@@ -13,6 +13,15 @@ class UpstreamError(RuntimeError):
     """A laptop API request failed or returned an invalid response."""
 
 
+class UpstreamResponseError(UpstreamError):
+    """The laptop returned an HTTP error with a structured response body."""
+
+    def __init__(self, status: int, payload: dict[str, Any]):
+        super().__init__(f"laptop API returned HTTP {status}")
+        self.status = status
+        self.payload = payload
+
+
 class UpstreamTimeout(UpstreamError):
     """The request timed out, so the laptop may already have applied it."""
 
@@ -34,7 +43,15 @@ class LaptopClient:
         try:
             with urlopen(request, timeout=self._timeout) as response:
                 payload = json.loads(response.read().decode("utf-8"))
-        except (HTTPError, URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError) as exc:
+        except HTTPError as exc:
+            try:
+                error_payload = json.loads(exc.read().decode("utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+            if not isinstance(error_payload, dict):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+            raise UpstreamResponseError(exc.code, error_payload) from exc
+        except (URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError) as exc:
             raise UpstreamError("laptop API request failed") from exc
         if not isinstance(payload, dict):
             raise UpstreamError("laptop API returned a non-object response")
