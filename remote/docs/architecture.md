@@ -24,6 +24,20 @@ This split preserves local panel behavior while the tunnel exposes only a narrow
 remote listener binds to loopback on the laptop, and the SSH remote bind is also loopback on AdvIn; neither adds a
 public laptop or VPS port.
 
+## GitHub OAuth callback and browser cookies
+
+Register the GitHub OAuth App callback as
+`<FLOW_FRONTEND_ORIGIN>/api/auth/callback`, on the same `*.vercel.app` origin the owner opens. The frontend's
+same-origin `/api/*` rewrite forwards `Cookie` and `Set-Cookie` to the gateway. Do not register the API
+hostname as the callback: browser cookies belong to the frontend host and are unavailable to a direct API-host
+callback.
+
+The gateway stores a random, single-use OAuth state token server-side and puts its browser binding in an
+`HttpOnly; Secure; SameSite=Lax` cookie scoped to the callback path. Lax is required because GitHub returns through a
+cross-site top-level GET. The resulting opaque session cookie is host-only and `HttpOnly; Secure; SameSite=Strict`;
+the browser sends it on subsequent same-site frontend requests, while the session itself remains in SQLite on the
+gateway.
+
 ## Alternatives considered
 
 | Option | Decision | Reason |

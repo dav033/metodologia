@@ -45,6 +45,4 @@ A repeated key with a different body returns
 
 Events have stable IDs and cursors. The schema includes `attempt.failed`, `attempt.blocked`, `run.finished`,
 `round.waiting`, `plan.waiting`, `quota.exhausted`, `attempt.stalled`, `laptop.offline`, and `command.updated`.
-Open scheduler decision requests are emitted as `plan.waiting` events with a `data.decisionRequest` payload;
-the request ID is part of the stable event identity.
 Consumers persist `nextCursor` and deduplicate notifications by the stable `dedupeKey`.
