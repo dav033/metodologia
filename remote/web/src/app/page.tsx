@@ -159,13 +159,23 @@ export default function HomePage() {
   const [commandHistory, setCommandHistory] = useState<CommandHistoryItem[]>([]);
   const [historyError, setHistoryError] = useState("");
   const snapshotRequest = useRef(0);
+  const reopenedTasks = useRef(new Set<string>());
 
   const refreshSnapshot = useCallback(async () => {
     const request = ++snapshotRequest.current;
     const response = await fetch("/api/remote/v1/snapshot", { cache: "no-store" });
     if (!response.ok) throw new Error(`No se pudo cargar el estado (${response.status}).`);
     const nextSnapshot = parseSnapshot(await response.json());
-    if (request === snapshotRequest.current) setSnapshot(nextSnapshot);
+    if (request === snapshotRequest.current) {
+      setSnapshot({ ...nextSnapshot, runs: nextSnapshot.runs.map((run) => ({ ...run, tasks: run.tasks?.map((task) => {
+        const key = `${run.project}/${run.req}/${task.id}`;
+        if (reopenedTasks.current.has(key) && ["failed", "blocked", "rejected"].includes(task.state)) {
+          return { ...task, state: "recovering" };
+        }
+        if (reopenedTasks.current.has(key)) reopenedTasks.current.delete(key);
+        return task;
+      }) })) });
+    }
   }, []);
 
   const refreshCommandHistory = useCallback(async () => {
@@ -283,6 +293,9 @@ export default function HomePage() {
         throw new Error(text(responseRecord?.message) ? responseRecord.message : `El gateway rechazó el comando (${response.status}).`);
       }
       result = text(responseRecord?.status) ? responseRecord.status : "Aceptado";
+      if (commandType === "reopen" && target?.kind === "task" && text(target.project) && text(target.req) && text(target.taskId)) {
+        reopenedTasks.current.add(`${target.project}/${target.req}/${target.taskId}`);
+      }
       await load();
       setCommandHistory((current) => [{ id: commandId, type: commandType, target: targetLabel, submittedAt, origin: "Web", result }, ...current.filter((item) => item.id !== commandId)].slice(0, 100));
       setReason(""); setConfirmation(""); setTypedReq("");
@@ -349,10 +362,43 @@ export default function HomePage() {
     </main>;
   }
 
+<<<<<<< d4a0a2b55a8a733f1b48f2a8e52e8d38ecc781cf
   const renderTask = (task: Task, run: Run) => <article className="task-card" key={`${run.req}-${task.id}`}>
+||||||| e3037b74a1a76def47b4e34dd011944470e2f084
+  const renderTask = (task: Task, run: Run) => {
+    const plan = snapshot?.plans.find((item) => item.project === run.project && item.req === run.req);
+    const nextRevision = (plan?.revision ?? run.revision ?? 0) + 1;
+    return <article className="task-card" key={`${run.req}-${task.id}`}>
+=======
+  const renderTask = (task: Task, run: Run) => {
+    const plan = snapshot?.plans.find((item) => item.project === run.project && item.req === run.req);
+    const nextRevision = (plan?.revision ?? run.revision ?? 0) + 1;
+    const canRecover = task.state === "recovering";
+    return <article className="task-card" key={`${run.req}-${task.id}`}>
+>>>>>>> 87dc0ae2cf1dc35bd48bc7683b84b5a0af137568
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
+<<<<<<< d4a0a2b55a8a733f1b48f2a8e52e8d38ecc781cf
+||||||| e3037b74a1a76def47b4e34dd011944470e2f084
+    {(task.state === "failed" || task.state === "blocked" || task.state === "rejected") && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
+      onRetry={(event, route) => retryTask(event, task, run, route)} />}
+    {(task.state === "failed" || task.state === "blocked" || task.state === "rejected") && <form className="recovery-form" onSubmit={editBriefForm(task, run, plan)}>
+      <h4>Editar brief de {task.id}</h4><p className="last-seen">Creará la revisión {nextRevision}.</p>
+      <label>Brief de la tarea<textarea name="brief" required maxLength={4000} defaultValue={task.title ?? ""} /></label>
+      <label>Escribe {run.req} para confirmar<input name="typedReq" required autoCapitalize="characters" aria-label={`Escribe ${run.req} para confirmar la edición del brief`} /></label>
+      <button disabled={!!working}>Crear revisión y actualizar tarea</button>
+    </form>}
+=======
+    {canRecover && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
+      onRetry={(event, route) => retryTask(event, task, run, route)} />}
+    {canRecover && <form className="recovery-form" onSubmit={editBriefForm(task, run, plan)}>
+      <h4>Editar brief de {task.id}</h4><p className="last-seen">Creará la revisión {nextRevision}.</p>
+      <label>Brief de la tarea<textarea name="brief" required maxLength={4000} defaultValue={task.title ?? ""} /></label>
+      <label>Escribe {run.req} para confirmar<input name="typedReq" required autoCapitalize="characters" aria-label={`Escribe ${run.req} para confirmar la edición del brief`} /></label>
+      <button disabled={!!working}>Crear revisión y actualizar tarea</button>
+    </form>}
+>>>>>>> 87dc0ae2cf1dc35bd48bc7683b84b5a0af137568
     <div className="actions">
       {(task.state === "failed" || task.state === "rejected" || task.activeAttempt?.state === "failed" || task.reviewAttempt) && <Link className="review-back feed-route" href={`/review?project=${encodeURIComponent(run.project)}&req=${encodeURIComponent(run.req)}&taskId=${encodeURIComponent(task.id)}`}>Ver intento fallido</Link>}
       {task.state === "blocked" || task.state === "failed" || task.state === "rejected" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
