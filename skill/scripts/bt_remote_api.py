@@ -82,10 +82,51 @@ def _snapshot_runs() -> list[dict]:
     return runs
 
 
+def _quota_accounts() -> list[dict]:
+    """Each subscription account with every quota window it reports (read-only, cached by bt_quota_live)."""
+    import bt_quota_live
+    try:
+        rows = bt_quota_live.read_all_live()
+    except Exception:  # noqa: BLE001 - a failed reading is "unavailable", never a crash of the listener
+        return []
+    accounts = []
+    for row in rows:
+        windows = []
+        for name, window in sorted((row.get("windows") or {}).items()):
+            if not isinstance(window, dict) or window.get("used_percent") is None:
+                continue
+            reset = window.get("resets_at")
+            windows.append({"window": name, "usedPercent": window["used_percent"],
+                            "resetsAt": dt.datetime.fromtimestamp(reset, dt.UTC).isoformat() if isinstance(reset, (int, float)) else None})
+        observed = row.get("observed_at")
+        accounts.append({"account": row.get("profile"), "provider": row.get("provider"), "status": row.get("status"),
+                         "observedAt": dt.datetime.fromtimestamp(observed, dt.UTC).isoformat() if isinstance(observed, (int, float)) else None,
+                         "windows": windows})
+    return accounts
+
+
 def _plans() -> list[dict]:
     import bt_plans_api as plans
+    import bt_rounds
     from bt_core import ROOT
-    return plans.plans_payload(ROOT)
+    rows = plans.plans_payload(ROOT)
+    for row in rows:
+        row["decisions"], row["rounds"] = [], []
+        try:
+            current = _target_state(f'{row["project"]}/{row["req_id"]}')
+            # Plan commands pin the plan's own status and revision; run commands pin the live run's (bt_remote_commands).
+            row["command_state"] = current.get("state") if current else None
+            row["plan_command_state"] = (current.get("plan_state") or current.get("state")) if current else None
+            row["plan_revision"] = current.get("plan_revision", current.get("revision")) if current else None
+            rdir = plans.req_dir(ROOT, row["project"], row["req_id"])
+            row["decisions"] = plans.open_decisions(rdir)
+            for path in bt_rounds.list_rounds(rdir):
+                data = bt_rounds.load(path)
+                if data.get("status") == "open":
+                    row["rounds"].append({key: data.get(key) for key in ("round", "title", "intro", "questions")})
+        except (plans.PlanError, OSError, ValueError):
+            continue    # a plan whose files cannot be read asks nothing; the row itself still shows
+    return rows
 
 
 def _read_review_file(path, limit: int = _REVIEW_FILE_MAX) -> bytes | None:
@@ -294,7 +335,10 @@ def route_get(handler) -> None:
         if path == f"{PREFIX}/challenges":
             return _problem(handler, 503, "CHALLENGES_UNAVAILABLE", "Los desafíos aún no están disponibles.")
         if path == f"{PREFIX}/quotas":
-            return _problem(handler, 503, "QUOTAS_UNAVAILABLE", "Las cuotas aún no están disponibles.")
+            accounts = _quota_accounts()
+            if not accounts:
+                return _problem(handler, 503, "QUOTAS_UNAVAILABLE", "Las cuotas aún no están disponibles.")
+            return _json(handler, {"accounts": accounts, "checkedAt": dt.datetime.now(dt.UTC).isoformat()})
         if path == f"{PREFIX}/events":
             import bt_live_api as live
             import bt_remote_events as remote_events

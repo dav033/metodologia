@@ -151,7 +151,27 @@ def dispatch_handlers() -> dict[str, Handler]:
     handlers.update({command: (lambda target, params, action=command: dispatch_plan_command(action, target, params))
                      for command in ("approve", "launch", "answer-round", "cancel-plan", "delete-plan")})
     handlers["edit-brief"] = lambda target, params: edit_brief(target, params)
+    handlers["note"] = lambda target, params: add_note(target, params)
     return handlers
+
+
+def add_note(target: str, params: dict) -> dict:
+    """Owner note for a task, appended to the file the next attempt's prompt reads (`operator_notes`)."""
+    import bt_scheduler_decisions as decisions
+    import bt_scheduler_ops as ops
+
+    _, _, rdir = _run_target(target)
+    task, note = params.get("task"), params.get("note")
+    if not isinstance(task, str) or not task:
+        raise ValueError("note requiere params.task.")
+    if not isinstance(note, str) or not note.strip():
+        raise ValueError("note debe ser texto no vacío.")
+    task = ops.bound_plan(rdir).task(task).id
+    path = decisions.notes_path(rdir, task)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    previous = path.read_text(encoding="utf-8").rstrip("\n") if path.exists() else ""
+    path.write_text((previous + "\n\n" if previous else "") + note.strip() + "\n", encoding="utf-8")
+    return {"messages": [f"{task}: note saved for its next attempt"]}
 
 
 def edit_brief(target: str, params: dict) -> dict:

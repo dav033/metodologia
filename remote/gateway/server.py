@@ -5,6 +5,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+import re
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
@@ -18,7 +19,9 @@ from auth import (
     SessionStore,
     cookie_values,
 )
+from liveness import LaptopStatus
 from security import RateLimiter, origin_matches
+from upstream import UpstreamError
 
 logger = logging.getLogger(__name__)
 RATE_WINDOW_SECONDS = 60
@@ -103,6 +106,20 @@ def make_handler(service: OAuthService, runtime=None) -> type[BaseHTTPRequestHan
                     self._json(503, {"error": "event stream unavailable"})
                     return
                 self._stream(runtime)
+                return
+            review = re.fullmatch(r"/api/remote/v1/attempts/([A-Za-z0-9._:-]{1,120})/review", route.path)
+            if review or route.path in {"/api/remote/v1/commands", "/api/remote/v1/quotas", "/api/remote/v1/routes"}:
+                if self._session_login() is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                if runtime is None or runtime.liveness.status is LaptopStatus.OFFLINE:
+                    self._json(410, {"code": "LAPTOP_OFFLINE", "message": "El portátil está desconectado."})
+                    return
+                try:
+                    self._json(200, runtime.laptop.get_json(route.path + ("?" + route.query if route.query else "")))
+                except UpstreamError:
+                    code = "REVIEW_UNAVAILABLE" if review else route.path.rsplit("/", 1)[-1].upper() + "_UNAVAILABLE"
+                    self._json(503, {"code": code, "message": "El portátil no pudo responder."})
                 return
             self._json(404, {"error": "not found"})
 

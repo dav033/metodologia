@@ -25,6 +25,30 @@ def free_port() -> int:
         return probe.getsockname()[1]
 
 
+class PlanSnapshotTests(unittest.TestCase):
+    def test_plan_rows_carry_open_rounds_and_decisions_for_the_phone(self):
+        import bt_plans_api
+        with tempfile.TemporaryDirectory() as temp:
+            rdir = Path(temp)
+            (rdir / "rounds").mkdir()
+            (rdir / "rounds" / "round-01.json").write_text(json.dumps(
+                {"round": 1, "title": "Scope", "intro": "", "status": "open",
+                 "questions": [{"id": "q1", "text": "Which?", "type": "open"}]}), encoding="utf-8")
+            (rdir / "rounds" / "round-02.json").write_text(json.dumps({"round": 2, "status": "answered", "questions": []}),
+                                                           encoding="utf-8")
+            decision = {"id": "T1:1", "options": [{"id": "retry", "label": "Reintentar", "consequence": "Gasta un intento."}]}
+            row = {"project": "demo", "req_id": "REQ-001", "plan_status": "draft"}
+            with patch.object(bt_plans_api, "plans_payload", return_value=[row]), \
+                    patch.object(bt_plans_api, "req_dir", return_value=rdir), \
+                    patch.object(bt_plans_api, "open_decisions", return_value=[decision]), \
+                    patch.object(bt_remote_api, "_target_state", return_value={"state": "running"}):
+                plans = bt_remote_api._plans()
+        self.assertEqual(plans[0]["command_state"], "running")
+        self.assertEqual([r["round"] for r in plans[0]["rounds"]], [1])
+        self.assertEqual(plans[0]["rounds"][0]["questions"][0]["id"], "q1")
+        self.assertEqual(plans[0]["decisions"][0]["options"][0]["consequence"], "Gasta un intento.")
+
+
 class RemoteApiTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -87,7 +111,6 @@ class RemoteApiTests(unittest.TestCase):
             ("GET", "/api/remote/v1/snapshot", 200),
             ("GET", "/api/remote/v1/events", 200),
             ("GET", "/api/remote/v1/attempts/attempt-1/review", 503),
-            ("GET", "/api/remote/v1/quotas", 503),
             ("GET", "/api/remote/v1/commands", 503),
             ("POST", "/api/remote/v1/commands", 400),
             ("GET", "/api/remote/v1/runs", 200),
