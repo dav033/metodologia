@@ -468,11 +468,82 @@ class EntryPointTests(LedgerBase):
         body = req(command="answer-round", params=params, precondition=state)
         with patch.object(bt_core, "ROOT", Path(self.temp.name)):
             status, response = self.post_real(body)
+<<<<<<< 14d58bc9524f2bf106fdced44f4911eaa5c56677
+||||||| 7bba8ac713838352e950bd4df154258000ccecdb
+||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
+        _bt_core, rdir, _harness = self.real_run()
+        round_path = bt_rounds.new_round(rdir, {
+            "title": "Scope choice",
+            "questions": [{"id": "q1", "text": "Keep scope?", "type": "choice",
+                           "options": [{"key": "yes", "label": "Yes"}]}],
+        })
+        round_data = bt_rounds.load(round_path)
+        actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
+        self.assertEqual(actual, {"state": "open", "revision": None})
+        body = req(command="answer-round", params={"round": round_data["round"],
+                                                    "answers": {"q1": {"text": "yes"}}},
+                   precondition={"state": actual["state"]})
+=======
+        _bt_core, rdir, _harness = self.real_run()
+        round_path = bt_rounds.new_round(rdir, {
+            "title": "Scope choice",
+            "questions": [{"id": "q1", "text": "Keep scope?", "type": "choice",
+                           "options": [{"key": "yes", "label": "Yes"}]}],
+        })
+        round_data = bt_rounds.load(round_path)
+        original_status_of = bt_plans_api.status_of
+
+        def waiting_scheduler_status(*args, **kwargs):
+            status = original_status_of(*args, **kwargs)
+            status["run"]["status"] = "waiting"
+            return status
+
+        with patch.object(bt_plans_api, "status_of", side_effect=waiting_scheduler_status):
+            actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
+        self.assertEqual(actual, {"state": "open", "revision": None})
+        body = req(command="answer-round", params={"round": round_data["round"],
+                                                    "answers": {"q1": {"text": "yes"}}},
+                   precondition={"state": actual["state"]})
+>>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
+=======
 
         saved = bt_rounds.load(round_path)
         self.assertEqual((status, response["status"]), (200, "OK"), response)
         self.assertEqual((saved["status"], saved["answered_via"], saved["answers"]),
                          ("answered", "remote", params["answers"]))
+    def test_route_post_answers_open_round_while_scheduler_is_waiting(self):
+        import bt_plans_api
+        import bt_rounds
+
+        _bt_core, rdir, _harness = self.real_run()
+        round_path = bt_rounds.new_round(rdir, {
+            "title": "Scope choice",
+            "questions": [{"id": "q1", "text": "Keep scope?", "type": "choice",
+                           "options": [{"key": "yes", "label": "Yes"}]}],
+        })
+        round_data = bt_rounds.load(round_path)
+        original_status_of = bt_plans_api.status_of
+
+        def waiting_scheduler_status(*args, **kwargs):
+            status = original_status_of(*args, **kwargs)
+            status["run"]["status"] = "waiting"
+            return status
+
+        with patch.object(bt_plans_api, "status_of", side_effect=waiting_scheduler_status):
+            actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
+        self.assertEqual(actual, {"state": "open", "revision": None})
+        body = req(command="answer-round", params={"round": round_data["round"],
+                                                    "answers": {"q1": {"text": "yes"}}},
+                   precondition={"state": actual["state"]})
+>>>>>>> fbac3dfc2e7826e15e9d91fb2d7f58b33d3b5c1f
+
+        status, response = self.post_real(body)
+
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        saved = bt_rounds.load(round_path)
+        self.assertEqual(saved["status"], "answered")
+        self.assertEqual(saved["answers"], {"q1": {"text": "yes"}})
+
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
