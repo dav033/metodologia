@@ -87,7 +87,6 @@ class RemoteApiTests(unittest.TestCase):
             ("GET", "/api/remote/v1/snapshot", 200),
             ("GET", "/api/remote/v1/events", 200),
             ("GET", "/api/remote/v1/attempts/attempt-1/review", 503),
-            ("GET", "/api/remote/v1/quotas", 503),
             ("GET", "/api/remote/v1/commands", 503),
             ("POST", "/api/remote/v1/commands", 400),
             ("GET", "/api/remote/v1/runs", 200),
@@ -100,6 +99,28 @@ class RemoteApiTests(unittest.TestCase):
             with self.subTest(method=method, path=path):
                 status, _, body = self.request(method, path, body="{}" if method == "POST" else None)
                 self.assertEqual(status, expected_status, body.decode("utf-8"))
+
+    def test_live_quotas_endpoint_returns_account_windows(self):
+        class Handler:
+            headers = {"Authorization": f"Bearer {KEY}"}
+            path = "/api/remote/v1/quotas"
+
+            def send(self, body, status, content_type):
+                self.response = status, content_type, body
+
+        handler = Handler()
+        accounts = [{"profile": "codex-work", "provider": "codex", "status": "ok",
+                     "observed_at": 1792411200, "windows": {"five_hour": {"used_percent": 27}}}]
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY}), \
+                patch("bt_quota_live.read_all_live", return_value=accounts):
+            bt_remote_api.route_get(handler)
+
+        status, content_type, body = handler.response
+        self.assertEqual(status, 200)
+        self.assertIn("application/json", content_type)
+        payload = json.loads(body)
+        self.assertEqual(payload["accounts"], accounts)
+        self.assertTrue(payload["checkedAt"])
 
     def test_snapshot_includes_live_task_and_latest_sign_of_life_from_shared_now_frame(self):
         runs = [{"run": "demo/REQ-001", "updated_at": "2026-10-19T10:00:00Z", "tasks": [
