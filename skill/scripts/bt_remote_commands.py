@@ -147,8 +147,17 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
         task = params.get("task")
         if not isinstance(task, str) or not task:
             raise ValueError("retry requiere params.task.")
-        if params.get("route"):
-            raise ValueError("retry con route requiere el despachador de recuperación.")
+        import bt_route_pins
+        pin = bt_route_pins.normalize(params)
+        if pin is not None:
+            # Check the exact candidate set before ops.retry can reopen the task. This also fails closed when
+            # quota refresh or account identity is unavailable.
+            candidates = bt_route_pins.available(project, rdir, task, pin)
+            if not candidates:
+                raise ValueError("La ruta fijada no está disponible; la tarea no se reabrió.")
+            bt_route_pins.set_pin(rdir, task, pin)
+        else:
+            bt_route_pins.clear(rdir, task)
         messages = ops.retry(project, req, rdir, task, reason)
         messages.append(ops.resume(project, req, rdir))
         return {"messages": messages}
@@ -243,6 +252,15 @@ def validate(req: Any) -> str | None:
         return "precondition debe fijar state, revision y/o updatedAt del objetivo."
     if not isinstance(req.get("params", {}), dict):
         return "params debe ser un objeto."
+    params = req.get("params", {})
+    pin_fields = {"route", "model", "account"}
+    if req["command"] == "retry":
+        for field in pin_fields & params.keys():
+            value = params[field]
+            if not isinstance(value, str) or not value.strip() or len(value.strip()) > 200:
+                return f"params.{field} debe ser texto no vacío de hasta 200 caracteres."
+    elif pin_fields & params.keys():
+        return "route, model y account solo se admiten en retry."
     if set(req) - {"idempotency_key", "command", "target", "origin", "params", "precondition", "confirmation"}:
         return "El comando contiene campos no reconocidos."
     if req["command"] in CHALLENGED:
