@@ -46,4 +46,5 @@ A repeated key with a different body returns
 
 Events have stable IDs and cursors. The schema includes `attempt.failed`, `attempt.blocked`, `run.finished`,
 `round.waiting`, `plan.waiting`, `quota.exhausted`, `attempt.stalled`, `laptop.offline`, and `command.updated`.
-Consumers persist `nextCursor` and deduplicate notifications by the stable `dedupeKey`.
+`occurredAt` is RFC 3339 UTC (`Z`); legacy naive laptop timestamps are interpreted in the laptop's local timezone
+before conversion. Consumers persist `nextCursor` and deduplicate notifications by the stable `dedupeKey`.

@@ -457,7 +457,8 @@ def resolve_m2_route(ledger_path: str | Path, reference: str) -> dict[str, str] 
             "effort": route.effort or ""}
 
 
-def project(snapshot: core.Snapshot, plan: core.Plan) -> dict[str, Any]:
+def project(snapshot: core.Snapshot, plan: core.Plan,
+            task_budgets: dict[str, dict[str, int | bool | str]] | None = None) -> dict[str, Any]:
     """A RUN.json-shaped read model of a scheduler run, for the tools that already read RUN.json (watch, web page).
 
     Derived on demand from the core's snapshot; it carries `authority: "scheduler"` so nothing mistakes it for a legacy
@@ -469,7 +470,7 @@ def project(snapshot: core.Snapshot, plan: core.Plan) -> dict[str, Any]:
         if not isinstance(route, dict):
             route = {}
         complexity = spec.meta.get("complexity")
-        tasks.append({"id": spec.id, "title": spec.meta.get("title", spec.id), "repo": spec.repository or None,
+        row = {"id": spec.id, "title": spec.meta.get("title", spec.id), "repo": spec.repository or None,
                       "after": list(spec.after), "milestone": spec.milestone_id or None,
                       "status": TASK_STATUS[view["state"]], "scheduler_state": view["state"],
                       "unreachable": view["unreachable"], "attempts": view["attempts"],
@@ -484,7 +485,10 @@ def project(snapshot: core.Snapshot, plan: core.Plan) -> dict[str, Any]:
                       "quota_valid_until": route.get("quota_valid_until", ""),
                       "quota_used_percent": route.get("quota_used_percent", ""),
                       "route_status": view.get("route_status", "unplanned"),
-                      "route_reason": view.get("route_reason", "")})
+                      "route_reason": view.get("route_reason", "")}
+        if task_budgets and spec.id in task_budgets:
+            row.update(task_budgets[spec.id])
+        tasks.append(row)
     heartbeat = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
     return {"req": snapshot.plan_id, "authority": AUTHORITY, "projection": True,
             "status": RUN_STATUS[snapshot.status], "scheduler_status": snapshot.status,
@@ -498,7 +502,10 @@ def write_projection(rdir: Path, scheduler: core.SchedulerCore) -> Path:
     legacy state file can neither be overwritten by it nor receive a legacy control write meant for a scheduler run."""
     rdir = Path(rdir)
     target = rdir / PROJECTION
-    body = json.dumps(project(scheduler.snapshot(), scheduler.plan), indent=1, sort_keys=True) + "\n"
+    import bt_scheduler_projection
+
+    task_budgets = bt_scheduler_projection.attempt_budgets(scheduler)
+    body = json.dumps(project(scheduler.snapshot(), scheduler.plan, task_budgets), indent=1, sort_keys=True) + "\n"
     fd, tmp = tempfile.mkstemp(dir=rdir, prefix=".RUN.projection.", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
