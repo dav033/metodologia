@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from urllib.parse import quote
 from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
@@ -158,6 +159,38 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(handler.status, 200)
         self.assertEqual(payload["events"][0]["type"], "plan.waiting")
         self.assertIn("decisionRequest", payload["events"][0]["data"])
+
+    def test_events_route_keeps_cursor_valid_after_open_decision_resolves(self):
+        plan = {"project": "demo", "req_id": "REQ-001", "updated_at": AT, "plan_status": "approved"}
+        open_requests = [{"id": "decision-1", "task": "T1", "title": "Waiting",
+                          "options": [{"id": "stop"}]}]
+        ledger = type("LedgerStub", (), {"rows": lambda self: []})
+
+        def read_events(handler):
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                    patch("bt_live_api.run_summaries", return_value=[]), \
+                    patch("bt_plans_api.plans_payload", return_value=[plan]), \
+                    patch("bt_plans_api.req_dir", return_value=Path("/tmp/REQ-001")), \
+                    patch("bt_plans_api.open_decisions", return_value=open_requests), \
+                    patch("bt_plans_api.open_rounds", return_value=[]), \
+                    patch("bt_live_api.flow_events", return_value=([], [], {})), \
+                    patch("bt_subscriptions.summary", return_value=[]), \
+                    patch("bt_remote_commands.Ledger", ledger):
+                bt_remote_api.route_get(handler)
+
+        first = Handler()
+        read_events(first)
+        first_payload = json.loads(first.body)
+        self.assertEqual(first.status, 200)
+        cursor = first_payload["nextCursor"]
+
+        open_requests.clear()
+        resolved = Handler()
+        resolved.path = f"/api/remote/v1/events?after={quote(cursor)}"
+        read_events(resolved)
+
+        self.assertEqual(resolved.status, 200)
+        self.assertEqual(json.loads(resolved.body)["events"], [])
 
     def test_events_route_rejects_bad_cursor_and_limit(self):
         for path, code in (("/api/remote/v1/events?after=junk", "INVALID_CURSOR"),

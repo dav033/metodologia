@@ -10,12 +10,15 @@ from typing import Any, Mapping
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from notifications import NotificationOutbox, TelegramSender, notification_for_event
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
+from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
 
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
 ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
 CHALLENGED_COMMANDS = frozenset({"revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"})
+COMMAND_TYPES = frozenset({"pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve",
+                           "launch", "answer-decision", "answer-round", "cancel-plan", "delete-plan",
+                           "edit-brief", "note"})
 TELEGRAM_REQ_ID = re.compile(r"^REQ-[0-9]{3,}$")
 
 
@@ -33,6 +36,7 @@ def _ledger_command(request: Any) -> dict[str, Any] | None:
     if not isinstance(command, str):
         return None
     field_map = {"reason": "reason", "route": "route", "brief": "brief", "answer": "answers",
+                 "requestId": "request_id", "answers": "answers", "option": "option",
                  "note": "note", "attemptId": "attempt", "taskId": "task", "round": "round",
                  "field": "field", "value": "value"}
     params: dict[str, Any] = {}
@@ -230,6 +234,13 @@ class GatewayRuntime:
     def _poll_events(self) -> None:
         try:
             result = self.laptop.events(self.event_cursor)
+        except UpstreamResponseError as exc:
+            if exc.status == 400 and exc.payload.get("code") == "INVALID_CURSOR":
+                self.event_cursor = ""
+                logger.info("Laptop event cursor expired; restarting feed from the beginning")
+                return
+            logger.warning("Laptop event feed unavailable")
+            return
         except UpstreamError:
             logger.warning("Laptop event feed unavailable")
             return

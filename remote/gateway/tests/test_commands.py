@@ -1,18 +1,42 @@
 import json
 import http.client
+import os
+import sys
 import threading
 import tempfile
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from app import GatewayRuntime, _ledger_command
 from auth import OAuthConfig, SessionStore
 from config import GatewayConfig
 from liveness import LaptopStatus
 from server import create_server
-from upstream import UpstreamTimeout
+from stream import StreamHub
+from upstream import LaptopClient, UpstreamResponseError, UpstreamTimeout
+
+SCRIPTS = Path(__file__).resolve().parents[3] / "skill" / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+import bt_remote_api
+
+class LaptopLedgerHandler(BaseHTTPRequestHandler):
+    def log_message(self, *_args):
+        pass
+
+    def do_POST(self):
+        bt_remote_api.route_post(self)
+
+    def send(self, payload, status=200, content_type="application/json; charset=utf-8"):
+        if isinstance(payload, str):
+            payload = payload.encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
 
 
 def config(path: Path) -> GatewayConfig:
@@ -77,6 +101,52 @@ class CommandRelayTests(unittest.TestCase):
         self.assertEqual(forwarded["params"]["route"], "route:abc")
         self.assertEqual(forwarded["params"]["model"], "sonnet")
         self.assertEqual(forwarded["params"]["account"], "work")
+
+    def test_expired_ephemeral_event_cursor_resets_before_later_delivery(self):
+        event = {"id": "evt-decision", "type": "plan.waiting", "dedupeKey": "evt-decision",
+                 "target": {"req": "REQ-027"}}
+        self.runtime.event_cursor = "expired-cursor"
+        self.laptop.events.side_effect = [
+            UpstreamResponseError(400, {"code": "INVALID_CURSOR"}),
+            {"events": [event], "nextCursor": "fresh-cursor"},
+        ]
+
+        self.runtime._poll_events()
+        self.assertEqual(self.runtime.event_cursor, "")
+        delivered = []
+        self.runtime.outbox.deliver_due(delivered.append)
+        self.assertEqual(delivered, [])
+
+        self.runtime._poll_events()
+        self.runtime.outbox.deliver_due(delivered.append)
+
+        self.assertEqual(self.laptop.events.call_args_list[0].args, ("expired-cursor",))
+        self.assertEqual(self.laptop.events.call_args_list[1].args, ("",))
+        self.assertEqual(self.runtime.event_cursor, "fresh-cursor")
+        self.assertEqual(len(delivered), 1)
+
+    def test_sse_stream_resets_expired_cursor_and_delivers_later_event(self):
+        event = {"id": "evt-round", "type": "round.waiting", "target": {"req": "REQ-027"}}
+        self.laptop.snapshot.return_value = {"runs": []}
+        self.laptop.events.side_effect = [
+            UpstreamResponseError(400, {"code": "INVALID_CURSOR"}),
+            {"events": [event], "nextCursor": "fresh-cursor"},
+        ]
+        hub = StreamHub(self.laptop)
+        hub._cursor = "expired-cursor"
+        subscription = hub.subscribe()
+        subscription.drain()
+
+        hub.poll_once()
+        self.assertEqual(hub._cursor, "")
+        self.assertEqual(subscription.drain(), [])
+
+        hub.poll_once()
+        self.assertEqual(self.laptop.events.call_args_list[0].args, ("expired-cursor",))
+        self.assertEqual(self.laptop.events.call_args_list[1].args, ("",))
+        self.assertEqual(hub._cursor, "fresh-cursor")
+        self.assertTrue(any(name == "event" and payload["id"] == "evt-round"
+                            for _event_id, name, payload in subscription.drain()))
 
     def test_phone_payloads_reach_laptop_http_with_route_round_and_edit_fields(self):
         received = []
@@ -209,7 +279,66 @@ class CommandRelayHttpTests(unittest.TestCase):
             "precondition": {"state": "running"},
         })
 
-    def test_authenticated_challenge_relay_supports_confirmed_command(self):
+    def test_web_decision_answer_passes_gateway_allowlist_and_translates_request_id(self):
+        body = {
+            "schemaVersion": 1,
+            "idempotencyKey": "decision-command-key-0001",
+            "type": "answer-decision",
+            "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
+            "precondition": {"state": "open"},
+            "requestId": "T2:1", "option": "retry", "reason": "Retry",
+        }
+
+        status, response = self.post_path("/api/remote/v1/commands", body)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(response["status"], "OK")
+        self.assertEqual(self.laptop.post_json.call_args.args[1]["params"], {
+            "request_id": "T2:1", "option": "retry", "reason": "Retry"})
+
+    def test_round_answer_http_command_sends_answers_with_open_round_precondition(self):
+        body = {
+            "schemaVersion": 1,
+            "idempotencyKey": "round-command-key-0001",
+            "type": "answer-round",
+            "target": {"kind": "round", "project": "demo", "req": "REQ-027", "roundId": "2"},
+            "precondition": {"state": "open"},
+            "round": 2, "answers": {"q1": {"text": "Keep scope"}},
+        }
+
+        status, response = self.post_path("/api/remote/v1/commands", body)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(response["status"], "OK")
+        self.assertEqual(self.laptop.post_json.call_args.args[1]["params"], {
+            "round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+        self.assertEqual(self.laptop.post_json.call_args.args[1]["precondition"], {"state": "open"})
+
+    def test_public_command_and_challenge_reach_the_real_laptop_ledger(self):
+        laptop_server = ThreadingHTTPServer(("127.0.0.1", 0), LaptopLedgerHandler)
+        laptop_thread = threading.Thread(target=laptop_server.serve_forever, daemon=True)
+        laptop_thread.start()
+        self.addCleanup(laptop_server.server_close)
+        self.addCleanup(laptop_server.shutdown)
+        self.runtime.laptop = LaptopClient(f"http://127.0.0.1:{laptop_server.server_port}", "test-key")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": self.temp.name}), \
+                patch.object(bt_remote_api, "_target_state", lambda *_args: {"state": "running"}), \
+                patch.dict(bt_remote_api.HANDLERS, {"pause": lambda *_args: {"paused": True}}, clear=True):
+            status, _body = self.post_path("/api/remote/v1/commands", {
+                "schemaVersion": 1, "idempotencyKey": "command-key-000001", "type": "pause",
+                "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
+                "precondition": {"state": "running"},
+            })
+            self.assertEqual(status, 200)
+
+            challenge_status, challenge = self.post_path("/api/remote/v1/challenges", {
+                "target": "demo/REQ-027", "typedReq": "REQ-027",
+            })
+
+        self.assertEqual(challenge_status, 200)
+        self.assertTrue(challenge.get("challengeId"))
+
+    def test_authenticated_challenge_http_relay_enables_confirmed_command(self):
         self.laptop.post_json.side_effect = [
             {"challengeId": "laptop-challenge-000001", "expiresIn": 120},
             {"status": "OK", "code": None},

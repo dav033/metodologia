@@ -10,14 +10,22 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import tarfile
 import threading
 import time
 import unittest
+import zipfile
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
+sys.path.insert(0, str(REPO / "tests" / "migration"))
+import bt_remote_api
+import installed_wheel
 TEST_KEY = "test-only-gateway-key"
 
 
@@ -236,6 +244,124 @@ class RemoteApiTests(unittest.TestCase):
                 self.assertEqual(json.loads(body)["code"], "ROUTES_UNAVAILABLE")
             finally:
                 self.stop_server(process)
+    def test_snapshot_route_keeps_non_live_failed_attempt_for_review(self):
+        import bt_remote_api
+
+        class Handler:
+            path = "/api/remote/v1/snapshot"
+            headers = {"Authorization": "Bearer test-key"}
+
+            def send(self, body, status, content_type):
+                self.body, self.status, self.content_type = body, status, content_type
+
+        handler = Handler()
+        timestamp = dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc).timestamp()
+        run_summary = {
+            "run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "title": "Demo",
+            "status": "failed", "active": False, "updated_at": "2026-10-20T10:01:00Z",
+            "tasks": [{"id": "T1", "title": "Failed task", "state": "failed",
+                       "attempt": {"id": "A-failed", "state": "failed", "live": False,
+                                   "updated_at": timestamp},
+                       "history": [{"id": "A-failed", "state": "failed", "live": False,
+                                    "updated_at": timestamp, "failure": "verification failed"}]}],
+        }
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_live_api.run_summaries", return_value=[run_summary]), \
+                patch("bt_live_api.now_frame_data", return_value={"items": []}):
+            bt_remote_api.route_get(handler)
+
+        task = json.loads(handler.body)["runs"][0]["tasks"][0]
+        self.assertEqual(handler.status, 200)
+        self.assertIsNone(task["activeAttempt"])
+        self.assertEqual(task["reviewAttempt"]["id"], "A-failed")
+        self.assertEqual(task["history"][0]["id"], "A-failed")
+
+    def test_installed_distribution_includes_remote_modules_and_dispatches_remote_commands(self):
+        installed = installed_wheel.get()
+        remote_modules = {
+            "bt_remote_api.py",
+            "bt_remote_commands.py",
+            "bt_remote_edit.py",
+            "bt_remote_events.py",
+            "bt_remote_preconditions.py",
+            "bt_remote_recovery.py",
+            "bt_remote_views.py",
+            "bt_route_pins.py",
+        }
+        with zipfile.ZipFile(installed.wheel) as wheel:
+            wheel_files = {Path(name).name for name in wheel.namelist()}
+        self.assertTrue(remote_modules.issubset(wheel_files), remote_modules - wheel_files)
+        with tarfile.open(installed.sdist, "r:*") as archive:
+            sdist_files = {Path(member.name).name for member in archive.getmembers()}
+        self.assertTrue(remote_modules.issubset(sdist_files), remote_modules - sdist_files)
+
+        port = free_port()
+        env = {
+            "PATH": "/usr/bin:/bin",
+            "HOME": str(installed.work / "home"),
+            "BITACORA_ROOT": str(installed.work / "bitacora"),
+            "FLOW_GATEWAY_KEY": TEST_KEY,
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONIOENCODING": "utf-8",
+        }
+        command = r"""
+import sys
+site, port = sys.argv[1:]
+sys.path.insert(0, site)
+import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_recovery, bt_remote_views
+import bt_remote_preconditions, bt_remote_edit, bt_route_pins
+import bt_plans_api
+
+# Exercise the real command dispatchers. The fixture has no project, so each dispatch
+# reaches its installed implementation and fails on the expected project lookup guard.
+try:
+    bt_remote_commands.dispatch_run_command("retry", "demo/REQ-001", {"task": "T1"})
+except bt_plans_api.PlanError as error:
+    assert str(error) == "Proyecto no encontrado."
+else:
+    raise AssertionError("retry unexpectedly succeeded without a project")
+assert "bt_route_pins" in sys.modules
+try:
+    bt_remote_commands.dispatch_edit_brief(
+        "demo/REQ-001", {"typed_req": "REQ-001", "task": "T1", "brief": "updated"})
+except bt_plans_api.PlanError as error:
+    assert str(error) == "Proyecto no encontrado."
+else:
+    raise AssertionError("edit-brief unexpectedly succeeded without a project")
+assert "bt_remote_edit" in sys.modules
+
+sys.argv = ["bitacora", "serve-remote", "--port", port]
+import bitacora
+bitacora.main()
+"""
+        process = subprocess.Popen(
+            [str(installed.python), "-I", "-c", command, str(installed.site), str(port)],
+            cwd=installed.work,
+            env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        try:
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if process.poll() is not None:
+                    self.fail(f"installed serve-remote exited: {process.stderr.read()}")
+                try:
+                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                        break
+                except OSError:
+                    time.sleep(0.05)
+            else:
+                self.fail("installed serve-remote did not start listening")
+
+            status, content_type, body = self.request(port, "/api/remote/v1/health", TEST_KEY)
+            self.assertEqual(status, 200, body.decode("utf-8"))
+            self.assertTrue(content_type.startswith("application/json"))
+            self.assertEqual(json.loads(body)["schemaVersion"], 1)
+        finally:
+            self.stop_server(process)
+            process.stderr.close()
 
 
 if __name__ == "__main__":
