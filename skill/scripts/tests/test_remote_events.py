@@ -8,12 +8,47 @@ import sys
 import tempfile
 import time
 import unittest
+<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
+||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
+<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
+from http.server import ThreadingHTTPServer
+||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
+<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
+from http.server import ThreadingHTTPServer
+||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
+=======
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+>>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
+=======
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+>>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
+=======
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+>>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import quote
 
 SCRIPTS = Path(__file__).resolve().parents[1]
+<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
 sys.path.insert(0, str(SCRIPTS))
+||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
+<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
+sys.path.insert(0, str(SCRIPTS))
+||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
+sys.path.insert(0, str(SCRIPTS))
+GATEWAY = Path(__file__).resolve().parents[3] / "remote" / "gateway"
+sys.path.insert(0, str(GATEWAY))
+=======
+GATEWAY = Path(__file__).resolve().parents[3] / "remote" / "gateway"
+sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(GATEWAY))
+>>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
+=======
+GATEWAY = Path(__file__).resolve().parents[3] / "remote" / "gateway"
+sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(GATEWAY))
+>>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
 
 import bt_remote_api
 import bt_remote_events as feed
@@ -324,6 +359,171 @@ class RouteTests(unittest.TestCase):
                                  [event["id"] for event in replay["events"]])
                 self.assertEqual(len(replay["events"][1]["data"]["decisionRequest"]["options"]), 2)
 
+<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
+||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
+<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
+||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
+    def test_gateway_recovers_expired_cursor_and_queues_next_event(self):
+        from app import GatewayRuntime
+        from config import GatewayConfig
+
+        requests = []
+        event = {"schemaVersion": 1, "id": "evt-next", "cursor": "cursor-next", "type": "run.finished",
+                 "occurredAt": "2026-10-21T12:00:00Z", "target": {"kind": "run", "req": "REQ-001"},
+                 "data": {}, "dedupeKey": "evt-next"}
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                requests.append(self.path)
+                if "after=" in self.path and "after=&" not in self.path:
+                    status, payload = 400, {"code": "INVALID_CURSOR"}
+                else:
+                    status, payload = 200, {"events": [event], "nextCursor": "cursor-next"}
+                body = json.dumps(payload).encode("utf-8")
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *_args):
+                pass
+
+        with tempfile.TemporaryDirectory() as directory:
+            server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            self.addCleanup(server.server_close)
+            self.addCleanup(server.shutdown)
+            runtime = GatewayRuntime(
+                GatewayConfig(f"http://127.0.0.1:{server.server_port}", "test-key", "test-token", "test-chat",
+                              Path(directory) / "gateway.sqlite"),
+                sender=lambda _message: None,
+            )
+            self.addCleanup(runtime.outbox._db.close)
+            runtime.event_cursor = '["v2","1","expired"]'
+
+            runtime._poll_events()
+            self.assertEqual(runtime.event_cursor, "")
+            runtime._poll_events()
+
+            self.assertEqual(len(requests), 2)
+            self.assertIn("after=%5B%22v2%22%2C%221%22%2C%22expired%22%5D", requests[0])
+            self.assertIn("after=&limit=200", requests[1])
+            self.assertEqual(runtime.event_cursor, "cursor-next")
+            keys = runtime.outbox._db.execute("SELECT dedupe_key FROM telegram_outbox").fetchall()
+            self.assertEqual(keys, [("event:evt-next",)])
+
+=======
+
+    def test_gateway_recovers_expired_cursor_and_queues_next_event(self):
+        from app import GatewayRuntime
+        from config import GatewayConfig
+
+        requests = []
+        event = {"schemaVersion": 1, "id": "evt-next", "cursor": "cursor-next", "type": "run.finished",
+                 "occurredAt": "2026-10-21T12:00:00Z", "target": {"kind": "run", "req": "REQ-001"},
+                 "data": {}, "dedupeKey": "evt-next"}
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                requests.append(self.path)
+                if "after=" in self.path and "after=&" not in self.path:
+                    status, payload = 400, {"code": "INVALID_CURSOR"}
+                else:
+                    status, payload = 200, {"events": [event], "nextCursor": "cursor-next"}
+                body = json.dumps(payload).encode("utf-8")
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *_args):
+                pass
+
+        with tempfile.TemporaryDirectory() as directory:
+            server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            self.addCleanup(server.server_close)
+            self.addCleanup(server.shutdown)
+            runtime = GatewayRuntime(
+                GatewayConfig(f"http://127.0.0.1:{server.server_port}", "test-key", "test-token", "test-chat",
+                              Path(directory) / "gateway.sqlite"),
+                sender=lambda _message: None,
+            )
+            self.addCleanup(runtime.outbox._db.close)
+            runtime.event_cursor = '["v2","1","expired"]'
+
+            runtime._poll_events()
+            self.assertEqual(runtime.event_cursor, "")
+            runtime._poll_events()
+
+            self.assertEqual(len(requests), 2)
+            self.assertIn("after=%5B%22v2%22%2C%221%22%2C%22expired%22%5D", requests[0])
+            self.assertIn("after=&limit=200", requests[1])
+            self.assertEqual(runtime.event_cursor, "cursor-next")
+            keys = runtime.outbox._db.execute("SELECT dedupe_key FROM telegram_outbox").fetchall()
+            self.assertEqual(keys, [("event:evt-next",)])
+
+>>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
+=======
+    def test_gateway_recovers_expired_cursor_and_delivers_subsequent_feed_event(self):
+        from app import GatewayRuntime
+        from config import GatewayConfig
+
+        requests = []
+        event = {"schemaVersion": 1, "id": "evt-next", "cursor": "cursor-next", "type": "run.finished",
+                 "occurredAt": "2026-10-21T12:00:00Z", "target": {"kind": "run", "req": "REQ-001"},
+                 "data": {}, "dedupeKey": "evt-next"}
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                requests.append(self.path)
+                expired = "after=%5B%22v2%22%2C%221%22%2C%22expired%22%5D" in self.path
+                status, payload = ((400, {"code": "INVALID_CURSOR"}) if expired else
+                                   (200, {"events": [event], "nextCursor": "cursor-next"}))
+                body = json.dumps(payload).encode("utf-8")
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *_args):
+                pass
+
+        with tempfile.TemporaryDirectory() as directory:
+            server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            self.addCleanup(server.server_close)
+            self.addCleanup(server.shutdown)
+            runtime = GatewayRuntime(
+                GatewayConfig(f"http://127.0.0.1:{server.server_port}", "test-key", "test-token", "test-chat",
+                              Path(directory) / "gateway.sqlite"),
+                sender=lambda _message: None,
+            )
+            self.addCleanup(runtime.outbox._db.close)
+            runtime.event_cursor = '["v2","1","expired"]'
+            hub_cursor = runtime.hub.live_cursor()
+
+            runtime._poll_events()
+            self.assertEqual(runtime.event_cursor, "")
+            runtime._poll_events()
+
+            self.assertEqual(len(requests), 2)
+            self.assertIn("after=%5B%22v2%22%2C%221%22%2C%22expired%22%5D", requests[0])
+            self.assertIn("after=&limit=200", requests[1])
+            self.assertEqual(runtime.event_cursor, "cursor-next")
+            published, resync = runtime.hub.events_after(hub_cursor)
+            self.assertFalse(resync)
+            self.assertEqual([item[1]["id"] for item in published], ["evt-next"])
+            self.assertEqual(runtime.outbox._db.execute("SELECT dedupe_key FROM telegram_outbox").fetchall(),
+                             [("event:evt-next",)])
+
+>>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
 
 if __name__ == "__main__":
     unittest.main()

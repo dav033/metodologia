@@ -143,10 +143,12 @@ def _snapshot(handler) -> None:
             last_activity = run.get("updated_at")
         tasks = []
         for task in run["tasks"]:
-            review = next((a for a in reversed(task["history"]) if a.get("state") == "rejected"), None)
+            review = next((a for a in reversed(task["history"])
+                           if a.get("state") in {"failed", "rejected"}), None)
             current = task.get("attempt")
             tasks.append({"id": task["id"], "title": task["title"], "state": task["state"],
-                          "activeAttempt": live._attempt(current) if current and current.get("live") else None,
+                          "activeAttempt": live._attempt(current) if current and
+                          (current.get("live") or current.get("state") in {"failed", "rejected"}) else None,
                           "reviewAttempt": live._attempt(review),
                           "history": [live._attempt(a) for a in task["history"]]})
         runs.append({"id": run["run"], "project": run["project"], "req": run["req_id"],
@@ -159,9 +161,72 @@ def _snapshot(handler) -> None:
                                     if active else None),
                      "lastActivityAt": last_activity, "tasks": tasks})
     plans, rounds, decisions = [], [], []
+<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
     for row in bt_plans_api.plans_payload(root):
         project, req = row["project"], row["req_id"]
         try:
+||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
+    try:
+        for summary in bt_plans_api.plans_payload(root):
+            project, req = summary["project"], summary["req_id"]
+            try:
+                status = bt_plans_api.status_of(root, project, req)
+            except (OSError, ValueError, bt_plans_api.PlanError):
+                continue
+            plan = status.get("plan") if isinstance(status.get("plan"), dict) else {}
+            plan_tasks = []
+            for milestone in status.get("milestones", []):
+                for task in milestone.get("tasks", []):
+                    current = task.get("attempt")
+                    plan_tasks.append({"id": task["id"], "title": task.get("title"),
+                                       "state": task.get("state", "pending"),
+                                       "acceptanceCriteria": task.get("acceptance_criteria", []),
+                                       "activeAttempt": live._attempt(current) if current and current.get("live") else None,
+                                       "history": [live._attempt(attempt) for attempt in task.get("history", [])]})
+            plans.append({"id": plan.get("plan_id") or f"{project}/{req}", "project": project, "req": req,
+                          "title": summary.get("title"),
+                          "state": plan.get("status") or summary.get("run_status") or "unknown",
+                          "revision": plan.get("revision"), "updatedAt": summary.get("updated_at"),
+                          "tasks": plan_tasks})
+            decisions.extend({"id": item["id"], "project": project, "req": req,
+                              "task": item.get("task"), "title": item.get("title"),
+                              "what": item.get("what"), "evidence": item.get("evidence", []),
+                              "options": item.get("options", []), "recommended": item.get("recommended"),
+                              "unskippable": item.get("unskippable"), "state": item.get("state", "open"),
+                              "revision": item.get("revision")}
+                             for item in status.get("decisions", []) if isinstance(item, dict))
+=======
+    try:
+        for summary in bt_plans_api.plans_payload(root):
+            project, req = summary["project"], summary["req_id"]
+            try:
+                status = bt_plans_api.status_of(root, project, req)
+            except (OSError, ValueError, bt_plans_api.PlanError):
+                continue
+            plan = status.get("plan") if isinstance(status.get("plan"), dict) else {}
+            plan_tasks = []
+            for milestone in status.get("milestones", []):
+                for task in milestone.get("tasks", []):
+                    current = task.get("attempt")
+                    plan_tasks.append({"id": task["id"], "title": task.get("title"),
+                                       "state": task.get("state", "pending"),
+                                       "acceptanceCriteria": task.get("acceptance_criteria", []),
+                                       "activeAttempt": live._attempt(current) if current and
+                                       (current.get("live") or current.get("state") in {"failed", "rejected"}) else None,
+                                       "history": [live._attempt(attempt) for attempt in task.get("history", [])]})
+            plans.append({"id": plan.get("plan_id") or f"{project}/{req}", "project": project, "req": req,
+                          "title": summary.get("title"),
+                          "state": plan.get("status") or summary.get("run_status") or "unknown",
+                          "revision": plan.get("revision"), "updatedAt": summary.get("updated_at"),
+                          "tasks": plan_tasks})
+            decisions.extend({"id": item["id"], "project": project, "req": req,
+                              "task": item.get("task"), "title": item.get("title"),
+                              "what": item.get("what"), "evidence": item.get("evidence", []),
+                              "options": item.get("options", []), "recommended": item.get("recommended"),
+                              "unskippable": item.get("unskippable"), "state": item.get("state", "open"),
+                              "revision": item.get("revision")}
+                             for item in status.get("decisions", []) if isinstance(item, dict))
+>>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
             rdir = bt_plans_api.req_dir(root, project, req)
             status = bt_plans_api.status_of(root, project, req)
         except bt_plans_api.PlanError:

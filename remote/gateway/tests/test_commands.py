@@ -217,6 +217,34 @@ class CommandRelayHttpTests(unittest.TestCase):
             "precondition": {"state": "running"},
         })
 
+<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
+||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
+<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
+=======
+    def test_decision_and_round_answers_are_translated_at_http_entrypoint(self):
+        decision_status, decision = self.post("/api/remote/v1/commands", {
+            "schemaVersion": 1, "idempotencyKey": "decision-command-key-0001",
+            "type": "answer-decision", "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
+            "precondition": {"state": "open"}, "requestId": "T2:1", "option": "retry", "reason": "Retry",
+        })
+        self.assertEqual((decision_status, decision["status"]), (200, "OK"))
+        decision_ledger = self.laptop.post_json.call_args.args[1]
+        self.assertEqual(decision_ledger["command"], "answer-decision")
+        self.assertEqual(decision_ledger["params"], {"request_id": "T2:1", "option": "retry", "reason": "Retry"})
+        self.assertEqual(decision_ledger["precondition"], {"state": "open"})
+
+        round_status, round_result = self.post("/api/remote/v1/commands", {
+            "schemaVersion": 1, "idempotencyKey": "round-command-key-0001",
+            "type": "answer-round", "target": {"kind": "round", "project": "demo", "req": "REQ-027", "roundId": "2"},
+            "precondition": {"state": "open"}, "round": 2, "answer": {"q1": {"text": "Keep scope"}},
+        })
+        self.assertEqual((round_status, round_result["status"]), (200, "OK"))
+        round_ledger = self.laptop.post_json.call_args.args[1]
+        self.assertEqual(round_ledger["command"], "answer-round")
+        self.assertEqual(round_ledger["params"], {"round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+        self.assertEqual(round_ledger["precondition"], {"state": "open"})
+
+>>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
     def test_authenticated_challenge_http_relay_supports_confirmed_command(self):
         self.laptop.post_json.side_effect = [
             {"challengeId": "laptop-challenge-000001", "expiresIn": 120},

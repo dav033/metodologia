@@ -184,7 +184,7 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
             rejected_task = snapshot["runs"][0]["tasks"][1]
             self.assertEqual(rejected_task["state"], "rejected")
-            self.assertIsNone(rejected_task["activeAttempt"])
+            self.assertEqual(rejected_task["activeAttempt"]["id"], "A-rejected")
             self.assertEqual(rejected_task["reviewAttempt"]["id"], "A-rejected")
             self.assertFalse(rejected_task["reviewAttempt"]["live"])
             self.assertEqual(rejected_task["history"][0]["id"], "A-rejected")

@@ -387,6 +387,29 @@ class EntryPointTests(LedgerBase):
         saved = json.loads(decisions.answers_path(rdir).read_text(encoding="utf-8").splitlines()[0])
         self.assertEqual((saved["request"], saved["option"], saved["by"]), (request["id"], "retry", "remote"))
 
+    def test_route_post_answers_open_round_using_round_state_precondition(self):
+        import bt_rounds
+
+        _bt_core, rdir, _harness = self.real_run()
+        round_path = bt_rounds.new_round(rdir, {
+            "title": "Scope choice",
+            "questions": [{"id": "q1", "text": "Keep scope?", "type": "choice",
+                           "options": [{"key": "yes", "label": "Yes"}]}],
+        })
+        round_data = bt_rounds.load(round_path)
+        actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
+        self.assertEqual(actual, {"state": "open", "revision": None})
+        body = req(command="answer-round", params={"round": round_data["round"],
+                                                    "answers": {"q1": {"text": "yes"}}},
+                   precondition={"state": actual["state"]})
+
+        status, response = self.post_real(body)
+
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        saved = bt_rounds.load(round_path)
+        self.assertEqual(saved["status"], "answered")
+        self.assertEqual(saved["answers"], {"q1": {"text": "yes"}})
+
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
         status, body = self.post(req())
