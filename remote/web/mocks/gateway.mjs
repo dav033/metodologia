@@ -105,7 +105,7 @@ export async function createMockGatewayServer() {
             send(nextResponse.status, nextResponse.body);
             return;
           }
-          server.commands.push(command);
+          server.commands.push({ ...command, requestMarker: request.headers["x-flow-request"] });
           server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "accepted" });
           send(202, { commandId: "mock-command-v1", status: "accepted", idempotencyKey: command.idempotencyKey });
         } catch {
