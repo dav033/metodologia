@@ -52,9 +52,16 @@ def _mobile_run(run: dict) -> dict:
     """Translate the live API vocabulary to the stable mobile snapshot v1 contract."""
     attempts = [task.get("attempt") for task in run.get("tasks", []) if task.get("attempt")]
     active = next((attempt for attempt in attempts if attempt.get("live")), None)
+    def task_attempt(task: dict) -> dict | None:
+        attempt = task.get("attempt")
+        if isinstance(attempt, dict) and (attempt.get("live") or task.get("state") == "failed"):
+            return attempt
+        return None
+
     return {**run, "req": run.get("req_id"), "state": run.get("status"),
             "activeAttempt": active, "lastSeenAt": run.get("updated_at"),
-            "tasks": [{**task, "activeAttempt": task.get("attempt")} for task in run.get("tasks", [])]}
+            "tasks": [{**task, "activeAttempt": task_attempt(task)}
+                      for task in run.get("tasks", [])]}
 
 
 def _shared_now_items() -> list[dict]:
@@ -376,8 +383,8 @@ def route_get(handler) -> None:
             events.extend(remote_events.from_snapshot(_snapshot_runs(), rounds,
                                                        quotas=bt_quota_live.read_all_live(),
                                                        commands=commands.Ledger().rows()))
-            if after and all(event["cursor"] != after for event in events):
-                return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
+            # Snapshot-derived decisions and rounds are ephemeral. Once resolved, their
+            # cursor can disappear; page() safely resumes at the oldest retained event.
             page, cursor, has_more = remote_events.page(events, after, limit)
             return _json(handler, remote_events.redact({"events": page, "nextCursor": cursor, "hasMore": has_more}))
         if path == f"{PREFIX}/commands":

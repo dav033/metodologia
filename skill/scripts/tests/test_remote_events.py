@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
 import bt_remote_api
 import bt_remote_events
 
@@ -129,6 +130,50 @@ class RemoteEventsTests(unittest.TestCase):
         self.assertEqual(handler.status, 200)
         self.assertNotIn(marker, handler.body)
 
+    def test_real_events_route_resumes_when_ephemeral_event_cursor_disappears(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/events?after=evt_" + "a" * 64
+        rows = [{"remote_type": "run.finished", "id": "retained", "at": "2026-10-20T12:00:00Z",
+                 "run": "demo/REQ-001"}]
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_live_api.flow_events", return_value=(rows, [], {})), \
+                patch.object(bt_remote_api, "_plans", return_value=[]), \
+                patch.object(bt_remote_api, "_snapshot_runs", return_value=[]), \
+                patch.object(bt_remote_api, "_planning_detail", return_value=([], [])), \
+                patch("bt_quota_live.read_all_live", return_value=[]), \
+                patch("bt_remote_commands.Ledger.rows", return_value=[]):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertEqual(json.loads(handler.body)["events"][0]["id"], bt_remote_events.from_flow(rows[0])["id"])
+
+    def test_gateway_resets_an_expired_cursor_and_delivers_events(self):
+        from app import create_runtime
+        from config import GatewayConfig
+        from upstream import UpstreamResponseError
+        from tempfile import TemporaryDirectory
+
+        class Laptop:
+            def __init__(self):
+                self.calls = []
+            def events(self, after):
+                self.calls.append(after)
+                if after:
+                    raise UpstreamResponseError(400, {"code": "INVALID_CURSOR"})
+                return {"events": [{"id": "next", "type": "run.finished", "dedupeKey": "next"}],
+                        "nextCursor": "fresh"}
+
+        with TemporaryDirectory() as directory:
+            laptop = Laptop()
+            runtime = create_runtime(GatewayConfig("http://localhost", "key", "token", "chat",
+                                                   Path(directory) / "gateway.db"), laptop=laptop,
+                                     sender=lambda _message: None)
+            runtime.event_cursor = "expired"
+            runtime._poll_events()
+            self.assertEqual(laptop.calls, ["expired", ""])
+            self.assertEqual(runtime.event_cursor, "fresh")
+            self.assertEqual(runtime.stream.after("0")[0][1]["id"], "next")
+            runtime.outbox._db.close()
+
     def test_real_get_route_projects_flow_bus_attempt_events_without_remote_type(self):
         row = {"v": 1, "seq": "m1:17", "ord": "0000000000000001.000000:m1:0000000017",
                "at": "2026-10-19T12:00:00.000+00:00", "run": "demo/REQ-001", "task": "T1",
@@ -155,7 +200,7 @@ class RemoteEventsTests(unittest.TestCase):
         replay = get_events()
         self.assertEqual(len(first), 1)
         self.assertEqual(first[0]["type"], "attempt.failed")
-        self.assertEqual(first[0]["target"], {"run": "demo/REQ-001", "task": "T1"})
+        self.assertEqual(first[0]["target"], {"run": "demo/REQ-001", "task": "T1", "attemptId": "attempt-1"})
         self.assertEqual(first[0]["data"], row["data"])
         self.assertEqual([event["id"] for event in first], [event["id"] for event in replay])
 

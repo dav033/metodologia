@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
 import bt_remote_api
 KEY = "test-gateway-key-0123456789"
 
@@ -161,6 +162,33 @@ class RemoteApiTests(unittest.TestCase):
         self.assertEqual(payload["runs"][0]["activeAttempt"]["id"], "a1")
         self.assertEqual(payload["rounds"][0]["round"], 2)
         self.assertEqual(payload["decisionRequests"][0]["id"], "d1")
+
+    def test_failed_task_snapshot_keeps_non_live_attempt_for_review_and_page_anchor(self):
+        from notifications import notification_for_event
+        attempt = {"id": "attempt-old", "state": "failed", "live": False}
+        run = {"run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "status": "running",
+               "tasks": [{"id": "T1", "state": "failed", "attempt": attempt, "history": [attempt]}]}
+        class Handler:
+            headers = {"Authorization": f"Bearer {KEY}"}
+            path = "/api/remote/v1/snapshot"
+            def send(self, body, status, content_type): self.response = status, body
+        handler = Handler()
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY}), \
+                patch.object(bt_remote_api, "_runs", return_value=[run]), \
+                patch.object(bt_remote_api, "_shared_now_items", return_value=[]), \
+                patch.object(bt_remote_api, "_plans", return_value=[]), \
+                patch.object(bt_remote_api, "_planning_detail", return_value=([], [])):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.response[0], 200)
+        projected = json.loads(handler.response[1])["runs"][0]["tasks"][0]
+        self.assertEqual(projected["activeAttempt"]["id"], "attempt-old")
+        self.assertEqual(projected["history"][0]["id"], "attempt-old")
+        page = (SCRIPTS.parents[1] / "remote" / "web" / "src" / "app" / "page.tsx").read_text(encoding="utf-8")
+        self.assertIn('id={`attempt-${encodeURIComponent(review.attemptId)}`}', page)
+        self.assertIn("task.history?.at(-1)", page)
+        notification = notification_for_event({"id": "event", "dedupeKey": "event", "type": "attempt.failed",
+                                               "target": {"req": "REQ-001", "attemptId": "attempt-old"}})
+        self.assertIn("#attempt-attempt-old", notification[1])
 
     def test_snapshot_handles_large_fixture_within_one_second(self):
         fixture_runs = [{"run": f"demo/REQ-{index:04d}", "updated_at": None, "tasks": []}

@@ -59,6 +59,8 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
     target = {"run": str(row.get("run", ""))}
     if row.get("task"):
         target["task"] = str(row["task"])
+    if row.get("attempt"):
+        target["attemptId"] = str(row["attempt"])
     identity = str(row.get("id") or row.get("ord") or row.get("seq") or "")
     data = row.get("data") if isinstance(row.get("data"), dict) else {}
     if kind == "attempt.failed" and not (data.get("retry_exhausted") or row.get("retry_exhausted")):
@@ -103,7 +105,8 @@ def from_snapshot(runs: list[dict[str, Any]], rounds: list[dict[str, Any]], *, q
                 events.append(project_event("attempt.blocked", event_id, at, task_target,
                                             {"state": "blocked", "reason": task.get("reason")}))
             if task.get("retry_exhausted") is True or task.get("retries_remaining") == 0:
-                events.append(project_event("attempt.failed", event_id + ":exhausted", at, task_target,
+                events.append(project_event("attempt.failed", event_id + ":exhausted", at,
+                                            {**task_target, **({"attemptId": event_id} if attempt.get("id") else {})},
                                             {"retry_exhausted": True, "attempts": task.get("attempts"),
                                              "retries_remaining": task.get("retries_remaining")}))
             if task.get("state") == "blocked" and "quota" in str(task.get("reason", "")).lower():

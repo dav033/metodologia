@@ -92,6 +92,9 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
     run = status["run"]
     if not isinstance(run, dict):
         return None
+    if command in {"answer-decision", "answer-round"}:
+        import bt_remote_preconditions
+        return bt_remote_preconditions.planning_target_state(rdir, command, params)
     # Plan commands pin the current plan revision; run commands pin the revision used by the live run.
     plan = status.get("plan") or {}
     revision = (run.get("plan_ref") or {}).get("revision")
