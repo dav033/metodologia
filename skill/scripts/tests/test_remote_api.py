@@ -181,6 +181,7 @@ class RemoteApiTests(unittest.TestCase):
             self.assertIn(b"A-live", live._now_frame(base))
             self.assertEqual(read_now.call_count, 1)
 
+<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
     def test_keyed_read_models_are_served_by_the_real_http_listener(self):
         with tempfile.TemporaryDirectory() as root:
             import bt_remote_commands as commands
@@ -236,6 +237,40 @@ class RemoteApiTests(unittest.TestCase):
                 self.assertEqual(json.loads(body)["code"], "ROUTES_UNAVAILABLE")
             finally:
                 self.stop_server(process)
+||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
+=======
+    def test_snapshot_route_keeps_non_live_failed_attempt_for_review(self):
+        import bt_remote_api
+
+        class Handler:
+            path = "/api/remote/v1/snapshot"
+            headers = {"Authorization": "Bearer test-key"}
+
+            def send(self, body, status, content_type):
+                self.body, self.status, self.content_type = body, status, content_type
+
+        handler = Handler()
+        timestamp = dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc).timestamp()
+        run_summary = {
+            "run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "title": "Demo",
+            "status": "failed", "active": False, "updated_at": "2026-10-20T10:01:00Z",
+            "tasks": [{"id": "T1", "title": "Failed task", "state": "failed",
+                       "attempt": {"id": "A-failed", "state": "failed", "live": False,
+                                   "updated_at": timestamp},
+                       "history": [{"id": "A-failed", "state": "failed", "live": False,
+                                    "updated_at": timestamp, "failure": "verification failed"}]}],
+        }
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_live_api.run_summaries", return_value=[run_summary]), \
+                patch("bt_live_api.now_frame_data", return_value={"items": []}):
+            bt_remote_api.route_get(handler)
+
+        task = json.loads(handler.body)["runs"][0]["tasks"][0]
+        self.assertEqual(handler.status, 200)
+        self.assertIsNone(task["activeAttempt"])
+        self.assertEqual(task["reviewAttempt"]["id"], "A-failed")
+        self.assertEqual(task["history"][0]["id"], "A-failed")
+>>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
 
 
 if __name__ == "__main__":

@@ -8,7 +8,13 @@ import { FailureReviewPanel } from "./failure-review-panel";
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string; roundId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
 type FailureReview = { attemptId: string };
+<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
 type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; reopenedForRecovery?: boolean; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string }; reviewAttempt?: FailureReview; history?: { id: string; state?: string }[] };
+||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
+type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string }; reviewAttempt?: FailureReview };
+=======
+type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string }; reviewAttempt?: FailureReview; history?: { id: string; state?: string }[] };
+>>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type RoundQuestion = { id: string; text: string; type: "choice" | "open"; options?: { key: string; label: string }[]; recommended?: string; why?: string; suggested?: string };
 type Round = { project: string; req: string; round: number; id?: string; title?: string; intro?: string; coverage?: string; status: string; revision?: number; questions: RoundQuestion[] };
@@ -396,7 +402,13 @@ export default function HomePage() {
   const renderTask = (task: Task, run: Run) => {
     const plan = snapshot?.plans.find((item) => item.project === run.project && item.req === run.req);
     const nextRevision = (plan?.revision ?? run.revision ?? 0) + 1;
+<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
     const canRecover = task.state === "recovering" || task.reopenedForRecovery === true;
+||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
+    const canRecover = task.state === "recovering";
+=======
+    const canRecover = task.state === "recovering";
+>>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
     const reviewAttemptId = task.reviewAttempt?.attemptId ?? [...(task.history ?? [])]
       .reverse().find((attempt) => attempt.state === "failed" || attempt.state === "rejected")?.id;
     return <article className="task-card" key={`${run.req}-${task.id}`}>
