@@ -361,10 +361,12 @@ class RemoteHandler(Handler):
         return self.remote_api_post()
 
     def remote_api_get(self):
+        """Dispatch to the versioned API; never fall through to panel routes."""
         import bt_remote_api
         return bt_remote_api.route_get(self)
 
     def remote_api_post(self):
+        """Dispatch to the versioned API; never fall through to panel controls."""
         import bt_remote_api
         return bt_remote_api.route_post(self)
 

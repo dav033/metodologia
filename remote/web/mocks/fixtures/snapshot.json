@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-19T12:00:00Z",
+  "cursor": "mock-cursor-v1",
+  "runs": [
+    {
+      "project": "lotm",
+      "req": "REQ-027",
+      "state": "running",
+      "revision": 3,
+      "updatedAt": "2026-10-19T11:59:45Z",
+      "lastSeenAt": "2026-10-19T11:59:45Z",
+      "activeAttempt": { "id": "att-0008", "state": "running", "updatedAt": "2026-10-19T11:59:45Z" },
+      "tasks": [
+        { "id": "T15a", "title": "Login screen and runs list", "state": "running", "revision": 1, "acceptanceCriteria": ["Shows state and last sign of life", "No horizontal scroll at 360 px"], "activeAttempt": { "id": "att-0008", "state": "running", "updatedAt": "2026-10-19T11:59:45Z" } },
+        { "id": "T15c", "title": "Failure review screen", "state": "rejected", "revision": 2, "reviewAttempt": { "id": "att-rejected-fixture", "live": false } }
+      ]
+    },
+    {
+      "project": "pictures",
+      "req": "REQ-018",
+      "state": "paused",
+      "revision": 7,
+      "updatedAt": "2026-10-19T11:55:00Z",
+      "lastSeenAt": "2026-10-19T11:50:00Z",
+      "tasks": [{ "id": "T2", "title": "Recover stalled work", "state": "blocked", "revision": 4, "acceptanceCriteria": ["Task can be reopened"] }]
+    }
+  ],
+  "plans": [
+    { "id": "plan-027", "project": "lotm", "req": "REQ-027", "state": "awaiting-review", "revision": 2, "updatedAt": "2026-10-19T11:45:00Z", "acceptanceCriteria": ["Owner reviews and approves the plan"] }
+  ],
+  "rounds": [],
+  "quotas": [],
+  "laptop": { "online": true, "checkedAt": "2026-10-19T11:59:50Z" }
+}

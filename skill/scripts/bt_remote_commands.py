@@ -13,8 +13,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable
 
-COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision",
-            "approve", "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
+COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve", "launch",
+            "answer-decision", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
 CHALLENGED = frozenset(("revise", "approve", "launch", "cancel-plan", "delete-plan"))
 ORIGINS = ("web", "telegram")
 PRECONDITION_FIELDS = ("state", "revision", "updatedAt")   # what a precondition may pin on the target
@@ -27,7 +27,7 @@ _CHALLENGE_SCHEMA = """CREATE TABLE IF NOT EXISTS challenges (
     challenge_hash TEXT PRIMARY KEY, target TEXT NOT NULL, expires_at REAL NOT NULL, used_at TEXT)"""
 
 Handler = Callable[[str, dict], Any]            # (target, params) -> JSON-able result; raises on failure
-StateReader = Callable[[str], "dict | None"]    # target -> {"state", "revision", "updatedAt"} or None if absent
+StateReader = Callable[..., "dict | None"]        # target[, command, params] -> current precondition fields
 
 
 def default_path() -> Path:
@@ -36,7 +36,7 @@ def default_path() -> Path:
 
 
 def _run_target(target: str) -> tuple[str, str, Path]:
-    """Resolve the stable remote run target `project/REQ-NNN` beneath the configured bitácora root."""
+    """Resolve a stable project/requirement target under the configured Bitácora root."""
     import bt_core
     import bt_plans_api
 
@@ -47,40 +47,72 @@ def _run_target(target: str) -> tuple[str, str, Path]:
     return project, req, rdir
 
 
-def target_state(target: str) -> dict | None:
-    """Return the same public run-state vocabulary used by the plans read model."""
+def _member_state(rdir: Path, command: str, params: dict) -> str | None:
+    """Read the state of the task or attempt that a task-scoped command mutates."""
+    import sqlite3
+
+    import bt_scheduler_adapter as adapter
+
+    if command == "cancel-attempt":
+        kind, key = "attempts", params.get("attempt")
+    else:
+        kind, key = "tasks", params.get("task")
+    if not isinstance(key, str) or not key:
+        return None
+    path = adapter.run_db_path(rdir).resolve()
+    try:
+        conn = sqlite3.connect(f"{path.as_uri()}?mode=ro", uri=True, timeout=5)
+        try:
+            row = conn.execute("SELECT doc FROM state WHERE id = 1").fetchone()
+            doc = json.loads(row[0]) if row else {}
+        finally:
+            conn.close()
+    except (sqlite3.Error, TypeError, ValueError, OSError):
+        return None
+    member = (doc.get(kind) or {}).get(key)
+    return member.get("state") if isinstance(member, dict) else None
+
+
+TASK_SCOPED = frozenset(("retry", "reopen", "cancel-attempt"))
+
+
+def target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
+    """Resolve current run/member state for the ledger's optimistic precondition."""
     import bt_core
     import bt_plans_api
+    import bt_scheduler_decisions
 
     try:
         project, req, rdir = _run_target(target)
         status = bt_plans_api.status_of(bt_core.ROOT, project, req)
     except (ValueError, bt_plans_api.PlanError, OSError):
         return None
-    run = status["run"]
-    if not isinstance(run, dict):
-        return None
-    # Plan commands pin the current plan revision; run commands pin the revision used by the live run.
+    run = status.get("run") or {}
     plan = status.get("plan") or {}
-    revision = (run.get("plan_ref") or {}).get("revision")
-    if run.get("authority") == "scheduler":
-        return {"state": run.get("status"), "revision": revision if revision is not None else plan.get("revision"),
-                "updatedAt": run.get("updated_at"), "plan_state": plan.get("status"),
-                "plan_revision": plan.get("revision"), "plan_updatedAt": _plan_updated_at(rdir)}
-    try:
-        updated_at = dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
-            timespec="microseconds")
-    except OSError:
-        updated_at = None
-    return {"state": plan.get("status"), "revision": plan.get("revision"), "updatedAt": updated_at}
-
-
-def _plan_updated_at(rdir: Path) -> str | None:
-    try:
-        return dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
-            timespec="microseconds")
-    except OSError:
+    if command in {"approve", "launch", "answer-round", "cancel-plan", "delete-plan"}:
+        try:
+            updated_at = dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
+                timespec="microseconds")
+        except OSError:
+            updated_at = None
+        return {"state": plan.get("status"), "revision": plan.get("revision"), "updatedAt": updated_at}
+    if run.get("authority") != "scheduler":
         return None
+    revision = (run.get("plan_ref") or {}).get("revision")
+    state = run.get("status")
+    params = params or {}
+    if command in TASK_SCOPED:
+        member_state = _member_state(rdir, command, params)
+        if member_state is None:
+            return None
+        state = member_state
+    elif command == "answer-decision":
+        request_id = params.get("request_id")
+        if not isinstance(request_id, str) or not request_id:
+            return None
+        is_open = any(item.get("id") == request_id for item in bt_scheduler_decisions.open_requests(rdir))
+        state = "open" if is_open else "closed"
+    return {"state": state, "revision": revision, "updatedAt": run.get("updated_at")}
 
 
 def dispatch_run_command(command: str, target: str, params: dict) -> Any:
@@ -98,15 +130,13 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
         return {"messages": [ops.resume(project, req, rdir)]}
     if command in {"cancel-attempt", "reopen", "revise"}:
         if command == "cancel-attempt":
-            attempt = params.get("attempt")
-            if not isinstance(attempt, str) or not attempt:
+            target_id = params.get("attempt")
+            if not isinstance(target_id, str) or not target_id:
                 raise ValueError("cancel-attempt requiere params.attempt.")
-            target_id = attempt
         elif command == "reopen":
-            task = params.get("task")
-            if not isinstance(task, str) or not task:
+            target_id = params.get("task")
+            if not isinstance(target_id, str) or not target_id:
                 raise ValueError("reopen requiere params.task.")
-            target_id = task
         else:
             target_id = ""
         messages = ops.apply(project, req, rdir, command, target_id, reason)
@@ -140,11 +170,11 @@ def dispatch_handlers() -> dict[str, Handler]:
 
 
 def dispatch_plan_command(command: str, target: str, params: dict) -> Any:
-    """Apply a plan or round command through the existing plan and round APIs."""
+    """Apply plan lifecycle and round answers through the existing file APIs."""
     project, req, rdir = _run_target(target)
+    import bt_core
     import bt_plans_api as plans
     import bt_rounds
-    import bt_core
 
     reason = params.get("reason", "")
     if not isinstance(reason, str):
@@ -152,23 +182,36 @@ def dispatch_plan_command(command: str, target: str, params: dict) -> Any:
     if command in {"approve", "launch"}:
         return {"message": plans.run_plan(bt_core.ROOT, project, req, command, by="remote")}
     if command == "cancel-plan":
-        return {"message": plans.cancel_plan(bt_core.ROOT, project, req, params["typed_req"], by="remote")}
+        return {"message": plans.cancel_plan(bt_core.ROOT, project, req, params.get("typed_req", ""), by="remote")}
     if command == "delete-plan":
-        return {"message": plans.delete_plan(bt_core.ROOT, project, req, params["typed_req"], by="remote",
-                                                reason=reason)}
+        return {"message": plans.delete_plan(bt_core.ROOT, project, req, params.get("typed_req", ""), by="remote",
+                                               reason=reason)}
     if command == "answer-round":
         round_number, answers = params.get("round"), params.get("answers")
         if not isinstance(round_number, int) or isinstance(round_number, bool) or round_number < 1:
             raise ValueError("answer-round requiere params.round.")
         if not isinstance(answers, dict) or not answers:
             raise ValueError("answer-round requiere params.answers.")
-        f = rdir / "rounds" / f"round-{round_number:02d}.json"
-        data = bt_rounds.load(f)
+        path = rdir / "rounds" / f"round-{round_number:02d}.json"
+        data = bt_rounds.load(path)
         if data.get("status") != "open" or data.get("round") != round_number:
             raise ValueError("La ronda ya no está abierta.")
-        return {"round": round_number, "status": "answered",
-                "answers": bt_rounds.answer_round(f, answers, "remote")["answers"]}
+        saved = bt_rounds.answer_round(path, answers, "remote")
+        return {"round": round_number, "status": saved["status"], "answers": saved["answers"]}
     raise ValueError(f"Comando no implementado por el despachador de planes: {command}.")
+
+
+def _read_state(state_of: StateReader, req: dict) -> dict | None:
+    """Pass command context to readers that support member-scoped preconditions."""
+    import inspect
+
+    try:
+        takes_context = len(inspect.signature(state_of).parameters) >= 3
+    except (TypeError, ValueError):
+        takes_context = False
+    if takes_context:
+        return state_of(req["target"], req["command"], req["params"])
+    return state_of(req["target"])
 
 
 def _now() -> str:
@@ -177,7 +220,7 @@ def _now() -> str:
 
 def fingerprint(req: dict) -> str:
     """Digest of everything that changes the effect: a reused key with other content must not replay."""
-    body = {k: v for k, v in req.items() if k != "idempotency_key"}
+    body = {k: req[k] for k in ("command", "target", "params", "precondition")}
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
 
 
@@ -239,17 +282,17 @@ class Ledger:
             return [dict(r) for r in db.execute("SELECT * FROM commands ORDER BY received_at, rowid")]
 
     def issue_challenge(self, target: str, typed_req: str, now: float | None = None) -> dict:
-        """Issue a one-use target-bound challenge after the caller types the target REQ id."""
-        match = re.fullmatch(r"[^/]+/(REQ-\d+)", target)
+        """Issue a one-use, target-bound challenge after the caller types the target REQ id."""
+        match = re.fullmatch(r"[^/]+/(REQ-\d+)", target) if isinstance(target, str) else None
         if not match or not isinstance(typed_req, str) or typed_req.strip().upper() != match.group(1):
             raise ValueError("Escribe el id REQ del objetivo para confirmar.")
         challenge_id = secrets.token_urlsafe(32)
         challenge_hash = hashlib.sha256(challenge_id.encode()).hexdigest()
-        issued_at = dt.datetime.now(dt.timezone.utc).timestamp() if now is None else now
+        issued = dt.datetime.now(dt.timezone.utc).timestamp() if now is None else now
         with self._db() as db:
-            db.execute("DELETE FROM challenges WHERE expires_at<? OR used_at IS NOT NULL", (issued_at,))
+            db.execute("DELETE FROM challenges WHERE expires_at<? OR used_at IS NOT NULL", (issued,))
             db.execute("INSERT INTO challenges (challenge_hash,target,expires_at,used_at) VALUES (?,?,?,NULL)",
-                       (challenge_hash, target, issued_at + 120))
+                       (challenge_hash, target, issued + 120))
         return {"challengeId": challenge_id, "target": target, "expiresIn": 120}
 
     @staticmethod
@@ -295,10 +338,19 @@ class Ledger:
         if req["command"] not in handlers:
             return {"status": "REJECTED", "code": "COMMAND_NOT_IMPLEMENTED", "stored": False,
                     "message": "El comando aún no tiene ejecutor."}
-        fp, key = fingerprint(req), req["idempotency_key"]
+        confirmation = req.get("confirmation")
+        current = None
+        try:
+            current = _read_state(state_of, req)
+        except Exception as exc:
+            return {"status": "FAILED", "code": "STATE_UNAVAILABLE", "stored": False,
+                    "message": str(exc)[:300]}
+        if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
+            return {"status": "REJECTED", "code": "STALE_PRECONDITION", "stored": False,
+                    "message": "La precondición del objetivo ya no se cumple."}
         with _LOCK:
-            # Existing keys replay before challenge validation: retrying a timed-out request remains safe.
             with self._db() as db:
+                db.execute("BEGIN IMMEDIATE")
                 row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
                 if row is not None:
                     if row["fingerprint"] != fp:
@@ -308,38 +360,15 @@ class Ledger:
                         return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "replayed": True,
                                 "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
                     return self._result(row, True)
-            try:
-                current = state_of(req["target"])
-            except Exception as exc:
-                return {"status": "FAILED", "code": "STATE_UNAVAILABLE", "stored": False,
-                        "message": str(exc)[:300]}
-            if req["command"] in {"approve", "launch", "cancel-plan", "delete-plan"} and current:
-                current = {**current, "state": current.get("plan_state", current.get("state")),
-                           "revision": current.get("plan_revision", current.get("revision")),
-                           "updatedAt": current.get("plan_updatedAt", current.get("updatedAt"))}
-            if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
-                return {"status": "REJECTED", "code": "STALE_PRECONDITION", "stored": False,
-                        "message": "La precondición del objetivo ya no se cumple."}
-            with self._db() as db:
-                db.execute("BEGIN IMMEDIATE")
-                row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
-                if row is not None:
-                    if row["fingerprint"] != fp:
-                        return {"status": "REJECTED", "code": "IDEMPOTENCY_CONFLICT", "stored": False,
-                                "message": "La clave ya se usó con un contenido distinto."}
-                    return self._result(row, True) if row["status"] != "PENDING" else {
-                        "status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "replayed": True,
-                        "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
                 if req["command"] in CHALLENGED:
-                    challenge = req["confirmation"]
-                    challenge_id = challenge.get("challenge_id", challenge.get("challengeId"))
-                    typed_req = challenge.get("typed_req", challenge.get("typedReq", "")).strip().upper()
-                    expected = req["target"].rsplit("/", 1)[-1].upper()
+                    challenge_id = confirmation.get("challenge_id", confirmation.get("challengeId"))
+                    typed_req = confirmation.get("typed_req", confirmation.get("typedReq", "")).strip().upper()
+                    expected_req = req["target"].rsplit("/", 1)[-1].upper()
                     challenge_hash = hashlib.sha256(challenge_id.encode()).hexdigest()
-                    record = db.execute("SELECT * FROM challenges WHERE challenge_hash=?", (challenge_hash,)).fetchone()
+                    challenge = db.execute("SELECT * FROM challenges WHERE challenge_hash=?", (challenge_hash,)).fetchone()
                     now = dt.datetime.now(dt.timezone.utc).timestamp()
-                    if (typed_req != expected or not record or record["target"] != req["target"]
-                            or record["used_at"] is not None or record["expires_at"] < now):
+                    if (typed_req != expected_req or challenge is None or challenge["target"] != req["target"]
+                            or challenge["used_at"] is not None or challenge["expires_at"] < now):
                         return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False,
                                 "message": "El desafío falta, venció, ya se usó o no corresponde al objetivo."}
                     db.execute("UPDATE challenges SET used_at=? WHERE challenge_hash=? AND used_at IS NULL",
@@ -348,12 +377,11 @@ class Ledger:
                            (key, fp, req["command"], req["target"], req["origin"],
                             json.dumps(req["params"], sort_keys=True), json.dumps(req["precondition"], sort_keys=True),
                             _now()))
-            effective = dict(req["params"])
+            params = dict(req["params"])
             if req["command"] in CHALLENGED:
-                effective["typed_req"] = req["confirmation"].get(
-                    "typed_req", req["confirmation"].get("typedReq"))
+                params["typed_req"] = confirmation.get("typed_req", confirmation.get("typedReq"))
             try:
-                outcome = handlers[req["command"]](req["target"], effective)
+                outcome = handlers[req["command"]](req["target"], params)
                 status, code = "OK", None
             except Exception as exc:
                 outcome, status, code = {"error": str(exc)[:300]}, "FAILED", "EFFECT_FAILED"
@@ -362,3 +390,18 @@ class Ledger:
                            (status, code, json.dumps(outcome, ensure_ascii=False), _now(), key))
                 row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
             return self._result(row, False)
+
+    @staticmethod
+    def _apply(req: dict, handlers: dict[str, Handler], state_of: StateReader) -> tuple[str, str | None, Any]:
+        try:
+            current = _read_state(state_of, req)
+        except Exception as exc:
+            return "FAILED", "STATE_UNAVAILABLE", {"error": str(exc)[:300]}
+        if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
+            return "REJECTED", "STALE_PRECONDITION", {"expected": req["precondition"],
+                                                       "actual": {k: (current or {}).get(k) for k in PRECONDITION_FIELDS}}
+        try:
+            result = handlers[req["command"]](req["target"], req["params"])
+        except Exception as exc:
+            return "FAILED", "EFFECT_FAILED", {"error": str(exc)[:300]}
+        return "OK", None, result

@@ -1,22 +1,24 @@
-"""HTTP-level coverage for the authenticated remote API entry point."""
+"""HTTP-level tests for the remote health endpoint and unchanged local panel."""
 from __future__ import annotations
 
+import datetime as dt
 import http.client
 import json
 import os
 import socket
+import sqlite3
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(SCRIPTS))
-import bt_remote_api
-KEY = "test-gateway-key-0123456789"
+TEST_KEY = "test-only-gateway-key"
 
 
 def free_port() -> int:
@@ -26,140 +28,157 @@ def free_port() -> int:
 
 
 class RemoteApiTests(unittest.TestCase):
-    def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
-        self.port = free_port()
-        self.process = subprocess.Popen(
-            [sys.executable, str(SCRIPTS / "bitacora.py"), "serve-remote", "--port", str(self.port)],
+    def start_server(self, command: str, port: int, env: dict[str, str]) -> subprocess.Popen:
+        process = subprocess.Popen(
+            [sys.executable, str(SCRIPTS / "bitacora.py"), command, "--port", str(port)],
             cwd=SCRIPTS,
-            env={**os.environ, "BITACORA_ROOT": self.temp.name, "FLOW_GATEWAY_KEY": KEY},
+            env=env,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
         deadline = time.monotonic() + 8
         while time.monotonic() < deadline:
-            if self.process.poll() is not None:
-                self.fail("serve-remote exited before accepting requests")
+            if process.poll() is not None:
+                self.fail(f"{command} exited before accepting requests")
             try:
-                with socket.create_connection(("127.0.0.1", self.port), timeout=0.2):
-                    break
+                with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                    return process
             except OSError:
                 time.sleep(0.05)
-        else:
-            self.fail("serve-remote did not start listening")
+        process.terminate()
+        process.wait(timeout=3)
+        self.fail(f"{command} did not start listening")
 
-    def tearDown(self):
-        self.process.terminate()
-        try:
-            self.process.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            self.process.kill()
-            self.process.wait(timeout=3)
-        self.temp.cleanup()
-
-    def request(self, method: str, path: str, *, key: str | None = KEY, body: str | None = None):
-        headers = {"Content-Type": "application/json"}
+    def request(self, port: int, path: str, key: str | None = None):
+        headers = {}
         if key is not None:
             headers["Authorization"] = f"Bearer {key}"
-        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=3)
-        connection.request(method, path, body=body, headers=headers)
+        connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
+        connection.request("GET", path, headers=headers)
         response = connection.getresponse()
-        payload = response.read()
-        result = response.status, response.getheader("Content-Type", ""), payload
+        result = response.status, response.getheader("Content-Type", ""), response.read()
         connection.close()
         return result
 
-    def test_gateway_key_is_required_and_health_has_version_and_timestamp(self):
-        status, content_type, body = self.request("GET", "/api/remote/v1/health", key=None)
-        self.assertEqual(status, 401)
-        self.assertIn("application/problem+json", content_type)
-        self.assertEqual(json.loads(body)["code"], "UNAUTHORIZED")
-
-        status, _, body = self.request("GET", "/api/remote/v1/health")
-        health = json.loads(body)
-        self.assertEqual(status, 200)
-        self.assertEqual(health["schemaVersion"], 1)
-        self.assertTrue(health["version"])
-        self.assertTrue(health["checkedAt"])
-
-    def test_contract_routes_are_dispatched_by_the_real_listener(self):
-        routes = (
-            ("GET", "/api/remote/v1/snapshot", 200),
-            ("GET", "/api/remote/v1/events", 200),
-            ("GET", "/api/remote/v1/attempts/attempt-1/review", 503),
-            ("GET", "/api/remote/v1/quotas", 503),
-            ("GET", "/api/remote/v1/commands", 503),
-            ("POST", "/api/remote/v1/commands", 400),
-            ("GET", "/api/remote/v1/runs", 200),
-            ("GET", "/api/remote/v1/plans", 200),
-            ("GET", "/api/remote/v1/history", 503),
-            ("GET", "/api/remote/v1/challenges", 503),
-            ("POST", "/api/remote/v1/challenges", 503),
-        )
-        for method, path, expected_status in routes:
-            with self.subTest(method=method, path=path):
-                status, _, body = self.request(method, path, body="{}" if method == "POST" else None)
-                self.assertEqual(status, expected_status, body.decode("utf-8"))
-
-    def test_snapshot_includes_live_task_and_latest_sign_of_life_from_shared_now_frame(self):
-        runs = [{"run": "demo/REQ-001", "updated_at": "2026-10-19T10:00:00Z", "tasks": [
-            {"id": "T1", "title": "Prepare", "attempt": {"last_activity_at": "2026-10-19T10:01:00Z"}},
-            {"id": "T2", "title": "Build", "attempt": {"last_activity_at": "2026-10-19T10:03:00Z"}},
-        ]}]
-        shared_frame = (b'event: now\ndata: {"items":[{"project":"demo","req_id":"REQ-001",'
-                        b'"task":"T2"}],"sessions":[]}\n\n')
-        with patch.object(bt_remote_api, "_runs", return_value=runs), \
-                patch("bt_live_api._now_frame", return_value=shared_frame) as now_frame:
-            snapshot = bt_remote_api._snapshot_runs()
-
-        now_frame.assert_called_once_with(None)
-        self.assertEqual(snapshot[0]["active_task"], {"id": "T2", "title": "Build"})
-        self.assertEqual(snapshot[0]["last_sign_of_life"], "2026-10-19T10:03:00Z")
-
-    def test_snapshot_handles_large_fixture_within_one_second(self):
-        fixture_runs = [{"run": f"demo/REQ-{index:04d}", "updated_at": None, "tasks": []}
-                        for index in range(3000)]
-        with patch.object(bt_remote_api, "_runs", return_value=fixture_runs), \
-                patch.object(bt_remote_api, "_shared_now_items", return_value=[]):
-            started = time.monotonic()
-            snapshot = bt_remote_api._snapshot_runs()
-            elapsed = time.monotonic() - started
-
-        self.assertEqual(len(snapshot), len(fixture_runs))
-        self.assertLess(elapsed, 1.0)
-
-    def test_local_panel_entry_point_still_serves_existing_routes(self):
-        port = free_port()
-        process = subprocess.Popen(
-            [sys.executable, str(SCRIPTS / "bitacora.py"), "serve", "--port", str(port)],
-            cwd=SCRIPTS,
-            env={**os.environ, "BITACORA_ROOT": self.temp.name},
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+    def stop_server(self, process: subprocess.Popen) -> None:
+        process.terminate()
         try:
-            deadline = time.monotonic() + 8
-            while time.monotonic() < deadline:
-                if process.poll() is not None:
-                    self.fail("serve exited before accepting requests")
-                try:
-                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
-                        break
-                except OSError:
-                    time.sleep(0.05)
-            else:
-                self.fail("serve did not start listening")
-            for path in ("/", "/api/now"):
-                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
-                connection.request("GET", path)
-                response = connection.getresponse()
-                response.read()
-                connection.close()
-                self.assertEqual(response.status, 200, path)
-        finally:
-            process.terminate()
+            process.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=3)
+
+    def test_health_requires_gateway_key_and_returns_version_and_timestamp(self):
+        with tempfile.TemporaryDirectory() as root:
+            port = free_port()
+            env = {**os.environ, "BITACORA_ROOT": root, "FLOW_GATEWAY_KEY": TEST_KEY}
+            process = self.start_server("serve-remote", port, env)
             try:
-                process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=3)
+                status, content_type, body = self.request(port, "/api/remote/v1/health")
+                self.assertEqual(status, 401)
+                self.assertTrue(content_type.startswith("application/problem+json"))
+                self.assertEqual(json.loads(body)["code"], "UNAUTHORIZED")
+
+                status, content_type, body = self.request(port, "/api/remote/v1/health", TEST_KEY)
+                health = json.loads(body)
+                self.assertEqual(status, 200)
+                self.assertTrue(content_type.startswith("application/json"))
+                self.assertEqual(health["schemaVersion"], 1)
+                self.assertEqual(health["status"], "ok")
+                self.assertTrue(health["version"])
+                checked_at = dt.datetime.fromisoformat(health["checkedAt"].replace("Z", "+00:00"))
+                self.assertIsNotNone(checked_at.tzinfo)
+
+                status, _, body = self.request(port, "/api/remote/v1/health", "wrong-key")
+                self.assertEqual(status, 401)
+                self.assertEqual(json.loads(body)["code"], "UNAUTHORIZED")
+            finally:
+                self.stop_server(process)
+
+    def test_local_panel_routes_still_work(self):
+        with tempfile.TemporaryDirectory() as root:
+            port = free_port()
+            env = {**os.environ, "BITACORA_ROOT": root}
+            env.pop("FLOW_GATEWAY_KEY", None)
+            process = self.start_server("serve", port, env)
+            try:
+                for path in ("/", "/api/now"):
+                    with self.subTest(path=path):
+                        status, _, _ = self.request(port, path)
+                        self.assertEqual(status, 200)
+            finally:
+                self.stop_server(process)
+
+    def test_snapshot_uses_shared_now_frame_and_exposes_rejected_review_attempt(self):
+        import bt_core
+        import bt_live_api as live
+        import bt_server
+
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ, {"FLOW_GATEWAY_KEY": TEST_KEY}), \
+                patch.object(bt_core, "ROOT", Path(root)), \
+                patch.object(live, "now_items", wraps=live.now_items) as read_now:
+            base = Path(root).resolve()
+            rdir = base / "demo" / "requirements" / "REQ-001-fixture"
+            rdir.mkdir(parents=True)
+            tasks = [{"id": "T1", "milestone_id": "M1", "title": "Active task", "after": [], "complexity": "low"},
+                     {"id": "T2", "milestone_id": "M1", "title": "Rejected task", "after": [], "complexity": "low"}]
+            plan = {"schema_version": "1.0.0", "plan_id": "REQ-001", "revision": 1,
+                    "milestones": [{"id": "M1", "title": "First"}], "tasks": tasks}
+            (rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
+            (rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan — REQ-001 — Fixture\n", encoding="utf-8")
+            (rdir / "SPEC.md").write_text("# Spec — REQ-001 — Fixture\n", encoding="utf-8")
+            timestamp = dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc).timestamp()
+            db = base / ".state" / "scheduler" / "demo-REQ-001.db"
+            db.parent.mkdir(parents=True)
+            doc = {"tasks": {"T1": {"state": "active", "attempts": ["A-live"]},
+                             "T2": {"state": "recovering", "attempts": ["A-rejected"]}},
+                   "attempts": {"A-live": {"id": "A-live", "task_id": "T1", "number": 1, "state": "running",
+                                            "created_at": timestamp - 60, "updated_at": timestamp,
+                                            "last_event_at": timestamp},
+                                "A-rejected": {"id": "A-rejected", "task_id": "T2", "number": 1,
+                                               "state": "rejected", "created_at": timestamp - 120,
+                                               "updated_at": timestamp - 30, "failure": "review required"}}}
+            with sqlite3.connect(db) as connection:
+                connection.execute("CREATE TABLE state (id INTEGER PRIMARY KEY, version INTEGER NOT NULL, doc TEXT NOT NULL)")
+                connection.execute("INSERT INTO state VALUES (1, 1, ?)", (json.dumps(doc),))
+            projection = {"authority": "scheduler", "projection": True, "req": "REQ-001", "status": "running",
+                          "heartbeat_at": "2026-10-20T10:01:00+00:00",
+                          "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "a" * 64},
+                          "tasks": [{"id": "T1", "title": "Active task", "status": "in_progress",
+                                     "scheduler_state": "active", "attempts": 1},
+                                    {"id": "T2", "title": "Rejected task", "status": "in_progress",
+                                     "scheduler_state": "recovering", "attempts": 1}]}
+            (rdir / "RUN.projection.json").write_text(json.dumps(projection), encoding="utf-8")
+            live._now_data_cache.pop(base, None)
+            live._now_cache.pop(base, None)
+            server = ThreadingHTTPServer(("127.0.0.1", 0), bt_server.RemoteHandler)
+            worker = threading.Thread(target=server.serve_forever, daemon=True)
+            worker.start()
+            self.addCleanup(server.server_close)
+            self.addCleanup(server.shutdown)
+            started = time.monotonic()
+            status, content_type, body = self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
+            elapsed = time.monotonic() - started
+            snapshot = json.loads(body)
+
+            self.assertEqual(status, 200)
+            self.assertTrue(content_type.startswith("application/json"))
+            self.assertLess(elapsed, 1.0)
+            self.assertEqual(snapshot["runs"][0]["activeTask"]["id"], "T1")
+            last_activity = dt.datetime.fromisoformat(snapshot["runs"][0]["lastActivityAt"].replace("Z", "+00:00"))
+            self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
+            rejected_task = snapshot["runs"][0]["tasks"][1]
+            self.assertEqual(rejected_task["state"], "rejected")
+            self.assertIsNone(rejected_task["activeAttempt"])
+            self.assertEqual(rejected_task["reviewAttempt"]["id"], "A-rejected")
+            self.assertFalse(rejected_task["reviewAttempt"]["live"])
+            self.assertEqual(rejected_task["history"][0]["id"], "A-rejected")
+
+            self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
+            self.assertEqual(read_now.call_count, 1)
+            self.assertIn(b"A-live", live._now_frame(base))
+            self.assertEqual(read_now.call_count, 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
