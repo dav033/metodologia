@@ -2,6 +2,7 @@
 import json
 import os
 import plistlib
+import socket
 import subprocess
 import sys
 import tempfile
@@ -170,6 +171,7 @@ class PlatformTests(unittest.TestCase):
 
     def test_web_server_with_its_systemd_unit_is_restarted_there_not_spawned_loose(self):
         with patch.object(bt_server, "_unit_enabled", return_value=True), \
+                patch.object(bt_server, "_server_stale", return_value=True), \
                 patch.object(bt_server, "is_running", return_value=False), \
                 patch.object(bt_server.subprocess, "run") as run, patch.object(bt_server.subprocess, "Popen") as spawn:
             bt_server.ensure_server(bt_server.DEFAULT_PORT)
@@ -177,10 +179,66 @@ class PlatformTests(unittest.TestCase):
         self.assertEqual(run.call_args.args[0], ["systemctl", "--user", "restart", bt_server.WEB_UNIT])
         spawn.assert_not_called()
         with patch.object(bt_server, "_unit_enabled", return_value=True), \
-                patch.object(bt_server, "is_running", return_value=True), patch.object(bt_server, "_stale", return_value=False), \
+                patch.object(bt_server, "is_running", return_value=True), patch.object(bt_server, "_server_stale", return_value=False), \
                 patch.object(bt_server.subprocess, "run") as run:
             bt_server.ensure_server(bt_server.DEFAULT_PORT)
         run.assert_not_called()                                              # current code: leave the unit alone
+
+    def test_socket_activation_unit_is_recognized_as_the_panel_owner(self):
+        results = [
+            subprocess.CompletedProcess([], 1, stdout="disabled\n", stderr=""),
+            subprocess.CompletedProcess([], 0, stdout="enabled-runtime\n", stderr=""),
+        ]
+        with patch.object(bt_server, "platform", return_value="linux"), \
+                patch.object(bt_server.shutil, "which", return_value="systemctl"), \
+                patch.object(bt_server.subprocess, "run", side_effect=results) as run:
+            self.assertTrue(bt_server._unit_enabled())
+        self.assertEqual(run.call_args_list[0].args[0][-1], bt_server.WEB_UNIT)
+        self.assertEqual(run.call_args_list[1].args[0][-1], bt_server.WEB_SOCKET_UNIT)
+
+    def test_systemd_status_failure_never_falls_back_to_a_loose_server(self):
+        with patch.object(bt_server, "platform", return_value="linux"), \
+                patch.object(bt_server.shutil, "which", return_value="systemctl"), \
+                patch.object(bt_server.subprocess, "run", side_effect=FileNotFoundError("systemctl unavailable")), \
+                patch.object(bt_server, "is_running", return_value=False), \
+                patch.object(bt_server.subprocess, "Popen") as spawn:
+            with self.assertRaises(FileNotFoundError):
+                bt_server.ensure_server(bt_server.DEFAULT_PORT)
+        spawn.assert_not_called()
+
+    def test_missing_systemctl_preserves_the_loose_startup_path(self):
+        with patch.object(bt_server, "platform", return_value="linux"), \
+                patch.object(bt_server.shutil, "which", return_value=None), \
+                patch.object(bt_server, "is_running", return_value=False), \
+                patch.object(bt_server.subprocess, "Popen") as spawn:
+            bt_server.ensure_server(bt_server.DEFAULT_PORT)
+        spawn.assert_called_once()
+
+    def test_web_server_reload_uses_the_inherited_listener(self):
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.addCleanup(listener.close)
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        address = listener.getsockname()
+        with patch.object(bt_server, "systemd_listener", return_value=listener):
+            httpd = bt_server.create_http_server(address[1])
+        self.addCleanup(httpd.server_close)
+        self.assertEqual(httpd.socket.getsockname(), address)
+        self.assertEqual(httpd.socket.fileno(), listener.fileno())
+
+    def test_systemd_listener_requires_its_activation_environment(self):
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.addCleanup(listener.close)
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        with patch.object(host.sys, "platform", "linux"), \
+                patch.object(host.os, "getpid", return_value=123), \
+                patch.dict(os.environ, {"LISTEN_PID": "123", "LISTEN_FDS": "1"}), \
+                patch.object(host.socket, "fromfd", return_value=listener):
+            self.assertIs(host.systemd_listener(listener.getsockname()[1]), listener)
+        with patch.object(host.sys, "platform", "linux"), \
+                patch.dict(os.environ, {"LISTEN_PID": "999", "LISTEN_FDS": "1"}):
+            self.assertIsNone(host.systemd_listener(listener.getsockname()[1]))
 
     def test_stale_web_server_can_be_stopped_on_posix_without_taskkill(self):
         state = self.root / "state"
