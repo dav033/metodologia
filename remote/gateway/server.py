@@ -18,7 +18,12 @@ from auth import (
     SessionStore,
     cookie_values,
 )
+<<<<<<< 34ab19a2491850919dd1d00647ea1a3883471932
 from stream import StreamHub, format_sse
+||||||| a4dce0b93ae5079f85d1c9469a9fead921b507dd
+=======
+from read_routes import handle_remote_get
+>>>>>>> 592a10ffff06f8904cf34efa124eca7973d62ea2
 from security import RateLimiter, origin_matches
 
 logger = logging.getLogger(__name__)
@@ -57,6 +62,8 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
 
         def do_GET(self) -> None:
             route = urlsplit(self.path)
+            if handle_remote_get(self, service, runtime, route):
+                return
             if route.path in {"/api/auth/login", "/api/auth/github"}:
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.

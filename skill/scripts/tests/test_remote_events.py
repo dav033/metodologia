@@ -42,6 +42,8 @@ class FixtureTests(unittest.TestCase):
     def test_each_notification_kind_has_a_fixture(self):
         fixtures = {
             "attempt.failed": {"runs": [run([{"id": "T1", "title": "Build",
+                                               "state": "blocked", "reason": "attempts_exhausted",
+                                               "attempts_used": 3, "max_attempts": 3,
                                                "attempt": attempt("a1", state="rejected", failure="tests")}])]},
             "attempt.blocked": {"runs": [run([{"id": "T1", "attempt": attempt("a2", state="blocked")}])]},
             "run.finished": {"runs": [run([], status="done")]},
@@ -184,6 +186,34 @@ class RouteTests(unittest.TestCase):
                 bt_remote_api.route_get(handler)
             self.assertEqual(handler.status, 400)
             self.assertEqual(json.loads(handler.body)["code"], code)
+
+    def test_events_route_requires_retry_exhaustion_before_failed_notification(self):
+        handler = Handler()
+        source = run([{"id": "T1", "state": "recovering", "attempts_used": 1, "max_attempts": 3,
+                       "attempt": attempt("a1", state="failed", failure="agent exited") }])
+        transition = {"kind": "state_change", "project": "demo", "req": "REQ-001", "task": "T1",
+                      "id": "transition-1", "at": AT, "data": {"state": "failed", "failure": "agent exited"}}
+        class LedgerStub:
+            def rows(self):
+                return []
+
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_core.ROOT", Path(directory)), \
+                patch("bt_live_api.run_summaries", return_value=[source]), \
+                patch("bt_plans_api.plans_payload", return_value=[]), \
+                patch("bt_live_api.flow_events", return_value=([transition], [], {})), \
+                patch("bt_subscriptions.summary", return_value=[]), \
+                patch("bt_remote_commands.Ledger", LedgerStub):
+            bt_remote_api.route_get(handler)
+            self.assertEqual(handler.status, 200)
+            self.assertFalse(any(event["type"] == "attempt.failed" for event in json.loads(handler.body)["events"]))
+
+            handler = Handler()
+            source["tasks"][0].update(state="blocked", reason="attempts_exhausted", attempts_used=3, max_attempts=3)
+            bt_remote_api.route_get(handler)
+            failed = next(event for event in json.loads(handler.body)["events"] if event["type"] == "attempt.failed")
+            self.assertTrue(failed["data"]["retryExhausted"])
+            self.assertEqual((failed["data"]["attemptsUsed"], failed["data"]["maxAttempts"]), (3, 3))
 
     def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
         # Exercise the route's real feed.collect -> build_events -> page path across polls.
