@@ -99,10 +99,12 @@ export async function createMockGatewayServer() {
           }
           server.receivedCommands.push(command);
           server.commandMarkers.push(request.headers["x-flow-request"]);
-          const nextResponse = server.commandResponses.shift() ?? server.nextCommandResponse;
+          const queuedResponse = server.commandResponses.shift();
+          const nextResponse = queuedResponse ?? server.nextCommandResponse;
           if (nextResponse) {
-            server.nextCommandResponse = null;
-            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+            if (queuedResponse === undefined) server.nextCommandResponse = null;
+            const result = nextResponse.body?.code === "STALE_PRECONDITION" ? "Rechazado: el estado cambió" : "Rechazado";
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result });
             send(nextResponse.status, nextResponse.body);
             return;
           }
