@@ -2,16 +2,29 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import hmac
 import json
 import os
+<<<<<<< 8667b54400fe6702b96dccc827a3ac5fc11d7388
 import sqlite3
+||||||| 039403d5906979e681173b8e75358ed03bfd4711
+=======
+import re
+import sqlite3
+import stat
+import subprocess
+>>>>>>> acf3bd27e2fc38f1693baefdb782c6b849de5fc2
 from urllib.parse import parse_qs, urlparse
 
 import bt_remote_commands as _commands
 
 PREFIX = "/api/remote/v1"
 MAX_BODY = 256 * 1024
+_ATTEMPT_ID = re.compile(r"[A-Za-z0-9._:-]{1,120}\Z")
+_REVIEW_FILE_MAX = 1 << 20
+_REVIEW_OUTPUT_MAX = 256 * 1024
+_REVIEW_DIFF_TIMEOUT = 3
 
 
 def _send_json(handler, payload: dict, status: int, content_type: str = "application/json; charset=utf-8") -> None:
@@ -48,12 +61,25 @@ def route_get(handler) -> None:
     path = _path(handler)
     if path == f"{PREFIX}/snapshot":
         return _snapshot(handler)
+<<<<<<< 8667b54400fe6702b96dccc827a3ac5fc11d7388
     if path in (f"{PREFIX}/commands", f"{PREFIX}/history"):
         return _command_history(handler)
     if path == f"{PREFIX}/quotas":
         return _quotas(handler)
     if path == f"{PREFIX}/routes":
         return _routes(handler)
+||||||| 039403d5906979e681173b8e75358ed03bfd4711
+=======
+    review_match = re.fullmatch(re.escape(f"{PREFIX}/attempts/") + r"([^/]+)/review", path)
+    if review_match:
+        attempt_id = review_match.group(1)
+        if not _ATTEMPT_ID.fullmatch(attempt_id):
+            return _problem(handler, 400, "INVALID_ID", "El identificador del intento no es válido.")
+        review = _failure_review(attempt_id)
+        if review is None:
+            return _problem(handler, 404, "ATTEMPT_NOT_FOUND", "No se encontró el intento fallido.")
+        return _send_json(handler, review, 200)
+>>>>>>> acf3bd27e2fc38f1693baefdb782c6b849de5fc2
     if path == f"{PREFIX}/events":
         import bt_remote_events as feed
         try:
@@ -139,6 +165,7 @@ def _snapshot(handler) -> None:
                                 "runs": runs}, 200)
 
 
+<<<<<<< 8667b54400fe6702b96dccc827a3ac5fc11d7388
 def _query(handler) -> dict[str, str]:
     return {key: values[0] for key, values in parse_qs(urlparse(handler.path).query).items()}
 
@@ -210,6 +237,222 @@ _COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "CONFIRMATION_REQUIRED": 4
                    "COMMAND_NOT_IMPLEMENTED": 501, "STALE_PRECONDITION": 409,
                    "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
                    "EFFECT_FAILED": 500, "ROUTE_UNAVAILABLE": 409, "STATE_UNAVAILABLE": 503}
+||||||| 039403d5906979e681173b8e75358ed03bfd4711
+HANDLERS: dict = {}  # Filled by the dispatch layer in T5a/T5b.
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
+                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
+                   "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503, "CONFIRMATION_REQUIRED": 409}
+=======
+def _read_review_file(path, limit: int = _REVIEW_FILE_MAX) -> bytes | None:
+    """Read a bounded regular artifact without following symlinks or blocking on special files."""
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError:
+        return None
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            return None
+        with os.fdopen(fd, "rb", closefd=False) as stream:
+            data = stream.read(limit + 1)
+    except OSError:
+        return None
+    finally:
+        os.close(fd)
+    return data if len(data) <= limit else None
+
+
+def _tail_review_file(path, limit: int = _REVIEW_OUTPUT_MAX) -> bytes | None:
+    """Read at most the final `limit` bytes of a regular artifact without following symlinks."""
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError:
+        return None
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            return None
+        size = os.lseek(fd, 0, os.SEEK_END)
+        os.lseek(fd, max(0, size - limit), os.SEEK_SET)
+        with os.fdopen(fd, "rb", closefd=False) as stream:
+            return stream.read(limit)
+    except OSError:
+        return None
+    finally:
+        os.close(fd)
+
+
+def _review_executor_attempt(rdir, attempt_id: str):
+    """Find the attempt directory only after its executor ledger confirms the exact id."""
+    import bt_scheduler_adapter as scheduler
+
+    db = scheduler.run_db_path(rdir)
+    roots = db.parent.parent / "executor"
+    try:
+        candidates = list(roots.glob(f"{db.stem}-r*"))
+    except OSError:
+        return None
+    for root in candidates:
+        if root.is_symlink() or not root.is_dir():
+            continue
+        ledger = root / "ledger.db"
+        if ledger.is_symlink() or not ledger.is_file():
+            continue
+        try:
+            connection = sqlite3.connect(f"{ledger.resolve().as_uri()}?mode=ro", uri=True, timeout=0.2)
+            try:
+                row = connection.execute("SELECT dirname,request FROM attempts WHERE attempt_id=?",
+                                         (attempt_id,)).fetchone()
+            finally:
+                connection.close()
+        except (sqlite3.Error, OSError):
+            continue
+        if not row:
+            continue
+        try:
+            request = json.loads(row[1])
+        except (TypeError, ValueError):
+            continue
+        dirname = row[0]
+        if not isinstance(request, dict) or request.get("attempt_id") != attempt_id \
+                or not isinstance(dirname, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", dirname):
+            continue
+        attempts_dir = root / "attempts"
+        attempt_dir = attempts_dir / dirname
+        if attempts_dir.is_symlink() or attempt_dir.is_symlink():
+            continue
+        try:
+            resolved_root = root.resolve(strict=True)
+            resolved_dir = attempt_dir.resolve(strict=True)
+            if resolved_dir.is_relative_to(resolved_root) and resolved_dir.is_dir():
+                return resolved_dir
+        except OSError:
+            continue
+    return None
+
+
+def _review_quality_result(rdir, attempt_id: str) -> tuple[dict | None, dict[str, bytes]]:
+    """Read the correlated M6 result and its referenced outputs through a read-only connection."""
+    import bt_run_stores
+
+    db = bt_run_stores.paths(rdir).get("m6")
+    if not db or not db.is_file() or db.is_symlink():
+        return None, {}
+    try:
+        connection = sqlite3.connect(f"{db.resolve().as_uri()}?mode=ro", uri=True, timeout=0.2)
+        connection.row_factory = sqlite3.Row
+        try:
+            rows = connection.execute(
+                "SELECT substr(request_json,1,65537) AS request_json,"
+                "substr(result_json,1,1048577) AS result_json FROM requests "
+                "WHERE result_json IS NOT NULL AND json_extract(request_json,'$.attempt_id')=? "
+                "ORDER BY created_at DESC LIMIT 8",
+                (attempt_id,)).fetchall()
+            for row in rows:
+                if len(row["request_json"] or "") > 65536 or len(row["result_json"] or "") > _REVIEW_FILE_MAX:
+                    continue
+                request = json.loads(row["request_json"])
+                result = json.loads(row["result_json"])
+                if not isinstance(request, dict) or request.get("attempt_id") != attempt_id \
+                        or not isinstance(result, dict) or not isinstance(result.get("checks"), list):
+                    continue
+                output: dict[str, bytes] = {}
+                for check in result["checks"]:
+                    if not isinstance(check, dict):
+                        continue
+                    for key in ("stdout_ref", "stderr_ref"):
+                        reference = check.get(key)
+                        if not isinstance(reference, str) or not re.fullmatch(r"m6://artifact/[a-f0-9]{64}", reference):
+                            continue
+                        digest = reference.rsplit("/", 1)[-1]
+                        artifact = connection.execute("SELECT coalesce(substr(content,1,?),x'') FROM artifacts WHERE digest=?",
+                                                      (_REVIEW_OUTPUT_MAX + 1, digest)).fetchone()
+                        if artifact and artifact[0] is not None and len(artifact[0]) <= _REVIEW_OUTPUT_MAX \
+                                and hashlib.sha256(bytes(artifact[0])).hexdigest() == digest:
+                            output[reference] = bytes(artifact[0])
+                return result, output
+        finally:
+            connection.close()
+    except (sqlite3.Error, OSError, UnicodeError, ValueError, TypeError):
+        return None, {}
+    return None, {}
+
+
+def _review_verification(result: dict | None, artifacts: dict[str, bytes]) -> dict:
+    checks = []
+    for check in (result or {}).get("checks", []):
+        if not isinstance(check, dict):
+            continue
+        stdout_ref, stderr_ref = check.get("stdout_ref"), check.get("stderr_ref")
+        stdout = artifacts.get(stdout_ref, b"").decode("utf-8", errors="replace") if isinstance(stdout_ref, str) else ""
+        stderr = artifacts.get(stderr_ref, b"").decode("utf-8", errors="replace") if isinstance(stderr_ref, str) else ""
+        checks.append({"command": check.get("command") if isinstance(check.get("command"), str) else None,
+                       "exitCode": check.get("exit_code"), "output": (stdout + stderr)[:_REVIEW_OUTPUT_MAX]})
+    failed = next((check for check in checks if check.get("exitCode") != 0), None)
+    selected = failed or (checks[0] if checks else {})
+    return {"command": selected.get("command"), "output": selected.get("output", "")}
+
+
+def _review_diff(attempt_dir) -> dict:
+    if attempt_dir is None:
+        return {"stat": None}
+    handoff = attempt_dir / "handoff"
+    if handoff.is_symlink():
+        return {"stat": None}
+    manifest_raw = _read_review_file(handoff / "manifest.json")
+    try:
+        manifest = json.loads(manifest_raw.decode("utf-8")) if manifest_raw else {}
+    except (UnicodeError, ValueError):
+        manifest = {}
+    patch = _read_review_file(handoff / "changes.patch", _REVIEW_OUTPUT_MAX)
+    stat_text = None
+    if patch is not None:
+        try:
+            result = subprocess.run(["git", "apply", "--stat"], input=patch, capture_output=True,
+                                    timeout=_REVIEW_DIFF_TIMEOUT, check=False)
+            if result.returncode == 0:
+                stat_text = result.stdout.decode("utf-8", errors="replace").strip()[:4000]
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    changed = manifest.get("changed") if isinstance(manifest, dict) else None
+    files = [item for item in changed[:200] if isinstance(item, str)] if isinstance(changed, list) else []
+    total = manifest.get("changed_total") if isinstance(manifest, dict) else None
+    if stat_text is None and isinstance(total, int) and not isinstance(total, bool) and total >= 0:
+        stat_text = f"{total} files changed" if total != 1 else "1 file changed"
+    return {"stat": stat_text, "files": files}
+
+
+def _failure_review(attempt_id: str) -> dict | None:
+    """Build the failure read model from Scheduler facts and the attempt's durable evidence."""
+    import bt_attempt_facts
+    import bt_live_api as live
+    import bt_remote_events
+
+    for _, rdir in live.runs(None):
+        facts = bt_attempt_facts.attempt_facts(rdir)
+        found = next(((task_id, row) for task_id, rows in facts.items()
+                      for row in rows if row.get("attempt") == attempt_id), None)
+        if found is None:
+            continue
+        _, attempt = found
+        if attempt.get("state") not in {"failed", "rejected"} and not attempt.get("failure"):
+            return None
+        attempt_dir = _review_executor_attempt(rdir, attempt_id)
+        result, artifacts = _review_quality_result(rdir, attempt_id)
+        log_bytes = _tail_review_file(attempt_dir / "output.tail") if attempt_dir else None
+        if log_bytes is None and attempt_dir:
+            log_bytes = _tail_review_file(attempt_dir / "output.log")
+        log_tail = (log_bytes or b"").decode("utf-8", errors="replace").splitlines()[-200:]
+        review = {"attemptId": attempt_id, "cause": attempt.get("failure") or attempt.get("state") or "unknown",
+                  "verification": _review_verification(result, artifacts), "diff": _review_diff(attempt_dir),
+                  "logTail": "\n".join(log_tail)}
+        return bt_remote_events.redact(review)
+    return None
+
+
+HANDLERS: dict = {}  # Filled by the dispatch layer in T5a/T5b.
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
+                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
+                   "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503, "CONFIRMATION_REQUIRED": 409}
+>>>>>>> acf3bd27e2fc38f1693baefdb782c6b849de5fc2
 
 
 def _target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
