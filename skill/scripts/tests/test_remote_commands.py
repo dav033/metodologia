@@ -154,6 +154,9 @@ class EntryPointTests(LedgerBase):
     def route_ledger(self):
         return rc.Ledger(Path(self.temp.name) / ".state" / "remote" / "commands.db")
 
+    def challenge(self):
+        return 201, self.route_ledger().issue_challenge("demo/REQ-001", "REQ-001")
+
     def real_run(self, *, blocked=False):
         import bt_core
 
@@ -196,10 +199,11 @@ class EntryPointTests(LedgerBase):
         with patch.object(bt_core, "ROOT", Path(self.temp.name)):
             return rc.target_state(target, command, params)
 
-    def post(self, body):
+    def post(self, body, *, use_default_handlers=True):
         h = FakeHandler(json.dumps(body).encode() if not isinstance(body, bytes) else body)
+        handlers = {**bt_remote_api.HANDLERS, **self.handlers} if use_default_handlers else self.handlers
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
-                patch.dict(bt_remote_api.HANDLERS, self.handlers, clear=True), \
+                patch.dict(bt_remote_api.HANDLERS, handlers, clear=True), \
                 patch.object(bt_remote_api, "_target_state", lambda t: self.state):
             bt_remote_api.route_post(h)
         return h.sent
@@ -226,7 +230,6 @@ class EntryPointTests(LedgerBase):
         harness.verdict("T1", accepted=False)
         self.assertEqual(harness.state("T1"), "recovering")
         scheduler_adapter.write_projection(rdir, harness.core)
-
         body = req(command="reopen", target="demo/REQ-001", params={"task": "T1", "reason": "fixed"},
                    precondition={"state": "rejected", "revision": 1})
         actual = self.real_target_state(body["target"], body["command"], body["params"])
@@ -244,14 +247,84 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((status, response["status"]), (200, "OK"), response)
         self.assertEqual(harness.state("T1"), "ready")
         transitions = [event for event in harness.core.audit_log() if event.kind == "task_transition"]
-        self.assertTrue(any(
-            event.detail.get("from") == "recovering" and event.detail.get("to") == "ready"
-            for event in transitions
-        ))
+        self.assertTrue(any(event.detail.get("from") == "recovering" and event.detail.get("to") == "ready"
+                            for event in transitions))
         row = self.route_ledger().rows()[0]
         self.assertEqual(json.loads(row["precondition"]), {"state": "rejected", "revision": 1})
         self.assertEqual(json.loads(row["outcome"]),
                          {"messages": ["owner stopped: 0 process(es)", "T1: reopened", "watchdog started"]})
+
+    def test_route_post_reopens_authoritative_recovering_task_from_rejected_review(self):
+        self.state = {"state": "recovering", "revision": 3, "updatedAt": "t1"}
+        self.handlers["reopen"] = self._pause
+        status, body = self.post(req(command="reopen", precondition={"state": "rejected", "revision": 3}))
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(len(self.calls), 1)
+        row = self.route_ledger().rows()[0]
+        self.assertEqual(json.loads(row["precondition"]), {"state": "rejected", "revision": 3})
+
+    def test_route_post_without_executor_is_not_ok(self):
+        self.handlers.clear()
+        status, body = self.post(req(command="reopen"), use_default_handlers=False)
+        self.assertEqual((status, body["code"]), (501, "COMMAND_NOT_IMPLEMENTED"))
+        self.assertEqual(self.route_ledger().rows(), [])
+
+    def test_route_post_requires_confirmation_for_edit_brief(self):
+        self.handlers.clear()
+        status, body = self.post(req(command="edit-brief"))
+        self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
+        self.assertEqual(self.route_ledger().rows(), [])
+
+    def test_real_entrypoint_refuses_launch_without_valid_challenge(self):
+        status, body = self.post(req(command="launch"))
+        self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
+        invalid = req(command="launch", idempotency_key="key-00000002",
+                      confirmation={"challengeId": "not-issued", "typedReq": "REQ-001"})
+        status, body = self.post(invalid)
+        self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
+        self.assertEqual(self.calls, [])
+        self.assertEqual(self.route_ledger().rows(), [])
+
+    def test_approve_launches_once_and_replay_does_not_launch_again(self):
+        import bt_plans_api
+
+        self.state = {"state": "review", "revision": 4, "updatedAt": "t1"}
+        issued_status, issued = self.challenge()
+        self.assertEqual((issued_status, issued["expiresIn"]), (201, 120))
+        command = req(command="approve", precondition={"state": "review", "revision": 4},
+                      confirmation={"challengeId": issued["challengeId"], "typedReq": "REQ-001"})
+        calls = []
+        with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.object(bt_plans_api, "run_plan", side_effect=lambda *a, **kw: calls.append((a, kw)) or "launched"):
+            first, replay = self.post(command), self.post(command)
+        self.assertEqual((first[0], first[1]["status"], replay[0], replay[1]["replayed"]),
+                         (200, "OK", 200, True))
+        self.assertEqual((len(calls), len(self.route_ledger().rows())), (1, 1))
+
+    def test_challenge_is_single_use_for_different_idempotency_key(self):
+        _, issued = self.challenge()
+        command = req(command="approve", precondition={"state": "running", "revision": 3},
+                      confirmation={"challengeId": issued["challengeId"], "typedReq": "REQ-001"})
+        with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch("bt_plans_api.run_plan", return_value="launched"):
+            self.assertEqual(self.post(command)[1]["status"], "OK")
+            status, body = self.post({**command, "idempotency_key": "key-00000002"})
+        self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
+
+    def test_answer_round_reaches_round_file_through_real_entrypoint(self):
+        import bt_rounds
+
+        rdir = Path(self.temp.name) / "requirements" / "REQ-001-demo"
+        round_file = rdir / "rounds" / "round-02.json"
+        round_file.parent.mkdir(parents=True)
+        round_file.write_text(json.dumps({"round": 2, "status": "open", "questions": [{"id": "q1"}],
+                                          "answers": {}}), encoding="utf-8")
+        command = req(command="answer-round", params={"round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+        with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)):
+            status, body = self.post(command)
+        saved = bt_rounds.load(round_file)
+        self.assertEqual((status, body["status"], saved["status"], saved["answers"], saved["answered_via"]),
+                         (200, "OK", "answered", {"q1": {"text": "Keep scope"}}, "remote"))
 
     def test_route_post_cancels_attempt_through_real_scheduler_operations(self):
         bt_core, rdir, harness = self.real_run()
@@ -292,12 +365,6 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(harness.state("T1"), "ready")
         saved = json.loads(decisions.answers_path(rdir).read_text(encoding="utf-8").splitlines()[0])
         self.assertEqual((saved["request"], saved["option"], saved["by"]), (request["id"], "retry", "remote"))
-
-    def test_route_post_without_executor_is_not_ok(self):
-        self.handlers.clear()
-        status, body = self.post(req())
-        self.assertEqual((status, body["code"]), (501, "COMMAND_NOT_IMPLEMENTED"))
-        self.assertEqual(self.route_ledger().rows(), [])
 
     def test_route_post_refuses_unknown_command(self):
         status, response = self.post(req(command="delete-everything"))

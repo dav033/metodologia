@@ -432,6 +432,11 @@ def _failure_review(target: str, attempt_id: str) -> dict | None:
               "logTail": "\n".join(log_tail)}
     return bt_remote_events.redact(review)
 
+HANDLERS: dict = _commands.dispatch_handlers()
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
+                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
+                   "EFFECT_FAILED": 500, "ROUTE_UNAVAILABLE": 422, "STATE_UNAVAILABLE": 503,
+                   "CONFIRMATION_REQUIRED": 409}
 
 
 def _target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
