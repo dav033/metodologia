@@ -1,19 +1,26 @@
 """Command ledger: idempotency, preconditions, audit rows; exercised also through bt_remote_api.route_post."""
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import os
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS / "bt_scheduler_core" / "tests"))
 import bt_remote_api
 import bt_remote_commands as rc
+import bt_scheduler_adapter as scheduler_adapter
+import bt_scheduler_core as scheduler_core
+import bt_scheduler_ops
+from support import Harness, indep
 
 KEY = "test-gateway-key-0123456789"
 
@@ -69,6 +76,36 @@ class LedgerTests(LedgerBase):
     def test_missing_target_is_stale(self):
         self.state = None
         self.assertEqual(self.submit(req())["code"], "STALE_PRECONDITION")
+
+    def test_concurrent_commands_recheck_state_under_the_effect_lock(self):
+        start = threading.Barrier(3)
+        entered_states = []
+        results = []
+
+        def effect(target, params):
+            entered_states.append(self.state["state"])
+            self.state["state"] = "paused"
+            return {"done": True}
+
+        handlers = {"pause": effect}
+
+        def submit(key):
+            start.wait()
+            results.append(self.ledger.submit(req(idempotency_key=key), handlers,
+                                              lambda target: dict(self.state)))
+
+        threads = [threading.Thread(target=submit, args=(f"key-concurrent-00{i}",)) for i in (1, 2)]
+        for thread in threads:
+            thread.start()
+        start.wait()
+        for thread in threads:
+            thread.join(timeout=5)
+
+        self.assertTrue(all(not thread.is_alive() for thread in threads), "concurrent submissions did not finish")
+        self.assertCountEqual([result.get("code") or result["status"] for result in results],
+                              ["STALE_PRECONDITION", "OK"])
+        self.assertEqual(entered_states, ["running"])
+        self.assertEqual(len(self.ledger.rows()), 2)
 
     def test_rows_keep_command_target_origin_outcome(self):
         self.submit(req(origin="telegram"))
@@ -148,6 +185,56 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(self.post(req(idempotency_key="key-00000003", params={"a": 1}))[1]["code"], "IDEMPOTENCY_CONFLICT")
         self.assertEqual(self.post(req(command="nope"))[0], 400)
         self.assertEqual(self.post(b"{not json")[0], 400)
+
+    def test_route_post_reopens_rejected_work_through_real_scheduler_operations(self):
+        import bt_core
+
+        rdir = Path(self.temp.name) / "demo" / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True)
+        plan_folder = rdir / scheduler_adapter.REVISIONS
+        plan_folder.mkdir()
+        scheduler_adapter.run_db_path(rdir).parent.mkdir(parents=True)
+        harness = Harness(
+            [indep("T1")], repository=scheduler_core.SqliteRepository(scheduler_adapter.run_db_path(rdir)),
+            plan_id="REQ-001",
+        )
+        digest = hashlib.sha256(harness.text.encode()).hexdigest()
+        (plan_folder / "PLAN.r1.json").write_text(harness.text, encoding="utf-8")
+        manifest = {"schema": 1, "revisions": [
+            {"revision": 1, "sha256": digest, "frozen_at": "2026-10-20T00:00:00+00:00"}
+        ]}
+        (plan_folder / "MANIFEST.json").write_text(json.dumps(manifest), encoding="utf-8")
+        harness.core.step()
+        harness.send("T1", "execution_finished")
+        harness.verdict("T1", accepted=False)
+        self.assertEqual(harness.state("T1"), "recovering")
+
+        def current_state(_target):
+            return {"state": harness.state("T1"), "revision": 1}
+
+        body = req(command="reopen", target="demo/REQ-001", params={"task": "T1", "reason": "fixed"},
+                   precondition={"state": "rejected", "revision": 1})
+        handler = FakeHandler(json.dumps(body).encode())
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(bt_core, "ROOT", Path(self.temp.name)), \
+                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
+                patch.object(bt_remote_api, "_target_state", current_state), \
+                patch.object(bt_scheduler_ops, "stop_owner", return_value=0), \
+                patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"):
+            bt_remote_api.route_post(handler)
+
+        status, response = handler.sent
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        self.assertEqual(harness.state("T1"), "ready")
+        transitions = [event for event in harness.core.audit_log() if event.kind == "task_transition"]
+        self.assertTrue(any(
+            event.detail.get("from") == "recovering" and event.detail.get("to") == "ready"
+            for event in transitions
+        ))
+        row = self.route_ledger().rows()[0]
+        self.assertEqual(json.loads(row["precondition"]), {"state": "rejected", "revision": 1})
+        self.assertEqual(json.loads(row["outcome"]),
+                         {"messages": ["owner stopped: 0 process(es)", "T1: reopened", "watchdog started"]})
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
