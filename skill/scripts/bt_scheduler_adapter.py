@@ -307,6 +307,7 @@ class DecisionAssignmentPort:
                  quality_artifacts: tuple[str | Path, str | Path, str | Path, str | Path, str | Path] | None = None,
                  classification_overlay: Callable[[], dict[str, dict[str, object]]] | None = None):
         self.classification_overlay = classification_overlay
+        self.run_dir: Path | None = None
         if checkpoint not in CHECKPOINTS:
             raise ValueError("unsupported Laya checkpoint")
         if quality_artifacts is None:
@@ -387,6 +388,11 @@ class DecisionAssignmentPort:
                 view.verification, view.shared_resources, view.expected_paths,
             )
             candidates = decision_sources._candidate_rows(self.project, kind, classifications, requested_at)
+            pinned = False
+            if self.run_dir is not None:
+                import bt_route_pins
+                pinned = bt_route_pins.get(self.run_dir, view.id) is not None
+                candidates = bt_route_pins.narrow(self.run_dir, view.id, candidates)
             candidates = tuple(
                 replace(candidate, quota_status="unknown")
                 if candidate.provider in {"claude", "codex", "antigravity"} and
@@ -409,6 +415,12 @@ class DecisionAssignmentPort:
                 (candidate.route_id, candidate.account_ref): candidate
                 for candidate in decision_request.candidates
             }
+            if pinned and not candidates:
+                # A stale pin pauses this task rather than silently assigning it elsewhere.
+                decision_requests.pop()
+                candidates_by_task.pop(view.id, None)
+                preserve_baseline_by_task.pop(view.id, None)
+                quota_evidence_by_task.pop(view.id, None)
         if not decision_requests:
             return ()
 

@@ -433,6 +433,30 @@ def _failure_review(target: str, attempt_id: str) -> dict | None:
     return bt_remote_events.redact(review)
 
 
+<<<<<<< 9aad5f7bf34f0957c9ed54e17d081de483203747
+||||||| cbf8402dba414e0b013e3968ce0e1996d98ec4a0
+<<<<<<< 497693eb28920c7819e414582da75b0252ece1b5
+||||||| 1d9f272019e5ee91d5d767acb0db78fd4932b4ff
+HANDLERS: dict = {}  # Filled by the dispatch layer in T5a/T5b.
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
+                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
+                   "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503, "CONFIRMATION_REQUIRED": 409}
+=======
+HANDLERS: dict = {}  # Filled by the dispatch layer in T5a/T5b.
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
+                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
+                   "EFFECT_FAILED": 500, "ROUTE_UNAVAILABLE": 422, "STATE_UNAVAILABLE": 503,
+                   "CONFIRMATION_REQUIRED": 409}
+>>>>>>> 8bbdb033ea96bba56a6cecdd9815c32221c2d5a5
+
+=======
+HANDLERS: dict = _commands.dispatch_handlers()
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
+                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
+                   "EFFECT_FAILED": 500, "ROUTE_UNAVAILABLE": 422, "STATE_UNAVAILABLE": 503,
+                   "CONFIRMATION_REQUIRED": 409}
+
+>>>>>>> fdb9597edffd7b7f9d4e61d476e76511ab2c7aa0
 
 def _target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
     """Resolve the live target state used to validate remote command preconditions."""
