@@ -6,6 +6,7 @@ import json
 import os
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -69,6 +70,36 @@ class LedgerTests(LedgerBase):
     def test_missing_target_is_stale(self):
         self.state = None
         self.assertEqual(self.submit(req())["code"], "STALE_PRECONDITION")
+
+    def test_concurrent_commands_recheck_state_under_the_effect_lock(self):
+        start = threading.Barrier(3)
+        entered_states = []
+        results = []
+
+        def effect(target, params):
+            entered_states.append(self.state["state"])
+            self.state["state"] = "paused"
+            return {"done": True}
+
+        handlers = {"pause": effect}
+
+        def submit(key):
+            start.wait()
+            results.append(self.ledger.submit(req(idempotency_key=key), handlers,
+                                              lambda target: dict(self.state)))
+
+        threads = [threading.Thread(target=submit, args=(f"key-concurrent-00{i}",)) for i in (1, 2)]
+        for thread in threads:
+            thread.start()
+        start.wait()
+        for thread in threads:
+            thread.join(timeout=5)
+
+        self.assertTrue(all(not thread.is_alive() for thread in threads), "concurrent submissions did not finish")
+        self.assertCountEqual([result.get("code") or result["status"] for result in results],
+                              ["STALE_PRECONDITION", "OK"])
+        self.assertEqual(entered_states, ["running"])
+        self.assertEqual(len(self.ledger.rows()), 2)
 
     def test_rows_keep_command_target_origin_outcome(self):
         self.submit(req(origin="telegram"))
@@ -148,6 +179,16 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(self.post(req(idempotency_key="key-00000003", params={"a": 1}))[1]["code"], "IDEMPOTENCY_CONFLICT")
         self.assertEqual(self.post(req(command="nope"))[0], 400)
         self.assertEqual(self.post(b"{not json")[0], 400)
+
+    def test_route_post_reopens_authoritative_recovering_task_from_rejected_review(self):
+        self.state = {"state": "recovering", "revision": 3, "updatedAt": "t1"}
+        self.handlers["reopen"] = self._pause
+        status, body = self.post(req(command="reopen", precondition={"state": "rejected", "revision": 3}))
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(len(self.calls), 1)
+        row = self.route_ledger().rows()[0]
+        self.assertEqual(json.loads(row["precondition"]), {"state": "rejected", "revision": 3})
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
