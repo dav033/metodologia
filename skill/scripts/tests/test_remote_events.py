@@ -4,9 +4,11 @@ from __future__ import annotations
 import json
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import quote
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
@@ -103,10 +105,16 @@ class Handler:
 class RouteTests(unittest.TestCase):
     def test_get_events_route_uses_cursor_and_projects_open_decisions(self):
         handler = Handler()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._assert_decision_route(handler, root)
+
+    def _assert_decision_route(self, handler, root):
         plan = {"project": "demo", "req_id": "REQ-001", "updated_at": AT, "plan_status": "approved"}
         request = {"id": "decision-1", "task": "T1", "title": "Waiting", "options": [{"id": "stop"}]}
         ledger = type("LedgerStub", (), {"rows": lambda self: []})
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_core.ROOT", root), \
                 patch("bt_live_api.run_summaries", return_value=[]), \
                 patch("bt_plans_api.plans_payload", return_value=[plan]), \
                 patch("bt_plans_api.req_dir", return_value=Path("/tmp/REQ-001")), \
@@ -130,6 +138,51 @@ class RouteTests(unittest.TestCase):
                 bt_remote_api.route_get(handler)
             self.assertEqual(handler.status, 400)
             self.assertEqual(json.loads(handler.body)["code"], code)
+
+    def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
+        # Exercise the route's real feed.collect -> build_events -> page path across polls.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            finished = run([], status="done", updated_at="2026-10-19T12:10:00Z")
+            active = run([{"id": "T1", "title": "Build", "attempt": attempt(
+                "a1", state="running", live=True, last_activity_at="2026-10-19T12:00:00Z")}],
+                status="running", active=True, updated_at="2026-10-19T12:10:00Z")
+            plan = {"project": "demo", "req_id": "REQ-001", "updated_at": "2026-10-19T12:00:00Z",
+                    "plan_status": "approved"}
+            request = {"id": "decision-9", "task": "T1", "attempt": "a1", "title": "Choose",
+                       "options": [{"id": "retry"}, {"id": "stop"}]}
+            class LedgerStub:
+                def rows(self):
+                    return []
+
+            def poll(after=""):
+                handler = Handler()
+                handler.path += "?after=" + quote(after, safe="") if after else ""
+                bt_remote_api.route_get(handler)
+                self.assertEqual(handler.status, 200)
+                return json.loads(handler.body)
+
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                    patch("bt_core.ROOT", root), \
+                    patch("bt_live_api.run_summaries", side_effect=[[finished], [active], [active]]), \
+                    patch("bt_plans_api.plans_payload", return_value=[plan]), \
+                    patch("bt_plans_api.req_dir", return_value=root), \
+                    patch("bt_plans_api.open_decisions", side_effect=[[], [request], [request]]), \
+                    patch("bt_plans_api.open_rounds", side_effect=[[], [2], [2]]), \
+                    patch("bt_live_api.flow_events", return_value=([], [], {})), \
+                    patch("bt_subscriptions.summary", return_value=[]), \
+                    patch("bt_remote_commands.Ledger", LedgerStub):
+                first = poll()
+                self.assertEqual([event["type"] for event in first["events"]], ["run.finished"])
+                cursor = first["nextCursor"]
+                second = poll(cursor)
+                self.assertEqual({event["type"] for event in second["events"]},
+                                 {"attempt.stalled", "plan.waiting", "round.waiting"})
+                self.assertEqual(len({event["id"] for event in second["events"]}), 3)
+                replay = poll(cursor)
+                self.assertEqual([event["id"] for event in second["events"]],
+                                 [event["id"] for event in replay["events"]])
+                self.assertEqual(len(replay["events"][1]["data"]["decisionRequest"]["options"]), 2)
 
 
 if __name__ == "__main__":
