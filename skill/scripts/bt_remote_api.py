@@ -403,9 +403,9 @@ _COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED":
                    "STATE_UNAVAILABLE": 503, "CONFIRMATION_REQUIRED": 409}
 
 
-def _target_state(target: str) -> dict | None:
+def _target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
     import bt_remote_commands as commands
-    return commands.target_state(target)
+    return commands.target_state(target, command, params)
 
 
 def _submit_command(handler, length: int) -> None:
