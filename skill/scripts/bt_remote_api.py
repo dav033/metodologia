@@ -428,6 +428,19 @@ def _failure_review(attempt_id: str) -> dict | None:
     return None
 
 
+<<<<<<< 497693eb28920c7819e414582da75b0252ece1b5
+||||||| 1d9f272019e5ee91d5d767acb0db78fd4932b4ff
+HANDLERS: dict = {}  # Filled by the dispatch layer in T5a/T5b.
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
+                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
+                   "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503, "CONFIRMATION_REQUIRED": 409}
+=======
+HANDLERS: dict = {}  # Filled by the dispatch layer in T5a/T5b.
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
+                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
+                   "EFFECT_FAILED": 500, "ROUTE_UNAVAILABLE": 422, "STATE_UNAVAILABLE": 503,
+                   "CONFIRMATION_REQUIRED": 409}
+>>>>>>> 8bbdb033ea96bba56a6cecdd9815c32221c2d5a5
 
 
 def _target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
