@@ -8,6 +8,7 @@ import threading
 import time
 from pathlib import Path
 from typing import Any, Callable, Mapping
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 
@@ -37,7 +38,20 @@ class NotificationOutbox:
             status TEXT NOT NULL DEFAULT 'pending',
             attempts INTEGER NOT NULL DEFAULT 0,
             next_attempt REAL NOT NULL DEFAULT 0,
-            last_error TEXT
+            last_error TEXT,
+            created_at REAL NOT NULL DEFAULT 0
+        )""")
+        columns = {row[1] for row in self._db.execute("PRAGMA table_info(telegram_outbox)")}
+        if "created_at" not in columns:
+            self._db.execute("ALTER TABLE telegram_outbox ADD COLUMN created_at REAL NOT NULL DEFAULT 0")
+            # Existing queued rows predate age tracking; start their one-hour window at migration.
+            self._db.execute("UPDATE telegram_outbox SET created_at = ? WHERE created_at = 0", (time.time(),))
+        self._db.execute("""CREATE TABLE IF NOT EXISTS telegram_delivery_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dedupe_key TEXT NOT NULL,
+            recorded_at REAL NOT NULL,
+            outcome TEXT NOT NULL,
+            error TEXT
         )""")
         self._db.execute("CREATE TABLE IF NOT EXISTS gateway_state (key TEXT PRIMARY KEY, value INTEGER NOT NULL)")
         self._db.commit()
@@ -45,8 +59,8 @@ class NotificationOutbox:
     def enqueue(self, dedupe_key: str, message: str) -> bool:
         with self._lock:
             cursor = self._db.execute(
-                "INSERT OR IGNORE INTO telegram_outbox(dedupe_key, message) VALUES (?, ?)",
-                (dedupe_key, message),
+                "INSERT OR IGNORE INTO telegram_outbox(dedupe_key, message, created_at) VALUES (?, ?, ?)",
+                (dedupe_key, message, time.time()),
             )
             self._db.commit()
             return cursor.rowcount == 1
@@ -78,32 +92,72 @@ class NotificationOutbox:
         current = time.time() if now is None else now
         with self._lock:
             rows = self._db.execute(
-                "SELECT dedupe_key, message, attempts FROM telegram_outbox "
-                "WHERE status = 'pending' AND next_attempt <= ? ORDER BY rowid LIMIT 20", (current,)
+                "SELECT dedupe_key, message, attempts, created_at FROM telegram_outbox "
+                "WHERE status = 'pending' AND (next_attempt <= ? OR created_at < ?) "
+                "ORDER BY rowid LIMIT 20", (current, current - 3600)
             ).fetchall()
         delivered = 0
-        for key, message, attempts in rows:
+        for key, message, attempts, created_at in rows:
+            if current - created_at > 3600:
+                with self._lock:
+                    self._db.execute(
+                        "UPDATE telegram_outbox SET status = 'dropped', last_error = 'MessageExpired' "
+                        "WHERE dedupe_key = ? AND status = 'pending'", (key,),
+                    )
+                    self._record_history(key, current, "dropped", "MessageExpired")
+                    self._db.commit()
+                continue
             try:
                 send(message)
             except Exception as exc:  # Delivery errors are persisted for retry; do not expose response data.
                 next_attempt = current + min(3600, 5 * (2 ** min(attempts, 10)))
-                status = "dropped" if attempts >= 10 else "pending"
+                retryable = not isinstance(exc, HTTPError) or 500 <= exc.code <= 599
+                status = "pending" if retryable and attempts < 10 else "dropped"
+                outcome = "retry" if status == "pending" else "dropped"
+                safe_error = f"HTTP{exc.code}" if isinstance(exc, HTTPError) else type(exc).__name__
+                if isinstance(exc, HTTPError):
+                    exc.close()
                 with self._lock:
                     self._db.execute(
                         "UPDATE telegram_outbox SET attempts = attempts + 1, next_attempt = ?, status = ?, "
                         "last_error = ? WHERE dedupe_key = ? AND status = 'pending'",
-                        (next_attempt, status, type(exc).__name__, key),
+                        (next_attempt, status, safe_error, key),
                     )
+                    self._record_history(key, current, outcome, safe_error)
                     self._db.commit()
             else:
                 with self._lock:
                     self._db.execute(
-                        "UPDATE telegram_outbox SET status = 'sent', attempts = attempts + 1 "
+                        "UPDATE telegram_outbox SET status = 'sent', attempts = attempts + 1, last_error = NULL "
                         "WHERE dedupe_key = ? AND status = 'pending'", (key,)
                     )
+                    self._record_history(key, current, "sent", None)
                     self._db.commit()
                 delivered += 1
         return delivered
+
+    def _record_history(self, key: str, recorded_at: float, outcome: str, error: str | None) -> None:
+        self._db.execute(
+            "INSERT INTO telegram_delivery_history(dedupe_key, recorded_at, outcome, error) VALUES (?, ?, ?, ?)",
+            (key, recorded_at, outcome, error),
+        )
+
+    def history(self, dedupe_key: str | None = None) -> list[dict[str, Any]]:
+        """Return delivery attempts in recording order, optionally for one queued message."""
+        with self._lock:
+            if dedupe_key is None:
+                rows = self._db.execute(
+                    "SELECT dedupe_key, recorded_at, outcome, error FROM telegram_delivery_history ORDER BY id"
+                ).fetchall()
+            else:
+                rows = self._db.execute(
+                    "SELECT dedupe_key, recorded_at, outcome, error FROM telegram_delivery_history "
+                    "WHERE dedupe_key = ? ORDER BY id", (dedupe_key,),
+                ).fetchall()
+        return [
+            {"dedupe_key": key, "recorded_at": recorded_at, "outcome": outcome, "error": error}
+            for key, recorded_at, outcome, error in rows
+        ]
 
 
 class TelegramSender:
