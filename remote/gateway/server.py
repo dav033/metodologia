@@ -22,6 +22,7 @@ from app import ChallengeRelayError, CommandRelayError
 from commands import CommandValidationError
 from security import RateLimiter, origin_matches
 from stream import SnapshotEventStream, encode_sse
+from upstream import UpstreamError
 
 logger = logging.getLogger(__name__)
 RATE_WINDOW_SECONDS = 60
@@ -35,6 +36,8 @@ class StreamRuntime(Protocol):
     def submit_command(self, value: object) -> tuple[int, dict[str, Any]]: ...
 
     def issue_challenge(self, value: object) -> tuple[int, dict[str, Any]]: ...
+
+    def read_model(self, path: str) -> dict[str, Any]: ...
 
 
 def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
@@ -98,7 +101,10 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                     return
                 self._json(200, {"login": login})
                 return
-            if route.path in {"/api/remote/v1/snapshot", "/api/remote/v1/events"} and runtime is not None:
+            read_routes = {"/api/remote/v1/snapshot", "/api/remote/v1/events", "/api/remote/v1/history",
+                           "/api/remote/v1/commands", "/api/remote/v1/quotas", "/api/remote/v1/routes"}
+            is_review = route.path.startswith("/api/remote/v1/attempts/") and route.path.endswith("/review")
+            if (route.path in read_routes or is_review) and runtime is not None:
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
                 if not token or service.store.get_session(token) is None:
                     self._json(401, {"error": "unauthorized"})
@@ -110,7 +116,15 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                     else:
                         self._json(200, snapshot)
                     return
-                self._stream_events()
+                if route.path == "/api/remote/v1/events":
+                    self._stream_events()
+                    return
+                try:
+                    model = runtime.read_model(route.path + ("?" + route.query if route.query else ""))
+                except UpstreamError:
+                    self._json(503, {"error": "read model unavailable"})
+                    return
+                self._json(200, model)
                 return
             self._json(404, {"error": "not found"})
 

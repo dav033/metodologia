@@ -57,6 +57,16 @@ class LaptopClient:
 
         return self.get_json("/api/remote/v1/events?" + urlencode({"after": after, "limit": limit}))
 
+    def read_model(self, path: str) -> dict[str, Any]:
+        from urllib.parse import urlsplit
+
+        route = urlsplit(path)
+        allowed = {"/api/remote/v1/history", "/api/remote/v1/commands", "/api/remote/v1/quotas"}
+        if route.path not in allowed and not route.path.startswith("/api/remote/v1/attempts/") \
+                and route.path != "/api/remote/v1/routes":
+            raise ValueError("unsupported read model")
+        return self.get_json(path)
+
     def command(self, command: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         body = json.dumps(command).encode("utf-8")
         request = Request(

@@ -4,9 +4,13 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+import http.client
+import json
 
 from app import create_runtime
+from auth import OAuthConfig, SessionStore
 from config import GatewayConfig
+from server import create_server
 from stream import SnapshotEventStream
 from upstream import UpstreamError
 
@@ -16,6 +20,7 @@ class FakeLaptop:
         self.online = True
         self.snapshot_calls = 0
         self.event_calls = 0
+        self.read_calls = []
 
     def health(self):
         if not self.online:
@@ -35,6 +40,10 @@ class FakeLaptop:
             ],
             "nextCursor": "upstream-2",
         }
+
+    def read_model(self, path):
+        self.read_calls.append(path)
+        return {"source": path}
 
 
 class SnapshotStreamTests(unittest.TestCase):
@@ -107,6 +116,31 @@ class SnapshotStreamTests(unittest.TestCase):
 
         self.assertFalse(client.is_alive())
         self.assertEqual(received, [(1, {"id": "event-a", "type": "run.finished"})])
+
+    def test_authenticated_http_entrypoint_relays_required_read_models(self) -> None:
+        database = Path(self.temp_dir.name) / "auth.sqlite"
+        oauth = OAuthConfig("client", "client-secret", "test-session-secret-with-more-than-32-bytes",
+                           "https://flow.example.test", str(database))
+        session = SessionStore(str(database), oauth.session_secret).create_session("dav033")
+        server = create_server(oauth, ("127.0.0.1", 0), runtime=self.runtime)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port)
+        paths = ["/api/remote/v1/attempts/a1/review", "/api/remote/v1/quotas",
+                 "/api/remote/v1/history", "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1"]
+        try:
+            for path in paths:
+                connection.request("GET", path, headers={"Cookie": f"flow_session={session}"})
+                response = connection.getresponse()
+                payload = json.loads(response.read())
+                self.assertEqual(response.status, 200)
+                self.assertEqual(payload["source"], path.split("?", 1)[0] + ("?" + path.split("?", 1)[1] if "?" in path else ""))
+            self.assertEqual(self.laptop.read_calls, paths)
+        finally:
+            connection.close()
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
 
 
 if __name__ == "__main__":

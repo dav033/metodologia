@@ -191,6 +191,21 @@ export default function HomePage() {
     setHistoryError("");
   }, []);
 
+  const refreshCommandHistory = useCallback(async () => {
+    const response = await fetch("/api/remote/v1/history", { cache: "no-store" });
+    if (!response.ok) throw new Error(`No se pudo cargar el historial (${response.status}).`);
+    const payload: unknown = await response.json();
+    const value = record(payload);
+    const rows = Array.isArray(value?.history) ? value.history : [];
+    setCommandHistory(rows.flatMap((row): CommandHistoryItem[] => {
+      const item = record(row);
+      if (!item || !text(item.idempotency_key) || !text(item.received_at)) return [];
+      return [{ id: item.idempotency_key, at: item.received_at,
+        origin: `${text(item.target) ? item.target : ""} · ${text(item.command) ? item.command : "comando"}`,
+        result: text(item.status) ? item.status : (text(item.code) ? item.code : "desconocido") }];
+    }));
+  }, []);
+
   const load = useCallback(async () => {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
     if (sessionResponse.status === 401) { setSession({ authenticated: false }); return; }
@@ -200,10 +215,18 @@ export default function HomePage() {
     if (!parsedSession || typeof parsedSession.authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
     setSession({ authenticated: parsedSession.authenticated });
     if (!parsedSession.authenticated) return;
+<<<<<<< 5ed5f3b725e5b0588cb6bc2c6475b750e0ada23b
     await refreshSnapshot();
     try { await refreshCommandHistory(); }
     catch (cause) { setHistoryError(cause instanceof Error ? cause.message : "No se pudo cargar el historial."); }
   }, [refreshCommandHistory, refreshSnapshot]);
+||||||| b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
+    await refreshSnapshot();
+  }, [refreshSnapshot]);
+=======
+    await Promise.all([refreshSnapshot(), refreshCommandHistory()]);
+  }, [refreshSnapshot, refreshCommandHistory]);
+>>>>>>> 8670ff1c3a7631e9ef0b97767d36220f86a7f5ec
 
   useEffect(() => {
     void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Error al cargar el panel."));
@@ -211,6 +234,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (session?.authenticated !== true) return;
+<<<<<<< 5ed5f3b725e5b0588cb6bc2c6475b750e0ada23b
     let stopped = false;
     let timer = 0;
     const poll = async () => {
@@ -225,6 +249,20 @@ export default function HomePage() {
     timer = window.setTimeout(() => void poll(), 5000);
     return () => { stopped = true; window.clearTimeout(timer); };
   }, [session?.authenticated, refreshSnapshot]);
+||||||| b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
+    const timer = window.setInterval(() => {
+      void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [session?.authenticated, refreshSnapshot]);
+=======
+    const timer = window.setInterval(() => {
+      void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+      void refreshCommandHistory().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el historial."));
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [session?.authenticated, refreshSnapshot, refreshCommandHistory]);
+>>>>>>> 8670ff1c3a7631e9ef0b97767d36220f86a7f5ec
 
   const snapshotCursor = useRef(snapshot?.cursor);
   snapshotCursor.current = snapshot?.cursor;
@@ -253,10 +291,17 @@ export default function HomePage() {
     if (!snapshot) return;
     setWorking(key); setError("");
     const target = record(command.target);
+<<<<<<< 5ed5f3b725e5b0588cb6bc2c6475b750e0ada23b
     const targetLabel = target && text(target.project) && text(target.req) ? `${target.project}/${target.req}` : "Destino desconocido";
     const commandType = text(command.type) ? command.type : "comando";
     const submittedAt = new Date().toISOString();
     let result = "Resultado desconocido";
+||||||| b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
+    const origin = `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""} · ${text(command.type) ? command.type : "comando"}`;
+    const addHistory = (result: string) => setCommandHistory((current) => [{ id: crypto.randomUUID(), at: new Date().toISOString(), origin, result }, ...current].slice(0, 20));
+=======
+    const addHistory = (_result: string) => { void refreshCommandHistory(); };
+>>>>>>> 8670ff1c3a7631e9ef0b97767d36220f86a7f5ec
     try {
       const confirmationValue = record(command.confirmation);
       if (confirmationValue && (!text(confirmationValue.challengeId) || !confirmationValue.challengeId.trim()) && text(confirmationValue.typedReq)) {
