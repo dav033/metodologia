@@ -110,11 +110,14 @@ export default function HomePage() {
   const [reason, setReason] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [typedReq, setTypedReq] = useState("");
+  const snapshotRequest = useRef(0);
 
   const refreshSnapshot = useCallback(async () => {
+    const request = ++snapshotRequest.current;
     const response = await fetch("/api/remote/v1/snapshot", { cache: "no-store" });
     if (!response.ok) throw new Error(`No se pudo cargar el estado (${response.status}).`);
-    setSnapshot(parseSnapshot(await response.json()));
+    const nextSnapshot = parseSnapshot(await response.json());
+    if (request === snapshotRequest.current) setSnapshot(nextSnapshot);
   }, []);
 
   const load = useCallback(async () => {
@@ -138,10 +141,19 @@ export default function HomePage() {
 
   useEffect(() => {
     if (session?.authenticated !== true) return;
-    const timer = window.setInterval(() => {
-      void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
-    }, 5000);
-    return () => window.clearInterval(timer);
+    let stopped = false;
+    let timer = 0;
+    const poll = async () => {
+      try {
+        await refreshSnapshot();
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel.");
+      } finally {
+        if (!stopped) timer = window.setTimeout(() => void poll(), 5000);
+      }
+    };
+    timer = window.setTimeout(() => void poll(), 5000);
+    return () => { stopped = true; window.clearTimeout(timer); };
   }, [session?.authenticated, refreshSnapshot]);
 
   const snapshotCursor = useRef(snapshot?.cursor);
