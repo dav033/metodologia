@@ -227,6 +227,10 @@ class GatewayRuntime:
         result["laptop"] = {"online": self.liveness.status is LaptopStatus.ONLINE}
         return result
 
+    def read_model(self, path: str) -> dict[str, Any]:
+        """Read an authenticated dashboard model from the laptop API."""
+        return self.laptop.read_model(path)
+
     def _poll_events(self) -> None:
         try:
             result = self.laptop.events(self.event_cursor)
