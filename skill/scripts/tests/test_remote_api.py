@@ -16,6 +16,15 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
+<<<<<<< 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
+||||||| 8f79667cf84ec0090fd3b66913d431e3da8f60e3
+||||||| 21ed855e0526bd6f970e6e6d9769919c0dcbf0b3
+=======
+sys.path.insert(0, str(REPO / "tests" / "migration"))
+>>>>>>> 0ba9b657011be079d160ed12134f1130cf08a4e9
+=======
+sys.path.insert(0, str(REPO / "tests" / "migration"))
+>>>>>>> 4f158bc298d1217d991378eb8f09a3fb378e3af2
 import bt_remote_api
 KEY = "test-gateway-key-0123456789"
 
