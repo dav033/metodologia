@@ -158,12 +158,12 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
                 self._json(404, {"error": "not found"})
                 return
             token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-            if not token or service.store.get_session(token) is None:
+            owner = service.store.get_session(token) if token else None
+            if owner is None:
                 self._json(401, {"error": "unauthorized"})
                 return
             endpoint = "challenges" if route.path.endswith("/challenges") else "commands"
-            client_key = self.client_address[0]
-            if not rate_limiter.acquire(endpoint, client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+            if not rate_limiter.acquire(endpoint, owner, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                 self._rate_limited()
                 return
             if runtime is None:
