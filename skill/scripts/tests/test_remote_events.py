@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import datetime as dt
+import http.client
 import json
 import os
 import sys
 import tempfile
+import threading
 import time
 import unittest
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import quote
@@ -19,6 +22,7 @@ import bt_remote_api
 import bt_remote_events as feed
 import bt_plans_api
 import bt_rounds
+import bt_server
 
 AT = "2026-10-19T12:00:00Z"
 OLD = "2026-10-19T08:00:00Z"
@@ -109,6 +113,62 @@ class Handler:
 
 
 class RouteTests(unittest.TestCase):
+    def get_remote(self, path):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), bt_server.RemoteHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        connection = http.client.HTTPConnection(*server.server_address, timeout=3)
+        try:
+            connection.request("GET", path, headers={"Authorization": "Bearer test-key"})
+            response = connection.getresponse()
+            return response.status, response.read().decode("utf-8")
+        finally:
+            connection.close()
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+
+    def test_snapshot_route_redacts_session_secret_from_diagnostic_payload(self):
+        run_summary = {
+            "run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "title": "Demo",
+            "status": "failed", "active": False, "updated_at": AT,
+            "tasks": [{"id": "T1", "title": "Build", "state": "failed",
+                       "history": [{"id": "a1", "state": "failed",
+                                    "failure": "SESSION_SECRET=synthetic-session-secret-value"}]}],
+        }
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_core.ROOT", Path(tempfile.gettempdir())), \
+                patch("bt_live_api.run_summaries", return_value=[run_summary]), \
+                patch("bt_live_api.now_frame_data", return_value={"items": []}), \
+                patch("bt_plans_api.plans_payload", return_value=[]):
+            status, body = self.get_remote("/api/remote/v1/snapshot")
+        self.assertEqual(status, 200)
+        self.assertNotIn("synthetic-session-secret-value", body)
+        self.assertIn("SESSION_SECRET=[REDACTED]", body)
+
+    def test_review_route_redacts_session_secret_from_diagnostic_log(self):
+        import bt_attempt_facts
+
+        with tempfile.TemporaryDirectory() as directory:
+            attempt_dir = Path(directory)
+            (attempt_dir / "output.tail").write_text(
+                "SESSION_SECRET=synthetic-session-secret-value\n", encoding="utf-8")
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                    patch("bt_core.ROOT", attempt_dir), \
+                    patch("bt_remote_api._commands._run_target",
+                          return_value=("demo", "REQ-001", attempt_dir)), \
+                    patch("bt_attempt_facts.attempt_facts", return_value={
+                        "T1": [{"attempt": "a1", "state": "failed", "failure": "verification failed"}],
+                    }), \
+                    patch("bt_remote_api._review_executor_attempt", return_value=attempt_dir), \
+                    patch("bt_remote_api._review_quality_result", return_value=(None, {})), \
+                    patch("bt_remote_api._review_diff", return_value={"stat": None}):
+                status, body = self.get_remote(
+                    "/api/remote/v1/attempts/a1/review?target=demo%2FREQ-001")
+        self.assertEqual(status, 200)
+        self.assertNotIn("synthetic-session-secret-value", body)
+        self.assertIn("SESSION_SECRET=[REDACTED]", body)
+
     def test_collect_keeps_blocked_attempt_ids_distinct_across_runs(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
