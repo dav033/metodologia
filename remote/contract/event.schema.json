@@ -1,17 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://bitacora.local/remote/contract/v1/event.schema.json",
-  "title": "Bitácora Remote Event v1",
+  "$id": "https://flow-remote.invalid/contract/v1/event.schema.json",
+  "title": "Bitácora remote event v1",
   "type": "object",
-  "required": ["id", "kind", "occurredAt", "data"],
+  "required": ["schemaVersion", "id", "cursor", "type", "occurredAt", "target", "data"],
   "properties": {
-    "id": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "kind": {
-      "type": "string",
-      "enum": ["run.updated", "task.failed", "task.blocked", "run.finished", "question.waiting", "plan.review", "quota.exhausted", "attempt.stale", "laptop.offline", "command.completed"]
-    },
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "cursor": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "type": { "enum": ["attempt.failed", "attempt.blocked", "run.finished", "round.waiting", "plan.waiting", "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated"] },
     "occurredAt": { "type": "string", "format": "date-time" },
-    "data": { "type": "object" }
+    "target": { "$ref": "command.schema.json#/$defs/target" },
+    "data": { "type": "object" },
+    "dedupeKey": { "type": "string", "minLength": 1, "maxLength": 256 }
   },
   "additionalProperties": false
 }

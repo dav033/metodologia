@@ -1,50 +1,48 @@
-# Remote flow architecture decision
+# Remote control architecture decision
+
+**Status:** selected for REQ-027. **Scope:** control-plane connectivity between the laptop, AdvIn gateway and Vercel
+frontend. The laptop remains the sole scheduler and agent executor. AdvIn has no agent credentials.
 
 ## Decision
 
-Keep execution and the source of truth on the laptop. AdvIn runs a small control-plane gateway, and the Vercel app
-talks only to that gateway. Connect AdvIn to the laptop through the already-running reverse SSH tunnel; do not expose
-the laptop panel or remote API to the public internet. The tunnel is the only network path from gateway to laptop.
+Keep the browser panel on its existing loopback listener, `127.0.0.1:8765`. Run a separate laptop listener on
+`127.0.0.1:8766` with a remote-only handler that accepts only `/api/remote/v1/`. The gateway key authenticates each
+request; the listener does not serve the panel, project pages, static assets, plan launch forms, or any other local
+web route. The gateway reaches it through one reverse SSH forward:
 
-The gateway authenticates the owner with GitHub, restricts the account to `dav033`, holds the session and Telegram
-integration, caches the last laptop snapshot, relays commands, and sends notifications. It does not run agents, hold
-Claude/Codex credentials, or become an alternate scheduler. The laptop's `/api/remote/v1/` API is reachable only with
-the gateway key and records command idempotency, preconditions and outcomes before acknowledging a command.
+```text
+AdvIn 127.0.0.1:18765  --SSH reverse forward-->  laptop 127.0.0.1:8766
+```
 
-The Vercel frontend uses same-origin rewrites to reach the gateway. This keeps the session cookie first-party and
-allows SSE without browser CORS access to the gateway hostname. The rewrite spike confirmed cookies and incremental
-SSE delivery; clients reconnect using stable event IDs and the gateway ends streams before the documented rewrite
-limit.
+The tracked user unit `remote/deploy/advin-bitacora-tunnel.service` makes that destination explicit. AdvIn's gateway
+uses `http://127.0.0.1:18765` as its laptop origin. Caddy and Vercel never connect to the laptop. Vercel rewrites
+same-origin `/api/*` requests to the gateway over HTTPS. The gateway owns GitHub login, session cookies, offline
+state, caching, command relay and Telegram delivery. The laptop API owns command preconditions, idempotency, dispatch
+to existing operations, and the event cursor.
+
+This split preserves local panel behavior while the tunnel exposes only a narrow, authenticated machine API. The
+remote listener binds to loopback on the laptop, and the SSH remote bind is also loopback on AdvIn; neither adds a
+public laptop or VPS port.
 
 ## Alternatives considered
 
 | Option | Decision | Reason |
 |---|---|---|
-| Run the scheduler on AdvIn | Rejected | Execution must remain on the laptop, and AdvIn must not contain agent credentials. |
-| Expose the laptop directly to the internet | Rejected | Violates the laptop isolation requirement and makes the control surface public-facing. |
-| Poll the laptop over a new public VPN or tunnel | Rejected | The existing reverse SSH tunnel already provides the required private route and keeps laptop reachability narrow. |
-| Put login, state and command execution in Vercel functions | Rejected | The persistent gateway needs a durable command ledger, event cursor, Telegram delivery retries and a connection to the private tunnel. |
-| Use a Cloudflare quick tunnel for gateway-to-laptop transport | Rejected | It is not the established route and the spike showed it buffered SSE; it is not a suitable substitute for the reverse SSH tunnel. |
-| Keep the Vercel app as a static observer with no gateway | Rejected | It cannot safely authenticate commands, track laptop liveness, deduplicate notifications or provide a durable ledger. |
+| Forward the existing panel at `127.0.0.1:8765` | Rejected | The panel has unauthenticated GET pages and plan-launch controls. Any process on AdvIn that can reach the forward would gain the full panel. A gateway key on selected API routes does not protect the rest of that listener. |
+| Expose a dedicated remote-only laptop listener through the reverse tunnel | **Selected** | Separates the trust boundary at the socket and HTTP handler. Only versioned API paths are routed; every API call also requires the gateway key. |
+| Expose the laptop directly to the internet | Rejected | Conflicts with the requirement that the laptop is never internet-reachable and adds inbound firewall and TLS exposure. |
+| Run an outbound WebSocket agent from laptop to gateway | Rejected | The reverse tunnel already provides a simple, reconnectable path without maintaining a second command transport. |
+| Auth.js in the Vercel frontend as the gateway's trust boundary | Rejected | The gateway still needs its own verified caller session; frontend authentication alone does not secure gateway-to-laptop commands. |
+| Starlette/uvicorn for the gateway | Rejected | The single-owner gateway has no async requirement, and the verifier is offline and cannot install third-party dependencies. Use Python 3.12 standard library and SQLite. |
+| Queue commands while laptop is offline | Rejected | The owner explicitly requires offline commands to fail immediately so stale actions do not run later. |
 
-## Boundaries and failure behavior
+## Consequences and rollback
 
-- Laptop `bt_server` owns run state and invokes existing scheduler/plan/round operations. The existing loopback UI
-  stays at `127.0.0.1:8765` with its current behavior.
-- Gateway owns the GitHub session, bounded snapshot cache, command ledger, event cursor and Telegram outbox. Gateway
-  storage contains no model credentials.
-- Frontend owns presentation and submits intent with an idempotency key, expected-state precondition and, for
-  destructive actions, the server-issued typed-REQ challenge.
-- If the laptop misses three health probes spaced five seconds apart, the gateway serves the last cached snapshot
-  with its timestamp and rejects commands. It never queues an offline command.
-- If a command times out after 15 seconds, the result is `UNKNOWN_OUTCOME`; retrying its same idempotency key safely
-  resolves the existing ledger entry.
-- Laptop API errors use a stable problem response with a request ID; secrets and stack traces are excluded from logs
-  and responses.
+The local panel remains independently available on port 8765. The API and tunnel use separate ports and handlers; a
+gateway outage cannot expose the local panel through the API listener. The tunnel unit must be installed or updated
+alongside the listener, and the gateway upstream must use port 18765. During rollout, verify both that the panel still
+works locally and that requests through the tunnel cannot load `/`, `/plans`, or `/p/*`.
 
-## Evidence and follow-up
-
-The contract is in [`contract.md`](contract.md). The same-origin cookie and streaming behavior was checked in the
-[Vercel rewrite spike](spike-rewrite-sse.md). The tunnel endpoint is already managed by
-`advin-bitacora-tunnel.service`; deployment work must preserve that service and add only the gateway-side route and
-key configuration. Secrets remain in protected environment files or platform environment settings, never in git.
+Rollback stops and disables `advin-bitacora-tunnel.service`, removes the gateway's upstream reference to port 18765,
+and stops the remote listener. The loopback panel remains on port 8765 throughout. Do not retarget the tunnel back to
+the panel as a rollback: disable remote access until the remote-only listener is restored.
