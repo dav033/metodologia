@@ -334,7 +334,35 @@ export default function HomePage() {
       }
       return sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "answer-round",
         target: { kind: "round", project: round.project, req: round.req, roundId: round.id ?? String(round.round) },
+<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
         precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
+||||||| 6d69194de8a49c55d12c9d73b42d9cda2631c1dd
+<<<<<<< 9e2b4a7ef27c0360273e4d2c110f31839133069d
+        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
+||||||| f5aa1d3190788a2f58e4928c44fd96a9b9a3e1c7
+<<<<<<< 6d3f5e84232234b75e9c4e46669c09404e864f22
+        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
+||||||| 7584b578bb3b90c6e31cd3e80816703e3f56b659
+<<<<<<< b84ace56ec9b6860c1bc5b40067d7cdf7f7ce424
+        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
+||||||| 569a1485062992dae9f8a61f28ef43ad8179f56e
+        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
+        round: round.round, answer }, `${round.req}-round-${round.round}`);
+=======
+        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
+        round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
+>>>>>>> 255adcdb1bc0fb3814e0d448585551076183162c
+=======
+        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
+        round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
+>>>>>>> 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
+=======
+        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
+        round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
+>>>>>>> e5f3b15ac8278a1920c8feef414f89bd689013ca
+=======
+        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
+>>>>>>> d5722a644747de28545fa30eb743fa0997f37253
     };
   }
 
@@ -393,6 +421,30 @@ export default function HomePage() {
     return <article className="task-card" key={`${run.req}-${task.id}`}>
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
+<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
+||||||| 6d69194de8a49c55d12c9d73b42d9cda2631c1dd
+<<<<<<< 9e2b4a7ef27c0360273e4d2c110f31839133069d
+||||||| f5aa1d3190788a2f58e4928c44fd96a9b9a3e1c7
+<<<<<<< 6d3f5e84232234b75e9c4e46669c09404e864f22
+||||||| 7584b578bb3b90c6e31cd3e80816703e3f56b659
+<<<<<<< b84ace56ec9b6860c1bc5b40067d7cdf7f7ce424
+||||||| 569a1485062992dae9f8a61f28ef43ad8179f56e
+    {task.state === "failed" && task.activeAttempt && <FailureReviewPanel attemptId={task.activeAttempt.id} />}
+=======
+    {task.state === "failed" && (task.activeAttempt ?? task.history?.at(-1)) &&
+      <FailureReviewPanel attemptId={(task.activeAttempt ?? task.history?.at(-1))!.id} />}
+>>>>>>> 255adcdb1bc0fb3814e0d448585551076183162c
+=======
+    {task.state === "failed" && (task.activeAttempt ?? task.history?.at(-1)) &&
+      <FailureReviewPanel attemptId={(task.activeAttempt ?? task.history?.at(-1))!.id} />}
+>>>>>>> 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
+=======
+    {task.state === "failed" && task.reviewAttempt?.attemptId &&
+      <FailureReviewPanel attemptId={task.reviewAttempt.attemptId} />}
+>>>>>>> e5f3b15ac8278a1920c8feef414f89bd689013ca
+=======
+    {task.state === "failed" && task.reviewAttempt?.attemptId && <FailureReviewPanel attemptId={task.reviewAttempt.attemptId} />}
+>>>>>>> d5722a644747de28545fa30eb743fa0997f37253
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     {canRecover && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
       onRetry={(event, route) => retryTask(event, task, run, route)} />}

@@ -13,6 +13,15 @@ class UpstreamError(RuntimeError):
     """A laptop API request failed or returned an invalid response."""
 
 
+class UpstreamResponseError(UpstreamError):
+    """The laptop returned a structured HTTP error response."""
+
+    def __init__(self, status: int, payload: dict[str, Any]):
+        super().__init__("laptop API returned an error response")
+        self.status = status
+        self.payload = payload
+
+
 class UpstreamTimeout(UpstreamError):
     """The request timed out, so the laptop may already have applied it."""
 
