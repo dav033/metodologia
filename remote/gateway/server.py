@@ -54,12 +54,18 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
 
         def do_GET(self) -> None:
             route = urlsplit(self.path)
-            if route.path == "/api/auth/login":
+            if route.path in {"/api/auth/login", "/api/auth/github"}:
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
                     ("Location", service.authorization_url(state)),
                     ("Set-Cookie", f"{STATE_COOKIE}={state}; Path=/api/auth/callback; Max-Age=600; HttpOnly; Secure; SameSite=Lax"),
+                ))
+                return
+            if route.path == "/api/auth/logout":
+                self._send(302, headers=(
+                    ("Location", service.config.frontend_origin + "/"),
+                    ("Set-Cookie", f"{SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"),
                 ))
                 return
             if route.path == "/api/auth/callback":
@@ -92,6 +98,10 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                     return
                 if runtime is None:
                     self._json(404, {"error": "not found"})
+                    return
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
                     return
                 try:
                     length = int(self.headers.get("Content-Length", "0"))
