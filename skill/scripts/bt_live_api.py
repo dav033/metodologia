@@ -281,9 +281,6 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
         tasks = [{"id": t["id"], "title": t["title"], "objective": (t.get("detail") or {}).get("objective"),
                   "milestone_id": t.get("milestone_id"), "state": t["state"],
                   "attempts": t["attempts"], "attempt": _attempt(t.get("attempt")),
-                  "attempts_used": t.get("attempts_used"), "max_attempts": t.get("max_attempts"),
-                  "retries_remaining": t.get("retries_remaining"),
-                  "retry_exhausted": t.get("retry_exhausted"), "reason": t.get("reason"),
                   "history": [_attempt(a) for a in t.get("history") or []]}
                  for m in status["milestones"] for t in m["tasks"]]
         out.append({"run": f'{project}/{status["req_id"]}', "project": project, "req_id": status["req_id"],

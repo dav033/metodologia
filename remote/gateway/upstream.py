@@ -13,7 +13,7 @@ class UpstreamError(RuntimeError):
 
 
 class UpstreamTimeout(UpstreamError):
-    """The laptop did not answer before the request deadline."""
+    """The request timed out, so the laptop may already have applied it."""
 
 
 class LaptopClient:
@@ -39,6 +39,34 @@ class LaptopClient:
             raise UpstreamError("laptop API returned a non-object response")
         return payload
 
+    def post_json(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
+        if path not in {"/api/remote/v1/commands", "/api/remote/v1/challenges"}:
+            raise ValueError("unsupported upstream command path")
+        request = Request(
+            self._origin + path,
+            data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
+            headers={"Authorization": f"Bearer {self._key}", "Accept": "application/json",
+                     "Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=self._timeout) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except HTTPError as exc:
+            try:
+                payload = json.loads(exc.read().decode("utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+        except (TimeoutError, OSError) as exc:
+            raise UpstreamTimeout("laptop command outcome is unknown") from exc
+        except (URLError, UnicodeError, json.JSONDecodeError) as exc:
+            if isinstance(exc, URLError) and isinstance(exc.reason, TimeoutError):
+                raise UpstreamTimeout("laptop command outcome is unknown") from exc
+            raise UpstreamError("laptop API request failed") from exc
+        if not isinstance(payload, dict):
+            raise UpstreamError("laptop API returned a non-object response")
+        return payload
+
     def health(self) -> dict[str, Any]:
         return self.get_json("/api/remote/v1/health")
 
@@ -49,39 +77,3 @@ class LaptopClient:
         from urllib.parse import urlencode
 
         return self.get_json("/api/remote/v1/events?" + urlencode({"after": after, "limit": limit}))
-
-    def command(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
-        return self.post_json("/api/remote/v1/commands", payload)
-
-    def challenge(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
-        return self.post_json("/api/remote/v1/challenges", payload)
-
-    def post_json(self, path: str, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
-        if path not in {"/api/remote/v1/commands", "/api/remote/v1/challenges"}:
-            raise ValueError("unsupported laptop POST path")
-        request = Request(self._origin + path, data=json.dumps(payload).encode("utf-8"), headers={
-            "Authorization": f"Bearer {self._key}", "Accept": "application/json",
-            "Content-Type": "application/json",
-        }, method="POST")
-        try:
-            with urlopen(request, timeout=self._timeout) as response:
-                status, raw = response.status, response.read().decode("utf-8")
-        except HTTPError as exc:
-            status = exc.code
-            try:
-                raw = exc.read().decode("utf-8")
-            except (OSError, UnicodeError):
-                raw = ""
-        except TimeoutError as exc:
-            raise UpstreamTimeout("laptop command timed out") from exc
-        except (URLError, OSError) as exc:
-            if isinstance(exc, URLError) and isinstance(exc.reason, TimeoutError):
-                raise UpstreamTimeout("laptop command timed out") from exc
-            raise UpstreamError("laptop command request failed") from exc
-        try:
-            result = json.loads(raw)
-        except (json.JSONDecodeError, UnicodeError) as exc:
-            raise UpstreamError("laptop command response was invalid") from exc
-        if not isinstance(result, dict):
-            raise UpstreamError("laptop command response was not an object")
-        return status, result

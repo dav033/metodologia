@@ -18,7 +18,7 @@ from auth import (
     SessionStore,
     cookie_values,
 )
-from stream import SnapshotUnavailable, StreamHub, format_sse
+from stream import StreamHub, format_sse
 from security import RateLimiter, origin_matches
 
 logger = logging.getLogger(__name__)
@@ -26,16 +26,6 @@ RATE_WINDOW_SECONDS = 60
 LOGIN_FAILURE_LIMIT = 5
 COMMAND_REQUEST_LIMIT = 30
 HEARTBEAT_SECONDS = 15.0
-MAX_COMMAND_BODY = 256 * 1024
-COMMAND_STATUS = {
-    "INVALID_COMMAND": 400,
-    "INVALID_CHALLENGE": 400,
-    "CONFIRMATION_REQUIRED": 400,
-    "LAPTOP_OFFLINE": 410,
-    "LAPTOP_UNAVAILABLE": 503,
-    "UNKNOWN_OUTCOME": 503,
-    "STALE_PRECONDITION": 409,
-}
 
 
 def make_handler(service: OAuthService, hub: StreamHub | None = None,
@@ -67,12 +57,21 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
 
         def do_GET(self) -> None:
             route = urlsplit(self.path)
-            if route.path == "/api/auth/login":
+            if route.path in {"/api/auth/login", "/api/auth/github"}:
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
                     ("Location", service.authorization_url(state)),
                     ("Set-Cookie", f"{STATE_COOKIE}={state}; Path=/api/auth/callback; Max-Age=600; HttpOnly; Secure; SameSite=Lax"),
+                ))
+                return
+            if route.path == "/api/auth/logout":
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if token:
+                    service.store.delete_session(token)
+                self._send(302, headers=(
+                    ("Location", service.config.frontend_origin + "/"),
+                    ("Set-Cookie", f"{SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"),
                 ))
                 return
             if route.path == "/api/auth/callback":
@@ -97,10 +96,7 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
                     self._json(401, {"error": "unauthorized"})
                     return
                 if route.path.endswith("/snapshot"):
-                    try:
-                        self._json(200, hub.read_snapshot_response())
-                    except SnapshotUnavailable:
-                        self._json(503, {"error": "snapshot unavailable"})
+                    self._json(200, hub.read_snapshot())
                 else:
                     self._stream(hub)
                 return
@@ -118,16 +114,10 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
                 while not hub.closed:
                     events, resync = hub.wait_for_events(cursor, HEARTBEAT_SECONDS)
                     if resync:
-                        try:
-                            state = hub.read_snapshot_response()
-                        except SnapshotUnavailable:
-                            state = None
-                        if state is not None:
-                            self.wfile.write(format_sse(None, "resync", state))
-                            if not events:
-                                cursor = state["lastEventId"]
-                        elif not events:
-                            cursor = hub.live_cursor()
+                        state = hub.read_snapshot()
+                        self.wfile.write(format_sse(None, "resync", state))
+                        if not events:
+                            cursor = state["lastEventId"]
                     for event_id, event in events:
                         self.wfile.write(format_sse(event_id, "event", event))
                         cursor = event_id
@@ -142,44 +132,45 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
                 self._json(403, {"error": "forbidden"})
                 return
             route = urlsplit(self.path)
-            if route.path not in ("/api/remote/v1/commands", "/api/remote/v1/challenges"):
+            if route.path not in {"/api/remote/v1/commands", "/api/remote/v1/challenges"}:
+                self._json(404, {"error": "not found"})
+                return
+            client_key = self.client_address[0]
+            if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+                self._rate_limited()
+                return
+            if runtime is None:
                 self._json(404, {"error": "not found"})
                 return
             token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
             if not token or service.store.get_session(token) is None:
                 self._json(401, {"error": "unauthorized"})
                 return
-            endpoint = "challenges" if route.path.endswith("/challenges") else "commands"
-            client_key = self.client_address[0]
-            if not rate_limiter.acquire(endpoint, client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-                self._rate_limited()
-                return
-            if runtime is None:
-                self._json(503, {"code": "COMMAND_NOT_AVAILABLE"})
-                return
+            error_code = "INVALID_CHALLENGE" if route.path.endswith("/challenges") else "INVALID_COMMAND"
             try:
                 length = int(self.headers.get("Content-Length", "0"))
             except ValueError:
-                length = -1
-            if length < 0:
-                self._json(400, {"code": "INVALID_COMMAND"})
+                self._json(400, {"code": error_code})
                 return
-            if length > MAX_COMMAND_BODY:
+            if length < 0:
+                self._json(400, {"code": error_code})
+                return
+            if length > 256 * 1024:
                 self._json(413, {"code": "BODY_TOO_LARGE"})
                 return
             try:
-                payload = json.loads(self.rfile.read(length) or b"null")
+                request = json.loads(self.rfile.read(length) or b"null")
             except (ValueError, OSError):
-                self._json(400, {"code": "INVALID_COMMAND"})
+                self._json(400, {"code": error_code})
                 return
-            if endpoint == "challenges":
-                result = runtime.issue_challenge(payload)
+            if route.path.endswith("/challenges"):
+                result = runtime.issue_challenge(request)
             else:
-                result = runtime.submit_command(payload)
-            code = result.get("code")
-            status = COMMAND_STATUS.get(code, result.pop("http_status", 200))
-            if "idempotency_key" in result:
-                result = {**result, "idempotencyKey": result.pop("idempotency_key")}
+                result = runtime.submit_command(request)
+            status = {"UNKNOWN_OUTCOME": 503, "LAPTOP_OFFLINE": 410,
+                      "CONFIRMATION_REQUIRED": 409, "INVALID_COMMAND": 400,
+                      "INVALID_CHALLENGE": 400, "LAPTOP_UNAVAILABLE": 503,
+                      "STALE_PRECONDITION": 409}.get(result.get("code"), 200)
             self._json(status, result)
 
         def _valid_state_changing_request(self) -> bool:

@@ -135,6 +135,10 @@ class SessionStore:
                        (_digest(token, self.secret), login, timestamp + SESSION_TTL_SECONDS))
         return token
 
+    def delete_session(self, token: str) -> None:
+        with self._connect() as db:
+            db.execute("DELETE FROM sessions WHERE token_hash = ?", (_digest(token, self.secret),))
+
     def get_session(self, token: str, now: int | None = None) -> str | None:
         timestamp = int(time.time()) if now is None else now
         with self._connect() as db:

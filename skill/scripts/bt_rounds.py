@@ -15,7 +15,6 @@ Round file: requirements/REQ-NNN-<slug>/rounds/round-NN.json
 """
 from __future__ import annotations
 
-import datetime as dt
 import time
 
 from bt_core import *  # noqa: F403
@@ -55,8 +54,7 @@ def new_round(rdir: Path, data: dict) -> Path:
     validate(data)
     rounds_dir(rdir).mkdir(exist_ok=True)
     n = len(list_rounds(rdir)) + 1
-    data.update({"round": n, "status": "open", "answers": {},
-                 "created_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds").replace("+00:00", "Z")})
+    data.update({"round": n, "status": "open", "answers": {}, "created_at": dt.datetime.now().isoformat("T", "seconds")})
     f = rounds_dir(rdir) / f"round-{n:02d}.json"
     save(f, data)
     return f
@@ -73,7 +71,7 @@ def answer_round(f: Path, answers: dict, via: str) -> dict:
     data = load(f)
     data["answers"] = answers
     data["status"] = "answered"
-    data["answered_at"] = dt.datetime.now(dt.UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+    data["answered_at"] = dt.datetime.now().isoformat("T", "seconds")
     data["answered_via"] = via
     save(f, data)
     return data

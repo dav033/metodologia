@@ -189,14 +189,6 @@ def _scheduler_overlay(tasks: dict[str, dict], projection: dict, facts: dict[str
         records = facts.get(raw["id"], [])
         task["state"] = _SCHEDULER_TASK.get(raw.get("scheduler_state"), "pending")
         task["attempts"] = raw.get("attempts") if isinstance(raw.get("attempts"), int) else len(records)
-        for key in ("attempts_used", "max_attempts", "retries_remaining"):
-            value = raw.get(key)
-            if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
-                task[key] = value
-        if isinstance(raw.get("retry_exhausted"), bool):
-            task["retry_exhausted"] = raw["retry_exhausted"]
-        if isinstance(raw.get("reason"), str):
-            task["reason"] = raw["reason"]
         task["evidence"] = raw.get("evidence") or None
         task["complexity"] = task["complexity"] or (raw.get("complexity") if raw.get("complexity") in LEVELS else None)
         route = {"provider": raw.get("provider") or None, "model_requested": raw.get("model") or None,

@@ -19,11 +19,6 @@ import bt_remote_api
 import bt_remote_events as feed
 import bt_plans_api
 import bt_rounds
-import bt_core
-import bt_live_api
-import bt_plan_adapter
-import bt_scheduler_adapter
-from bt_planner import revisions as plan_revisions
 
 AT = "2026-10-19T12:00:00Z"
 OLD = "2026-10-19T08:00:00Z"
@@ -47,8 +42,6 @@ class FixtureTests(unittest.TestCase):
     def test_each_notification_kind_has_a_fixture(self):
         fixtures = {
             "attempt.failed": {"runs": [run([{"id": "T1", "title": "Build",
-                                               "state": "blocked", "reason": "attempts_exhausted",
-                                               "attempts_used": 3, "max_attempts": 3,
                                                "attempt": attempt("a1", state="rejected", failure="tests")}])]},
             "attempt.blocked": {"runs": [run([{"id": "T1", "attempt": attempt("a2", state="blocked")}])]},
             "run.finished": {"runs": [run([], status="done")]},
@@ -156,37 +149,6 @@ class RouteTests(unittest.TestCase):
             round_event = next(event for event in events if event["type"] == "round.waiting")
             self.assertEqual(round_event["occurredAt"], created_at)
 
-    def test_new_round_and_event_use_utc_when_laptop_timezone_is_bogota(self):
-        if not hasattr(time, "tzset"):
-            self.skipTest("tzset is unavailable on this platform")
-        original_tz = os.environ.get("TZ")
-        try:
-            os.environ["TZ"] = "America/Bogota"
-            time.tzset()
-            with tempfile.TemporaryDirectory() as directory:
-                rdir = Path(directory) / "REQ-001"
-                rdir.mkdir()
-                round_path = bt_rounds.new_round(rdir, {
-                    "title": "Fresh question",
-                    "questions": [{"id": "q1", "text": "Choose", "type": "open"}],
-                })
-                created_at = bt_rounds.load(round_path)["created_at"]
-                self.assertTrue(created_at.endswith("Z"))
-                event = events_for({"rounds": [{"project": "demo", "req": "REQ-001", "round": 1,
-                                                  "at": created_at}]})["round.waiting"]
-                self.assertEqual(event["occurredAt"], created_at)
-                created_epoch = dt.datetime.fromisoformat(created_at.replace("Z", "+00:00")).timestamp()
-                self.assertLess(abs(created_epoch - time.time()), 5)
-                legacy = events_for({"rounds": [{"project": "demo", "req": "REQ-001", "round": 2,
-                                                  "at": "2026-10-21T12:00:00"}]})["round.waiting"]
-                self.assertEqual(legacy["occurredAt"], "2026-10-21T17:00:00Z")
-        finally:
-            if original_tz is None:
-                os.environ.pop("TZ", None)
-            else:
-                os.environ["TZ"] = original_tz
-            time.tzset()
-
     def test_get_events_route_uses_cursor_and_projects_open_decisions(self):
         handler = Handler()
         with tempfile.TemporaryDirectory() as directory:
@@ -222,87 +184,6 @@ class RouteTests(unittest.TestCase):
                 bt_remote_api.route_get(handler)
             self.assertEqual(handler.status, 400)
             self.assertEqual(json.loads(handler.body)["code"], code)
-
-    def test_events_route_requires_retry_exhaustion_before_failed_notification(self):
-        handler = Handler()
-        source = run([{"id": "T1", "state": "recovering", "attempts_used": 1, "max_attempts": 3,
-                       "attempt": attempt("a1", state="failed", failure="agent exited") }])
-        transition = {"kind": "state_change", "project": "demo", "req": "REQ-001", "task": "T1",
-                      "id": "transition-1", "at": AT, "data": {"state": "failed", "failure": "agent exited"}}
-        class LedgerStub:
-            def rows(self):
-                return []
-
-        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
-                patch("bt_core.ROOT", Path(directory)), \
-                patch("bt_live_api.run_summaries", return_value=[source]), \
-                patch("bt_plans_api.plans_payload", return_value=[]), \
-                patch("bt_live_api.flow_events", return_value=([transition], [], {})), \
-                patch("bt_subscriptions.summary", return_value=[]), \
-                patch("bt_remote_commands.Ledger", LedgerStub):
-            bt_remote_api.route_get(handler)
-            self.assertEqual(handler.status, 200)
-            self.assertFalse(any(event["type"] == "attempt.failed" for event in json.loads(handler.body)["events"]))
-
-            handler = Handler()
-            source["tasks"][0].update(state="blocked", reason="attempts_exhausted", attempts_used=3, max_attempts=3)
-            bt_remote_api.route_get(handler)
-            failed = next(event for event in json.loads(handler.body)["events"] if event["type"] == "attempt.failed")
-            self.assertTrue(failed["data"]["retryExhausted"])
-            self.assertEqual((failed["data"]["attemptsUsed"], failed["data"]["maxAttempts"]), (3, 3))
-
-    def test_real_scheduler_projection_emits_exhausted_failure_through_remote_route(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            req_dir = root / "demo" / "requirements" / "REQ-001-budget"
-            req_dir.mkdir(parents=True)
-            plan = {
-                "schema_version": "1.0.0", "plan_id": "REQ-001", "revision": 1,
-                "spec_ref": "SPEC.md",
-                "milestones": [{"id": "M1", "title": "Build", "acceptance_criteria": ["Build is checked"]}],
-                "tasks": [{"id": "T1", "milestone_id": "M1", "title": "Fail three times",
-                           "objective": "Exercise the retry limit", "estimate_rationale": "Fixture test",
-                           "complexity": "low", "scope": "small_change", "estimated_minutes": 10,
-                           "risk": "low", "coupling": "low", "confidence": "high",
-                           "repository": "demo", "expected_paths": ["src/**"], "shared_resources": [], "after": [],
-                           "verification": [{"type": "command", "value": "true", "purpose": "fixture check"}],
-                           "acceptance_criteria": ["A failure is recorded"]}],
-            }
-            (req_dir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
-            (req_dir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan — REQ-001 — Budget\n",
-                                             encoding="utf-8")
-            plan_revisions.freeze(req_dir, plan, source="approval")
-            scheduler = bt_scheduler_adapter.open_scheduler(
-                req_dir, config=bt_scheduler_adapter.core.Config(max_parallel_tasks=1, max_attempts=3))
-            for number in range(1, 4):
-                scheduler.step()
-                attempt_id = scheduler.snapshot().tasks["T1"]["attempt"]
-                token = scheduler.read(lambda ctx: ctx.state.attempts[attempt_id].token)
-                scheduler.ingest(bt_scheduler_adapter.core.Event(
-                    f"failure-{number}", "REQ-001", 1, "T1", attempt_id, "fixture", "execution_failed",
-                    payload={"reason": "fixture failure"}, token=token,
-                ))
-                scheduler.step()
-
-            projection = json.loads(bt_scheduler_adapter.write_projection(req_dir, scheduler).read_text())
-            projected = projection["tasks"][0]
-            self.assertEqual((projected["attempts_used"], projected["max_attempts"],
-                              projected["retries_remaining"], projected["retry_exhausted"]), (3, 3, 0, True))
-            self.assertEqual(projected["attempts"], 3)
-
-            handler = Handler()
-            handler.path += "?limit=100"
-            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(root)}), \
-                    patch("bt_core.ROOT", root):
-                bt_live_api._runs_seen.pop(root.resolve(), None)
-                bt_remote_api.route_get(handler)
-            self.assertEqual(handler.status, 200)
-            payload = json.loads(handler.body)
-            failed = [event for event in payload["events"] if event["type"] == "attempt.failed"]
-            self.assertEqual(len(failed), 1)
-            self.assertEqual(failed[0]["target"]["attemptId"], "att-0003")
-            self.assertTrue(failed[0]["data"]["retryExhausted"])
-            self.assertEqual((failed[0]["data"]["attemptsUsed"], failed[0]["data"]["maxAttempts"]), (3, 3))
 
     def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
         # Exercise the route's real feed.collect -> build_events -> page path across polls.

@@ -47,27 +47,13 @@ def redact(value: Any) -> Any:
 def _event(kind: str, identity: str, occurred_at: str, target: dict[str, str], data: dict[str, Any]) -> dict[str, Any]:
     event_id = "evt_" + hashlib.sha256(f"{kind}\0{identity}".encode()).hexdigest()
     return {"schemaVersion": 1, "id": event_id, "cursor": "", "type": kind,
-            "occurredAt": _utc_timestamp(occurred_at), "target": target,
+            "occurredAt": occurred_at or "1970-01-01T00:00:00Z", "target": target,
             "data": redact(data), "dedupeKey": event_id}
-
-
-def _utc_timestamp(stamp: str | None) -> str:
-    """Normalize timestamps to RFC 3339 UTC; legacy naive values mean laptop-local time."""
-    try:
-        parsed = dt.datetime.fromisoformat(stamp.replace("Z", "+00:00")) if stamp else None
-    except (ValueError, AttributeError):
-        parsed = None
-    if parsed is None:
-        return "1970-01-01T00:00:00Z"
-    if parsed.tzinfo is None:
-        parsed = parsed.astimezone()
-    return parsed.astimezone(dt.UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _seconds(stamp: str | None) -> float | None:
     try:
-        parsed = dt.datetime.fromisoformat(stamp.replace("Z", "+00:00")) if stamp else None
-        return parsed.astimezone(dt.UTC).timestamp() if parsed else None
+        return dt.datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp() if stamp else None
     except (ValueError, AttributeError):
         return None
 
@@ -81,45 +67,22 @@ def _task_target(project: str, req: str, task: str | None = None, attempt: str |
             **({"taskId": task} if task else {}), **({"attemptId": attempt} if attempt else {})}
 
 
-def _retry_exhausted(value: dict[str, Any]) -> bool:
-    used = value.get("attempts_used", value.get("attemptsUsed"))
-    maximum = value.get("max_attempts", value.get("maxAttempts"))
-    remaining = value.get("retries_remaining", value.get("retriesRemaining"))
-    if (not isinstance(used, int) or isinstance(used, bool) or used < 1
-            or not isinstance(maximum, int) or isinstance(maximum, bool) or maximum < 1 or used < maximum):
-        return False
-    return (value.get("retry_exhausted") is True or value.get("retryExhausted") is True
-            or (isinstance(remaining, int) and not isinstance(remaining, bool) and remaining == 0)
-            or (value.get("state") == "blocked" and value.get("reason") == "attempts_exhausted"))
-
-
 def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[str, Any]]:
     """Derive stable events from current run state and explicit notification fixtures."""
     out: list[dict[str, Any]] = []
-    state_failure_targets: set[tuple[str, str, str]] = set()
     for run in state.get("runs", []):
         project, req = run.get("project", ""), run.get("req_id", "")
         for task in run.get("tasks", []):
-            exhausted = _retry_exhausted(task)
-            terminal_attempt = task.get("attempt")
-            terminal_attempt_id = terminal_attempt.get("id") if isinstance(terminal_attempt, dict) else None
             attempts = [attempt for attempt in [task.get("attempt"), *(task.get("history") or [])]
                         if isinstance(attempt, dict) and attempt.get("id")]
             for attempt in {item["id"]: item for item in attempts}.values():
-                if exhausted and terminal_attempt_id and attempt["id"] != terminal_attempt_id:
-                    continue
                 target = _task_target(project, req, task.get("id"), attempt["id"])
                 identity = f"{project}/{req}:{task.get('id', '')}:{attempt['id']}"
                 occurred_at = attempt.get("ended_at") or attempt.get("last_activity_at") or run.get("updated_at") or ""
                 data = {"title": task.get("title"), "failure": attempt.get("failure"),
                         "verdict": attempt.get("verdict")}
                 if attempt.get("state") in {"rejected", "failed"} or attempt.get("failure"):
-                    if exhausted:
-                        data.update({"retryExhausted": True,
-                                     "attemptsUsed": task.get("attempts_used", task.get("attempts")),
-                                     "maxAttempts": task.get("max_attempts")})
-                        out.append(_event("attempt.failed", identity, occurred_at, target, data))
-                        state_failure_targets.add((project, req, str(task.get("id", ""))))
+                    out.append(_event("attempt.failed", identity, occurred_at, target, data))
                 elif attempt.get("state") == "blocked":
                     out.append(_event("attempt.blocked", identity, occurred_at, target, data))
                 elif attempt.get("live") and now is not None:
@@ -180,11 +143,7 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
             out.append(_event("laptop.offline", since, since, {"kind": "system"}, {"since": since}))
     for row in state.get("flow", []):
         event = from_flow(row)
-        if event is not None and not (
-            event["type"] in {"attempt.failed", "attempt.blocked"}
-            and (event["target"].get("project", ""), event["target"].get("req", ""),
-                 event["target"].get("taskId", "")) in state_failure_targets
-        ):
+        if event is not None:
             out.append(event)
 
     out.sort(key=lambda event: (event["occurredAt"], event["id"]))
@@ -213,8 +172,6 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
     source_id = str(row.get("id") or row.get("ord") or row.get("seq") or "")
     identity = f'{target["project"]}/{target["req"]}:{source_id}'
     payload = data or {key: row[key] for key in ("failure", "summary") if row.get(key) is not None}
-    if kind == "attempt.failed" and not _retry_exhausted(payload):
-        return None
     return _event(kind, identity, str(row.get("at") or row.get("occurredAt") or ""), target, payload)
 
 
