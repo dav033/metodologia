@@ -8,8 +8,14 @@ from typing import Any
 
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
+<<<<<<< 6325aad3bf697b5532e04cadff1faaf103f99745
 from stream import StreamHub
 from notifications import NotificationOutbox, TelegramSender, notification_for_event
+||||||| d50e31c90b0e67af0ef0f7d068ae134a8c2c23a0
+from notifications import NotificationOutbox, TelegramSender, notification_for_event
+=======
+from notifications import NotificationOutbox, TelegramSender, event_timestamp, notification_for_event
+>>>>>>> d88a6a63b45058501d9bd5ba9116859d7bfce2c5
 from upstream import LaptopClient, UpstreamError, UpstreamTimeout
 
 logger = logging.getLogger(__name__)
@@ -205,7 +211,7 @@ class GatewayRuntime:
             self.hub.publish(event)
             notification = notification_for_event(event)
             if notification:
-                self.outbox.enqueue(*notification)
+                self.outbox.enqueue(*notification, created_at=event_timestamp(event))
         next_cursor = result.get("nextCursor")
         if isinstance(next_cursor, str):
             self.event_cursor = next_cursor
