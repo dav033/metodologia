@@ -112,11 +112,16 @@ class RemoteApiTests(unittest.TestCase):
     def test_snapshot_uses_shared_now_frame_and_exposes_rejected_review_attempt(self):
         import bt_core
         import bt_live_api as live
+        import bt_plans_api
         import bt_server
 
         with tempfile.TemporaryDirectory() as root, patch.dict(os.environ, {"FLOW_GATEWAY_KEY": TEST_KEY}), \
                 patch.object(bt_core, "ROOT", Path(root)), \
-                patch.object(live, "now_items", wraps=live.now_items) as read_now:
+                patch.object(live, "now_items", wraps=live.now_items) as read_now, \
+                patch.object(bt_plans_api, "open_decisions", return_value=[{
+                    "id": "decision-1", "task": "T1", "title": "Choose", "what": "Pick a route",
+                    "options": [{"id": "retry", "label": "Retry", "consequence": "Runs again"}],
+                }] ):
             base = Path(root).resolve()
             rdir = base / "demo" / "requirements" / "REQ-001-fixture"
             rdir.mkdir(parents=True)
@@ -127,6 +132,13 @@ class RemoteApiTests(unittest.TestCase):
             (rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
             (rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan — REQ-001 — Fixture\n", encoding="utf-8")
             (rdir / "SPEC.md").write_text("# Spec — REQ-001 — Fixture\n", encoding="utf-8")
+            rounds = rdir / "rounds"
+            rounds.mkdir()
+            (rounds / "round-01.json").write_text(json.dumps({
+                "round": 1, "title": "Scope", "status": "open",
+                "questions": [{"id": "q1", "text": "Which route?", "type": "choice",
+                               "options": [{"key": "a", "label": "A"}]}],
+            }), encoding="utf-8")
             timestamp = dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc).timestamp()
             db = base / ".state" / "scheduler" / "demo-REQ-001.db"
             db.parent.mkdir(parents=True)
@@ -167,6 +179,7 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(snapshot["runs"][0]["activeTask"]["id"], "T1")
             self.assertEqual(snapshot["runs"][0]["req"], "REQ-001")
             self.assertEqual(snapshot["runs"][0]["state"], "running")
+            self.assertEqual(snapshot["runs"][0]["activeAttempt"]["id"], "A-live")
             last_activity = dt.datetime.fromisoformat(snapshot["runs"][0]["lastActivityAt"].replace("Z", "+00:00"))
             self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
             rejected_task = snapshot["runs"][0]["tasks"][1]
@@ -175,6 +188,10 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(rejected_task["reviewAttempt"]["id"], "A-rejected")
             self.assertFalse(rejected_task["reviewAttempt"]["live"])
             self.assertEqual(rejected_task["history"][0]["id"], "A-rejected")
+            self.assertEqual(snapshot["plans"][0]["req"], "REQ-001")
+            self.assertEqual(snapshot["plans"][0]["tasks"][0]["id"], "T1")
+            self.assertEqual(snapshot["rounds"][0]["questions"][0]["id"], "q1")
+            self.assertEqual(snapshot["decisionRequests"][0]["id"], "decision-1")
 
             self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
             self.assertEqual(read_now.call_count, 1)

@@ -119,6 +119,8 @@ def _snapshot(handler) -> None:
     """Compact run read model, with live task signals taken from the panel's shared now frame."""
     import bt_core
     import bt_live_api as live
+    import bt_plans_api
+    import bt_rounds
 
     root = bt_core.ROOT
     try:
@@ -153,11 +155,13 @@ def _snapshot(handler) -> None:
                      "reqId": run["req_id"],
                      "state": run.get("status") or ("running" if run.get("active") else "idle"),
                      "title": run["title"], "status": run["status"], "active": run["active"],
+                     "activeAttempt": live._attempt(active["attempt"]) if active else None,
                      "activeTask": ({"id": active["task"], "title": active["task_title"],
                                      "state": active["state"], "attempt": live._attempt(active["attempt"])}
                                     if active else None),
                      "lastActivityAt": last_activity, "tasks": tasks})
     plans, rounds, decisions = [], [], []
+<<<<<<< fe6f41a9ce94e7e0d6f2e6de6f1bc7bda2c997ac
     for plan in plan_summaries:
         project, req = plan["project"], plan["req_id"]
         rdir = bt_plans_api.req_dir(root, project, req)
@@ -177,6 +181,35 @@ def _snapshot(handler) -> None:
             rounds.append({"project": project, "req": req, "round": number,
                            **{key: data[key] for key in ("id", "title", "intro", "coverage", "status", "questions")
                               if key in data}})
+||||||| b5fb9e730a15b5f5a36ed676d8dc6b5caae4844d
+=======
+    for row in bt_plans_api.plans_payload(root):
+        project, req = row["project"], row["req_id"]
+        try:
+            rdir = bt_plans_api.req_dir(root, project, req)
+            status = bt_plans_api.status_of(root, project, req)
+        except bt_plans_api.PlanError:
+            continue
+        tasks = [task for milestone in status.get("milestones", [])
+                 for task in milestone.get("tasks", [])]
+        plans.append({"id": status.get("plan", {}).get("plan_id") or req,
+                      "project": project, "req": req,
+                      "state": status.get("plan", {}).get("status") or row.get("plan_status") or "unknown",
+                      "revision": status.get("plan", {}).get("revision"),
+                      "updated_at": row.get("updated_at"),
+                      "acceptance_criteria": [criterion for task in tasks
+                                              for criterion in task.get("acceptance_criteria", [])],
+                      "tasks": tasks})
+        for round_path in bt_rounds.list_rounds(rdir):
+            try:
+                round_data = bt_rounds.load(round_path)
+            except (OSError, ValueError):
+                continue
+            if round_data.get("status") == "open":
+                rounds.append({**round_data, "project": project, "req": req})
+        decisions.extend({**decision, "project": project, "req": req}
+                         for decision in bt_plans_api.open_decisions(rdir))
+>>>>>>> af4745f7f09edb40bc2aff39c663b988ef7c9d07
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
     return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
                                 "runs": runs, "plans": plans, "rounds": rounds,

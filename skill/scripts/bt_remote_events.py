@@ -101,8 +101,12 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
         project, req = run.get("project", ""), run.get("req_id", "")
         for task in run.get("tasks", []):
             exhausted = _retry_exhausted(task)
+<<<<<<< fe6f41a9ce94e7e0d6f2e6de6f1bc7bda2c997ac
             terminal_attempt = task.get("attempt")
             terminal_attempt_id = terminal_attempt.get("id") if isinstance(terminal_attempt, dict) else None
+||||||| b5fb9e730a15b5f5a36ed676d8dc6b5caae4844d
+=======
+>>>>>>> af4745f7f09edb40bc2aff39c663b988ef7c9d07
             attempts = [attempt for attempt in [task.get("attempt"), *(task.get("history") or [])]
                         if isinstance(attempt, dict) and attempt.get("id")]
             for attempt in {item["id"]: item for item in attempts}.values():
@@ -116,8 +120,8 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
                 if attempt.get("state") in {"rejected", "failed"} or attempt.get("failure"):
                     if exhausted:
                         data.update({"retryExhausted": True,
-                                     "attemptsUsed": task.get("attempts_used", task.get("attempts")),
-                                     "maxAttempts": task.get("max_attempts")})
+                                     "attemptsUsed": task.get("attempts_used", task.get("attemptsUsed")),
+                                     "maxAttempts": task.get("max_attempts", task.get("maxAttempts"))})
                         out.append(_event("attempt.failed", identity, occurred_at, target, data))
                         state_failure_targets.add((project, req, str(task.get("id", ""))))
                 elif attempt.get("state") == "blocked":
@@ -180,11 +184,29 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
             out.append(_event("laptop.offline", since, since, {"kind": "system"}, {"since": since}))
     for row in state.get("flow", []):
         event = from_flow(row)
+        flow_data = row.get("data") if isinstance(row.get("data"), dict) else {}
+        exhausted = _retry_exhausted({**row, **flow_data})
         if event is not None and not (
+<<<<<<< fe6f41a9ce94e7e0d6f2e6de6f1bc7bda2c997ac
             event["type"] in {"attempt.failed", "attempt.blocked"}
             and (event["target"].get("project", ""), event["target"].get("req", ""),
                  event["target"].get("taskId", "")) in state_failure_targets
+||||||| b5fb9e730a15b5f5a36ed676d8dc6b5caae4844d
+            event["type"] == "attempt.failed"
+            and (event["target"].get("project", ""), event["target"].get("req", ""),
+                 event["target"].get("taskId", "")) in state_failure_targets
+=======
+            event["type"] == "attempt.failed"
+            and ((event["target"].get("project", ""), event["target"].get("req", ""),
+                  event["target"].get("taskId", "")) in state_failure_targets or not exhausted)
+>>>>>>> af4745f7f09edb40bc2aff39c663b988ef7c9d07
         ):
+            if event["type"] == "attempt.failed":
+                event["data"].update({"retryExhausted": True,
+                                      "attemptsUsed": flow_data.get("attempts_used", flow_data.get("attemptsUsed",
+                                                         row.get("attempts_used", row.get("attemptsUsed")))),
+                                      "maxAttempts": flow_data.get("max_attempts", flow_data.get("maxAttempts",
+                                                         row.get("max_attempts", row.get("maxAttempts"))))})
             out.append(event)
 
     out.sort(key=lambda event: (event["occurredAt"], event["id"]))
@@ -198,9 +220,12 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
     data = row.get("data") if isinstance(row.get("data"), dict) else {}
     kind = row.get("remote_type")
     if kind is None:
+        state = data.get("state", row.get("state"))
         kind = {("state_change", "failed"): "attempt.failed", ("state_change", "rejected"): "attempt.failed",
+                ("attempt_transition", "failed"): "attempt.failed",
+                ("attempt_transition", "rejected"): "attempt.failed",
                 ("task_state", "blocked"): "attempt.blocked", ("verdict", "failed"): "attempt.failed",
-                ("verdict", "rejected"): "attempt.failed"}.get((row.get("kind"), data.get("state")))
+                ("verdict", "rejected"): "attempt.failed"}.get((row.get("kind"), state))
     if kind not in NOTIFICATION_KINDS:
         return None
     target = _run_target(str(row.get("project", "unknown")), str(row.get("req", "REQ-000")))
