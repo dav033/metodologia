@@ -102,7 +102,21 @@ export async function createMockGatewayServer() {
           const nextResponse = server.commandResponses.shift() ?? server.nextCommandResponse;
           if (nextResponse) {
             server.nextCommandResponse = null;
+<<<<<<< bf3913c2ab9879f2c4a2bb8b61f62ab7e53ccc83
             server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+||||||| b498bd7e66aed145929c5fd334fb808458c7e9c4
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+||||||| ab51e89869d7e5691e66531a32861db97d644083
+=======
+          if (server.nextCommandResponse) {
+            const nextResponse = server.nextCommandResponse;
+            server.nextCommandResponse = null;
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado: el estado cambió" });
+>>>>>>> 4b7278cd27f206dd23e84a30bc7838460d65b17c
+=======
+            const result = nextResponse.body?.code === "STALE_PRECONDITION" ? "Rechazado: el estado cambió" : "Rechazado";
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result });
+>>>>>>> 9ef9600bb6d980b33f9e0e4bf809cda193f40287
             send(nextResponse.status, nextResponse.body);
             return;
           }
