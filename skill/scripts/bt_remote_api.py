@@ -2,15 +2,22 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import hmac
 import json
 import os
 import re
+import sqlite3
+import stat
+import subprocess
 from urllib.parse import parse_qs, urlparse
 
 PREFIX = "/api/remote/v1"
 MAX_BODY = 256 * 1024
 _ATTEMPT_ID = re.compile(r"^[A-Za-z0-9._:-]{1,120}$")
+_REVIEW_FILE_MAX = 1 << 20
+_REVIEW_OUTPUT_MAX = 256 * 1024
+_REVIEW_DIFF_TIMEOUT = 3
 
 
 def _json(handler, payload: dict, status: int = 200, content_type: str = "application/json; charset=utf-8") -> None:
@@ -81,6 +88,177 @@ def _plans() -> list[dict]:
     return plans.plans_payload(ROOT)
 
 
+def _read_review_file(path, limit: int = _REVIEW_FILE_MAX) -> bytes | None:
+    """Read a bounded regular artifact without following symlinks."""
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError:
+        return None
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            return None
+        with os.fdopen(fd, "rb", closefd=False) as stream:
+            data = stream.read(limit + 1)
+    except OSError:
+        return None
+    finally:
+        os.close(fd)
+    return data if len(data) <= limit else None
+
+
+def _review_executor_attempt(rdir, attempt_id: str):
+    """Find the M3 attempt artifact under this run's executor roots, verifying its ledger identity."""
+    import bt_scheduler_adapter as scheduler
+
+    db = scheduler.run_db_path(rdir)
+    roots = db.parent.parent / "executor"
+    try:
+        candidates = list(roots.glob(f"{db.stem}-r*"))
+    except OSError:
+        return None
+    for root in candidates:
+        if root.is_symlink() or not root.is_dir():
+            continue
+        ledger = root / "ledger.db"
+        if not ledger.is_file() or ledger.is_symlink():
+            continue
+        try:
+            connection = sqlite3.connect(f"{ledger.resolve().as_uri()}?mode=ro", uri=True, timeout=0.2)
+            try:
+                row = connection.execute(
+                    "SELECT dirname,request FROM attempts WHERE attempt_id=?", (attempt_id,)
+                ).fetchone()
+            finally:
+                connection.close()
+        except (sqlite3.Error, OSError):
+            continue
+        if not row:
+            continue
+        try:
+            request = json.loads(row[1])
+        except (TypeError, ValueError):
+            continue
+        if not isinstance(request, dict) or request.get("attempt_id") != attempt_id:
+            continue
+        dirname = row[0]
+        if not isinstance(dirname, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", dirname):
+            continue
+        attempt_dir = root / "attempts" / dirname
+        try:
+            if attempt_dir.resolve().is_relative_to(root.resolve()) and attempt_dir.is_dir():
+                return attempt_dir.resolve()
+        except OSError:
+            continue
+    return None
+
+
+def _review_quality_result(rdir, attempt_id: str) -> tuple[dict | None, dict[str, bytes]]:
+    """Read M6 verification result and output artifacts for an attempt without opening a writer store."""
+    import bt_run_stores
+
+    db = bt_run_stores.paths(rdir).get("m6")
+    if not db or not db.is_file() or db.is_symlink():
+        return None, {}
+    try:
+        connection = sqlite3.connect(f"{db.resolve().as_uri()}?mode=ro", uri=True, timeout=0.2)
+        connection.row_factory = sqlite3.Row
+        try:
+            rows = connection.execute("SELECT request_json,result_json FROM requests WHERE result_json IS NOT NULL").fetchall()
+            for row in rows:
+                request = json.loads(row["request_json"])
+                if not isinstance(request, dict) or request.get("attempt_id") != attempt_id:
+                    continue
+                result = json.loads(row["result_json"])
+                if not isinstance(result, dict) or not isinstance(result.get("checks"), list):
+                    return None, {}
+                output: dict[str, bytes] = {}
+                for check in result["checks"]:
+                    if not isinstance(check, dict):
+                        continue
+                    for key in ("stdout_ref", "stderr_ref"):
+                        reference = check.get(key)
+                        if not isinstance(reference, str) or not re.fullmatch(r"m6://artifact/[a-f0-9]{64}", reference):
+                            continue
+                        digest = reference.rsplit("/", 1)[-1]
+                        artifact = connection.execute("SELECT content FROM artifacts WHERE digest=?", (digest,)).fetchone()
+                        if artifact and hashlib.sha256(bytes(artifact[0])).hexdigest() == digest:
+                            output[reference] = bytes(artifact[0])
+                return result, output
+        finally:
+            connection.close()
+    except (sqlite3.Error, OSError, UnicodeError, ValueError):
+        return None, {}
+    return None, {}
+
+
+def _verification_section(result: dict | None, artifacts: dict[str, bytes]) -> dict:
+    checks = []
+    for item in (result or {}).get("checks", []):
+        if not isinstance(item, dict):
+            continue
+        stdout = artifacts.get(item.get("stdout_ref"), b"").decode("utf-8", errors="replace")
+        stderr = artifacts.get(item.get("stderr_ref"), b"").decode("utf-8", errors="replace")
+        checks.append({"command": item.get("command", ""), "exitCode": item.get("exit_code"),
+                       "output": (stdout + stderr)[:_REVIEW_OUTPUT_MAX]})
+    failed = next((item for item in checks if item.get("exitCode") != 0), None)
+    return {"command": failed.get("command") if failed else (checks[0].get("command") if checks else None),
+            "output": failed.get("output") if failed else (checks[0].get("output") if checks else ""),
+            "checks": checks}
+
+
+def _diff_section(attempt_dir) -> dict:
+    handoff_dir = attempt_dir / "handoff" if attempt_dir else None
+    if handoff_dir and (handoff_dir.is_symlink() or not handoff_dir.resolve().is_relative_to(attempt_dir.resolve())):
+        handoff_dir = None
+    manifest_raw = _read_review_file(handoff_dir / "manifest.json") if handoff_dir else None
+    try:
+        manifest = json.loads(manifest_raw.decode("utf-8")) if manifest_raw else {}
+    except (UnicodeError, ValueError):
+        manifest = {}
+    changed = manifest.get("changed") if isinstance(manifest, dict) else None
+    files = [str(item) for item in changed if isinstance(item, str)] if isinstance(changed, list) else []
+    patch_path = handoff_dir / "changes.patch" if handoff_dir else None
+    stat_text = None
+    patch = _read_review_file(patch_path, _REVIEW_OUTPUT_MAX) if patch_path else None
+    if patch is not None:
+        try:
+            result = subprocess.run(["git", "apply", "--stat"], input=patch, capture_output=True,
+                                    timeout=_REVIEW_DIFF_TIMEOUT, check=False)
+            if result.returncode == 0:
+                stat_text = result.stdout.decode("utf-8", errors="replace").strip()[-4000:]
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    if stat_text is None and isinstance(manifest, dict) and isinstance(manifest.get("changed_total"), int):
+        count = manifest["changed_total"]
+        stat_text = f"{count} files changed" if count != 1 else "1 file changed"
+    return {"stat": stat_text, "files": files}
+
+
+def _failure_review(attempt_id: str) -> dict | None:
+    """Compose the frontend's four-section view from the authoritative live read model and durable M1/M3/M6 records."""
+    import bt_attempt_facts
+    import bt_live_api as live
+
+    for _, rdir in live.runs(None):
+        facts = bt_attempt_facts.attempt_facts(rdir)
+        match = next(((task_id, item) for task_id, history in facts.items()
+                      for item in history if item.get("attempt") == attempt_id), None)
+        if match is None:
+            continue
+        _, attempt = match
+        if attempt.get("state") not in {"failed", "rejected"} and not attempt.get("failure"):
+            return None
+        attempt_dir = _review_executor_attempt(rdir, attempt_id)
+        result, artifacts = _review_quality_result(rdir, attempt_id)
+        log_bytes = _read_review_file(attempt_dir / "output.tail", _REVIEW_OUTPUT_MAX) if attempt_dir else None
+        log_lines = (log_bytes.decode("utf-8", errors="replace").splitlines() if log_bytes else [])[-200:]
+        cause = attempt.get("failure") or attempt.get("state") or "unknown"
+        return {"attemptId": attempt_id, "cause": cause,
+                "verification": _verification_section(result, artifacts),
+                "diff": _diff_section(attempt_dir), "logTail": "\n".join(log_lines)}
+    return None
+
+
 def route_get(handler) -> None:
     if not _authorized(handler):
         return _problem(handler, 401, "UNAUTHORIZED", "Se requiere la clave del gateway.")
@@ -97,6 +275,18 @@ def route_get(handler) -> None:
                                    "generatedAt": dt.datetime.now(dt.UTC).isoformat(), "cursor": ""}))
         if path == f"{PREFIX}/runs":
             return _json(handler, {"runs": _runs()})
+        if path == f"{PREFIX}/routes":
+            target, task = query.get("target", ""), query.get("task", "")
+            if not target or not re.fullmatch(r"[A-Za-z0-9_-]+/REQ-[0-9]+", target) or \
+                    not re.fullmatch(r"T[0-9A-Za-z_-]{1,79}", task):
+                return _problem(handler, 400, "INVALID_ROUTE_QUERY", "Se requieren target y task válidos.")
+            import bt_remote_commands as commands
+            import bt_remote_recovery as recovery
+            try:
+                project, _, rdir = commands._run_target(target)
+                return _json(handler, {"routes": recovery.route_options(project, rdir, task)})
+            except ValueError as exc:
+                return _problem(handler, 404, "ROUTES_UNAVAILABLE", str(exc))
         if path == f"{PREFIX}/plans":
             return _json(handler, {"plans": _plans()})
         if path == f"{PREFIX}/history":
@@ -124,14 +314,18 @@ def route_get(handler) -> None:
             if after and all(event["cursor"] != after for event in events):
                 return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
             page, cursor, has_more = remote_events.page(events, after, limit)
-            return _json(handler, {"events": page, "nextCursor": cursor, "hasMore": has_more})
+            return _json(handler, remote_events.redact({"events": page, "nextCursor": cursor, "hasMore": has_more}))
         if path == f"{PREFIX}/commands":
             return _problem(handler, 503, "COMMANDS_UNAVAILABLE", "El registro de comandos aún no está disponible.")
         match = re.fullmatch(re.escape(PREFIX) + r"/attempts/([^/]+)/review", path)
         if match:
             if not _ATTEMPT_ID.fullmatch(match.group(1)):
                 return _problem(handler, 400, "INVALID_ID", "El identificador del intento no es válido.")
-            return _problem(handler, 503, "REVIEW_UNAVAILABLE", "La revisión remota aún no está disponible.")
+            import bt_remote_events as remote_events
+            review = _failure_review(match.group(1))
+            if review is None:
+                return _problem(handler, 404, "ATTEMPT_NOT_FOUND", "No se encontró el intento.")
+            return _json(handler, remote_events.redact(review))
     except (ValueError, OSError):
         return _problem(handler, 503, "STARTING", "La API remota aún no está disponible.")
     return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
