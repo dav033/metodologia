@@ -223,6 +223,10 @@ class GatewayRuntime:
         }
         return snapshot
 
+    def read_model(self, path: str) -> dict[str, Any]:
+        """Relay an authenticated gateway read route to the laptop's v1 API."""
+        return self.laptop.read_model(path)
+
     def _poll_events(self) -> None:
         try:
             result = self.laptop.events(self.event_cursor)

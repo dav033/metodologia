@@ -5,6 +5,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
@@ -18,6 +19,7 @@ from auth import (
     cookie_values,
 )
 from security import RateLimiter, origin_matches
+from upstream import UpstreamError
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -54,12 +56,18 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
 
         def do_GET(self) -> None:
             route = urlsplit(self.path)
-            if route.path == "/api/auth/login":
+            if route.path in {"/api/auth/login", "/api/auth/github"}:
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
                     ("Location", service.authorization_url(state)),
                     ("Set-Cookie", f"{STATE_COOKIE}={state}; Path=/api/auth/callback; Max-Age=600; HttpOnly; Secure; SameSite=Lax"),
+                ))
+                return
+            if route.path == "/api/auth/logout":
+                self._send(302, headers=(
+                    ("Location", service.config.frontend_origin + "/"),
+                    ("Set-Cookie", f"{SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"),
                 ))
                 return
             if route.path == "/api/auth/callback":
@@ -88,6 +96,25 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                     return
                 self._json(200, runtime.web_snapshot())
                 return
+            read_routes = {
+                "/api/remote/v1/commands",
+                "/api/remote/v1/history",
+                "/api/remote/v1/quotas",
+                "/api/remote/v1/routes",
+            }
+            is_review = re.fullmatch(r"/api/remote/v1/attempts/[A-Za-z0-9._:-]{1,120}/review", route.path)
+            if (route.path in read_routes or is_review) and runtime is not None:
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                try:
+                    model = runtime.read_model(route.path + ("?" + route.query if route.query else ""))
+                except UpstreamError:
+                    self._json(503, {"error": "read model unavailable"})
+                    return
+                self._json(200, model)
+                return
             self._json(404, {"error": "not found"})
 
         def do_POST(self) -> None:
@@ -102,6 +129,10 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                     return
                 if runtime is None:
                     self._json(404, {"error": "not found"})
+                    return
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
                     return
                 try:
                     length = int(self.headers.get("Content-Length", "0"))
