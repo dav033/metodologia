@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -77,3 +78,16 @@ class LaptopClient:
         from urllib.parse import urlencode
 
         return self.get_json("/api/remote/v1/events?" + urlencode({"after": after, "limit": limit}))
+
+    def read_model(self, path: str) -> dict[str, Any]:
+        from urllib.parse import urlsplit
+
+        route = urlsplit(path)
+        allowed = {"/api/remote/v1/commands", "/api/remote/v1/history", "/api/remote/v1/quotas",
+                   "/api/remote/v1/routes"}
+        if route.path not in allowed and not re.fullmatch(
+                r"/api/remote/v1/attempts/[A-Za-z0-9._:-]{1,120}/review", route.path):
+            raise ValueError("unsupported read model")
+        if route.scheme or route.netloc or route.fragment:
+            raise ValueError("unsupported read model")
+        return self.get_json(path)

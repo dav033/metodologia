@@ -1,7 +1,16 @@
+import http.client
+import json
+import tempfile
+import threading
 import unittest
+from pathlib import Path
 
 from stream import StreamHub, format_sse, parse_last_event_id
 from upstream import UpstreamError
+from app import create_runtime
+from auth import OAuthConfig, SessionStore
+from config import GatewayConfig
+from server import create_server
 
 
 class FakeLaptop:
@@ -11,6 +20,7 @@ class FakeLaptop:
         self.event_calls = 0
         self.pending = []
         self.snap = {"runs": []}
+        self.read_calls = []
 
     def snapshot(self):
         self.snapshot_calls += 1
@@ -24,6 +34,10 @@ class FakeLaptop:
             raise UpstreamError("offline")
         out, self.pending = self.pending, []
         return {"events": out, "nextCursor": f"c{self.event_calls}"}
+
+    def read_model(self, path):
+        self.read_calls.append(path)
+        return {"source": path}
 
 
 def events_of(items):
@@ -102,6 +116,36 @@ class StreamTests(unittest.TestCase):
         self.assertIsNone(parse_last_event_id(None))
         self.assertEqual(parse_last_event_id(" 7 "), 7)
 
+    def test_authenticated_read_models_reach_laptop_at_http_entrypoint(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            database = Path(temp_dir) / "gateway.sqlite"
+            oauth = OAuthConfig("client", "client-secret", "test-session-secret-with-more-than-32-bytes",
+                                "https://flow.example.test", str(database))
+            session = SessionStore(str(database), oauth.session_secret).create_session("owner")
+            laptop = FakeLaptop()
+            config = GatewayConfig("http://127.0.0.1:18765", "test-key", "test-token", "test-chat", database)
+            runtime = create_runtime(config, laptop=laptop, sender=lambda _message: None)
+            server = create_server(oauth, ("127.0.0.1", 0), runtime=runtime)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            connection = http.client.HTTPConnection("127.0.0.1", server.server_port)
+            paths = ["/api/remote/v1/attempts/a1/review", "/api/remote/v1/history",
+                     "/api/remote/v1/quotas",
+                     "/api/remote/v1/commands?after=&limit=100",
+                     "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1"]
+            try:
+                for path in paths:
+                    connection.request("GET", path, headers={"Cookie": f"flow_session={session}"})
+                    response = connection.getresponse()
+                    payload = json.loads(response.read())
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(payload["source"], path)
+                self.assertEqual(laptop.read_calls, paths)
+            finally:
+                connection.close()
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=2)
 
 if __name__ == "__main__":
     unittest.main()
