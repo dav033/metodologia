@@ -214,6 +214,87 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(len(self.calls), 1)
         self.assertEqual(len(self.route_ledger().rows()), 1)
 
+<<<<<<< 6e14d8818318957c2a22229173f0d8756cc62fbb
+||||||| 6d1052395d7a35eef523094e5f1b9609bba0fed6
+    def test_f19_retry_precondition_uses_failed_task_while_run_is_running(self):
+        _, patches = self._create_scheduler_run({"T1": "failed"})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", params={"task": "T1"},
+                precondition={"state": "failed", "revision": 3}), patches)
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"task": "T1"})])
+
+    def test_f19_retry_rejects_task_state_change_before_handler(self):
+        _, patches = self._create_scheduler_run({"T1": "done"})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", idempotency_key="key-00000002", params={"task": "T1"},
+                precondition={"state": "failed", "revision": 3}), patches)
+
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
+    def test_f19_cancel_attempt_precondition_uses_attempt_state(self):
+        _, patches = self._create_scheduler_run({"T1": "done"}, {"att-7": "running"})
+        self.handlers["cancel-attempt"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="cancel-attempt", idempotency_key="key-00000003", params={"attempt": "att-7"},
+                precondition={"state": "running", "revision": 3}), patches)
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"attempt": "att-7"})])
+
+=======
+    def test_f19_retry_precondition_uses_failed_task_while_run_is_running(self):
+        _, patches = self._create_scheduler_run({"T1": "failed"})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", params={"task": "T1"},
+                precondition={"state": "failed", "revision": 3}), patches)
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"task": "T1"})])
+
+    def test_f19_retry_rejects_task_state_change_before_handler(self):
+        _, patches = self._create_scheduler_run({"T1": "done"})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", idempotency_key="key-00000002", params={"task": "T1"},
+                precondition={"state": "failed", "revision": 3}), patches)
+
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
+    def test_f19_retry_does_not_fall_back_to_running_run_for_missing_task(self):
+        _, patches = self._create_scheduler_run({})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", params={"task": "T-missing"},
+                precondition={"state": "running", "revision": 3}), patches)
+
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
+    def test_f19_cancel_attempt_precondition_uses_attempt_state(self):
+        _, patches = self._create_scheduler_run({"T1": "done"}, {"att-7": "running"})
+        self.handlers["cancel-attempt"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="cancel-attempt", idempotency_key="key-00000003", params={"attempt": "att-7"},
+                precondition={"state": "running", "revision": 3}), patches)
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"attempt": "att-7"})])
+
+>>>>>>> 99d8de03f9da6e02705b23608c367d0e9835c5b3
     def test_route_post_stale_changed_and_invalid(self):
         self.assertEqual(self.post(req(precondition={"revision": 1}))[0], 409)
         self.assertEqual(self.post(req(idempotency_key="key-00000002", precondition={"revision": 1}))[1]["code"],
