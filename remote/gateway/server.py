@@ -78,6 +78,20 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                     return
                 self._json(200, {"login": login})
                 return
+            if route.path == "/api/remote/v1/snapshot":
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                if runtime is None:
+                    self._json(404, {"error": "not found"})
+                    return
+                snapshot = runtime.web_snapshot()
+                if snapshot is None:
+                    self._json(503, {"error": "snapshot unavailable"})
+                    return
+                self._json(200, snapshot)
+                return
             self._json(404, {"error": "not found"})
 
         def do_POST(self) -> None:
@@ -114,7 +128,9 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                 else:
                     result = runtime.submit_command(request)
                 status = {"UNKNOWN_OUTCOME": 503, "LAPTOP_OFFLINE": 410,
-                          "CONFIRMATION_REQUIRED": 409, "INVALID_COMMAND": 400,
+                          "CONFIRMATION_REQUIRED": 409, "STALE_PRECONDITION": 409,
+                          "IDEMPOTENCY_CONFLICT": 409, "CONFIRMATION_EXPIRED": 409,
+                          "COMMAND_NOT_APPLICABLE": 409, "INVALID_COMMAND": 400,
                           "INVALID_CHALLENGE": 400, "LAPTOP_UNAVAILABLE": 503}.get(result.get("code"), 200)
                 self._json(status, result)
                 return
