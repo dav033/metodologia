@@ -307,6 +307,7 @@ class DecisionAssignmentPort:
                  quality_artifacts: tuple[str | Path, str | Path, str | Path, str | Path, str | Path] | None = None,
                  classification_overlay: Callable[[], dict[str, dict[str, object]]] | None = None):
         self.classification_overlay = classification_overlay
+        self.run_dir: Path | None = None
         if checkpoint not in CHECKPOINTS:
             raise ValueError("unsupported Laya checkpoint")
         if quality_artifacts is None:
@@ -396,6 +397,13 @@ class DecisionAssignmentPort:
                 else candidate
                 for candidate in candidates
             )
+            if self.run_dir is not None:
+                import bt_route_pins
+                pin = bt_route_pins.get(self.run_dir, view.id)
+                if pin is not None:
+                    candidates = bt_route_pins.narrow(self.run_dir, view.id, candidates)
+                    if not candidates:  # A hard pin with no current match must wait, never fall through to another route.
+                        continue
             decision_request = DecisionRequest(
                 request.plan_id, request.revision, request.plan_sha256, request.free_slots, requested_at, task,
                 candidates,
