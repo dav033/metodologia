@@ -5,6 +5,28 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+<<<<<<< 0c2b75045d1c088b366d290e1236f82a6204b982
+||||||| dc60481f471192cacb7e098604adb9e83f6ca85a
+<<<<<<< b21af576095cc9c033b3326647f1e1a84fb3152f
+||||||| d59402f2311e71a7d7b249554f3f9507983622f2
+<<<<<<< 725ff33443950b7b5e0842d1366bc81f05c1a57c
+||||||| 788d3dd30328bfccc7880c00baf691d188b0b6ed
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+from typing import Any, Protocol
+=======
+import re
+from typing import Any, Protocol
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
+=======
+import re
+>>>>>>> 7bab8d3fc65eb4681168829156ff0d7510a656a6
+=======
+import re
+>>>>>>> ff6d46bc29f4b6a862628af4bad381b77e5a9d7a
+=======
+import re
+>>>>>>> 4714cf64fe4c866730eb7ff2dc4f69bf7c4a5603
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
@@ -18,6 +40,29 @@ from auth import (
     cookie_values,
 )
 from security import RateLimiter, origin_matches
+<<<<<<< 0c2b75045d1c088b366d290e1236f82a6204b982
+||||||| dc60481f471192cacb7e098604adb9e83f6ca85a
+<<<<<<< b21af576095cc9c033b3326647f1e1a84fb3152f
+||||||| d59402f2311e71a7d7b249554f3f9507983622f2
+<<<<<<< 725ff33443950b7b5e0842d1366bc81f05c1a57c
+||||||| 788d3dd30328bfccc7880c00baf691d188b0b6ed
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
+from typing import Any
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+from stream import SnapshotEventStream, encode_sse
+=======
+from stream import SnapshotEventStream, encode_sse
+from upstream import UpstreamError
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
+=======
+from upstream import UpstreamError
+>>>>>>> 7bab8d3fc65eb4681168829156ff0d7510a656a6
+=======
+from upstream import UpstreamError
+>>>>>>> ff6d46bc29f4b6a862628af4bad381b77e5a9d7a
+=======
+from upstream import UpstreamError
+>>>>>>> 4714cf64fe4c866730eb7ff2dc4f69bf7c4a5603
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -84,6 +129,114 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                     return
                 self._json(200, {"login": login})
                 return
+<<<<<<< 0c2b75045d1c088b366d290e1236f82a6204b982
+||||||| dc60481f471192cacb7e098604adb9e83f6ca85a
+            if route.path == "/api/remote/v1/snapshot":
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                if runtime is None:
+                    self._json(404, {"error": "not found"})
+                    return
+                snapshot = runtime.web_snapshot()
+                if snapshot is None:
+                    self._json(503, {"error": "snapshot unavailable"})
+                    return
+                self._json(200, snapshot)
+<<<<<<< b21af576095cc9c033b3326647f1e1a84fb3152f
+||||||| d59402f2311e71a7d7b249554f3f9507983622f2
+<<<<<<< 725ff33443950b7b5e0842d1366bc81f05c1a57c
+||||||| 788d3dd30328bfccc7880c00baf691d188b0b6ed
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+                self._stream_events()
+=======
+                if route.path == "/api/remote/v1/events":
+                    self._stream_events()
+                    return
+                try:
+                    model = runtime.read_model(route.path + ("?" + route.query if route.query else ""))
+                except UpstreamError:
+                    self._json(503, {"error": "read model unavailable"})
+                    return
+                self._json(200, model)
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
+=======
+                return
+            read_routes = {
+                "/api/remote/v1/commands",
+                "/api/remote/v1/quotas",
+                "/api/remote/v1/routes",
+            }
+            is_review = re.fullmatch(r"/api/remote/v1/attempts/[A-Za-z0-9._:-]{1,120}/review", route.path)
+            if (route.path in read_routes or is_review) and runtime is not None:
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                try:
+                    model = runtime.read_model(route.path + ("?" + route.query if route.query else ""))
+                except UpstreamError:
+                    self._json(503, {"error": "read model unavailable"})
+                    return
+                self._json(200, model)
+>>>>>>> 7bab8d3fc65eb4681168829156ff0d7510a656a6
+=======
+                return
+            read_routes = {
+                "/api/remote/v1/commands",
+                "/api/remote/v1/quotas",
+                "/api/remote/v1/routes",
+            }
+            is_review = re.fullmatch(r"/api/remote/v1/attempts/[A-Za-z0-9._:-]{1,120}/review", route.path)
+            if (route.path in read_routes or is_review) and runtime is not None:
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                try:
+                    model = runtime.read_model(route.path + ("?" + route.query if route.query else ""))
+                except UpstreamError:
+                    self._json(503, {"error": "read model unavailable"})
+                    return
+                self._json(200, model)
+>>>>>>> ff6d46bc29f4b6a862628af4bad381b77e5a9d7a
+                return
+=======
+            if route.path == "/api/remote/v1/snapshot":
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                if runtime is None:
+                    self._json(404, {"error": "not found"})
+                    return
+                snapshot = runtime.web_snapshot()
+                if snapshot is None:
+                    self._json(503, {"error": "snapshot unavailable"})
+                    return
+                self._json(200, snapshot)
+                return
+            read_routes = {
+                "/api/remote/v1/commands",
+                "/api/remote/v1/history",
+                "/api/remote/v1/quotas",
+                "/api/remote/v1/routes",
+            }
+            is_review = re.fullmatch(r"/api/remote/v1/attempts/[A-Za-z0-9._:-]{1,120}/review", route.path)
+            if (route.path in read_routes or is_review) and runtime is not None:
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                try:
+                    model = runtime.read_model(route.path + ("?" + route.query if route.query else ""))
+                except UpstreamError:
+                    self._json(503, {"error": "read model unavailable"})
+                    return
+                self._json(200, model)
+                return
+>>>>>>> 4714cf64fe4c866730eb7ff2dc4f69bf7c4a5603
             self._json(404, {"error": "not found"})
 
         def do_POST(self) -> None:
