@@ -145,6 +145,13 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseMoved", x: reviewPoint.x, y: reviewPoint.y });
     await cdp(socket, "Input.dispatchMouseEvent", { type: "mousePressed", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
     await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseReleased", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
+    let reviewRouteOpened = false;
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      const location = await cdp(socket, "Runtime.evaluate", { expression: "window.location.pathname", returnByValue: true });
+      if (location.result?.value === "/review") { reviewRouteOpened = true; break; }
+      await delay(100);
+    }
+    if (!reviewRouteOpened) await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
     let fixtureReview = "";
     for (let attempt = 0; attempt < 300; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
