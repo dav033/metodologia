@@ -114,7 +114,13 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan") && browserState?.text?.includes("Intento att-0008")) break;
       await delay(250);
     }
+<<<<<<< d73082a15e9f12065d3a05cf5bd8b3e2bc120e72
     for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "T15c · Failure review screen", "rejected", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
+||||||| bd90d4344a65160c45de638b41b7422a4f655b01
+    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
+=======
+    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan", "Aprobar plan", "Rondas abiertas", "¿Qué prioridad prefieres?", "Esperando tu decisión", "Crea otro intento y consume una oportunidad.", "Pausa el scheduler hasta que lo reanudes."]) {
+>>>>>>> 5b342b78553c961701edc16fd91ba9576e6af110
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
     await cdp(socket, "Page.navigate", { url: `${frontendOrigin}/review?project=lotm&req=REQ-027&taskId=T15c` });
@@ -270,6 +276,20 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.click()", returnByValue: true });
     await waitForText("El estado cambió");
     await waitForText("Resultado · Rechazado: el estado cambió");
+    await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-028");
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.innerText.includes('Aprobar plan'))?.requestSubmit()", returnByValue: true });
+    assert.equal(gateway.challenges.length, 0, "a mismatched REQ id must not request an approval challenge");
+    await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.innerText.includes('Aprobar plan'))?.requestSubmit()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
+    assert.equal(gateway.challenges.at(-1)?.typedReq, "REQ-027", "approval should issue a challenge for the exact REQ id");
+    assert.equal(gateway.commands.at(-1)?.type, "approve");
+    assert.equal(gateway.commands.at(-1)?.confirmation?.typedReq, "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 4; attempt += 1) await delay(100);
+    assert.equal(gateway.commands.at(-1)?.type, "answer-round", "round answers should use the command ledger");
+    assert.equal(gateway.commands.at(-1)?.round, 2);
+    assert.deepEqual(gateway.commands.at(-1)?.answer, { q1: { choice: "safe", note: "" }, q2: { text: "Keep the audit trail" } });
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);
