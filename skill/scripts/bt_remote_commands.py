@@ -15,7 +15,7 @@ from typing import Any, Callable
 
 COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve", "launch",
             "answer-decision", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
-CHALLENGED = frozenset(("revise", "approve", "launch", "cancel-plan", "delete-plan"))
+CHALLENGED = frozenset(("revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"))
 ORIGINS = ("web", "telegram")
 PRECONDITION_FIELDS = ("state", "revision", "updatedAt")   # what a precondition may pin on the target
 # Covers key reservation, state precondition, effect, and outcome write as one process-local critical section.
@@ -125,6 +125,10 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
     project, req, rdir = _run_target(target)
     import bt_scheduler_ops as ops
 
+    if command == "revise":
+        typed_req = params.get("typed_req")
+        if not isinstance(typed_req, str) or typed_req.strip().upper() != req.upper():
+            raise ValueError("revise requiere confirmar el id REQ del objetivo.")
     reason = params.get("reason", "")
     if not isinstance(reason, str):
         raise ValueError("reason debe ser texto.")
@@ -180,7 +184,14 @@ def dispatch_handlers() -> dict[str, Handler]:
                 for command in ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision")}
     handlers.update({command: (lambda target, params, action=command: dispatch_plan_command(action, target, params))
                      for command in ("approve", "launch", "answer-round", "cancel-plan", "delete-plan")})
+    handlers["edit-brief"] = dispatch_edit_brief
     return handlers
+
+
+def dispatch_edit_brief(target: str, params: dict) -> Any:
+    """Edit and approve a plan revision before rebasing its active run."""
+    import bt_remote_edit
+    return bt_remote_edit.dispatch_edit_brief(target, params)
 
 
 def dispatch_plan_command(command: str, target: str, params: dict) -> Any:
