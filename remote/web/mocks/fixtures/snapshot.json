@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-19T12:00:00Z",
+  "cursor": "",
+  "laptopStatus": "online",
+  "cachedAt": "2026-10-19T12:00:00Z",
+  "runs": [
+    {
+      "run": "lotm/REQ-027",
+      "project": "lotm",
+      "reqId": "REQ-027",
+      "title": "Remote control",
+      "status": "running",
+      "active": true,
+      "updatedAt": "2026-10-19T11:59:45Z",
+      "lastSignOfLife": "2026-10-19T11:59:45Z",
+      "activeTask": { "id": "T15a", "title": "Login screen and runs list" },
+      "summary": { "tasksTotal": 2, "tasksDone": 0 },
+      "tasks": [{ "id": "T15a", "title": "Login screen and runs list", "state": "running", "attempts": 1, "attempt": { "id": "att-0008", "state": "running", "live": true, "lastActivityAt": "2026-10-19T11:59:45Z" }, "history": [] }]
+    },
+    {
+      "run": "pictures/REQ-018",
+      "project": "pictures",
+      "reqId": "REQ-018",
+      "title": "Recover stalled work",
+      "status": "paused",
+      "active": true,
+      "updatedAt": "2026-10-19T11:55:00Z",
+      "lastSignOfLife": "2026-10-19T11:50:00Z",
+      "activeTask": null,
+      "summary": { "tasksTotal": 1, "tasksDone": 0 },
+      "tasks": [{ "id": "T2", "title": "Recover stalled work", "state": "blocked", "attempts": 2, "attempt": null, "history": [{ "id": "att-failed-02", "state": "failed", "failure": "verification_failed" }] }]
+    }
+  ],
+  "plans": [
+    {
+      "project": "lotm", "reqId": "REQ-027", "title": "Remote control", "planStatus": "review", "runStatus": null, "active": false,
+      "progress": { "done": 0, "total": 2 }, "difficulty": "high", "updatedAt": "2026-10-19T11:45:00Z", "asks": 1, "commandState": "review",
+      "decisions": [],
+      "rounds": [{ "round": 2, "title": "Alcance", "intro": "Dos preguntas antes de aprobar.", "questions": [
+        { "id": "q1", "text": "¿Qué pantalla va primero?", "type": "choice", "options": [{ "key": "a", "label": "Planes" }, { "key": "b", "label": "Ejecuciones" }], "recommended": "a", "why": "Es lo que se aprueba desde el teléfono." },
+        { "id": "q2", "text": "¿Algo más que cuidar?", "type": "open", "suggested": "Nada" }
+      ] }]
+    },
+    {
+      "project": "pictures", "reqId": "REQ-018", "title": "Recover stalled work", "planStatus": "launched", "runStatus": "paused", "active": true,
+      "progress": { "done": 0, "total": 1 }, "difficulty": "medium", "updatedAt": "2026-10-19T11:55:00Z", "asks": 1, "commandState": "paused",
+      "decisions": [{ "id": "T2:2", "source": "task", "task": "T2", "attempt": "att-failed-02", "title": "T2 bloqueada: attempts_exhausted",
+        "what": "Se agotaron los intentos y ninguno pasó la verificación.", "reason": "m5:attempts_exhausted", "evidence": ["intentos: 2", "último fallo: verification_failed"],
+        "options": [
+          { "id": "retry", "label": "Reintentar", "consequence": "Un intento nuevo, que sigue desde el último snapshot si existe. Gasta un intento." },
+          { "id": "retry_with_note", "label": "Reintentar con una indicación tuya", "consequence": "Como reintentar, y tu nota entra en el prompt del agente. Exige razón." },
+          { "id": "stop", "label": "Detener el run", "consequence": "Para el scheduler y el vigilante hasta que lo reanudes. Nada más se ejecuta." }
+        ], "recommended": "retry", "unskippable": false }],
+      "rounds": []
+    }
+  ]
+}
