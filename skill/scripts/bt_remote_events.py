@@ -6,7 +6,7 @@ import json
 import re
 from typing import Any
 
-_SECRET_NAMES = r"(?:FLOW_GATEWAY_KEY|TELEGRAM_BOT_TOKEN|GITHUB_CLIENT_SECRET)"
+_SECRET_NAMES = r"(?:FLOW_GATEWAY_KEY|TELEGRAM_BOT_TOKEN|GITHUB_CLIENT_SECRET|SESSION_SECRET)"
 _ASSIGNMENT = re.compile(
     rf"(?i)\b({_SECRET_NAMES})\s*(?:=|:)\s*(?:\"[^\"\r\n]*\"|'[^'\r\n]*'|[^\s,;]+)"
 )
@@ -47,7 +47,7 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
         data = row.get("data") if isinstance(row.get("data"), dict) else {}
         state = data.get("state")
         kind = {
-            ("state_change", "failed"): "attempt.failed",
+            ("state_change", "failed"): "attempt.failed" if data.get("retry_exhausted") else None,
             ("state_change", "rejected"): "attempt.failed",
             ("task_state", "blocked"): "attempt.blocked",
             ("verdict", "failed"): "attempt.failed",
@@ -59,11 +59,94 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
     target = {"run": str(row.get("run", ""))}
     if row.get("task"):
         target["task"] = str(row["task"])
+    if row.get("attempt"):
+        target["attemptId"] = str(row["attempt"])
     identity = str(row.get("id") or row.get("ord") or row.get("seq") or "")
     data = row.get("data") if isinstance(row.get("data"), dict) else {}
+    if kind == "attempt.failed" and not (data.get("retry_exhausted") or row.get("retry_exhausted")):
+        # A failed transition says only that one attempt ended; it does not prove that recovery is over.
+        return None
     if not data:
         data = {key: row.get(key) for key in ("failure", "summary") if row.get(key) is not None}
     return project_event(kind, identity, str(row.get("at") or row.get("occurredAt") or ""), target, data)
+
+
+def from_snapshot(runs: list[dict[str, Any]], rounds: list[dict[str, Any]], *, quotas: list[dict[str, Any]] | None = None,
+                  commands: list[dict[str, Any]] | None = None, now: float | None = None
+                  ) -> list[dict[str, Any]]:
+    """Derive notifications from durable snapshot facts absent from the flow bus."""
+    import datetime as dt
+    import time
+
+    current = time.time() if now is None else now
+    events = []
+    for run in runs:
+        if not isinstance(run, dict):
+            continue
+        target = {"run": str(run.get("run", ""))}
+        status = run.get("state", run.get("status"))
+        stamp = str(run.get("updatedAt", run.get("updated_at", "")) or "")
+        identity = str(run.get("run", "")) + ":" + stamp
+        if status in {"finished", "completed", "done"}:
+            events.append(project_event("run.finished", identity, stamp, target, {"state": status}))
+        if run.get("decisions"):
+            for decision in run["decisions"]:
+                if isinstance(decision, dict):
+                    events.append(project_event("plan.waiting", identity + ":" + str(decision.get("id", "")), stamp,
+                                                target, {"decision": decision}))
+        for task in run.get("tasks", []):
+            if not isinstance(task, dict):
+                continue
+            task_target = {**target, "task": str(task.get("id", ""))}
+            attempt = task.get("attempt") if isinstance(task.get("attempt"), dict) else {}
+            at = str(attempt.get("ended_at") or attempt.get("last_activity_at") or stamp)
+            event_id = str(attempt.get("id") or task.get("id") or identity)
+            if task.get("state") == "blocked":
+                events.append(project_event("attempt.blocked", event_id, at, task_target,
+                                            {"state": "blocked", "reason": task.get("reason")}))
+            if task.get("retry_exhausted") is True or task.get("retries_remaining") == 0:
+                events.append(project_event("attempt.failed", event_id + ":exhausted", at,
+                                            {**task_target, **({"attemptId": event_id} if attempt.get("id") else {})},
+                                            {"retry_exhausted": True, "attempts": task.get("attempts"),
+                                             "retries_remaining": task.get("retries_remaining")}))
+            if task.get("state") == "blocked" and "quota" in str(task.get("reason", "")).lower():
+                events.append(project_event("quota.exhausted", event_id + ":quota", at, task_target,
+                                            {"reason": task.get("reason")}))
+            activity = attempt.get("last_activity_at")
+            if activity:
+                try:
+                    age = current - dt.datetime.fromisoformat(str(activity).replace("Z", "+00:00")).timestamp()
+                except (ValueError, OverflowError):
+                    age = 0
+                if age > 600 and attempt.get("live"):
+                    events.append(project_event("attempt.stalled", event_id + ":stalled", str(activity), task_target,
+                                                {"lastActivityAt": activity, "ageSeconds": int(age)}))
+    for round_data in rounds:
+        if isinstance(round_data, dict) and round_data.get("status") == "open":
+            target = {"run": f"{round_data.get('project', '')}/{round_data.get('req', '')}"}
+            events.append(project_event("round.waiting", target["run"] + ":round:" + str(round_data.get("round", "")),
+                                        str(round_data.get("created_at", "")), target,
+                                        {"round": round_data.get("round"), "title": round_data.get("title")}))
+    for account in quotas or []:
+        if not isinstance(account, dict):
+            continue
+        exhausted = account.get("status") == "exhausted" or any(
+            isinstance(window, dict) and window.get("used_percent") == 100
+            for window in (account.get("windows") or {}).values()
+        ) if isinstance(account.get("windows", {}), dict) else account.get("status") == "exhausted"
+        if exhausted:
+            identity = str(account.get("profile", "")) + ":" + str(account.get("observed_at", ""))
+            events.append(project_event("quota.exhausted", identity, str(account.get("observed_at", "")),
+                                        {"run": "quota"}, {"profile": account.get("profile"),
+                                        "provider": account.get("provider"), "status": account.get("status")}))
+    for command in commands or []:
+        if isinstance(command, dict):
+            identity = str(command.get("idempotency_key", ""))
+            events.append(project_event("command.updated", identity, str(command.get("finished_at") or command.get("received_at") or ""),
+                                        {"run": str(command.get("target", ""))},
+                                        {"command": command.get("command"), "status": command.get("status"),
+                                         "origin": command.get("origin")}))
+    return events
 
 
 def decision_events(plans: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -74,6 +157,13 @@ def decision_events(plans: list[dict[str, Any]]) -> list[dict[str, Any]]:
             identity = f"{target['run']}:{request.get('id', '')}"
             events.append(project_event("plan.waiting", identity, str(request.get("created_at") or plan.get("updated_at") or ""),
                                         target, {"decision": request}))
+            reason = str(request.get("reason", ""))
+            if reason.removeprefix("m5:").removeprefix("m5_") == "attempts_exhausted":
+                events.append(project_event("attempt.failed", identity + ":exhausted",
+                                            str(request.get("created_at") or plan.get("updated_at") or ""),
+                                            {**target, **({"task": str(request["task"])} if request.get("task") else {})},
+                                            {"retry_exhausted": True, "reason": "attempts_exhausted",
+                                             "attempt": request.get("attempt")}))
     return events
 
 

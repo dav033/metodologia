@@ -7,7 +7,7 @@ from typing import Any
 
 COMMAND_TYPES = frozenset({
     "pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve",
-    "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note",
+    "launch", "answer-round", "answer-decision", "cancel-plan", "delete-plan", "edit-brief", "note",
 })
 CONFIRMATION_REQUIRED_TYPES = frozenset({
     "revise", "approve", "launch", "cancel-plan", "delete-plan",

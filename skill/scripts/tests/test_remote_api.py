@@ -14,8 +14,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
+REPO = SCRIPTS.parents[1]
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
+sys.path.insert(0, str(REPO / "tests" / "migration"))
 import bt_remote_api
+import installed_wheel
 KEY = "test-gateway-key-0123456789"
 
 
@@ -57,6 +61,56 @@ class RemoteApiTests(unittest.TestCase):
             self.process.wait(timeout=3)
         self.temp.cleanup()
 
+    def test_remote_entry_point_runs_from_installed_wheel(self):
+        installed = installed_wheel.get()
+        probe = subprocess.run(
+            [str(installed.python), "-I", "-c",
+             "import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_recovery, bt_remote_views"],
+            cwd=installed.work,
+            env={"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
+                 "PYTHONDONTWRITEBYTECODE": "1"},
+            capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(probe.returncode, 0, probe.stderr)
+
+        port = free_port()
+        env = {"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
+               "BITACORA_ROOT": str(installed.work / "remote-root"), "FLOW_GATEWAY_KEY": KEY,
+               "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"}
+        process = subprocess.Popen(
+            [str(installed.python), "-I", "-c",
+             "import sys, bt_server; bt_server.serve_remote(int(sys.argv[1]))", str(port)],
+            cwd=installed.work, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        try:
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if process.poll() is not None:
+                    self.fail("installed serve-remote exited before accepting requests")
+                try:
+                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                        break
+                except OSError:
+                    time.sleep(0.05)
+            else:
+                self.fail("installed serve-remote did not start listening")
+
+            connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
+            connection.request("GET", "/api/remote/v1/health",
+                               headers={"Authorization": f"Bearer {KEY}"})
+            response = connection.getresponse()
+            body = response.read()
+            connection.close()
+            self.assertEqual(response.status, 200, body.decode("utf-8"))
+            self.assertEqual(json.loads(body)["schemaVersion"], 1)
+        finally:
+            process.terminate()
+            try:
+                process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=3)
+
     def request(self, method: str, path: str, *, key: str | None = KEY, body: str | None = None):
         headers = {"Content-Type": "application/json"}
         if key is not None:
@@ -86,14 +140,14 @@ class RemoteApiTests(unittest.TestCase):
         routes = (
             ("GET", "/api/remote/v1/snapshot", 200),
             ("GET", "/api/remote/v1/events", 200),
-            ("GET", "/api/remote/v1/attempts/attempt-1/review", 503),
-            ("GET", "/api/remote/v1/commands", 503),
+            ("GET", "/api/remote/v1/attempts/attempt-1/review", 404),
+            ("GET", "/api/remote/v1/commands", 200),
             ("POST", "/api/remote/v1/commands", 400),
             ("GET", "/api/remote/v1/runs", 200),
             ("GET", "/api/remote/v1/plans", 200),
-            ("GET", "/api/remote/v1/history", 503),
+            ("GET", "/api/remote/v1/history", 200),
             ("GET", "/api/remote/v1/challenges", 503),
-            ("POST", "/api/remote/v1/challenges", 503),
+            ("POST", "/api/remote/v1/challenges", 400),
         )
         for method, path, expected_status in routes:
             with self.subTest(method=method, path=path):
@@ -136,6 +190,58 @@ class RemoteApiTests(unittest.TestCase):
         now_frame.assert_called_once_with(None)
         self.assertEqual(snapshot[0]["active_task"], {"id": "T2", "title": "Build"})
         self.assertEqual(snapshot[0]["last_sign_of_life"], "2026-10-19T10:03:00Z")
+
+    def test_mobile_snapshot_uses_v1_run_dialect_and_includes_rounds_and_decisions(self):
+        run = {"run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "status": "running",
+               "tasks": [{"id": "T1", "state": "running", "attempt": {"id": "a1", "state": "running", "live": True}}]}
+        round_data = {"round": 2, "status": "open", "questions": [{"id": "q1", "text": "Scope?"}]}
+        decision = {"id": "d1", "title": "Continue", "options": [{"id": "retry"}]}
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY}), \
+                patch.object(bt_remote_api, "_runs", return_value=[run]), \
+                patch.object(bt_remote_api, "_shared_now_items", return_value=[]), \
+                patch.object(bt_remote_api, "_plans", return_value=[]), \
+                patch.object(bt_remote_api, "_planning_detail", return_value=(
+                    [{**round_data, "project": "demo", "req": "REQ-001"}],
+                    [{**decision, "project": "demo", "req": "REQ-001"}])):
+            class Handler:
+                headers = {"Authorization": f"Bearer {KEY}"}
+                path = "/api/remote/v1/snapshot"
+                def send(self, body, status, content_type): self.response = status, body
+            handler = Handler()
+            bt_remote_api.route_get(handler)
+        payload = json.loads(handler.response[1])
+        self.assertEqual(payload["runs"][0]["req"], "REQ-001")
+        self.assertEqual(payload["runs"][0]["state"], "running")
+        self.assertEqual(payload["runs"][0]["activeAttempt"]["id"], "a1")
+        self.assertEqual(payload["rounds"][0]["round"], 2)
+        self.assertEqual(payload["decisionRequests"][0]["id"], "d1")
+
+    def test_failed_task_snapshot_keeps_non_live_attempt_for_review_and_page_anchor(self):
+        from notifications import notification_for_event
+        attempt = {"id": "attempt-old", "state": "failed", "live": False}
+        run = {"run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "status": "running",
+               "tasks": [{"id": "T1", "state": "failed", "attempt": attempt, "history": [attempt]}]}
+        class Handler:
+            headers = {"Authorization": f"Bearer {KEY}"}
+            path = "/api/remote/v1/snapshot"
+            def send(self, body, status, content_type): self.response = status, body
+        handler = Handler()
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY}), \
+                patch.object(bt_remote_api, "_runs", return_value=[run]), \
+                patch.object(bt_remote_api, "_shared_now_items", return_value=[]), \
+                patch.object(bt_remote_api, "_plans", return_value=[]), \
+                patch.object(bt_remote_api, "_planning_detail", return_value=([], [])):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.response[0], 200)
+        projected = json.loads(handler.response[1])["runs"][0]["tasks"][0]
+        self.assertEqual(projected["activeAttempt"]["id"], "attempt-old")
+        self.assertEqual(projected["history"][0]["id"], "attempt-old")
+        page = (SCRIPTS.parents[1] / "remote" / "web" / "src" / "app" / "page.tsx").read_text(encoding="utf-8")
+        self.assertIn('id={`attempt-${encodeURIComponent(review.attemptId)}`}', page)
+        self.assertIn("task.history?.at(-1)", page)
+        notification = notification_for_event({"id": "event", "dedupeKey": "event", "type": "attempt.failed",
+                                               "target": {"req": "REQ-001", "attemptId": "attempt-old"}})
+        self.assertIn("#attempt-attempt-old", notification[1])
 
     def test_snapshot_handles_large_fixture_within_one_second(self):
         fixture_runs = [{"run": f"demo/REQ-{index:04d}", "updated_at": None, "tasks": []}

@@ -45,7 +45,23 @@ def _path(handler) -> tuple[str, dict[str, str]]:
 
 def _runs() -> list[dict]:
     import bt_live_api as live
-    return live.run_summaries(None, "global")
+    return [_mobile_run(run) for run in live.run_summaries(None, "global")]
+
+
+def _mobile_run(run: dict) -> dict:
+    """Translate the live API vocabulary to the stable mobile snapshot v1 contract."""
+    attempts = [task.get("attempt") for task in run.get("tasks", []) if task.get("attempt")]
+    active = next((attempt for attempt in attempts if attempt.get("live")), None)
+    def task_attempt(task: dict) -> dict | None:
+        attempt = task.get("attempt")
+        if isinstance(attempt, dict) and (attempt.get("live") or task.get("state") == "failed"):
+            return attempt
+        return None
+
+    return {**run, "req": run.get("req_id"), "state": run.get("status"),
+            "activeAttempt": active, "lastSeenAt": run.get("updated_at"),
+            "tasks": [{**task, "activeAttempt": task_attempt(task)}
+                      for task in run.get("tasks", [])]}
 
 
 def _shared_now_items() -> list[dict]:
@@ -61,7 +77,7 @@ def _shared_now_items() -> list[dict]:
 
 def _snapshot_runs() -> list[dict]:
     """Add live task and liveness data to run summaries using the shared now read model."""
-    runs = _runs()
+    runs = [_mobile_run(run) for run in _runs()]
     now_by_run = {}
     for item in _shared_now_items():
         key = f'{item.get("project", "")}/{item.get("req_id", "")}'
@@ -85,7 +101,49 @@ def _snapshot_runs() -> list[dict]:
 def _plans() -> list[dict]:
     import bt_plans_api as plans
     from bt_core import ROOT
-    return plans.plans_payload(ROOT)
+    rows = plans.plans_payload(ROOT)
+    enriched = []
+    for row in rows:
+        item = {**row, "req": row.get("req_id"), "state": row.get("plan_status"),
+                "updatedAt": row.get("updated_at"), "revision": row.get("revision")}
+        try:
+            status = plans.status_of(ROOT, row["project"], row["req_id"])
+            item["state"] = status.get("plan", {}).get("status", row.get("plan_status"))
+            item["revision"] = status.get("plan", {}).get("revision")
+            item["decisions"] = status.get("decisions", [])
+            item["rounds"] = status.get("open_rounds", [])
+            item["tasks"] = status.get("tasks", [])
+            item["acceptanceCriteria"] = status.get("acceptance_criteria", [])
+        except (KeyError, OSError, ValueError):
+            item.update(decisions=[], rounds=[])
+        enriched.append(item)
+    return enriched
+
+
+def _planning_detail() -> tuple[list[dict], list[dict]]:
+    """Project open rounds and owner decisions into the snapshot fields consumed by mobile clients."""
+    import bt_core
+    import bt_plans_api
+    import bt_rounds
+    rounds, decisions = [], []
+    for plan in _plans():
+        project, req = plan.get("project"), plan.get("req_id")
+        if not isinstance(project, str) or not isinstance(req, str):
+            continue
+        try:
+            rdir = bt_plans_api.req_dir(bt_core.ROOT, project, req)
+        except (ValueError, bt_plans_api.PlanError, OSError):
+            continue
+        for path in bt_rounds.list_rounds(rdir):
+            try:
+                value = bt_rounds.load(path)
+            except (OSError, ValueError):
+                continue
+            rounds.append({**value, "project": project, "req": req})
+        for decision in plan.get("decisions", []):
+            if isinstance(decision, dict):
+                decisions.append({**decision, "project": project, "req": req})
+    return rounds, decisions
 
 
 def _read_review_file(path, limit: int = _REVIEW_FILE_MAX) -> bytes | None:
@@ -271,7 +329,9 @@ def route_get(handler) -> None:
     try:
         if path == f"{PREFIX}/snapshot":
             from bt_remote_events import redact
+            rounds, decisions = _planning_detail()
             return _json(handler, redact({"schemaVersion": 1, "runs": _snapshot_runs(), "plans": _plans(),
+                                   "rounds": rounds, "decisionRequests": decisions,
                                    "generatedAt": dt.datetime.now(dt.UTC).isoformat(), "cursor": ""}))
         if path == f"{PREFIX}/runs":
             return _json(handler, {"runs": _runs()})
@@ -290,7 +350,8 @@ def route_get(handler) -> None:
         if path == f"{PREFIX}/plans":
             return _json(handler, {"plans": _plans()})
         if path == f"{PREFIX}/history":
-            return _problem(handler, 503, "HISTORY_UNAVAILABLE", "El registro de comandos aún no está disponible.")
+            import bt_remote_commands as commands
+            return _json(handler, {"history": commands.Ledger().rows()})
         if path == f"{PREFIX}/challenges":
             return _problem(handler, 503, "CHALLENGES_UNAVAILABLE", "Los desafíos aún no están disponibles.")
         if path == f"{PREFIX}/quotas":
@@ -314,13 +375,21 @@ def route_get(handler) -> None:
                 return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
             rows, _, _ = live.flow_events(None, "global", limit=5000)
             events = [event for row in rows if (event := remote_events.from_flow(row)) is not None]
-            events.extend(remote_events.decision_events(_plans()))
-            if after and all(event["cursor"] != after for event in events):
-                return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
+            plans = _plans()
+            events.extend(remote_events.decision_events(plans))
+            rounds, _ = _planning_detail()
+            import bt_quota_live
+            import bt_remote_commands as commands
+            events.extend(remote_events.from_snapshot(_snapshot_runs(), rounds,
+                                                       quotas=bt_quota_live.read_all_live(),
+                                                       commands=commands.Ledger().rows()))
+            # Snapshot-derived decisions and rounds are ephemeral. Once resolved, their
+            # cursor can disappear; page() safely resumes at the oldest retained event.
             page, cursor, has_more = remote_events.page(events, after, limit)
             return _json(handler, remote_events.redact({"events": page, "nextCursor": cursor, "hasMore": has_more}))
         if path == f"{PREFIX}/commands":
-            return _problem(handler, 503, "COMMANDS_UNAVAILABLE", "El registro de comandos aún no está disponible.")
+            import bt_remote_commands as commands
+            return _json(handler, {"commands": commands.Ledger().rows()})
         match = re.fullmatch(re.escape(PREFIX) + r"/attempts/([^/]+)/review", path)
         if match:
             if not _ATTEMPT_ID.fullmatch(match.group(1)):
@@ -341,9 +410,9 @@ _COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED":
                    "STATE_UNAVAILABLE": 503, "CONFIRMATION_REQUIRED": 409}
 
 
-def _target_state(target: str) -> dict | None:
+def _target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
     import bt_remote_commands as commands
-    return commands.target_state(target)
+    return commands.target_state(target, command, params)
 
 
 def _submit_command(handler, length: int) -> None:

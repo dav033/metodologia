@@ -73,7 +73,7 @@ export async function createMockGatewayServer() {
             send(400, { code: "INVALID_CHALLENGE", message: "El id del requerimiento no coincide" });
             return;
           }
-          server.challenges.push(challengeRequest);
+          server.challenges.push({ ...challengeRequest, requestMarker: request.headers["x-flow-request"] });
           send(201, { challengeId: "mock-server-challenge-0001", target: challengeRequest.target, expiresIn: 120 });
         } catch { send(400, { code: "INVALID_CHALLENGE", message: "JSON inválido" }); }
       });
@@ -89,7 +89,7 @@ export async function createMockGatewayServer() {
             send(400, { code: "INVALID_COMMAND", message: "Comando inválido" });
             return;
           }
-          server.commands.push(command);
+          server.commands.push({ ...command, requestMarker: request.headers["x-flow-request"] });
           const nextResponse = server.commandResponses.shift();
           send(nextResponse?.status ?? 202, nextResponse?.body ?? { commandId: "mock-command-v1", status: "accepted", idempotencyKey: command.idempotencyKey });
         } catch {

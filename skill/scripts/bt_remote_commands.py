@@ -49,8 +49,38 @@ def _run_target(target: str) -> tuple[str, str, Path]:
     return project, req, rdir
 
 
-def target_state(target: str) -> dict | None:
-    """Return the same public run-state vocabulary used by the plans read model."""
+def _member_state(rdir: Path, command: str, params: dict) -> str | None:
+    """State of the task/attempt a task-scoped command mutates.
+
+    "" when the run database cannot be read (the caller keeps the run state), None when the member is absent."""
+    import json as _json
+    import sqlite3
+    import bt_scheduler_adapter as adapter
+
+    kind, key = (("attempts", params.get("attempt")) if command == "cancel-attempt"
+                 else ("tasks", params.get("task")))
+    if not isinstance(key, str) or not key:
+        return ""
+    try:
+        conn = sqlite3.connect(f"{adapter.run_db_path(rdir).resolve().as_uri()}?mode=ro", uri=True, timeout=5)
+        try:
+            doc = _json.loads(conn.execute("SELECT doc FROM state WHERE id = 1").fetchone()[0])
+        finally:
+            conn.close()
+    except (sqlite3.Error, TypeError, ValueError, OSError):
+        return ""
+    row = (doc.get(kind) or {}).get(key)
+    return row.get("state") if isinstance(row, dict) else None
+
+
+TASK_SCOPED = frozenset(("retry", "reopen", "cancel-attempt"))
+
+
+def target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
+    """Return the same public run-state vocabulary used by the plans read model.
+
+    Task-scoped commands (retry, reopen, cancel-attempt) get the state of the task/attempt they mutate.
+    """
     import bt_core
     import bt_plans_api
 
@@ -62,11 +92,20 @@ def target_state(target: str) -> dict | None:
     run = status["run"]
     if not isinstance(run, dict):
         return None
+    if command in {"answer-decision", "answer-round"}:
+        import bt_remote_preconditions
+        return bt_remote_preconditions.planning_target_state(rdir, command, params)
     # Plan commands pin the current plan revision; run commands pin the revision used by the live run.
     plan = status.get("plan") or {}
     revision = (run.get("plan_ref") or {}).get("revision")
     if run.get("authority") == "scheduler":
-        return {"state": run.get("status"), "revision": revision if revision is not None else plan.get("revision"),
+        run_state = run.get("status")
+        if command in TASK_SCOPED:
+            member = _member_state(rdir, command, params or {})
+            if member is None:
+                return None
+            run_state = member or run_state
+        return {"state": run_state, "revision": revision if revision is not None else plan.get("revision"),
                 "updatedAt": run.get("updated_at"), "plan_state": plan.get("status"),
                 "plan_revision": plan.get("revision"), "plan_updatedAt": _plan_updated_at(rdir)}
     try:
@@ -304,6 +343,17 @@ def validate(req: Any) -> str | None:
     return None
 
 
+def _read_state(state_of: StateReader, req: dict) -> dict | None:
+    """Call the reader with command and params when it accepts them (task/attempt-scoped preconditions)."""
+    import inspect
+
+    try:
+        takes = len(inspect.signature(state_of).parameters) >= 3
+    except (TypeError, ValueError):
+        takes = False
+    return state_of(req["target"], req["command"], req["params"]) if takes else state_of(req["target"])
+
+
 class Ledger:
     def __init__(self, path: Path | str | None = None):
         self.path = Path(path) if path else default_path()
@@ -400,7 +450,7 @@ class Ledger:
                                 "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
                     return self._result(row, True)
             try:
-                current = state_of(req["target"])
+                current = _read_state(state_of, req)
             except Exception as exc:
                 return {"status": "FAILED", "code": "STATE_UNAVAILABLE", "stored": False,
                         "message": str(exc)[:300]}

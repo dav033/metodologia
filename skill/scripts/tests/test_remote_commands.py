@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
 import bt_remote_api
 import bt_remote_commands as rc
 import bt_scheduler_ops
@@ -202,12 +203,69 @@ class EntryPointTests(LedgerBase):
         round_file.parent.mkdir(parents=True)
         round_file.write_text(json.dumps({"round": 2, "status": "open", "questions": [{"id": "q1"}],
                                           "answers": {}}), encoding="utf-8")
-        request = req(command="answer-round", params={"round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+        request = req(command="answer-round", params={"round": 2, "answers": {"q1": {"text": "Keep scope"}}},
+                      precondition={"state": "open"})
+        self.state = {"state": "open"}
         with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)):
             status, body = self.post(request)
         saved = bt_rounds.load(round_file)
         self.assertEqual((status, body["status"], saved["status"], saved["answers"], saved["answered_via"]),
                          (200, "OK", "answered", {"q1": {"text": "Keep scope"}}, "remote"))
+
+    def test_gateway_accepts_and_translates_web_decision_answer(self):
+        from app import GatewayRuntime
+        from config import GatewayConfig
+
+        command = {"schemaVersion": 1, "idempotencyKey": "web-1234567890123456", "type": "answer-decision",
+                   "target": {"kind": "run", "project": "demo", "req": "REQ-001"},
+                   "precondition": {"state": "waiting"}, "requestId": "T1:2", "option": "retry"}
+        received = []
+        class Laptop:
+            def command(self, value):
+                received.append(value)
+                return 202, {"status": "accepted"}
+        runtime = GatewayRuntime(GatewayConfig("http://localhost", "key", "token", "chat",
+                                               Path(self.temp.name) / "gateway.db"), laptop=Laptop(), sender=lambda _: None)
+        self.addCleanup(runtime.outbox._db.close)
+        status, _ = runtime.submit_command(command)
+        self.assertEqual(status, 202)
+        laptop_command = received[0]
+        self.assertEqual(laptop_command["params"]["request_id"], "T1:2")
+        self.assertNotIn("requestId", laptop_command["params"])
+
+    def test_decision_precondition_reads_the_open_decision_not_run_state(self):
+        import bt_plans_api
+        import bt_scheduler_decisions as decisions
+
+        with patch.object(bt_plans_api, "status_of", return_value={
+                "run": {"authority": "scheduler", "status": "running", "updated_at": "t1"},
+                "plan": {"status": "approved", "revision": 4}}), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.object(decisions, "open_requests", return_value=[{"id": "T1:2"}]):
+            current = rc.target_state("demo/REQ-001", "answer-decision", {"request_id": "T1:2"})
+        self.assertEqual(current, {"state": "waiting"})
+
+    def test_round_precondition_reads_open_round_and_gateway_maps_answer_collection(self):
+        import bt_plans_api
+        from app import GatewayRuntime
+
+        rdir = Path(self.temp.name)
+        rounds = rdir / "rounds"
+        rounds.mkdir()
+        (rounds / "round-02.json").write_text(json.dumps({"round": 2, "status": "open"}), encoding="utf-8")
+        with patch.object(bt_plans_api, "status_of", return_value={
+                "run": {"authority": "scheduler", "status": "waiting", "updated_at": "t1"},
+                "plan": {"status": "approved", "revision": 4}}), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)):
+            current = rc.target_state("demo/REQ-001", "answer-round", {"round": 2})
+        self.assertEqual(current, {"state": "open"})
+        web_command = {"schemaVersion": 1, "idempotencyKey": "web-1234567890123456", "type": "answer-round",
+                       "target": {"kind": "round", "project": "demo", "req": "REQ-001"},
+                       "precondition": {"state": "open"}, "round": 2,
+                       "answer": {"q1": {"text": "Keep scope"}}}
+        laptop_command = GatewayRuntime._web_command(web_command)
+        self.assertEqual(laptop_command["params"]["answers"], web_command["answer"])
+        self.assertNotIn("answer", laptop_command["params"])
 
     def test_route_post_cancel_attempt_dispatches_through_scheduler_operator(self):
         request = req(command="cancel-attempt", params={"attempt": "att-001", "reason": "owner request"})
@@ -239,6 +297,66 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((status, body["status"]), (200, "OK"))
         self.assertEqual(calls[0][4], "att-001")
         status_reader.assert_called_once()
+
+    def _task_run(self, tasks, attempts=None):
+        import sqlite3
+        import bt_plans_api
+
+        db = Path(self.temp.name) / "run.db"
+        db.unlink(missing_ok=True)
+        conn = sqlite3.connect(db)
+        conn.execute("CREATE TABLE state (id INTEGER PRIMARY KEY, doc TEXT)")
+        conn.execute("INSERT INTO state VALUES (1, ?)", (json.dumps(
+            {"tasks": {k: {"state": v} for k, v in tasks.items()},
+             "attempts": {k: {"state": v} for k, v in (attempts or {}).items()}}),))
+        conn.commit()
+        conn.close()
+        model = {"run": {"authority": "scheduler", "status": "running", "updated_at": "t1",
+                         "plan_ref": {"revision": 3}}, "plan": {"revision": 3, "status": "approved"}}
+        return db, [patch.object(bt_plans_api, "status_of", return_value=model),
+                    patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))),
+                    patch("bt_scheduler_adapter.run_db_path", return_value=db)]
+
+    def _post_real_state(self, request, patches):
+        h = FakeHandler(json.dumps(request).encode())
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, self.handlers, clear=True):
+            for p in patches:
+                p.start()
+            try:
+                bt_remote_api.route_post(h)
+            finally:
+                patch.stopall()
+        return h.sent
+
+    def test_f19_retry_precondition_pins_the_task_state_not_the_run_state(self):
+        _, patches = self._task_run({"T1": "failed"})
+        self.handlers["retry"] = self._pause
+        status, body = self._post_real_state(
+            req(command="retry", params={"task": "T1"}, precondition={"state": "failed", "revision": 3}), patches)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(len(self.calls), 1)
+
+    def test_f19_retry_is_stale_when_the_task_is_no_longer_failed(self):
+        _, patches = self._task_run({"T1": "done"})
+        self.handlers["retry"] = self._pause
+        status, body = self._post_real_state(
+            req(command="retry", params={"task": "T1"}, precondition={"state": "failed", "revision": 3}), patches)
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
+    def test_f19_cancel_attempt_precondition_pins_the_attempt_state(self):
+        _, patches = self._task_run({"T1": "running"}, {"att-001": "running"})
+        self.handlers["cancel-attempt"] = self._pause
+        status, body = self._post_real_state(
+            req(command="cancel-attempt", params={"attempt": "att-001"},
+                precondition={"state": "running", "revision": 3}), patches)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        _, patches = self._task_run({"T1": "running"}, {"att-001": "cancelled"})
+        status, body = self._post_real_state(
+            req(command="cancel-attempt", idempotency_key="key-00000002", params={"attempt": "att-001"},
+                precondition={"state": "running", "revision": 3}), patches)
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
 
     def test_route_post_rejects_stale_plan_revision(self):
         import bt_plans_api

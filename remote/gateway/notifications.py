@@ -6,6 +6,7 @@ import json
 import sqlite3
 import threading
 import time
+from urllib.parse import quote
 from pathlib import Path
 from typing import Any, Callable, Mapping
 from urllib.error import HTTPError
@@ -186,4 +187,6 @@ def notification_for_event(event: Mapping[str, Any]) -> tuple[str, str] | None:
     target = event.get("target")
     req = target.get("req") if isinstance(target, dict) else None
     details = f"\n{req}" if isinstance(req, str) and req else ""
-    return f"event:{dedupe_key}", _EVENT_MESSAGES[event_type] + details
+    attempt = target.get("attemptId") if isinstance(target, dict) else None
+    review = f"\n#attempt-{quote(attempt, safe='')}" if event_type == "attempt.failed" and isinstance(attempt, str) and attempt else ""
+    return f"event:{dedupe_key}", _EVENT_MESSAGES[event_type] + details + review

@@ -211,9 +211,11 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
     assert.equal(gateway.challenges[0]?.target, "lotm/REQ-027");
     assert.equal(gateway.challenges[0]?.typedReq, "REQ-027");
+    assert.equal(gateway.challenges[0]?.requestMarker, "1", "challenge mutations must include the gateway request marker");
     assert.equal(gateway.commands[2]?.type, "approve");
     assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
     assert.equal(gateway.commands[2]?.confirmation?.challengeId, "mock-server-challenge-0001");
+    assert.equal(gateway.commands[2]?.requestMarker, "1", "command mutations must include the gateway request marker");
     await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.answer-form input[name=\"q1\"][value=\"safe\"]').click(); document.querySelector('.answer-form textarea[name=\"q2\"]').value='Keep a review step'; document.querySelector('.answer-form textarea[name=\"q2\"]').dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('.answer-form').requestSubmit()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 4; attempt += 1) await delay(100);
     assert.equal(gateway.commands[3]?.type, "answer-round");
