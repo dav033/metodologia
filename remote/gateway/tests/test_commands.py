@@ -217,7 +217,198 @@ class CommandRelayHttpTests(unittest.TestCase):
             "precondition": {"state": "running"},
         })
 
+<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
     def test_authenticated_challenge_http_relay_supports_confirmed_command(self):
+||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
+<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
+||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
+<<<<<<< e6088af660026d2e861b496d907f514eef10722f
+    def test_authenticated_challenge_relay_supports_confirmed_command(self):
+||||||| 9c190842d7f30c6178e9794e196264c85b92bba2
+<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
+    def test_authenticated_challenge_relay_supports_confirmed_command(self):
+||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
+    def test_authenticated_challenge_http_relay_enables_confirmed_command(self):
+=======
+    def test_web_decision_answer_passes_gateway_allowlist_and_translates_request_id(self):
+        body = {
+            "schemaVersion": 1,
+            "idempotencyKey": "decision-command-key-0001",
+            "type": "answer-decision",
+            "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
+            "precondition": {"state": "open"},
+            "requestId": "T2:1", "option": "retry", "reason": "Retry",
+        }
+
+        status, response = self.post_path("/api/remote/v1/commands", body)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(response["status"], "OK")
+        self.assertEqual(self.laptop.post_json.call_args.args[1]["params"], {
+            "request_id": "T2:1", "option": "retry", "reason": "Retry"})
+
+    def test_round_answer_http_command_sends_answers_with_open_round_precondition(self):
+        body = {
+            "schemaVersion": 1,
+            "idempotencyKey": "round-command-key-0001",
+            "type": "answer-round",
+            "target": {"kind": "round", "project": "demo", "req": "REQ-027", "roundId": "2"},
+            "precondition": {"state": "open"},
+            "round": 2, "answers": {"q1": {"text": "Keep scope"}},
+        }
+
+        status, response = self.post_path("/api/remote/v1/commands", body)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(response["status"], "OK")
+        self.assertEqual(self.laptop.post_json.call_args.args[1]["params"], {
+            "round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+        self.assertEqual(self.laptop.post_json.call_args.args[1]["precondition"], {"state": "open"})
+
+    def test_public_command_and_challenge_reach_the_real_laptop_ledger(self):
+        laptop_server = ThreadingHTTPServer(("127.0.0.1", 0), LaptopLedgerHandler)
+        laptop_thread = threading.Thread(target=laptop_server.serve_forever, daemon=True)
+        laptop_thread.start()
+        self.addCleanup(laptop_server.server_close)
+        self.addCleanup(laptop_server.shutdown)
+        self.runtime.laptop = LaptopClient(f"http://127.0.0.1:{laptop_server.server_port}", "test-key")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": self.temp.name}), \
+                patch.object(bt_remote_api, "_target_state", lambda *_args: {"state": "running"}), \
+                patch.dict(bt_remote_api.HANDLERS, {"pause": lambda *_args: {"paused": True}}, clear=True):
+            status, _body = self.post_path("/api/remote/v1/commands", {
+                "schemaVersion": 1, "idempotencyKey": "command-key-000001", "type": "pause",
+                "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
+                "precondition": {"state": "running"},
+            })
+            self.assertEqual(status, 200)
+
+            challenge_status, challenge = self.post_path("/api/remote/v1/challenges", {
+                "target": "demo/REQ-027", "typedReq": "REQ-027",
+            })
+
+        self.assertEqual(challenge_status, 200)
+        self.assertTrue(challenge.get("challengeId"))
+
+    def test_authenticated_challenge_http_relay_enables_confirmed_command(self):
+>>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
+=======
+    def test_web_decision_answer_passes_gateway_allowlist_and_translates_request_id(self):
+        body = {
+            "schemaVersion": 1,
+            "idempotencyKey": "decision-command-key-0001",
+            "type": "answer-decision",
+            "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
+            "precondition": {"state": "open"},
+            "requestId": "T2:1", "option": "retry", "reason": "Retry",
+        }
+
+        status, response = self.post_path("/api/remote/v1/commands", body)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(response["status"], "OK")
+        self.assertEqual(self.laptop.post_json.call_args.args[1]["params"], {
+            "request_id": "T2:1", "option": "retry", "reason": "Retry"})
+
+    def test_round_answer_http_command_sends_answers_with_open_round_precondition(self):
+        body = {
+            "schemaVersion": 1,
+            "idempotencyKey": "round-command-key-0001",
+            "type": "answer-round",
+            "target": {"kind": "round", "project": "demo", "req": "REQ-027", "roundId": "2"},
+            "precondition": {"state": "open"},
+            "round": 2, "answers": {"q1": {"text": "Keep scope"}},
+        }
+
+        status, response = self.post_path("/api/remote/v1/commands", body)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(response["status"], "OK")
+        self.assertEqual(self.laptop.post_json.call_args.args[1]["params"], {
+            "round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+        self.assertEqual(self.laptop.post_json.call_args.args[1]["precondition"], {"state": "open"})
+
+    def test_public_command_and_challenge_reach_the_real_laptop_ledger(self):
+        laptop_server = ThreadingHTTPServer(("127.0.0.1", 0), LaptopLedgerHandler)
+        laptop_thread = threading.Thread(target=laptop_server.serve_forever, daemon=True)
+        laptop_thread.start()
+        self.addCleanup(laptop_server.server_close)
+        self.addCleanup(laptop_server.shutdown)
+        self.runtime.laptop = LaptopClient(f"http://127.0.0.1:{laptop_server.server_port}", "test-key")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": self.temp.name}), \
+                patch.object(bt_remote_api, "_target_state", lambda *_args: {"state": "running"}), \
+                patch.dict(bt_remote_api.HANDLERS, {"pause": lambda *_args: {"paused": True}}, clear=True):
+            status, _body = self.post_path("/api/remote/v1/commands", {
+                "schemaVersion": 1, "idempotencyKey": "command-key-000001", "type": "pause",
+                "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
+                "precondition": {"state": "running"},
+            })
+            self.assertEqual(status, 200)
+
+            challenge_status, challenge = self.post_path("/api/remote/v1/challenges", {
+                "target": "demo/REQ-027", "typedReq": "REQ-027",
+            })
+
+        self.assertEqual(challenge_status, 200)
+        self.assertTrue(challenge.get("challengeId"))
+
+    def test_authenticated_challenge_http_relay_enables_confirmed_command(self):
+>>>>>>> 70de5f62178587b71e15d40677732fb4dc3cae8c
+=======
+    def test_web_decision_and_round_answers_translate_at_the_http_entrypoint(self):
+        decision_status, decision_response = self.post_path("/api/remote/v1/commands", {
+            "schemaVersion": 1,
+            "idempotencyKey": "decision-command-key-0001",
+            "type": "answer-decision",
+            "target": {"kind": "run", "project": "demo", "req": "REQ-027", "taskId": "T2"},
+            "precondition": {"state": "open"},
+            "requestId": "T2:1", "option": "retry", "reason": "Retry",
+        })
+        round_status, round_response = self.post_path("/api/remote/v1/commands", {
+            "schemaVersion": 1,
+            "idempotencyKey": "round-command-key-0001",
+            "type": "answer-round",
+            "target": {"kind": "round", "project": "demo", "req": "REQ-027", "roundId": "2"},
+            "precondition": {"state": "open"},
+            "round": 2, "answer": {"q1": {"text": "Keep scope"}},
+        })
+
+        self.assertEqual((decision_status, decision_response["status"]), (200, "OK"))
+        self.assertEqual((round_status, round_response["status"]), (200, "OK"))
+        decision, round_command = [call.args[1] for call in self.laptop.post_json.call_args_list]
+        self.assertEqual(decision["params"], {"request_id": "T2:1", "option": "retry",
+                                              "reason": "Retry", "task": "T2"})
+        self.assertEqual(round_command["params"], {"round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+
+>>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
+    def test_authenticated_challenge_relay_supports_confirmed_command(self):
+=======
+    def test_web_decision_and_round_answers_translate_at_the_http_entrypoint(self):
+        decision_status, decision_response = self.post_path("/api/remote/v1/commands", {
+            "schemaVersion": 1,
+            "idempotencyKey": "decision-command-key-0001",
+            "type": "answer-decision",
+            "target": {"kind": "run", "project": "demo", "req": "REQ-027", "taskId": "T2"},
+            "precondition": {"state": "open"},
+            "requestId": "T2:1", "option": "retry", "reason": "Retry",
+        })
+        round_status, round_response = self.post_path("/api/remote/v1/commands", {
+            "schemaVersion": 1,
+            "idempotencyKey": "round-command-key-0001",
+            "type": "answer-round",
+            "target": {"kind": "round", "project": "demo", "req": "REQ-027", "roundId": "2"},
+            "precondition": {"state": "open"},
+            "round": 2, "answer": {"q1": {"text": "Keep scope"}},
+        })
+
+        self.assertEqual((decision_status, decision_response["status"]), (200, "OK"))
+        self.assertEqual((round_status, round_response["status"]), (200, "OK"))
+        decision, round_command = [call.args[1] for call in self.laptop.post_json.call_args_list]
+        self.assertEqual(decision["params"], {"request_id": "T2:1", "option": "retry",
+                                              "reason": "Retry", "task": "T2"})
+        self.assertEqual(round_command["params"], {"round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+
+    def test_authenticated_challenge_relay_supports_confirmed_command(self):
+>>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
         self.laptop.post_json.side_effect = [
             {"challengeId": "laptop-challenge-000001", "expiresIn": 120},
             {"status": "OK", "code": None},
