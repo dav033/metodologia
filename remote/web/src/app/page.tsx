@@ -207,6 +207,29 @@ export default function HomePage() {
     setHistoryError("");
   }, []);
 
+  const refreshCommandHistory = useCallback(async () => {
+    const response = await fetch("/api/remote/v1/commands?after=&limit=100", { cache: "no-store" });
+    if (!response.ok) throw new Error(`No se pudo cargar el historial (${response.status}).`);
+    const payload: unknown = await response.json();
+    const history = record(payload);
+    if (!history || !Array.isArray(history.commands)) throw new Error("La respuesta del historial de comandos es inválida.");
+    const rows = history.commands.flatMap((value): CommandHistoryItem[] => {
+      const item = record(value);
+      if (!item) return [];
+      const id = field(item, "id", "idempotency_key");
+      const type = text(item.command) ? item.command : item.type;
+      const submittedAt = field(item, "submittedAt", "received_at");
+      const targetObject = record(item.target);
+      const target = text(item.target) ? item.target : targetObject && text(targetObject.project) && text(targetObject.req) ? `${targetObject.project}/${targetObject.req}` : "";
+      const result = text(item.result) ? item.result : item.status;
+      if (!text(id) || !text(type) || !text(submittedAt) || !text(target) || !text(item.origin) || !text(result)) return [];
+      return [{ id, type, target, submittedAt, origin: item.origin, result }];
+    });
+    setCommandHistory((current) => [...rows, ...current.filter((item) => !rows.some((row) => row.id === item.id))]
+      .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)).slice(0, 100));
+    setHistoryError("");
+  }, []);
+
   const load = useCallback(async () => {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
     if (sessionResponse.status === 401) { setSession({ authenticated: false }); return; }
@@ -279,6 +302,7 @@ export default function HomePage() {
     const commandId = text(command.idempotencyKey) ? command.idempotencyKey : `${key}-${submittedAt}`;
     let result = "Resultado desconocido";
     try {
+<<<<<<< 4474c51061e38144d93b9fcb8bcb8be15c88c3bd
       const mutationHeaders = { "content-type": "application/json", "X-Flow-Request": "1" };
       const confirmation = record(command.confirmation);
       if (confirmation && !text(confirmation.challengeId) && text(confirmation.typedReq)) {
@@ -307,6 +331,23 @@ export default function HomePage() {
       if (commandType === "retry" && target?.kind === "task" && text(target.project) && text(target.req) && text(target.taskId)) {
         reopenedTasks.current.delete(`${target.project}/${target.req}/${target.taskId}`);
       }
+||||||| ab51e89869d7e5691e66531a32861db97d644083
+      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(command) });
+      if (!response.ok) throw new Error(`El gateway rechazó el comando (${response.status}).`);
+=======
+      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(command) });
+      const payload: unknown = await response.json().catch(() => null);
+      const responseRecord = record(payload);
+      if (!response.ok) {
+        if (responseRecord?.code === "STALE_PRECONDITION") {
+          result = "Rechazado: el estado cambió";
+          throw new Error("El estado cambió. Actualiza el panel antes de volver a intentarlo.");
+        }
+        result = "Rechazado";
+        throw new Error(text(responseRecord?.message) ? responseRecord.message : `El gateway rechazó el comando (${response.status}).`);
+      }
+      result = text(responseRecord?.status) ? responseRecord.status : "Aceptado";
+>>>>>>> 4b7278cd27f206dd23e84a30bc7838460d65b17c
       await load();
       setCommandHistory((current) => [{ id: commandId, type: commandType, target: targetLabel, submittedAt, origin: "Web", result }, ...current.filter((item) => item.id !== commandId)].slice(0, 100));
       setReason(""); setConfirmation(""); setTypedReq("");
@@ -453,13 +494,21 @@ export default function HomePage() {
       return <article className="run-card" key={`${plan.project}-${plan.req}-${plan.id ?? "plan"}`}><div className="run-top"><div><p className="eyebrow">{plan.project}</p><h3>{plan.req} · Plan</h3></div><span className="state">{plan.state}</span></div>
         <p className="last-seen">Última actividad · {prettyTime(plan.updatedAt)}</p>
         {[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].length > 0 && <details><summary>Criterios de aceptación</summary><ul>{[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
+<<<<<<< 4474c51061e38144d93b9fcb8bcb8be15c88c3bd
         <div className="actions">
           {plan.state === "review" || plan.state === "awaiting-review" ? <form onSubmit={commandForm("approve", target, plan.state, plan.revision, `${plan.req}-approve`)}><label>Escribe {plan.req} para aprobar <input required name="typedReq" pattern={plan.req} autoCapitalize="characters" aria-label={`Escribe ${plan.req} para confirmar la aprobación`} /></label><button disabled={!!working}>Aprobar plan</button></form> : null}
           {plan.state === "approved" ? <form onSubmit={commandForm("launch", target, plan.state, plan.revision, `${plan.req}-launch`)}><label>Escribe {plan.req} para ejecutar <input required name="typedReq" pattern={plan.req} autoCapitalize="characters" aria-label={`Escribe ${plan.req} para confirmar la ejecución`} /></label><button disabled={!!working}>Ejecutar plan</button></form> : null}
           <label>Confirmación <input required aria-label="Id del reto de confirmación" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Id del reto" /></label><label>Escribe {plan.req} <input required aria-label={`Escribe ${plan.req}`} value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button disabled={!!working || !confirmation || typedReq !== plan.req}>Cancelar plan</button></form>
+||||||| ab51e89869d7e5691e66531a32861db97d644083
+        <div className="actions"><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><label>Confirmación <input required aria-label="Id del reto de confirmación" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Id del reto" /></label><label>Escribe {plan.req} <input required value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><button disabled={!!working}>Cancelar plan</button></form>
+          <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button className="danger" disabled={!!working}>Eliminar plan</button></form></div>
+=======
+        <div className="actions"><label>Confirmación <input required aria-label="Id del reto de confirmación" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Id del reto" /></label><label>Escribe {plan.req} <input required aria-label={`Escribe ${plan.req}`} value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button disabled={!!working || !confirmation || typedReq !== plan.req}>Cancelar plan</button></form>
+>>>>>>> 4b7278cd27f206dd23e84a30bc7838460d65b17c
           <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button className="danger" disabled={!!working || !confirmation || typedReq !== plan.req}>Eliminar plan</button></form></div>
       </article>;
     })}</div></section>}
+<<<<<<< 4474c51061e38144d93b9fcb8bcb8be15c88c3bd
     {!!snapshot?.rounds?.some((round) => round.status === "open") && <section className="runs plans" aria-labelledby="rounds-title"><div className="section-heading"><div><p className="eyebrow">PREGUNTAS</p><h2 id="rounds-title">Rondas abiertas</h2></div></div><div className="run-list">{snapshot.rounds.filter((round) => round.status === "open").map((round) => <article className="run-card" key={`${round.project}-${round.req}-${round.round}`}>
       <div className="run-top"><div><p className="eyebrow">{round.project}</p><h3>{round.req} · {round.title || `Ronda ${round.round}`}</h3></div><span className="state">Ronda {round.round}</span></div>
       {round.intro && <p className="last-seen">{round.intro}</p>}{round.coverage && <p className="last-seen">Cobertura · {round.coverage}</p>}
@@ -477,6 +526,9 @@ export default function HomePage() {
         <button disabled={!!working}>Elegir esta opción</button>
       </form>)}</div>
     </article>)}</div></section>}
+||||||| ab51e89869d7e5691e66531a32861db97d644083
+=======
+>>>>>>> 4b7278cd27f206dd23e84a30bc7838460d65b17c
     <section className="runs history" aria-labelledby="command-history-title"><div className="section-heading"><div><p className="eyebrow">TRAZABILIDAD</p><h2 id="command-history-title">Historial de comandos</h2></div></div>{historyError && <p className="error" role="status">{historyError}</p>}{commandHistory.length ? <ol className="command-history">{commandHistory.map((item) => <li key={item.id}><strong>{item.type}</strong><span>{item.target}</span><time dateTime={item.submittedAt}>{prettyTime(item.submittedAt)}</time><span>Origen · {item.origin}</span><span>Resultado · {item.result}</span></li>)}</ol> : <p className="empty">Aún no se han enviado comandos desde este panel.</p>}</section>
     <footer className="footer"><span>FLOW REMOTE</span><span>Actualizado · {prettyTime(snapshot?.generatedAt)}</span></footer>
   </main>;

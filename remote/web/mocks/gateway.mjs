@@ -27,6 +27,7 @@ export async function createMockGatewayServer() {
       send(200, { commands: server.history.slice(-100).reverse(), nextCursor: "mock-command-cursor-v1" });
       return;
     }
+<<<<<<< 4474c51061e38144d93b9fcb8bcb8be15c88c3bd
     if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/routes?")) {
       send(200, { routes: [
         { route_id: "route-unavailable", provider: "claude", model: "sonnet", profile: "work", available: false },
@@ -58,6 +59,9 @@ export async function createMockGatewayServer() {
       });
       return;
     }
+||||||| ab51e89869d7e5691e66531a32861db97d644083
+=======
+>>>>>>> 4b7278cd27f206dd23e84a30bc7838460d65b17c
     const reviewMatch = request.method === "GET" && request.url?.match(/^\/api\/remote\/v1\/attempts\/([^/]+)\/review$/);
     if (reviewMatch) {
       const attemptId = decodeURIComponent(reviewMatch[1]);
@@ -97,12 +101,20 @@ export async function createMockGatewayServer() {
             send(400, { code: "INVALID_COMMAND", message: "Comando inválido" });
             return;
           }
+<<<<<<< 4474c51061e38144d93b9fcb8bcb8be15c88c3bd
           server.receivedCommands.push(command);
           server.commandMarkers.push(request.headers["x-flow-request"]);
           const nextResponse = server.commandResponses.shift() ?? server.nextCommandResponse;
           if (nextResponse) {
             server.nextCommandResponse = null;
             server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+||||||| ab51e89869d7e5691e66531a32861db97d644083
+=======
+          if (server.nextCommandResponse) {
+            const nextResponse = server.nextCommandResponse;
+            server.nextCommandResponse = null;
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado: el estado cambió" });
+>>>>>>> 4b7278cd27f206dd23e84a30bc7838460d65b17c
             send(nextResponse.status, nextResponse.body);
             return;
           }
@@ -120,11 +132,16 @@ export async function createMockGatewayServer() {
   server.snapshot = snapshot;
   server.snapshotReads = [];
   server.commands = [];
+<<<<<<< 4474c51061e38144d93b9fcb8bcb8be15c88c3bd
   server.receivedCommands = [];
   server.commandMarkers = [];
   server.history = [];
   server.challenges = [];
   server.commandResponses = [];
+||||||| ab51e89869d7e5691e66531a32861db97d644083
+=======
+  server.history = [];
+>>>>>>> 4b7278cd27f206dd23e84a30bc7838460d65b17c
   server.nextCommandResponse = null;
   return server;
 }
