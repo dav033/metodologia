@@ -37,7 +37,7 @@ def feed_event(event_id, event_type="attempt.failed"):
         "id": event_id,
         "dedupeKey": event_id,
         "type": event_type,
-        "target": {"project": "demo", "req": "REQ-027"},
+        "target": {"project": "demo", "req": "REQ-027", "taskId": "T1", "attemptId": "att-0001"},
         "data": {},
     }
 
@@ -62,6 +62,7 @@ class NotificationTests(unittest.TestCase):
 
         self.assertEqual(len(self.sent), 1)
         self.assertIn("Una tarea falló", self.sent[0])
+        self.assertIn("/review?project=demo&req=REQ-027&taskId=T1#attempt-att-0001", self.sent[0])
 
     def test_duplicate_failure_sources_yield_one_notification_per_attempt(self):
         runtime = self.runtime()

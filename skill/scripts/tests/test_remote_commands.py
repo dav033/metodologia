@@ -453,9 +453,17 @@ class EntryPointTests(LedgerBase):
         saved = json.loads(decisions.answers_path(rdir).read_text(encoding="utf-8").splitlines()[0])
         self.assertEqual((saved["request"], saved["option"], saved["by"]), (request["id"], "retry", "remote"))
 
+<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
     def test_route_post_answers_round_to_the_round_file(self):
+||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
+    def test_route_post_answers_open_round_using_round_state_precondition(self):
+=======
+    def test_route_post_answers_open_round_while_scheduler_is_waiting(self):
+        import bt_plans_api
+>>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
         import bt_rounds
 
+<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
         bt_core, rdir, _ = self.real_run()
         rounds_dir = rdir / "rounds"
         rounds_dir.mkdir()
@@ -468,6 +476,41 @@ class EntryPointTests(LedgerBase):
         body = req(command="answer-round", params=params, precondition=state)
         with patch.object(bt_core, "ROOT", Path(self.temp.name)):
             status, response = self.post_real(body)
+||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
+        _bt_core, rdir, _harness = self.real_run()
+        round_path = bt_rounds.new_round(rdir, {
+            "title": "Scope choice",
+            "questions": [{"id": "q1", "text": "Keep scope?", "type": "choice",
+                           "options": [{"key": "yes", "label": "Yes"}]}],
+        })
+        round_data = bt_rounds.load(round_path)
+        actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
+        self.assertEqual(actual, {"state": "open", "revision": None})
+        body = req(command="answer-round", params={"round": round_data["round"],
+                                                    "answers": {"q1": {"text": "yes"}}},
+                   precondition={"state": actual["state"]})
+=======
+        _bt_core, rdir, _harness = self.real_run()
+        round_path = bt_rounds.new_round(rdir, {
+            "title": "Scope choice",
+            "questions": [{"id": "q1", "text": "Keep scope?", "type": "choice",
+                           "options": [{"key": "yes", "label": "Yes"}]}],
+        })
+        round_data = bt_rounds.load(round_path)
+        original_status_of = bt_plans_api.status_of
+
+        def waiting_scheduler_status(*args, **kwargs):
+            status = original_status_of(*args, **kwargs)
+            status["run"]["status"] = "waiting"
+            return status
+
+        with patch.object(bt_plans_api, "status_of", side_effect=waiting_scheduler_status):
+            actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
+        self.assertEqual(actual, {"state": "open", "revision": None})
+        body = req(command="answer-round", params={"round": round_data["round"],
+                                                    "answers": {"q1": {"text": "yes"}}},
+                   precondition={"state": actual["state"]})
+>>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
 
         saved = bt_rounds.load(round_path)
         self.assertEqual((status, response["status"]), (200, "OK"), response)

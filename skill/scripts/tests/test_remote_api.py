@@ -109,7 +109,7 @@ class RemoteApiTests(unittest.TestCase):
             finally:
                 self.stop_server(process)
 
-    def test_snapshot_uses_shared_now_frame_and_exposes_rejected_review_attempt(self):
+    def test_snapshot_uses_shared_now_frame_and_exposes_nonlive_review_attempt(self):
         import bt_core
         import bt_live_api as live
         import bt_plans_api
@@ -197,6 +197,38 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(read_now.call_count, 1)
             self.assertIn(b"A-live", live._now_frame(base))
             self.assertEqual(read_now.call_count, 1)
+
+    def test_snapshot_route_keeps_failed_attempt_identity_out_of_active_attempt(self):
+        import bt_core
+        import bt_live_api
+        import bt_plans_api
+        import bt_remote_api
+
+        attempt = {"id": "A-failed", "state": "failed", "live": False, "failure": "checks failed"}
+        summary = {"run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "title": "Demo",
+                   "status": "failed", "active": False, "updated_at": None,
+                   "tasks": [{"id": "T1", "title": "Build", "state": "failed", "attempt": attempt,
+                              "history": [attempt]}]}
+
+        class Handler:
+            path = "/api/remote/v1/snapshot"
+            headers = {"Authorization": f"Bearer {TEST_KEY}"}
+
+            def send(self, body, status, content_type):
+                self.body, self.status, self.content_type = body, status, content_type
+
+        handler = Handler()
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ, {"FLOW_GATEWAY_KEY": TEST_KEY}), \
+                patch.object(bt_core, "ROOT", Path(root)), \
+                patch.object(bt_live_api, "run_summaries", return_value=[summary]), \
+                patch.object(bt_live_api, "now_frame_data", return_value={"items": []}), \
+                patch.object(bt_plans_api, "plans_payload", return_value=[]):
+            bt_remote_api.route_get(handler)
+
+        self.assertEqual(handler.status, 200)
+        task = json.loads(handler.body)["runs"][0]["tasks"][0]
+        self.assertIsNone(task["activeAttempt"])
+        self.assertEqual(task["reviewAttempt"]["id"], "A-failed")
 
     def test_keyed_read_models_are_served_by_the_real_http_listener(self):
         with tempfile.TemporaryDirectory() as root:
