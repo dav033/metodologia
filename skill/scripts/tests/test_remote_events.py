@@ -121,6 +121,43 @@ class Handler:
 
 
 class RouteTests(unittest.TestCase):
+    def test_snapshot_route_redacts_session_secret_from_diagnostic_payload(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/snapshot"
+        run_summary = {
+            "run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "title": "Demo",
+            "status": "failed", "active": False, "updated_at": AT,
+            "tasks": [{"id": "T1", "title": "Build", "state": "failed",
+                       "history": [{"id": "a1", "state": "failed",
+                                    "failure": "SESSION_SECRET=synthetic-not-a-credential"}]}],
+        }
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_live_api.run_summaries", return_value=[run_summary]), \
+                patch("bt_live_api.now_frame_data", return_value={"items": []}):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertNotIn("synthetic-not-a-credential", handler.body)
+        self.assertIn("SESSION_SECRET=[REDACTED]", handler.body)
+
+    def test_review_route_redacts_session_secret_from_diagnostic_log(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/attempts/a1/review"
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "output.tail"
+            output.write_text("SESSION_SECRET=synthetic-not-a-credential\n", encoding="utf-8")
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                    patch("bt_live_api.runs", return_value=[("demo/REQ-001", Path(directory))]), \
+                    patch("bt_attempt_facts.attempt_facts", return_value={
+                        "T1": [{"attempt": "a1", "state": "failed", "failure": "verification failed"}],
+                    }), \
+                    patch("bt_remote_api._review_executor_attempt", return_value=Path(directory)), \
+                    patch("bt_remote_api._review_quality_result", return_value=(None, {})), \
+                    patch("bt_remote_api._review_diff", return_value={"stat": None}):
+                bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertNotIn("synthetic-not-a-credential", handler.body)
+        self.assertIn("SESSION_SECRET=[REDACTED]", handler.body)
+
     def test_get_events_route_uses_cursor_and_projects_open_decisions(self):
         handler = Handler()
         with tempfile.TemporaryDirectory() as directory:

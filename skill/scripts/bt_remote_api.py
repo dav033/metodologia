@@ -116,8 +116,13 @@ def _snapshot(handler) -> None:
     """Compact run read model, with live task signals taken from the panel's shared now frame."""
     import bt_core
     import bt_live_api as live
+<<<<<<< 0d0dd48d35237123898d202a25bcd85838d7ff3f
     import bt_plans_api
     import bt_rounds
+||||||| 27eddbf4d46527a94f9c3d70f4f01c34f744c5ca
+=======
+    import bt_remote_events
+>>>>>>> 5a5761a021f0c8d1a035ba4a2695e335afaa258b
 
     root = bt_core.ROOT
     try:
@@ -199,9 +204,18 @@ def _snapshot(handler) -> None:
         # A malformed plan must not make the independent run list unavailable.
         pass
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
+<<<<<<< 0d0dd48d35237123898d202a25bcd85838d7ff3f
     return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
                                 "runs": runs, "plans": plans, "rounds": rounds,
                                 "decisionRequests": decisions}, 200)
+||||||| 27eddbf4d46527a94f9c3d70f4f01c34f744c5ca
+    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
+                                "runs": runs}, 200)
+=======
+    snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
+                "runs": runs}
+    return _send_json(handler, bt_remote_events.redact(snapshot), 200)
+>>>>>>> 5a5761a021f0c8d1a035ba4a2695e335afaa258b
 
 
 def _command_history(handler) -> None:
