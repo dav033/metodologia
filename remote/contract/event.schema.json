@@ -10,7 +10,7 @@
     "cursor": { "type": "string", "minLength": 1, "maxLength": 256 },
     "type": { "enum": ["attempt.failed", "attempt.blocked", "run.finished", "round.waiting", "plan.waiting", "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated"] },
     "occurredAt": { "type": "string", "format": "date-time" },
-    "target": { "anyOf": [{ "$ref": "command.schema.json#/$defs/target" }, { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "system" } }, "additionalProperties": false }] },
+    "target": { "$ref": "command.schema.json#/$defs/target" },
     "data": { "type": "object" },
     "dedupeKey": { "type": "string", "minLength": 1, "maxLength": 256 }
   },

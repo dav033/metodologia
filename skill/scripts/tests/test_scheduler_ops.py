@@ -109,24 +109,6 @@ class RetryTests(unittest.TestCase):
         self.assertEqual(moves, [("cancel-attempt", "att-0007"), ("reopen", "T3")])
         self.assertEqual(lines, ["cancel-attempt", "reopen"])
 
-    def test_retry_accepts_a_task_already_ready_after_an_operator_reopen(self):
-        with patch.object(ops, "status", return_value={"live_attempts": [], "blocked_tasks": [],
-                                                         "task_states": {"T3": "ready"}}), \
-                patch.object(ops, "apply") as apply, patch.object(ops.time, "sleep") as sleep:
-            lines = ops.retry("p", "REQ-001", Path("/nonexistent"), "T3", "why")
-        self.assertEqual(lines, ["T3: already ready"])
-        apply.assert_not_called()
-        sleep.assert_not_called()
-
-    def test_retry_reopens_a_task_already_recovering_without_waiting_for_blocked(self):
-        with patch.object(ops, "status", return_value={"live_attempts": [], "blocked_tasks": [],
-                                                         "task_states": {"T3": "recovering"}}), \
-                patch.object(ops, "apply", return_value=["reopen"]) as apply, patch.object(ops.time, "sleep") as sleep:
-            lines = ops.retry("p", "REQ-001", Path("/nonexistent"), "T3", "why")
-        apply.assert_called_once_with("p", "REQ-001", Path("/nonexistent"), "reopen", "T3", "why")
-        self.assertEqual(lines, ["reopen"])
-        sleep.assert_not_called()
-
 
 class AgentKill(unittest.TestCase):
     def test_kill_agent_reads_every_revision_ledger_and_signals_shim_and_worktree(self):

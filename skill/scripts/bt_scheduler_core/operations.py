@@ -58,13 +58,13 @@ def cancel(ctx: Ctx, by: str, reason: str = "") -> None:
 
 
 def reopen(ctx: Ctx, task_id: str, by: str, reason: str = "") -> None:
-    """BLOCKED/RECOVERING -> READY with a fresh attempt budget. Completed and cancelled tasks never reopen (new revision instead)."""
+    """BLOCKED -> READY with a fresh attempt budget. Completed and cancelled tasks never reopen (new revision instead)."""
     by, reason = _who(by, reason)
     if task_id not in ctx.state.tasks:
         raise SchedulerError("UNKNOWN_TASK", task_id)
     rec = ctx.state.tasks[task_id]
-    if rec.state not in (T.BLOCKED.value, T.RECOVERING.value) or ctx.state.cancel_requested:
-        raise SchedulerError("NOT_ALLOWED", f"only a blocked or recovering task of a live run can be reopened ({task_id} is {rec.state})")
+    if rec.state != T.BLOCKED.value or ctx.state.cancel_requested:
+        raise SchedulerError("NOT_ALLOWED", f"only a blocked task of a live run can be reopened ({task_id} is {rec.state})")
     rec.budget_base, rec.reason, rec.hold_until, rec.waits = len(rec.attempts), "", 0.0, 0
     set_task(ctx, task_id, T.READY, by=by, reason=reason, decision="reopen")
 
