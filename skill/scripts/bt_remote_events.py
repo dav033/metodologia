@@ -70,6 +70,7 @@ def _task_target(project: str, req: str, task: str | None = None, attempt: str |
 def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[str, Any]]:
     """Derive stable events from current run state and explicit notification fixtures."""
     out: list[dict[str, Any]] = []
+    state_failure_targets: set[tuple[str, str, str]] = set()
     for run in state.get("runs", []):
         project, req = run.get("project", ""), run.get("req_id", "")
         for task in run.get("tasks", []):
@@ -82,7 +83,30 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
                 data = {"title": task.get("title"), "failure": attempt.get("failure"),
                         "verdict": attempt.get("verdict")}
                 if attempt.get("state") in {"rejected", "failed"} or attempt.get("failure"):
+<<<<<<< df0c3380ae4eade2520bfd7c3fd1edb9a7ce2595
                     out.append(_event("attempt.failed", identity, occurred_at, target, data))
+||||||| be7c0f732ccaf1b2b6139dc222cbf0fb0cd9c8fa
+<<<<<<< 34ab19a2491850919dd1d00647ea1a3883471932
+                    out.append(_event("attempt.failed", identity, occurred_at, target, data))
+||||||| a4dce0b93ae5079f85d1c9469a9fead921b507dd
+                    out.append(_event("attempt.failed", identity, occurred_at, target, data))
+                    state_failure_targets.add((project, req, str(task.get("id", ""))))
+=======
+                    if exhausted:
+                        data.update({"retryExhausted": True,
+                                     "attemptsUsed": task.get("attempts_used", task.get("attempts")),
+                                     "maxAttempts": task.get("max_attempts")})
+                        out.append(_event("attempt.failed", identity, occurred_at, target, data))
+                        state_failure_targets.add((project, req, str(task.get("id", ""))))
+>>>>>>> 592a10ffff06f8904cf34efa124eca7973d62ea2
+=======
+                    if exhausted:
+                        data.update({"retryExhausted": True,
+                                     "attemptsUsed": task.get("attempts_used", task.get("attempts")),
+                                     "maxAttempts": task.get("max_attempts")})
+                        out.append(_event("attempt.failed", identity, occurred_at, target, data))
+                        state_failure_targets.add((project, req, str(task.get("id", ""))))
+>>>>>>> 3f2cfc39914a25e7888c2fc9a4d34485f8cd0bed
                 elif attempt.get("state") == "blocked":
                     out.append(_event("attempt.blocked", identity, occurred_at, target, data))
                 elif attempt.get("live") and now is not None:
@@ -143,7 +167,11 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
             out.append(_event("laptop.offline", since, since, {"kind": "system"}, {"since": since}))
     for row in state.get("flow", []):
         event = from_flow(row)
-        if event is not None:
+        if event is not None and not (
+            event["type"] == "attempt.failed"
+            and (event["target"].get("project", ""), event["target"].get("req", ""),
+                 event["target"].get("taskId", "")) in state_failure_targets
+        ):
             out.append(event)
 
     out.sort(key=lambda event: (event["occurredAt"], event["id"]))
