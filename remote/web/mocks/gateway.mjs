@@ -99,10 +99,34 @@ export async function createMockGatewayServer() {
           }
           server.receivedCommands.push(command);
           server.commandMarkers.push(request.headers["x-flow-request"]);
-          const nextResponse = server.commandResponses.shift() ?? server.nextCommandResponse;
+          const queuedResponse = server.commandResponses.shift();
+          const nextResponse = queuedResponse ?? server.nextCommandResponse;
           if (nextResponse) {
+<<<<<<< dbe9af6fa48d86c710e39535bd40561c61f887a4
             server.nextCommandResponse = null;
             server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+||||||| edf7ff97f693839f8f1c3556b3edc83fd7fa4be0
+            server.nextCommandResponse = null;
+<<<<<<< bf3913c2ab9879f2c4a2bb8b61f62ab7e53ccc83
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+||||||| b498bd7e66aed145929c5fd334fb808458c7e9c4
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+||||||| ab51e89869d7e5691e66531a32861db97d644083
+=======
+          if (server.nextCommandResponse) {
+            const nextResponse = server.nextCommandResponse;
+            server.nextCommandResponse = null;
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado: el estado cambió" });
+>>>>>>> 4b7278cd27f206dd23e84a30bc7838460d65b17c
+=======
+            const result = nextResponse.body?.code === "STALE_PRECONDITION" ? "Rechazado: el estado cambió" : "Rechazado";
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result });
+>>>>>>> 9ef9600bb6d980b33f9e0e4bf809cda193f40287
+=======
+            if (queuedResponse === undefined) server.nextCommandResponse = null;
+            const result = nextResponse.body?.code === "STALE_PRECONDITION" ? "Rechazado: el estado cambió" : "Rechazado";
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result });
+>>>>>>> d7f02de5e9bf4a86971317a06d90d8a632c02a7f
             send(nextResponse.status, nextResponse.body);
             return;
           }
