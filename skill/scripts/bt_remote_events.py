@@ -140,10 +140,16 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
         since = offline.get("since")
         if since:
             out.append(_event("laptop.offline", since, since, {"kind": "system"}, {"since": since}))
+    failed_tasks = {(event["target"].get("project"), event["target"].get("req"), event["target"].get("taskId"))
+                    for event in out if event["type"] == "attempt.failed" and event["target"].get("taskId")}
     for row in state.get("flow", []):
         event = from_flow(row)
-        if event is not None:
-            out.append(event)
+        if event is None:
+            continue
+        key = (event["target"].get("project"), event["target"].get("req"), event["target"].get("taskId"))
+        if event["type"] == "attempt.failed" and key in failed_tasks:
+            continue  # the run state already reports this failure; one failure, one notification
+        out.append(event)
 
     out.sort(key=lambda event: (event["occurredAt"], event["id"]))
     for event in out:
