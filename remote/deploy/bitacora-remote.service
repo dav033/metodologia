@@ -1,0 +1,16 @@
+[Unit]
+Description=Bitacora remote API listener (loopback only, gateway key required)
+After=network.target
+
+[Service]
+Type=simple
+# Mode-0600 file in your home holding FLOW_GATEWAY_KEY (same value as the gateway's); see remote.env.example.
+EnvironmentFile=%h/.config/bitacora-remote/remote.env
+ExecStart=/usr/bin/python3 %h/.claude/skills/metodologia/scripts/bitacora.py serve-remote
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target
