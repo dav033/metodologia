@@ -352,6 +352,22 @@ def _submit_command(handler, length: int) -> None:
         request = json.loads(handler.rfile.read(length) or b"null")
     except (ValueError, OSError):
         return _problem(handler, 400, "INVALID_COMMAND", "El cuerpo debe ser JSON válido.")
+    # The gateway speaks the public, versioned contract. The command ledger keeps its
+    # internal representation; translate the attempt cancellation at this boundary.
+    if isinstance(request, dict) and request.get("schemaVersion") == 1:
+        target = request.get("target")
+        if (request.get("type") != "cancel-attempt" or not isinstance(target, dict)
+                or target.get("kind") != "attempt" or not isinstance(target.get("project"), str)
+                or not isinstance(target.get("req"), str) or not isinstance(target.get("attemptId"), str)):
+            return _problem(handler, 400, "INVALID_COMMAND", "El comando versionado no es válido.")
+        request = {
+            "idempotency_key": request.get("idempotencyKey"),
+            "command": "cancel-attempt",
+            "target": f"{target['project']}/{target['req']}",
+            "origin": "web",
+            "params": {"attempt": target["attemptId"], "reason": request.get("reason", "")},
+            "precondition": request.get("precondition"),
+        }
     handlers = commands.dispatch_handlers()
     handlers.update(HANDLERS)
     result = commands.Ledger().submit(request, handlers, _target_state)
