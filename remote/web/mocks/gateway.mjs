@@ -80,7 +80,7 @@ export async function createMockGatewayServer() {
             send(400, { code: "INVALID_CHALLENGE", message: "El id del requerimiento no coincide" });
             return;
           }
-          server.challenges.push(challengeRequest);
+          server.challenges.push({ ...challengeRequest, requestMarker: request.headers["x-flow-request"] });
           send(201, { challengeId: "mock-server-challenge-0001", target: challengeRequest.target, expiresIn: 120 });
         } catch { send(400, { code: "INVALID_CHALLENGE", message: "JSON inválido" }); }
       });
