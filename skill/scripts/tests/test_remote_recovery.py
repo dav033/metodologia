@@ -1,7 +1,9 @@
 """Pinned Scheduler retries validate route availability before reopening."""
 from __future__ import annotations
 
+import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -12,6 +14,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import bt_remote_commands as commands
+import bt_remote_api
 import bt_route_pins as pins
 import bt_scheduler_adapter as scheduler
 from bt_scheduler_core import AssignmentRequest, TaskView
@@ -140,6 +143,90 @@ class RemoteRecoveryTests(unittest.TestCase):
     def test_pin_parameters_are_retry_only(self):
         request = {**self.request(), "command": "resume", "params": {"route": "claude"}}
         self.assertIn("solo se admiten en retry", commands.validate(request))
+
+    def test_owner_edit_freezes_next_revision_and_rebases_through_remote_entrypoint(self):
+        from bt_planner import contract, revisions, sync
+        from bt_planner.tests.support import PLAN_MD, classify
+
+        rdir = self.root / "demo" / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True)
+        (rdir / "SPEC.md").write_text("# Spec\n## Requirements\n- R1. Demo\n", encoding="utf-8")
+        (rdir / "PLAN.md").write_text(PLAN_MD.replace("REQ-042", "REQ-001").format(status="approved"),
+                                     encoding="utf-8")
+        plan = classify(sync.skeleton(rdir, plan_id="REQ-001"))
+        (rdir / "PLAN.json").write_text(contract.dumps(plan), encoding="utf-8")
+        sync.approve_freeze(rdir, "REQ-001", ("approved",))
+
+        class Handler:
+            def __init__(self, body, path):
+                raw = json.dumps(body).encode()
+                self.path = path
+                self.headers = {"Authorization": "Bearer test-gateway-key", "Content-Length": str(len(raw))}
+                self.rfile = io.BytesIO(raw)
+                self.sent = None
+
+            def send(self, payload, status=200, content_type=""):
+                self.sent = (status, json.loads(payload))
+
+        current_revision = 1
+        rebases = []
+        (self.root / ".state" / "locks").mkdir(parents=True)
+
+        def apply_revise(project, req, path, action, target, reason):
+            nonlocal current_revision
+            self.assertEqual((project, req, path, action, target), ("demo", "REQ-001", rdir, "revise", ""))
+            current_revision = revisions.latest(rdir)["revision"]
+            rebases.append((current_revision, reason))
+            return [f"rebased r{current_revision}"]
+
+        def send_challenge():
+            challenge = Handler({"target": "demo/REQ-001", "typedReq": "REQ-001"},
+                                "/api/remote/v1/challenges")
+            bt_remote_api.route_post(challenge)
+            self.assertEqual(challenge.sent[0], 201)
+            return challenge.sent[1]["challengeId"]
+
+        def send_edit(key, field, value, challenge_id, typed_req="REQ-001"):
+            body = {"idempotency_key": key, "command": "edit-brief", "target": "demo/REQ-001",
+                    "origin": "telegram", "params": {"task": "T1", "field": field, "value": value},
+                    "precondition": {"state": "running", "revision": current_revision},
+                    "confirmation": {"challengeId": challenge_id, "typedReq": typed_req}}
+            handler = Handler(body, "/api/remote/v1/commands")
+            bt_remote_api.route_post(handler)
+            return handler.sent
+
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-gateway-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(commands, "_run_target", return_value=("demo", "REQ-001", rdir)), \
+                patch.object(bt_remote_api, "_target_state",
+                             side_effect=lambda *_args: {"state": "running", "revision": current_revision}), \
+                patch("bt_lock._lock_dir", return_value=self.root / ".state" / "locks"), \
+                patch("bt_scheduler_ops.apply", side_effect=apply_revise), \
+                patch("bt_scheduler_ops.resume", return_value="watchdog started"):
+            missing = Handler({"idempotency_key": "edit-no-challenge", "command": "edit-brief",
+                               "target": "demo/REQ-001", "origin": "telegram",
+                               "params": {"task": "T1", "field": "brief", "value": "New brief"},
+                               "precondition": {"state": "running", "revision": 1}},
+                              "/api/remote/v1/commands")
+            bt_remote_api.route_post(missing)
+            self.assertEqual((missing.sent[0], missing.sent[1]["code"]), (409, "CONFIRMATION_REQUIRED"))
+            self.assertEqual(revisions.latest(rdir)["revision"], 1)
+            self.assertEqual(rebases, [])
+
+            first = send_edit("edit-brief-r2", "brief", "Update the approved task brief clearly", send_challenge())
+            self.assertEqual(first[1]["status"], "OK", first)
+            self.assertEqual((first[0], first[1]["status"], first[1]["outcome"]["revision"]),
+                             (200, "OK", 2), first)
+            second = send_edit("edit-criteria-r3", "criteria", ["Verify the new acceptance condition"], send_challenge())
+            self.assertEqual((second[0], second[1]["status"], second[1]["outcome"]["revision"]),
+                             (200, "OK", 3))
+
+        self.assertEqual(rebases, [(2, "Owner edited task brief"), (3, "Owner edited task brief")])
+        self.assertEqual(revisions.load_revision(rdir, 2)["tasks"][0]["objective"],
+                         "Update the approved task brief clearly")
+        self.assertEqual(revisions.load_revision(rdir, 3)["tasks"][0]["acceptance_criteria"],
+                         ["Verify the new acceptance condition"])
+        self.assertEqual([entry["source"] for entry in revisions.list_revisions(rdir)],
+                         ["approval", "approval", "approval"])
 
 
 if __name__ == "__main__":
