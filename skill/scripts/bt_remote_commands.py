@@ -8,6 +8,8 @@ import os
 import re
 import secrets
 import sqlite3
+import stat
+import tempfile
 import threading
 from contextlib import contextmanager
 from pathlib import Path
@@ -15,7 +17,7 @@ from typing import Any, Callable
 
 COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision",
             "approve", "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
-CHALLENGED = frozenset(("revise", "approve", "launch", "cancel-plan", "delete-plan"))
+CHALLENGED = frozenset(("revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"))
 ORIGINS = ("web", "telegram")
 PRECONDITION_FIELDS = ("state", "revision", "updatedAt")   # what a precondition may pin on the target
 _LOCK = threading.Lock()
@@ -116,8 +118,21 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
         task = params.get("task")
         if not isinstance(task, str) or not task:
             raise ValueError("retry requiere params.task.")
-        if params.get("route"):
-            raise ValueError("retry con route requiere el despachador de recuperación.")
+        task = ops.bound_plan(rdir).task(task).id
+        route = params.get("route")
+        if route is None and any(key in params for key in ("provider", "model", "account", "profile")):
+            route = {key: params[key] for key in ("provider", "model", "account", "profile") if key in params}
+        if route is not None:
+            import bt_remote_recovery as recovery
+            pin = recovery.validate_pin(route)
+            recovery.validate_available(project, rdir, task, pin)
+            recovery.write_pin(rdir, task, pin)
+        note = params.get("reason", "")
+        if note.strip():
+            import bt_scheduler_decisions as decisions
+            path = decisions.notes_path(rdir, task)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(note.strip() + "\n", encoding="utf-8")
         messages = ops.retry(project, req, rdir, task, reason)
         messages.append(ops.resume(project, req, rdir))
         return {"messages": messages}
@@ -136,7 +151,83 @@ def dispatch_handlers() -> dict[str, Handler]:
                 for command in ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision")}
     handlers.update({command: (lambda target, params, action=command: dispatch_plan_command(action, target, params))
                      for command in ("approve", "launch", "answer-round", "cancel-plan", "delete-plan")})
+    handlers["edit-brief"] = dispatch_edit_brief
     return handlers
+
+
+def _write_plan_atomically(path: Path, content: str) -> None:
+    mode = stat.S_IMODE(path.stat().st_mode)
+    fd, temporary_name = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temporary, mode)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def dispatch_edit_brief(target: str, params: dict) -> Any:
+    """Owner-edit task scope, freeze it as an approved revision, then rebase the active run."""
+    project, req, rdir = _run_target(target)
+    typed_req = params.get("typed_req")
+    if not isinstance(typed_req, str) or typed_req.strip().upper() != req.upper():
+        raise ValueError("edit-brief requiere confirmar el id REQ del objetivo.")
+    task_id = params.get("task")
+    field = params.get("field", "objective")
+    value = params.get("value", params.get("brief"))
+    if not isinstance(task_id, str) or not task_id.strip():
+        raise ValueError("edit-brief requiere params.task.")
+    if not isinstance(field, str):
+        raise ValueError("edit-brief requiere un campo válido.")
+    fields = {"brief": "objective", "criteria": "acceptance_criteria"}
+    field = fields.get(field, field)
+    if field not in {"objective", "acceptance_criteria"}:
+        raise ValueError("edit-brief solo puede cambiar objective o acceptance_criteria.")
+    if field == "objective" and (not isinstance(value, str) or not value.strip()):
+        raise ValueError("edit-brief requiere un brief de tarea no vacío.")
+    if field == "acceptance_criteria" and (not isinstance(value, list) or not value
+                                             or any(not isinstance(item, str) or not item.strip() for item in value)):
+        raise ValueError("edit-brief requiere una lista no vacía de criterios.")
+    reason = params.get("reason", "Owner edited task brief")
+    if not isinstance(reason, str):
+        raise ValueError("reason debe ser texto.")
+
+    from bt_planner import contract as plan_contract
+    from bt_planner import revisions, sync
+
+    current_path = rdir / "PLAN.json"
+    if current_path.is_symlink() or not current_path.is_file():
+        raise ValueError("PLAN.json debe ser un archivo regular para editarlo desde remoto.")
+    original = current_path.read_bytes()
+    latest = revisions.latest(rdir)
+    if latest is None:
+        raise ValueError("edit-brief requiere una revisión congelada para crear N+1.")
+    frozen = revisions.load_revision(rdir, latest["revision"])
+    current = plan_contract.load(current_path)
+    if current.get("revision") != latest["revision"] or revisions.sha256(plan_contract.dumps(current)) != latest["sha256"]:
+        raise ValueError("PLAN.json cambió desde la última revisión aprobada; no se aplicó el cambio.")
+    edited = json.loads(json.dumps(frozen))
+    task = next((item for item in edited.get("tasks", []) if item.get("id") == task_id), None)
+    if task is None:
+        raise ValueError(f"Tarea desconocida en la revisión {latest['revision']}: {task_id}.")
+    task[field] = value
+    edited["revision"] = latest["revision"] + 1
+    content = plan_contract.dumps(edited)
+    _write_plan_atomically(current_path, content)
+    try:
+        entry = sync.approve_freeze(rdir, req)
+    except BaseException:
+        _write_plan_atomically(current_path, original.decode("utf-8"))
+        raise
+
+    import bt_scheduler_ops as ops
+    messages = ops.apply(project, req, rdir, "revise", "", reason)
+    messages.append(ops.resume(project, req, rdir))
+    return {"revision": entry["revision"], "sha256": entry["sha256"], "messages": messages}
 
 
 def dispatch_plan_command(command: str, target: str, params: dict) -> Any:
