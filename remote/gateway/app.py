@@ -9,7 +9,7 @@ from typing import Any
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from stream import StreamHub
-from notifications import NotificationOutbox, TelegramSender, notification_for_event
+from notifications import NotificationOutbox, TelegramSender, event_timestamp, notification_for_event
 from upstream import LaptopClient, UpstreamError, UpstreamTimeout
 
 logger = logging.getLogger(__name__)
@@ -83,6 +83,14 @@ class GatewayRuntime:
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
         self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
+        outage_started_at = self.outbox.state_value("laptop_outage_started_at")
+        if outage_started_at:
+            # LivenessMonitor uses monotonic time in-process. Reconstruct its clock from the
+            # persisted wall-clock outage start so a gateway restart does not reset the alert.
+            self.liveness.status = LaptopStatus.OFFLINE
+            self.liveness.consecutive_failures = self.liveness.failures_before_offline
+            elapsed = max(0.0, time.time() - outage_started_at)
+            self.liveness.offline_since = time.monotonic() - elapsed
 
     def submit_command(self, payload: dict[str, Any]) -> dict[str, Any]:
         status, result = self.relay_command(payload)
@@ -142,9 +150,12 @@ class GatewayRuntime:
                 self.hub.set_online(False)
             if transition and transition.current is LaptopStatus.OFFLINE:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
+                self.outbox.set_state_value("laptop_outage_started_at", int(time.time()))
         else:
-            self.liveness.record_success()
+            transition = self.liveness.record_success()
             self.hub.set_online(True)
+            if transition and transition.current is LaptopStatus.ONLINE:
+                self.outbox.set_state_value("laptop_outage_started_at", 0)
             self._refresh_active_run_cache()
             self._poll_events()
         if self.liveness.status is LaptopStatus.OFFLINE:
@@ -198,7 +209,7 @@ class GatewayRuntime:
             self.hub.publish(event)
             notification = notification_for_event(event)
             if notification:
-                self.outbox.enqueue(*notification)
+                self.outbox.enqueue(*notification, created_at=event_timestamp(event))
         next_cursor = result.get("nextCursor")
         if isinstance(next_cursor, str):
             self.event_cursor = next_cursor
