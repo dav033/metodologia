@@ -116,19 +116,6 @@ class Authorisation(unittest.TestCase):
         with self.assertRaises(sc.SchedulerError):
             h.core.reopen("T2", "owner")                                     # completed is terminal
 
-    def test_reopen_can_resume_a_recovering_task_after_a_rejected_verdict(self):
-        h = Harness([indep("T1")], max_attempts=1)
-        h.core.step()
-        h.send("T1", "execution_finished")
-        h.verdict("T1", accepted=False)
-        self.assertEqual(h.state("T1"), "recovering")
-
-        h.core.reopen("T1", "owner", "corrected rejected work")
-
-        self.assertEqual(h.state("T1"), "ready")
-        self.assertEqual(h.core.audit_log()[-1].kind, "task_transition")
-        self.assertEqual(h.core.snapshot().tasks["T1"]["attempts"], 1)
-
     def test_reopen_after_cancel_is_refused(self):
         h = Harness([indep("T1")])
         h.core.step()

@@ -161,8 +161,6 @@ def status(project: str, req: str, rdir: Path) -> dict:
     except Exception:  # noqa: BLE001 - status must answer even when the run has no readable state
         out["open_decisions"] = []
     out["blocked_tasks"] = [t for t, r in doc.get("tasks", {}).items() if r.get("state") == "blocked"]
-    out["task_states"] = {task: record.get("state") for task, record in doc.get("tasks", {}).items()
-                          if isinstance(record, dict) and isinstance(record.get("state"), str)}
     return out
 
 
@@ -248,34 +246,18 @@ def _refresh_projection(rdir: Path) -> bool:
 
 
 def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wait: float = 180.0) -> list[str]:
-    """Cancel a live attempt and reopen its task once Scheduler makes it recoverable.
-
-    A task reopened by a separate operator move is already ready; preserve that state instead of waiting for a block
-    which will never arrive. A task already recovering can be reopened directly.
-    """
-    current = status(project, req, rdir)
-    attempts = [a["attempt"] for a in current["live_attempts"] if a["task"] == task]
+    """Cancel the task's live attempt and have it tried again. M5 blocks a cancelled task once the owner runs, and only
+    then can it be reopened, so this waits for that and reopens it."""
+    attempts = [a["attempt"] for a in status(project, req, rdir)["live_attempts"] if a["task"] == task]
     lines = []
     for attempt in attempts:
         lines += apply(project, req, rdir, "cancel-attempt", attempt, reason)
-    task_state = current.get("task_states", {}).get(task)
-    if task_state == "ready":
-        return lines + [f"{task}: already ready"]
-    if task_state == "recovering":
-        return lines + apply(project, req, rdir, "reopen", task, reason)
-    if task_state == "blocked" or task in current.get("blocked_tasks", []):
-        return lines + apply(project, req, rdir, "reopen", task, reason)
     deadline = time.monotonic() + wait
-    while True:
-        current = status(project, req, rdir)
-        task_state = current.get("task_states", {}).get(task)
-        if task_state == "ready":
-            return lines + [f"{task}: already ready"]
-        if task_state == "recovering" or task_state == "blocked" or task in current.get("blocked_tasks", []):
-            return lines + apply(project, req, rdir, "reopen", task, reason)
+    while task not in status(project, req, rdir)["blocked_tasks"]:
         if time.monotonic() > deadline:
             return lines + [f"{task}: not blocked after {int(wait)} s; reopen it by hand if it needs to"]
         time.sleep(2)
+    return lines + apply(project, req, rdir, "reopen", task, reason)
 
 
 def resume(project: str, req: str, rdir: Path) -> str:

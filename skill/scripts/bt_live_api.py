@@ -281,9 +281,6 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
         tasks = [{"id": t["id"], "title": t["title"], "objective": (t.get("detail") or {}).get("objective"),
                   "milestone_id": t.get("milestone_id"), "state": t["state"],
                   "attempts": t["attempts"], "attempt": _attempt(t.get("attempt")),
-                  "attempts_used": t.get("attempts_used"), "max_attempts": t.get("max_attempts"),
-                  "retries_remaining": t.get("retries_remaining"),
-                  "retry_exhausted": t.get("retry_exhausted"), "reason": t.get("reason"),
                   "history": [_attempt(a) for a in t.get("history") or []]}
                  for m in status["milestones"] for t in m["tasks"]]
         out.append({"run": f'{project}/{status["req_id"]}', "project": project, "req_id": status["req_id"],
@@ -296,33 +293,18 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
 
 NOW_TTL = 1.0                # one "now" frame serves every live client for a second (it reads every run's plan)
 _now_cache: dict[Path, tuple[float, bytes]] = {}
-_now_data_cache: dict[Path, tuple[float, dict[str, Any]]] = {}
 _now_lock = threading.Lock()
-
-
-def now_frame_data(root: Path | None) -> dict[str, Any]:
-    """Return the shared, one-second now read model used by SSE and remote snapshots."""
-    base = _root(root)
-    with _now_lock:
-        at, payload = _now_data_cache.get(base, (0.0, {}))
-        if time.monotonic() - at > NOW_TTL:
-            payload = {"items": now_items(root), "sessions": sessions(root)}
-            _now_data_cache[base] = (time.monotonic(), payload)
-        return payload
 
 
 def _now_frame(root: Path | None) -> bytes:
     import bt_page_now          # the web layer renders the fragments; this module only decides when to send them
     base = _root(root)
-    now_frame_data(root)
     with _now_lock:
-        at, payload = _now_data_cache.get(base, (0.0, {}))
-        frame_at, frame = _now_cache.get(base, (0.0, b""))
-        if frame and frame_at == at:
-            return frame
-        data = {**payload, "html": bt_page_now.fragments(payload["items"], payload["sessions"])}
-        frame = _frame("now", data)
-        _now_cache[base] = (at, frame)
+        at, frame = _now_cache.get(base, (0.0, b""))
+        if time.monotonic() - at > NOW_TTL:
+            items, agents = now_items(root), sessions(root)
+            frame = _frame("now", {"items": items, "sessions": agents, "html": bt_page_now.fragments(items, agents)})
+            _now_cache[base] = (time.monotonic(), frame)
         return frame
 
 
