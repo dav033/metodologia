@@ -1,4 +1,4 @@
-"""Remote recovery commands must reach the scheduler, persist pins, and reject unavailable routes first."""
+"""Pinned Scheduler retries validate route availability before reopening."""
 from __future__ import annotations
 
 import io
@@ -11,179 +11,222 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-SCRIPTS = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(SCRIPTS))
-import bt_remote_api
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 import bt_remote_commands as commands
-import bt_remote_recovery as recovery
-import bt_scheduler_decisions as decisions
-import bt_scheduler_ops as ops
+import bt_remote_api
+import bt_route_pins as pins
+import bt_scheduler_adapter as scheduler
+from bt_scheduler_core import AssignmentRequest, TaskView
+from bt_scheduler_decision import TaskFacts
 
-KEY = "test-gateway-key-0123456789"
 
-
-class Handler:
-    def __init__(self, body, path="/api/remote/v1/commands"):
-        self.path = path
-        raw = json.dumps(body).encode() if not isinstance(body, bytes) else body
-        self.headers = {"Authorization": f"Bearer {KEY}", "Content-Length": str(len(raw))}
-        self.rfile = io.BytesIO(raw)
-        self.sent = None
-
-    def send(self, payload, status=200, content_type=""):
-        self.sent = (status, json.loads(payload))
+def candidate(route_id="route-a", provider="claude", model="sonnet", profile="claude-work",
+              account_ref="acct:stable-a", **overrides):
+    values = {
+        "route_id": route_id, "provider": provider, "model": model, "profile": profile,
+        "account_ref": account_ref, "effort": "medium", "source_status": "available",
+        "source_reason_codes": (), "profile_authorized": True, "auth_status": "valid",
+        "runtime_status": "available", "quota_status": "available", "quota_observed_at": 100.0,
+        "quota_valid_until": 200.0, "quota_used_percent": 20.0, "baseline_rank": 0,
+        "history": SimpleNamespace(),
+    }
+    values.update(overrides)
+    return SimpleNamespace(**values)
 
 
 class RemoteRecoveryTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temp.cleanup)
-        self.rdir = Path(self.temp.name)
-        self.retries = []
+        self.root = Path(self.temp.name)
+        self.rdir = self.root / "req"
+        self.rdir.mkdir()
+        self.ledger = commands.Ledger(self.root / "commands.db")
 
-    def request(self, params, key="key-00000001"):
-        body = {"idempotency_key": key, "command": "retry", "target": "demo/REQ-001", "origin": "web",
-                "params": params, "precondition": {"state": "running", "revision": 3}}
-        handler = Handler(body)
-        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
-                patch.object(commands, "_run_target", return_value=("demo", "REQ-001", self.rdir)), \
-                patch.object(ops, "bound_plan", return_value=SimpleNamespace(
-                    task=lambda task_id: SimpleNamespace(id=task_id))), \
-                patch.object(bt_remote_api, "_target_state", return_value={"state": "running", "revision": 3,
-                                                                             "updatedAt": "t1"}), \
-                patch.object(recovery, "validate_available", return_value=SimpleNamespace()), \
-                patch.object(ops, "retry", side_effect=lambda *args: self.retries.append(args) or ["T1 reopened"]), \
-                patch.object(ops, "resume", return_value="watchdog started"):
-            bt_remote_api.route_post(handler)
-        return handler.sent
+    def tearDown(self):
+        self.temp.cleanup()
 
-    def test_real_command_pins_next_m2_candidates_and_records_pin_and_prompt_note(self):
-        status, body = self.request({"task": "T1", "route": {"provider": "codex", "model": "gpt-5",
-                                                                   "account": "work"},
-                                    "reason": "Continue from the failing test"})
-        self.assertEqual((status, body["status"]), (200, "OK"))
-        pin = recovery.read_pins(self.rdir)["T1"]
-        rows = recovery.filter_candidates(pin, [
-            SimpleNamespace(provider="claude", model="sonnet", profile="work"),
-            SimpleNamespace(provider="codex", model="gpt-5", profile="work"),
-            SimpleNamespace(provider="codex", model="gpt-5", profile="personal"),
-        ])
-        self.assertEqual([(row.provider, row.model, row.profile) for row in rows], [("codex", "gpt-5", "work")])
-        ledger = commands.Ledger(self.rdir / ".state" / "remote" / "commands.db")
-        self.assertEqual(json.loads(ledger.rows()[0]["params"])["route"],
-                         {"account": "work", "model": "gpt-5", "provider": "codex"})
-        self.assertIn("Continue from the failing test", decisions.operator_notes(self.rdir, "T1"))
-        self.assertEqual(len(self.retries), 1)
+    def request(self, key="retry-route-0001", **params):
+        return {
+            "idempotency_key": key,
+            "command": "retry",
+            "target": "demo/REQ-001",
+            "origin": "web",
+            "params": {"task": "T1", **params},
+            "precondition": {"state": "blocked"},
+        }
 
-    def test_unavailable_pin_is_refused_before_reopen_and_ledger_marks_failure(self):
-        body = {"idempotency_key": "key-00000002", "command": "retry", "target": "demo/REQ-001",
-                "origin": "web", "params": {"task": "T1", "route": {"profile": "offline"}},
-                "precondition": {"state": "running", "revision": 3}}
-        handler = Handler(body)
-        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
-                patch.object(commands, "_run_target", return_value=("demo", "REQ-001", self.rdir)), \
-                patch.object(ops, "bound_plan", return_value=SimpleNamespace(
-                    task=lambda task_id: SimpleNamespace(id=task_id))), \
-                patch.object(bt_remote_api, "_target_state", return_value={"state": "running", "revision": 3}), \
-                patch.object(recovery, "validate_available", side_effect=ValueError("route unavailable")), \
-                patch.object(ops, "retry") as retry:
-            bt_remote_api.route_post(handler)
-        self.assertEqual((handler.sent[0], handler.sent[1]["code"]), (500, "EFFECT_FAILED"))
+    def dispatch(self, request, candidate_rows):
+        with (
+            patch("bt_remote_commands._run_target", return_value=("demo", "REQ-001", self.rdir)),
+            patch("bt_route_pins.candidates_for", return_value=tuple(candidate_rows)),
+            patch("bt_scheduler_ops.retry", return_value=["T1: reopened"]) as retry,
+            patch("bt_scheduler_ops.resume", return_value="watchdog started"),
+        ):
+            result = self.ledger.submit(request, commands.dispatch_handlers(),
+                                        lambda _target, _command, _params: {"state": "blocked"})
+        return result, retry
+
+    def test_pinned_retry_routes_only_to_the_chosen_candidate(self):
+        rows = (candidate(), candidate("route-b", model="opus", profile="claude-work"))
+        result, retry = self.dispatch(self.request(route="route-b", model="opus"), rows)
+
+        self.assertEqual(result["status"], "OK")
+        retry.assert_called_once()
+        self.assertEqual(pins.get(self.rdir, "T1"), {"route": "route-b", "model": "opus"})
+
+        assignment_port = scheduler.DecisionAssignmentPort.__new__(scheduler.DecisionAssignmentPort)
+        assignment_port.project = "demo"
+        assignment_port.run_dir = self.rdir
+        assignment_port.classification_overlay = None
+        assignment_port.checkpoint = "typed-decisions"
+        assignment_port.ledger = object()
+        captured = {}
+
+        def persist(_ledger, requests, **_kwargs):
+            captured["requests"] = requests
+            return SimpleNamespace(assignments=())
+
+        request = AssignmentRequest(
+            "REQ-001", 1,
+            (TaskView("T1", "M1", "skill", (), (), 1),),
+            1, 150.0, "a" * 64,
+        )
+        with (
+            patch.object(scheduler, "refresh_quota_preflight", return_value={"claude-work": {"status": "available"}}),
+            patch("bt_scheduler_decision_adapter.task_facts",
+                  return_value=(TaskFacts("T1", "brief", {}, {}), "implement", {})),
+            patch("bt_scheduler_decision_adapter._candidate_rows", return_value=rows),
+            patch("bt_scheduler_plan_routing._quota_evidence", return_value={}),
+            patch("bt_scheduler_plan_routing.persist_dispatch_batch", side_effect=persist),
+        ):
+            assignment_port.propose(request)
+
+        selected = captured["requests"][0].candidates
+        self.assertEqual([item.route_id for item in selected], ["route-b"])
+
+    def test_unavailable_route_is_refused_before_reopening(self):
+        result, retry = self.dispatch(self.request(model="sonnet"),
+                                      (candidate(quota_status="unknown"),))
+
+        self.assertEqual(result["status"], "FAILED")
+        self.assertIn("no se reabrió", result["outcome"]["error"])
         retry.assert_not_called()
-        self.assertFalse(recovery.pin_path(self.rdir).exists())
-        ledger = commands.Ledger(self.rdir / ".state" / "remote" / "commands.db")
-        self.assertEqual(ledger.rows()[0]["status"], "FAILED")
+        self.assertEqual(pins.load(self.rdir), {})
 
-    def test_routes_endpoint_uses_run_target_and_task(self):
-        handler = Handler({}, "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1")
-        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY}), \
-                patch.object(commands, "_run_target", return_value=("demo", "REQ-001", self.rdir)), \
-                patch.object(recovery, "route_options", return_value=[{"provider": "codex", "model": "gpt-5",
-                                                                        "profile": "work", "available": True}]) as options:
-            bt_remote_api.route_get(handler)
-        self.assertEqual(handler.sent, (200, {"routes": [{"provider": "codex", "model": "gpt-5",
-                                                          "profile": "work", "available": True}]}))
-        options.assert_called_once_with("demo", self.rdir, "T1")
+    def test_pin_is_recorded_in_ledger_for_success_and_refusal(self):
+        self.dispatch(self.request("retry-ok-0001", account="acct:stable-a"), (candidate(),))
+        self.dispatch(self.request("retry-no-0001", route="missing-route"), (candidate(),))
 
-    def test_edit_brief_requires_owner_challenge_before_freeze_or_revise(self):
-        effects = []
-        request = {"idempotency_key": "key-edit-brief-01", "command": "edit-brief",
-                   "target": "demo/REQ-001", "origin": "telegram",
-                   "params": {"task": "T1", "field": "objective", "value": "Updated objective"},
-                   "precondition": {"state": "running", "revision": 3}}
+        rows = {row["idempotency_key"]: row for row in self.ledger.rows()}
+        self.assertEqual(json.loads(rows["retry-ok-0001"]["params"])["account"], "acct:stable-a")
+        self.assertEqual(json.loads(rows["retry-no-0001"]["params"])["route"], "missing-route")
+        self.assertEqual(rows["retry-ok-0001"]["status"], "OK")
+        self.assertEqual(rows["retry-no-0001"]["status"], "FAILED")
 
-        def edit_brief(target, params):
-            effects.append((target, params["typed_req"]))
-            return {"revision": 4, "rebased": True}
+    def test_route_pin_matches_provider_model_and_account_selectors(self):
+        selected = pins.narrow(self.rdir, "T1", (candidate(), candidate("route-b", provider="codex")))
+        self.assertEqual([item.route_id for item in pins.narrow(
+            self.rdir, "T1", selected,
+        )], [item.route_id for item in selected])
+        self.assertTrue(pins.matches({"route": "claude", "model": "sonnet", "account": "claude-work"},
+                                     candidate()))
+        self.assertFalse(pins.matches({"model": "opus"}, candidate()))
 
-        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
-                patch.dict(bt_remote_api.HANDLERS, {"edit-brief": edit_brief}, clear=True), \
-                patch.object(bt_remote_api, "_target_state", return_value={"state": "running", "revision": 3}):
-            missing = Handler(request)
-            bt_remote_api.route_post(missing)
-            self.assertEqual((missing.sent[0], missing.sent[1]["code"]), (409, "CONFIRMATION_REQUIRED"))
-            self.assertEqual(effects, [])
-            ledger = commands.Ledger(Path(self.temp.name) / ".state" / "remote" / "commands.db")
-            self.assertEqual(ledger.rows(), [])
+    def test_malformed_pin_is_rejected_without_ledger_or_retry_effect(self):
+        request = self.request(model=" ")
+        self.assertIsNotNone(commands.validate(request))
+        self.assertEqual(self.ledger.submit(request, commands.dispatch_handlers(),
+                                             lambda *_args: {"state": "blocked"})["status"], "REJECTED")
+        self.assertEqual(self.ledger.rows(), [])
 
-            challenge = ledger.issue_challenge("demo/REQ-001", "REQ-001")
-            mismatched = Handler({**request, "idempotency_key": "key-edit-brief-bad",
-                                  "confirmation": {"challengeId": challenge["challengeId"],
-                                                   "typedReq": "REQ-002"}})
-            bt_remote_api.route_post(mismatched)
-            self.assertEqual((mismatched.sent[0], mismatched.sent[1]["code"]),
-                             (409, "CONFIRMATION_REQUIRED"))
-            self.assertEqual(effects, [])
-            self.assertEqual(ledger.rows(), [])
+    def test_pin_parameters_are_retry_only(self):
+        request = {**self.request(), "command": "resume", "params": {"route": "claude"}}
+        self.assertIn("solo se admiten en retry", commands.validate(request))
 
-            confirmed = {**request, "idempotency_key": "key-edit-brief-02",
-                         "confirmation": {"challengeId": challenge["challengeId"], "typedReq": "REQ-001"}}
-            accepted = Handler(confirmed)
-            bt_remote_api.route_post(accepted)
-
-        self.assertEqual((accepted.sent[0], accepted.sent[1]["status"], accepted.sent[1]["outcome"]["revision"]),
-                         (200, "OK", 4))
-        self.assertEqual(effects, [("demo/REQ-001", "REQ-001")])
-
-    def test_owner_edit_freezes_next_revision_before_rebasing_run(self):
-        from bt_planner import contract as plan_contract, revisions, sync
+    def test_owner_edit_freezes_next_revision_and_rebases_through_remote_entrypoint(self):
+        from bt_planner import contract, revisions, sync
         from bt_planner.tests.support import PLAN_MD, classify
 
-        rdir = Path(self.temp.name) / "demo" / "requirements" / "REQ-001-demo"
+        rdir = self.root / "demo" / "requirements" / "REQ-001-demo"
         rdir.mkdir(parents=True)
         (rdir / "SPEC.md").write_text("# Spec\n## Requirements\n- R1. Demo\n", encoding="utf-8")
-        (rdir / "PLAN.md").write_text(PLAN_MD.format(status="approved"), encoding="utf-8")
+        (rdir / "PLAN.md").write_text(PLAN_MD.replace("REQ-042", "REQ-001").format(status="approved"),
+                                     encoding="utf-8")
         plan = classify(sync.skeleton(rdir, plan_id="REQ-001"))
-        (rdir / "PLAN.json").write_text(plan_contract.dumps(plan), encoding="utf-8")
+        (rdir / "PLAN.json").write_text(contract.dumps(plan), encoding="utf-8")
         sync.approve_freeze(rdir, "REQ-001", ("approved",))
-        original_objective = plan["tasks"][0]["objective"]
 
-        challenge_handler = Handler({"target": "demo/REQ-001", "typedReq": "REQ-001"},
-                                    "/api/remote/v1/challenges")
-        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+        class Handler:
+            def __init__(self, body, path):
+                raw = json.dumps(body).encode()
+                self.path = path
+                self.headers = {"Authorization": "Bearer test-gateway-key", "Content-Length": str(len(raw))}
+                self.rfile = io.BytesIO(raw)
+                self.sent = None
+
+            def send(self, payload, status=200, content_type=""):
+                self.sent = (status, json.loads(payload))
+
+        current_revision = 1
+        rebases = []
+        (self.root / ".state" / "locks").mkdir(parents=True)
+
+        def apply_revise(project, req, path, action, target, reason):
+            nonlocal current_revision
+            self.assertEqual((project, req, path, action, target), ("demo", "REQ-001", rdir, "revise", ""))
+            current_revision = revisions.latest(rdir)["revision"]
+            rebases.append((current_revision, reason))
+            return [f"rebased r{current_revision}"]
+
+        def send_challenge():
+            challenge = Handler({"target": "demo/REQ-001", "typedReq": "REQ-001"},
+                                "/api/remote/v1/challenges")
+            bt_remote_api.route_post(challenge)
+            self.assertEqual(challenge.sent[0], 201)
+            return challenge.sent[1]["challengeId"]
+
+        def send_edit(key, field, value, challenge_id, typed_req="REQ-001"):
+            body = {"idempotency_key": key, "command": "edit-brief", "target": "demo/REQ-001",
+                    "origin": "telegram", "params": {"task": "T1", "field": field, "value": value},
+                    "precondition": {"state": "running", "revision": current_revision},
+                    "confirmation": {"challengeId": challenge_id, "typedReq": typed_req}}
+            handler = Handler(body, "/api/remote/v1/commands")
+            bt_remote_api.route_post(handler)
+            return handler.sent
+
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-gateway-key", "BITACORA_ROOT": str(self.root)}), \
                 patch.object(commands, "_run_target", return_value=("demo", "REQ-001", rdir)), \
-                patch.object(bt_remote_api, "_target_state", return_value={"state": "running", "revision": 1}), \
-                patch.object(ops, "apply", side_effect=lambda project, req, path, action, target, reason: [
-                    self.assertEqual((project, req, path, action), ("demo", "REQ-001", rdir, "revise")),
-                    self.assertEqual(revisions.latest(rdir)["revision"], 2), "rebased"]), \
-                patch.object(ops, "resume", return_value="watchdog started"):
-            bt_remote_api.route_post(challenge_handler)
-            request = {"idempotency_key": "key-edit-brief-real", "command": "edit-brief",
-                       "target": "demo/REQ-001", "origin": "telegram",
-                       "params": {"task": "T1", "field": "objective", "value": "A revised task brief"},
-                       "precondition": {"state": "running", "revision": 1},
-                       "confirmation": {"challengeId": challenge_handler.sent[1]["challengeId"],
-                                        "typedReq": "REQ-001"}}
-            command_handler = Handler(request)
-            bt_remote_api.route_post(command_handler)
+                patch.object(bt_remote_api, "_target_state",
+                             side_effect=lambda *_args: {"state": "running", "revision": current_revision}), \
+                patch("bt_lock._lock_dir", return_value=self.root / ".state" / "locks"), \
+                patch("bt_scheduler_ops.apply", side_effect=apply_revise), \
+                patch("bt_scheduler_ops.resume", return_value="watchdog started"):
+            missing = Handler({"idempotency_key": "edit-no-challenge", "command": "edit-brief",
+                               "target": "demo/REQ-001", "origin": "telegram",
+                               "params": {"task": "T1", "field": "brief", "value": "New brief"},
+                               "precondition": {"state": "running", "revision": 1}},
+                              "/api/remote/v1/commands")
+            bt_remote_api.route_post(missing)
+            self.assertEqual((missing.sent[0], missing.sent[1]["code"]), (409, "CONFIRMATION_REQUIRED"))
+            self.assertEqual(revisions.latest(rdir)["revision"], 1)
+            self.assertEqual(rebases, [])
 
-        frozen = revisions.load_revision(rdir, 2)
-        manifest_entry = revisions.latest(rdir)
-        self.assertEqual((command_handler.sent[0], command_handler.sent[1]["status"],
-                          command_handler.sent[1]["outcome"]["revision"]), (200, "OK", 2))
-        self.assertEqual(frozen["tasks"][0]["objective"], "A revised task brief")
-        self.assertNotEqual(frozen["tasks"][0]["objective"], original_objective)
-        self.assertEqual(manifest_entry["source"], "approval")
+            first = send_edit("edit-brief-r2", "brief", "Update the approved task brief clearly", send_challenge())
+            self.assertEqual(first[1]["status"], "OK", first)
+            self.assertEqual((first[0], first[1]["status"], first[1]["outcome"]["revision"]),
+                             (200, "OK", 2), first)
+            second = send_edit("edit-criteria-r3", "criteria", ["Verify the new acceptance condition"], send_challenge())
+            self.assertEqual((second[0], second[1]["status"], second[1]["outcome"]["revision"]),
+                             (200, "OK", 3))
+
+        self.assertEqual(rebases, [(2, "Owner edited task brief"), (3, "Owner edited task brief")])
+        self.assertEqual(revisions.load_revision(rdir, 2)["tasks"][0]["objective"],
+                         "Update the approved task brief clearly")
+        self.assertEqual(revisions.load_revision(rdir, 3)["tasks"][0]["acceptance_criteria"],
+                         ["Verify the new acceptance condition"])
+        self.assertEqual([entry["source"] for entry in revisions.list_revisions(rdir)],
+                         ["approval", "approval", "approval"])
 
 
 if __name__ == "__main__":

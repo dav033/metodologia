@@ -214,11 +214,10 @@ def task_facts(task_id: str, meta_value: object, dependencies: Sequence[str], ac
     brief_parts = [title.strip(), objective.strip(), *(item.strip() for item in acceptance_criteria)]
     brief = "\n".join(part for part in brief_parts if part)[:2048]
     classifications = {key: meta.get(key) for key in
-                       ("complexity", "scope", "estimated_minutes", "risk", "coupling", "confidence", "_route_pin")}
+                       ("complexity", "scope", "estimated_minutes", "risk", "coupling", "confidence")}
     evidence = meta.get("classification_evidence")
     kind = bt_agents.infer_kind(title, meta.get("kind"))
-    task_classifications = {key: value for key, value in classifications.items() if key != "_route_pin"}
-    task = TaskFacts(task_id, brief, task_classifications, evidence if isinstance(evidence, Mapping) else {},
+    task = TaskFacts(task_id, brief, classifications, evidence if isinstance(evidence, Mapping) else {},
                      tuple(dependencies), tuple(acceptance_criteria), tuple(verification),
                      tuple(shared_resources), tuple(expected_paths))
     return task, kind, classifications
@@ -267,10 +266,6 @@ def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, 
                 source_status, model_source_reasons, True, auth, runtime_status, quota,
                 observed, valid_until, pressure, route_rank, history,
             ))
-    pin = classifications.get("_route_pin")
-    if isinstance(pin, Mapping):
-        from bt_remote_recovery import filter_candidates
-        return filter_candidates(pin, candidates)
     return tuple(candidates)
 
 

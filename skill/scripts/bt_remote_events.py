@@ -1,89 +1,209 @@
-"""Stable, redacted event projection for the remote laptop API."""
+"""Stable, cursor-based notifications for the remote gateway."""
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import json
 import re
 from typing import Any
 
-_SECRET_NAMES = r"(?:FLOW_GATEWAY_KEY|TELEGRAM_BOT_TOKEN|GITHUB_CLIENT_SECRET)"
-_ASSIGNMENT = re.compile(
-    rf"(?i)\b({_SECRET_NAMES})\s*(?:=|:)\s*(?:\"[^\"\r\n]*\"|'[^'\r\n]*'|[^\s,;]+)"
+STALL_SECONDS = 15 * 60
+RUN_DONE = {"done", "completed", "finished", "complete"}
+NOTIFICATION_KINDS = (
+    "attempt.failed", "attempt.blocked", "run.finished", "round.waiting", "plan.waiting",
+    "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated",
 )
+_SECRET_NAMES = (r"(?:FLOW_GATEWAY_KEY|TELEGRAM_BOT_TOKEN|GITHUB_CLIENT_SECRET|SESSION_SECRET"
+                 r"|[A-Z0-9_]*(?:API_?KEY|ACCESS_?KEY|SECRET|TOKEN|PASSWORD|PASSWD))")
+_ASSIGNMENT = re.compile(rf"(?i)\b({_SECRET_NAMES})\s*(?:=|:)\s*(?:\"[^\"\r\n]*\"|'[^'\r\n]*'|[^\s,;]+)")
+_TOKEN_SHAPES = re.compile(
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|\Z)"
+    r"|\bgh[pousr]_[A-Za-z0-9]{20,}|\bgithub_pat_[A-Za-z0-9_]{20,}|\bsk-[A-Za-z0-9_-]{20,}"
+    r"|\bAKIA[0-9A-Z]{16}\b|\bxox[abprs]-[A-Za-z0-9-]{10,}"
+    r"|\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}"
+    r"|\b\d{8,10}:[A-Za-z0-9_-]{35}\b|(?i:\bBearer)\s+[A-Za-z0-9._~+/=-]{16,}"
+)
+_SECRET_KEY = re.compile(rf"(?i)(?:authorization|{_SECRET_NAMES})")
 _REDACTED = "[REDACTED]"
 
 
+class CursorError(ValueError):
+    """The supplied cursor is malformed."""
+
+
 def redact(value: Any) -> Any:
-    """Redact known credential assignments from all remotely exposed text."""
+    """Remove credential assignments and recognizable credential shapes from remote data."""
     if isinstance(value, str):
-        return _ASSIGNMENT.sub(lambda match: f"{match.group(1)}={_REDACTED}", value)
+        return _TOKEN_SHAPES.sub(_REDACTED, _ASSIGNMENT.sub(lambda match: f"{match.group(1)}={_REDACTED}", value))
     if isinstance(value, list):
         return [redact(item) for item in value]
     if isinstance(value, dict):
-        return {key: (_REDACTED if isinstance(key, str) and re.fullmatch(_SECRET_NAMES, key, re.I)
-                      else redact(item)) for key, item in value.items()}
+        return {key: (_REDACTED if isinstance(key, str) and _SECRET_KEY.fullmatch(key) else redact(item))
+                for key, item in value.items()}
     return value
 
 
-def _stable_id(kind: str, identity: str) -> str:
-    digest = hashlib.sha256(f"{kind}\0{identity}".encode()).hexdigest()
-    return f"evt_{digest}"
+def _event(kind: str, identity: str, occurred_at: str, target: dict[str, str], data: dict[str, Any]) -> dict[str, Any]:
+    event_id = "evt_" + hashlib.sha256(f"{kind}\0{identity}".encode()).hexdigest()
+    return {"schemaVersion": 1, "id": event_id, "cursor": "", "type": kind,
+            "occurredAt": occurred_at or "1970-01-01T00:00:00Z", "target": target,
+            "data": redact(data), "dedupeKey": event_id}
 
 
-def project_event(kind: str, identity: str, occurred_at: str, target: dict[str, str],
-                  data: dict[str, Any]) -> dict[str, Any]:
-    event_id = _stable_id(kind, identity)
-    return {"schemaVersion": 1, "id": event_id, "cursor": event_id, "type": kind,
-            "occurredAt": occurred_at, "target": target, "data": redact(data),
-            "dedupeKey": event_id}
+def _seconds(stamp: str | None) -> float | None:
+    try:
+        return dt.datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp() if stamp else None
+    except (ValueError, AttributeError):
+        return None
+
+
+def _run_target(project: str, req: str, **extra: str) -> dict[str, str]:
+    return {"kind": "run", "project": project, "req": req, **{key: value for key, value in extra.items() if value}}
+
+
+def _task_target(project: str, req: str, task: str | None = None, attempt: str | None = None) -> dict[str, str]:
+    return {"kind": "task", "project": project, "req": req,
+            **({"taskId": task} if task else {}), **({"attemptId": attempt} if attempt else {})}
+
+
+def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[str, Any]]:
+    """Derive stable events from current run state and explicit notification fixtures."""
+    out: list[dict[str, Any]] = []
+    for run in state.get("runs", []):
+        project, req = run.get("project", ""), run.get("req_id", "")
+        for task in run.get("tasks", []):
+            attempts = [attempt for attempt in [task.get("attempt"), *(task.get("history") or [])]
+                        if isinstance(attempt, dict) and attempt.get("id")]
+            for attempt in {item["id"]: item for item in attempts}.values():
+                target = _task_target(project, req, task.get("id"), attempt["id"])
+                identity = f"{project}/{req}:{task.get('id', '')}:{attempt['id']}"
+                occurred_at = attempt.get("ended_at") or attempt.get("last_activity_at") or run.get("updated_at") or ""
+                data = {"title": task.get("title"), "failure": attempt.get("failure"),
+                        "verdict": attempt.get("verdict")}
+                if attempt.get("state") in {"rejected", "failed"} or attempt.get("failure"):
+                    out.append(_event("attempt.failed", identity, occurred_at, target, data))
+                elif attempt.get("state") == "blocked":
+                    out.append(_event("attempt.blocked", attempt["id"], occurred_at, target, data))
+                elif attempt.get("live") and now is not None:
+                    last = _seconds(attempt.get("last_activity_at"))
+                    if last is not None and now - last > STALL_SECONDS:
+                        out.append(_event("attempt.stalled", f'{identity}:{attempt["last_activity_at"]}',
+                                          attempt["last_activity_at"], target, data))
+        if run.get("status") in RUN_DONE and not run.get("active"):
+            updated_at = run.get("updated_at") or ""
+            out.append(_event("run.finished", f"{project}/{req}:{updated_at}", updated_at,
+                              _run_target(project, req), {"title": run.get("title"), "status": run["status"]}))
+
+    for decision in state.get("decisions", []):
+        request = decision["request"]
+        project, req = decision["project"], decision["req"]
+        identity = f"{project}/{req}:{request['id']}"
+        out.append(_event("plan.waiting", identity, decision.get("at", ""),
+                          _task_target(project, req, request.get("task"), request.get("attempt")),
+                          {"decisionRequest": {"id": request["id"], "title": request.get("title"),
+                                                "what": request.get("what"), "reason": request.get("reason"),
+                                                "options": [option.get("id") for option in request.get("options", [])],
+                                                "recommended": request.get("recommended")}}))
+    for round_ in state.get("rounds", []):
+        project, req, number = round_["project"], round_["req"], str(round_["round"])
+        out.append(_event("round.waiting", f"{project}/{req}:{number}", round_.get("at", ""),
+                          {"kind": "round", "project": project, "req": req, "roundId": number}, {"round": number}))
+    for plan in state.get("plans", []):
+        if plan.get("plan_status") in {"proposed", "awaiting_approval", "review"}:
+            project, req = plan.get("project", ""), plan.get("req_id", "")
+            updated_at = plan.get("updated_at") or ""
+            out.append(_event("plan.waiting", f"{project}/{req}:{updated_at}", updated_at,
+                              {"kind": "plan", "project": project, "req": req}, {"title": plan.get("title")}))
+    for quota in state.get("quotas", []):
+        until = quota.get("exhausted_until")
+        if until:
+            out.append(_event("quota.exhausted", f'{quota.get("profile")}:{until}', quota.get("observed_at", ""),
+                              {"kind": "system"}, {"profile": quota.get("profile"), "until": until}))
+    for command in state.get("commands", []):
+        try:
+            raw_target = command.get("target") or "{}"
+            target = json.loads(raw_target) if isinstance(raw_target, str) else raw_target
+        except ValueError:
+            target = raw_target
+        except TypeError:
+            continue
+        if isinstance(target, str):
+            project, separator, req = target.partition("/")
+            target = _run_target(project, req) if separator and project and req else {}
+        if not isinstance(target, dict) or target.get("kind") not in {"run", "attempt", "task", "plan", "round"}:
+            continue
+        identity = f'{command.get("idempotency_key", "")}:{command.get("outcome", "")} '
+        out.append(_event("command.updated", identity.strip(), command.get("created_at", ""), target,
+                          {"command": command.get("command"), "outcome": command.get("outcome"),
+                           "origin": command.get("origin")}))
+    for offline in state.get("offline", []):
+        since = offline.get("since")
+        if since:
+            out.append(_event("laptop.offline", since, since, {"kind": "system"}, {"since": since}))
+    for row in state.get("flow", []):
+        event = from_flow(row)
+        if event is not None:
+            out.append(event)
+
+    out.sort(key=lambda event: (event["occurredAt"], event["id"]))
+    for event in out:
+        event["cursor"] = json.dumps([event["occurredAt"], event["id"]], ensure_ascii=False)
+    return out
 
 
 def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
-    """Map actionable flow-bus records to the versioned remote notification contract."""
+    """Map actionable flow bus transitions to notification events."""
+    data = row.get("data") if isinstance(row.get("data"), dict) else {}
     kind = row.get("remote_type")
     if kind is None:
-        # Production rows come from bt_flow_bus and carry its `kind`/`data` contract;
-        # `remote_type` is reserved for explicitly projected external notifications.
-        data = row.get("data") if isinstance(row.get("data"), dict) else {}
-        state = data.get("state")
-        kind = {
-            ("state_change", "failed"): "attempt.failed",
-            ("state_change", "rejected"): "attempt.failed",
-            ("task_state", "blocked"): "attempt.blocked",
-            ("verdict", "failed"): "attempt.failed",
-            ("verdict", "rejected"): "attempt.failed",
-        }.get((row.get("kind"), state))
-    if kind not in {"attempt.failed", "attempt.blocked", "run.finished", "round.waiting", "plan.waiting",
-                    "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated"}:
+        kind = {("state_change", "failed"): "attempt.failed", ("state_change", "rejected"): "attempt.failed",
+                ("task_state", "blocked"): "attempt.blocked", ("verdict", "failed"): "attempt.failed",
+                ("verdict", "rejected"): "attempt.failed"}.get((row.get("kind"), data.get("state")))
+    if kind not in NOTIFICATION_KINDS:
         return None
-    target = {"run": str(row.get("run", ""))}
+    target = _run_target(str(row.get("project", "unknown")), str(row.get("req", "REQ-000")))
+    if row.get("run"):
+        project, _, req = str(row["run"]).partition("/")
+        target = _run_target(project, req or "REQ-000")
     if row.get("task"):
-        target["task"] = str(row["task"])
-    identity = str(row.get("id") or row.get("ord") or row.get("seq") or "")
-    data = row.get("data") if isinstance(row.get("data"), dict) else {}
-    if not data:
-        data = {key: row.get(key) for key in ("failure", "summary") if row.get(key) is not None}
-    return project_event(kind, identity, str(row.get("at") or row.get("occurredAt") or ""), target, data)
+        target = _task_target(target["project"], target["req"], str(row["task"]))
+    source_id = str(row.get("id") or row.get("ord") or row.get("seq") or "")
+    identity = f'{target["project"]}/{target["req"]}:{source_id}'
+    payload = data or {key: row[key] for key in ("failure", "summary") if row.get(key) is not None}
+    return _event(kind, identity, str(row.get("at") or row.get("occurredAt") or ""), target, payload)
 
 
-def decision_events(plans: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    events = []
-    for plan in plans:
-        target = {"run": f"{plan.get('project', '')}/{plan.get('req_id', '')}"}
-        for request in plan.get("decisions") or []:
-            identity = f"{target['run']}:{request.get('id', '')}"
-            events.append(project_event("plan.waiting", identity, str(request.get("created_at") or plan.get("updated_at") or ""),
-                                        target, {"decision": request}))
-    return events
-
-
-def page(events: list[dict[str, Any]], after: str, limit: int) -> tuple[list[dict[str, Any]], str, bool]:
-    events.sort(key=lambda event: (event["occurredAt"], event["id"]))
-    start = 0
+def page(events: list[dict[str, Any]], after: str = "", limit: int = 200) -> dict[str, Any]:
+    """Return a deterministic page strictly after the opaque cursor."""
     if after:
-        positions = [index for index, event in enumerate(events) if event["cursor"] == after]
-        if positions:
-            start = positions[-1] + 1
-    selected = events[start:start + limit]
-    cursor = selected[-1]["cursor"] if selected else after
-    return selected, cursor, start + len(selected) < len(events)
+        try:
+            key = json.loads(after)
+            if not isinstance(key, list) or len(key) != 2 or not all(isinstance(item, str) for item in key):
+                raise ValueError
+        except (ValueError, TypeError):
+            raise CursorError("El cursor no es válido.") from None
+        events = [event for event in events if [event["occurredAt"], event["id"]] > key]
+    selected = events[:limit]
+    return {"events": selected, "nextCursor": selected[-1]["cursor"] if selected else after,
+            "hasMore": len(events) > limit}
+
+
+def collect(root, runs: list[dict[str, Any]], plans: list[dict[str, Any]], quotas: list[dict[str, Any]],
+            commands: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Collect live flow events and open decisions/rounds, then project notification events."""
+    import bt_plans_api
+    import bt_live_api
+    import time
+
+    decisions, rounds = [], []
+    for plan in plans:
+        rdir = bt_plans_api.req_dir(root, plan["project"], plan["req_id"])
+        at = plan.get("updated_at") or ""
+        decisions.extend({"project": plan["project"], "req": plan["req_id"], "request": request, "at": at}
+                         for request in bt_plans_api.open_decisions(rdir))
+        rounds.extend({"project": plan["project"], "req": plan["req_id"], "round": number, "at": at}
+                      for number in bt_plans_api.open_rounds(rdir))
+    flow, _, _ = bt_live_api.flow_events(root, "global")
+    offline = []
+    return build_events({"runs": runs, "plans": plans, "quotas": quotas, "commands": commands,
+                         "decisions": decisions, "rounds": rounds, "offline": offline, "flow": flow}, now=time.time())

@@ -8,15 +8,13 @@ import os
 import re
 import secrets
 import sqlite3
-import stat
-import tempfile
 import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable
 
-COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision",
-            "approve", "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
+COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve", "launch",
+            "answer-decision", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
 CHALLENGED = frozenset(("revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"))
 ORIGINS = ("web", "telegram")
 PRECONDITION_FIELDS = ("state", "revision", "updatedAt")   # what a precondition may pin on the target
@@ -29,7 +27,7 @@ _CHALLENGE_SCHEMA = """CREATE TABLE IF NOT EXISTS challenges (
     challenge_hash TEXT PRIMARY KEY, target TEXT NOT NULL, expires_at REAL NOT NULL, used_at TEXT)"""
 
 Handler = Callable[[str, dict], Any]            # (target, params) -> JSON-able result; raises on failure
-StateReader = Callable[[str], "dict | None"]    # target -> {"state", "revision", "updatedAt"} or None if absent
+StateReader = Callable[..., "dict | None"]        # target[, command, params] -> current precondition fields
 
 
 def default_path() -> Path:
@@ -38,7 +36,7 @@ def default_path() -> Path:
 
 
 def _run_target(target: str) -> tuple[str, str, Path]:
-    """Resolve the stable remote run target `project/REQ-NNN` beneath the configured bitácora root."""
+    """Resolve a stable project/requirement target under the configured Bitácora root."""
     import bt_core
     import bt_plans_api
 
@@ -49,40 +47,72 @@ def _run_target(target: str) -> tuple[str, str, Path]:
     return project, req, rdir
 
 
-def target_state(target: str) -> dict | None:
-    """Return the same public run-state vocabulary used by the plans read model."""
+def _member_state(rdir: Path, command: str, params: dict) -> str | None:
+    """Read the state of the task or attempt that a task-scoped command mutates."""
+    import sqlite3
+
+    import bt_scheduler_adapter as adapter
+
+    if command == "cancel-attempt":
+        kind, key = "attempts", params.get("attempt")
+    else:
+        kind, key = "tasks", params.get("task")
+    if not isinstance(key, str) or not key:
+        return None
+    path = adapter.run_db_path(rdir).resolve()
+    try:
+        conn = sqlite3.connect(f"{path.as_uri()}?mode=ro", uri=True, timeout=5)
+        try:
+            row = conn.execute("SELECT doc FROM state WHERE id = 1").fetchone()
+            doc = json.loads(row[0]) if row else {}
+        finally:
+            conn.close()
+    except (sqlite3.Error, TypeError, ValueError, OSError):
+        return None
+    member = (doc.get(kind) or {}).get(key)
+    return member.get("state") if isinstance(member, dict) else None
+
+
+TASK_SCOPED = frozenset(("retry", "reopen", "cancel-attempt"))
+
+
+def target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
+    """Resolve current run/member state for the ledger's optimistic precondition."""
     import bt_core
     import bt_plans_api
+    import bt_scheduler_decisions
 
     try:
         project, req, rdir = _run_target(target)
         status = bt_plans_api.status_of(bt_core.ROOT, project, req)
     except (ValueError, bt_plans_api.PlanError, OSError):
         return None
-    run = status["run"]
-    if not isinstance(run, dict):
-        return None
-    # Plan commands pin the current plan revision; run commands pin the revision used by the live run.
+    run = status.get("run") or {}
     plan = status.get("plan") or {}
-    revision = (run.get("plan_ref") or {}).get("revision")
-    if run.get("authority") == "scheduler":
-        return {"state": run.get("status"), "revision": revision if revision is not None else plan.get("revision"),
-                "updatedAt": run.get("updated_at"), "plan_state": plan.get("status"),
-                "plan_revision": plan.get("revision"), "plan_updatedAt": _plan_updated_at(rdir)}
-    try:
-        updated_at = dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
-            timespec="microseconds")
-    except OSError:
-        updated_at = None
-    return {"state": plan.get("status"), "revision": plan.get("revision"), "updatedAt": updated_at}
-
-
-def _plan_updated_at(rdir: Path) -> str | None:
-    try:
-        return dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
-            timespec="microseconds")
-    except OSError:
+    if command in {"approve", "launch", "answer-round", "cancel-plan", "delete-plan"}:
+        try:
+            updated_at = dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
+                timespec="microseconds")
+        except OSError:
+            updated_at = None
+        return {"state": plan.get("status"), "revision": plan.get("revision"), "updatedAt": updated_at}
+    if run.get("authority") != "scheduler":
         return None
+    revision = (run.get("plan_ref") or {}).get("revision")
+    state = run.get("status")
+    params = params or {}
+    if command in TASK_SCOPED:
+        member_state = _member_state(rdir, command, params)
+        if member_state is None:
+            return None
+        state = member_state
+    elif command == "answer-decision":
+        request_id = params.get("request_id")
+        if not isinstance(request_id, str) or not request_id:
+            return None
+        is_open = any(item.get("id") == request_id for item in bt_scheduler_decisions.open_requests(rdir))
+        state = "open" if is_open else "closed"
+    return {"state": state, "revision": revision, "updatedAt": run.get("updated_at")}
 
 
 def dispatch_run_command(command: str, target: str, params: dict) -> Any:
@@ -90,6 +120,10 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
     project, req, rdir = _run_target(target)
     import bt_scheduler_ops as ops
 
+    if command == "revise":
+        typed_req = params.get("typed_req")
+        if not isinstance(typed_req, str) or typed_req.strip().upper() != req.upper():
+            raise ValueError("revise requiere confirmar el id REQ del objetivo.")
     reason = params.get("reason", "")
     if not isinstance(reason, str):
         raise ValueError("reason debe ser texto.")
@@ -100,15 +134,13 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
         return {"messages": [ops.resume(project, req, rdir)]}
     if command in {"cancel-attempt", "reopen", "revise"}:
         if command == "cancel-attempt":
-            attempt = params.get("attempt")
-            if not isinstance(attempt, str) or not attempt:
+            target_id = params.get("attempt")
+            if not isinstance(target_id, str) or not target_id:
                 raise ValueError("cancel-attempt requiere params.attempt.")
-            target_id = attempt
         elif command == "reopen":
-            task = params.get("task")
-            if not isinstance(task, str) or not task:
+            target_id = params.get("task")
+            if not isinstance(target_id, str) or not target_id:
                 raise ValueError("reopen requiere params.task.")
-            target_id = task
         else:
             target_id = ""
         messages = ops.apply(project, req, rdir, command, target_id, reason)
@@ -118,21 +150,17 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
         task = params.get("task")
         if not isinstance(task, str) or not task:
             raise ValueError("retry requiere params.task.")
-        task = ops.bound_plan(rdir).task(task).id
-        route = params.get("route")
-        if route is None and any(key in params for key in ("provider", "model", "account", "profile")):
-            route = {key: params[key] for key in ("provider", "model", "account", "profile") if key in params}
-        if route is not None:
-            import bt_remote_recovery as recovery
-            pin = recovery.validate_pin(route)
-            recovery.validate_available(project, rdir, task, pin)
-            recovery.write_pin(rdir, task, pin)
-        note = params.get("reason", "")
-        if note.strip():
-            import bt_scheduler_decisions as decisions
-            path = decisions.notes_path(rdir, task)
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(note.strip() + "\n", encoding="utf-8")
+        import bt_route_pins
+        pin = bt_route_pins.normalize(params)
+        if pin is not None:
+            # Check the exact candidate set before ops.retry can reopen the task. This also fails closed when
+            # quota refresh or account identity is unavailable.
+            candidates = bt_route_pins.available(project, rdir, task, pin)
+            if not candidates:
+                raise ValueError("La ruta fijada no está disponible; la tarea no se reabrió.")
+            bt_route_pins.set_pin(rdir, task, pin)
+        else:
+            bt_route_pins.clear(rdir, task)
         messages = ops.retry(project, req, rdir, task, reason)
         messages.append(ops.resume(project, req, rdir))
         return {"messages": messages}
@@ -155,87 +183,18 @@ def dispatch_handlers() -> dict[str, Handler]:
     return handlers
 
 
-def _write_plan_atomically(path: Path, content: str) -> None:
-    mode = stat.S_IMODE(path.stat().st_mode)
-    fd, temporary_name = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
-    temporary = Path(temporary_name)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write(content)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.chmod(temporary, mode)
-        os.replace(temporary, path)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
 def dispatch_edit_brief(target: str, params: dict) -> Any:
-    """Owner-edit task scope, freeze it as an approved revision, then rebase the active run."""
-    project, req, rdir = _run_target(target)
-    typed_req = params.get("typed_req")
-    if not isinstance(typed_req, str) or typed_req.strip().upper() != req.upper():
-        raise ValueError("edit-brief requiere confirmar el id REQ del objetivo.")
-    task_id = params.get("task")
-    field = params.get("field", "objective")
-    value = params.get("value", params.get("brief"))
-    if not isinstance(task_id, str) or not task_id.strip():
-        raise ValueError("edit-brief requiere params.task.")
-    if not isinstance(field, str):
-        raise ValueError("edit-brief requiere un campo válido.")
-    fields = {"brief": "objective", "criteria": "acceptance_criteria"}
-    field = fields.get(field, field)
-    if field not in {"objective", "acceptance_criteria"}:
-        raise ValueError("edit-brief solo puede cambiar objective o acceptance_criteria.")
-    if field == "objective" and (not isinstance(value, str) or not value.strip()):
-        raise ValueError("edit-brief requiere un brief de tarea no vacío.")
-    if field == "acceptance_criteria" and (not isinstance(value, list) or not value
-                                             or any(not isinstance(item, str) or not item.strip() for item in value)):
-        raise ValueError("edit-brief requiere una lista no vacía de criterios.")
-    reason = params.get("reason", "Owner edited task brief")
-    if not isinstance(reason, str):
-        raise ValueError("reason debe ser texto.")
-
-    from bt_planner import contract as plan_contract
-    from bt_planner import revisions, sync
-
-    current_path = rdir / "PLAN.json"
-    if current_path.is_symlink() or not current_path.is_file():
-        raise ValueError("PLAN.json debe ser un archivo regular para editarlo desde remoto.")
-    original = current_path.read_bytes()
-    latest = revisions.latest(rdir)
-    if latest is None:
-        raise ValueError("edit-brief requiere una revisión congelada para crear N+1.")
-    frozen = revisions.load_revision(rdir, latest["revision"])
-    current = plan_contract.load(current_path)
-    if current.get("revision") != latest["revision"] or revisions.sha256(plan_contract.dumps(current)) != latest["sha256"]:
-        raise ValueError("PLAN.json cambió desde la última revisión aprobada; no se aplicó el cambio.")
-    edited = json.loads(json.dumps(frozen))
-    task = next((item for item in edited.get("tasks", []) if item.get("id") == task_id), None)
-    if task is None:
-        raise ValueError(f"Tarea desconocida en la revisión {latest['revision']}: {task_id}.")
-    task[field] = value
-    edited["revision"] = latest["revision"] + 1
-    content = plan_contract.dumps(edited)
-    _write_plan_atomically(current_path, content)
-    try:
-        entry = sync.approve_freeze(rdir, req)
-    except BaseException:
-        _write_plan_atomically(current_path, original.decode("utf-8"))
-        raise
-
-    import bt_scheduler_ops as ops
-    messages = ops.apply(project, req, rdir, "revise", "", reason)
-    messages.append(ops.resume(project, req, rdir))
-    return {"revision": entry["revision"], "sha256": entry["sha256"], "messages": messages}
+    """Edit and approve a plan revision before rebasing its active run."""
+    import bt_remote_edit
+    return bt_remote_edit.dispatch_edit_brief(target, params)
 
 
 def dispatch_plan_command(command: str, target: str, params: dict) -> Any:
-    """Apply a plan or round command through the existing plan and round APIs."""
+    """Apply plan lifecycle and round answers through the existing file APIs."""
     project, req, rdir = _run_target(target)
+    import bt_core
     import bt_plans_api as plans
     import bt_rounds
-    import bt_core
 
     reason = params.get("reason", "")
     if not isinstance(reason, str):
@@ -243,23 +202,36 @@ def dispatch_plan_command(command: str, target: str, params: dict) -> Any:
     if command in {"approve", "launch"}:
         return {"message": plans.run_plan(bt_core.ROOT, project, req, command, by="remote")}
     if command == "cancel-plan":
-        return {"message": plans.cancel_plan(bt_core.ROOT, project, req, params["typed_req"], by="remote")}
+        return {"message": plans.cancel_plan(bt_core.ROOT, project, req, params.get("typed_req", ""), by="remote")}
     if command == "delete-plan":
-        return {"message": plans.delete_plan(bt_core.ROOT, project, req, params["typed_req"], by="remote",
-                                                reason=reason)}
+        return {"message": plans.delete_plan(bt_core.ROOT, project, req, params.get("typed_req", ""), by="remote",
+                                               reason=reason)}
     if command == "answer-round":
         round_number, answers = params.get("round"), params.get("answers")
         if not isinstance(round_number, int) or isinstance(round_number, bool) or round_number < 1:
             raise ValueError("answer-round requiere params.round.")
         if not isinstance(answers, dict) or not answers:
             raise ValueError("answer-round requiere params.answers.")
-        f = rdir / "rounds" / f"round-{round_number:02d}.json"
-        data = bt_rounds.load(f)
+        path = rdir / "rounds" / f"round-{round_number:02d}.json"
+        data = bt_rounds.load(path)
         if data.get("status") != "open" or data.get("round") != round_number:
             raise ValueError("La ronda ya no está abierta.")
-        return {"round": round_number, "status": "answered",
-                "answers": bt_rounds.answer_round(f, answers, "remote")["answers"]}
+        saved = bt_rounds.answer_round(path, answers, "remote")
+        return {"round": round_number, "status": saved["status"], "answers": saved["answers"]}
     raise ValueError(f"Comando no implementado por el despachador de planes: {command}.")
+
+
+def _read_state(state_of: StateReader, req: dict) -> dict | None:
+    """Pass command context to readers that support member-scoped preconditions."""
+    import inspect
+
+    try:
+        takes_context = len(inspect.signature(state_of).parameters) >= 3
+    except (TypeError, ValueError):
+        takes_context = False
+    if takes_context:
+        return state_of(req["target"], req["command"], req["params"])
+    return state_of(req["target"])
 
 
 def _now() -> str:
@@ -268,7 +240,7 @@ def _now() -> str:
 
 def fingerprint(req: dict) -> str:
     """Digest of everything that changes the effect: a reused key with other content must not replay."""
-    body = {k: v for k, v in req.items() if k != "idempotency_key"}
+    body = {k: req[k] for k in ("command", "target", "params", "precondition")}
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
 
 
@@ -290,6 +262,15 @@ def validate(req: Any) -> str | None:
         return "precondition debe fijar state, revision y/o updatedAt del objetivo."
     if not isinstance(req.get("params", {}), dict):
         return "params debe ser un objeto."
+    params = req.get("params", {})
+    pin_fields = {"route", "model", "account"}
+    if req["command"] == "retry":
+        for field in pin_fields & params.keys():
+            value = params[field]
+            if not isinstance(value, str) or not value.strip() or len(value.strip()) > 200:
+                return f"params.{field} debe ser texto no vacío de hasta 200 caracteres."
+    elif pin_fields & params.keys():
+        return "route, model y account solo se admiten en retry."
     if set(req) - {"idempotency_key", "command", "target", "origin", "params", "precondition", "confirmation"}:
         return "El comando contiene campos no reconocidos."
     if req["command"] in CHALLENGED:
@@ -330,17 +311,17 @@ class Ledger:
             return [dict(r) for r in db.execute("SELECT * FROM commands ORDER BY received_at, rowid")]
 
     def issue_challenge(self, target: str, typed_req: str, now: float | None = None) -> dict:
-        """Issue a one-use target-bound challenge after the caller types the target REQ id."""
-        match = re.fullmatch(r"[^/]+/(REQ-\d+)", target)
+        """Issue a one-use, target-bound challenge after the caller types the target REQ id."""
+        match = re.fullmatch(r"[^/]+/(REQ-\d+)", target) if isinstance(target, str) else None
         if not match or not isinstance(typed_req, str) or typed_req.strip().upper() != match.group(1):
             raise ValueError("Escribe el id REQ del objetivo para confirmar.")
         challenge_id = secrets.token_urlsafe(32)
         challenge_hash = hashlib.sha256(challenge_id.encode()).hexdigest()
-        issued_at = dt.datetime.now(dt.timezone.utc).timestamp() if now is None else now
+        issued = dt.datetime.now(dt.timezone.utc).timestamp() if now is None else now
         with self._db() as db:
-            db.execute("DELETE FROM challenges WHERE expires_at<? OR used_at IS NOT NULL", (issued_at,))
+            db.execute("DELETE FROM challenges WHERE expires_at<? OR used_at IS NOT NULL", (issued,))
             db.execute("INSERT INTO challenges (challenge_hash,target,expires_at,used_at) VALUES (?,?,?,NULL)",
-                       (challenge_hash, target, issued_at + 120))
+                       (challenge_hash, target, issued + 120))
         return {"challengeId": challenge_id, "target": target, "expiresIn": 120}
 
     @staticmethod
@@ -386,10 +367,19 @@ class Ledger:
         if req["command"] not in handlers:
             return {"status": "REJECTED", "code": "COMMAND_NOT_IMPLEMENTED", "stored": False,
                     "message": "El comando aún no tiene ejecutor."}
-        fp, key = fingerprint(req), req["idempotency_key"]
+        confirmation = req.get("confirmation")
+        current = None
+        try:
+            current = _read_state(state_of, req)
+        except Exception as exc:
+            return {"status": "FAILED", "code": "STATE_UNAVAILABLE", "stored": False,
+                    "message": str(exc)[:300]}
+        if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
+            return {"status": "REJECTED", "code": "STALE_PRECONDITION", "stored": False,
+                    "message": "La precondición del objetivo ya no se cumple."}
         with _LOCK:
-            # Existing keys replay before challenge validation: retrying a timed-out request remains safe.
             with self._db() as db:
+                db.execute("BEGIN IMMEDIATE")
                 row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
                 if row is not None:
                     if row["fingerprint"] != fp:
@@ -399,38 +389,15 @@ class Ledger:
                         return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "replayed": True,
                                 "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
                     return self._result(row, True)
-            try:
-                current = state_of(req["target"])
-            except Exception as exc:
-                return {"status": "FAILED", "code": "STATE_UNAVAILABLE", "stored": False,
-                        "message": str(exc)[:300]}
-            if req["command"] in {"approve", "launch", "cancel-plan", "delete-plan"} and current:
-                current = {**current, "state": current.get("plan_state", current.get("state")),
-                           "revision": current.get("plan_revision", current.get("revision")),
-                           "updatedAt": current.get("plan_updatedAt", current.get("updatedAt"))}
-            if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
-                return {"status": "REJECTED", "code": "STALE_PRECONDITION", "stored": False,
-                        "message": "La precondición del objetivo ya no se cumple."}
-            with self._db() as db:
-                db.execute("BEGIN IMMEDIATE")
-                row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
-                if row is not None:
-                    if row["fingerprint"] != fp:
-                        return {"status": "REJECTED", "code": "IDEMPOTENCY_CONFLICT", "stored": False,
-                                "message": "La clave ya se usó con un contenido distinto."}
-                    return self._result(row, True) if row["status"] != "PENDING" else {
-                        "status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "replayed": True,
-                        "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
                 if req["command"] in CHALLENGED:
-                    challenge = req["confirmation"]
-                    challenge_id = challenge.get("challenge_id", challenge.get("challengeId"))
-                    typed_req = challenge.get("typed_req", challenge.get("typedReq", "")).strip().upper()
-                    expected = req["target"].rsplit("/", 1)[-1].upper()
+                    challenge_id = confirmation.get("challenge_id", confirmation.get("challengeId"))
+                    typed_req = confirmation.get("typed_req", confirmation.get("typedReq", "")).strip().upper()
+                    expected_req = req["target"].rsplit("/", 1)[-1].upper()
                     challenge_hash = hashlib.sha256(challenge_id.encode()).hexdigest()
-                    record = db.execute("SELECT * FROM challenges WHERE challenge_hash=?", (challenge_hash,)).fetchone()
+                    challenge = db.execute("SELECT * FROM challenges WHERE challenge_hash=?", (challenge_hash,)).fetchone()
                     now = dt.datetime.now(dt.timezone.utc).timestamp()
-                    if (typed_req != expected or not record or record["target"] != req["target"]
-                            or record["used_at"] is not None or record["expires_at"] < now):
+                    if (typed_req != expected_req or challenge is None or challenge["target"] != req["target"]
+                            or challenge["used_at"] is not None or challenge["expires_at"] < now):
                         return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False,
                                 "message": "El desafío falta, venció, ya se usó o no corresponde al objetivo."}
                     db.execute("UPDATE challenges SET used_at=? WHERE challenge_hash=? AND used_at IS NULL",
@@ -439,12 +406,11 @@ class Ledger:
                            (key, fp, req["command"], req["target"], req["origin"],
                             json.dumps(req["params"], sort_keys=True), json.dumps(req["precondition"], sort_keys=True),
                             _now()))
-            effective = dict(req["params"])
+            params = dict(req["params"])
             if req["command"] in CHALLENGED:
-                effective["typed_req"] = req["confirmation"].get(
-                    "typed_req", req["confirmation"].get("typedReq"))
+                params["typed_req"] = confirmation.get("typed_req", confirmation.get("typedReq"))
             try:
-                outcome = handlers[req["command"]](req["target"], effective)
+                outcome = handlers[req["command"]](req["target"], params)
                 status, code = "OK", None
             except Exception as exc:
                 outcome, status, code = {"error": str(exc)[:300]}, "FAILED", "EFFECT_FAILED"
@@ -453,3 +419,18 @@ class Ledger:
                            (status, code, json.dumps(outcome, ensure_ascii=False), _now(), key))
                 row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
             return self._result(row, False)
+
+    @staticmethod
+    def _apply(req: dict, handlers: dict[str, Handler], state_of: StateReader) -> tuple[str, str | None, Any]:
+        try:
+            current = _read_state(state_of, req)
+        except Exception as exc:
+            return "FAILED", "STATE_UNAVAILABLE", {"error": str(exc)[:300]}
+        if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
+            return "REJECTED", "STALE_PRECONDITION", {"expected": req["precondition"],
+                                                       "actual": {k: (current or {}).get(k) for k in PRECONDITION_FIELDS}}
+        try:
+            result = handlers[req["command"]](req["target"], req["params"])
+        except Exception as exc:
+            return "FAILED", "EFFECT_FAILED", {"error": str(exc)[:300]}
+        return "OK", None, result

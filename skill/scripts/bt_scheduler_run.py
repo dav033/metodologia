@@ -66,19 +66,9 @@ def _wire(project: str, rdir: Path):
     stores = _required_module_stores(db_path, run_id)
     import bt_plan_adapter
     assignment = adapter.DecisionAssignmentPort(project, ledger, laya_root=bt_core.ROOT / ".state" / "laya")
+    assignment.run_dir = rdir
     if hasattr(assignment, "classification_overlay"):      # M2 decides with the classification in force (amendments)
-        def routing_overlay():
-            import bt_remote_recovery
-            changes = bt_plan_adapter.effective_overrides(rdir)
-            try:
-                pins = bt_remote_recovery.read_pins(rdir)
-            except ValueError:
-                pins = {task_id: {"route_id": "unreadable-pin"}
-                        for task_id in adapter.approved_plan(rdir).ids()}
-            for task_id, pin in pins.items():
-                changes[task_id] = {**changes.get(task_id, {}), "_route_pin": pin}
-            return changes
-        assignment.classification_overlay = routing_overlay
+        assignment.classification_overlay = lambda: bt_plan_adapter.effective_overrides(rdir)
     wiring = None
     try:
         wiring = composition.wire(

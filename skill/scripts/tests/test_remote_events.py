@@ -1,4 +1,4 @@
-"""Remote event contract and API-boundary redaction coverage."""
+"""Behavioral fixtures for stable remote notifications and cursor paging."""
 from __future__ import annotations
 
 import json
@@ -10,11 +10,86 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
-import bt_remote_api
-import bt_remote_events
 
-KINDS = ("attempt.failed", "attempt.blocked", "run.finished", "round.waiting", "plan.waiting",
-         "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated")
+import bt_remote_api
+import bt_remote_events as feed
+
+AT = "2026-10-19T12:00:00Z"
+OLD = "2026-10-19T08:00:00Z"
+KINDS = set(feed.NOTIFICATION_KINDS)
+
+
+def attempt(attempt_id: str, **values):
+    return {"id": attempt_id, "last_activity_at": AT, **values}
+
+
+def run(tasks, **values):
+    return {"project": "demo", "req_id": "REQ-001", "title": "Demo", "updated_at": AT,
+            "active": False, "status": "running", "tasks": tasks, **values}
+
+
+def events_for(state, now=None):
+    return {event["type"]: event for event in feed.build_events(state, now)}
+
+
+class FixtureTests(unittest.TestCase):
+    def test_each_notification_kind_has_a_fixture(self):
+        fixtures = {
+            "attempt.failed": {"runs": [run([{"id": "T1", "title": "Build",
+                                               "attempt": attempt("a1", state="rejected", failure="tests")}])]},
+            "attempt.blocked": {"runs": [run([{"id": "T1", "attempt": attempt("a2", state="blocked")}])]},
+            "run.finished": {"runs": [run([], status="done")]},
+            "round.waiting": {"rounds": [{"project": "demo", "req": "REQ-001", "round": 2, "at": AT}]},
+            "plan.waiting": {"plans": [{"project": "demo", "req_id": "REQ-001", "plan_status": "proposed",
+                                          "updated_at": AT}]},
+            "quota.exhausted": {"quotas": [{"profile": "codex", "exhausted_until": AT}]},
+            "attempt.stalled": {"runs": [run([{"id": "T1", "attempt": attempt(
+                "a3", state="running", live=True, last_activity_at=OLD)}])]},
+            "laptop.offline": {"offline": [{"since": AT}]},
+            "command.updated": {"commands": [{"idempotency_key": "a" * 24, "command": "retry",
+                                                "target": "demo/REQ-001",
+                                                "origin": "web", "outcome": "done", "created_at": AT}]},
+        }
+        produced = set()
+        for kind, fixture in fixtures.items():
+            with self.subTest(kind=kind):
+                event = events_for(fixture, now=1792400000.0).get(kind)
+                self.assertIsNotNone(event)
+                self.assertEqual(event["type"], kind)
+                self.assertEqual(event["id"], event["dedupeKey"])
+                produced.add(event["type"])
+        self.assertEqual(produced, KINDS)
+
+    def test_open_decision_request_is_a_stable_plan_waiting_event(self):
+        request = {"id": "decision-7", "task": "T4", "attempt": "a9", "title": "T4 bloqueada",
+                   "what": "Se agotaron los intentos.", "options": [{"id": "retry"}, {"id": "stop"}],
+                   "recommended": "retry"}
+        event = events_for({"decisions": [{"project": "demo", "req": "REQ-001",
+                                            "request": request, "at": AT}]})["plan.waiting"]
+        self.assertEqual(event["type"], "plan.waiting")
+        self.assertEqual(event["target"], {"kind": "task", "project": "demo", "req": "REQ-001",
+                                            "taskId": "T4", "attemptId": "a9"})
+        self.assertEqual(event["data"]["decisionRequest"]["options"], ["retry", "stop"])
+        replay = events_for({"decisions": [{"project": "demo", "req": "REQ-001",
+                                             "request": request, "at": AT}]})["plan.waiting"]
+        self.assertEqual(event["id"], replay["id"])
+
+    def test_cursor_pages_replay_the_same_ids(self):
+        state = {"rounds": [{"project": "demo", "req": "REQ-001", "round": n,
+                             "at": f"2026-10-19T12:00:0{n}Z"} for n in range(1, 6)]}
+        events = feed.build_events(state)
+        first = feed.page(events, limit=2)
+        replay = feed.page(feed.build_events(state), limit=2)
+        self.assertEqual([item["id"] for item in first["events"]], [item["id"] for item in replay["events"]])
+        next_a = feed.page(feed.build_events(state), first["nextCursor"], 2)
+        next_b = feed.page(feed.build_events(state), first["nextCursor"], 2)
+        self.assertEqual([item["id"] for item in next_a["events"]], [item["id"] for item in next_b["events"]])
+        self.assertEqual(len(next_a["events"]), 2)
+        self.assertTrue(next_a["hasMore"])
+
+    def test_malformed_cursor_is_rejected(self):
+        with self.assertRaises(feed.CursorError):
+            feed.page([], "not-a-cursor")
 
 
 class Handler:
@@ -25,84 +100,36 @@ class Handler:
         self.body, self.status, self.content_type = body, status, content_type
 
 
-class RemoteEventsTests(unittest.TestCase):
-    def test_each_notification_kind_has_a_fixture_and_contract_shape(self):
-        for kind in KINDS:
-            with self.subTest(kind=kind):
-                event = bt_remote_events.from_flow({"remote_type": kind, "id": "source-1", "at": "2026-10-19T12:00:00Z",
-                                                    "run": "demo/REQ-001", "task": "T1", "failure": "failed"})
-                self.assertIsNotNone(event)
-                self.assertEqual(event["type"], kind)
-                self.assertEqual(event["id"], event["cursor"])
-                self.assertEqual(event["id"], bt_remote_events.from_flow(
-                    {"remote_type": kind, "id": "source-1", "at": "2026-10-19T12:00:00Z",
-                     "run": "demo/REQ-001", "task": "T1"})["id"])
-
-    def test_decision_requests_are_stable_plan_waiting_events(self):
-        plans = [{"project": "demo", "req_id": "REQ-001", "decisions": [
-            {"id": "decision-7", "title": "Choose", "options": [{"id": "retry"}]}]}]
-        first = bt_remote_events.decision_events(plans)
-        second = bt_remote_events.decision_events(plans)
-        self.assertEqual(first, second)
-        self.assertEqual(first[0]["type"], "plan.waiting")
-        self.assertEqual(first[0]["target"], {"run": "demo/REQ-001"})
-
-    def test_cursor_page_replay_has_identical_event_ids(self):
-        events = [bt_remote_events.project_event("run.finished", str(n), f"2026-10-19T12:00:0{n}Z",
-                                                  {"run": "demo/REQ-001"}, {}) for n in range(3)]
-        first, cursor, more = bt_remote_events.page(events, "", 2)
-        replay, _, _ = bt_remote_events.page(events, "", 2)
-        next_page, _, _ = bt_remote_events.page(events, cursor, 2)
-        self.assertEqual([event["id"] for event in first], [event["id"] for event in replay])
-        self.assertTrue(more)
-        self.assertEqual(len(next_page), 1)
-
-    def test_real_get_route_includes_decisions_and_redacts_snapshot_and_event_text(self):
-        decision = {"id": "d1", "title": "review", "failure": "TELEGRAM_BOT_TOKEN=abc"}
-        row = {"remote_type": "attempt.failed", "id": "a1", "at": "2026-10-19T12:00:00Z",
-               "run": "demo/REQ-001", "failure": "FLOW_GATEWAY_KEY=hidden GITHUB_CLIENT_SECRET=alsohidden"}
+class RouteTests(unittest.TestCase):
+    def test_get_events_route_uses_cursor_and_projects_open_decisions(self):
         handler = Handler()
+        plan = {"project": "demo", "req_id": "REQ-001", "updated_at": AT, "plan_status": "approved"}
+        request = {"id": "decision-1", "task": "T1", "title": "Waiting", "options": [{"id": "stop"}]}
+        ledger = type("LedgerStub", (), {"rows": lambda self: []})
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
-                patch("bt_live_api.flow_events", return_value=([row], [], {})), \
-                patch.object(bt_remote_api, "_plans", return_value=[{"project": "demo", "req_id": "REQ-001",
-                                                                       "decisions": [decision]}]):
+                patch("bt_live_api.run_summaries", return_value=[]), \
+                patch("bt_plans_api.plans_payload", return_value=[plan]), \
+                patch("bt_plans_api.req_dir", return_value=Path("/tmp/REQ-001")), \
+                patch("bt_plans_api.open_decisions", return_value=[request]), \
+                patch("bt_plans_api.open_rounds", return_value=[]), \
+                patch("bt_live_api.flow_events", return_value=([], [], {})), \
+                patch("bt_subscriptions.summary", return_value=[]), \
+                patch("bt_remote_commands.Ledger", ledger):
             bt_remote_api.route_get(handler)
         payload = json.loads(handler.body)
         self.assertEqual(handler.status, 200)
-        self.assertEqual({event["type"] for event in payload["events"]}, {"attempt.failed", "plan.waiting"})
-        self.assertNotIn("hidden", handler.body)
-        self.assertNotIn("alsohidden", handler.body)
-        self.assertNotIn("abc", handler.body)
+        self.assertEqual(payload["events"][0]["type"], "plan.waiting")
+        self.assertIn("decisionRequest", payload["events"][0]["data"])
 
-        handler.path = "/api/remote/v1/snapshot"
-        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
-                patch.object(bt_remote_api, "_snapshot_runs", return_value=[{"failure": "GITHUB_CLIENT_SECRET=secret"}]), \
-                patch.object(bt_remote_api, "_plans", return_value=[]):
-            bt_remote_api.route_get(handler)
-        self.assertNotIn("secret", handler.body)
-
-    def test_real_get_route_projects_flow_bus_attempt_events_without_remote_type(self):
-        row = {"v": 1, "seq": "m1:17", "ord": "0000000000000001.000000:m1:0000000017",
-               "at": "2026-10-19T12:00:00.000+00:00", "run": "demo/REQ-001", "task": "T1",
-               "attempt": "attempt-1", "from": "M3", "to": "M1", "kind": "state_change",
-               "summary": "attempt-1: running → failed", "data": {"state": "failed", "audit": "attempt_transition"}}
-
-        def get_events():
+    def test_events_route_rejects_bad_cursor_and_limit(self):
+        for path, code in (("/api/remote/v1/events?after=junk", "INVALID_CURSOR"),
+                           ("/api/remote/v1/events?limit=0", "INVALID_LIMIT")):
             handler = Handler()
-            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
-                    patch("bt_live_api.flow_events", return_value=([row], [], {})), \
-                    patch.object(bt_remote_api, "_plans", return_value=[]):
+            handler.path = path
+            with self.subTest(path=path), patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}):
                 bt_remote_api.route_get(handler)
-            self.assertEqual(handler.status, 200)
-            return json.loads(handler.body)["events"]
-
-        first = get_events()
-        replay = get_events()
-        self.assertEqual(len(first), 1)
-        self.assertEqual(first[0]["type"], "attempt.failed")
-        self.assertEqual(first[0]["target"], {"run": "demo/REQ-001", "task": "T1"})
-        self.assertEqual(first[0]["data"], row["data"])
-        self.assertEqual([event["id"] for event in first], [event["id"] for event in replay])
+            self.assertEqual(handler.status, 400)
+            self.assertEqual(json.loads(handler.body)["code"], code)
 
 
 if __name__ == "__main__":
