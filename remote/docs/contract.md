@@ -42,3 +42,16 @@ the challenge after the user types the target REQ id. A repeated key with a diff
 Events have stable IDs and cursors. The schema includes `attempt.failed`, `attempt.blocked`, `run.finished`,
 `round.waiting`, `plan.waiting`, `quota.exhausted`, `attempt.stalled`, `laptop.offline`, and `command.updated`.
 Consumers persist `nextCursor` and deduplicate notifications by the stable `dedupeKey`.
+
+## Gateway browser routes
+
+After GitHub sign-in, the gateway serves the laptop snapshot at `GET /api/remote/v1/snapshot` with its original
+`generatedAt` plus `cachedAt` and `laptopStatus`. The compatible `GET /api/remote/v1/runs` and `/plans` routes return
+the corresponding arrays with the same freshness fields. These routes serve the most recently polled snapshot when
+the laptop is offline; they do not trigger per-browser upstream requests.
+
+`GET /api/remote/v1/events` and `/api/remote/v1/stream` are authenticated Server-Sent Event streams. Each `flow`
+frame carries the original laptop event JSON and a gateway sequence in the SSE `id` field. Reconnect with
+`Last-Event-ID` to replay events collected since that sequence. A cursor older than the in-memory replay window is
+rejected with HTTP 409 instead of silently skipping events. Commands are posted to `/api/remote/v1/commands` with
+the signed-in session, `Origin`, and `X-Flow-Request: 1`; the gateway relays the JSON command to the laptop API.
