@@ -17,7 +17,6 @@ _EVENT_MESSAGES = {
     "run.finished": "La ejecución terminó.",
     "round.waiting": "Hay una ronda de preguntas esperando respuesta.",
     "plan.waiting": "Hay un plan esperando aprobación.",
-    "decision.requested": "Hay una decisión esperando respuesta.",
     "quota.exhausted": "Se agotó la cuota de una cuenta.",
     "attempt.stalled": "Una tarea no muestra actividad desde hace más de 10 minutos.",
 }

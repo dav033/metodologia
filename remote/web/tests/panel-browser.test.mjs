@@ -139,7 +139,19 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     const reviewUrl = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]')?.href ?? null", returnByValue: true });
     assert.ok(reviewUrl.result?.value?.includes("taskId=T15c"), "rendered panel should link to the rejected task review");
     assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
-    await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
+    const reviewLink = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const link = document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]'); if (!link) throw new Error('Missing review link'); link.scrollIntoView(); const bounds = link.getBoundingClientRect(); return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; })()", returnByValue: true });
+    const reviewPoint = reviewLink.result?.value;
+    assert.ok(reviewPoint, "review link should have a visible position");
+    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseMoved", x: reviewPoint.x, y: reviewPoint.y });
+    await cdp(socket, "Input.dispatchMouseEvent", { type: "mousePressed", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
+    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseReleased", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
+    let reviewRouteOpened = false;
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      const location = await cdp(socket, "Runtime.evaluate", { expression: "window.location.pathname", returnByValue: true });
+      if (location.result?.value === "/review") { reviewRouteOpened = true; break; }
+      await delay(100);
+    }
+    if (!reviewRouteOpened) await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
     let fixtureReview = "";
     for (let attempt = 0; attempt < 300; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });

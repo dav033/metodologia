@@ -76,14 +76,6 @@ class GatewayRuntime:
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
         self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
-        outage_started_at = self.outbox.state_value("laptop_outage_started_at")
-        if outage_started_at:
-            # LivenessMonitor uses monotonic time in-process. Reconstruct its clock from the
-            # persisted wall-clock outage start so a gateway restart does not reset the alert.
-            self.liveness.status = LaptopStatus.OFFLINE
-            self.liveness.consecutive_failures = self.liveness.failures_before_offline
-            elapsed = max(0.0, time.time() - outage_started_at)
-            self.liveness.offline_since = time.monotonic() - elapsed
 
     def poll_once(self) -> None:
         try:
@@ -94,11 +86,8 @@ class GatewayRuntime:
             transition = self.liveness.record_failure()
             if transition and transition.current is LaptopStatus.OFFLINE:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
-                self.outbox.set_state_value("laptop_outage_started_at", int(time.time()))
         else:
-            transition = self.liveness.record_success()
-            if transition and transition.current is LaptopStatus.ONLINE:
-                self.outbox.set_state_value("laptop_outage_started_at", 0)
+            self.liveness.record_success()
             self._refresh_active_run_cache()
             self._poll_events()
         if self.liveness.status is LaptopStatus.OFFLINE:
