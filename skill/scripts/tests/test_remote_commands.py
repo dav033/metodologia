@@ -162,6 +162,34 @@ class EntryPointTests(LedgerBase):
             bt_remote_api.route_post(h)
         return h.sent
 
+    def _create_scheduler_run(self, tasks, attempts=None):
+        import sqlite3
+
+        import bt_plans_api
+
+        root = Path(self.temp.name)
+        rdir = root / "demo" / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True, exist_ok=True)
+        db = root / ".state" / "scheduler" / "demo-REQ-001.db"
+        db.parent.mkdir(parents=True, exist_ok=True)
+        doc = {"tasks": {key: {"state": state} for key, state in tasks.items()},
+               "attempts": {key: {"state": state} for key, state in (attempts or {}).items()}}
+        with sqlite3.connect(db) as conn:
+            conn.execute("CREATE TABLE state (id INTEGER PRIMARY KEY, version INTEGER NOT NULL, doc TEXT NOT NULL)")
+            conn.execute("INSERT INTO state VALUES (1, 1, ?)", (json.dumps(doc),))
+        model = {"run": {"authority": "scheduler", "status": "running", "updated_at": "t1",
+                         "plan_ref": {"revision": 3}}, "plan": {"revision": 3, "status": "approved"}}
+        return rdir, [patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)),
+                      patch.object(bt_plans_api, "status_of", return_value=model)]
+
+    def post_with_scheduler_state(self, body, patches):
+        h = FakeHandler(json.dumps(body).encode())
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, self.handlers, clear=True):
+            with patches[0], patches[1]:
+                bt_remote_api.route_post(h)
+        return h.sent
+
     def challenge(self, target="demo/REQ-001", typed_req="REQ-001"):
         return self.post({"target": target, "typedReq": typed_req}, "/api/remote/v1/challenges")
 
@@ -170,6 +198,39 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((a[0], a[1]["status"], b[0], b[1]["replayed"]), (200, "OK", 200, True))
         self.assertEqual(len(self.calls), 1)
         self.assertEqual(len(self.route_ledger().rows()), 1)
+
+    def test_f19_retry_precondition_uses_failed_task_while_run_is_running(self):
+        _, patches = self._create_scheduler_run({"T1": "failed"})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", params={"task": "T1"},
+                precondition={"state": "failed", "revision": 3}), patches)
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"task": "T1"})])
+
+    def test_f19_retry_rejects_task_state_change_before_handler(self):
+        _, patches = self._create_scheduler_run({"T1": "done"})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", idempotency_key="key-00000002", params={"task": "T1"},
+                precondition={"state": "failed", "revision": 3}), patches)
+
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
+    def test_f19_cancel_attempt_precondition_uses_attempt_state(self):
+        _, patches = self._create_scheduler_run({"T1": "done"}, {"att-7": "running"})
+        self.handlers["cancel-attempt"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="cancel-attempt", idempotency_key="key-00000003", params={"attempt": "att-7"},
+                precondition={"state": "running", "revision": 3}), patches)
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"attempt": "att-7"})])
 
     def test_route_post_stale_changed_and_invalid(self):
         self.assertEqual(self.post(req(precondition={"revision": 1}))[0], 409)
