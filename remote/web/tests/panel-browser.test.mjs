@@ -99,12 +99,18 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     for (let attempt = 0; attempt < 80; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "({text: document.body.innerText, width: document.documentElement.scrollWidth, viewport: window.innerWidth})", returnByValue: true });
       browserState = evaluated.result?.value;
-      if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan")) break;
+      if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan") && browserState?.text?.includes("Intento att-0008")) break;
       await delay(250);
     }
-    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
+    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
+    for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("×2"); attempt += 1) {
+      await delay(100);
+      const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
+      browserState.text = evaluated.result?.value;
+    }
+    assert.ok(browserState?.text?.includes("×2"), "SSE messages should render through the /flow grouping logic");
     assert.equal(browserState.viewport, 360);
     assert.equal(browserState.width, 360, `page overflowed horizontally at 360 px: ${browserState.width}px`);
     const fill = async (selector, value) => cdp(socket, "Runtime.evaluate", {

@@ -9,49 +9,90 @@ type Task = { id: string; title?: string; state: string; revision?: number; upda
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptop?: { online: boolean; checkedAt?: string } };
 type Session = { authenticated: boolean };
+type FlowEvent = { id: string; cursor: string; run: string; seq: string; ord: number; task: string; attempt: string; from: string; to: string; kind: string; summary: string; at_epoch: number };
+type FlowCore = { groupRows(events: FlowEvent[]): { ev: FlowEvent; n: number; first: number; last: number }[]; taskState(state: string): string };
+declare global { interface Window { FlowCore?: FlowCore } }
 
 function record(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 
 function text(value: unknown): value is string { return typeof value === "string"; }
+function field(source: Record<string, unknown>, camel: string, snake: string): unknown { return source[camel] ?? source[snake]; }
+
+function parseFlowEvent(value: unknown): FlowEvent | null {
+  const event = record(value);
+  const target = record(event?.target);
+  const data = record(event?.data);
+  if (!event || event.schemaVersion !== 1 || !target || !data || !text(event.id) || !text(event.cursor) || !text(event.type) || !text(target.project) || !text(target.req) || !text(event.occurredAt)) return null;
+  const task = text(field(target, "taskId", "task_id")) ? String(field(target, "taskId", "task_id")) : "";
+  const attempt = text(field(target, "attemptId", "attempt_id")) ? String(field(target, "attemptId", "attempt_id")) : "";
+  const routes: Record<string, [string, string, string]> = {
+    "attempt.failed": ["M3", "M6", "execution_finished"], "attempt.blocked": ["M3", "M5", "incident"],
+    "attempt.stalled": ["M3", "M1", "incident_detected"], "run.finished": ["M6", "owner", "execution_finished"],
+    "plan.waiting": ["M6", "owner", "planning"], "round.waiting": ["M5", "owner", "recommendation"],
+    "quota.exhausted": ["M2", "M1", "reservation_refused"], "laptop.offline": ["M1", "owner", "incident"],
+    "command.updated": ["owner", "M1", "state_change"],
+  };
+  const route = routes[event.type];
+  if (!route) return null;
+  const [from, to, kind] = route;
+  const date = new Date(event.occurredAt);
+  if (Number.isNaN(date.valueOf())) return null;
+  return { id: event.id, cursor: event.cursor, run: `${target.project}/${target.req}`, seq: event.cursor, ord: date.valueOf(), task,
+    attempt, from, to, kind, summary: text(data.summary) ? data.summary : text(data.message) ? data.message : event.type,
+    at_epoch: date.valueOf() / 1000 };
+}
 
 function parseSnapshot(value: unknown): Snapshot {
   const raw = record(value);
-  if (!raw || raw.schemaVersion !== 1 || !text(raw.generatedAt) || !text(raw.cursor) || !Array.isArray(raw.runs) || !Array.isArray(raw.plans)) {
+  const generatedAt = raw ? field(raw, "generatedAt", "generated_at") : undefined;
+  if (!raw || raw.schemaVersion !== 1 || !text(generatedAt) || !text(raw.cursor) || !Array.isArray(raw.runs) || !Array.isArray(raw.plans)) {
     throw new Error("La respuesta del gateway no cumple el contrato de snapshot v1.");
   }
+  const parseAttempt = (value: unknown) => {
+    const attempt = record(value);
+    const id = attempt && field(attempt, "id", "attempt_id");
+    if (!attempt || !text(id)) return undefined;
+    const state = attempt.state;
+    const updatedAt = field(attempt, "updatedAt", "updated_at");
+    return { id, state: text(state) ? state : undefined, updatedAt: text(updatedAt) ? updatedAt : undefined };
+  };
   const parseTask = (item: unknown): Task => {
     const task = record(item);
     if (!task || !text(task.id) || !text(task.state)) throw new Error("El snapshot contiene una tarea inválida.");
+    const criteria = field(task, "acceptanceCriteria", "acceptance_criteria");
+    const updatedAt = field(task, "updatedAt", "updated_at");
     return { id: task.id, title: text(task.title) ? task.title : undefined, state: task.state,
       revision: typeof task.revision === "number" ? task.revision : undefined,
-      updatedAt: text(task.updatedAt) ? task.updatedAt : undefined,
-      acceptanceCriteria: Array.isArray(task.acceptanceCriteria) ? task.acceptanceCriteria.filter(text) : [],
-      activeAttempt: parseAttempt(task.activeAttempt) };
-  };
-  const parseAttempt = (value: unknown) => {
-    const attempt = record(value);
-    if (!attempt || !text(attempt.id)) return undefined;
-    return { id: attempt.id, state: text(attempt.state) ? attempt.state : undefined, updatedAt: text(attempt.updatedAt) ? attempt.updatedAt : undefined };
+      updatedAt: text(updatedAt) ? updatedAt : undefined,
+      acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
+      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")) };
   };
   const runs = raw.runs.map((item): Run => {
     const run = record(item);
     if (!run || !text(run.project) || !text(run.req) || !text(run.state)) throw new Error("El snapshot contiene una ejecución inválida.");
+    const updatedAt = field(run, "updatedAt", "updated_at");
+    const lastSeenAt = field(run, "lastSeenAt", "last_seen_at");
     return { project: run.project, req: run.req, state: run.state, revision: typeof run.revision === "number" ? run.revision : undefined,
-      updatedAt: text(run.updatedAt) ? run.updatedAt : undefined, lastSeenAt: text(run.lastSeenAt) ? run.lastSeenAt : undefined,
-      activeAttempt: parseAttempt(run.activeAttempt), tasks: Array.isArray(run.tasks) ? run.tasks.map(parseTask) : [] };
+      updatedAt: text(updatedAt) ? updatedAt : undefined, lastSeenAt: text(lastSeenAt) ? lastSeenAt : undefined,
+      activeAttempt: parseAttempt(field(run, "activeAttempt", "active_attempt")), tasks: Array.isArray(run.tasks) ? run.tasks.map(parseTask) : [] };
   });
   const plans = raw.plans.map((item): Plan => {
     const plan = record(item);
     if (!plan || !text(plan.project) || !text(plan.req) || !text(plan.state)) throw new Error("El snapshot contiene un plan inválido.");
+    const criteria = field(plan, "acceptanceCriteria", "acceptance_criteria");
+    const updatedAt = field(plan, "updatedAt", "updated_at");
     return { id: text(plan.id) ? plan.id : undefined, project: plan.project, req: plan.req, state: plan.state,
       revision: typeof plan.revision === "number" ? plan.revision : undefined,
-      updatedAt: text(plan.updatedAt) ? plan.updatedAt : undefined,
-      acceptanceCriteria: Array.isArray(plan.acceptanceCriteria) ? plan.acceptanceCriteria.filter(text) : [],
+      updatedAt: text(updatedAt) ? updatedAt : undefined,
+      acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
       tasks: Array.isArray(plan.tasks) ? plan.tasks.map(parseTask) : [] };
   });
-  return { schemaVersion: 1, generatedAt: raw.generatedAt, cursor: raw.cursor, runs, plans };
+  const laptop = record(raw.laptop);
+  const cursor = raw.cursor;
+  return { schemaVersion: 1, generatedAt: String(generatedAt), cursor: String(cursor), runs, plans,
+    laptop: laptop && typeof laptop.online === "boolean" ? { online: laptop.online, checkedAt: text(field(laptop, "checkedAt", "checked_at")) ? String(field(laptop, "checkedAt", "checked_at")) : undefined } : undefined };
 }
 
 function prettyTime(value?: string): string {
@@ -63,6 +104,7 @@ function prettyTime(value?: string): string {
 export default function HomePage() {
   const [session, setSession] = useState<Session | null>(null);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const [feed, setFeed] = useState<FlowEvent[]>([]);
   const [error, setError] = useState("");
   const [working, setWorking] = useState("");
   const [reason, setReason] = useState("");
@@ -88,25 +130,22 @@ export default function HomePage() {
   }, [load]);
 
   useEffect(() => {
-    if (!session?.authenticated || !snapshot) return;
-    let active = true;
-    let cursor = snapshot.cursor;
-    const poll = async () => {
+    const authenticated = session?.authenticated;
+    const cursor = snapshot?.cursor;
+    if (authenticated !== true || !cursor) return;
+    const stream = new EventSource(`/api/remote/v1/events/stream?after=${encodeURIComponent(cursor)}`);
+    stream.onmessage = (message) => {
       try {
-        const eventsResponse = await fetch(`/api/remote/v1/events?after=${encodeURIComponent(cursor)}&limit=100`, { cache: "no-store" });
-        if (eventsResponse.ok) {
-          const value: unknown = await eventsResponse.json();
-          const body = record(value);
-          if (body && text(body.nextCursor)) cursor = body.nextCursor;
-        }
-        if (active) await load();
-      } catch (cause) {
-        if (active) setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel.");
-      }
+        const event = parseFlowEvent(JSON.parse(message.data) as unknown);
+        if (!event) throw new Error("Evento remoto inválido.");
+        setFeed((current) => current.some((item) => item.id === event.id) ? current : [...current, event].sort((a, b) => a.ord - b.ord).slice(-500));
+        setError("");
+        void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+      } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo leer el evento remoto."); }
     };
-    const timer = window.setInterval(() => { void poll(); }, 15_000);
-    return () => { active = false; window.clearInterval(timer); };
-  }, [session?.authenticated, snapshot, load]);
+    stream.onerror = () => setError("Se perdió la conexión en vivo; intentando reconectar…");
+    return () => stream.close();
+  }, [session?.authenticated, snapshot?.cursor, load]);
 
   async function sendCommand(event: FormEvent<HTMLFormElement>, command: Record<string, unknown>, key: string) {
     event.preventDefault();
@@ -160,6 +199,12 @@ export default function HomePage() {
       {!snapshot ? <p className="empty">Cargando estado…</p> : snapshot.runs.length === 0 ? <p className="empty">No hay ejecuciones.</p> : <div className="run-list">{snapshot.runs.map((run) => <article className="run-card" key={`${run.project}-${run.req}`}>
         <div className="run-top"><div><p className="eyebrow">{run.project}</p><h2>{run.req}</h2></div><span className="state">{run.state}</span></div>
         <p className="last-seen">Última señal de vida · {prettyTime(run.lastSeenAt ?? run.updatedAt ?? run.activeAttempt?.updatedAt)}</p>
+        {(() => {
+          const activeTask = run.tasks?.find((task) => task.activeAttempt || ["running", "verifying", "dispatched"].includes(task.state));
+          const activeAttempt = activeTask?.activeAttempt ?? run.activeAttempt;
+          const activeModule = activeAttempt?.state === "verifying" ? "M6" : activeAttempt ? "M3" : run.state === "paused" ? "M1" : "En espera";
+          return <div className="activity-strip" aria-label="Actividad actual"><span className="activity-module">{activeModule}</span><span>{activeTask ? `Tarea ${activeTask.id}` : "Sin tarea activa"}</span><span>{activeAttempt ? `Intento ${activeAttempt.id}` : "Sin intento activo"}</span></div>;
+        })()}
         <div className="actions">
           {run.state === "running" ? <form onSubmit={commandForm("pause", { kind: "run", project: run.project, req: run.req }, run.state, run.revision, `${run.req}-pause`)}><button disabled={!!working}>Pausar</button></form> : null}
           {run.state === "paused" ? <form onSubmit={commandForm("resume", { kind: "run", project: run.project, req: run.req }, run.state, run.revision, `${run.req}-resume`)}><button disabled={!!working}>Reanudar</button></form> : null}
@@ -167,6 +212,10 @@ export default function HomePage() {
           {run.activeAttempt && !run.tasks?.some((task) => task.activeAttempt?.id === run.activeAttempt?.id) && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, attemptId: run.activeAttempt.id }, run.activeAttempt.state ?? run.state, run.revision, `${run.req}-cancel-attempt`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
         </div>
         {!!run.tasks?.length && <div className="task-list"><h3>Tareas</h3>{run.tasks.map((task) => renderTask(task, run))}</div>}
+        <section className="feed" aria-label={`Feed ${run.req}`}><h3>Actividad reciente</h3>{(() => {
+          const rows = typeof window === "undefined" ? [] : window.FlowCore?.groupRows(feed.filter((event) => event.run === `${run.project}/${run.req}`)) ?? [];
+          return rows.length ? <ol>{rows.map(({ ev, n, first, last }) => <li key={ev.id}><span className="feed-route">{ev.from} → {ev.to}</span><span>{ev.summary}{n > 1 ? ` ×${n}` : ""}</span><time dateTime={new Date(last * 1000).toISOString()}>{prettyTime(new Date(last * 1000).toISOString())}{first !== last ? ` – ${prettyTime(new Date(first * 1000).toISOString())}` : ""}</time></li>)}</ol> : <p className="empty">Esperando actividad del feed en vivo.</p>;
+        })()}</section>
       </article>)}</div>}
     </section>
     {!!snapshot?.plans.length && <section className="runs plans" aria-labelledby="plans-title"><div className="section-heading"><div><p className="eyebrow">REVISIÓN</p><h2 id="plans-title">Planes</h2></div></div><div className="run-list">{snapshot.plans.map((plan) => {

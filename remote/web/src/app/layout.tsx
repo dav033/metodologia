@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
 import "./globals.css";
 
 const manrope = localFont({
@@ -43,7 +44,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es" className={`${manrope.variable} ${jetBrainsMono.variable}`}>
-      <body>{children}</body>
+      <body><Script src="/flow-core.js" strategy="beforeInteractive" />{children}</body>
     </html>
   );
 }
