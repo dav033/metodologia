@@ -102,7 +102,8 @@ export async function createMockGatewayServer() {
           const nextResponse = server.commandResponses.shift() ?? server.nextCommandResponse;
           if (nextResponse) {
             server.nextCommandResponse = null;
-            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+            const result = nextResponse.body?.code === "STALE_PRECONDITION" ? "Rechazado: el estado cambió" : "Rechazado";
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result });
             send(nextResponse.status, nextResponse.body);
             return;
           }

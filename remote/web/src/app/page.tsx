@@ -178,7 +178,6 @@ export default function HomePage() {
         if (reopenedTasks.current.has(key) && ["ready", "recovering"].includes(task.state)) {
           return { ...task, reopenedForRecovery: true };
         }
-        if (reopenedTasks.current.has(key)) reopenedTasks.current.delete(key);
         return task;
       }) })) });
     }
