@@ -165,6 +165,8 @@ class RemoteApiTests(unittest.TestCase):
             self.assertTrue(content_type.startswith("application/json"))
             self.assertLess(elapsed, 1.0)
             self.assertEqual(snapshot["runs"][0]["activeTask"]["id"], "T1")
+            self.assertEqual(snapshot["runs"][0]["req"], "REQ-001")
+            self.assertEqual(snapshot["runs"][0]["state"], "running")
             last_activity = dt.datetime.fromisoformat(snapshot["runs"][0]["lastActivityAt"].replace("Z", "+00:00"))
             self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
             rejected_task = snapshot["runs"][0]["tasks"][1]
@@ -178,6 +180,62 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(read_now.call_count, 1)
             self.assertIn(b"A-live", live._now_frame(base))
             self.assertEqual(read_now.call_count, 1)
+
+    def test_keyed_read_models_are_served_by_the_real_http_listener(self):
+        with tempfile.TemporaryDirectory() as root:
+            import bt_remote_commands as commands
+
+            req_dir = Path(root) / "demo" / "requirements" / "REQ-001-fixture"
+            req_dir.mkdir(parents=True)
+            plan = {"schema_version": "1.0.0", "plan_id": "REQ-001", "revision": 1,
+                    "milestones": [{"id": "M1", "title": "First"}],
+                    "tasks": [{"id": "T1", "milestone_id": "M1", "title": "Task", "objective": "x",
+                               "after": [], "complexity": "low"}]}
+            (req_dir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
+            (req_dir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan\n", encoding="utf-8")
+            ledger = commands.Ledger(Path(root) / ".state" / "remote" / "commands.db")
+            outcome = ledger.submit({"idempotency_key": "fixture-command-1", "command": "note",
+                                     "target": "demo/REQ-001", "origin": "web", "params": {"task": "T1", "note": "fixture"},
+                                     "precondition": {"state": "running"}},
+                                    {"note": lambda target, params: {"saved": True}},
+                                    lambda target: {"state": "running"})
+            self.assertEqual(outcome["status"], "OK")
+            port = free_port()
+            env = {**os.environ, "BITACORA_ROOT": root, "FLOW_GATEWAY_KEY": TEST_KEY}
+            process = self.start_server("serve-remote", port, env)
+            try:
+                for path in ("/api/remote/v1/commands", "/api/remote/v1/history"):
+                    with self.subTest(path=path):
+                        status, content_type, body = self.request(port, path, TEST_KEY)
+                        self.assertEqual(status, 200, body.decode("utf-8"))
+                        self.assertTrue(content_type.startswith("application/json"))
+                        response = json.loads(body)
+                        self.assertEqual(len(response["commands"]), 1)
+                        self.assertEqual(response["commands"][0]["command"], "note")
+                        self.assertTrue(response["nextCursor"].startswith("cmd_"))
+                        self.assertNotIn('"note":"fixture"', body.decode("utf-8"))
+
+                status, _, body = self.request(port, "/api/remote/v1/commands?after=invalid", TEST_KEY)
+                self.assertEqual(status, 400)
+                self.assertEqual(json.loads(body)["code"], "INVALID_CURSOR")
+
+                status, _, body = self.request(port, "/api/remote/v1/quotas", TEST_KEY)
+                self.assertIn(status, (200, 503), body.decode("utf-8"))
+                if status == 200:
+                    self.assertIn("accounts", json.loads(body))
+                else:
+                    self.assertEqual(json.loads(body)["code"], "QUOTAS_UNAVAILABLE")
+
+                status, _, body = self.request(port, "/api/remote/v1/routes", TEST_KEY)
+                self.assertEqual(status, 400)
+                self.assertEqual(json.loads(body)["code"], "INVALID_ROUTE_QUERY")
+
+                status, _, body = self.request(
+                    port, "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1", TEST_KEY)
+                self.assertEqual(status, 404, body.decode("utf-8"))
+                self.assertEqual(json.loads(body)["code"], "ROUTES_UNAVAILABLE")
+            finally:
+                self.stop_server(process)
 
 
 if __name__ == "__main__":

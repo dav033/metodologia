@@ -72,7 +72,7 @@
     "resume": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "resume" } } }] },
     "cancelAttempt": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["reason"], "properties": { "type": { "const": "cancel-attempt" }, "reason": { "$ref": "#/$defs/reason" } } }] },
     "reopen": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "reopen" } } }] },
-    "retry": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "retry" }, "route": { "$ref": "#/$defs/route" }, "model": { "$ref": "#/$defs/route" }, "account": { "$ref": "#/$defs/route" } } }] },
+    "retry": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "retry" }, "route": { "$ref": "#/$defs/route" } } }] },
     "revise": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "revise" } } }] },
     "approve": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "approve" } } }] },
     "launch": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "launch" } } }] },

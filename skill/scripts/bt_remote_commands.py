@@ -94,7 +94,20 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
         return None
     run = status.get("run") or {}
     plan = status.get("plan") or {}
-    if command in {"approve", "launch", "answer-round", "cancel-plan", "delete-plan"}:
+    params = params or {}
+    if command == "answer-round":
+        round_number = params.get("round")
+        if not isinstance(round_number, int) or isinstance(round_number, bool) or round_number < 1:
+            return None
+        try:
+            import bt_rounds
+            round_data = bt_rounds.load(rdir / "rounds" / f"round-{round_number:02d}.json")
+        except (OSError, ValueError):
+            return None
+        if round_data.get("round") != round_number or round_data.get("status") != "open":
+            return None
+        return {"state": "open", "revision": round_data.get("revision")}
+    if command in {"approve", "launch", "cancel-plan", "delete-plan"}:
         try:
             updated_at = dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
                 timespec="microseconds")
@@ -103,9 +116,8 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
         return {"state": plan.get("status"), "revision": plan.get("revision"), "updatedAt": updated_at}
     if run.get("authority") != "scheduler":
         return None
-    revision = (run.get("plan_ref") or {}).get("revision")
+    revision = plan.get("revision")
     state = run.get("status")
-    params = params or {}
     if command in TASK_SCOPED:
         member_state = _member_state(rdir, command, params)
         if member_state is None:
@@ -115,8 +127,12 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
         request_id = params.get("request_id")
         if not isinstance(request_id, str) or not request_id:
             return None
-        is_open = any(item.get("id") == request_id for item in bt_scheduler_decisions.open_requests(rdir))
-        state = "open" if is_open else "closed"
+        request = next((item for item in bt_scheduler_decisions.open_requests(rdir)
+                        if item.get("id") == request_id), None)
+        if request is None:
+            return None
+        return {"state": "open", **({"revision": request["revision"]}
+                                     if isinstance(request.get("revision"), int) else {})}
     return {"state": state, "revision": revision, "updatedAt": run.get("updated_at")}
 
 
@@ -314,6 +330,23 @@ class Ledger:
     def rows(self) -> list[dict]:
         with self._db() as db:
             return [dict(r) for r in db.execute("SELECT * FROM commands ORDER BY received_at, rowid")]
+
+    def history(self, after: str = "", limit: int = 100) -> tuple[list[dict], str]:
+        """Return a bounded, cursor-based public history without command parameters or preconditions."""
+        if after and not re.fullmatch(r"cmd_[0-9]{1,18}", after):
+            raise ValueError("El cursor no es válido.")
+        columns = "rowid, idempotency_key, command, target, origin, status, code, received_at, finished_at"
+        with self._db() as db:
+            if after:
+                rows = db.execute(f"SELECT {columns} FROM commands WHERE rowid>? ORDER BY rowid LIMIT ?",
+                                  (int(after[4:]), limit)).fetchall()
+            else:
+                rows = db.execute(f"SELECT {columns} FROM (SELECT {columns} FROM commands ORDER BY rowid DESC LIMIT ?) "
+                                  "ORDER BY rowid", (limit,)).fetchall()
+        items = [{"id": row["idempotency_key"], "command": row["command"], "target": row["target"],
+                  "origin": row["origin"], "submittedAt": row["received_at"], "finishedAt": row["finished_at"],
+                  "result": row["code"] or row["status"]} for row in rows]
+        return items, f"cmd_{rows[-1]['rowid']}" if rows else after
 
     def issue_challenge(self, target: str, typed_req: str, now: float | None = None) -> dict:
         """Issue a one-use, target-bound challenge after the caller types the target REQ id."""
