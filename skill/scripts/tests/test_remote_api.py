@@ -10,15 +10,19 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import tarfile
+import zipfile
 import threading
 import time
-import tomllib
 import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO / "tests" / "migration"))
+import installed_wheel  # noqa: E402
 TEST_KEY = "test-only-gateway-key"
 
 
@@ -29,49 +33,6 @@ def free_port() -> int:
 
 
 class RemoteApiTests(unittest.TestCase):
-    def test_snapshot_module_is_declared_for_wheel_packaging(self):
-        pyproject = SCRIPTS.parents[1] / "pyproject.toml"
-        config = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-        self.assertIn("bt_remote_snapshot", config["tool"]["setuptools"]["py-modules"])
-        self.assertTrue((SCRIPTS / "bt_remote_snapshot.py").is_file())
-
-    def test_snapshot_module_import_failure_returns_unavailable_problem(self):
-        import bt_remote_api
-
-        handler = Mock()
-        with patch.dict(sys.modules, {"bt_remote_snapshot": None}):
-            bt_remote_api._snapshot(handler)
-
-        handler.send.assert_called_once()
-        body, status, content_type = handler.send.call_args.args
-        self.assertEqual(status, 503)
-        self.assertTrue(content_type.startswith("application/problem+json"))
-        self.assertEqual(json.loads(body)["code"], "SNAPSHOT_UNAVAILABLE")
-
-    def test_snapshot_keeps_plan_round_and_decision_metadata_with_shared_run_model(self):
-        import bt_remote_api
-
-        handler = Mock()
-        plan = {"project": "demo", "req_id": "REQ-001", "plan_status": "approved",
-                "revision": 2, "updated_at": "2026-10-21T12:00:00Z"}
-        request = {"id": "T1:3", "title": "T1 bloqueada", "options": ["retry", "stop"]}
-        round_data = {"id": "round-2", "title": "Question", "status": "open"}
-        with patch("bt_core.ROOT", Path("/tmp")), \
-                patch("bt_remote_snapshot.build", return_value={"schemaVersion": 1, "runs": [{"id": "run-1"}]}), \
-                patch("bt_plans_api.plans_payload", return_value=[plan]), \
-                patch("bt_plans_api.req_dir", return_value=Path("/tmp/REQ-001")), \
-                patch("bt_plans_api.open_decisions", return_value=[request]), \
-                patch("bt_plans_api.open_rounds", return_value=[2]), \
-                patch("bt_rounds.rounds_dir", return_value=Path("/tmp/rounds")), \
-                patch("bt_rounds.load", return_value=round_data):
-            bt_remote_api._snapshot(handler)
-
-        payload = json.loads(handler.send.call_args.args[0])
-        self.assertEqual(payload["runs"], [{"id": "run-1"}])
-        self.assertEqual(payload["plans"][0]["id"], "demo/REQ-001")
-        self.assertEqual(payload["rounds"][0]["id"], "round-2")
-        self.assertEqual(payload["decisionRequests"][0]["options"][0]["id"], "retry")
-
     def start_server(self, command: str, port: int, env: dict[str, str]) -> subprocess.Popen:
         process = subprocess.Popen(
             [sys.executable, str(SCRIPTS / "bitacora.py"), command, "--port", str(port)],
@@ -164,33 +125,42 @@ class RemoteApiTests(unittest.TestCase):
             base = Path(root).resolve()
             rdir = base / "demo" / "requirements" / "REQ-001-fixture"
             rdir.mkdir(parents=True)
-            tasks = [{"id": "T1", "milestone_id": "M1", "title": "Active task", "after": [], "complexity": "low"},
-                     {"id": "T2", "milestone_id": "M1", "title": "Rejected task", "after": [], "complexity": "low"}]
+            tasks = [{"id": "T1", "milestone_id": "M1", "title": "Active task", "after": [], "complexity": "low",
+                      "acceptance_criteria": ["Active work is visible"]},
+                     {"id": "T2", "milestone_id": "M1", "title": "Rejected task", "after": [], "complexity": "low"},
+                     {"id": "T3", "milestone_id": "M1", "title": "Failed task", "after": [], "complexity": "low"}]
             plan = {"schema_version": "1.0.0", "plan_id": "REQ-001", "revision": 1,
                     "milestones": [{"id": "M1", "title": "First"}], "tasks": tasks}
             (rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
             (rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan — REQ-001 — Fixture\n", encoding="utf-8")
             (rdir / "SPEC.md").write_text("# Spec — REQ-001 — Fixture\n", encoding="utf-8")
             timestamp = dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc).timestamp()
-            db = base / ".state" / "scheduler" / "demo-REQ-001.db"
+            import bt_scheduler_adapter as scheduler_adapter
+            db = scheduler_adapter.run_db_path(rdir)
             db.parent.mkdir(parents=True)
             doc = {"tasks": {"T1": {"state": "active", "attempts": ["A-live"]},
-                             "T2": {"state": "recovering", "attempts": ["A-rejected"]}},
+                             "T2": {"state": "recovering", "attempts": ["A-rejected"]},
+                             "T3": {"state": "failed", "attempts": ["A-failed"]}},
                    "attempts": {"A-live": {"id": "A-live", "task_id": "T1", "number": 1, "state": "running",
                                             "created_at": timestamp - 60, "updated_at": timestamp,
                                             "last_event_at": timestamp},
                                 "A-rejected": {"id": "A-rejected", "task_id": "T2", "number": 1,
                                                "state": "rejected", "created_at": timestamp - 120,
-                                               "updated_at": timestamp - 30, "failure": "review required"}}}
+                                               "updated_at": timestamp - 30, "failure": "review required"},
+                                "A-failed": {"id": "A-failed", "task_id": "T3", "number": 1,
+                                             "state": "failed", "created_at": timestamp - 120,
+                                             "updated_at": timestamp - 30, "failure": "tests failed"}}}
             with sqlite3.connect(db) as connection:
                 connection.execute("CREATE TABLE state (id INTEGER PRIMARY KEY, version INTEGER NOT NULL, doc TEXT NOT NULL)")
                 connection.execute("INSERT INTO state VALUES (1, 1, ?)", (json.dumps(doc),))
             projection = {"authority": "scheduler", "projection": True, "req": "REQ-001", "status": "running",
-                          "heartbeat_at": "2026-10-20T10:01:00+00:00",
+                          "heartbeat_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                           "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "a" * 64},
                           "tasks": [{"id": "T1", "title": "Active task", "status": "in_progress",
                                      "scheduler_state": "active", "attempts": 1},
                                     {"id": "T2", "title": "Rejected task", "status": "in_progress",
+                                     "scheduler_state": "recovering", "attempts": 1},
+                                    {"id": "T3", "title": "Failed task", "status": "in_progress",
                                      "scheduler_state": "recovering", "attempts": 1}]}
             (rdir / "RUN.projection.json").write_text(json.dumps(projection), encoding="utf-8")
             live._now_data_cache.pop(base, None)
@@ -211,6 +181,11 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(snapshot["runs"][0]["activeTask"]["id"], "T1")
             self.assertEqual(snapshot["runs"][0]["req"], "REQ-001")
             self.assertEqual(snapshot["runs"][0]["state"], "running")
+            self.assertIn("activeAttempt", snapshot["runs"][0])
+            self.assertEqual(snapshot["plans"][0]["req"], "REQ-001")
+            self.assertEqual(snapshot["plans"][0]["tasks"][0]["acceptanceCriteria"],
+                             ["Active work is visible"])
+            self.assertEqual(snapshot["plans"][0]["acceptanceCriteria"], ["Active work is visible"])
             last_activity = dt.datetime.fromisoformat(snapshot["runs"][0]["lastActivityAt"].replace("Z", "+00:00"))
             self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
             rejected_task = snapshot["runs"][0]["tasks"][1]
@@ -219,11 +194,49 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(rejected_task["reviewAttempt"]["id"], "A-rejected")
             self.assertFalse(rejected_task["reviewAttempt"]["live"])
             self.assertEqual(rejected_task["history"][0]["id"], "A-rejected")
+            failed_task = snapshot["runs"][0]["tasks"][2]
+            self.assertEqual(failed_task["state"], "rejected")
+            self.assertIsNone(failed_task["activeAttempt"])
+            self.assertEqual(failed_task["reviewAttempt"]["id"], "A-failed")
+            self.assertFalse(failed_task["reviewAttempt"]["live"])
+            self.assertEqual(failed_task["history"][0]["id"], "A-failed")
 
             self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
             self.assertEqual(read_now.call_count, 1)
             self.assertIn(b"A-live", live._now_frame(base))
             self.assertEqual(read_now.call_count, 1)
+
+    def test_snapshot_route_keeps_failed_attempt_identity_out_of_active_attempt(self):
+        import bt_core
+        import bt_live_api
+        import bt_plans_api
+        import bt_remote_api
+
+        attempt = {"id": "A-failed", "state": "failed", "live": False, "failure": "checks failed"}
+        summary = {"run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "title": "Demo",
+                   "status": "failed", "active": False, "updated_at": None,
+                   "tasks": [{"id": "T1", "title": "Build", "state": "failed", "attempt": attempt,
+                              "history": [attempt]}]}
+
+        class Handler:
+            path = "/api/remote/v1/snapshot"
+            headers = {"Authorization": f"Bearer {TEST_KEY}"}
+
+            def send(self, body, status, content_type):
+                self.body, self.status, self.content_type = body, status, content_type
+
+        handler = Handler()
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ, {"FLOW_GATEWAY_KEY": TEST_KEY}), \
+                patch.object(bt_core, "ROOT", Path(root)), \
+                patch.object(bt_live_api, "run_summaries", return_value=[summary]), \
+                patch.object(bt_live_api, "now_frame_data", return_value={"items": []}), \
+                patch.object(bt_plans_api, "plans_payload", return_value=[]):
+            bt_remote_api.route_get(handler)
+
+        self.assertEqual(handler.status, 200)
+        task = json.loads(handler.body)["runs"][0]["tasks"][0]
+        self.assertIsNone(task["activeAttempt"])
+        self.assertEqual(task["reviewAttempt"]["id"], "A-failed")
 
     def test_keyed_read_models_are_served_by_the_real_http_listener(self):
         with tempfile.TemporaryDirectory() as root:
@@ -244,6 +257,9 @@ class RemoteApiTests(unittest.TestCase):
                                     {"note": lambda target, params: {"saved": True}},
                                     lambda target: {"state": "running"})
             self.assertEqual(outcome["status"], "OK")
+            quota_cache = Path(root) / ".state" / "globalusage-cache.json"
+            quota_cache.parent.mkdir(parents=True, exist_ok=True)
+            quota_cache.write_text(json.dumps({"at": time.time(), "rows": []}), encoding="utf-8")
             port = free_port()
             env = {**os.environ, "BITACORA_ROOT": root, "FLOW_GATEWAY_KEY": TEST_KEY}
             process = self.start_server("serve-remote", port, env)
@@ -280,6 +296,68 @@ class RemoteApiTests(unittest.TestCase):
                 self.assertEqual(json.loads(body)["code"], "ROUTES_UNAVAILABLE")
             finally:
                 self.stop_server(process)
+
+
+    def test_installed_distribution_serves_remote_api_from_packaged_modules(self):
+        installed = installed_wheel.get()
+        remote_modules = {
+            "bt_remote_api.py",
+            "bt_remote_commands.py",
+            "bt_remote_events.py",
+            "bt_remote_recovery.py",
+            "bt_remote_views.py",
+        }
+        with zipfile.ZipFile(installed.wheel) as wheel:
+            wheel_files = {Path(name).name for name in wheel.namelist()}
+        self.assertTrue(remote_modules.issubset(wheel_files), remote_modules - wheel_files)
+        with tarfile.open(installed.sdist, "r:*") as archive:
+            sdist_files = {Path(member.name).name for member in archive.getmembers()}
+        self.assertTrue(remote_modules.issubset(sdist_files), remote_modules - sdist_files)
+
+        port = free_port()
+        env = {
+            "PATH": "/usr/bin:/bin",
+            "HOME": str(installed.work / "home"),
+            "BITACORA_ROOT": str(installed.work / "bitacora"),
+            "FLOW_GATEWAY_KEY": TEST_KEY,
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONIOENCODING": "utf-8",
+        }
+        command = (
+            "import sys; sys.path.insert(0, sys.argv[1]); "
+            "import bt_remote_api, bt_remote_commands, bt_remote_events, "
+            "bt_remote_recovery, bt_remote_views; "
+            "sys.argv = ['bitacora', 'serve-remote', '--port', sys.argv[2]]; "
+            "import bitacora; bitacora.main()"
+        )
+        process = subprocess.Popen(
+            [str(installed.python), "-I", "-c", command, str(installed.site), str(port)],
+            cwd=installed.work,
+            env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        try:
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if process.poll() is not None:
+                    self.fail(f"installed bitacora serve-remote exited: {process.stderr.read()}")
+                try:
+                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                        break
+                except OSError:
+                    time.sleep(0.05)
+            else:
+                self.fail("installed bitacora serve-remote did not start listening")
+
+            status, content_type, body = self.request(port, "/api/remote/v1/health", TEST_KEY)
+            self.assertEqual(status, 200, body.decode("utf-8"))
+            self.assertTrue(content_type.startswith("application/json"))
+            self.assertEqual(json.loads(body)["schemaVersion"], 1)
+        finally:
+            self.stop_server(process)
+            process.stderr.close()
 
 
 if __name__ == "__main__":

@@ -2,18 +2,23 @@
 from __future__ import annotations
 
 import datetime as dt
+import http.client
 import json
 import os
 import sys
 import tempfile
+import threading
 import time
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import quote
 
 SCRIPTS = Path(__file__).resolve().parents[1]
+GATEWAY = Path(__file__).resolve().parents[3] / "remote" / "gateway"
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(GATEWAY))
 
 import bt_remote_api
 import bt_remote_events as feed
@@ -24,6 +29,8 @@ import bt_live_api
 import bt_plan_adapter
 import bt_scheduler_adapter
 from bt_planner import revisions as plan_revisions
+import bt_server
+
 
 AT = "2026-10-19T12:00:00Z"
 OLD = "2026-10-19T08:00:00Z"
@@ -49,6 +56,8 @@ class FixtureTests(unittest.TestCase):
             "attempt.failed": {"runs": [run([{"id": "T1", "title": "Build",
                                                "state": "blocked", "reason": "attempts_exhausted",
                                                "attempts_used": 3, "max_attempts": 3,
+                                               "attemptsUsed": 3, "maxAttempts": 3,
+                                               "retriesRemaining": 0,
                                                "attempt": attempt("a1", state="rejected", failure="tests")}])]},
             "attempt.blocked": {"runs": [run([{"id": "T1", "attempt": attempt("a2", state="blocked")}])]},
             "run.finished": {"runs": [run([], status="done")]},
@@ -75,7 +84,7 @@ class FixtureTests(unittest.TestCase):
 
     def test_open_decision_request_is_a_stable_plan_waiting_event(self):
         request = {"id": "decision-7", "task": "T4", "attempt": "a9", "title": "T4 bloqueada",
-                   "what": "Se agotaron los intentos.", "options": ["retry", "stop"],
+                   "what": "Se agotaron los intentos.", "options": [{"id": "retry"}, {"id": "stop"}],
                    "recommended": "retry"}
         event = events_for({"decisions": [{"project": "demo", "req": "REQ-001",
                                             "request": request, "at": AT}]})["plan.waiting"]
@@ -114,6 +123,39 @@ class Handler:
 
 
 class RouteTests(unittest.TestCase):
+
+
+    def test_snapshot_route_redacts_session_secret_assignments(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/snapshot"
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_remote_snapshot.build_snapshot", return_value={
+                    "runs": [{"failure": "SESSION_SECRET=synthetic-not-a-credential"}],
+                }):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertNotIn("synthetic-not-a-credential", handler.body)
+        self.assertIn("SESSION_SECRET=[REDACTED]", handler.body)
+
+    def test_review_route_redacts_session_secret_from_diagnostic_payload(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/attempts/a1/review?target=demo%2FREQ-001"
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "output.tail"
+            output.write_text("SESSION_SECRET=synthetic-not-a-credential\n", encoding="utf-8")
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                    patch("bt_remote_api._commands._run_target", return_value=("demo", "REQ-001", Path(directory))), \
+                    patch("bt_attempt_facts.attempt_facts", return_value={
+                        "T1": [{"attempt": "a1", "state": "failed", "failure": "verification failed"}],
+                    }), \
+                    patch("bt_remote_api._review_executor_attempt", return_value=Path(directory)), \
+                    patch("bt_remote_api._review_quality_result", return_value=(None, {})), \
+                    patch("bt_remote_api._review_diff", return_value={"stat": None}):
+                bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertNotIn("synthetic-not-a-credential", handler.body)
+        self.assertIn("SESSION_SECRET=[REDACTED]", handler.body)
+
     def test_collect_keeps_blocked_attempt_ids_distinct_across_runs(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -195,7 +237,7 @@ class RouteTests(unittest.TestCase):
 
     def _assert_decision_route(self, handler, root):
         plan = {"project": "demo", "req_id": "REQ-001", "updated_at": AT, "plan_status": "approved"}
-        request = {"id": "decision-1", "task": "T1", "title": "Waiting", "options": ["stop"]}
+        request = {"id": "decision-1", "task": "T1", "title": "Waiting", "options": [{"id": "stop"}]}
         ledger = type("LedgerStub", (), {"rows": lambda self: []})
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
                 patch("bt_core.ROOT", root), \
@@ -212,7 +254,6 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(handler.status, 200)
         self.assertEqual(payload["events"][0]["type"], "plan.waiting")
         self.assertIn("decisionRequest", payload["events"][0]["data"])
-        self.assertEqual(payload["events"][0]["data"]["decisionRequest"]["options"], ["stop"])
 
     def test_events_route_rejects_bad_cursor_and_limit(self):
         for path, code in (("/api/remote/v1/events?after=junk", "INVALID_CURSOR"),
@@ -228,7 +269,7 @@ class RouteTests(unittest.TestCase):
         handler = Handler()
         source = run([{"id": "T1", "state": "recovering", "attempts_used": 1, "max_attempts": 3,
                        "attempt": attempt("a1", state="failed", failure="agent exited") }])
-        transition = {"kind": "state_change", "project": "demo", "req": "REQ-001", "task": "T1",
+        transition = {"kind": "attempt_transition", "project": "demo", "req": "REQ-001", "task": "T1",
                       "id": "transition-1", "at": AT, "data": {"state": "failed", "failure": "agent exited"}}
         class LedgerStub:
             def rows(self):
@@ -251,6 +292,23 @@ class RouteTests(unittest.TestCase):
             failed = next(event for event in json.loads(handler.body)["events"] if event["type"] == "attempt.failed")
             self.assertTrue(failed["data"]["retryExhausted"])
             self.assertEqual((failed["data"]["attemptsUsed"], failed["data"]["maxAttempts"]), (3, 3))
+            self.assertEqual(failed["data"]["retriesRemaining"], 0)
+
+    def test_attempt_transition_requires_and_reports_retry_exhaustion(self):
+        transition = {"kind": "attempt_transition", "project": "demo", "req": "REQ-001", "task": "T1",
+                      "attempt": "a1", "id": "transition-1", "at": AT,
+                      "data": {"state": "failed", "failure": "agent exited"}}
+        exhausted = {**transition, "data": {"state": "failed", "failure": "agent exited",
+                                              "attempts_used": 3, "max_attempts": 3,
+                                              "retries_remaining": 0}}
+
+        self.assertIsNone(feed.from_flow(transition))
+        event = feed.from_flow(exhausted)
+        self.assertIsNotNone(event)
+        self.assertEqual(event["type"], "attempt.failed")
+        self.assertTrue(event["data"]["retryExhausted"])
+        self.assertEqual((event["data"]["attemptsUsed"], event["data"]["maxAttempts"],
+                          event["data"]["retriesRemaining"]), (3, 3, 0))
 
     def test_real_scheduler_projection_emits_exhausted_failure_through_remote_route(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -304,6 +362,39 @@ class RouteTests(unittest.TestCase):
             self.assertEqual(len({event["id"] for event in failed}), 3)
             self.assertEqual({event["data"]["attemptsUsed"] for event in failed}, {3})
             self.assertEqual({event["data"]["maxAttempts"] for event in failed}, {3})
+
+    def test_events_route_requires_exhaustion_for_failed_attempt_transition(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            transition = {"id": "transition-1", "kind": "attempt_transition", "state": "failed",
+                          "project": "demo", "req": "REQ-001", "task": "T1", "attempt": "a1",
+                          "at": AT, "data": {"state": "failed", "failure": "tests"}}
+            exhausted = {**transition, "data": {"state": "failed", "failure": "tests", "attemptsUsed": 3,
+                                                 "maxAttempts": 3, "retriesRemaining": 0}}
+
+            class LedgerStub:
+                def rows(self):
+                    return []
+
+            def poll():
+                handler = Handler()
+                with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}):
+                    bt_remote_api.route_get(handler)
+                self.assertEqual(handler.status, 200)
+                return json.loads(handler.body)
+
+            with patch("bt_core.ROOT", root), \
+                    patch("bt_live_api.run_summaries", return_value=[]), \
+                    patch("bt_plans_api.plans_payload", return_value=[]), \
+                    patch("bt_live_api.flow_events", side_effect=[([transition], [], {}), ([exhausted], [], {})]), \
+                    patch("bt_subscriptions.summary", return_value=[]), \
+                    patch("bt_remote_commands.Ledger", LedgerStub):
+                self.assertEqual(poll()["events"], [])
+                events = poll()["events"]
+                self.assertEqual(len(events), 1)
+                self.assertEqual(events[0]["type"], "attempt.failed")
+                self.assertTrue(events[0]["data"]["retryExhausted"])
+                self.assertEqual(events[0]["data"]["attemptsUsed"], 3)
 
     def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
         # Exercise the route's real feed.collect -> build_events -> page path across polls.

@@ -67,7 +67,8 @@ def route_get(handler) -> None:
         review = _failure_review(target, attempt_id)
         if review is None:
             return _problem(handler, 404, "ATTEMPT_NOT_FOUND", "No se encontró el intento fallido en esa ejecución.")
-        return _send_json(handler, review, 200)
+        import bt_remote_events
+        return _send_json(handler, bt_remote_events.redact(review), 200)
     if path in (f"{PREFIX}/commands", f"{PREFIX}/history"):
         return _command_history(handler)
     if path == f"{PREFIX}/quotas":
@@ -116,40 +117,18 @@ def route_get(handler) -> None:
 
 
 def _snapshot(handler) -> None:
-    """Compact run read model, with live task signals taken from the panel's shared now frame."""
-    try:
-        import bt_core
-        import bt_live_api as live
-        import bt_remote_snapshot
-        import bt_plans_api
-        import bt_rounds
+    """Serve the mobile run and plan read model."""
+    import bt_core
+    import bt_remote_events
+    from bt_remote_snapshot import build_snapshot
 
-        payload = bt_remote_snapshot.build(bt_core.ROOT, live)
-        plan_summaries = bt_plans_api.plans_payload(bt_core.ROOT)
-        plans, rounds, decisions = [], [], []
-        for plan in plan_summaries:
-            project, req = plan["project"], plan["req_id"]
-            req_dir = bt_plans_api.req_dir(bt_core.ROOT, project, req)
-            plans.append({"id": f"{project}/{req}", "project": project, "req": req,
-                          "state": plan.get("plan_status") or "unknown", "revision": plan.get("revision"),
-                          "updatedAt": plan.get("updated_at")})
-            decisions.extend({**request, "project": project, "req": req,
-                              "options": [{"id": option, "label": option.replace("_", " "),
-                                           "consequence": option.replace("_", " ")}
-                                          for option in request.get("options", []) if isinstance(option, str)]}
-                             for request in bt_plans_api.open_decisions(req_dir))
-            for number in bt_plans_api.open_rounds(req_dir):
-                try:
-                    data = bt_rounds.load(bt_rounds.rounds_dir(req_dir) / f"round-{number:02d}.json")
-                except (OSError, ValueError):
-                    continue
-                rounds.append({"project": project, "req": req, "round": number,
-                               **{key: data[key] for key in ("id", "title", "intro", "coverage", "status", "questions")
-                                  if key in data}})
-        payload.update({"plans": plans, "rounds": rounds, "decisionRequests": decisions})
+    try:
+        payload = build_snapshot(bt_core.ROOT)
     except Exception:
         return _problem(handler, 503, "SNAPSHOT_UNAVAILABLE", "La vista remota aún no está disponible.")
-    return _send_json(handler, payload, 200)
+
+    return _send_json(handler, bt_remote_events.redact(payload), 200)
+
 
 def _command_history(handler) -> None:
     query = _query(handler)
@@ -441,17 +420,40 @@ def _submit_command(handler, length: int) -> None:
     _send_json(handler, result, status)
 
 
+def _issue_challenge(handler, length: int) -> None:
+    try:
+        request = json.loads(handler.rfile.read(length) or b"null")
+    except (ValueError, OSError):
+        return _problem(handler, 400, "INVALID_CHALLENGE", "El cuerpo debe ser JSON válido.")
+    if not isinstance(request, dict):
+        return _problem(handler, 400, "INVALID_CHALLENGE", "El cuerpo debe ser un objeto JSON.")
+    typed_req = request.get("typedReq", request.get("typed_req"))
+    if (set(request) not in ({"target", "typedReq"}, {"target", "typed_req"})
+            or not isinstance(request.get("target"), str) or not isinstance(typed_req, str)):
+        return _problem(handler, 400, "INVALID_CHALLENGE", "La solicitud de confirmación no es válida.")
+    try:
+        challenge = _commands.Ledger().issue_challenge(request["target"], typed_req)
+    except ValueError as exc:
+        return _problem(handler, 400, "INVALID_CHALLENGE", str(exc))
+    return _send_json(handler, challenge, 201)
+
+
 def route_post(handler) -> None:
     if not _authorized(handler):
         return _problem(handler, 401, "UNAUTHORIZED", "Se requiere la clave del gateway.")
-    if _path(handler) == f"{PREFIX}/commands":
-        try:
-            length = int(handler.headers.get("Content-Length", "0"))
-        except (AttributeError, ValueError):
-            length = -1
-        if length < 0:
-            return _problem(handler, 400, "INVALID_COMMAND", "Longitud de solicitud no válida.")
-        if length > MAX_BODY:
-            return _problem(handler, 413, "BODY_TOO_LARGE", "La solicitud excede el tamaño permitido.")
-        return _submit_command(handler, length)
-    return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
+    path = _path(handler)
+    if path not in {f"{PREFIX}/commands", f"{PREFIX}/challenges"}:
+        return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
+    is_challenge = path == f"{PREFIX}/challenges"
+    invalid_code = "INVALID_CHALLENGE" if is_challenge else "INVALID_COMMAND"
+    try:
+        length = int(handler.headers.get("Content-Length", "0"))
+    except (AttributeError, ValueError):
+        length = -1
+    if length < 0 or (is_challenge and length == 0):
+        return _problem(handler, 400, invalid_code, "Longitud de solicitud no válida.")
+    if length > MAX_BODY:
+        return _problem(handler, 413, "BODY_TOO_LARGE", "La solicitud excede el tamaño permitido.")
+    if is_challenge:
+        return _issue_challenge(handler, length)
+    return _submit_command(handler, length)

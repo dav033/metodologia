@@ -27,3 +27,14 @@ test("recovery entrypoint previews the next revision and renders each account qu
   assert.match(panels, /windowLabel\(name\)/);
   assert.match(panels, /Cuotas en vivo/);
 });
+
+test("failure review scopes attempt lookup to its run target", async () => {
+  const [page, panel] = await Promise.all([
+    readFile(pagePath, "utf8"),
+    readFile(fileURLToPath(new URL("../src/app/failure-review-panel.tsx", import.meta.url)), "utf8"),
+  ]);
+
+  assert.match(page, /<FailureReviewPanel attemptId=\{reviewAttemptId\} target=\{`\$\{run\.project\}\/\$\{run\.req\}`\} \/>/);
+  assert.match(panel, /review\?target=\$\{encodeURIComponent\(target\)\}/);
+  assert.match(panel, /\}, \[attemptId, target\]\);/);
+});
