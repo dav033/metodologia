@@ -9,7 +9,7 @@ import time
 from collections import deque
 from typing import Any, Callable
 
-from upstream import UpstreamError
+from upstream import UpstreamError, UpstreamResponseError
 
 
 def format_sse(event_id: int | None, name: str, data: Any) -> bytes:
@@ -79,6 +79,17 @@ class StreamHub:
         try:
             snapshot = self._laptop.snapshot()
             result = self._laptop.events(self._cursor)
+        except UpstreamResponseError as exc:
+            if exc.status == 400 and exc.payload.get("code") == "INVALID_CURSOR":
+                with self._lock:
+                    self._cursor = ""
+                return
+            with self._lock:
+                changed = self._online
+                self._online = False
+                if changed:
+                    self._broadcast(None, "status", self._status_locked())
+            return
         except UpstreamError:
             with self._lock:
                 changed = self._online
