@@ -263,7 +263,7 @@ export default function HomePage() {
     let result = "Resultado desconocido";
     try {
       const confirmationValue = record(command.confirmation);
-      if (confirmationValue && !text(confirmationValue.challengeId) && text(confirmationValue.typedReq)) {
+      if (confirmationValue && (!text(confirmationValue.challengeId) || !confirmationValue.challengeId.trim()) && text(confirmationValue.typedReq)) {
         const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" },
           body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmationValue.typedReq }) });
         const challengeBody: unknown = await challengeResponse.json().catch(() => null);
@@ -299,7 +299,10 @@ export default function HomePage() {
     const command = (event: FormEvent<HTMLFormElement>) => {
       const formValues = new FormData(event.currentTarget);
       const typedReq = formValues.get("typedReq");
-      const confirmation = typeof typedReq === "string" && typedReq ? { confirmation: { typedReq } } : {};
+      const existingConfirmation = record(extra?.confirmation);
+      const confirmation = typeof typedReq === "string" && typedReq
+        ? { confirmation: { ...(existingConfirmation ?? {}), typedReq } }
+        : {};
       return sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type, target,
         precondition: { state, ...(revision === undefined ? {} : { revision }) }, ...extra, ...confirmation }, key);
     };
@@ -392,8 +395,8 @@ export default function HomePage() {
         <div className="actions">
           {plan.state === "review" || plan.state === "awaiting-review" ? <form onSubmit={commandForm("approve", target, plan.state, plan.revision, `${plan.req}-approve`)}><label>Escribe {plan.req} para aprobar <input required name="typedReq" pattern={plan.req} autoCapitalize="characters" aria-label={`Escribe ${plan.req} para confirmar la aprobación`} /></label><button disabled={!!working}>Aprobar plan</button></form> : null}
           {plan.state === "approved" ? <form onSubmit={commandForm("launch", target, plan.state, plan.revision, `${plan.req}-launch`)}><label>Escribe {plan.req} para ejecutar <input required name="typedReq" pattern={plan.req} autoCapitalize="characters" aria-label={`Escribe ${plan.req} para confirmar la ejecución`} /></label><button disabled={!!working}>Ejecutar plan</button></form> : null}
-          <label>Confirmación <input required aria-label="Id del reto de confirmación" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Id del reto" /></label><label>Escribe {plan.req} <input required aria-label={`Escribe ${plan.req}`} value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button disabled={!!working || typedReq !== plan.req}>Cancelar plan</button></form>
-          <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button className="danger" disabled={!!working || typedReq !== plan.req}>Eliminar plan</button></form></div>
+          <label>Confirmación <input required aria-label="Id del reto de confirmación" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Id del reto" /></label><label>Escribe {plan.req} <input required aria-label={`Escribe ${plan.req}`} value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><input type="hidden" name="typedReq" value={typedReq} /><button disabled={!!working || typedReq !== plan.req}>Cancelar plan</button></form>
+          <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><input type="hidden" name="typedReq" value={typedReq} /><button className="danger" disabled={!!working || typedReq !== plan.req}>Eliminar plan</button></form></div>
       </article>;
     })}</div></section>}
     {!!snapshot?.rounds?.some((round) => round.status === "open") && <section className="runs plans" aria-labelledby="rounds-title"><div className="section-heading"><div><p className="eyebrow">PREGUNTAS</p><h2 id="rounds-title">Rondas abiertas</h2></div></div><div className="run-list">{snapshot.rounds.filter((round) => round.status === "open").map((round) => <article className="run-card" key={`${round.project}-${round.req}-${round.round}`}>

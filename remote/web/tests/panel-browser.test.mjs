@@ -223,6 +223,35 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await waitForText("LAPTOP SIN CONEXIÓN");
     gateway.snapshot = originalSnapshot;
     await waitForText("Intento att-0008");
+<<<<<<< 8897333073c9f813187ee4d4ab49ec12ced7167a
+||||||| 942f3505046fe22f2a0f8824ec2590de4734860c
+<<<<<<< 33e883f8e59e173f61bd64505525f8ec31bfda28
+||||||| dca4bf1e93c3a76be36c77768b74123a4047b72d
+    const initialPanel = await waitForText("Rondas abiertas");
+    assert.ok(initialPanel.includes("Seguridad"), "open rounds should show their available answers");
+    assert.ok(initialPanel.includes("Pausa el scheduler hasta que lo reanudes."), "decision options should show their consequences");
+=======
+    const initialPanel = await waitForText("Rondas abiertas");
+    assert.ok(initialPanel.includes("Seguridad"), "open rounds should show their available answers");
+    assert.ok(initialPanel.includes("Pausa el scheduler hasta que lo reanudes."), "decision options should show their consequences");
+    const livePanel = await waitForText("codex-work · codex");
+    assert.ok(livePanel.includes("Cuotas en vivo"), "the panel should render the live quota section");
+    assert.ok(livePanel.includes("Five hour") && livePanel.includes("27% usado"), "each account quota window should be shown");
+    const recoveryPanel = await waitForText("gpt-6.1-sol · codex-work");
+    assert.ok(recoveryPanel.includes("codex · gpt-6.1-sol · codex-work"), "available recovery routes should be selectable");
+    assert.ok(recoveryPanel.includes("Creará la revisión 6."), "brief edit should preview the next plan revision");
+>>>>>>> 0c3c9165791db2c8201f4598d850c891d915c1e6
+=======
+    const initialPanel = await waitForText("Rondas abiertas");
+    assert.ok(initialPanel.includes("Seguridad"), "open rounds should show their available answers");
+    assert.ok(initialPanel.includes("Pausa el scheduler hasta que lo reanudes."), "decision options should show their consequences");
+    const livePanel = await waitForText("codex-work · codex");
+    assert.ok(livePanel.includes("Cuotas en vivo"), "the panel should render the live quota section");
+    assert.ok(livePanel.includes("Five hour") && livePanel.includes("27% usado"), "each account quota window should be shown");
+    const recoveryPanel = await waitForText("gpt-6.1-sol · codex-work");
+    assert.ok(recoveryPanel.includes("codex · gpt-6.1-sol · codex-work"), "available recovery routes should be selectable");
+    assert.ok(recoveryPanel.includes("Creará la revisión 6."), "brief edit should preview the next plan revision");
+>>>>>>> 413bda613d2f7acf3d37c6862f9e17c552b18427
     const fill = async (selector, value) => cdp(socket, "Runtime.evaluate", {
       expression: `(() => { const input = document.querySelector(${JSON.stringify(selector)}); if (!input) throw new Error('Missing input ${selector}'); input.focus(); input.select(); return true; })()`,
       returnByValue: true,
@@ -238,11 +267,35 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     assert.equal(gateway.commands[0]?.reason, "Stop the stalled attempt");
     assert.equal(gateway.commands[0]?.target.attemptId, "att-0008");
     for (let attempt = 0; attempt < 40; attempt += 1) {
+<<<<<<< 8897333073c9f813187ee4d4ab49ec12ced7167a
       const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.disabled === false", returnByValue: true });
+||||||| 942f3505046fe22f2a0f8824ec2590de4734860c
+<<<<<<< 33e883f8e59e173f61bd64505525f8ec31bfda28
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].some((button) => button.innerText === 'Reabrir' && !button.disabled)", returnByValue: true });
+||||||| dca4bf1e93c3a76be36c77768b74123a4047b72d
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·'))?.querySelector('button')?.disabled === false", returnByValue: true });
+=======
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·'))?.querySelector('.actions button')?.disabled === false", returnByValue: true });
+>>>>>>> 0c3c9165791db2c8201f4598d850c891d915c1e6
+=======
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·'))?.querySelector('.actions button')?.disabled === false", returnByValue: true });
+>>>>>>> 413bda613d2f7acf3d37c6862f9e17c552b18427
       if (ready.result?.value) break;
       await delay(100);
     }
+<<<<<<< 8897333073c9f813187ee4d4ab49ec12ced7167a
     await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.click()", returnByValue: true });
+||||||| 942f3505046fe22f2a0f8824ec2590de4734860c
+<<<<<<< 33e883f8e59e173f61bd64505525f8ec31bfda28
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Reabrir')?.click()", returnByValue: true });
+||||||| dca4bf1e93c3a76be36c77768b74123a4047b72d
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·'))?.querySelector('button')?.click()", returnByValue: true });
+=======
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·'))?.querySelector('.actions button')?.click()", returnByValue: true });
+>>>>>>> 0c3c9165791db2c8201f4598d850c891d915c1e6
+=======
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·'))?.querySelector('.actions button')?.click()", returnByValue: true });
+>>>>>>> 413bda613d2f7acf3d37c6862f9e17c552b18427
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
     assert.equal(gateway.commands[1]?.type, "reopen");
     assert.equal(gateway.commands[1]?.target.taskId, "T2");
@@ -256,8 +309,16 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     }
     await fill('[aria-label="Escribe REQ-027"]', "REQ-028");
     const destructiveDisabled = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Eliminar plan')?.disabled", returnByValue: true });
+<<<<<<< 8897333073c9f813187ee4d4ab49ec12ced7167a
     assert.equal(destructiveDisabled.result?.value, true, "destructive commands must stay disabled unless the exact REQ is typed");
     await fill('[aria-label="Escribe REQ-027"]', "REQ-027");
+||||||| 942f3505046fe22f2a0f8824ec2590de4734860c
+    assert.equal(destructiveDisabled.result?.value, true, "a destructive command must stay disabled when the typed REQ differs");
+    await fill('[aria-label="Escribe REQ-027"]', "REQ-027");
+=======
+    assert.equal(destructiveDisabled.result?.value, true, "a destructive command must stay disabled when the typed REQ differs");
+    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const input = document.querySelector('[aria-label=\"Escribe REQ-027\"]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'REQ-027'); input.dispatchEvent(new Event('input', { bubbles: true })); return true; })()", returnByValue: true });
+>>>>>>> 413bda613d2f7acf3d37c6862f9e17c552b18427
     let destructiveEnabled;
     for (let attempt = 0; attempt < 40; attempt += 1) {
       destructiveEnabled = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Eliminar plan')?.disabled", returnByValue: true });
@@ -284,6 +345,104 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     assert.equal(gateway.commands.at(-1)?.type, "answer-round", "round answers should use the command ledger");
     assert.equal(gateway.commands.at(-1)?.round, 2);
     assert.deepEqual(gateway.commands.at(-1)?.answer, { q1: { choice: "safe", note: "" }, q2: { text: "Keep the audit trail" } });
+<<<<<<< 8897333073c9f813187ee4d4ab49ec12ced7167a
+||||||| 942f3505046fe22f2a0f8824ec2590de4734860c
+||||||| dca4bf1e93c3a76be36c77768b74123a4047b72d
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.decision-option button')?.click()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 5; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[4]?.type, "answer-decision");
+    assert.equal(gateway.commands[4]?.requestId, "decision-1");
+    assert.equal(gateway.commands[4]?.option, "retry");
+    gateway.commandResponses.push({ status: 409, body: { code: "STALE_PRECONDITION", message: "precondition changed" } });
+    await fill('[aria-label="Escribe REQ-027 para confirmar la cancelación"]', "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('[aria-label=\"Escribe REQ-027 para confirmar la cancelación\"]').form.requestSubmit()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 6; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[5]?.type, "cancel-plan");
+    assert.equal(gateway.commands[5]?.confirmation?.typedReq, "REQ-027");
+    assert.ok(gateway.commands[5]?.confirmation?.challengeId?.length >= 16);
+    const historyText = await waitForText("el estado cambió");
+    assert.ok(historyText.includes("Origen · lotm/REQ-027 · cancel-plan"), "history should list command origin");
+    assert.ok(historyText.includes("Resultado · Rechazado · el estado cambió"), "history should list command result");
+=======
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.decision-option button')?.click()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 5; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[4]?.type, "answer-decision");
+    assert.equal(gateway.commands[4]?.requestId, "decision-1");
+    assert.equal(gateway.commands[4]?.option, "retry");
+    gateway.commandResponses.push({ status: 409, body: { code: "STALE_PRECONDITION", message: "precondition changed" } });
+    await fill('[aria-label="Escribe REQ-027 para confirmar la cancelación"]', "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('[aria-label=\"Escribe REQ-027 para confirmar la cancelación\"]').form.requestSubmit()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 6; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[5]?.type, "cancel-plan");
+    assert.equal(gateway.commands[5]?.confirmation?.typedReq, "REQ-027");
+    assert.ok(gateway.commands[5]?.confirmation?.challengeId?.length >= 16);
+    const historyText = await waitForText("el estado cambió");
+    assert.ok(historyText.includes("Origen · lotm/REQ-027 · cancel-plan"), "history should list command origin");
+    assert.ok(historyText.includes("Resultado · Rechazado · el estado cambió"), "history should list command result");
+    await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = [...document.querySelectorAll('.task-card')].find((item) => item.querySelector('strong')?.innerText.startsWith('T2 ·')); const form = card.querySelector('.recovery-form'); const select = form.querySelector('select[name="route"]'); select.value = 'route-codex-work'; select.dispatchEvent(new Event('change', { bubbles: true })); const note = form.querySelector('textarea[name="reason"]'); note.value = 'Keep the review step'; note.dispatchEvent(new Event('input', { bubbles: true })); form.requestSubmit(); return true; })()`, returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 7; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[6]?.type, "retry");
+    assert.equal(gateway.commands[6]?.route?.route_id, "route-codex-work");
+    assert.equal(gateway.commands[6]?.reason, "Keep the review step");
+    const editSubmitted = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = [...document.querySelectorAll('.task-card')].find((item) => item.querySelector('strong')?.innerText.startsWith('T2 ·')); const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('textarea[name="brief"]')); const textarea = form.querySelector('textarea[name="brief"]'); const input = form.querySelector('input[name="typedReq"]'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, 'Recover the task with a review'); textarea.dispatchEvent(new Event('input', { bubbles: true })); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'REQ-018'); input.dispatchEvent(new Event('input', { bubbles: true })); const valid = form.checkValidity(); if (valid) form.requestSubmit(); return { valid, invalid: [...form.elements].filter((element) => !element.validity.valid).map((element) => ({ name: element.name, value: element.value, message: element.validationMessage })) }; })()`, returnByValue: true });
+    assert.equal(editSubmitted.result?.value?.valid, true, `brief edit fields should pass browser validation: ${JSON.stringify(editSubmitted.result?.value?.invalid)}`);
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 8; attempt += 1) await delay(100);
+    assert.equal(gateway.challenges[2]?.target, "pictures/REQ-018");
+    assert.equal(gateway.commands[7]?.type, "edit-brief");
+    assert.equal(gateway.commands[7]?.value, "Recover the task with a review");
+    assert.equal(gateway.commands[7]?.confirmation?.typedReq, "REQ-018");
+>>>>>>> 0c3c9165791db2c8201f4598d850c891d915c1e6
+=======
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.decision-option button')?.disabled === false", returnByValue: true });
+      if (ready.result?.value) break;
+      await delay(100);
+    }
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.decision-option button')?.click()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 5; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[4]?.type, "answer-decision");
+    assert.equal(gateway.commands[4]?.requestId, "decision-1");
+    assert.equal(gateway.commands[4]?.option, "retry");
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.decision-option button')?.disabled === false", returnByValue: true });
+      if (ready.result?.value) break;
+      await delay(100);
+    }
+    gateway.commandResponses.push({ status: 409, body: { code: "STALE_PRECONDITION", message: "precondition changed" } });
+    await fill('[aria-label="Escribe REQ-027"]', "REQ-027");
+    let cancelReady;
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      cancelReady = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Cancelar plan')?.disabled === false", returnByValue: true });
+      if (cancelReady.result?.value) break;
+      await delay(100);
+    }
+    assert.equal(cancelReady.result?.value, true, "typing the exact REQ should enable plan cancellation");
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.querySelector('button')?.innerText === 'Cancelar plan')?.requestSubmit()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 6; attempt += 1) await delay(100);
+    const cancelPlanCommand = gateway.receivedCommands.find((command) => command.type === "cancel-plan");
+    assert.equal(cancelPlanCommand?.confirmation?.typedReq, "REQ-027");
+    assert.ok(cancelPlanCommand?.confirmation?.challengeId?.length >= 16);
+    const historyText = await waitForText("el estado cambió");
+    assert.ok(historyText.includes("lotm/REQ-027") && historyText.includes("cancel-plan") && historyText.includes("Origen · Web"), "history should list command origin and target");
+    assert.ok(historyText.includes("Resultado · Rechazado: el estado cambió"), "history should list command result");
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.recovery-form button')].some((button) => !button.disabled)", returnByValue: true });
+      if (ready.result?.value) break;
+      await delay(100);
+    }
+    await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = [...document.querySelectorAll('.task-card')].find((item) => item.querySelector('strong')?.innerText.startsWith('T2 ·')); const form = card.querySelector('.recovery-form'); const select = form.querySelector('select[name="route"]'); select.value = 'route-codex-work'; select.dispatchEvent(new Event('change', { bubbles: true })); const note = form.querySelector('textarea[name="reason"]'); note.value = 'Keep the review step'; note.dispatchEvent(new Event('input', { bubbles: true })); form.requestSubmit(); return true; })()`, returnByValue: true });
+    for (let attempt = 0; attempt < 40 && !gateway.commands.some((command) => command.type === "retry"); attempt += 1) await delay(100);
+    const retryCommand = gateway.commands.find((command) => command.type === "retry");
+    assert.equal(retryCommand?.route?.route_id, "route-codex-work");
+    assert.equal(retryCommand?.reason, "Keep the review step");
+    const editSubmitted = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = [...document.querySelectorAll('.task-card')].find((item) => item.querySelector('strong')?.innerText.startsWith('T2 ·')); const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('textarea[name="brief"]')); const textarea = form.querySelector('textarea[name="brief"]'); const input = form.querySelector('input[name="typedReq"]'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, 'Recover the task with a review'); textarea.dispatchEvent(new Event('input', { bubbles: true })); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'REQ-018'); input.dispatchEvent(new Event('input', { bubbles: true })); const valid = form.checkValidity(); if (valid) form.requestSubmit(); return { valid, invalid: [...form.elements].filter((element) => !element.validity.valid).map((element) => ({ name: element.name, value: element.value, message: element.validationMessage })) }; })()`, returnByValue: true });
+    assert.equal(editSubmitted.result?.value?.valid, true, `brief edit fields should pass browser validation: ${JSON.stringify(editSubmitted.result?.value?.invalid)}`);
+    for (let attempt = 0; attempt < 40 && !gateway.commands.some((command) => command.type === "edit-brief"); attempt += 1) await delay(100);
+    assert.equal(gateway.challenges[2]?.target, "pictures/REQ-018");
+    const editCommand = gateway.commands.find((command) => command.type === "edit-brief");
+    assert.equal(editCommand?.value, "Recover the task with a review");
+    assert.equal(editCommand?.confirmation?.typedReq, "REQ-018");
+>>>>>>> 413bda613d2f7acf3d37c6862f9e17c552b18427
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);
