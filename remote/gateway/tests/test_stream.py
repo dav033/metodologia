@@ -70,11 +70,14 @@ class SnapshotStreamTests(unittest.TestCase):
         self.runtime.poll_once()
         self.laptop.online = False
 
-        self.runtime.poll_once()
+        for _ in range(3):
+            self.runtime.poll_once()
         cached = self.runtime.stream.snapshot()
 
         self.assertEqual(cached["generatedAt"], "2026-10-20T12:00:00Z")
         self.assertTrue(cached["cachedAt"].endswith("Z"))
+        self.assertFalse(cached["laptop"]["online"])
+        self.assertTrue(cached["laptop"]["checkedAt"].endswith("Z"))
         self.assertEqual(self.laptop.snapshot_calls, 1)
 
     def test_multiple_clients_share_the_single_runtime_poll(self) -> None:

@@ -51,6 +51,7 @@ class GatewayRuntime:
             transition = self.liveness.record_failure()
             if transition and transition.current is LaptopStatus.OFFLINE:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
+            self._update_laptop_status()
         else:
             self.liveness.record_success()
             self._refresh_active_run_cache()
@@ -58,6 +59,10 @@ class GatewayRuntime:
         if self.liveness.status is LaptopStatus.OFFLINE:
             self._notify_long_offline_with_active_run()
         self.outbox.deliver_due(self.sender)
+
+    def _update_laptop_status(self) -> None:
+        checked_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        self.stream.update_laptop_status(self.liveness.status is LaptopStatus.ONLINE, checked_at)
 
     def _notify_long_offline_with_active_run(self) -> None:
         offline_since = self.liveness.offline_since
@@ -87,6 +92,7 @@ class GatewayRuntime:
             for run in runs
         )
         self.stream.update_snapshot(snapshot, datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+        self._update_laptop_status()
         self.has_cached_active_run = has_active_run
         self.outbox.set_state_value("laptop_has_cached_active_run", int(has_active_run))
 

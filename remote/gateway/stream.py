@@ -24,6 +24,12 @@ class SnapshotEventStream:
             self._snapshot = copy.deepcopy(snapshot)
             self._snapshot_fetched_at = fetched_at
 
+    def update_laptop_status(self, online: bool, checked_at: str) -> None:
+        with self._condition:
+            if self._snapshot is None:
+                return
+            self._snapshot["laptop"] = {"online": online, "checkedAt": checked_at}
+
     def snapshot(self) -> dict[str, Any] | None:
         with self._condition:
             if self._snapshot is None:
