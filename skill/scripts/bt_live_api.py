@@ -283,6 +283,12 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
                   "attempts": t["attempts"], "attempt": _attempt(t.get("attempt")),
                   "history": [_attempt(a) for a in t.get("history") or []]}
                  for m in status["milestones"] for t in m["tasks"]]
+        import bt_config
+        max_attempts = bt_config.get("scheduler.max_attempts", 3)
+        if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts < 1:
+            max_attempts = 3
+        for task in tasks:
+            task["max_attempts"] = max_attempts
         out.append({"run": f'{project}/{status["req_id"]}', "project": project, "req_id": status["req_id"],
                     "title": status["title"], "status": status["run"].get("status"), "active": status["run"].get("active"),
                     "updated_at": status["run"].get("updated_at"), "summary": status["summary"], "tasks": tasks})

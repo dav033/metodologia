@@ -5,6 +5,13 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+from typing import Any, Protocol
+=======
+import re
+from typing import Any, Protocol
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
@@ -18,7 +25,14 @@ from auth import (
     cookie_values,
 )
 from security import RateLimiter, origin_matches
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
 from typing import Any
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+from stream import SnapshotEventStream, encode_sse
+=======
+from stream import SnapshotEventStream, encode_sse
+from upstream import UpstreamError
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
 
 logger = logging.getLogger(__name__)
 RATE_WINDOW_SECONDS = 60
@@ -26,7 +40,31 @@ LOGIN_FAILURE_LIMIT = 5
 COMMAND_REQUEST_LIMIT = 30
 
 
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
 def make_handler(service: OAuthService, runtime: Any | None = None) -> type[BaseHTTPRequestHandler]:
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+class StreamRuntime(Protocol):
+    stream: SnapshotEventStream
+
+    def submit_command(self, value: object) -> tuple[int, dict[str, Any]]: ...
+
+    def issue_challenge(self, target: str, typed_req: str) -> dict[str, Any]: ...
+
+
+def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
+=======
+class StreamRuntime(Protocol):
+    stream: SnapshotEventStream
+
+    def submit_command(self, value: object) -> tuple[int, dict[str, Any]]: ...
+
+    def issue_challenge(self, target: str, typed_req: str) -> dict[str, Any]: ...
+
+    def read_model(self, path: str) -> dict[str, Any]: ...
+
+
+def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
     rate_limiter = RateLimiter()
 
     class GatewayHandler(BaseHTTPRequestHandler):
@@ -84,7 +122,16 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                     return
                 self._json(200, {"login": login})
                 return
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
             if route.path == "/api/remote/v1/snapshot":
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+            if route.path in {"/api/remote/v1/snapshot", "/api/remote/v1/events"} and runtime is not None:
+=======
+            read_routes = {"/api/remote/v1/snapshot", "/api/remote/v1/events", "/api/remote/v1/commands",
+                           "/api/remote/v1/quotas", "/api/remote/v1/routes"}
+            is_review = re.fullmatch(r"/api/remote/v1/attempts/[A-Za-z0-9._:-]{1,120}/review", route.path) is not None
+            if (route.path in read_routes or is_review) and runtime is not None:
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
                 if not token or service.store.get_session(token) is None:
                     self._json(401, {"error": "unauthorized"})
@@ -92,11 +139,25 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                 if runtime is None:
                     self._json(404, {"error": "not found"})
                     return
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
                 snapshot = runtime.web_snapshot()
                 if snapshot is None:
                     self._json(503, {"error": "snapshot unavailable"})
                     return
                 self._json(200, snapshot)
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+                self._stream_events()
+=======
+                if route.path == "/api/remote/v1/events":
+                    self._stream_events()
+                    return
+                try:
+                    model = runtime.read_model(route.path + ("?" + route.query if route.query else ""))
+                except UpstreamError:
+                    self._json(503, {"error": "read model unavailable"})
+                    return
+                self._json(200, model)
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
                 return
             self._json(404, {"error": "not found"})
 

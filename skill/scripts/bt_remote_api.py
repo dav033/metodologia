@@ -54,6 +54,8 @@ def route_get(handler) -> None:
     path = _path(handler)
     if path == f"{PREFIX}/snapshot":
         return _snapshot(handler)
+    if path in {f"{PREFIX}/commands", f"{PREFIX}/quotas", f"{PREFIX}/routes"}:
+        return _read_model(handler, path)
     review_match = re.fullmatch(re.escape(f"{PREFIX}/attempts/") + r"([^/]+)/review", path)
     if review_match:
         attempt_id = review_match.group(1)
@@ -108,11 +110,13 @@ def _snapshot(handler) -> None:
     """Compact run read model, with live task signals taken from the panel's shared now frame."""
     import bt_core
     import bt_live_api as live
+    import bt_plans_api as plans_api
 
     root = bt_core.ROOT
     try:
         summaries = live.run_summaries(root, "global")
         now = live.now_frame_data(root)
+        plans = plans_api.plans_payload(root)
     except Exception:
         return _problem(handler, 503, "SNAPSHOT_UNAVAILABLE", "La vista remota aún no está disponible.")
 
@@ -136,14 +140,86 @@ def _snapshot(handler) -> None:
                           "reviewAttempt": live._attempt(review),
                           "history": [live._attempt(a) for a in task["history"]]})
         runs.append({"id": run["run"], "project": run["project"], "reqId": run["req_id"],
+                     "req": run["req_id"], "state": run["status"],
                      "title": run["title"], "status": run["status"], "active": run["active"],
                      "activeTask": ({"id": active["task"], "title": active["task_title"],
                                      "state": active["state"], "attempt": live._attempt(active["attempt"])}
                                     if active else None),
                      "lastActivityAt": last_activity, "tasks": tasks})
+    plan_rows = []
+    rounds = []
+    decisions = []
+    for plan in plans:
+        project, req = plan["project"], plan["req_id"]
+        rdir = plans_api.req_dir(root, project, req)
+        plan_rows.append({"id": f"{project}/{req}", "project": project, "req": req,
+                          "state": plan.get("plan_status") or plan.get("run_status") or "unknown",
+                          "updatedAt": plan.get("updated_at"), "tasks": []})
+        import bt_rounds
+        for number in plans_api.open_rounds(rdir):
+            round_path = rdir / "rounds" / f"round-{number:02d}.json"
+            round_data = bt_rounds.load(round_path)
+            rounds.append({"project": project, "req": req, "round": number, "id": f"{project}/{req}:{number}",
+                           "title": round_data.get("title"), "intro": round_data.get("intro"),
+                           "coverage": round_data.get("coverage"), "status": "open",
+                           "questions": round_data.get("questions", [])})
+        decisions.extend({**request, "project": project, "req": req}
+                         for request in plans_api.open_decisions(rdir))
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
     return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs}, 200)
+                                "runs": runs, "plans": plan_rows, "rounds": rounds,
+                                "decisionRequests": decisions}, 200)
+
+
+def _read_model(handler, path: str) -> None:
+    """Serve authenticated, read-only command, quota and eligible-route models."""
+    import bt_plans_api
+
+    query = _query(handler)
+    try:
+        if path == f"{PREFIX}/commands":
+            import bt_remote_commands as commands
+
+            rows = commands.Ledger().rows()
+            limit = min(max(int(query.get("limit", "100")), 1), 200)
+            after = query.get("after", "")
+            if after:
+                rows = [row for row in rows if row.get("idempotency_key", "") > after]
+            values = []
+            for row in rows[-limit:]:
+                code = row.get("code")
+                result = "Rechazado: el estado cambió" if code == "STALE_PRECONDITION" else (
+                    row.get("outcome") or code or row["status"])
+                values.append({"id": row["idempotency_key"], "idempotency_key": row["idempotency_key"],
+                               "command": row["command"], "target": row["target"], "origin": row["origin"],
+                               "status": row["status"], "result": result,
+                               "received_at": row["received_at"], "submittedAt": row["received_at"]})
+            return _send_json(handler, {"commands": values, "nextCursor": values[-1]["id"] if values else after,
+                                        "hasMore": len(rows) > limit}, 200)
+        if path == f"{PREFIX}/quotas":
+            import bt_subscriptions
+
+            checked_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
+            return _send_json(handler, {"accounts": bt_subscriptions.summary(), "checkedAt": checked_at}, 200)
+        if path == f"{PREFIX}/routes":
+            import bt_core
+            import bt_route_pins
+
+            target, task_id = query.get("target", ""), query.get("task", "")
+            project, separator, req = target.partition("/")
+            if (not separator or not project or not re.fullmatch(r"REQ-\d+", req)
+                    or not task_id or "/" in req or len(task_id) > 120):
+                return _problem(handler, 400, "INVALID_ROUTE_QUERY", "Se requieren target y task válidos.")
+            rdir = bt_plans_api.req_dir(bt_core.ROOT, project, req)
+            candidates = bt_route_pins.available(project, rdir, task_id, {})
+            routes = [{"routeId": row.route_id, "provider": row.provider, "model": row.model,
+                       "profile": row.profile, "available": True}
+                      for row in candidates]
+            return _send_json(handler, {"routes": routes}, 200)
+    except bt_plans_api.PlanError:
+        return _problem(handler, 404, "TARGET_NOT_FOUND", "No se encontró el objetivo solicitado.")
+    except (OSError, ValueError, KeyError):
+        return _problem(handler, 503, "READ_MODEL_UNAVAILABLE", "La lectura remota aún no está disponible.")
 
 
 def _read_review_file(path, limit: int = _REVIEW_FILE_MAX) -> bytes | None:

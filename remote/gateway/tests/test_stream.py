@@ -1,6 +1,26 @@
 import unittest
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+from pathlib import Path
+=======
+from pathlib import Path
+import http.client
+import json
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
 
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
 from stream import StreamHub, format_sse, parse_last_event_id
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+from app import create_runtime
+from config import GatewayConfig
+from stream import SnapshotEventStream
+=======
+from app import create_runtime
+from auth import OAuthConfig, SessionStore
+from config import GatewayConfig
+from server import create_server
+from stream import SnapshotEventStream
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
 from upstream import UpstreamError
 
 
@@ -9,8 +29,23 @@ class FakeLaptop:
         self.up = True
         self.snapshot_calls = 0
         self.event_calls = 0
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
         self.pending = []
         self.snap = {"runs": []}
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+
+    def health(self):
+        if not self.online:
+            raise UpstreamError("offline")
+        return {"status": "ok"}
+=======
+        self.read_calls = []
+
+    def health(self):
+        if not self.online:
+            raise UpstreamError("offline")
+        return {"status": "ok"}
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
 
     def snapshot(self):
         self.snapshot_calls += 1
@@ -24,6 +59,10 @@ class FakeLaptop:
             raise UpstreamError("offline")
         out, self.pending = self.pending, []
         return {"events": out, "nextCursor": f"c{self.event_calls}"}
+
+    def read_model(self, path):
+        self.read_calls.append(path)
+        return {"source": path}
 
 
 def events_of(items):
@@ -101,6 +140,32 @@ class StreamTests(unittest.TestCase):
         self.assertIsNone(parse_last_event_id("abc"))
         self.assertIsNone(parse_last_event_id(None))
         self.assertEqual(parse_last_event_id(" 7 "), 7)
+
+    def test_authenticated_http_entrypoint_relays_required_read_models(self) -> None:
+        database = Path(self.temp_dir.name) / "auth.sqlite"
+        oauth = OAuthConfig("client", "client-secret", "test-session-secret-with-more-than-32-bytes",
+                            "https://flow.example.test", str(database))
+        session = SessionStore(str(database), oauth.session_secret).create_session("owner")
+        server = create_server(oauth, ("127.0.0.1", 0), runtime=self.runtime)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port)
+        paths = ["/api/remote/v1/attempts/a1/review", "/api/remote/v1/quotas",
+                 "/api/remote/v1/commands?after=&limit=100",
+                 "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1"]
+        try:
+            for path in paths:
+                connection.request("GET", path, headers={"Cookie": f"flow_session={session}"})
+                response = connection.getresponse()
+                payload = json.loads(response.read())
+                self.assertEqual(response.status, 200)
+                self.assertEqual(payload["source"], path)
+            self.assertEqual(self.laptop.read_calls, paths)
+        finally:
+            connection.close()
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
 
 
 if __name__ == "__main__":

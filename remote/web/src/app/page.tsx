@@ -197,8 +197,16 @@ export default function HomePage() {
       if (!text(id) || !text(type) || !text(submittedAt) || !text(targetLabel) || !text(item.origin) || !text(result)) return [];
       return [{ id, type, target: targetLabel, submittedAt, origin: item.origin, result }];
     });
-    setCommandHistory((current) => [...rows, ...current.filter((item) => !rows.some((row) => row.id === item.id))]
-      .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)).slice(0, 100));
+    setCommandHistory((current) => {
+      const currentById = new Map(current.map((item) => [item.id, item]));
+      const merged = rows.map((row) => {
+        const local = currentById.get(row.id);
+        const genericRejection = row.result === "Rechazado" || row.result === "REJECTED";
+        return genericRejection && local?.result.startsWith("Rechazado:") ? { ...row, result: local.result } : row;
+      });
+      return [...merged, ...current.filter((item) => !rows.some((row) => row.id === item.id))]
+        .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)).slice(0, 100);
+    });
     setHistoryError("");
   }, []);
 
@@ -238,7 +246,33 @@ export default function HomePage() {
     };
     timer = window.setTimeout(() => void poll(), 5000);
     return () => { stopped = true; window.clearTimeout(timer); };
+<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
   }, [session?.authenticated, refreshSnapshot]);
+||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
+<<<<<<< 8a050424a13d0335b6f496bee2e6edb1152be935
+  }, [session?.authenticated, refreshSnapshot]);
+||||||| ee57e7261a126090985dcd98194ef174bf779829
+  }, [session?.authenticated, refreshSnapshot]);
+||||||| b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
+    const timer = window.setInterval(() => {
+      void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [session?.authenticated, refreshSnapshot]);
+=======
+    const timer = window.setInterval(() => {
+      void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+      void refreshCommandHistory().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el historial."));
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [session?.authenticated, refreshSnapshot, refreshCommandHistory]);
+>>>>>>> 8670ff1c3a7631e9ef0b97767d36220f86a7f5ec
+=======
+  }, [session?.authenticated, refreshSnapshot, refreshCommandHistory]);
+>>>>>>> 6ba8783aa2704a6c741fb1f93341154971cafc27
+=======
+  }, [session?.authenticated, refreshSnapshot, refreshCommandHistory]);
+>>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
 
   const snapshotCursor = useRef(snapshot?.cursor);
   snapshotCursor.current = snapshot?.cursor;

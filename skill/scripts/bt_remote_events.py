@@ -66,6 +66,15 @@ def _task_target(project: str, req: str, task: str | None = None, attempt: str |
             **({"taskId": task} if task else {}), **({"attemptId": attempt} if attempt else {})}
 
 
+def _retry_budget_exhausted(task: dict[str, Any], run: dict[str, Any], attempt: dict[str, Any] | None = None) -> bool:
+    if task.get("retry_exhausted") is True or (attempt or {}).get("retry_exhausted") is True:
+        return True
+    used = task.get("attempts_used", task.get("attempts"))
+    maximum = task.get("max_attempts", run.get("max_attempts"))
+    return (isinstance(used, int) and not isinstance(used, bool) and
+            isinstance(maximum, int) and not isinstance(maximum, bool) and maximum > 0 and used >= maximum)
+
+
 def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[str, Any]]:
     """Derive stable events from current run state and explicit notification fixtures."""
     out: list[dict[str, Any]] = []
@@ -80,7 +89,8 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
                 occurred_at = attempt.get("ended_at") or attempt.get("last_activity_at") or run.get("updated_at") or ""
                 data = {"title": task.get("title"), "failure": attempt.get("failure"),
                         "verdict": attempt.get("verdict")}
-                if attempt.get("state") in {"rejected", "failed"} or attempt.get("failure"):
+                if (attempt.get("state") in {"rejected", "failed"} or attempt.get("failure")) \
+                        and _retry_budget_exhausted(task, run, attempt):
                     out.append(_event("attempt.failed", identity, occurred_at, target, data))
                 elif attempt.get("state") == "blocked":
                     out.append(_event("attempt.blocked", attempt["id"], occurred_at, target, data))
@@ -176,6 +186,12 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
                 ("verdict", "rejected"): "attempt.failed"}.get((row.get("kind"), data.get("state")))
     if kind not in NOTIFICATION_KINDS:
         return None
+    if kind == "attempt.failed":
+        used = data.get("attempts_used", row.get("attempts_used"))
+        maximum = data.get("max_attempts", row.get("max_attempts"))
+        if not (isinstance(used, int) and not isinstance(used, bool) and
+                isinstance(maximum, int) and not isinstance(maximum, bool) and maximum > 0 and used >= maximum):
+            return None
     target = _run_target(str(row.get("project", "unknown")), str(row.get("req", "REQ-000")))
     if row.get("run"):
         project, _, req = str(row["run"]).partition("/")
