@@ -33,7 +33,35 @@ class LaptopClient:
         try:
             with urlopen(request, timeout=self._timeout) as response:
                 payload = json.loads(response.read().decode("utf-8"))
+<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
         except (HTTPError, URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError) as exc:
+||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
+        except HTTPError as exc:
+            try:
+                error_payload = json.loads(exc.read().decode("utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+            if not isinstance(error_payload, dict):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+            raise UpstreamResponseError(exc.code, error_payload) from exc
+        except (URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError) as exc:
+=======
+        except HTTPError as exc:
+            try:
+                error_body = exc.read()
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+            finally:
+                exc.close()
+            try:
+                error_payload = json.loads(error_body.decode("utf-8"))
+            except (UnicodeError, json.JSONDecodeError):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+            if not isinstance(error_payload, dict):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+            raise UpstreamResponseError(exc.code, error_payload) from exc
+        except (URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError) as exc:
+>>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
             raise UpstreamError("laptop API request failed") from exc
         if not isinstance(payload, dict):
             raise UpstreamError("laptop API returned a non-object response")

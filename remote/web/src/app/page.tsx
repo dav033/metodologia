@@ -403,7 +403,13 @@ export default function HomePage() {
     return <article className="task-card" key={`${run.req}-${task.id}`}>
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
+<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
     {task.state === "failed" && reviewAttemptId && <FailureReviewPanel attemptId={reviewAttemptId} target={`${run.project}/${run.req}`} />}
+||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
+    {task.state === "failed" && reviewAttemptId && <FailureReviewPanel attemptId={reviewAttemptId} />}
+=======
+    {(task.state === "failed" || task.state === "rejected") && reviewAttemptId && <FailureReviewPanel attemptId={reviewAttemptId} />}
+>>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     {canRecover && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
       onRetry={(event, route) => retryTask(event, task, run, route)} />}
@@ -414,7 +420,7 @@ export default function HomePage() {
       <button disabled={!!working}>Crear revisión y actualizar tarea</button>
     </form>}
     <div className="actions">
-      {(task.state === "failed" || task.state === "rejected" || task.activeAttempt?.state === "failed" || reviewAttemptId) && <Link className="review-back feed-route" href={`/review?project=${encodeURIComponent(run.project)}&req=${encodeURIComponent(run.req)}&taskId=${encodeURIComponent(task.id)}${reviewAttemptId ? `#attempt=${encodeURIComponent(reviewAttemptId)}` : ""}`}>Ver intento fallido</Link>}
+      {(task.state === "failed" || task.state === "rejected" || task.activeAttempt?.state === "failed" || reviewAttemptId) && <Link className="review-back feed-route" href={`/?project=${encodeURIComponent(run.project)}&req=${encodeURIComponent(run.req)}&taskId=${encodeURIComponent(task.id)}${reviewAttemptId ? `#attempt-${encodeURIComponent(reviewAttemptId)}` : ""}`}>Ver intento fallido</Link>}
       {task.state === "blocked" || task.state === "failed" || task.state === "rejected" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
       {task.activeAttempt && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, taskId: task.id, attemptId: task.activeAttempt.id }, task.activeAttempt.state ?? task.state, task.revision, `${run.req}-${task.id}-cancel`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
     </div>

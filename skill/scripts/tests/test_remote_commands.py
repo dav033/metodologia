@@ -388,12 +388,39 @@ class EntryPointTests(LedgerBase):
         round_file.parent.mkdir(parents=True)
         round_file.write_text(json.dumps({"round": 2, "status": "open", "questions": [{"id": "q1"}],
                                           "answers": {}}), encoding="utf-8")
-        command = req(command="answer-round", params={"round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+        command = req(command="answer-round", params={"round": 2, "answers": {"q1": {"text": "Keep scope"}}},
+                       precondition={"state": "open"})
         with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)):
-            status, body = self.post(command)
+            status, body = self.post_real(command)
         saved = bt_rounds.load(round_file)
-        self.assertEqual((status, body["status"], saved["status"], saved["answers"], saved["answered_via"]),
-                         (200, "OK", "answered", {"q1": {"text": "Keep scope"}}, "remote"))
+        self.assertEqual((status, body["status"], saved["status"], saved["answers"]),
+                         (200, "OK", "answered", {"q1": {"text": "Keep scope"}}))
+
+    def test_open_round_precondition_uses_round_file_when_run_is_waiting(self):
+        import bt_plans_api
+        import bt_rounds
+
+        rdir = Path(self.temp.name) / "demo" / "requirements" / "REQ-001-demo"
+        round_file = rdir / "rounds" / "round-02.json"
+        round_file.parent.mkdir(parents=True)
+        round_file.write_text(json.dumps({"round": 2, "status": "open", "questions": [{"id": "q1"}],
+                                          "answers": {}}), encoding="utf-8")
+        body = req(command="answer-round", params={"round": 2, "answers": {"q1": {"text": "Keep scope"}}},
+                   precondition={"state": "open"})
+        handler = FakeHandler(json.dumps(body).encode())
+        model = {"run": {"authority": "scheduler", "status": "waiting", "updated_at": "run-time",
+                         "plan_ref": {"revision": 3}},
+                 "plan": {"status": "waiting", "revision": 3}}
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)), \
+                patch.object(bt_plans_api, "status_of", return_value=model):
+            bt_remote_api.route_post(handler)
+
+        status, response = handler.sent
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        saved = bt_rounds.load(round_file)
+        self.assertEqual((saved["status"], saved["answers"]),
+                         ("answered", {"q1": {"text": "Keep scope"}}))
 
     def test_route_post_cancels_attempt_through_real_scheduler_operations(self):
         bt_core, rdir, harness = self.real_run()
@@ -434,6 +461,33 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(harness.state("T1"), "ready")
         saved = json.loads(decisions.answers_path(rdir).read_text(encoding="utf-8").splitlines()[0])
         self.assertEqual((saved["request"], saved["option"], saved["by"]), (request["id"], "retry", "remote"))
+
+    def test_open_decision_precondition_uses_matching_request_while_run_is_waiting(self):
+        import bt_scheduler_decisions as decisions
+
+        rdir = Path(self.temp.name) / "demo" / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True)
+        body = req(command="answer-decision", params={"request_id": "T2:1", "option": "retry"},
+                   precondition={"state": "open", "revision": 8})
+        handler = FakeHandler(json.dumps(body).encode())
+        open_request = {"id": "T2:1", "task": "T2", "revision": 8}
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)), \
+                patch.object(decisions, "open_requests", return_value=[open_request]), \
+                patch.object(decisions, "answer", return_value=["T2: reopened"]) as answer:
+            bt_remote_api.route_post(handler)
+
+        status, response = handler.sent
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        answer.assert_called_once()
+
+    def test_route_post_refuses_unknown_command_before_dispatch(self):
+        command = req(command="erase-run")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(rc, "dispatch_run_command") as dispatch:
+            status, body = self.post_real(command)
+        self.assertEqual((status, body["code"]), (400, "INVALID_COMMAND"))
+        dispatch.assert_not_called()
 
     def test_route_post_refuses_unknown_command(self):
         status, response = self.post(req(command="delete-everything"))
