@@ -95,6 +95,27 @@ class RemoteRecoveryTests(unittest.TestCase):
         scheduler.write_projection(rdir, harness.core)
         return bt_core, rdir, harness
 
+    def real_approved_edit_run(self):
+        import bt_core
+        import bt_planner
+        import bt_scheduler_run
+        import bt_scheduler_adapter as adapter
+        from test_plan_integration import PLAN_MD, classified
+
+        project_dir = self.root / "demo"
+        rdir = project_dir / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True)
+        (rdir / "SPEC.md").write_text("# Spec\n## Requirements\n- R1. Demo requirement\n", encoding="utf-8")
+        (rdir / "PLAN.md").write_text(PLAN_MD.format(status="approved"), encoding="utf-8")
+        document = classified(rdir)
+        plan_path = rdir / "PLAN.json"
+        plan_path.write_text(bt_planner.dumps(document), encoding="utf-8")
+        bt_planner.approve_freeze(rdir, "REQ-001", bt_planner.APPROVED_STATES)
+        scheduler = adapter.open_scheduler(rdir, config=scheduler_core.Config(max_parallel_tasks=1))
+        adapter.write_projection(rdir, scheduler)
+        bt_scheduler_run._runtime_binding(rdir, resume=False)
+        return bt_core, rdir, document
+
     def post_real(self, body, bt_core):
         class Handler:
             path = f"{api.PREFIX}/commands"
@@ -115,6 +136,81 @@ class RemoteRecoveryTests(unittest.TestCase):
                 patch.object(ops, "resume", return_value="watchdog started"):
             api.route_post(handler)
         return handler.sent
+
+    def edit_body(self, bt_core, params, key):
+        target = "demo/REQ-001"
+        ledger = commands.Ledger(self.root / ".state" / "remote" / "commands.db")
+        challenge = ledger.issue_challenge(target, "REQ-001")
+        with patch.object(bt_core, "ROOT", self.root):
+            precondition = commands.target_state(target, "edit-brief", params)
+        return {"idempotency_key": key, "command": "edit-brief", "target": target, "origin": "web",
+                "params": params, "confirmation": {"challengeId": challenge["challengeId"],
+                                                       "typedReq": "REQ-001"},
+                "precondition": precondition}
+
+    def test_http_edit_accepts_phone_objective_and_criteria_aliases_and_rebases_real_run(self):
+        import bt_planner
+
+        bt_core, rdir, _document = self.real_approved_edit_run()
+        objective = self.edit_body(bt_core, {"task": "T1", "field": "objective",
+                                             "value": "Handle expired sessions safely"}, "edit-objective-0001")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(bt_core, "ROOT", self.root), patch.object(ops, "stop_owner", return_value=0), \
+                patch.object(ops, "resume", return_value="watchdog started"):
+            status, response = self.post_real(objective, bt_core)
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        self.assertEqual(response["outcome"]["revision"], 2)
+        self.assertEqual(ops.bound_plan(rdir).revision, 2)
+        self.assertEqual(bt_planner.latest(rdir)["source"], "remote-owner")
+        saved = json.loads((rdir / "plan-revisions" / "PLAN.r2.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["tasks"][0]["objective"], "Handle expired sessions safely")
+
+        criteria = self.edit_body(bt_core, {"task": "T1", "field": "acceptance_criteria",
+                                            "value": ["Expired sessions are rejected"]}, "edit-criteria-0001")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(bt_core, "ROOT", self.root), patch.object(ops, "stop_owner", return_value=0), \
+                patch.object(ops, "resume", return_value="watchdog started"):
+            status, response = self.post_real(criteria, bt_core)
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        self.assertEqual(response["outcome"]["revision"], 3)
+        self.assertEqual(ops.bound_plan(rdir).revision, 3)
+        saved = json.loads((rdir / "plan-revisions" / "PLAN.r3.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["tasks"][0]["acceptance_criteria"], ["Expired sessions are rejected"])
+
+    def test_http_edit_rejects_unapproved_drift_and_review_without_publishing_or_mutating(self):
+        import bt_planner
+
+        bt_core, rdir, document = self.real_approved_edit_run()
+        path = rdir / "PLAN.json"
+        drifted = json.loads(path.read_text(encoding="utf-8"))
+        drifted["tasks"][1]["objective"] = "Unapproved change to another task"
+        path.write_text(json.dumps(drifted), encoding="utf-8")
+        drifted_bytes = path.read_bytes()
+        body = self.edit_body(bt_core, {"task": "T1", "field": "brief", "value": "New objective"},
+                              "edit-drift-0001")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(bt_core, "ROOT", self.root), patch.object(ops, "stop_owner", return_value=0), \
+                patch.object(ops, "resume", return_value="watchdog started"):
+            status, response = self.post_real(body, bt_core)
+        self.assertEqual((status, response["code"]), (500, "EFFECT_FAILED"), response)
+        self.assertIn("PLAN_DRIFT", response["outcome"]["error"])
+        self.assertEqual(path.read_bytes(), drifted_bytes)
+        self.assertEqual(bt_planner.latest(rdir)["revision"], 1)
+
+        path.write_text(bt_planner.dumps(document), encoding="utf-8")
+        (rdir / "PLAN.md").write_text((rdir / "PLAN.md").read_text(encoding="utf-8").replace(
+            "status: approved", "status: review"), encoding="utf-8")
+        before = path.read_bytes()
+        body = self.edit_body(bt_core, {"task": "T1", "field": "brief", "value": "New objective"},
+                              "edit-review-0001")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(bt_core, "ROOT", self.root), patch.object(ops, "stop_owner", return_value=0), \
+                patch.object(ops, "resume", return_value="watchdog started"):
+            status, response = self.post_real(body, bt_core)
+        self.assertEqual((status, response["code"]), (500, "EFFECT_FAILED"), response)
+        self.assertIn("PLAN_NOT_APPROVED", response["outcome"]["error"])
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(bt_planner.latest(rdir)["revision"], 1)
 
     def test_http_retry_reopens_real_blocked_task_and_records_the_pin(self):
         bt_core, rdir, harness = self.real_blocked_run()
