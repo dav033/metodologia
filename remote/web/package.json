@@ -1,0 +1,7 @@
+{
+  "name": "flow-remote-web",
+  "private": true,
+  "scripts": {
+    "verify": "node --test tests/*.test.mjs"
+  }
+}
