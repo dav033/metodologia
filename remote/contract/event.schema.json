@@ -9,8 +9,8 @@
     "id": { "type": "string", "minLength": 1, "maxLength": 160 },
     "cursor": { "type": "string", "minLength": 1, "maxLength": 256 },
     "type": { "enum": ["attempt.failed", "attempt.blocked", "run.finished", "round.waiting", "plan.waiting", "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated"] },
-    "occurredAt": { "type": "string", "format": "date-time" },
-    "target": { "anyOf": [{ "$ref": "command.schema.json#/$defs/target" }, { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "system" } }, "additionalProperties": false }] },
+    "occurredAt": { "type": "string", "format": "date-time", "description": "RFC 3339 timestamp normalized to UTC. Legacy naive laptop timestamps are interpreted in the laptop's local timezone before conversion." },
+    "target": { "$ref": "command.schema.json#/$defs/target" },
     "data": { "type": "object" },
     "dedupeKey": { "type": "string", "minLength": 1, "maxLength": 256 }
   },

@@ -403,7 +403,7 @@ export default function HomePage() {
     return <article className="task-card" key={`${run.req}-${task.id}`}>
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
-    {task.state === "failed" && reviewAttemptId && <FailureReviewPanel attemptId={reviewAttemptId} target={`${run.project}/${run.req}`} />}
+    {task.state === "failed" && reviewAttemptId && <FailureReviewPanel attemptId={reviewAttemptId} />}
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     {canRecover && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
       onRetry={(event, route) => retryTask(event, task, run, route)} />}

@@ -44,13 +44,13 @@ function parseFailureReview(value: unknown): FailureReview {
   };
 }
 
-export function FailureReviewPanel({ attemptId, target }: { attemptId: string; target: string }) {
+export function FailureReviewPanel({ attemptId }: { attemptId: string }) {
   const [review, setReview] = useState<FailureReview | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
-    void fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review?target=${encodeURIComponent(target)}`, { cache: "no-store" })
+    void fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review`, { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("No se pudo cargar la revisión del intento.");
         return parseFailureReview(await response.json() as unknown);
@@ -60,7 +60,7 @@ export function FailureReviewPanel({ attemptId, target }: { attemptId: string; t
         if (active) setError(cause instanceof Error ? cause.message : "No se pudo cargar la revisión del intento.");
       });
     return () => { active = false; };
-  }, [attemptId, target]);
+  }, [attemptId]);
 
   useEffect(() => {
     const target = `#attempt-${encodeURIComponent(attemptId)}`;

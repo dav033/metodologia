@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import http.client
 import io
 import json
 import os
@@ -10,6 +11,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
@@ -204,6 +206,70 @@ class EntryPointTests(LedgerBase):
             bt_remote_api.route_post(h)
         return h.sent
 
+    def post_http(self, port, path, body, key=KEY):
+        payload = json.dumps(body).encode() if not isinstance(body, bytes) else body
+        connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
+        connection.request("POST", path, body=payload,
+                           headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+        response = connection.getresponse()
+        result = response.status, json.loads(response.read())
+        connection.close()
+        return result
+
+    def test_native_http_challenge_issues_and_approves_once(self):
+        import bt_core
+        import bt_plans_api
+        import bt_server
+
+        calls = []
+        (Path(self.temp.name) / "demo" / "requirements" / "REQ-001-demo").mkdir(parents=True)
+
+        def approve_once(root, project, req_id, expected, by):
+            calls.append((project, req_id, expected, by))
+            return "launched once"
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), bt_server.RemoteHandler)
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+
+        challenge_path = "/api/remote/v1/challenges"
+        command_path = "/api/remote/v1/commands"
+        challenge_request = {"target": "demo/REQ-001", "typedReq": "REQ-001"}
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(bt_core, "ROOT", Path(self.temp.name)), \
+                patch.object(bt_remote_api, "HANDLERS", rc.dispatch_handlers()), \
+                patch.object(bt_plans_api, "run_plan", approve_once), \
+                patch.object(bt_remote_api, "_target_state", lambda target: {"state": "approved", "revision": 1}):
+            status, unauthorized = self.post_http(server.server_address[1], challenge_path, challenge_request,
+                                                  key="wrong-key")
+            self.assertEqual((status, unauthorized["code"]), (401, "UNAUTHORIZED"))
+
+            status, invalid = self.post_http(server.server_address[1], challenge_path,
+                                             {**challenge_request, "extra": True})
+            self.assertEqual((status, invalid["code"]), (400, "INVALID_CHALLENGE"))
+
+            command = req(command="approve", precondition={"state": "approved", "revision": 1},
+                          confirmation={"challengeId": "missing", "typedReq": "REQ-001"})
+            status, refused = self.post_http(server.server_address[1], command_path, command)
+            self.assertEqual((status, refused["code"]), (400, "CONFIRMATION_REQUIRED"))
+
+            status, challenge = self.post_http(server.server_address[1], challenge_path, challenge_request)
+            self.assertEqual(status, 201, challenge)
+            self.assertEqual((challenge["target"], challenge["expiresIn"]), ("demo/REQ-001", 120))
+            command["confirmation"]["challengeId"] = challenge["challengeId"]
+            first = self.post_http(server.server_address[1], command_path, command)
+            replay = self.post_http(server.server_address[1], command_path, command)
+            reused = self.post_http(server.server_address[1], command_path,
+                                    {**command, "idempotency_key": "key-00000002"})
+
+        self.assertEqual((first[0], first[1]["status"]), (200, "OK"), first)
+        self.assertEqual((replay[0], replay[1]["replayed"]), (200, True), replay)
+        self.assertEqual((reused[0], reused[1]["code"]), (400, "CONFIRMATION_REQUIRED"), reused)
+        self.assertEqual(calls, [("demo", "REQ-001", "approve", "remote")])
+        self.assertEqual(len(self.route_ledger().rows()), 1)
+
     def test_route_post_stores_once_and_replays(self):
         a, b = self.post(req()), self.post(req())
         self.assertEqual((a[0], a[1]["status"], b[0], b[1]["replayed"]), (200, "OK", 200, True))
@@ -292,6 +358,27 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(harness.state("T1"), "ready")
         saved = json.loads(decisions.answers_path(rdir).read_text(encoding="utf-8").splitlines()[0])
         self.assertEqual((saved["request"], saved["option"], saved["by"]), (request["id"], "retry", "remote"))
+
+    def test_route_post_answers_round_to_the_round_file(self):
+        import bt_rounds
+
+        bt_core, rdir, _ = self.real_run()
+        rounds_dir = rdir / "rounds"
+        rounds_dir.mkdir()
+        round_path = rounds_dir / "round-01.json"
+        round_path.write_text(json.dumps({"round": 1, "status": "open", "revision": 2,
+                                          "questions": [{"id": "q1", "type": "open", "text": "Why?"}],
+                                          "answers": {}}), encoding="utf-8")
+        params = {"round": 1, "answers": {"q1": {"text": "Keep the audit trail"}}}
+        state = self.real_target_state("demo/REQ-001", "answer-round", params)
+        body = req(command="answer-round", params=params, precondition=state)
+        with patch.object(bt_core, "ROOT", Path(self.temp.name)):
+            status, response = self.post_real(body)
+
+        saved = bt_rounds.load(round_path)
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        self.assertEqual((saved["status"], saved["answered_via"], saved["answers"]),
+                         ("answered", "remote", params["answers"]))
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
