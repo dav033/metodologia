@@ -148,6 +148,13 @@ class LedgerTests(LedgerBase):
         self.assertEqual(again["code"], "UNKNOWN_OUTCOME")
         self.assertEqual(self.calls, [])
 
+    def test_state_reader_receives_command_and_effect_params(self):
+        seen = []
+        request = req(command="cancel-attempt", params={"attempt": "att-7"})
+        self.ledger.submit(request, {"cancel-attempt": self._pause},
+                           lambda target, command, params: seen.append((target, command, params)) or self.state)
+        self.assertEqual(seen, [(request["target"], "cancel-attempt", {"attempt": "att-7"})])
+
 
 class EntryPointTests(LedgerBase):
     def route_ledger(self):
@@ -228,9 +235,46 @@ class EntryPointTests(LedgerBase):
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
-        status, body = self.post(req())
+        status, body = self.post(req(command="launch"))
         self.assertEqual((status, body["code"]), (501, "COMMAND_NOT_IMPLEMENTED"))
         self.assertEqual(self.route_ledger().rows(), [])
+
+    def test_route_post_cancel_attempt_uses_scheduler_operator_apply(self):
+        import bt_scheduler_ops as ops
+
+        command = req(command="cancel-attempt", params={"attempt": "att-7"})
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
+                patch.object(bt_remote_api, "_target_state", lambda target: self.state), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.object(ops, "apply", return_value=["att-7: cancelled"]) as apply, \
+                patch.object(ops, "resume", return_value="watchdog started"):
+            status, body = self.post(command)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        apply.assert_called_once_with("demo", "REQ-001", Path(self.temp.name), "cancel-attempt", "att-7", "")
+
+    def test_route_post_answer_decision_uses_scheduler_decisions_api(self):
+        import bt_scheduler_decisions as decisions
+
+        command = req(command="answer-decision", params={"request_id": "T2:1", "option": "retry"})
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
+                patch.object(bt_remote_api, "_target_state", lambda target: self.state), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.object(decisions, "answer", return_value=["T2: reopened"]) as answer:
+            status, body = self.post(command)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        answer.assert_called_once_with("demo", "REQ-001", Path(self.temp.name), "T2:1", "retry", "", by="remote")
+
+    def test_route_post_refuses_unknown_command_before_dispatch(self):
+        command = req(command="erase-run")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
+                patch.object(bt_remote_api, "_target_state", lambda target: self.state), \
+                patch.object(rc, "dispatch_run_command") as dispatch:
+            status, body = self.post(command)
+        self.assertEqual((status, body["code"]), (400, "INVALID_COMMAND"))
+        dispatch.assert_not_called()
 
 
 if __name__ == "__main__":
