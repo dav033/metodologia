@@ -15,6 +15,98 @@ from upstream import LaptopClient, UpstreamError
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
 ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
+<<<<<<< c2b225c9191627acfbad740aef3a84c0daca7a7b
+||||||| ef9fe0162516f6adb503d5596e407285e62f7c0e
+CHALLENGED_COMMANDS = frozenset({"revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"})
+
+
+def _ledger_command(request: Any) -> dict[str, Any] | None:
+    """Translate the public v1 command envelope into the laptop ledger contract."""
+    if not isinstance(request, dict) or request.get("schemaVersion") != 1:
+        return None
+    target = request.get("target")
+    if not isinstance(target, dict):
+        return None
+    project, req = target.get("project"), target.get("req")
+    if not isinstance(project, str) or not isinstance(req, str):
+        return None
+    command = request.get("type")
+    if not isinstance(command, str):
+        return None
+    field_map = {"reason": "reason", "route": "route", "brief": "brief", "answer": "answers",
+                 "note": "note", "attemptId": "attempt", "taskId": "task"}
+    params: dict[str, Any] = {}
+    for source, destination in field_map.items():
+        if source in request:
+            params[destination] = request[source]
+    if isinstance(target.get("taskId"), str):
+        params.setdefault("task", target["taskId"])
+    if isinstance(target.get("attemptId"), str):
+        params.setdefault("attempt", target["attemptId"])
+    route = request.get("route")
+    if isinstance(route, dict):
+        # Laptop recovery dispatch accepts selectors, while the web contract carries a route object.
+        params["route"] = route.get("id") or route.get("routeId") or route.get("route")
+        for selector in ("model", "account"):
+            if selector in route:
+                params[selector] = route[selector]
+    confirmation = request.get("confirmation")
+    ledger: dict[str, Any] = {
+        "idempotency_key": request.get("idempotencyKey"), "command": command,
+        "target": f"{project}/{req}", "origin": "web", "params": params,
+        "precondition": request.get("precondition"),
+    }
+    if isinstance(confirmation, dict):
+        ledger["confirmation"] = {"challenge_id": confirmation.get("challengeId"),
+                                  "typed_req": confirmation.get("typedReq")}
+    return ledger
+=======
+CHALLENGED_COMMANDS = frozenset({"revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"})
+
+
+def _ledger_command(request: Any) -> dict[str, Any] | None:
+    """Translate the public v1 command envelope into the laptop ledger contract."""
+    if not isinstance(request, dict) or request.get("schemaVersion") != 1:
+        return None
+    target = request.get("target")
+    if not isinstance(target, dict):
+        return None
+    project, req = target.get("project"), target.get("req")
+    if not isinstance(project, str) or not isinstance(req, str):
+        return None
+    command = request.get("type")
+    if not isinstance(command, str):
+        return None
+    field_map = {"reason": "reason", "route": "route", "brief": "brief", "answer": "answers",
+                 "note": "note", "attemptId": "attempt", "taskId": "task", "round": "round",
+                 "field": "field", "value": "value"}
+    params: dict[str, Any] = {}
+    for source, destination in field_map.items():
+        if source in request:
+            params[destination] = request[source]
+    if isinstance(target.get("taskId"), str):
+        params.setdefault("task", target["taskId"])
+    if isinstance(target.get("attemptId"), str):
+        params.setdefault("attempt", target["attemptId"])
+    route = request.get("route")
+    if isinstance(route, dict):
+        # Laptop recovery dispatch accepts selectors, while the web contract carries a route object.
+        params["route"] = (route.get("id") or route.get("routeId") or route.get("route_id")
+                           or route.get("route"))
+        for selector in ("model", "account"):
+            if selector in route:
+                params[selector] = route[selector]
+    confirmation = request.get("confirmation")
+    ledger: dict[str, Any] = {
+        "idempotency_key": request.get("idempotencyKey"), "command": command,
+        "target": f"{project}/{req}", "origin": "web", "params": params,
+        "precondition": request.get("precondition"),
+    }
+    if isinstance(confirmation, dict):
+        ledger["confirmation"] = {"challenge_id": confirmation.get("challengeId"),
+                                  "typed_req": confirmation.get("typedReq")}
+    return ledger
+>>>>>>> 3367f62355c02b2ad638862c6589e7b3f266b243
 
 
 class GatewayRuntime:
