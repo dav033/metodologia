@@ -121,6 +121,15 @@ def _snapshot(handler) -> None:
     import bt_live_api as live
     import bt_plans_api
     import bt_rounds
+<<<<<<< af4745f7f09edb40bc2aff39c663b988ef7c9d07
+||||||| d88893200d213875887aba717975e1db538c70ff
+||||||| 27eddbf4d46527a94f9c3d70f4f01c34f744c5ca
+=======
+    import bt_remote_events
+>>>>>>> 5a5761a021f0c8d1a035ba4a2695e335afaa258b
+=======
+    import bt_remote_events
+>>>>>>> ac534adf5cfac8a08cfba2690234314cc0a6286c
 
     root = bt_core.ROOT
     try:
@@ -185,9 +194,29 @@ def _snapshot(handler) -> None:
         decisions.extend({**decision, "project": project, "req": req}
                          for decision in bt_plans_api.open_decisions(rdir))
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
+<<<<<<< af4745f7f09edb40bc2aff39c663b988ef7c9d07
     return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
                                 "runs": runs, "plans": plans, "rounds": rounds,
                                 "decisionRequests": decisions}, 200)
+||||||| d88893200d213875887aba717975e1db538c70ff
+<<<<<<< 0d0dd48d35237123898d202a25bcd85838d7ff3f
+    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
+                                "runs": runs, "plans": plans, "rounds": rounds,
+                                "decisionRequests": decisions}, 200)
+||||||| 27eddbf4d46527a94f9c3d70f4f01c34f744c5ca
+    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
+                                "runs": runs}, 200)
+=======
+    snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
+                "runs": runs}
+    return _send_json(handler, bt_remote_events.redact(snapshot), 200)
+>>>>>>> 5a5761a021f0c8d1a035ba4a2695e335afaa258b
+=======
+    payload = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
+               "runs": runs, "plans": plans, "rounds": rounds,
+               "decisionRequests": decisions}
+    return _send_json(handler, bt_remote_events.redact(payload), 200)
+>>>>>>> ac534adf5cfac8a08cfba2690234314cc0a6286c
 
 
 def _command_history(handler) -> None:
