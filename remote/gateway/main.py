@@ -10,6 +10,7 @@ from app import create_runtime
 from auth import AuthenticationError, OAuthConfig
 from config import ConfigurationError, GatewayConfig
 from server import create_server
+from telegram_bot import TelegramBot
 
 
 def main() -> int:
@@ -21,9 +22,12 @@ def main() -> int:
         print(str(exc), file=sys.stderr)
         return 2
     runtime = create_runtime(config)
+    bot = TelegramBot(runtime, config.telegram_bot_token, config.telegram_chat_id)
     auth_server = create_server(auth_config, (config.bind_host, config.bind_port), runtime=runtime)
     auth_thread = Thread(target=auth_server.serve_forever, name="gateway-http", daemon=True)
+    telegram_thread = Thread(target=bot.run_forever, name="gateway-telegram", daemon=True)
     auth_thread.start()
+    telegram_thread.start()
     try:
         runtime.run_forever()
     finally:

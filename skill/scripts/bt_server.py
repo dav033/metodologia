@@ -18,7 +18,7 @@ import bt_pages as pages
 import bt_rounds as rounds
 from bt_core import *  # noqa: F403
 from bt_page_req import req_page
-from bt_platform import detached_options, platform
+from bt_platform import detached_options, platform, systemd_listener
 from bt_vcs import commit
 
 ASSETS = SKILL_DIR / "assets"
@@ -389,11 +389,22 @@ def serve(port: int = DEFAULT_PORT) -> None:
     token()
     (STATE / "server.json").write_text(json.dumps({"pid": os.getpid(), "port": port, "version": code_version(),
                                                    "root": str(ROOT)}), encoding="utf-8")
-    httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    httpd = create_http_server(port)
     import bt_live_api
     bt_live_api.warm(ROOT)
     print(f"Bitácora at {url(port)}  (Ctrl+C to stop)")
     httpd.serve_forever()
+
+
+def create_http_server(port: int = DEFAULT_PORT) -> ThreadingHTTPServer:
+    """Build the panel server around systemd's listener when socket activation is configured."""
+    listener = systemd_listener(port)
+    httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler, bind_and_activate=listener is None)
+    if listener is not None:
+        httpd.socket.close()
+        httpd.socket = listener
+        httpd.server_address = listener.getsockname()
+    return httpd
 
 
 def serve_remote(port: int = REMOTE_PORT) -> None:
@@ -407,12 +418,12 @@ def serve_remote(port: int = REMOTE_PORT) -> None:
 
 def _stale(port: int) -> bool:
     """A running server on our port that runs old code or serves another bitácora."""
+    if not _server_stale(port):
+        return False
     try:
         info = json.loads((STATE / "server.json").read_text(encoding="utf-8"))
     except Exception:
         return True
-    if info.get("port") != port or info.get("version") == code_version() and info.get("root") == str(ROOT):
-        return False
     pid = info.get("pid")
     if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 1 or pid == os.getpid():
         return False
@@ -431,6 +442,16 @@ def _stale(port: int) -> bool:
     return True
 
 
+def _server_stale(port: int) -> bool:
+    """Check server metadata without stopping the process that owns the listener."""
+    try:
+        info = json.loads((STATE / "server.json").read_text(encoding="utf-8"))
+    except Exception:
+        return True
+    return (info.get("port") == port and (info.get("version") != code_version()
+                                           or info.get("root") != str(ROOT)))
+
+
 WEB_UNIT = "bitacora-web.service"            # the user's systemd unit for the panel on the default port, if installed
 
 
@@ -447,12 +468,10 @@ def _unit_enabled() -> bool:
 def ensure_server(port: int = DEFAULT_PORT) -> str:
     """Start the server detached in the background if it isn't running (or restart it if its code is stale)."""
     if port == DEFAULT_PORT and _unit_enabled():
-        # systemd owns the panel: (re)start it there; a loose copy would hold the port and leave the unit failing
-        if not is_running(port) or _stale(port):
-            try:
-                subprocess.run(["systemctl", "--user", "restart", WEB_UNIT], capture_output=True, timeout=30)
-            except (OSError, subprocess.SubprocessError):
-                pass
+        # systemd owns the panel: restart only its service; its socket unit retains the listening socket.
+        if not is_running(port) or _server_stale(port):
+            subprocess.run(["systemctl", "--user", "restart", WEB_UNIT], capture_output=True,
+                           timeout=30, check=True)
         return url(port)
     if is_running(port):
         _stale(port)
