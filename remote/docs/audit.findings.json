@@ -1,0 +1,789 @@
+{
+  "schema": "audit-findings/1",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "status": "fixed",
+      "tasks": [
+        "T16"
+      ],
+      "summary": "The private Caddy bridge upstream and gateway bind match the container-to-host topology.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. B exits 0 with all example keys filled synthetically, bind 172.20.0.1. The frozen deploy-kit command exits 0: 14 tests, one Caddy skip. No deployed connectivity claim."
+    },
+    {
+      "id": "F2",
+      "severity": "high",
+      "status": "fixed",
+      "tasks": [
+        "T17"
+      ],
+      "summary": "The frozen built-web loopback end-to-end scenarios now execute and pass.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` exits 0: 1 test in 20.571 s, 20.730 s wall. Production build, owner OAuth/foreign-login refusal, real keyed cancellation/stale rejection, exactly one terminal-failure alert, authenticated snapshot and offline within 20 s are asserted. AH independently confirms real max-attempts=1 producer exhaustion facts. No multi-retry or deployed scenario is implied."
+    },
+    {
+      "id": "F3",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T16"
+      ],
+      "summary": "The runbook still deploys and restarts before installing the service on a fresh host.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. J exits 0 using fake systemctl and mode-600 synthetic env: missing unit makes deploy exit 5 after switching current; deploy --dry-run exits 0, rollback --dry-run exits 2 without previous release. No host service touched."
+    },
+    {
+      "id": "F4",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T11a"
+      ],
+      "summary": "Gateway request logs expose OAuth code/state query values in the status field.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. A exits 0: a real synthetic callback query appears in captured logging. server.py log_message uses the full request line in args[0] as status. No live credential or account takeover was demonstrated."
+    },
+    {
+      "id": "F5",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T11a",
+        "T15a"
+      ],
+      "summary": "Any nonempty mutation marker is accepted, and foreign-Origin GET logout bypasses mutation guards.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. A exits 0 with a relay_command tuple fixture matching the current adapter: wrong X-Flow-Request gets HTTP 200; foreign-Origin GET logout gets 302 and revokes the session. Real POST foreign-Origin guards pass the 7-test guard suite. No command CSRF bypass alleged."
+    },
+    {
+      "id": "F6",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T14a",
+        "T14b"
+      ],
+      "summary": "Failure alerts lack a review link, cause and safe inline actions; Telegram retry is unsupported.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AI/B exit 0: notification_for_event now returns only generic text plus REQ; the previously added relative review URL was removed. TelegramSender sends only chat_id/text, with no reply_markup. submit_telegram_command rejects retry with INVALID_COMMAND. Preserve run-scoped event IDs while restoring context and actions."
+    },
+    {
+      "id": "F7",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T5a"
+      ],
+      "summary": "The public standalone note command has no laptop dispatcher.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. B exits 0: actual Ledger.submit(note) with commands.dispatch_handlers returns COMMAND_NOT_IMPLEMENTED. Retry reason/RUN.notes is a separate path."
+    },
+    {
+      "id": "F8",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T15f"
+      ],
+      "summary": "The phone brief form lacks criteria editing and prefills the task title instead of its objective.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. Static page.tsx trace: one brief textarea submits field=objective and a string, with no criteria editor. The repaired native editor now accepts objective/criteria/acceptance_criteria (E2 exits 0); that does not add a criteria input to the phone UI. AQ exits 0 using a real approved task and native snapshot: objective is absent from the phone task model, textarea defaultValue is task.title, and submission targets objective. The real publication validator rejects the title-only objective and restores original bytes, so the provider's claimed silent overwrite is rejected; approved/bound revision stays r1."
+    },
+    {
+      "id": "F9",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T15d"
+      ],
+      "summary": "Run-level reopen supplies no identity to the task-scoped operation.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. page.tsx commandForm(reopen) omits taskId, while TASK_SCOPED/_member_state and dispatch_run_command require params.task. C exits 0 for a task-scoped reopen; that does not repair the run-level form."
+    },
+    {
+      "id": "F10",
+      "severity": "medium",
+      "status": "fixed",
+      "tasks": [
+        "T6"
+      ],
+      "summary": "A plan awaiting approval emits plan.waiting without a scheduler decision.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. B exits 0: plan_status=review produces plan.waiting. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py` exits 0: 16 tests."
+    },
+    {
+      "id": "F11",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T12"
+      ],
+      "summary": "Gateway restart loses the last snapshot despite production stream-hub wiring.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. B exits 0: old generatedAt remains offline in one runtime, but a replacement runtime using the same SQLite database returns None. StreamHub snapshot and runtime.snapshot_cache remain memory-only."
+    },
+    {
+      "id": "F12",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T11",
+        "T14a",
+        "T5",
+        "T6"
+      ],
+      "summary": "Expired sessions and command/Telegram history are not pruned after 90 days.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. B exits 0: creating another session leaves an abandoned expired row. Static auth.py, notifications.py and Ledger.rows/history inspection finds no 90-day command/outbox/telegram_history prune. Timestamped delivery history is present and retained. bt_remote_events._observe also creates/inserts observed_events without retention or DELETE; this expands the recorded retention gap, not the repaired cursor semantics."
+    },
+    {
+      "id": "F13",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T12",
+        "T15b"
+      ],
+      "summary": "The phone recognizes offline state but still has no offline-start time.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AK exits 0: actual public snapshot has root online=false AND laptop.online=false; the exact phone parser recognizes it. The previous EN VIVO subclaim is withdrawn. No offline-start/checkedAt timestamp is supplied or displayed as sin conexion desde HH:MM. B confirms the retained generatedAt cache is separate."
+    },
+    {
+      "id": "F14",
+      "severity": "medium",
+      "status": "fixed",
+      "tasks": [
+        "T7",
+        "T6"
+      ],
+      "summary": "Laptop redaction handles plain provider assignments and bearer authorization text.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. B exits 0: synthetic OPENAI_API_KEY assignment and Authorization: Bearer text are redacted. JSON-quoted strings and database URLs remain the separate F56. The absent test_remote_review.py is not passing evidence."
+    },
+    {
+      "id": "F15",
+      "severity": "medium",
+      "status": "fixed",
+      "tasks": [
+        "T9"
+      ],
+      "summary": "Local-panel inherited systemd listener activation and reload remain implemented.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py` exits 0: 28 tests. `cd skill/scripts && python -m unittest discover -s tests -p \"test_page*.py\"` exits 0: 43 tests. These cover ownership, inherited socket and local-panel regressions without touching host services."
+    },
+    {
+      "id": "F16",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T15d"
+      ],
+      "summary": "The phone discards uncertain command envelopes and generates a new key on resubmission.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. Static submitControl/commandForm trace: UNKNOWN_OUTCOME HTTP 503 is labeled Rechazado, history retains summaries rather than a replayable exact envelope, and form submitters call crypto.randomUUID again. Same-key server at-most-once is preserved; no specific duplicate effect sequence demonstrated."
+    },
+    {
+      "id": "F17",
+      "severity": "low",
+      "status": "open",
+      "tasks": [
+        "T3"
+      ],
+      "summary": "The published command schema differs from production command families, fields and key limits.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. JSON syntax command exits 0 only. command.schema.json omits answer-decision, expects singular answer/route text/edit brief, while phone sends answers/round, route object, field/value. B rejects a 121-character ledger key although schema permits 128. contract.md review/status dialects remain incomplete."
+    },
+    {
+      "id": "F18",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T15"
+      ],
+      "summary": "The mobile browser test measures 366 px on a 360 px viewport.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. `cd remote/web && npm run verify` exits 1: lint and typecheck pass, 14/15 tests pass, zero skips; panel-browser.test.mjs:165 fails 366 !== 360. Wall 27.619 s. The verify chain does not reach build; a separate npm run build exits 0. Assertions and CSS were not changed."
+    },
+    {
+      "id": "F19",
+      "severity": "high",
+      "status": "fixed",
+      "tasks": [
+        "T15c"
+      ],
+      "summary": "FailureReviewPanel again accepts the run target and the integrated web typechecks and builds.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. `cd remote/web && npm run verify` completes lint/typecheck before the unrelated F18 browser failure. `cd remote/web && npm run build` exits 0, 19.851 s wall, emitting / and /review. The frozen E2E also builds successfully. FailureReviewPanel now declares target:string and the call site supplies it."
+    },
+    {
+      "id": "F20",
+      "severity": "high",
+      "status": "fixed",
+      "tasks": [
+        "T15a"
+      ],
+      "summary": "The phone accepts the actual gateway login-session response.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. A exits 0: authenticated GET /api/auth/session returns 200 {login:dav033}. Frozen auth command exits 0: 3 tests. E2E exits 0 and checks the actual same-origin session. Browser session assertion also passes before F18."
+    },
+    {
+      "id": "F21",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T12",
+        "T6",
+        "T15b"
+      ],
+      "summary": "Production SSE routing and event dialect still disagree with the phone.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AG exits 0: public events and phone events/stream return 404; explicit /api/remote/v1/stream serves named event/resync frames and epoch:sequence IDs. page.tsx requests events/stream?after=<snapshot cursor> and handles onmessage. Polling fallback remains, bounding impact. Static page.tsx poll success never clears setError; the dead SSE sets a banner that remains during successful polling until another action clears it. This additional presentation symptom is retained under the same broken live-feed finding."
+    },
+    {
+      "id": "F22",
+      "severity": "medium",
+      "status": "fixed",
+      "tasks": [
+        "T16"
+      ],
+      "summary": "A completely filled example configuration parses successfully.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. B exits 0: every example key filled with synthetic values parses in GatewayConfig and OAuthConfig. Frozen deploy-kit command exits 0: 14 tests, one missing-Caddy skip. Optional empty bind remains F54."
+    },
+    {
+      "id": "F23",
+      "severity": "medium",
+      "status": "fixed",
+      "tasks": [
+        "T4a",
+        "T15d"
+      ],
+      "summary": "Native keyed command history is exposed through the authenticated gateway.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. C and AG exit 0: commands/history return HTTP 200 with commands/nextCursor; AJ confirms public history omits injected exception text. Frozen remote-command command exits 0: 25 tests. Actual E2E cancellation succeeds."
+    },
+    {
+      "id": "F24",
+      "severity": "high",
+      "status": "fixed",
+      "tasks": [
+        "T8",
+        "T8a"
+      ],
+      "summary": "Wheel and sdist contain the edit and route-pin implementation modules.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. P exits 0: fresh wheel and sdist contain bt_remote_edit.py/bt_route_pins.py; isolated imports of bt_remote_api, bt_remote_commands, bt_remote_edit and bt_route_pins exit 0. This bounded original repair does not cover the newly introduced snapshot-module omission F72, which AM independently reproduces."
+    },
+    {
+      "id": "F25",
+      "severity": "medium",
+      "status": "fixed",
+      "tasks": [
+        "T15c"
+      ],
+      "summary": "The selected failed-attempt review now forwards its run target.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. C and AG exit 0. Both failure-review-panel.tsx and review/page.tsx fetch review?target=<encoded project/REQ>; panel effect depends on attemptId and target. Actual authenticated att-0001 review for demo/REQ-001 returns 200 with all four sections. Target-less negative control returns 400 INVALID_TARGET. Browser selected-attempt/fixture assertions pass before F18; production build exits 0."
+    },
+    {
+      "id": "F26",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T15f",
+        "T15d"
+      ],
+      "summary": "Ready recovery controls disappear after reload or in another tab.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. C exits 0: actual reopen projects ready and pinned retry succeeds with process-start/route-availability seams. page.tsx still gates forms on recovering/reopenedForRecovery with reopenedTasks in a useRef. A new tab cannot recover that in-memory marker."
+    },
+    {
+      "id": "F27",
+      "severity": "low",
+      "status": "open",
+      "tasks": [
+        "T11a"
+      ],
+      "summary": "Command rate limits are shared by login across sessions.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. server.py uses authenticated login as commands/challenges bucket. Frozen guard suite exits 0: 7 tests. This is stricter than per-session R17, not an auth bypass; proxy-shared anonymous login exhaustion is F47."
+    },
+    {
+      "id": "F28",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "Different-key concurrent preconditions serialize with the ledger effect.",
+      "tasks": [
+        "T5"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. D exits 0: two concurrent running-to-paused requests with distinct keys produce exactly one handler effect and one STALE_PRECONDITION, with two ledger rows. This proves process-local serialization only; multiprocess local writers were not exercised."
+    },
+    {
+      "id": "F29",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Snapshot activity timestamps still do not match phone fields; frozen task criteria are repaired.",
+      "tasks": [
+        "T4a"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. C exits 0: bound T1 acceptance_criteria equals projected acceptanceCriteria, so the missing-criteria subclaim is withdrawn. build_snapshot still emits lastActivityAt and live._attempt last_activity_at, while parseSnapshot consumes lastSeenAt and attempt.updatedAt/updated_at; task timestamps are absent in run.tasks. The UI falls back to run.updatedAt or no task activity time."
+    },
+    {
+      "id": "F30",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Stalled-attempt alerts start after 15 minutes rather than more than 10 minutes.",
+      "tasks": [
+        "T6"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. B exits 0: at 660 seconds no event; at 901 seconds attempt.stalled. The frozen R10 threshold is greater than 10 minutes."
+    },
+    {
+      "id": "F31",
+      "severity": "low",
+      "status": "open",
+      "summary": "An authenticated SSE connection continues after session revocation.",
+      "tasks": [
+        "T11",
+        "T12"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AG exits 0: open /stream, revoke session through SessionStore.delete_session, then publish synthetic.after.logout; the existing connection receives the named frame. Fresh requests are authenticated; stream is read-only, so severity remains low."
+    },
+    {
+      "id": "F32",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "Gateway translation preserves route, model and account pins.",
+      "tasks": [
+        "T13"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. C exits 0: a real ready-task retry traverses the gateway/native ledger and persists synthetic route/model/account. Only route availability and process startup are stubbed. Frozen recovery command exits 0: 12 tests. No paid agent execution claim."
+    },
+    {
+      "id": "F33",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "Gateway translation preserves question answers, decision aliases and edited field/value.",
+      "tasks": [
+        "T13"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. C exits 0: answer-round round/answers completes the real round; objective/value is preserved. AI exits 0 for requestId and request_id aliases. Frozen gateway command suite exits 0: 13 tests. E2 exits 0 through the real gateway/native HTTP path: preserved objective and both criteria aliases now publish approved revisions and rebase the run (F41 repaired)."
+    },
+    {
+      "id": "F34",
+      "severity": "medium",
+      "status": "fixed",
+      "summary": "Frozen notification and delivery test files exist and execute.",
+      "tasks": [
+        "T14",
+        "T14a"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. `cd remote/gateway && python -m unittest discover -s tests -p test_notify.py` exits 0: 3 tests. The same command with test_telegram_send.py exits 0: 3 tests. Both frozen commands run tests, unlike F69."
+    },
+    {
+      "id": "F35",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "The native nonempty snapshot is accepted by the exact phone parser.",
+      "tasks": [
+        "T4a"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. C exits 0: actual native API read model with a real M1 run and frozen plan parses to one run through transpiled parseSnapshot from page.tsx. Frozen remote API command exits 0: 6 tests. Installed-module omission is separately F72."
+    },
+    {
+      "id": "F36",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "The real gateway flattens its cached snapshot for the phone.",
+      "tasks": [
+        "T12"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AG exits 0: authenticated production snapshot returns 200 with runs/plans/schemaVersion at the root, one real run, and laptop.online. The exact phone parseSnapshot accepts it. Frozen stream command exits 0: 14 tests."
+    },
+    {
+      "id": "F37",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Final exhaustion again emits retrospective failure alerts for earlier attempts.",
+      "tasks": [
+        "T6"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AB exits 0 after replacing the obsolete one-alert expectation: task max=3/current=a3/history=a1,a2 produces three attempt.failed events instead of one terminal a3 event. The terminal-attempt filter was removed from build_events. Single-attempt E2E passes and does not cover this scenario."
+    },
+    {
+      "id": "F38",
+      "severity": "medium",
+      "status": "fixed",
+      "summary": "Structured HTTP INVALID_CURSOR reaches the gateway reset branch.",
+      "tasks": [
+        "T13",
+        "T12"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. G exits 0: actual loopback HTTP error is translated to UpstreamResponseError and resets event_cursor to empty. Frozen gateway command and stream suites exit 0: 13 and 14 tests."
+    },
+    {
+      "id": "F39",
+      "severity": "medium",
+      "status": "fixed",
+      "summary": "The public relay preserves native failed-effect HTTP status.",
+      "tasks": [
+        "T13",
+        "T15d"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AK exits 0: injected native handler failure through actual laptop and authenticated public gateway returns HTTP 500, status FAILED, code EFFECT_FAILED. G separately preserves a status tuple. Frozen command suite exits 0: 13 tests."
+    },
+    {
+      "id": "F40",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Ambiguous or truncated successful upstream responses are misclassified or escape the runtime.",
+      "tasks": [
+        "T13"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. I and I2 exit 0 reproducing malformed successful JSON classification and truncated-response propagation. Normal timeout tests pass; an ambiguous accepted response is not proof the effect did not execute. Retain the idempotency key when reporting uncertainty."
+    },
+    {
+      "id": "F41",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "The native editor accepts phone objective and both criteria aliases and rebases the bound run.",
+      "tasks": [
+        "T8a"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py` exits 0: 12 tests. Report Probe E2 fenced Python command exits 0: actual gateway/native HTTP commands using field=objective, criteria and acceptance_criteria plus value each return HTTP 200/status OK; frozen remote-owner revisions r2/r3/r4 contain the exact edits and the bound run reaches each matching revision. Only process stopping/startup is stubbed; validation, challenge, publication and rebasing are real. The obsolete Probe E failed its old defect assertion because objective now succeeds; it is not passing defect evidence."
+    },
+    {
+      "id": "F42",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "Remote editing rejects unapproved drift or review status and rolls back prepublication refusal.",
+      "tasks": [
+        "T8a"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py` exits 0: 12 tests including real native HTTP drift/review rejection. Report Probe E2 fenced Python command exits 0: an unrelated unapproved T2 edit returns PLAN_DRIFT, review status returns PLAN_NOT_APPROVED, bytes and approved/bound r4 remain unchanged. Injecting refusal only at publishable_problem restores exact original PLAN.json bytes and creates no r5. Source uses the approved bound base, remote-edit lock, atomic replace and prepublication rollback. Postpublication I/O reconciliation remains F70, separately reproduced by AL2; this repair does not claim cross-process writer serialization."
+    },
+    {
+      "id": "F43",
+      "severity": "medium",
+      "status": "fixed",
+      "summary": "Telegram delivery retains bounded expiry, backoff and timestamped attempt history.",
+      "tasks": [
+        "T14a"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. N exits 0: failures back off, messages over one hour drop, and telegram_history records timestamped sent/retry/dropped attempts. Frozen telegram_send command exits 0: 3 tests. Public visibility and 90-day retention remain separate F71/F12."
+    },
+    {
+      "id": "F44",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Actual quota windows are returned as an array that the phone discards.",
+      "tasks": [
+        "T4a"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. Q exits 0: real quota projection windows array produces zero accounts through the exact parseQuotaAccounts phone parser. Source fixtures with another dialect do not repair the public producer."
+    },
+    {
+      "id": "F45",
+      "severity": "medium",
+      "status": "fixed",
+      "summary": "The gateway entrypoint liveness fixture includes mandatory OAuth settings.",
+      "tasks": [
+        "T10"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. `cd remote/gateway && python -m unittest discover -s tests -p test_liveness.py` exits 0: 5 tests, including entrypoint/config. No real deployment or OAuth app was used."
+    },
+    {
+      "id": "F46",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Phone cancel/delete plan controls require a challenge ID the UI never obtains.",
+      "tasks": [
+        "T15d"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. page.tsx plan controls are disabled until a manually supplied challengeId exists, with no automatic challenge fetch/display for cancel-plan/delete-plan. AG confirms public native challenge issuance itself is fixed and returns 201 (F66)."
+    },
+    {
+      "id": "F47",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Anonymous Caddy clients share one login bucket and can exhaust owner sign-in availability.",
+      "tasks": [
+        "T11a"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. L exits 0: six real requests with distinct synthetic X-Forwarded-For addresses from one proxy peer return [302,302,302,302,302,429]. Limiter keys on connection peer; Caddy is the shared peer. Do not fix by trusting arbitrary forwarded headers."
+    },
+    {
+      "id": "F48",
+      "severity": "low",
+      "status": "open",
+      "summary": "The documented gateway-key minimum is not enforced at startup.",
+      "tasks": [
+        "T16"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. W/Y/Z/O exits 0: GatewayConfig accepts a short nonempty synthetic key despite the documented 24-character minimum. No real credentials read or strength attack attempted."
+    },
+    {
+      "id": "F49",
+      "severity": "medium",
+      "status": "open",
+      "summary": "A malformed authenticated native command disconnects before deliberate validation.",
+      "tasks": [
+        "T5"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. Report Probe V fenced Python command exits 0: a real keyed native POST containing idempotency_key and command=pause but no target disconnects with KeyError before deliberate validation. The identical unauthenticated request returns HTTP 401. Ledger.validate also performs unguarded command membership for unhashable input; that additional TypeError is a source observation, not V's measured exception. Valid/unknown-command suite paths pass."
+    },
+    {
+      "id": "F50",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Telegram /estado skips real snapshot runs because it reads req_id.",
+      "tasks": [
+        "T14b"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. W exits 0: the actual native serializer uses req/reqId, while TelegramBot reads req_id; the rendered status has only its heading and no run controls. Existing four bot tests use their own dialect."
+    },
+    {
+      "id": "F51",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Inline Telegram delivery can block five-second liveness polling.",
+      "tasks": [
+        "T14a",
+        "T10"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. Y exits 0: a deterministic sender/clock seam consumes delivery time inside poll_once. Source run_forever calls poll_once synchronously and sleeps afterward; sender defaults to five-second network timeout per delivery with no separate worker. No measured real Telegram latency claim."
+    },
+    {
+      "id": "F52",
+      "severity": "low",
+      "status": "open",
+      "summary": "The upstream command deadline defaults to five seconds rather than fifteen.",
+      "tasks": [
+        "T10",
+        "T13"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. W/Y/Z/O exits 0: default GatewayConfig.request_timeout is 5, shared by the upstream client, against the frozen suspended-command 15-second deadline. Normal timeout still returns UNKNOWN_OUTCOME with a key."
+    },
+    {
+      "id": "F53",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Telegram-induced offline transition can suppress the active-run outage alert.",
+      "tasks": [
+        "T10",
+        "T13",
+        "T14"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. Z exits 0: the tested Telegram timeout path changes liveness state before the poll transition bookkeeping; subsequent offline polls do not enqueue the required active-run alert. Durable same-outage restart dedupe separately passes R/S/T/U/X."
+    },
+    {
+      "id": "F54",
+      "severity": "medium",
+      "status": "open",
+      "summary": "An explicitly empty gateway bind becomes a wildcard HTTP bind.",
+      "tasks": [
+        "T10"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. W/Y/Z/O exits 0: GatewayConfig.from_env accepts GATEWAY_BIND empty and passes it as the listener address instead of rejecting it or choosing the private bridge. Completely filled example parsing remains repaired F22."
+    },
+    {
+      "id": "F55",
+      "severity": "high",
+      "status": "fixed",
+      "tasks": [
+        "T6"
+      ],
+      "summary": "Persisted first-observation cursors deliver late-derived events.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. R exits 0: a late stall and newly observed round appear after a saved cursor despite older occurredAt timestamps; runtime.event_cursor advances. Frozen remote-events command exits 0: 16 tests. Old backlog scheduling is separately F57."
+    },
+    {
+      "id": "F56",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T6",
+        "T7",
+        "T15c"
+      ],
+      "summary": "JSON-quoted credentials and database URL passwords remain visible inside text logs.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. S exits 0: stringified JSON password/refresh_token and postgres URL password remain after laptop redaction and phone review-text sanitizer; structured dict password is redacted. Synthetic values only. This does not invalidate plain assignment/bearer fix F14."
+    },
+    {
+      "id": "F57",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T14"
+      ],
+      "summary": "Cursor reconstruction starts at the beginning and can delay fresh notifications beyond 60 seconds.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. T/AF exit 0: new runtime initially polls after empty cursor and sends a historical run.finished event. With 3000 preceding command events, the fresh round is queued only at poll 16 (75 s at the production five-second cadence), with no send at polls 1 through 13."
+    },
+    {
+      "id": "F58",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T6",
+        "T14"
+      ],
+      "summary": "Quota alerts trigger per exhausted account without requiring every account to be exhausted.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. U exits 0: one exhausted account plus one available account still produces a quota notification. Frozen R10 requires every account out of quota."
+    },
+    {
+      "id": "F59",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T6"
+      ],
+      "summary": "The same failed attempt can enqueue twice when flow and projection arrive sequentially.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. U exits 0: observe flow failure, persist cursor, then observe its run projection; two different dedupe keys produce two outbox rows. Restart same-ID dedupe still works. AB separately shows retrospective historical-attempt alerts (F37)."
+    },
+    {
+      "id": "F60",
+      "severity": "low",
+      "status": "open",
+      "tasks": [
+        "T11"
+      ],
+      "summary": "Unicode OAuth state disconnects the unauthenticated callback instead of returning an invalid-state error.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. X exits 0: a synthetic matching non-ASCII state query/cookie reaches compare_digest and raises TypeError, closing the connection. No session bypass or live credential demonstrated."
+    },
+    {
+      "id": "F61",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "Blocked-event identities remain run-scoped for repeated attempt IDs.",
+      "tasks": [
+        "T6"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AA exits 0: two real M1 runs both allocate att-0001; scoped reviews return each run distinct failure. Generated blocked events have distinct keys, yielding two outbox rows. Frozen remote-event command exits 0: 16 tests."
+    },
+    {
+      "id": "F62",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "Both phone failure-review callers now supply the required run target.",
+      "tasks": [
+        "T15c"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AG exits 0: real keyed laptop/public authenticated review?target=demo%2FREQ-001 for att-0001 returns 200 with cause/verification/diff/logTail. Missing-target control returns 400. Source inspection confirms target forwarding in both /review and embedded panel, including effect dependency. npm run build exits 0; browser fixture review assertions pass before the unrelated width failure."
+    },
+    {
+      "id": "F63",
+      "severity": "high",
+      "status": "fixed",
+      "summary": "Fresh Bogota round timestamps are UTC and delivered before expiry.",
+      "tasks": [
+        "T6"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AC exits 0 under TZ=America/Bogota: new_round writes an explicit Z timestamp; collect emits round.waiting at that timestamp despite a two-hour-old PLAN.md, and outbox delivery records sent. Frozen remote-events command exits 0: 16 tests."
+    },
+    {
+      "id": "F64",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Routes with unknown quota are shown as available although retry refuses them.",
+      "tasks": [
+        "T8"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AD exits 0: the same synthetic candidate with quota_status=unknown is marked available by route_options but omitted by pins.available. C confirms an explicitly available pinned route still works."
+    },
+    {
+      "id": "F65",
+      "severity": "medium",
+      "status": "fixed",
+      "summary": "Absent systemctl preserves panel startup; uncertain service ownership fails closed.",
+      "tasks": [
+        "T9"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AE2 exits 0: absent executable yields one detached startup and zero systemctl calls; discovered executable raising FileNotFoundError yields no competing loose server. Frozen platform suite exits 0: 28 tests."
+    },
+    {
+      "id": "F66",
+      "severity": "high",
+      "status": "fixed",
+      "tasks": [
+        "T5b"
+      ],
+      "summary": "Native/public keyed challenge issuance returns HTTP 201.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AG exits 0: actual native POST challenges and authenticated gateway relay both return 201 with challengeId, bound target and expiresIn=120. Frozen command suite exits 0: 13 tests. Manual challenge UI gap remains F46."
+    },
+    {
+      "id": "F67",
+      "severity": "high",
+      "status": "fixed",
+      "tasks": [
+        "T6"
+      ],
+      "summary": "Actual M1 projection exposes exhaustion facts and produces a terminal event.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AH exits 0: the current fixture has one real failed att-0001 with attempts_used=max_attempts=1 and retries_remaining=0; build_events emits exactly one attempt.failed with those facts. The raw retry_exhausted flag is false, but the explicit remaining count satisfies the event predicate. Frozen E2E exits 0 and asserts that event and one delivered alert. Multi-retry retrospective alerts remain F37."
+    },
+    {
+      "id": "F68",
+      "severity": "low",
+      "status": "open",
+      "tasks": [
+        "T5"
+      ],
+      "summary": "Immediate command errors forward raw handler exception text.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AJ exits 0: injecting ValueError with a synthetic secret-shaped assignment returns it verbatim through actual HTTP; public history withholds it and feed.redact would sanitize it. This is bounded failure injection, not a reproduced built-in live-secret leak; severity remains low."
+    },
+    {
+      "id": "F69",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Frozen failure-review verification names a missing test file and runs zero tests.",
+      "tasks": [
+        "T7"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py` exits 5: Ran 0 tests / NO TESTS RAN. Other review tests/probes do not make this frozen command execute."
+    },
+    {
+      "id": "F70",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T8a"
+      ],
+      "summary": "A post-publication edit failure leaves the approved revision ahead of the bound run.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. Report Probe AL2 fenced Python command exits 0: injecting OSError solely at ops.apply, without bypassing the publication compatibility gate, leaves latest approved r2 and bound run r1. PLAN.json remains r2; a subsequent edit fails closed with PLAN_BASE_STALE and does not mutate bytes. No durable completion/reconciliation is present. Prepublication drift/status/rollback is now repaired F42. Preserve published history rather than deleting an approved revision."
+    },
+    {
+      "id": "F71",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T14a"
+      ],
+      "summary": "Telegram no-entregado status exists internally but is not exposed in public history or the web.",
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. N exits 0 with timestamped dropped history. Static trace: public commands/history relay native command ledger only; TelegramBot/web do not read outbox.history, and read_routes allow-list exposes no notification-history endpoint. No claim that internal history is absent."
+    },
+    {
+      "id": "F72",
+      "severity": "high",
+      "status": "open",
+      "summary": "The newly extracted snapshot module is absent from wheel and sdist, breaking installed remote snapshots.",
+      "tasks": [
+        "T4a"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AM exits 0: fresh built wheel/sdist omit bt_remote_snapshot.py; isolated installed bt_remote_api._snapshot(None) exits 1 with ModuleNotFoundError: No module named bt_remote_snapshot. pyproject.toml py-modules omits the new module, and _snapshot imports it before its error boundary. Checkout tests pass because the source file is directly importable; installed clients cannot read the snapshot."
+    },
+    {
+      "id": "F73",
+      "severity": "medium",
+      "status": "open",
+      "summary": "A built-in approval-gate SystemExit escapes the command ledger and strands the command as PENDING.",
+      "tasks": [
+        "T5b"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AN exits 0 using a real review-state plan with invalid PLAN.json, real target_state, issued one-use challenge and dispatch_handlers. approve enters bt_rounds.plan_decide, its real publication gate raises SystemExit(PLAN_INVALID), Ledger._apply catches only Exception, and the caller receives no normal result. The sole ledger row remains PENDING; same-key replay returns UNKNOWN_OUTCOME although no approval or launch occurred. No injected SystemExit or agent process was used."
+    },
+    {
+      "id": "F74",
+      "severity": "low",
+      "status": "open",
+      "summary": "Production frontend configuration silently defaults a missing gateway origin to loopback.",
+      "tasks": [
+        "T15"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. AO exits 0: transpile and evaluate the actual next.config.ts with NODE_ENV=production and no FLOW_GATEWAY_ORIGIN; rewrites returns http://127.0.0.1:8790/api/:path*. This unconditional development fallback violates the fail-closed mandatory-production-config engineering rule and builds a frontend with the wrong API destination instead of refusing configuration. No live misconfigured deployment or data exposure is claimed."
+    },
+    {
+      "id": "F75",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Blocked-task decision requests are notified as plans awaiting approval.",
+      "tasks": [
+        "T6",
+        "T14"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. Report Probe AP fenced Python command exits 0: a real M1 blocked task produces a real open_requests decision with options; build_events maps it to plan.waiting, and notification_for_event renders plan esperando aprobación, not a decision notice. The decision payload is retained, but the Telegram renderer ignores it. The distinct decision.requested mapping is never reached. Actual plan approval waiting remains fixed F10."
+    },
+    {
+      "id": "F76",
+      "severity": "low",
+      "status": "open",
+      "summary": "Command activity events use a missing created_at field and are timestamped in 1970.",
+      "tasks": [
+        "T6"
+      ],
+      "evidence": "Rechecked on 885fd50f77742b9ee2b7a7a2bce21c9ebdacd776 (att-0428), 2026-10-21. Report Probe AP fenced Python command exits 0: actual successful Ledger.submit stores a current received_at and no created_at; passing the real Ledger.rows result to build_events emits command.updated occurredAt=1970-01-01T00:00:00Z. The schema-field mismatch is concrete. command.updated is not a notifying event, so no dropped Telegram command alert is claimed; numeric quota timestamp loss remains unconfirmed."
+    }
+  ]
+}
