@@ -153,6 +153,13 @@ def _snapshot(handler) -> None:
                      "reqId": run["req_id"],
                      "state": run.get("status") or ("running" if run.get("active") else "idle"),
                      "title": run["title"], "status": run["status"], "active": run["active"],
+<<<<<<< 994fd1e9ee28e03cae2f7c757218ab60ae7fe2e1
+||||||| a4936d53d3e29e51d1bd14e4f17968ee51c77dfa
+                     "activeAttempt": live._attempt(active["attempt"]) if active else None,
+=======
+                     "revision": run.get("revision"), "updatedAt": run.get("updated_at"),
+                     "activeAttempt": live._attempt(active["attempt"]) if active else None,
+>>>>>>> 6a384ab4c1c843dcde961f5b5b47db14aa3d408d
                      "activeTask": ({"id": active["task"], "title": active["task_title"],
                                      "state": active["state"], "attempt": live._attempt(active["attempt"])}
                                     if active else None),
@@ -161,14 +168,26 @@ def _snapshot(handler) -> None:
     for plan in plan_summaries:
         project, req = plan["project"], plan["req_id"]
         rdir = bt_plans_api.req_dir(root, project, req)
-        plans.append({"id": f"{project}/{req}", "project": project, "req": req,
-                      "state": plan.get("plan_status") or "unknown", "revision": plan.get("revision"),
-                      "updatedAt": plan.get("updated_at")})
-        decisions.extend({**request, "project": project, "req": req,
-                          "options": [{"id": option, "label": option.replace("_", " "),
-                                       "consequence": option.replace("_", " ")}
-                                      for option in request.get("options", []) if isinstance(option, str)]}
-                         for request in bt_plans_api.open_decisions(rdir))
+        plan_status = bt_plans_api.status_of(root, project, req)
+        tasks = [task for milestone in plan_status.get("milestones", [])
+                 for task in milestone.get("tasks", [])]
+        plans.append({"id": plan_status.get("plan", {}).get("plan_id") or f"{project}/{req}",
+                      "project": project, "req": req,
+                      "state": plan_status.get("plan", {}).get("status") or plan.get("plan_status") or "unknown",
+                      "revision": plan_status.get("plan", {}).get("revision") or plan.get("revision"),
+                      "updatedAt": plan.get("updated_at"),
+                      "acceptanceCriteria": [criterion for task in tasks
+                                             for criterion in task.get("acceptance_criteria", [])],
+                      "tasks": tasks})
+        for request in bt_plans_api.open_decisions(rdir):
+            options = []
+            for option in request.get("options", []):
+                if isinstance(option, str):
+                    options.append({"id": option, "label": option.replace("_", " "),
+                                    "consequence": option.replace("_", " ")})
+                elif isinstance(option, dict) and isinstance(option.get("id"), str):
+                    options.append(option)
+            decisions.append({**request, "project": project, "req": req, "options": options})
         for number in bt_plans_api.open_rounds(rdir):
             try:
                 data = bt_rounds.load(bt_rounds.rounds_dir(rdir) / f"round-{number:02d}.json")
