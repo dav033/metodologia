@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "Flow Remote",
+  "short_name": "Flow",
+  "description": "Panel remoto de ejecuciones de Flow.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1e1e2e",
+  "theme_color": "#1e1e2e",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
