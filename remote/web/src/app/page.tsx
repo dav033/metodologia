@@ -3,7 +3,11 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { QuotasPanel, RoutesPanel, type RouteOption } from "./recovery-panels";
+<<<<<<< 2a2a9b0efe481445c9da817af7a269d056ff7005
 import { FailureReviewPanel } from "./failure-review-panel";
+||||||| 9cb5a2d87bcc764b794dbe42da02b557903e9698
+=======
+>>>>>>> 43eff38e70b7a433338899c2bd8b0db3c50b6c1d
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string; roundId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
@@ -397,9 +401,28 @@ export default function HomePage() {
   const renderTask = (task: Task, run: Run) => {
     const plan = snapshot?.plans.find((item) => item.project === run.project && item.req === run.req);
     const nextRevision = (plan?.revision ?? run.revision ?? 0) + 1;
+<<<<<<< 2a2a9b0efe481445c9da817af7a269d056ff7005
     const canRecover = task.state === "recovering" || task.reopenedForRecovery === true;
     const reviewAttemptId = task.reviewAttempt?.attemptId ?? [...(task.history ?? [])]
       .reverse().find((attempt) => attempt.state === "failed" || attempt.state === "rejected")?.id;
+||||||| 9cb5a2d87bcc764b794dbe42da02b557903e9698
+<<<<<<< d4a0a2b55a8a733f1b48f2a8e52e8d38ecc781cf
+  const renderTask = (task: Task, run: Run) => <article className="task-card" key={`${run.req}-${task.id}`}>
+||||||| e3037b74a1a76def47b4e34dd011944470e2f084
+  const renderTask = (task: Task, run: Run) => {
+    const plan = snapshot?.plans.find((item) => item.project === run.project && item.req === run.req);
+    const nextRevision = (plan?.revision ?? run.revision ?? 0) + 1;
+    return <article className="task-card" key={`${run.req}-${task.id}`}>
+=======
+  const renderTask = (task: Task, run: Run) => {
+    const plan = snapshot?.plans.find((item) => item.project === run.project && item.req === run.req);
+    const nextRevision = (plan?.revision ?? run.revision ?? 0) + 1;
+    const canRecover = task.state === "recovering";
+    return <article className="task-card" key={`${run.req}-${task.id}`}>
+>>>>>>> 87dc0ae2cf1dc35bd48bc7683b84b5a0af137568
+=======
+    const canRecover = task.state === "recovering";
+>>>>>>> 43eff38e70b7a433338899c2bd8b0db3c50b6c1d
     return <article className="task-card" key={`${run.req}-${task.id}`}>
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>

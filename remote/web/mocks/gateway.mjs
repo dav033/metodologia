@@ -98,12 +98,24 @@ export async function createMockGatewayServer() {
             return;
           }
           server.receivedCommands.push(command);
+<<<<<<< 2a2a9b0efe481445c9da817af7a269d056ff7005
           server.commandMarkers.push(request.headers["x-flow-request"]);
+||||||| 9cb5a2d87bcc764b794dbe42da02b557903e9698
+          if (server.nextCommandResponse) {
+            const nextResponse = server.nextCommandResponse;
+=======
+>>>>>>> 43eff38e70b7a433338899c2bd8b0db3c50b6c1d
           const nextResponse = server.commandResponses.shift() ?? server.nextCommandResponse;
           if (nextResponse) {
             server.nextCommandResponse = null;
+<<<<<<< 2a2a9b0efe481445c9da817af7a269d056ff7005
             const result = nextResponse.body?.code === "STALE_PRECONDITION" ? "Rechazado: el estado cambió" : "Rechazado";
             server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result });
+||||||| 9cb5a2d87bcc764b794dbe42da02b557903e9698
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado: el estado cambió" });
+=======
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+>>>>>>> 43eff38e70b7a433338899c2bd8b0db3c50b6c1d
             send(nextResponse.status, nextResponse.body);
             return;
           }
@@ -122,7 +134,11 @@ export async function createMockGatewayServer() {
   server.snapshotReads = [];
   server.commands = [];
   server.receivedCommands = [];
+<<<<<<< 2a2a9b0efe481445c9da817af7a269d056ff7005
   server.commandMarkers = [];
+||||||| 9cb5a2d87bcc764b794dbe42da02b557903e9698
+=======
+>>>>>>> 43eff38e70b7a433338899c2bd8b0db3c50b6c1d
   server.history = [];
   server.challenges = [];
   server.commandResponses = [];
