@@ -121,6 +121,34 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(payload["events"][0]["type"], "plan.waiting")
         self.assertIn("decisionRequest", payload["events"][0]["data"])
 
+    def test_snapshot_route_redacts_session_secret_from_payload(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/snapshot"
+        run_row = run([], title="Diagnostic SESSION_SECRET=synthetic-session-secret")
+        run_row.update({"run": "demo/REQ-001", "req_id": "REQ-001", "status": "running"})
+        import bt_core
+
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch.object(bt_core, "ROOT", Path("/tmp")), \
+                patch("bt_live_api.run_summaries", return_value=[run_row]), \
+                patch("bt_live_api.now_frame_data", return_value={"items": []}), \
+                patch("bt_plans_api.plans_payload", return_value=[]):
+            bt_remote_api.route_get(handler)
+
+        payload = json.loads(handler.body)
+        serialized = json.dumps(payload)
+        self.assertEqual(handler.status, 200)
+        self.assertNotIn("synthetic-session-secret", serialized)
+        self.assertIn("SESSION_SECRET=[REDACTED]", serialized)
+
+    def test_redaction_covers_session_secret_assignments_and_fields(self):
+        payload = feed.redact({"diagnostic": "SESSION_SECRET: synthetic-session-secret",
+                               "SESSION_SECRET": "synthetic-session-secret"})
+        serialized = json.dumps(payload)
+        self.assertNotIn("synthetic-session-secret", serialized)
+        self.assertIn("SESSION_SECRET=[REDACTED]", serialized)
+        self.assertEqual(payload["SESSION_SECRET"], "[REDACTED]")
+
     def test_events_route_rejects_bad_cursor_and_limit(self):
         for path, code in (("/api/remote/v1/events?after=junk", "INVALID_CURSOR"),
                            ("/api/remote/v1/events?limit=0", "INVALID_LIMIT")):
