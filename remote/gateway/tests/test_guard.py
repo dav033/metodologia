@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlencode
 
-from auth import OAuthConfig
+from auth import OAuthConfig, SESSION_COOKIE, SessionStore
 from server import create_server
 
 
@@ -61,11 +61,29 @@ class RequestGuardTests(unittest.TestCase):
             statuses.append(status)
         self.assertEqual(statuses, [400, 400, 400, 400, 400, 429])
 
+    def test_oauth_login_starts_are_throttled(self) -> None:
+        statuses = [self.request("GET", "/api/auth/login")[0] for _ in range(6)]
+        self.assertEqual(statuses, [302, 302, 302, 302, 302, 429])
+
     def test_command_rate_limit_rejects_the_thirty_first_request(self) -> None:
         headers = {"Origin": "https://flow.example.test", "X-Flow-Request": "1"}
-        statuses = [self.request("POST", "/api/remote/v1/commands", headers)[0] for _ in range(31)]
+        token = SessionStore(str(Path(self.temp_dir.name) / "gateway.sqlite"),
+                             "test-session-secret-with-more-than-32-bytes").create_session("dav033")
+        authenticated = {**headers, "Cookie": f"{SESSION_COOKIE}={token}"}
+        statuses = [self.request("POST", "/api/remote/v1/commands", authenticated)[0] for _ in range(31)]
         self.assertEqual(statuses[:30], [404] * 30)
         self.assertEqual(statuses[30], 429)
+
+    def test_anonymous_commands_do_not_consume_authenticated_command_quota(self) -> None:
+        headers = {"Origin": "https://flow.example.test", "X-Flow-Request": "1"}
+        anonymous = [self.request("POST", "/api/remote/v1/commands", headers)[0] for _ in range(30)]
+        self.assertEqual(anonymous, [401] * 30)
+
+        token = SessionStore(str(Path(self.temp_dir.name) / "gateway.sqlite"),
+                             "test-session-secret-with-more-than-32-bytes").create_session("dav033")
+        authenticated = {**headers, "Cookie": f"{SESSION_COOKIE}={token}"}
+        status, _ = self.request("POST", "/api/remote/v1/commands", authenticated)
+        self.assertEqual(status, 404)
 
 
 if __name__ == "__main__":

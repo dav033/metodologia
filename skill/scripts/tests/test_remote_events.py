@@ -95,6 +95,40 @@ class RemoteEventsTests(unittest.TestCase):
             bt_remote_api.route_get(handler)
         self.assertNotIn("secret", handler.body)
 
+    def test_real_get_routes_redact_session_secret_from_events_snapshot_and_review(self):
+        marker = "synthetic-session-secret-marker"
+        row = {"remote_type": "attempt.failed", "id": "session-secret-event", "at": "2026-10-19T12:00:00Z",
+               "run": "demo/REQ-001", "retry_exhausted": True,
+               "data": {"failure": f"SESSION_SECRET={marker}"}}
+        handler = Handler()
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_live_api.flow_events", return_value=([row], [], {})), \
+                patch.object(bt_remote_api, "_plans", return_value=[]), \
+                patch.object(bt_remote_api, "_snapshot_runs", return_value=[{"run": "demo/REQ-001",
+                                                                               "failure": f"SESSION_SECRET={marker}"}]), \
+                patch.object(bt_remote_api, "_planning_detail", return_value=([], [])), \
+                patch("bt_quota_live.read_all_live", return_value=[]), \
+                patch("bt_remote_commands.Ledger.rows", return_value=[]):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertNotIn(marker, handler.body)
+        self.assertIn("[REDACTED]", handler.body)
+
+        handler.path = "/api/remote/v1/snapshot"
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch.object(bt_remote_api, "_snapshot_runs", return_value=[{"run": "demo/REQ-001",
+                                                                               "failure": f"SESSION_SECRET={marker}"}]), \
+                patch.object(bt_remote_api, "_plans", return_value=[]):
+            bt_remote_api.route_get(handler)
+        self.assertNotIn(marker, handler.body)
+
+        handler.path = "/api/remote/v1/attempts/a1/review"
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch.object(bt_remote_api, "_failure_review", return_value={"summary": f"SESSION_SECRET={marker}"}):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertNotIn(marker, handler.body)
+
     def test_real_get_route_projects_flow_bus_attempt_events_without_remote_type(self):
         row = {"v": 1, "seq": "m1:17", "ord": "0000000000000001.000000:m1:0000000017",
                "at": "2026-10-19T12:00:00.000+00:00", "run": "demo/REQ-001", "task": "T1",

@@ -69,6 +69,10 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
         def do_GET(self) -> None:
             route = urlsplit(self.path)
             if route.path in {"/api/auth/login", "/api/auth/github"}:
+                client_key = self.client_address[0]
+                if not rate_limiter.acquire("login", client_key, LOGIN_FAILURE_LIMIT, RATE_WINDOW_SECONDS):
+                    self._rate_limited()
+                    return
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
@@ -162,16 +166,16 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 return
             route = urlsplit(self.path)
             if route.path == "/api/remote/v1/challenges":
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
                 client_key = self.client_address[0]
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
                     return
                 if runtime is None:
                     self._json(404, {"error": "not found"})
-                    return
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
                     return
                 try:
                     length = int(self.headers.get("Content-Length", "0"))
@@ -200,16 +204,16 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 self._json(status, result)
                 return
             if route.path == "/api/remote/v1/commands":
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
                 client_key = self.client_address[0]
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
                     return
                 if runtime is None:
                     self._json(404, {"error": "not found"})
-                    return
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
                     return
                 try:
                     length = int(self.headers.get("Content-Length", "0"))
