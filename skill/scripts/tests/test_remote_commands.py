@@ -210,6 +210,41 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((status, body["status"]), (200, "OK"))
         self.assertEqual(self.calls, [("demo/REQ-001", {"task": "T1"})])
 
+    def test_f3_answer_decision_precondition_reads_open_decision_at_route_entry(self):
+        import bt_scheduler_decisions
+
+        _, patches = self._create_scheduler_run({})
+        self.handlers["answer-decision"] = self._pause
+        command = req(command="answer-decision", params={"request_id": "T2:1", "option": "retry"},
+                      precondition={"state": "blocked", "revision": 3})
+        patches.append(patch.object(bt_scheduler_decisions, "open_requests",
+                                    return_value=[{"id": "T2:1", "state": "blocked", "revision": 3}]))
+        h = FakeHandler(json.dumps(command).encode())
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, self.handlers, clear=True):
+            with patches[0], patches[1], patches[2]:
+                bt_remote_api.route_post(h)
+
+        self.assertEqual((h.sent[0], h.sent[1]["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"request_id": "T2:1", "option": "retry"})])
+
+    def test_f4_answer_round_precondition_reads_open_round_at_route_entry(self):
+        rdir, patches = self._create_scheduler_run({})
+        round_path = rdir / "rounds" / "round-02.json"
+        round_path.parent.mkdir(parents=True)
+        round_path.write_text(json.dumps({"round": 2, "status": "open", "answers": {}}), encoding="utf-8")
+        self.handlers["answer-round"] = self._pause
+        command = req(command="answer-round", params={"round": 2, "answers": {"q1": {"text": "Keep scope"}}},
+                      precondition={"state": "open"})
+        h = FakeHandler(json.dumps(command).encode())
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, self.handlers, clear=True):
+            with patches[0], patches[1]:
+                bt_remote_api.route_post(h)
+
+        self.assertEqual((h.sent[0], h.sent[1]["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", command["params"])])
+
     def test_f19_retry_rejects_task_state_change_before_handler(self):
         _, patches = self._create_scheduler_run({"T1": "done"})
         self.handlers["retry"] = self._pause

@@ -11,7 +11,7 @@ const read = (path) => readFile(join(root, path), "utf8");
 test("failure review renders its four sections from the fixture", async () => {
   const page = await read("src/app/review/page.tsx");
   const fixture = await read("src/app/review/review-fixture.ts");
-  for (const section of ["Causa", "Salida de verificación", "Estadística del diff", "Final del log"]) {
+  for (const section of ["CAUSA", "SALIDA DE VERIFICACIÓN", "ESTADÍSTICA DEL DIFF", "FINAL DEL LOG"]) {
     assert.match(page, new RegExp(`title="${section}"`));
   }
   assert.match(page, /useState<FailureReview>\(\{ \.\.\.reviewFixture/);

@@ -345,7 +345,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 4; attempt += 1) await delay(100);
     assert.equal(gateway.commands.at(-1)?.type, "answer-round", "round answers should use the command ledger");
     assert.equal(gateway.commands.at(-1)?.round, 2);
-    assert.deepEqual(gateway.commands.at(-1)?.answer, { q1: { choice: "safe", note: "" }, q2: { text: "Keep the audit trail" } });
+    assert.deepEqual(gateway.commands.at(-1)?.answers, { q1: { choice: "safe", note: "" }, q2: { text: "Keep the audit trail" } });
     for (let attempt = 0; attempt < 40; attempt += 1) {
       const ready = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.decision-option button')?.disabled === false", returnByValue: true });
       if (ready.result?.value) break;

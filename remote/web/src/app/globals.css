@@ -109,6 +109,8 @@ h1 span { color: var(--ctp-lavender); }
 .task-list { display: grid; gap: 10px; margin-top: 22px; }
 .task-list h3 { margin: 0; color: var(--ctp-subtext1); font-size: 14px; }
 .task-card { min-width: 0; border: 1px solid rgb(205 214 244 / 8%); border-radius: 11px; background: rgb(49 50 68 / 38%); padding: 14px; }
+.failure-review { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.failure-review .review-scroll { max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 .row-heading strong { min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
 .task-card .state { font-size: 10px; }
 .task-card .last-seen { margin-top: 6px; font-size: 12px; }

@@ -250,6 +250,39 @@ class RemoteApiTests(unittest.TestCase):
             self.assertIn(b"A-live", live._now_frame(base))
             self.assertEqual(read_now.call_count, 1)
 
+    def test_snapshot_route_preserves_non_live_failed_attempt_for_review(self):
+        import bt_remote_api
+        import bt_plans_api
+
+        class SnapshotHandler:
+            path = "/api/remote/v1/snapshot"
+            headers = {"Authorization": f"Bearer {TEST_KEY}"}
+
+            def send(self, body, status, content_type):
+                self.body, self.status, self.content_type = body, status, content_type
+
+        failed_attempt = {"id": "A-failed", "state": "failed", "live": False,
+                          "last_activity_at": "2026-10-20T10:00:00Z", "failure": "tests failed"}
+        failed_run = {
+            "run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "title": "Demo",
+            "updated_at": "2026-10-20T10:00:00Z", "max_attempts": 2, "active": False,
+            "status": "failed", "tasks": [{"id": "T1", "title": "Failed task", "state": "failed",
+                                               "attempt": failed_attempt, "history": [failed_attempt]}],
+        }
+        handler = SnapshotHandler()
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": TEST_KEY}), \
+                patch("bt_live_api.run_summaries", return_value=[failed_run]), \
+                patch("bt_live_api.now_frame_data", return_value={"items": []}), \
+                patch.object(bt_plans_api, "plans_payload", return_value=[]):
+            bt_remote_api.route_get(handler)
+
+        payload = json.loads(handler.body)
+        task = payload["runs"][0]["tasks"][0]
+        self.assertEqual(handler.status, 200)
+        self.assertIsNone(task["activeAttempt"])
+        self.assertEqual(task["reviewAttempt"]["id"], "A-failed")
+        self.assertFalse(task["reviewAttempt"]["live"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -38,8 +38,47 @@ class LaptopLedgerHandler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
 
+<<<<<<< 9e2b4a7ef27c0360273e4d2c110f31839133069d
 def config(path: Path) -> GatewayConfig:
     return GatewayConfig("http://127.0.0.1:18765", "test-key", "test-token", "test-chat", path)
+||||||| f5aa1d3190788a2f58e4928c44fd96a9b9a3e1c7
+class FakeLaptop:
+    def __init__(self) -> None:
+        self.command_calls: list[dict[str, object]] = []
+        self.challenge_calls: list[dict[str, object]] = []
+        self.command_error: Exception | None = None
+=======
+class LaptopEventsHandler(BaseHTTPRequestHandler):
+    requested_cursors: list[str] = []
+    event = {"id": "evt-decision", "type": "plan.waiting", "dedupeKey": "evt-decision",
+             "target": {"req": "REQ-027"}}
+
+    def log_message(self, *_args):
+        pass
+
+    def do_GET(self):
+        from urllib.parse import parse_qs, urlsplit
+
+        after = parse_qs(urlsplit(self.path).query).get("after", [""])[0]
+        self.requested_cursors.append(after)
+        if after == "expired-cursor":
+            status, body = 400, {"code": "INVALID_CURSOR"}
+        else:
+            status, body = 200, {"events": [self.event], "nextCursor": "fresh-cursor"}
+        payload = json.dumps(body).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+
+class FakeLaptop:
+    def __init__(self) -> None:
+        self.command_calls: list[dict[str, object]] = []
+        self.challenge_calls: list[dict[str, object]] = []
+        self.command_error: Exception | None = None
+>>>>>>> e5f3b15ac8278a1920c8feef414f89bd689013ca
 
 
 def command(**changes):
@@ -162,10 +201,74 @@ class CommandRelayHttpTests(unittest.TestCase):
             "precondition": {"state": "running"},
         }
 
+<<<<<<< 9e2b4a7ef27c0360273e4d2c110f31839133069d
     def test_destructive_command_requires_confirmation(self):
         status, body = self.post(self.run_command("approve"))
         self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
         self.laptop.post_json.assert_not_called()
+||||||| f5aa1d3190788a2f58e4928c44fd96a9b9a3e1c7
+    def test_authenticated_challenge_request_is_relayed_to_laptop(self) -> None:
+        status, content_type, body = self.post_path(
+            "/api/remote/v1/challenges",
+            {"target": "demo/REQ-027", "typedReq": "REQ-027"},
+            self.headers,
+        )
+=======
+    def test_web_decision_answer_is_validated_and_translated_for_laptop(self) -> None:
+        command = self.command("answer-decision")
+        command.update({"idempotencyKey": "decision-command-key-0001", "requestId": "T2:1",
+                       "option": "retry", "reason": "Reintentar"})
+        command["precondition"] = {"state": "open"}
+
+        status, _content_type, body = self.post(command)
+
+        self.assertEqual((status, body["status"]), (202, "accepted"))
+        self.assertEqual(self.laptop.command_calls[-1]["params"], {
+            "request_id": "T2:1", "option": "retry", "reason": "Reintentar",
+        })
+
+    def test_round_answer_envelope_relays_answers_to_laptop(self) -> None:
+        command = self.command("answer-round")
+        command.update({"idempotencyKey": "round-command-key-0001",
+                       "target": {"kind": "round", "project": "demo", "req": "REQ-027", "roundId": "2"},
+                       "round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+        command["precondition"] = {"state": "open"}
+
+        status, _content_type, body = self.post(command)
+
+        self.assertEqual((status, body["status"]), (202, "accepted"))
+        self.assertEqual(self.laptop.command_calls[-1]["params"], {
+            "round": 2, "answers": {"q1": {"text": "Keep scope"}},
+        })
+
+    def test_expired_event_cursor_resets_then_sse_and_telegram_delivery_resume(self) -> None:
+        LaptopEventsHandler.requested_cursors = []
+        laptop_server = ThreadingHTTPServer(("127.0.0.1", 0), LaptopEventsHandler)
+        laptop_thread = threading.Thread(target=laptop_server.serve_forever, daemon=True)
+        laptop_thread.start()
+        self.addCleanup(laptop_server.server_close)
+        self.addCleanup(laptop_server.shutdown)
+        self.runtime.laptop = LaptopClient(f"http://127.0.0.1:{laptop_server.server_port}", "test-key")
+        self.runtime.event_cursor = "expired-cursor"
+        self.runtime._poll_events()
+        self.assertEqual(self.runtime.event_cursor, "")
+
+        self.runtime._poll_events()
+
+        self.assertEqual(LaptopEventsHandler.requested_cursors, ["expired-cursor", ""])
+        self.assertEqual(self.runtime.event_cursor, "fresh-cursor")
+        self.assertEqual(self.runtime.stream.after(None)[0][1], LaptopEventsHandler.event)
+        delivered = []
+        self.runtime.outbox.deliver_due(delivered.append)
+        self.assertEqual(len(delivered), 1)
+
+    def test_authenticated_challenge_request_is_relayed_to_laptop(self) -> None:
+        status, content_type, body = self.post_path(
+            "/api/remote/v1/challenges",
+            {"target": "demo/REQ-027", "typedReq": "REQ-027"},
+            self.headers,
+        )
+>>>>>>> e5f3b15ac8278a1920c8feef414f89bd689013ca
 
     def test_confirmed_destructive_command_reaches_laptop_ledger(self):
         command = self.run_command("approve")

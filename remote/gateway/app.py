@@ -232,6 +232,13 @@ class GatewayRuntime:
     def _poll_events(self) -> None:
         try:
             result = self.laptop.events(self.event_cursor)
+        except UpstreamResponseError as exc:
+            if exc.status == 400 and exc.payload.get("code") == "INVALID_CURSOR":
+                self.event_cursor = ""
+                logger.info("Laptop event cursor expired; restarting feed from the beginning")
+                return
+            logger.warning("Laptop event feed unavailable")
+            return
         except UpstreamError:
             logger.warning("Laptop event feed unavailable")
             return
@@ -249,6 +256,178 @@ class GatewayRuntime:
         if isinstance(next_cursor, str):
             self.event_cursor = next_cursor
 
+<<<<<<< 9e2b4a7ef27c0360273e4d2c110f31839133069d
+||||||| f5aa1d3190788a2f58e4928c44fd96a9b9a3e1c7
+    def submit_command(self, value: object) -> tuple[int, dict[str, Any]]:
+        command = validate_command(value)
+        target = command["target"]
+        params = {key: item for key, item in command.items()
+                  if key not in {"schemaVersion", "idempotencyKey", "type", "target", "precondition"}}
+        if "taskId" in target:
+            params["task"] = target["taskId"]
+        if "attemptId" in target:
+            params["attempt"] = target["attemptId"]
+        if "requestId" in params:
+            params["request_id"] = params.pop("requestId")
+        if "typedReq" in params:
+            params["typed_req"] = params.pop("typedReq")
+        if "answer" in params and command["type"] == "answer-round":
+            params["answers"] = params.pop("answer")
+        confirmation = params.pop("confirmation", None)
+        ledger_command = {
+            "idempotency_key": command["idempotencyKey"],
+            "command": command["type"],
+            "target": f'{target["project"]}/{target["req"]}',
+            "origin": "web",
+            "params": params,
+            "precondition": command["precondition"],
+        }
+        if isinstance(confirmation, dict):
+            ledger_command["confirmation"] = {
+                "challenge_id": confirmation.get("challengeId", confirmation.get("challenge_id")),
+                "typed_req": confirmation.get("typedReq", confirmation.get("typed_req")),
+            }
+        return self._relay_command(ledger_command)
+
+    def issue_challenge(self, target: str, typed_req: str) -> dict[str, Any]:
+        if (not isinstance(target, str) or target.count("/") != 1 or not isinstance(typed_req, str)
+                or target.rsplit("/", 1)[-1] != typed_req):
+            raise CommandValidationError("INVALID_CHALLENGE", "Typed request id must match its target")
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            raise CommandRelayError(410, "LAPTOP_OFFLINE", "Laptop is offline; challenge was not issued", None)
+        try:
+            challenge = self.laptop.challenge({"target": target, "typedReq": typed_req})
+        except UpstreamResponseError as exc:
+            code = exc.payload.get("code")
+            safe_code = code if isinstance(code, str) and code in {"INVALID_CHALLENGE", "LAPTOP_OFFLINE"} else "CHALLENGE_REJECTED"
+            raise CommandValidationError(safe_code, "Laptop rejected the confirmation challenge", exc.status) from exc
+        except UpstreamError as exc:
+            raise CommandRelayError(503, "CHALLENGE_UNAVAILABLE", "Could not issue confirmation challenge", None) from exc
+        if not isinstance(challenge, dict) or not isinstance(challenge.get("challengeId"), str):
+            raise CommandRelayError(503, "CHALLENGE_UNAVAILABLE", "Laptop returned an invalid confirmation challenge", None)
+        return challenge
+
+    def read_model(self, path: str) -> dict[str, Any]:
+        return self.laptop.read_model(path)
+
+    def submit_telegram_command(self, value: object) -> tuple[int, dict[str, Any]]:
+        command = validate_command(value)
+        if command["type"] not in {"pause", "resume"} or command["target"]["kind"] != "run":
+            raise CommandValidationError("INVALID_COMMAND", "Telegram command target or type is not allowed")
+        target = command["target"]
+        ledger_command = {
+            "idempotency_key": command["idempotencyKey"],
+            "command": command["type"],
+            "target": f"{target['project']}/{target['req']}",
+            "origin": "telegram",
+            "params": {},
+            "precondition": {"state": command["precondition"]["state"]},
+        }
+        return self._relay_command(ledger_command)
+
+    def _relay_command(self, command: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        key = command.get("idempotencyKey", command.get("idempotency_key", ""))
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            raise CommandRelayError(410, "LAPTOP_OFFLINE", "Laptop is offline; command was not queued", key)
+        try:
+            return self.laptop.command(command)
+        except UpstreamResponseError as exc:
+            code = exc.payload.get("code")
+            safe_codes = {
+                "INVALID_COMMAND", "STALE_PRECONDITION", "IDEMPOTENCY_CONFLICT", "CONFIRMATION_REQUIRED",
+                "CONFIRMATION_EXPIRED", "LAPTOP_OFFLINE", "BODY_TOO_LARGE", "COMMAND_NOT_APPLICABLE",
+            }
+            safe_code = code if isinstance(code, str) and code in safe_codes else "COMMAND_REJECTED"
+            raise CommandRelayError(exc.status, safe_code, "Laptop rejected the command", key) from exc
+        except (UpstreamTimeout, UpstreamError) as exc:
+            raise CommandRelayError(503, "UNKNOWN_OUTCOME", "Command outcome is unknown; retry with the same idempotency key", key) from exc
+
+=======
+    def submit_command(self, value: object) -> tuple[int, dict[str, Any]]:
+        command = validate_command(value)
+        target = command["target"]
+        params = {key: item for key, item in command.items()
+                  if key not in {"schemaVersion", "idempotencyKey", "type", "target", "precondition"}}
+        if "taskId" in target:
+            params["task"] = target["taskId"]
+        if "attemptId" in target:
+            params["attempt"] = target["attemptId"]
+        if "requestId" in params:
+            params["request_id"] = params.pop("requestId")
+        if "typedReq" in params:
+            params["typed_req"] = params.pop("typedReq")
+        if "answer" in params and command["type"] == "answer-round" and "answers" not in params:
+            params["answers"] = params.pop("answer")
+        confirmation = params.pop("confirmation", None)
+        ledger_command = {
+            "idempotency_key": command["idempotencyKey"],
+            "command": command["type"],
+            "target": f'{target["project"]}/{target["req"]}',
+            "origin": "web",
+            "params": params,
+            "precondition": command["precondition"],
+        }
+        if isinstance(confirmation, dict):
+            ledger_command["confirmation"] = {
+                "challenge_id": confirmation.get("challengeId", confirmation.get("challenge_id")),
+                "typed_req": confirmation.get("typedReq", confirmation.get("typed_req")),
+            }
+        return self._relay_command(ledger_command)
+
+    def issue_challenge(self, target: str, typed_req: str) -> dict[str, Any]:
+        if (not isinstance(target, str) or target.count("/") != 1 or not isinstance(typed_req, str)
+                or target.rsplit("/", 1)[-1] != typed_req):
+            raise CommandValidationError("INVALID_CHALLENGE", "Typed request id must match its target")
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            raise CommandRelayError(410, "LAPTOP_OFFLINE", "Laptop is offline; challenge was not issued", None)
+        try:
+            challenge = self.laptop.challenge({"target": target, "typedReq": typed_req})
+        except UpstreamResponseError as exc:
+            code = exc.payload.get("code")
+            safe_code = code if isinstance(code, str) and code in {"INVALID_CHALLENGE", "LAPTOP_OFFLINE"} else "CHALLENGE_REJECTED"
+            raise CommandValidationError(safe_code, "Laptop rejected the confirmation challenge", exc.status) from exc
+        except UpstreamError as exc:
+            raise CommandRelayError(503, "CHALLENGE_UNAVAILABLE", "Could not issue confirmation challenge", None) from exc
+        if not isinstance(challenge, dict) or not isinstance(challenge.get("challengeId"), str):
+            raise CommandRelayError(503, "CHALLENGE_UNAVAILABLE", "Laptop returned an invalid confirmation challenge", None)
+        return challenge
+
+    def read_model(self, path: str) -> dict[str, Any]:
+        return self.laptop.read_model(path)
+
+    def submit_telegram_command(self, value: object) -> tuple[int, dict[str, Any]]:
+        command = validate_command(value)
+        if command["type"] not in {"pause", "resume"} or command["target"]["kind"] != "run":
+            raise CommandValidationError("INVALID_COMMAND", "Telegram command target or type is not allowed")
+        target = command["target"]
+        ledger_command = {
+            "idempotency_key": command["idempotencyKey"],
+            "command": command["type"],
+            "target": f"{target['project']}/{target['req']}",
+            "origin": "telegram",
+            "params": {},
+            "precondition": {"state": command["precondition"]["state"]},
+        }
+        return self._relay_command(ledger_command)
+
+    def _relay_command(self, command: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        key = command.get("idempotencyKey", command.get("idempotency_key", ""))
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            raise CommandRelayError(410, "LAPTOP_OFFLINE", "Laptop is offline; command was not queued", key)
+        try:
+            return self.laptop.command(command)
+        except UpstreamResponseError as exc:
+            code = exc.payload.get("code")
+            safe_codes = {
+                "INVALID_COMMAND", "STALE_PRECONDITION", "IDEMPOTENCY_CONFLICT", "CONFIRMATION_REQUIRED",
+                "CONFIRMATION_EXPIRED", "LAPTOP_OFFLINE", "BODY_TOO_LARGE", "COMMAND_NOT_APPLICABLE",
+            }
+            safe_code = code if isinstance(code, str) and code in safe_codes else "COMMAND_REJECTED"
+            raise CommandRelayError(exc.status, safe_code, "Laptop rejected the command", key) from exc
+        except (UpstreamTimeout, UpstreamError) as exc:
+            raise CommandRelayError(503, "UNKNOWN_OUTCOME", "Command outcome is unknown; retry with the same idempotency key", key) from exc
+
+>>>>>>> e5f3b15ac8278a1920c8feef414f89bd689013ca
     def run_forever(self) -> None:
         while True:
             started = time.monotonic()
