@@ -58,14 +58,14 @@ export async function createMockGatewayServer() {
       });
       return;
     }
-    const reviewUrl = request.url ? new URL(request.url, "http://localhost") : null;
-    const reviewMatch = request.method === "GET" && reviewUrl?.pathname.match(/^\/api\/remote\/v1\/attempts\/([^/]+)\/review$/);
+    const reviewUrl = new URL(request.url ?? "/", "http://localhost");
+    const reviewMatch = request.method === "GET" && reviewUrl.pathname.match(/^\/api\/remote\/v1\/attempts\/([^/]+)\/review$/);
     if (reviewMatch) {
-      const attemptId = decodeURIComponent(reviewMatch[1]);
-      if (reviewUrl.searchParams.get("target") !== "lotm/REQ-027") {
+      if (!/^[A-Za-z0-9_-]+\/REQ-[0-9]+$/.test(reviewUrl.searchParams.get("target") ?? "")) {
         send(400, { code: "INVALID_TARGET", message: "Se requiere un target válido." });
         return;
       }
+      const attemptId = decodeURIComponent(reviewMatch[1]);
       send(200, { attemptId, cause: "La verificación falló; GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz123456",
         verification: { command: "npm run verify", output: "Fallo de fixture en rejected" },
         diff: { stat: "2 files changed, 3 insertions(+)" },

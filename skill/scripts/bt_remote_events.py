@@ -112,8 +112,11 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
                 if attempt.get("state") in {"rejected", "failed"} or attempt.get("failure"):
                     if exhausted:
                         data.update({"retryExhausted": True,
-                                     "attemptsUsed": task.get("attempts_used", task.get("attempts")),
-                                     "maxAttempts": task.get("max_attempts")})
+                                     "attemptsUsed": task.get("attempts_used", task.get("attemptsUsed",
+                                                                  task.get("attempts"))),
+                                     "maxAttempts": task.get("max_attempts", task.get("maxAttempts")),
+                                     "retriesRemaining": task.get("retries_remaining",
+                                                                   task.get("retriesRemaining", 0))})
                         out.append(_event("attempt.failed", identity, occurred_at, target, data))
                         state_failure_targets.add((project, req, str(task.get("id", ""))))
                 elif attempt.get("state") == "blocked":
@@ -132,14 +135,11 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
         request = decision["request"]
         project, req = decision["project"], decision["req"]
         identity = f"{project}/{req}:{request['id']}"
-        options = request.get("options", [])
-        option_ids = [option if isinstance(option, str) else option.get("id")
-                      for option in options if isinstance(option, str) or isinstance(option, dict)]
         out.append(_event("plan.waiting", identity, decision.get("at", ""),
                           _task_target(project, req, request.get("task"), request.get("attempt")),
                           {"decisionRequest": {"id": request["id"], "title": request.get("title"),
                                                 "what": request.get("what"), "reason": request.get("reason"),
-                                                "options": option_ids,
+                                                "options": [option.get("id") for option in request.get("options", [])],
                                                 "recommended": request.get("recommended")}}))
     for round_ in state.get("rounds", []):
         project, req, number = round_["project"], round_["req"], str(round_["round"])
@@ -198,6 +198,8 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
     kind = row.get("remote_type")
     if kind is None:
         kind = {("state_change", "failed"): "attempt.failed", ("state_change", "rejected"): "attempt.failed",
+                ("attempt_transition", "failed"): "attempt.failed",
+                ("attempt_transition", "rejected"): "attempt.failed",
                 ("task_state", "blocked"): "attempt.blocked", ("verdict", "failed"): "attempt.failed",
                 ("verdict", "rejected"): "attempt.failed"}.get((row.get("kind"), data.get("state")))
     if kind not in NOTIFICATION_KINDS:
@@ -212,8 +214,14 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
     source_id = str(row.get("id") or row.get("ord") or row.get("seq") or "")
     identity = f'{target["project"]}/{target["req"]}:{source_id}'
     payload = data or {key: row[key] for key in ("failure", "summary") if row.get(key) is not None}
-    if kind == "attempt.failed" and not _retry_exhausted(payload):
-        return None
+    if kind == "attempt.failed":
+        retry_facts = {**row, **payload}
+        if not _retry_exhausted(retry_facts):
+            return None
+        payload = {**payload, "retryExhausted": True,
+                   "attemptsUsed": retry_facts.get("attempts_used", retry_facts.get("attemptsUsed")),
+                   "maxAttempts": retry_facts.get("max_attempts", retry_facts.get("maxAttempts")),
+                   "retriesRemaining": retry_facts.get("retries_remaining", retry_facts.get("retriesRemaining", 0))}
     return _event(kind, identity, str(row.get("at") or row.get("occurredAt") or ""), target, payload)
 
 

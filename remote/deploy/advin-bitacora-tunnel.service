@@ -1,7 +1,8 @@
 [Unit]
 Description=Reverse SSH tunnel for the Bitacora remote API
-After=network-online.target
+After=network-online.target bitacora-remote-api.service
 Wants=network-online.target
+Requires=bitacora-remote-api.service
 
 [Service]
 Type=simple

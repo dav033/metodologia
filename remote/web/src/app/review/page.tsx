@@ -62,8 +62,11 @@ export default function ReviewPage() {
     const req = params.get("req");
     const taskId = params.get("taskId");
     const fragment = new URLSearchParams(window.location.hash.slice(1));
-    const fragmentAttempt = fragment.get("attempt") ?? fragment.get("attemptId");
-    if (!project || !req || (!fragmentAttempt && !taskId)) return;
+    const legacyAttempt = window.location.hash.startsWith("#attempt-")
+      ? decodeURIComponent(window.location.hash.slice("#attempt-".length))
+      : null;
+    const fragmentAttempt = fragment.get("attempt") ?? fragment.get("attemptId") ?? legacyAttempt;
+    if (!fragmentAttempt && (!project || !req || !taskId)) return;
     let active = true;
     setLoading(true);
     const attemptIdPromise = fragmentAttempt
@@ -73,9 +76,9 @@ export default function ReviewPage() {
         return attemptFromSnapshot(await response.json() as unknown, project!, req!, taskId!);
       });
     void attemptIdPromise.then(async (attemptId) => {
-        if (!attemptId) return null;
-        const target = encodeURIComponent(`${project}/${req}`);
-        const detailResponse = await fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review?target=${target}`, { cache: "no-store" });
+        if (!attemptId || !project || !req) return null;
+        const target = `${project}/${req}`;
+        const detailResponse = await fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review?target=${encodeURIComponent(target)}`, { cache: "no-store" });
         if (!detailResponse.ok) throw new Error("Review unavailable");
         const response = await detailResponse.json() as unknown;
         const reviewValue = object(response);
