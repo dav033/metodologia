@@ -76,7 +76,7 @@ export async function createMockGatewayServer() {
             send(400, { code: "INVALID_CHALLENGE", message: "El id del requerimiento no coincide" });
             return;
           }
-          server.challenges.push(challengeRequest);
+          server.challenges.push({ ...challengeRequest, requestMarker: request.headers["x-flow-request"] });
           send(201, { challengeId: "mock-server-challenge-0001", target: challengeRequest.target, expiresIn: 120 });
         } catch { send(400, { code: "INVALID_CHALLENGE", message: "JSON inválido" }); }
       });
@@ -92,6 +92,7 @@ export async function createMockGatewayServer() {
             send(400, { code: "INVALID_COMMAND", message: "Comando inválido" });
             return;
           }
+<<<<<<< 662ec50eedec3dccee3b4f7f940a648cfadd1c18
           server.receivedCommands.push(command);
           const queuedResponse = server.commandResponses.shift();
           const nextResponse = queuedResponse ?? server.nextCommandResponse;
@@ -104,6 +105,15 @@ export async function createMockGatewayServer() {
           server.commands.push(command);
           server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "accepted" });
           send(202, { commandId: "mock-command-v1", status: "accepted", idempotencyKey: command.idempotencyKey });
+||||||| b80e38cf6c5c691122c401f289f9072c565b0841
+          server.commands.push(command);
+          const nextResponse = server.commandResponses.shift();
+          send(nextResponse?.status ?? 202, nextResponse?.body ?? { commandId: "mock-command-v1", status: "accepted", idempotencyKey: command.idempotencyKey });
+=======
+          server.commands.push({ ...command, requestMarker: request.headers["x-flow-request"] });
+          const nextResponse = server.commandResponses.shift();
+          send(nextResponse?.status ?? 202, nextResponse?.body ?? { commandId: "mock-command-v1", status: "accepted", idempotencyKey: command.idempotencyKey });
+>>>>>>> b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
         } catch {
           send(400, { code: "INVALID_COMMAND", message: "JSON inválido" });
         }

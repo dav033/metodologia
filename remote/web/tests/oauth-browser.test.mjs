@@ -41,6 +41,7 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
   let provider;
   let next;
   let profile;
+  const gatewayPaths = [];
 
   try {
     provider = createServer((request, response) => {
@@ -56,6 +57,7 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
 
     gateway = createServer((request, response) => {
       const requestUrl = new URL(request.url, "http://gateway.local");
+      gatewayPaths.push(requestUrl.pathname);
       if (requestUrl.pathname === "/api/auth/github") {
         const state = "browser-state-check";
         const authorize = new URL(`http://localhost:${providerPort}/authorize`);
@@ -64,6 +66,14 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
         response.writeHead(302, {
           "set-cookie": `flow_oauth_state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax`,
           location: authorize.toString(),
+        });
+        response.end();
+        return;
+      }
+      if (requestUrl.pathname === "/api/auth/logout") {
+        response.writeHead(302, {
+          "set-cookie": "flow_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict",
+          location: "/",
         });
         response.end();
         return;
@@ -108,6 +118,13 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
     });
     await waitForNext(frontendOrigin, next);
 
+    const signInResponse = await fetch(`${frontendOrigin}/api/auth/github`, { redirect: "manual" });
+    assert.equal(signInResponse.status, 302, "the displayed sign-in path must reach the gateway");
+    assert.match(signInResponse.headers.get("location") ?? "", /\/authorize\?/);
+    const logoutResponse = await fetch(`${frontendOrigin}/api/auth/logout`, { redirect: "manual" });
+    assert.equal(logoutResponse.status, 302, "the displayed logout path must reach the gateway");
+    assert.match(logoutResponse.headers.get("set-cookie") ?? "", /flow_session=;.*Max-Age=0/);
+
     profile = await mkdtemp(join(tmpdir(), "flow-oauth-browser-"));
     const browser = spawn(chromiumPath, [
       "--headless=new", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage",
@@ -126,6 +143,8 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
     assert.match(stdout, /authenticated.*true|true.*authenticated/i);
     assert.equal(sawStateOnCallback, true, "frontend callback must receive the Lax state cookie");
     assert.equal(sawSessionAfterCallback, true, "same-origin API session request must receive the Strict session cookie");
+    assert.ok(gatewayPaths.includes("/api/auth/github"));
+    assert.ok(gatewayPaths.includes("/api/auth/logout"));
   } catch (error) {
     if (error?.code === "ENOENT") {
       assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);

@@ -18,7 +18,7 @@ from auth import (
     SessionStore,
     cookie_values,
 )
-from app import CommandRelayError
+from app import ChallengeRelayError, CommandRelayError
 from commands import CommandValidationError
 from security import RateLimiter, origin_matches
 from stream import SnapshotEventStream, encode_sse
@@ -33,6 +33,8 @@ class StreamRuntime(Protocol):
     stream: SnapshotEventStream
 
     def submit_command(self, value: object) -> tuple[int, dict[str, Any]]: ...
+
+    def issue_challenge(self, value: object) -> tuple[int, dict[str, Any]]: ...
 
 
 def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
@@ -63,12 +65,21 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
 
         def do_GET(self) -> None:
             route = urlsplit(self.path)
-            if route.path == "/api/auth/login":
+            if route.path in {"/api/auth/login", "/api/auth/github"}:
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
                     ("Location", service.authorization_url(state)),
                     ("Set-Cookie", f"{STATE_COOKIE}={state}; Path=/api/auth/callback; Max-Age=600; HttpOnly; Secure; SameSite=Lax"),
+                ))
+                return
+            if route.path == "/api/auth/logout":
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if token:
+                    service.store.delete_session(token)
+                self._send(302, headers=(
+                    ("Location", "/"),
+                    ("Set-Cookie", f"{SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"),
                 ))
                 return
             if route.path == "/api/auth/callback":
@@ -136,6 +147,44 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 self._json(403, {"error": "forbidden"})
                 return
             route = urlsplit(self.path)
+            if route.path == "/api/remote/v1/challenges":
+                client_key = self.client_address[0]
+                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+                    self._rate_limited()
+                    return
+                if runtime is None:
+                    self._json(404, {"error": "not found"})
+                    return
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                try:
+                    length = int(self.headers.get("Content-Length", "0"))
+                except ValueError:
+                    self._problem(400, "INVALID_CHALLENGE", "Content-Length is invalid")
+                    return
+                if length <= 0:
+                    self._problem(400, "INVALID_CHALLENGE", "Challenge body is required")
+                    return
+                if length > 65536:
+                    self._problem(413, "BODY_TOO_LARGE", "Challenge body is too large")
+                    return
+                try:
+                    value = json.loads(self.rfile.read(length).decode("utf-8"))
+                except (UnicodeError, json.JSONDecodeError):
+                    self._problem(400, "INVALID_CHALLENGE", "Challenge body must be valid JSON")
+                    return
+                try:
+                    status, result = runtime.issue_challenge(value)
+                except CommandValidationError as exc:
+                    self._problem(exc.status, exc.code, str(exc))
+                    return
+                except ChallengeRelayError as exc:
+                    self._problem(exc.status, exc.code, str(exc))
+                    return
+                self._json(status, result)
+                return
             if route.path == "/api/remote/v1/commands":
                 client_key = self.client_address[0]
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
