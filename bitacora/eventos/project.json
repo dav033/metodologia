@@ -1,7 +1,13 @@
 {
  "repos": {
-  "frontend": "C:/Users/davidt/Desktop/eventos/FrontSempertexEventos",
-  "backend": "C:/Users/davidt/Desktop/eventos/ViveSempertexEventos"
+  "frontend": {
+   "remote": "https://github.com/Sempertex-de-Colombia/FrontSempertexEventos.git",
+   "hint": "~/Desktop/eventos/FrontSempertexEventos"
+  },
+  "backend": {
+   "remote": "https://github.com/Sempertex-de-Colombia/ViveSempertexEventos.git",
+   "hint": "~/Desktop/eventos/ViveSempertexEventos"
+  }
  },
- "root": "C:/Users/davidt/Desktop/eventos"
+ "root": "~/Desktop/eventos"
 }

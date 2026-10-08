@@ -1,6 +1,12 @@
 {
  "repos": {
-  "frontend": "C:/Users/davidt/maros-next",
-  "backend": "C:/Users/davidt/maros-nest"
+  "frontend": {
+   "remote": "https://github.com/dav033/maros-next.git",
+   "hint": "~/maros-next"
+  },
+  "backend": {
+   "remote": "https://github.com/dav033/maros-nest.git",
+   "hint": "~/maros-nest"
+  }
  }
 }

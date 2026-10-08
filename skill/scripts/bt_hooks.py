@@ -1,0 +1,175 @@
+"""Bitácora hooks: SessionStart context, Stop gate, SessionEnd cleanup."""
+from __future__ import annotations
+
+from bt_core import *  # noqa: F403
+from bt_views import *  # noqa: F403
+from bt_core import _git, _load_bindings, _save_bindings
+# ---------------------------------------------------------------- Stop gate
+
+def _norm(p: str) -> str:
+    return p.replace("\\", "/").lower()
+
+
+def needs_logging(transcript: Path) -> tuple[bool, str]:
+    """Look at the transcript since the last write into the bitácora."""
+    root = _norm(str(ROOT))
+    events = []  # ("log" | "work" | "turn")
+    try:
+        with transcript.open(encoding="utf-8") as fh:
+            for line in fh:
+                try:
+                    e = json.loads(line)
+                except Exception:
+                    continue
+                if e.get("type") != "assistant":
+                    continue
+                content = (e.get("message") or {}).get("content") or []
+                if not isinstance(content, list):
+                    continue
+                for c in content:
+                    if not isinstance(c, dict):
+                        continue
+                    if c.get("type") == "text":
+                        events.append("turn")
+                    if c.get("type") != "tool_use":
+                        continue
+                    name, inp = c.get("name", ""), c.get("input") or {}
+                    target = _norm(str(inp.get("file_path") or inp.get("notebook_path") or inp.get("command") or ""))
+                    if root in target or "bitacora.py" in target:
+                        if name in MUTATING_TOOLS or name in ("Bash", "PowerShell"):
+                            events.append("log")
+                        continue
+                    if name in MUTATING_TOOLS:
+                        events.append("work")
+                    elif name in ("Bash", "PowerShell") and re.search(r"git (commit|merge|push)", target):
+                        events.append("work")
+    except Exception:
+        return False, ""
+    last_log = max((i for i, e in enumerate(events) if e == "log"), default=-1)
+    tail = events[last_log + 1:]
+    work = tail.count("work")
+    turns = tail.count("turn")
+    if work:
+        return True, f"{work} file change(s)/commit(s) since the bitácora was last updated"
+    if turns >= CHAT_TURNS_BEFORE_NUDGE:
+        return True, f"{turns} replies since the bitácora was last updated"
+    return False, ""
+
+
+# ---------------------------------------------------------------- hooks
+
+def _read_stdin_json() -> dict:
+    try:
+        return json.loads(sys.stdin.read() or "{}")
+    except Exception:
+        return {}
+
+
+def hook_start(harness: str = "claude") -> None:
+    data = _read_stdin_json()
+    sid = data.get("session_id", "")
+    cwd = Path(data.get("cwd") or os.getcwd())
+    source = data.get("source", "startup")
+    from bt_vcs import pull
+    sync_warning = pull(ROOT) if source in ("startup", "clear") else ""  # other machines' changes first
+    project = resolve_project(cwd, sid)
+    top = _git(cwd, "rev-parse", "--show-toplevel")
+    if project and top and not in_hq(cwd) and not ws.project_for_path(ROOT, top):
+        register_repo(project, Path(top))
+    ctx = build_context(project, sid, cwd, source)
+    if sync_warning:
+        ctx += f"\nWARNING: {sync_warning} — tell the user in one line."
+    if in_hq(cwd):
+        from bt_server import ensure_server
+        ctx += f"\nWeb UI (dashboard, rounds, plan approval): {ensure_server()}"
+    if harness == "codex":  # Codex has no CLAUDE.md import: inject the skill itself so it's always active
+        ctx = skill_body() + "\n\n" + ctx
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": ctx}}))
+
+
+def skill_body() -> str:
+    text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+    body = re.sub(r"^---\n.*?\n---\n", "", text, count=1, flags=re.S)
+    return f"[metodologia skill — always active; references live in {SKILL_DIR.as_posix()}/references]\n" + body
+
+
+def dirty_since_log(project: str, cwd: Path, day: Path) -> tuple[bool, str]:
+    """Harness-agnostic fallback: files in the workspace repos changed after the day log was last written."""
+    tops = [p for p in ws.repos(ROOT, project).values() if p.exists()]
+    own = _git(cwd, "rev-parse", "--show-toplevel")
+    if own and all(ws._key(own) != ws._key(t) for t in tops):
+        tops.append(Path(own))
+    last_log = day.stat().st_mtime if day.exists() else 0
+    newer = 0
+    for top in tops:
+        for line in (_git(top, "status", "--porcelain") or "").splitlines():
+            f = top / line[3:].strip().strip('"').split(" -> ")[-1]
+            try:
+                if f.is_file() and f.stat().st_mtime > last_log:
+                    newer += 1
+            except OSError:
+                pass
+    return (True, f"{newer} workspace file(s) changed since the bitácora was last updated") if newer else (False, "")
+
+
+def hook_stop(harness: str = "claude") -> None:
+    data = _read_stdin_json()
+    if data.get("stop_hook_active"):
+        return
+    sid = data.get("session_id", "")
+    cwd = Path(data.get("cwd") or os.getcwd())
+    project = resolve_project(cwd, sid)
+    tp = data.get("transcript_path")
+    if not project and tp and sid:  # e.g. a session in the home folder: bind by the repos it touched
+        touched = ws.projects_in_transcript(ROOT, Path(tp))
+        if len(touched) == 1:
+            project = touched.pop()
+            bindings = _load_bindings()
+            bindings[sid] = project
+            _save_bindings(bindings)
+            pdir, _ = ensure_project(project)
+            ensure_session_block(pdir, sid, cwd)
+    if not project:
+        return
+    day = day_paths(ROOT / project, today())["day"]
+    if harness == "codex" or not tp:  # Codex transcript format isn't a stable interface: use git instead
+        need, why = dirty_since_log(project, cwd, day)
+    else:
+        need, why = needs_logging(Path(tp))
+    if not need:
+        return
+    reason = (f"[bitácora] {why}. Before stopping, update your session section (`{sid[:8]}`) in "
+              f"`{day.as_posix()}` (Done / Decisions / Not done / Pending / Next), and propagate new decisions "
+              f"and pending items to DECISIONS.md / PENDING.md (and SUMMARY.md if the state changed). "
+              f"Keep it short; if truly nothing worth logging happened, add one line saying so.")
+    print(json.dumps({"decision": "block", "reason": reason}))
+
+
+def hook_end() -> None:
+    data = _read_stdin_json()
+    sid = data.get("session_id", "")
+    cwd = Path(data.get("cwd") or os.getcwd())
+    project = resolve_project(cwd, sid)
+    if not project:
+        return
+    pdir = ROOT / project
+    day = day_paths(pdir, today())["day"]
+    if day.exists() and sid:
+        text = day.read_text(encoding="utf-8")
+        tag = f"`{sid[:8]}`"
+        # drop a session block that was never filled in (still identical to the template)
+        empty_block = re.compile(r"\n---\n\n## Session [^\n]*" + re.escape(tag) + r"[^\n]*\n\n"
+                                 + re.escape(render("SESSION.md")))
+        new = empty_block.sub("", text)
+        if new == text and tag in text:
+            new = text.rstrip("\n") + f"\n\n_Session `{sid[:8]}` ended {dt.datetime.now():%H:%M}._\n"
+        if new != text:
+            if new.strip() == text.splitlines()[0].strip():  # only the "# date — project" header is left
+                day.unlink()
+            else:
+                day.write_text(new, encoding="utf-8")
+    write_index(pdir)
+    from bt_vcs import commit
+    commit(ROOT, f"{project}: session {sid[:8]} end")
+
+
