@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -183,6 +184,16 @@ def main() -> None:
             for role, path in ws.repos(root, d.name).items():
                 if path.exists() and path.resolve() != REPO.resolve():
                     say(f"{d.name}/{role}: pre-commit {bt_secrets.install_hook(path)}")
+    print("7. optional: CodeGraph (code-graph MCP, see skill/references/codegraph.md)")
+    npm = shutil.which("npm")
+    if shutil.which("codegraph"):
+        say("codegraph: already installed")
+    elif npm:
+        r = subprocess.run([npm, "i", "-g", "@colbymchenry/codegraph"], check=False, capture_output=True)
+        say("codegraph: installed (register the MCP by hand, see codegraph.md)" if r.returncode == 0
+            else "codegraph: npm install failed (optional, skipped)")
+    else:
+        say("codegraph: npm not found (optional, skipped)")
     if (REPO / ".git").exists():
         subprocess.run(["git", "-C", str(REPO), "config", "pull.rebase", "true"], check=False)
     print("Done. Missing repos are cloned on demand (launch) or with: bitacora.py --project <p> workspace clone")
