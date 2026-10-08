@@ -70,6 +70,8 @@ def main() -> None:
     p_ws.add_argument("path", nargs="?", help="add: repo path")
     p_serve = sub.add_parser("serve", help="run the local web server in the foreground")
     p_serve.add_argument("--port", type=int)
+    p_graph = sub.add_parser("graph", help="open the trace graph of the project in the browser (starts the server)")
+    p_graph.add_argument("--no-open", action="store_true")
     p_web = sub.add_parser("web", help="start the web server if needed, open the browser, print the URL")
     p_web.add_argument("--no-open", action="store_true")
     sub.add_parser("secrets", help="install the gitleaks pre-commit hook in every workspace repo on this machine")
@@ -99,12 +101,15 @@ def main() -> None:
     if a.cmd == "serve":
         from bt_server import DEFAULT_PORT, serve
         return serve(a.port or DEFAULT_PORT)
-    if a.cmd == "web":
+    if a.cmd in ("web", "graph"):
         import webbrowser
         from bt_server import ensure_server
         target = ensure_server()
-        if a.project:
-            target += f"/p/{slugify(a.project, 60)}"
+        project = a.project and slugify(a.project, 60) or resolve_project(Path(a.cwd))
+        if a.cmd == "graph" and not project:
+            sys.exit("Which project? bitacora.py --project <name> graph")
+        if project:
+            target += f"/p/{project}" + ("/graph" if a.cmd == "graph" else "")
         if not a.no_open:
             webbrowser.open(target)
         return print(target)

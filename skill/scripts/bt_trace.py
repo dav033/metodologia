@@ -60,8 +60,11 @@ def _requirements(g: Graph, pdir: Path) -> None:
         rid = req_id(rdir)
         text = _read(spec)
         title = re.search(r"^# (.+)$", text, re.M)
-        g.node(rid, "REQ", title.group(1) if title else rid, status=_front(spec, "status"),
-               path=spec.relative_to(pdir).as_posix())
+        status = _front(spec, "status")
+        if status == "?":  # specs written by hand: "Status: approved by …" line instead of front matter
+            m = re.search(r"^\**Status:?\**\s*:?\s*([A-Za-z-]+)", text, re.M | re.I)
+            status = m.group(1).lower() if m else "?"
+        g.node(rid, "REQ", title.group(1) if title else rid, status=status, path=spec.relative_to(pdir).as_posix())
         for m in re.finditer(r"^###\s+(US-\d+)\b[^\n]*?(?:—|-)\s*(.+)$", text, re.M):
             nid = f"{rid}/{m.group(1)}"
             g.node(nid, "US", f"{m.group(1)} {m.group(2).strip()}", req=rid)
@@ -114,12 +117,13 @@ def _pending(g: Graph, pdir: Path) -> None:
 def _mentions(g: Graph, pdir: Path) -> None:
     """Cross-references between IDs written anywhere in the project's docs."""
     for f in pdir.rglob("*.md"):
-        if ".state" in f.parts:
+        if ".state" in f.parts or f.name == "INDEX.md":  # INDEX is generated: it lists everything together
             continue
         rel = f.relative_to(pdir).as_posix()
-        text = "\n".join(l for l in _read(f).splitlines() if not l.lstrip().startswith("_"))  # skip template notes
-        for para in re.split(r"\n\s*\n", text):
-            ids = list(dict.fromkeys(ID_RE.findall(para)))
+        # Co-mention per LINE (a bullet, a sentence): per paragraph, summaries and lists link everything to
+        # everything and the graph turns into a hairball. Template notes ("_..._") are skipped.
+        for line in (l for l in _read(f).splitlines() if not l.lstrip().startswith("_")):
+            ids = list(dict.fromkeys(ID_RE.findall(line)))
             for i in ids:
                 g.nodes.setdefault(i, {"id": i, "type": i.split("-")[0], "label": i, "undefined": True})
                 g.nodes[i].setdefault("mentioned_in", [])

@@ -7,8 +7,16 @@
   const color = (t) => css.getPropertyValue('--g-' + t).trim() || '#888';
   const project = data.project;
 
+  // Deterministic starting positions (hash of the id, grouped by type) so the same graph always lands the same way.
+  const hash = (s) => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+  const ring = { REQ: 0, US: 1, R: 1, T: 2, D: 3, P: 3, C: 4, F: 5 };
+  const place = (n) => {
+    const h = hash(n.id), a = (h % 3600) / 3600 * 2 * Math.PI, r = 80 + (ring[n.type] ?? 3) * 110 + (h % 40);
+    return { x: Math.cos(a) * r, y: Math.sin(a) * r };
+  };
   const elements = [
-    ...data.nodes.map((n) => ({ data: { ...n, short: n.type === 'F' ? n.label.split('/').pop() : n.id.split('/').pop() } })),
+    ...data.nodes.map((n) => ({ data: { ...n, short: n.type === 'F' ? n.label.split('/').pop() : n.id.split('/').pop() },
+                                 position: place(n) })),
     ...data.edges.map((e, i) => ({ data: { id: 'e' + i, ...e } })),
   ];
   const cy = cytoscape({
@@ -23,14 +31,15 @@
         height: (n) => ({ REQ: 26, D: 18, P: 16, T: 14, R: 12, US: 12, C: 10, F: 8 }[n.data('type')] || 12),
         'border-width': (n) => (n.data('undefined') ? 2 : 0), 'border-color': '#d33' } },
       { selector: 'edge', style: {
-        width: 1, 'line-color': css.getPropertyValue('--border').trim(), 'curve-style': 'bezier',
+        width: 1.2, 'line-color': css.getPropertyValue('--muted').trim(), 'line-opacity': 0.45, 'curve-style': 'bezier',
         'target-arrow-shape': 'triangle', 'arrow-scale': 0.6,
         'target-arrow-color': css.getPropertyValue('--border').trim(),
         'line-style': (e) => (e.data('type') === 'mentions' ? 'dashed' : 'solid') } },
       { selector: '.faded', style: { opacity: 0.12 } },
       { selector: 'node:selected', style: { 'border-width': 3, 'border-color': css.getPropertyValue('--accent').trim() } },
     ],
-    layout: { name: 'cose', animate: false, nodeRepulsion: 9000, idealEdgeLength: 60 },
+    layout: { name: 'cose', animate: false, randomize: false, nodeRepulsion: 40000, idealEdgeLength: 90,
+              nodeOverlap: 20, gravity: 0.6, numIter: 1500 },
   });
 
   const hidden = new Set(['F', 'C']);

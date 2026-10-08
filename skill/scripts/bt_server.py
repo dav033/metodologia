@@ -205,15 +205,45 @@ def is_running(port: int = DEFAULT_PORT) -> bool:
         return s.connect_ex(("127.0.0.1", port)) == 0
 
 
+def code_version() -> str:
+    """Changes whenever the server's code or assets change (newest mtime), so a stale server can be replaced."""
+    files = list(Path(__file__).parent.glob("*.py")) + list(ASSETS.glob("*"))
+    return str(int(max(f.stat().st_mtime for f in files)))
+
+
 def serve(port: int = DEFAULT_PORT) -> None:
     token()
+    (STATE / "server.json").write_text(json.dumps({"pid": os.getpid(), "port": port, "version": code_version(),
+                                                   "root": str(ROOT)}), encoding="utf-8")
     httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print(f"Bitácora at {url(port)}  (Ctrl+C to stop)")
     httpd.serve_forever()
 
 
+def _stale(port: int) -> bool:
+    """A running server on our port that runs old code or serves another bitácora."""
+    try:
+        info = json.loads((STATE / "server.json").read_text(encoding="utf-8"))
+    except Exception:
+        return True
+    if info.get("port") != port or info.get("version") == code_version() and info.get("root") == str(ROOT):
+        return False
+    try:
+        subprocess.run(["taskkill", "/PID", str(info["pid"]), "/F"], capture_output=True, timeout=10)
+    except Exception:
+        return False
+    for _ in range(20):
+        if not is_running(port):
+            return True
+        import time
+        time.sleep(0.2)
+    return True
+
+
 def ensure_server(port: int = DEFAULT_PORT) -> str:
-    """Start the server detached in the background if it isn't running. Returns its URL."""
+    """Start the server detached in the background if it isn't running (or restart it if its code is stale)."""
+    if is_running(port):
+        _stale(port)
     if not is_running(port):
         exe = Path(sys.executable)
         pyw = exe.with_name("pythonw.exe")
