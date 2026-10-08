@@ -6,6 +6,7 @@ month summary._
 
 ## Now
 REQ-003 · Scene agent v2 (5 agents in worktrees e3a/c/d/e/f) · high · added 2026-10-08 · requirements/REQ-003-scene-agent-v2
+REQ-004 · Users (email+password, admin|staff) + AI spend ledger & dashboard for Gemini and fal.ai (no caps yet) · high · added 2026-10-08 · requirements/REQ-004-users-and-spend-control
 REQ-002 · Workshop library RAG + celebrations taxonomy (planned, no code) · high · added 2026-10-08 · requirements/REQ-002-workshop-library-rag
 REQ-001 · Photo → scene + flexible structures (13 owner photos) · high · added 2026-10-08 · requirements/REQ-001-photo-to-scene
 

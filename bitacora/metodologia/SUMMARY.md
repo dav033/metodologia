@@ -12,8 +12,8 @@ Built and installed on the main machine (2026-10-08): always-on (CLAUDE.md @impo
 (maros, eventos), multi-machine sync. Not yet exercised end to end on a real requirement (P-002).
 
 ## Active focus
-- Batch 2026-10-08: secret scanning (gitleaks), trace graph + lint, graph view, review-and-merge page, skill evals,
-  optional CodeGraph MCP.
+- Batch 2026-10-08 done: gitleaks, trace graph + lint + redesigned graph view, review & merge, evals (10/10),
+  CodeGraph (optional). Next: first supervised end-to-end run (P-002).
 
 ## Top pending (see PENDING.md)
 - P-002 real end-to-end test · P-003 web UI visual review · P-001 executor status/notifications (future)
