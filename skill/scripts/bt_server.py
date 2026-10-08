@@ -96,6 +96,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.file(safe_path(ROOT / project / "artifacts", sub))
         if kind == "view" and safe_path(ROOT / project / "artifacts", sub):
             return self.send(pages.artifact_view(project, sub))
+        if kind == "graph":
+            from bt_page_graph import graph_page
+            return self.send(graph_page(project))
         if kind == "req" and len(rest) == 2:
             return self.send(req_page(project, rest[1], q.get("tab", ""), token(), q.get("msg", "")))
         self.send("Not found", 404, "text/plain")

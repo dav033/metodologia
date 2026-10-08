@@ -69,3 +69,15 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
 ul.plain li { padding: 4px 0; border-bottom: 1px dashed var(--border); }
 iframe.artifact { width: 100%; height: 75vh; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; }
 @media (max-width: 640px) { header.top { padding: 10px 16px; } main { padding: 16px; } }
+/* trace graph */
+:root { --g-REQ: #c2410c; --g-US: #0e7490; --g-R: #0891b2; --g-T: #4d7c0f; --g-D: #7c3aed; --g-P: #b45309;
+  --g-C: #64748b; --g-F: #94a3b8; }
+.graph-wrap { display: grid; grid-template-columns: 1fr 300px; gap: 12px; }
+#graph { height: 70vh; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+#node-info { max-height: 70vh; overflow: auto; font-size: 13px; }
+#node-info table th { width: 90px; color: var(--muted); font-weight: 500; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 2px; }
+label.kpi { display: inline-flex; align-items: center; gap: 2px; cursor: pointer; }
+table.matrix td, table.matrix th { text-align: center; }
+table.matrix td:first-child { text-align: left; }
+@media (max-width: 800px) { .graph-wrap { grid-template-columns: 1fr; } #graph { height: 55vh; } }

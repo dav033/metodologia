@@ -73,6 +73,13 @@ def main() -> None:
     p_web = sub.add_parser("web", help="start the web server if needed, open the browser, print the URL")
     p_web.add_argument("--no-open", action="store_true")
     sub.add_parser("secrets", help="install the gitleaks pre-commit hook in every workspace repo on this machine")
+    p_tr = sub.add_parser("trace", help="trace graph from IDs (REQ/US/R/T/D/P), commits and files; lint drift")
+    p_tr.add_argument("--node", help="neighborhood of an ID, e.g. REQ-001 or REQ-001/T3")
+    p_tr.add_argument("--file", help="impact: which REQ/D/P touched files matching this text")
+    p_tr.add_argument("--bundle", help="context bundle for an ID (for handoffs / subagent briefs)")
+    p_tr.add_argument("--depth", type=int, default=2)
+    p_tr.add_argument("--json", action="store_true", help="print the whole graph as JSON")
+    p_tr.add_argument("--no-commits", action="store_true")
     p_commit = sub.add_parser("commit", help="commit the bitácora (local git)")
     p_commit.add_argument("message")
     p_hook = sub.add_parser("hook", help="Claude Code hook entry point (reads JSON on stdin)")
@@ -179,6 +186,23 @@ def main() -> None:
         print(json.dumps({"project": project, **ws.meta(ROOT, project), "local_paths": local,
                           "workdir": (ws.workdir(ROOT, project) or Path(".")).as_posix()}, indent=1,
                          ensure_ascii=False))
+    elif a.cmd == "trace":
+        import bt_trace as tr
+        g = tr.build(project, with_commits=not a.no_commits)
+        if a.json:
+            return print(json.dumps({**g.to_dict(), "lint": tr.lint(g)}, indent=1, ensure_ascii=False))
+        if a.bundle:
+            return print(tr.bundle(g, a.bundle, a.depth))
+        if a.file:
+            return print(json.dumps(tr.files_impact(g, a.file), indent=1, ensure_ascii=False))
+        if a.node:
+            return print("\n".join(sorted(tr.neighborhood(g, a.node, a.depth))))
+        kinds = {}
+        for n in g.nodes.values():
+            kinds[n["type"]] = kinds.get(n["type"], 0) + 1
+        print(f"{project}: " + ", ".join(f"{v} {k}" for k, v in sorted(kinds.items())) + f", {len(g.edges)} edges")
+        issues = tr.lint(g)
+        print("\n".join(f"[{i['level']}] {i['code']}: {i['message']}" for i in issues) or "lint: clean")
     elif a.cmd in ("round", "plan"):
         from bt_cli_flows import run_flow
         run_flow(a, project, pdir)

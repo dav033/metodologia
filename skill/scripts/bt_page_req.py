@@ -8,7 +8,7 @@ from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _front
 from bt_pages import badge, layout, md, purl, read
 
-REQ_TABS = [("rounds", "Preguntas"), ("spec", "Spec"), ("plan", "Plan"), ("handoff", "Handoff")]
+REQ_TABS = [("rounds", "Preguntas"), ("spec", "Spec"), ("plan", "Plan"), ("trace", "Trazabilidad"), ("handoff", "Handoff")]
 
 
 def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> str:
@@ -28,6 +28,9 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> 
     elif tab == "plan":
         content = plan_panel(project, rid, plan, plan_status, token) if plan.exists() else \
             '<p class="muted">Todavía no hay plan.</p>'
+    elif tab == "trace":
+        from bt_page_graph import coverage_panel
+        content = coverage_panel(project, rid)
     elif tab == "handoff":
         h = rdir / "HANDOFF.md"
         content = md("doc", read(h)) if h.exists() else '<p class="muted">Aún no se lanzó un ejecutor.</p>'

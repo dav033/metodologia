@@ -78,7 +78,10 @@ def _merge_hooks(current: dict, ours: dict) -> dict:
 
 
 def _cmd(script: str, *args: str) -> str:
-    return f'"{PY}" "{SCRIPTS}/{script}"' + "".join(f" {a}" for a in args)
+    # Hook commands may run under bash OR PowerShell. A quoted program path ("C:/x/python.exe" args) is a parse
+    # error in PowerShell, so the interpreter goes unquoted (fine in both); with spaces, fall back to `python`.
+    exe = PY if " " not in PY else "python"
+    return f'{exe} "{SCRIPTS}/{script}"' + "".join(f" {a}" for a in args)
 
 
 def claude_hooks() -> None:
