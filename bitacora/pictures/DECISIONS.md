@@ -70,3 +70,16 @@ Decision: the model only READS the photo into `LecturaFoto` (catalog pieces in i
 thickness, decorator colour names + finish, sizes, foliage, backdrops, scale reference); `compilarLectura` builds the
 scene deterministically (testable). The 13 owner photos are read by hand with the same format as the benchmark.
 Alternatives: free-form tool calling from the image (untestable, drifts) · generating images (forbidden for Gemini).
+
+## D-009 · Scene agent: stay on Gemini Flash, invest in tools and rules · 2026-10-08
+Context: the AI changed whole pieces when asked for "the link-o-loons of Ramas" or "the colours of one size".
+Decision: keep Flash; give it sight inside pieces (parts contract, `ver_pieza`, `buscar_en_escena`), a trade glossary,
+selector-based precise edits verified by rebuild, layout/group tools, selection context, ask-when-ambiguous and an
+evaluation bank. Every piece must be made of identifiable balloon types/products by parts. Source: owner, REQ-003.
+
+## D-010 · Library RAG architecture · 2026-10-08
+Decision: Neon Postgres + pgvector; embeddings for everything (text fichas + item photos + standard 3D renders);
+Python does batch work (embeddings, analysis, rerank), Next does the online hybrid query (FTS + trigram + vectors, RRF,
+hard filters) with in-memory fallback; code stays source of truth for factory items; owner items move to the DB;
+taxonomy of ~60 celebrations + ~50 themes first. Alternatives: query through Python (extra hop to a hand-deployed VPS);
+DB as editable source (later, with an admin). Source: owner, REQ-002.
