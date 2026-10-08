@@ -11,6 +11,7 @@ REQ-002 · Workshop library RAG + celebrations taxonomy (planned, no code) · hi
 REQ-001 · Photo → scene + flexible structures (13 owner photos) · high · added 2026-10-08 · requirements/REQ-001-photo-to-scene
 
 ## Next
+P-013 · Scene-AI bank: 8 requests tools still can't satisfy (2nd «más R-24» saturates; «menos tupida»/«menos R-5» refill raises totals; ajustar_tamanos drops a requested colour; colours not made in a format fall back to white silently; loose R-36 on top of a column; letter painted inside a mesh; size mix by side «pata izquierda») · high · added 2026-10-08 · scripts/test/fixtures/banco-escena-ia.json backlog
 P-012 · Occasion ids inconsistent (owner references use cumpleanos/graduacion; list uses cumpleaños/grado) → fix with taxonomy (REQ-002 step 0) · med · added 2026-10-08
 P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · high · added 2026-10-08 · REQ-001
 P-011 · «Más tupida» barely changes stroke garlands (engine saturated at density 1.25) · low · added 2026-10-08
