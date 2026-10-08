@@ -22,8 +22,11 @@ context — often that reader is you, next session. The script handles structure
 
 Paths for the current session come from the SessionStart context, or `python <skill>/scripts/bitacora.py where`.
 
-**Versioning:** the whole bitácora is a local git repository (never pushed). Session end, web answers/approvals,
-round posts and launches commit automatically; after a big manual update you can run `bitacora.py commit "<msg>"`.
+**Versioning & sync:** the bitácora lives in `bitacora/` of the private `metodologia` repo (with the skill in
+`skill/`). Session end, web answers/approvals, round posts and launches commit automatically (only the bitácora
+folder) and push in the background; SessionStart and every new ID pull first, so several machines stay in sync.
+If the start context warns that sync failed, tell the user; nothing is lost locally. Changes to the skill itself
+are normal commits. A new machine: clone the repo and run `python ~/metodologia/install.py`.
 
 **Web UI:** `bitacora.py web [--project X]` starts the local server (127.0.0.1:8765) if needed and opens it:
 dashboard of projects, every document rendered, artifacts, question rounds and plan approval. It starts by itself
