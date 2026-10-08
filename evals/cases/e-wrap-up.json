@@ -1,0 +1,40 @@
+{
+  "name": "e-wrap-up",
+  "description": "'listo, cerramos' after a change -> day log section, WEEK.md and INDEX updated",
+  "checks": "documentation.md 'When to write' (close of work)",
+  "fixture": "next-app",
+  "max_turns": 25,
+  "budget_usd": 0.5,
+  "turns": [
+    "Hazlo directo: agrega un archivo .nvmrc con Node 20 y menciónalo en el README.",
+    "listo, cerramos"
+  ],
+  "graders": [
+    {
+      "name": "day-log-done",
+      "type": "file_regex",
+      "path": "{bt}/20*/W*/20*.md",
+      "pattern": "nvmrc",
+      "flags": "i"
+    },
+    {
+      "name": "day-log-next-steps",
+      "type": "file_regex",
+      "path": "{bt}/20*/W*/20*.md",
+      "pattern": "### Next session starts with\\s*\\n\\s*(-|\\d+\\.)[ \\t]*\\S"
+    },
+    {
+      "name": "week-rewritten",
+      "type": "file_regex",
+      "path": "{bt}/20*/W*/WEEK.md",
+      "pattern": "nvmrc",
+      "flags": "i"
+    },
+    {
+      "name": "index-regenerated",
+      "type": "tool_used",
+      "tool": "Bash|PowerShell",
+      "input_match": "bitacora\\.py[^\\n]*\\bindex\\b"
+    }
+  ]
+}

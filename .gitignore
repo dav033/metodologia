@@ -3,3 +3,4 @@ bitacora/.state/
 __pycache__/
 *.pyc
 *.tmp
+evals/results/

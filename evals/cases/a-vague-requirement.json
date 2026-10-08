@@ -1,0 +1,34 @@
+{
+  "name": "a-vague-requirement",
+  "description": "Vague requirement -> exploration + prioritized round with recommended answers, no code",
+  "checks": "requirements.md §2-4",
+  "fixture": "next-app",
+  "max_turns": 30,
+  "budget_usd": 0.8,
+  "turns": [
+    "Quiero que los clientes puedan dejar reseñas de los productos en la tienda."
+  ],
+  "graders": [
+    {
+      "name": "no-code-written",
+      "type": "repo_unchanged"
+    },
+    {
+      "name": "reads-requirements-ref",
+      "type": "tool_used",
+      "tool": "Read",
+      "input_match": "references/requirements\\.md"
+    },
+    {
+      "name": "recommends-answers",
+      "type": "regex",
+      "pattern": "Recomiendo|Sugiero|➡️|Recomendad",
+      "flags": "i"
+    },
+    {
+      "name": "round-quality",
+      "type": "llm",
+      "criteria": "PASS if ALL hold: (1) the reply asks the user a round of numbered questions (between 2 and 6); (2) every question comes with a recommended or suggested answer; (3) the most fundamental questions (goal/scope, who can review, moderation) come before details; (4) it does not claim to have implemented or written code. FAIL if any of these is missing, or if it starts implementing without asking."
+    }
+  ]
+}

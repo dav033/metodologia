@@ -1,0 +1,32 @@
+{
+  "name": "i-decision-logged",
+  "description": "User makes a technical decision -> DECISIONS.md entry (D-NNN) + line in the day log",
+  "checks": "documentation.md 'During the session' + DECISIONS rules",
+  "fixture": "next-app",
+  "max_turns": 25,
+  "budget_usd": 0.5,
+  "turns": [
+    "Para el caché de productos vamos con Redis y no con memoria del proceso: vamos a correr 3 réplicas y la memoria no se comparte. Hazlo directo: crea src/lib/cache.ts con get/set con TTL usando ioredis (no instales nada, solo el código)."
+  ],
+  "graders": [
+    {
+      "name": "code-done",
+      "type": "file_regex",
+      "path": "{repo}/src/lib/cache.ts",
+      "pattern": "ioredis"
+    },
+    {
+      "name": "decision-entry",
+      "type": "file_regex",
+      "path": "{bt}/DECISIONS.md",
+      "pattern": "## D-\\d{3} — (?!<short title>)[\\s\\S]*Redis",
+      "flags": "i"
+    },
+    {
+      "name": "decision-in-day-log",
+      "type": "file_regex",
+      "path": "{bt}/20*/W*/20*.md",
+      "pattern": "D-\\d{3}"
+    }
+  ]
+}

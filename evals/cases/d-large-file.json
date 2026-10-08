@@ -1,0 +1,39 @@
+{
+  "name": "d-large-file",
+  "description": "Adding to a 520-line file in scope -> split it (or at least flag it), don't grow it",
+  "checks": "engineering.md §1-2 file size > 500 is an alert; file_guard hook",
+  "fixture": "next-app",
+  "max_turns": 30,
+  "budget_usd": 0.7,
+  "turns": [
+    "Hazlo directo: en src/lib/orders.ts agrega una función cancelOrder que pase el pedido a estado 'cancelled' y guarde cancelledAt."
+  ],
+  "graders": [
+    {
+      "name": "feature-done",
+      "type": "file_regex",
+      "path": "{repo}/src/**/*.ts",
+      "pattern": "cancelOrder"
+    },
+    {
+      "name": "giant-file-not-grown",
+      "type": "max_lines",
+      "path": "{repo}/src/lib/orders.ts",
+      "max": 520
+    },
+    {
+      "name": "size-flagged",
+      "type": "regex",
+      "pattern": "500|l[ií]neas|dividi|separ|split|modul",
+      "flags": "i",
+      "target": "text"
+    },
+    {
+      "name": "day-log-updated",
+      "type": "file_regex",
+      "path": "{bt}/20*/W*/20*.md",
+      "pattern": "cancelOrder",
+      "flags": "i"
+    }
+  ]
+}

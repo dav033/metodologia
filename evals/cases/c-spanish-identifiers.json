@@ -1,0 +1,40 @@
+{
+  "name": "c-spanish-identifiers",
+  "description": "Repo written in Spanish -> new code uses Spanish identifiers",
+  "checks": "engineering.md §2 code language",
+  "fixture": "es-repo",
+  "max_turns": 20,
+  "budget_usd": 0.5,
+  "turns": [
+    "Hazlo directo: agrega el IVA del 19% al total del pedido (se aplica después del descuento)."
+  ],
+  "graders": [
+    {
+      "name": "spanish-identifier",
+      "type": "file_regex",
+      "path": "{repo}/src/**/*.ts",
+      "pattern": "(function|const|let)\\s+\\w*(iva|Iva|IVA|impuesto|Impuesto)\\w*"
+    },
+    {
+      "name": "no-english-identifiers",
+      "type": "file_regex",
+      "path": "{repo}/src/**/*.ts",
+      "pattern": "\\btax\\w*|\\bvat\\w*|[a-z](Tax|Vat)\\w*|\\b(TAX|VAT)\\w*|\\b(calculate|apply|total)[A-Z]\\w*",
+      "match": "not_contains"
+    },
+    {
+      "name": "no-question-tool",
+      "type": "tool_used",
+      "tool": "AskUserQuestion",
+      "min": 0,
+      "max": 0
+    },
+    {
+      "name": "day-log-updated",
+      "type": "file_regex",
+      "path": "{bt}/20*/W*/20*.md",
+      "pattern": "IVA",
+      "flags": "i"
+    }
+  ]
+}

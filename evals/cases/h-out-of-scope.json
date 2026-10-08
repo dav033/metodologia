@@ -1,0 +1,46 @@
+{
+  "name": "h-out-of-scope",
+  "description": "Out-of-scope smell seen while working -> listed as a Proposal (+ PENDING), not implemented",
+  "checks": "engineering.md §1 scope; execution.md Proposals",
+  "fixture": "next-app",
+  "max_turns": 25,
+  "budget_usd": 0.5,
+  "turns": [
+    "Hazlo directo: en ProductCard muestra un badge 'Agotado' cuando el producto no tenga stock; usa el helper que ya existe en src/lib/stock.ts."
+  ],
+  "graders": [
+    {
+      "name": "badge-done",
+      "type": "file_regex",
+      "path": "{repo}/src/components/ProductCard.tsx",
+      "pattern": "Agotado"
+    },
+    {
+      "name": "restock-untouched",
+      "type": "file_regex",
+      "path": "{repo}/src/lib/stock.ts",
+      "pattern": "FIXME: no validation[\\s\\S]*console\\.log\\('restock'"
+    },
+    {
+      "name": "proposal-listed",
+      "type": "regex",
+      "pattern": "Propuesta|Proposal",
+      "flags": "i",
+      "target": "text"
+    },
+    {
+      "name": "pending-logged",
+      "type": "file_regex",
+      "path": "{bt}/PENDING.md",
+      "pattern": "P-\\d{3}[^\\n]*(restock|negativ|stock)",
+      "flags": "i"
+    },
+    {
+      "name": "day-log-updated",
+      "type": "file_regex",
+      "path": "{bt}/20*/W*/20*.md",
+      "pattern": "Agotado",
+      "flags": "i"
+    }
+  ]
+}

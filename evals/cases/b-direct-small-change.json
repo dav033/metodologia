@@ -1,0 +1,54 @@
+{
+  "name": "b-direct-small-change",
+  "description": "'Hazlo directo' small change -> implemented without interview, identifiers in the repo's language (English)",
+  "checks": "requirements.md §1 Quick track; engineering.md §2 code language",
+  "fixture": "next-app",
+  "max_turns": 25,
+  "budget_usd": 0.5,
+  "turns": [
+    "Hazlo directo, sin preguntas: crea una función en src/lib/format.ts que formatee precios en pesos colombianos (COP, sin decimales) y úsala en ProductCard en vez del formato actual."
+  ],
+  "graders": [
+    {
+      "name": "no-question-tool",
+      "type": "tool_used",
+      "tool": "AskUserQuestion",
+      "min": 0,
+      "max": 0
+    },
+    {
+      "name": "no-interview",
+      "type": "regex",
+      "pattern": "Ronda \\d",
+      "match": "not_contains",
+      "target": "text"
+    },
+    {
+      "name": "helper-created",
+      "type": "file_regex",
+      "path": "{repo}/src/lib/format.ts",
+      "pattern": "export (function|const) \\w+"
+    },
+    {
+      "name": "helper-used",
+      "type": "file_regex",
+      "path": "{repo}/src/components/ProductCard.tsx",
+      "pattern": "lib/format['\"]"
+    },
+    {
+      "name": "identifiers-in-english",
+      "type": "file_regex",
+      "path": "{repo}/src/lib/format.ts",
+      "pattern": "\\b(formatear|precio|moneda|valor|pesos)\\w*\\s*[(=:]",
+      "flags": "i",
+      "match": "not_contains"
+    },
+    {
+      "name": "day-log-updated",
+      "type": "file_regex",
+      "path": "{bt}/20*/W*/20*.md",
+      "pattern": "format",
+      "flags": "i"
+    }
+  ]
+}
