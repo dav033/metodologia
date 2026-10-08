@@ -59,6 +59,9 @@ files in the bitácora, versioned with local git — no dependency on any agent 
 Read only the references you need right now. They chain naturally: requirements → execution (built to the
 engineering standards), with documentation running alongside all of it.
 
+"Muéstrame el grafo" / "quiero ver el grafo": run `bitacora.py [--project X] graph` — it starts the local server if
+needed and opens the interactive trace graph in the browser. "Abre el panel": `bitacora.py web`.
+
 "¿En qué estamos?" / "¿qué quedó pendiente?": answer from SUMMARY.md, PENDING.md and the latest day logs in ≤6
 lines, with links.
 

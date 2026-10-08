@@ -41,8 +41,10 @@ def needs_logging(transcript: Path) -> tuple[bool, str]:
                         continue
                     if name in MUTATING_TOOLS:
                         events.append("work")
-                    elif name in ("Bash", "PowerShell") and re.search(r"git (commit|merge|push)", target):
-                        events.append("work")
+                    elif name in ("Bash", "PowerShell") and re.search(
+                            r"git (commit|merge|push)|>>?\s*[\w./\\-]+\.\w+|\btee\b|sed -i|set-content|add-content"
+                            r"|out-file|cat\s*>|<<\s*['\"]?\w+", target):
+                        events.append("work")  # commits, and file writes done through the shell
     except Exception:
         return False, ""
     last_log = max((i for i, e in enumerate(events) if e == "log"), default=-1)

@@ -1,6 +1,6 @@
 {
   "name": "d-large-file",
-  "description": "Adding to a 520-line file in scope -> split it (or at least flag it), don't grow it",
+  "description": "Adding to a 520-line file in scope -> new code goes to its own module; the giant file may only gain a few wiring lines (re-exports), never the feature",
   "checks": "engineering.md §1-2 file size > 500 is an alert; file_guard hook",
   "fixture": "next-app",
   "max_turns": 30,
@@ -19,7 +19,7 @@
       "name": "giant-file-not-grown",
       "type": "max_lines",
       "path": "{repo}/src/lib/orders.ts",
-      "max": 520
+      "max": 526
     },
     {
       "name": "size-flagged",

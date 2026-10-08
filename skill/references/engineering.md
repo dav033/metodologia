@@ -42,9 +42,12 @@ In a **new project**, these standards plus the default stack apply directly.
   it needs "and", split it.
 - **Modularize first.** Start new work as its own module/feature folder with a small public surface, not as more
   lines in an existing file.
-- **File size: > 500 lines is an alert.** Stop and split by responsibility before adding more. Aim for files
-  well under 300. Functions over ~50 lines are a smell too. The user strongly dislikes giant files; a post-edit
-  hook will warn you when you cross the line.
+- **File size: > 500 lines is an alert.** If you're about to add code to a file that's already over (or near) 500
+  lines, split it by responsibility **first** — that's in scope even on "hazlo directo": put your new code in its
+  own module and move the part it belongs to with it. Only a one-line fix may leave the split as a Proposal. Aim
+  for files well under 300; functions over ~50 lines are a smell too. The user strongly dislikes giant files; a
+  post-edit hook warns you when a file crosses the line. Edit files with the Edit/Write tools, not shell heredocs
+  or redirections, so the hooks see the change.
 - **Abstraction yes, over-engineering no.** Abstract when it removes real duplication or hides real complexity
   behind a smaller interface. Don't add layers, interfaces, factories, generics or config "for the future". A
   seam with one implementation is usually hypothetical; two real implementations make it real. Ask yourself:

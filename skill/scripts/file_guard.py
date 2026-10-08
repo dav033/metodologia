@@ -40,10 +40,11 @@ def check(p: Path) -> None:
         return
     if n <= LIMIT:
         return
-    msg = (f"[metodologia] {p.name} now has {n} lines (> {LIMIT}): alert. The user strongly dislikes giant files. "
-           f"If you're working on this file within the task's scope, split it by responsibility now (single "
-           f"responsibility, feature modules, atomic components). If splitting is out of scope, add it to "
-           f"PENDING.md and to the Proposals in your final report.")
+    msg = (f"[metodologia] {p.name} now has {n} lines (> {LIMIT}). The user strongly dislikes giant files. You just "
+           f"edited it, so splitting it IS in scope: before finishing, move the code you added (and the part it "
+           f"belongs to) into its own module by responsibility (single responsibility, feature modules, atomic "
+           f"components), keep behavior identical, and re-run the tests. Only if you didn't add lines (a one-line "
+           f"fix) may you leave the split as a Proposal + PENDING.md item instead.")
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": msg}}))
 
 
