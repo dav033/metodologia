@@ -24,7 +24,8 @@ def write_handoff(project: str, rdir: Path, workdir: Path, repos: dict[str, Path
     pdir = ROOT / project
     spec, plan = rdir / "SPEC.md", rdir / "PLAN.md"
     rid = req_id(rdir)
-    branch = f"feat/{rdir.name.lower()}"[:60]
+    from bt_review import feature_branch
+    branch = feature_branch(rdir)
     repo_lines = [f"  - **{role}** → `{p.as_posix()}`" for role, p in repos.items()]
     steps = [
         f"You are the **executor** for {rid} — {_first_heading(spec)} (project `{project}`).",
@@ -65,7 +66,10 @@ def write_handoff(project: str, rdir: Path, workdir: Path, repos: dict[str, Path
         "## Done means",
         "Every task ticked, the plan's Verification passes with evidence, fresh-eyes review done, spec/plan "
         "statuses updated, bitácora updated (day log + walkthrough, PENDING, SUMMARY), and a final report in "
-        "Spanish (built / verified / rulings / needs your eyes / proposals / pending).",
+        "Spanish (built / verified / rulings / needs your eyes / proposals / pending). Also write that report to "
+        f"`{(rdir / 'REPORT.md').as_posix()}` (sections: Built, Verification evidence, Rulings, Needs your eyes, "
+        "Proposals, Pending, Walkthrough) and set PLAN.md `status: done` — the web UI's Review tab shows it and "
+        "offers the merge.",
     ]
     if agent == "claude" and mode == "loop":
         steps += ["", "## Run mode", "This session was started with a self-paced `/loop`. Do as much as is sensible "

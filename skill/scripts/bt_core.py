@@ -17,6 +17,8 @@ Weeks are week-of-month, Monday-based: W1 is the (possibly partial) week contain
 """
 from __future__ import annotations
 
+import bt_nowindow  # noqa: F401  (no console windows on Windows)
+
 import datetime as dt
 import json
 import os

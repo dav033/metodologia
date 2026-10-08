@@ -6,6 +6,8 @@ If gitleaks isn't installed, scanning is skipped (install: `winget install Gitle
 """
 from __future__ import annotations
 
+import bt_nowindow  # noqa: F401  (no console windows on Windows)
+
 import glob
 import os
 import shutil

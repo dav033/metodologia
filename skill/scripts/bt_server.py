@@ -123,6 +123,9 @@ class Handler(BaseHTTPRequestHandler):
             if action == "answer":
                 msg = self.answer(project, rid, rdir, form)
                 return self.redirect(f"{base}?tab=rounds&msg={quote(msg)}")
+            if action == "review":
+                msg = self.review(project, rid, rdir, form)
+                return self.redirect(f"{base}?tab=review&msg={quote(msg)}")
             if action == "plan":
                 msg = self.decide(project, rid, rdir, form)
                 return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
@@ -161,6 +164,33 @@ class Handler(BaseHTTPRequestHandler):
         from bt_launch import launch
         info = launch(project, rid, agent=form.get("agent", "claude"))
         return f"Plan aprobado. Ejecutor lanzado ({info['agent']}) en {info['repo']}."
+
+
+    def review(self, project: str, rid: str, rdir: Path, form: dict) -> str:
+        import bt_review as rv
+        decision, comments = form.get("decision", ""), form.get("comments", "").strip()
+        plan = rdir / "PLAN.md"
+        stamp = f"{dt.datetime.now():%Y-%m-%d %H:%M}"
+        if decision == "changes":
+            if not comments:
+                return "Para pedir cambios escribe qué cambiar."
+            with plan.open("a", encoding="utf-8") as fh:
+                fh.write(f"- {stamp} REVIEW: changes requested (web): {comments}\n")
+            set_front(plan, "status", "approved")
+            commit(ROOT, f"{project}: {rid} review — changes requested (web)")
+            from bt_launch import launch
+            info = launch(project, rid, agent="claude", force=True)
+            return f"Cambios anotados en el plan. Ejecutor relanzado en {info['workdir']}."
+        lines = rv.merge(project, rdir, push=decision == "merge_push")
+        merged = any("fusionada" in l for l in lines)
+        with plan.open("a", encoding="utf-8") as fh:
+            fh.write(f"- {stamp} REVIEW ({decision}, web): " + " | ".join(lines)
+                     + (f" — {comments}" if comments else "") + "\n")
+        if merged:
+            set_front(plan, "status", "merged")
+            set_front(rdir / "SPEC.md", "status", "done")
+        commit(ROOT, f"{project}: {rid} review — {decision} (web)")
+        return " · ".join(lines)
 
 
 # ---------------------------------------------------------------- lifecycle

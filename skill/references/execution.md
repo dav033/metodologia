@@ -129,20 +129,27 @@ bitácora explicitly (the Stop hook won't remind you).
   branches are merged together, as one change.
 - Commit after every green phase (Conventional Commits, in the repo's language). Keep refactor commits separate from behavior
   commits.
+- **Cite IDs in commits** so the trace graph links code to the bitácora: a trailer line `Refs: REQ-012 T3`
+  (add `D-004` / `P-007` when the commit implements a decision or closes a pending item).
 - `main` must stay deployable. Unfinished work that has to be merged goes behind a flag, off by default (and the
   flag removal goes to PENDING.md).
-- Merging the feature branch locally once verification passes is fine; **push and deploy only after asking**.
+- Don't merge the feature branch yourself: the user merges from the web UI's **Revisar** tab (one click merges every
+  repo of the workspace together; "merge and publish" also pushes). **Push and deploy only after asking.**
 
 ## 4. Verify & close
 
 - Run the verification from the plan for real and read the output. "Should work" is not verification (see the
   excuse table in `engineering.md` §6).
 - **Fresh-eyes review:** for anything beyond a small change, the `reviewer` subagent ×2 (axes `spec` and
-  `standards`) sees only the spec, PLAN.md and the diff and and reports **only** correctness problems, unmet requirements and out-of-scope changes. Fix
-  those; everything else goes to PENDING.md, not into the code — chasing every review nit is how
-  over-engineering happens.
-- Update statuses (spec `done`, or `in-progress` with what's missing; plan `done`) and the bitácora (today's log,
-  PENDING, SUMMARY; ARCHITECTURE if structure changed).
+  `standards`) sees only the spec, PLAN.md and the diff and reports **only** correctness problems, unmet
+  requirements and out-of-scope changes. Fix those; everything else goes to PENDING.md, not into the code —
+  chasing every review nit is how over-engineering happens.
+- **Trace check:** `bitacora.py trace` must show no `uncovered` / `unknown-ref` / `dangling` issue for this REQ.
+- Update statuses (spec `in-progress` with what's missing, or leave it for the merge; plan `done`) and the bitácora
+  (today's log, PENDING, SUMMARY; ARCHITECTURE if structure changed).
+- Write **`REPORT.md`** in the requirement folder (sections: Built, Verification evidence, Rulings, Needs your eyes,
+  Proposals, Pending, Walkthrough). The web UI's **Revisar** tab shows it next to each repo's commits and diff, and
+  is where the user merges (plan → `merged`, spec → `done`) or asks for changes (which relaunches the executor).
 - **Walkthrough against comprehension debt:** in today's log, 5–10 lines on how the feature works — entry points,
   data flow, the non-obvious decision, where it would break. The user must stay able to understand and debug
   their own system.

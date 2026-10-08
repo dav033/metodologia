@@ -28,6 +28,13 @@ folder) and push in the background; SessionStart and every new ID pull first, so
 If the start context warns that sync failed, tell the user; nothing is lost locally. Changes to the skill itself
 are normal commits. A new machine: clone the repo and run `python ~/metodologia/install.py`.
 
+**Trace graph:** `bitacora.py trace` builds a graph from the IDs (REQ, US, R, T, D, P), the commits that cite them
+(`Refs:` trailers) and the files those commits touched, and lints drift (requirements no task covers, tasks
+covering unknown IDs, dangling or superseded references). `trace --bundle REQ-012` gives a compact linked context
+for a handoff or a subagent brief; `trace --file <name>` answers "which requirements/decisions touched this file";
+`trace --node REQ-012` lists its neighborhood. Run the lint before closing a requirement and when updating
+central files. The web UI shows it as an interactive graph (project → Grafo) and per requirement (Trazabilidad).
+
 **Web UI:** `bitacora.py web [--project X]` starts the local server (127.0.0.1:8765) if needed and opens it:
 dashboard of projects, every document rendered, artifacts, question rounds and plan approval. It starts by itself
 when a session opens in the HQ.

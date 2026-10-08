@@ -8,7 +8,7 @@ from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _front
 from bt_pages import badge, layout, md, purl, read
 
-REQ_TABS = [("rounds", "Preguntas"), ("spec", "Spec"), ("plan", "Plan"), ("trace", "Trazabilidad"), ("handoff", "Handoff")]
+REQ_TABS = [("rounds", "Preguntas"), ("spec", "Spec"), ("plan", "Plan"), ("trace", "Trazabilidad"), ("review", "Revisar"), ("handoff", "Handoff")]
 
 
 def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> str:
@@ -18,7 +18,8 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> 
     plan_status = _front(plan, "status") if plan.exists() else None
     open_round = rounds.open_round(rdir) if rounds.rounds_dir(rdir).exists() else None
     if not tab:
-        tab = "rounds" if open_round else ("plan" if plan_status == "review" else "spec")
+        tab = "rounds" if open_round else ("plan" if plan_status == "review" else
+                                           ("review" if plan_status in ("done", "launched") else "spec"))
     tabs = "".join(
         f'<a class="{"on" if k == tab else ""}" href="{purl(project, "req", rid)}?tab={k}">{v}'
         f'{" ●" if (k == "rounds" and open_round) or (k == "plan" and plan_status == "review") else ""}</a>'
@@ -28,6 +29,9 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> 
     elif tab == "plan":
         content = plan_panel(project, rid, plan, plan_status, token) if plan.exists() else \
             '<p class="muted">Todavía no hay plan.</p>'
+    elif tab == "review":
+        from bt_page_review import review_panel
+        content = review_panel(project, rid, rdir, token)
     elif tab == "trace":
         from bt_page_graph import coverage_panel
         content = coverage_panel(project, rid)

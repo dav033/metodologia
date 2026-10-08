@@ -7,11 +7,14 @@ changes with `--rebase --autostash`.
 """
 from __future__ import annotations
 
+import bt_nowindow  # noqa: F401  (no console windows on Windows)
+
 import subprocess
 from pathlib import Path
 
 GITIGNORE = ".state/\n__pycache__/\n*.tmp\n"
-_DETACHED = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+# background push: own process group, no console window (DETACHED_PROCESS let git helpers pop up windows)
+_DETACHED = 0x08000000 | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
 
 
 def _run(root: Path, *args: str, timeout: int = 20) -> subprocess.CompletedProcess | None:

@@ -10,6 +10,8 @@ Must not import bt_core (bt_core imports this module).
 """
 from __future__ import annotations
 
+import bt_nowindow  # noqa: F401  (no console windows on Windows)
+
 import json
 import os
 import re
