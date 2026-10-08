@@ -256,6 +256,10 @@ def project_for_path(root: Path, path: str | Path) -> str | None:
     if not index_file.exists():
         reindex(root)
     k = _key(path)
+    rk = _key(root)
+    if k == rk or k.startswith(rk + "/"):  # inside the bitácora itself: its folder names the project
+        first = k[len(rk):].strip("/").split("/")[0]
+        return first if first and not first.startswith(".") else None
     best, best_len = None, -1
     for repo_key, project in _read(index_file).items():
         if (k == repo_key or k.startswith(repo_key + "/")) and len(repo_key) > best_len:

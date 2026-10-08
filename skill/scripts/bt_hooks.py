@@ -79,6 +79,11 @@ def hook_start(harness: str = "claude") -> None:
     ctx = build_context(project, sid, cwd, source)
     if sync_warning:
         ctx += f"\nWARNING: {sync_warning} — tell the user in one line."
+    from bt_secrets import alert
+    if alert(ROOT):
+        ctx += ("\nWARNING: a possible SECRET was found in the bitácora and was NOT committed. Remove it (keep only a "
+                "reference: key path, env var name, ssh alias), then run `bitacora.py commit \"fix: remove secret\"`. "
+                f"Redacted report:\n{alert(ROOT)[:1500]}")
     if in_hq(cwd):
         from bt_server import ensure_server
         ctx += f"\nWeb UI (dashboard, rounds, plan approval): {ensure_server()}"
@@ -115,6 +120,14 @@ def dirty_since_log(project: str, cwd: Path, day: Path) -> tuple[bool, str]:
 def hook_stop(harness: str = "claude") -> None:
     data = _read_stdin_json()
     if data.get("stop_hook_active"):
+        return
+    from bt_secrets import alert
+    if alert(ROOT):
+        print(json.dumps({"decision": "block", "reason": (
+            "[bitácora] A possible secret was written into the bitácora and blocked from git. Find it (report: "
+            f"{(ROOT / '.state' / 'secret-alert.txt').as_posix()}), replace the value with a reference (key path, env "
+            "var name, ssh alias), then run `bitacora.py commit \"fix: remove secret\"`. If it's a false positive, add "
+            "its fingerprint to bitacora/.gitleaksignore.")}))
         return
     sid = data.get("session_id", "")
     cwd = Path(data.get("cwd") or os.getcwd())

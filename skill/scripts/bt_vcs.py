@@ -55,6 +55,13 @@ def commit(root: Path, message: str, push: bool = True) -> bool:
     status = _run(root, "status", "--porcelain", "--", ".")
     if not status or not status.stdout.strip():
         return False
+    from bt_secrets import clear_alert, scan_staged, set_alert
+    clean, report = scan_staged(root)
+    if not clean:  # never commit (or push) a secret: unstage and leave an alert for the next hook to surface
+        _run(root, "reset", "-q", "--", ".")
+        set_alert(root, report)
+        return False
+    clear_alert(root)
     if not _ok(_run(root, "commit", "-q", "-m", message, "--", ".")):
         return False
     if push:

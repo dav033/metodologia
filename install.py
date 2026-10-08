@@ -172,6 +172,17 @@ def main() -> None:
         if (d / "project.json").exists():
             gone = ws.missing(root, d.name)
             say(f"{d.name}: {'all repos found' if not gone else 'not cloned here: ' + ', '.join(gone)}")
+    print("6. secret scanning (gitleaks)")
+    import bt_secrets
+    if not bt_secrets.find_gitleaks() and os.name == "nt":
+        subprocess.run(["winget", "install", "--id", "Gitleaks.Gitleaks", "-e", "--accept-source-agreements",
+                        "--accept-package-agreements", "--disable-interactivity"], check=False, capture_output=True)
+    say(f"gitleaks: {bt_secrets.find_gitleaks() or 'NOT installed — winget install Gitleaks.Gitleaks'}")
+    for d in sorted(root.iterdir()):
+        if (d / "project.json").exists():
+            for role, path in ws.repos(root, d.name).items():
+                if path.exists() and path.resolve() != REPO.resolve():
+                    say(f"{d.name}/{role}: pre-commit {bt_secrets.install_hook(path)}")
     if (REPO / ".git").exists():
         subprocess.run(["git", "-C", str(REPO), "config", "pull.rebase", "true"], check=False)
     print("Done. Missing repos are cloned on demand (launch) or with: bitacora.py --project <p> workspace clone")

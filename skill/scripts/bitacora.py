@@ -72,6 +72,7 @@ def main() -> None:
     p_serve.add_argument("--port", type=int)
     p_web = sub.add_parser("web", help="start the web server if needed, open the browser, print the URL")
     p_web.add_argument("--no-open", action="store_true")
+    sub.add_parser("secrets", help="install the gitleaks pre-commit hook in every workspace repo on this machine")
     p_commit = sub.add_parser("commit", help="commit the bitácora (local git)")
     p_commit.add_argument("message")
     p_hook = sub.add_parser("hook", help="Claude Code hook entry point (reads JSON on stdin)")
@@ -101,8 +102,20 @@ def main() -> None:
             webbrowser.open(target)
         return print(target)
     if a.cmd == "commit":
+        from bt_secrets import alert
         from bt_vcs import commit
-        return print("committed" if commit(ROOT, a.message) else "nothing to commit")
+        if commit(ROOT, a.message):
+            return print("committed")
+        return print(f"BLOCKED — possible secret:\n{alert(ROOT)}" if alert(ROOT) else "nothing to commit")
+    if a.cmd == "secrets":
+        from bt_secrets import find_gitleaks, install_hook
+        if not find_gitleaks():
+            print("gitleaks not found — install with: winget install Gitleaks.Gitleaks")
+        for d in sorted(p for p in ROOT.iterdir() if (p / "project.json").exists()):
+            for role, path in ws.repos(ROOT, d.name).items():
+                if path.exists() and path.resolve() != ROOT.resolve().parent:
+                    print(f"{d.name}/{role}: {install_hook(path)}")
+        return
 
     cwd = Path(a.cwd)
     if a.cmd == "bind":
