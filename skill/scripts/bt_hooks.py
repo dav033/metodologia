@@ -12,7 +12,8 @@ def _norm(p: str) -> str:
 
 def needs_logging(transcript: Path) -> tuple[bool, str]:
     """Look at the transcript since the last write into the bitácora."""
-    root = _norm(str(ROOT))
+    # the bitácora is reachable through its link (~/bitacora) AND its real path (~/metodologia/bitacora)
+    roots = {_norm(str(ROOT)), _norm(str(ROOT.resolve())), "~/bitacora"}
     events = []  # ("log" | "work" | "turn")
     try:
         with transcript.open(encoding="utf-8") as fh:
@@ -35,7 +36,7 @@ def needs_logging(transcript: Path) -> tuple[bool, str]:
                         continue
                     name, inp = c.get("name", ""), c.get("input") or {}
                     target = _norm(str(inp.get("file_path") or inp.get("notebook_path") or inp.get("command") or ""))
-                    if root in target or "bitacora.py" in target:
+                    if any(r in target for r in roots) or "bitacora.py" in target:
                         if name in MUTATING_TOOLS or name in ("Bash", "PowerShell"):
                             events.append("log")
                         continue
