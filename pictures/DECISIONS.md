@@ -48,3 +48,18 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Context:** owner: «pausemos el resto, centrémonos en rendimiento».
 - **Decision:** stop the 10-minute loop after lot 26; state documented in repo `SEGUIMIENTO.md` (pause section).
 - **Source:** [day log](2026-10/W2/2026-10-08.md)
+
+## D-006 — FLUX color text uses official balloon hex and neutral light
+- **Date:** 2026-10-08 · **Status:** Accepted
+- **Context:** FLUX.2 warmed/darkened the whole photo and turned «Fashion Azul Caribe» (named "turquoise") green.
+- **Decision:** every color goes with its `hexGlobo` («light aqua blue (#4BBBCF)»), room tones with hex and without "warm", plus color-fidelity and neutral white-balance sentences; MAX_DESCRIPCION 1400 → 1800.
+- **Alternatives:** post-correct colors per piece — kept as next step if residual drift matters.
+- **Consequences:** + mean per-piece ΔE ~25 → ~15 (experiment US$0.096) / − longer prompt (~2.6k chars).
+- **Source:** commit c25490f1 · `scripts/exp/render-color.ts`
+
+## D-007 · Parametric organic pieces keep their generator · 2026-10-08
+Context: the owner finds structures rigid; photo garlands need any silhouette and must stay editable.
+Decision: `organico` pieces may carry `generador` (today `trazo`); editors and the AI change the generator and
+re-derive `opciones` (`piezaDeGenerador`). Recolor writes both. Organic-column question round answered with the
+recommended defaults (three types: classic / irregular / freeform; to be built in REQ-001 step 2).
+Alternatives: new piece type (touches every switch) · keep raw tramos (not editable). Source: REQ-001.
