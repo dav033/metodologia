@@ -16,4 +16,5 @@ _None yet._
 
 ## Timeline
 
-_No entries yet._
+- **2026-10** — [month summary](2026-10/MONTH.md)
+  - [W2](2026-10/W2/WEEK.md): [08](2026-10/W2/2026-10-08.md)

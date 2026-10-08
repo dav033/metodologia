@@ -63,3 +63,10 @@ Decision: `organico` pieces may carry `generador` (today `trazo`); editors and t
 re-derive `opciones` (`piezaDeGenerador`). Recolor writes both. Organic-column question round answered with the
 recommended defaults (three types: classic / irregular / freeform; to be built in REQ-001 step 2).
 Alternatives: new piece type (touches every switch) · keep raw tramos (not editable). Source: REQ-001.
+
+## D-008 · Photo → scene through a structured reading · 2026-10-08
+Context: the owner wants the AI to recreate a Pinterest photo autonomously.
+Decision: the model only READS the photo into `LecturaFoto` (catalog pieces in image coordinates, silhouettes with
+thickness, decorator colour names + finish, sizes, foliage, backdrops, scale reference); `compilarLectura` builds the
+scene deterministically (testable). The 13 owner photos are read by hand with the same format as the benchmark.
+Alternatives: free-form tool calling from the image (untestable, drifts) · generating images (forbidden for Gemini).
