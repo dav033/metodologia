@@ -1,0 +1,5 @@
+# machine-local state of the bitácora (sessions, repo paths, server token, launch scripts)
+bitacora/.state/
+__pycache__/
+*.pyc
+*.tmp
