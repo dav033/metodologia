@@ -5,9 +5,12 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Now
+REQ-003 · Scene agent v2 (5 agents in worktrees e3a/c/d/e/f) · high · added 2026-10-08 · requirements/REQ-003-scene-agent-v2
+REQ-002 · Workshop library RAG + celebrations taxonomy (planned, no code) · high · added 2026-10-08 · requirements/REQ-002-workshop-library-rag
 REQ-001 · Photo → scene + flexible structures (13 owner photos) · high · added 2026-10-08 · requirements/REQ-001-photo-to-scene
 
 ## Next
+P-012 · Occasion ids inconsistent (owner references use cumpleanos/graduacion; list uses cumpleaños/grado) → fix with taxonomy (REQ-002 step 0) · med · added 2026-10-08
 P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · high · added 2026-10-08 · REQ-001
 P-011 · «Más tupida» barely changes stroke garlands (engine saturated at density 1.25) · low · added 2026-10-08
 P-008 · Split organico.ts (1529 lines) and escena.ts (740) by responsibility · med · added 2026-10-08
