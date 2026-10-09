@@ -28,10 +28,10 @@ Grounded in `origin/main` = `b4433bc9` (worktree `C:/Users/davidt/Downloads/e6f`
 | Guided-chat library | `src/lib/biblioteca-sempertex/`: `planes-ideas.json` (v1, 28 plans, reader `lib/plan/planes-ideas-guardados.ts`), `detalles-ideas.json` (31, reader `detalle-idea.ts`), `decoraciones.json` (46: 31 real, 15 example; reader `biblioteca.ts`), `proveedores.json` (13 example suppliers) | — | idea keys | balloons (Python / engine BOM) |
 | Balloon formats & colours | `FORMATOS_GLOBO` (14, `src/lib/globos3d/formatos.ts:31`), colour table `contracts/domain/v1/sempertex/tabla-color.json` (90 codes, `sempertex-color.v1`, loaded as `TABLA_SEMPERTEX` in `src/lib/plan/referencia-sempertex.ts:60`), `colores-formato.ts` | — | `R-12`, `LOL-660`, codes `570`… | defines the crosswalk key `formatoId\|codigo` |
 | Shop props (utilería) | `CATALOGO_UTILERIA` (`utileria-catalogo.ts:39`, 620 shop entries, no price field) | 620 | shop url | link only |
-| Fixed backdrops (`FONDOS_BASE`) | `src/lib/globos3d/fondos-escenografia.ts:105-115` | 9 | bare snake_case (`panel_redondo`) | no ("escenografía: no cotiza") |
-| Parametric furniture + standing décor (`CATALOGO_MOBILIARIO`) | `src/lib/globos3d/mobiliario-catalogo.ts` (+ `mobiliario-*.ts` builders) | 42 (asiento 9 · mesa 16 · decorado 17) | bare snake_case (`silla_tiffany`, `pastel`) | no |
+| Fixed backdrops (`FONDOS_BASE`) | `src/lib/globos3d/fondos-escenografia.ts:93-104` | 9 | bare snake_case (`panel_redondo`) | no ("escenografía: no cotiza") |
+| Parametric furniture + standing décor (`CATALOGO_MOBILIARIO`) | `src/lib/globos3d/mobiliario-catalogo.ts:338` (+ `mobiliario-*.ts` builders) | 42 (asiento 9 · mesa 16 · decorado 17) | bare snake_case (`silla_tiffany`, `pastel`) | no |
 | Parametric table/chair sets (REQ-012) | `mobiliario-conjunto*.ts`, `mobiliario-mesas-param.ts`, `mobiliario-sillas-param.ts` | 2 generators | `mesa_param`, `sillas_param` (labels in `pieza.mueble.id`) | no |
-| One registry for both | `FONDOS_CATALOGO = [...FONDOS_BASE, ...CATALOGO_MOBILIARIO]` (`fondos-escenografia.ts:118`) | 51 | — | — |
+| One registry for both | `FONDOS_CATALOGO = [...FONDOS_BASE, ...CATALOGO_MOBILIARIO]` (`fondos-escenografia.ts:106`) | 51 | — | — |
 
 Consumers of the undivided registry:
 - Taller «Añadir» = `PanelAnadir.tsx` with 4 tabs (Estructuras, Decoraciones, Utilería, Ideas; `:22-29`, content
@@ -291,7 +291,9 @@ test (not at runtime, to keep imports cheap); `terceros` entries are validated a
   into the repo; shop links point to sempertex shop". Item-level provenance keeps today's `FuenteItem.tipo`
   (`referencia-web` and `referencia-dueno` items carry licence `referencia`: geometry re-created, image not stored).
   `idsLocales.prefijos = ["idea:", "celebra:", "decoracion:", "utileria:", "base-organica:", "referencia:", "escena:"]`;
-  `datos: "data/taller"`.
+  `datos: "data/taller"`; `depende: ["escenografia", "mobiliario"]` (owner-reference scenes compiled by
+  `compilar-lectura.ts` place catalogue backdrops/furniture; inline scenery inside idea lots — 108 pieces without
+  `mueble` — belongs to the idea itself).
 - `mobiliario` / `escenografia`: licence `propia` (in-house parametric models; `rotulo_acrilico`/`neon_cursiva` render
   with the bundled Great Vibes font, OFL 1.1 — D-018 — recorded as attribution). `idsLocales.exactos = "del-cargador"`.
 - Lock file `src/lib/catalogo/repositorios.lock.json`: `{ id, version, huella }` per repository, where `huella` =
