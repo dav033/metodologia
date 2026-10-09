@@ -8,7 +8,7 @@ product is the **3D workshop** at `/3d`: a parametric three.js editor (balloon â
 decorations) whose shopping list comes from the leaves, plus a FLUX photo render of the 3D view and a Gemini Flash
 agent that builds and edits scenes with tools. Users: Sempertex staff and decorators.
 
-## Current state (main = `72ed7d28`, 2026-10-09)
+## Current state (main = `0a6e9993`, 2026-10-09)
 - **Library RAG LIVE** (REQ-002): Neon indexed (3 217 items, 12 567 parts, 6 447 vectors), `TALLER_RAG_ENABLED` on in
   Vercel; RAG beats in-memory on the gold set (acierto@5 97.5 % vs 87.5 %). Orphan table `taller_taxonomia` (P-030).
 - **Taller AI panel B LIVE** (D-021): per-turn change cards, undo only AI-touched pieces, NDJSON steps + stop, phone
