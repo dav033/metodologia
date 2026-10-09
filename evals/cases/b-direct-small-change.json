@@ -49,6 +49,12 @@
       "path": "{bt}/20*/W*/20*.md",
       "pattern": "format",
       "flags": "i"
+    },
+    {
+      "name": "starts-with-aye",
+      "type": "regex",
+      "pattern": "^\\s*\\**Aye\\b",
+      "target": "final"
     }
   ]
 }

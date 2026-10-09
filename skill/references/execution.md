@@ -127,6 +127,9 @@ bitácora explicitly (the Stop hook won't remind you).
 - **Workspaces with several repos:** the same branch name in every repo the requirement touches; commit and
   verify per repo; keep cross-repo contracts (API shapes, shared types) in sync within the same phase; the
   branches are merged together, as one change.
+- **Before every commit, the antagonist gate** (`subagents.md` §The antagonist gate): it attacks the staged
+  change, you triage — fix what's relevant now, defer the rest to PENDING.md with urgency/complexity — one review
+  plus at most one re-review, never more.
 - Commit after every green phase (Conventional Commits, in the repo's language). Keep refactor commits separate from behavior
   commits.
 - **Cite IDs in commits** so the trace graph links code to the bitácora: a trailer line `Refs: REQ-012 T3`

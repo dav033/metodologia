@@ -29,6 +29,12 @@
       "name": "round-quality",
       "type": "llm",
       "criteria": "PASS if ALL hold: (1) the reply asks the user a round of numbered questions (between 2 and 6); (2) every question comes with a recommended or suggested answer; (3) the most fundamental questions (goal/scope, who can review, moderation) come before details; (4) it does not claim to have implemented or written code. FAIL if any of these is missing, or if it starts implementing without asking."
+    },
+    {
+      "name": "starts-with-aye",
+      "type": "regex",
+      "pattern": "^\\s*\\**Aye\\b",
+      "target": "final"
     }
   ]
 }

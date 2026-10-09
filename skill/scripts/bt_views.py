@@ -88,11 +88,18 @@ def build_context(project: str | None, session_id: str, cwd: Path, source: str) 
     state = _section(summ, "Current state", 12)
     if state:
         out += ["", "### Current state (SUMMARY.md)", state]
-    pend = (pdir / "PENDING.md").read_text(encoding="utf-8")
-    for h in ("Now", "Blocked"):
-        s = _section(pend, h, 10)
-        if s and "_None_" not in s:
-            out += ["", f"### Pending — {h}", s]
+    import bt_pending
+    bt_pending.sort_file(pdir)
+    top = bt_pending.top(pdir, 5)
+    if top:
+        out += ["", "### Top pending (PENDING.md, sorted by urgency then complexity)", *[f"- {t}" for t in top]]
+    unsized = (pdir / "PENDING.md").read_text(encoding="utf-8").count("complexity: ?")
+    if unsized:
+        out.append(f"({unsized} pending item(s) have no complexity estimate yet: when you touch this project, "
+                   f"estimate them S/M/L in PENDING.md — the file re-sorts itself.)")
+    blocked = _section((pdir / "PENDING.md").read_text(encoding="utf-8"), "Blocked", 6)
+    if blocked and "_None_" not in blocked:
+        out += ["", "### Pending — Blocked", blocked]
     nxt = last_next_steps(pdir)
     if nxt:
         out += ["", "### Last session said to start with", nxt]

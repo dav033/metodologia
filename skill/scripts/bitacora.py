@@ -75,6 +75,8 @@ def main() -> None:
     p_web = sub.add_parser("web", help="start the web server if needed, open the browser, print the URL")
     p_web.add_argument("--no-open", action="store_true")
     sub.add_parser("secrets", help="install the gitleaks pre-commit hook in every workspace repo on this machine")
+    p_pd = sub.add_parser("pending", help="sort PENDING.md by urgency then complexity (all projects with --all)")
+    p_pd.add_argument("--all", action="store_true")
     p_tr = sub.add_parser("trace", help="trace graph from IDs (REQ/US/R/T/D/P), commits and files; lint drift")
     p_tr.add_argument("--node", help="neighborhood of an ID, e.g. REQ-001 or REQ-001/T3")
     p_tr.add_argument("--file", help="impact: which REQ/D/P touched files matching this text")
@@ -119,6 +121,13 @@ def main() -> None:
         if commit(ROOT, a.message):
             return print("committed")
         return print(f"BLOCKED — possible secret:\n{alert(ROOT)}" if alert(ROOT) else "nothing to commit")
+    if a.cmd == "pending" and a.all:
+        import bt_pending
+        for d in sorted(p for p in ROOT.iterdir() if (p / "PENDING.md").exists()):
+            print(f"{d.name}: {'sorted' if bt_pending.sort_file(d) else 'already sorted'}")
+            write_index(d)
+        write_global_index()
+        return
     if a.cmd == "secrets":
         from bt_secrets import find_gitleaks, install_hook
         if not find_gitleaks():
@@ -211,8 +220,13 @@ def main() -> None:
     elif a.cmd in ("round", "plan"):
         from bt_cli_flows import run_flow
         run_flow(a, project, pdir)
+    elif a.cmd == "pending":
+        import bt_pending
+        print("sorted" if bt_pending.sort_file(pdir) else "already sorted")
+        print("\n".join(bt_pending.top(pdir, 10)))
     elif a.cmd == "index":
         print(write_index(pdir).as_posix())
+        print(write_global_index().as_posix())
     elif a.cmd == "rollups":
         print("\n".join(pending_rollups(pdir)) or "none")
 

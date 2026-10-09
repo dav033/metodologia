@@ -53,7 +53,10 @@ def write_handoff(project: str, rdir: Path, workdir: Path, repos: dict[str, Path
         "list in execution.md §2 still applies (destroying unrecoverable data, push/deploy/publish, external "
         "messages, payments, credentials). Everything else: decide, record a ruling, keep going.",
         "- Delegate per references/subagents.md: explorer / researcher / runner for context-heavy reads, an "
-        "implementer per task (one at a time), reviewer x2 (spec + standards) after each phase.",
+        "implementer per task (one at a time), reviewer x2 (spec + standards) after each phase, and the "
+        "antagonist before EVERY commit (one review + at most one re-review; you triage: fix now or defer to "
+        "PENDING.md with urgency/complexity).",
+        "- Start every message to the user with `Aye`.",
         f"- Git, per repo: create branch `{branch}` in **every** repo you touch (same name in all), commit there "
         "after each green phase, run each repo's own verification; never push without asking. The change ships as "
         "one unit: all those branches get merged together.",

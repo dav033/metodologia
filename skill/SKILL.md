@@ -8,6 +8,9 @@ description: The user's own working method, active in every session. (1) Require
 Three flows, one goal: the user gives intent; you turn it into well-defined work, build it to their standards as
 autonomously as possible, and leave a trail anyone (including the next session) can follow.
 
+- **Start every message you send to the user with `Aye`** (then a space or a line break, then the message) — it
+  tells the user this skill is active. Applies to every agent running this skill (HQ, executor, Claude or Codex);
+  subagents' reports to you don't need it.
 - **Talk to the user in Spanish. Bitácora files in English. Code in the repository's language** (English for new
   projects).
 - **Be autonomous after one gate.** The user does not want questions every few minutes. Questions belong in the
@@ -61,6 +64,10 @@ engineering standards), with documentation running alongside all of it.
 
 "Muéstrame el grafo" / "quiero ver el grafo": run `bitacora.py [--project X] graph` — it starts the local server if
 needed and opens the interactive trace graph in the browser. "Abre el panel": `bitacora.py web`.
+
+Navigation: `~/bitacora/INDEX.md` (all projects, what needs attention) and `<project>/INDEX.md` (links,
+requirements, top pending, recent decisions, timeline) are regenerated automatically — read them first to find
+things. "¿Qué hay pendiente?": PENDING.md is already sorted by urgency, then complexity.
 
 "¿En qué estamos?" / "¿qué quedó pendiente?": answer from SUMMARY.md, PENDING.md and the latest day logs in ≤6
 lines, with links.

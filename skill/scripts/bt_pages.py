@@ -63,8 +63,8 @@ def requirements(pdir: Path) -> list[dict]:
 
 
 def open_pending(pdir: Path) -> list[str]:
-    text = read(pdir / "PENDING.md")
-    return [l.strip("-* ").strip() for l in text.splitlines() if re.match(r"^\s*(?:[-*]\s+)?P-\d{3,}", l)]
+    import bt_pending
+    return bt_pending.top(pdir, 999)
 
 
 def last_day_logs(pdir: Path, n: int = 7) -> list[Path]:

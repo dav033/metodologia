@@ -184,7 +184,10 @@ def hook_end() -> None:
                 day.unlink()
             else:
                 day.write_text(new, encoding="utf-8")
+    import bt_pending
+    bt_pending.sort_file(pdir)
     write_index(pdir)
+    write_global_index()
     from bt_vcs import commit
     commit(ROOT, f"{project}: session {sid[:8]} end")
 

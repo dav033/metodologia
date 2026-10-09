@@ -17,6 +17,7 @@ definition, not by asking nicely.
 | `implementer` | One plan task in a fresh context | Yes | sonnet (pass `opus` for hard tasks) |
 | `reviewer` | Fresh-eyes review on one axis: `spec` or `standards` | No | opus |
 | `runner` | Test suites, builds, lint/typecheck, logs, server status — returns only failures | No | haiku |
+| `antagonist` | **Before every commit:** attacks the staged change (architecture, correctness, security, tests) | No | opus |
 
 In Codex refer to them by name ("have explorer map…"). If the roles aren't installed, use the harness's built-ins
 (Claude Code: Explore / general-purpose; Codex: explorer / worker) with the same briefs and contracts.
@@ -68,6 +69,28 @@ VERIFY: <command/test that proves done>
 STOP IF: ambiguity that changes the design, missing context → return NEEDS_CONTEXT
 OUTPUT: your role's output contract; full notes to <path> if any
 ```
+
+## The antagonist gate (before every commit)
+
+Every commit of code (not bitácora-only commits, not pure docs/formatting) passes through the `antagonist` first.
+It is deliberately hostile; **you** are the judge. The protocol is built so it can never loop:
+
+1. **Stage** the change, then brief the antagonist: repo(s), `git diff --staged` (per repo in a workspace), the
+   spec/plan task it implements. One antagonist per commit — for a multi-repo phase, one brief covering all repos.
+2. **Triage every finding yourself** — the antagonist never decides:
+   - **Relevant now** (blocker/major that is real, in scope, and cheaper to fix now than later) → fix it.
+   - **Not now** (real but out of scope, minor, speculative, or bigger than the task) → record it as a pending
+     item with urgency and complexity: `bitacora.py id P`, then a line in PENDING.md with source
+     `antagonist <REQ/commit>` (see documentation.md §Pending).
+   - **Wrong** (the antagonist misread the code) → drop it, one line why in the PLAN Progress log.
+3. **At most one re-review**, and only if you fixed something: send the antagonist the fix diff with the earlier
+   findings and say it's a re-review. Whatever it says then: fix if trivial, otherwise defer. **Never a third pass.**
+   A finding that comes back after you fixed it → defer it, don't argue.
+4. **Commit**, and log in the PLAN Progress log: `antagonist: N fixed, M deferred (P-0xx…), K dropped`.
+
+Hard stops against loops: one review + at most one re-review per commit; the antagonist can't delegate or edit;
+you don't re-run it on deferred items; if it times out or errors, commit anyway and note "antagonist skipped".
+Quick-track one-liners (typo, config value, copy) skip the gate.
 
 ## Where they plug into the flow
 
