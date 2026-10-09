@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-09 16:49 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-09 16:55 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -26,7 +26,7 @@ _Generated 2026-10-09 16:49 by `bitacora.py index`. Do not edit by hand._
 | [REQ-010](requirements/REQ-010-ai-feedback/SPEC.md) | AI feedback: rate every AI action and keep its full state | `in progress 2026-10-09` | — |  |
 | [REQ-011](requirements/REQ-011-module-studio-with-cached-ai-renders/SPEC.md) | Module studio with cached AI renders | `in-progress` | — |  |
 | [REQ-012](requirements/REQ-012-furniture-freedom-tables-and-chairs-deco/SPEC.md) | Furniture freedom: tables and chairs decoupled | `in-progress` | — |  |
-| [REQ-013](requirements/REQ-013-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `clarifying` | — |  |
+| [REQ-013](requirements/REQ-013-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `ready` | [in-progress](requirements/REQ-013-72h-marathon-autonomous-product-developm/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 

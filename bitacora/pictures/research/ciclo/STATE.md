@@ -14,7 +14,8 @@
 ## In flight (relaunched 16:50 with explicit models per brief §5 model rule)
 | Item | Worktree / branch | Agent (model) | Status |
 |---|---|---|---|
-| W1 REQ-007 Phase 5 (from d2590cd4, main merged 8b07f6a0) | e6g feat/guiada-motor-ediciones | implementer (haiku) a20f3aba | running |
+| W1 REQ-007 Phase 5 | e6g feat/guiada-motor-ediciones @903916f4 | built (haiku); antagonist (sonnet xhigh) a1075ed3 | in review |
+| W5 local Claude provider | e7c feat/ia-local-claude | implementer (opus xhigh, architecture) a3def6b1 | running |
 | W2 scenario matrix | e7a feat/escenarios-matriz | implementer (haiku) ae4bd443 | running |
 | W6 REQ-013 ADR | — | general-purpose (opus xhigh) a9b97ee7 | running |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
