@@ -8,32 +8,35 @@ product is the **3D workshop** at `/3d`: a parametric three.js editor (balloon �
 decorations) whose shopping list comes from the leaves, plus a FLUX photo render of the 3D view and a Gemini Flash
 agent that builds and edits scenes with tools. Users: Sempertex staff and decorators.
 
-## Current state (main = `bfe3447f`, 2026-10-08)
-- Library: 26 lots of Sempertex ideas (~423/987), 20 organic web bases, **13 owner Pinterest references** (read by hand
-  in the photo-reading format, compiled to scenes), predefined decorations, utilería, backdrops & furniture.
-- New structures/decorations: free organic stroke garland (any silhouette, editable by its `generador`), four column
-  types (classic / organic XV / irregular / freeform), foliage (monstera, palm, fern, eucalyptus, pampas), grape
-  clusters / R-5 ball / collar, orb with fringe, backdrop catalog; decorator colour names (navy, emerald, blush…).
-- Editor: redesign live; drag & drop from the whole sidebar; chrome balloons render in colour; AI photos persist.
-- FLUX: closed inventory, official hex, silhouettes of any organic piece + empty-wall gaps (no more closed frames).
-- AI: `ajustar_tamanos` (precise size mix); **parts contract** — every balloon can carry `parte`, selector/inventory
-  in `partes-globos.ts`.
+## Current state (main = `251c58bd`, 2026-10-09)
+- **Library RAG LIVE** (REQ-002): Neon indexed (3 217 items, 12 567 parts, 6 447 vectors), `TALLER_RAG_ENABLED` on in
+  Vercel; on the gold set RAG beats in-memory (acierto@5 97.5 % vs 87.5 %, nDCG@10 0.687 vs 0.564). Found and fixed:
+  no vector uploader existed; TS/Python text-hash mismatch. Orphan table `taller_taxonomia` (P-030).
+- **Photo → scene** (REQ-001, main a0fad72a + integ): tilted photo camera, cluster-box review (Gemini counts balloons
+  in oversized boxes), same-colour giants, clear acrylic, fragment boxes, signs in front of balloons, pedestal
+  counting; proportion metric + rounds 1–2 on integ/foto-taller (not yet on main: last review fix in progress).
+- **Furniture** (39 items + agregar_mobiliario), cursive signs, pampas, studio materials — on main.
+- **In parallel branches (not merged):** REQ-008 complete events (e4v: halls to 30×30×10 m, armar_salon/ajustar/
+  mover/quitar zona, planificar_evento with alcance solo_decoracion|rincon|salon, venue registry; merged with e4w
+  centrepieces decorar_mesas… + techo_por_zona + golden snapshot test; + empty starting scene and varied
+  decorations by theme in progress); Taller AI panel B (e4x, D-021: per-turn change cards, undo only AI-touched
+  pieces, NDJSON steps + stop, phone sheet; review fixes in progress).
+- VPS advin-vps: APP_ORIGINS set (P-024 done); Whisper + Laya benchmark being set up in an isolated compose project.
 
 ## Active focus
-- **REQ-003 scene agent v2** — 5 agents running in worktrees (see today's log «Handoff»).
-- **REQ-002 library RAG + celebrations taxonomy** — planned (SPEC + PLAN), starts after REQ-003.
-- REQ-001 photo → scene: steps 7–10 (Gemini vision reading → compiler, upload in AI bar, refinement, paid eval) pending.
+- REQ-008 merge + variety → hostile review → push. Panel B review fixes → push. Photo zone fix → verify → push.
+- Whisper/Laya benchmark → decide integration.
 
 ## Top pending (see PENDING.md)
-- REQ-003, REQ-002, REQ-001 · P-012 occasion ids · P-002 FLUX colour/exactness · P-008 split organico.ts/escena.ts.
+- P-022 owner A/B labelling for refine · P-027 burgundy chrome · P-029 CI health · P-030 orphan taxonomy table ·
+  REQ-005 / REQ-006 (room scan: import RoomPlan USDZ suggested by the market study).
 
 ## Recent decisions (see DECISIONS.md)
-- D-007 organic pieces keep a `generador` · D-008 photo → scene = structured reading + deterministic compiler.
-- Owner: stay on Gemini Flash; "more tools, rules, semantics"; everything made of identifiable balloon types/products.
-- RAG split: Python = batch (embeddings text+image, analysis, rerank); Next = online query to Neon; code = source.
+- D-019/D-020: 3D engine canonical via (b); two products; customer edits = AI requests + colour refs/proportions +
+  size proportions. D-021: Taller AI direction B. Market study artifact 5i7KgEc4b9J5aSCmLnfqTb.
 
 ## Known issues
-- FLUX.2 still redraws (not pixel-exact); colour drift ΔE ~15.
-- «Más tupida» barely changes stroke garlands (P-011).
+- Default workshop scene + CRUD rule made every new decoration the same arch+columns+garland (fix in progress).
+- Burgundy chrome renders red (no wine Reflex in the table); photo metric biased by sparse small-balloon detections.
 
-_Last updated: 2026-10-08_
+_Last updated: 2026-10-09_

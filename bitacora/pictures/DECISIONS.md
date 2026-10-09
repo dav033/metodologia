@@ -83,3 +83,80 @@ Python does batch work (embeddings, analysis, rerank), Next does the online hybr
 hard filters) with in-memory fallback; code stays source of truth for factory items; owner items move to the DB;
 taxonomy of ~60 celebrations + ~50 themes first. Alternatives: query through Python (extra hop to a hand-deployed VPS);
 DB as editable source (later, with an admin). Source: owner, REQ-002.
+
+## D-011 · Library classification by Claude subagents, not paid API calls · 2026-10-08
+Context: REQ-002 step 1 planned a Gemini pass (cap US$1.00) to tag every item with celebrations and themes.
+Decision: rules first (free), then Claude Sonnet 5.5 subagents at medium effort read batches of fichas and assign
+celebraciones/temáticas with confidence and reason; output stored as versioned JSON; rule/model disagreements listed
+for owner review. No paid Gemini calls for classification. Embeddings themselves still need the embedding API
+(paid, capped, after REQ-004's spend ledger). Source: owner.
+
+## D-012 · Photo → scene: measure with detection, never settle for the tools · 2026-10-08
+Context: Gemini's eyeballed reading of a photo gets scale, balloon sizes, thickness and zones wrong (83 sparse balloons).
+Decision: Gemini reads WHAT and WHERE (pieces, axis); a second Gemini pass detects every balloon (tiled box_2d + colour)
+and backdrops; deterministic code measures scale, tier formats (by ratio, anchored on mediums), per-segment thickness/mix,
+colours per tier/zone and anchors giants. Claude renders a reference first; missing engine capabilities are built, not
+worked around. A colour is never changed to keep a format (drop the format instead). Source: owner.
+
+## D-013 · Antagonistic review gates and the orphan-property rule · 2026-10-08
+Decision: every branch and plan passes hostile senior reviewers (architecture, correctness, orphan properties, separation,
+performance) before merge; every contract field must have a declared consumer (typed ledger test) or an explicit
+"ignored" reason. Source: owner ("agentes antagónicos por donde haya", "propiedades que se pierden").
+
+## D-014 · REQ-007 plan v1 rejected · 2026-10-08
+Context: 3 antagonistic architects: customer already has the designer engine (Python ports, golden vectors, the SVG the
+customer approves); Escena-as-API freezes the workshop; separation cosmetic; shadow in request path unsafe (9.3 s for
+1 483 balloons). Decision: PLAN v2 (ADR on canonical engine first, real product separation, contracts in
+contracts/domain/v1, offline shadow, versioned approvals). Owner decisions D1–D5 pending.
+
+## D-015 · Automatic photo refinement stays OFF until owner-labelled calibration · 2026-10-08
+Context: calibration over 4 owner photos × 28 known perturbations: capture/embedding noise is 0, but image-embedding
+cosine does not separate small changes (moving 50 cm improved similarity in 2/4 photos). Decision: MARGEN_MEJORA 0.02,
+RONDAS_AUTOMATICAS = 0; enable only after ~30 owner-labelled A/B rounds give a threshold that rejects bad rounds.
+
+## D-016 · Merge order of the four review branches · 2026-10-08
+e4m (refine) → e4q (materials, based on e4m) → e4p (furniture) → e4n (photo fidelity, last). Hand-resolve: `ambiente` in
+e4m's `esquema-escena.ts`; per-viewer scenery caches in escena-globos.ts (no module-level env/material maps).
+
+## D-017 · Viewer resources are per viewer, never module-level · 2026-10-09
+Context: three branches independently re-introduced module-level caches holding GPU resources (env map, scenery
+materials/geometries); a second viewer (capture, library thumbnail) disposing them turned metals/foil black.
+Decision: every cache holding a GPU resource lives inside the viewer (`crearEscena` closure / per-viewer factories such
+as `escenografia-visor.ts`) and is released in `destruir`; enforced by test-foil-visor (no module-level env) and
+test-escenografia-visor (two viewers share nothing).
+
+## D-018 · Bundled script font for text signs: Great Vibes (SIL OFL 1.1) · 2026-10-09
+Context: system cursive fonts don't join letters and change text size per OS → non-deterministic captures.
+Decision: bundle Great Vibes (woff2, OFL.txt included), loaded before rasterising; no silent fallback. Reversible:
+another OFL script (Sacramento, Alex Brush) can be added per sign later if the owner prefers.
+
+## D-019 · REQ-007 owner rulings: the 3D engine becomes canonical; two products, one engine · 2026-10-09
+Context: REQ-007 PLAN v2 asked D1–D5. Owner (2026-10-09): "el motor 3D es el que va a [reemplazar] el Python, [que] no
+nos sirve para nada… la pregunta es A y B"; "el chat normal todavía usa el motor viejo… lo 2D es básicamente el 3D del
+plan modificado ligeramente; el 3D y el chat normal van a ser productos diferentes"; "el chat… es otro producto, va a
+utilizar el motor, pero no se lo va a mostrar al usuario… podrá modificar cositas puntuales, pero no el nivel de
+control del motor pro".
+Decision: D1 = target (a) — globos3d is the canonical geometry/quantity engine — reached through (b): the customer chat
+keeps its current (Python/designer) engine until each structure type passes parity with golden vectors, then switches
+to globos3d. The customer "2D" view is the plan's 3D render lightly modified (not a separate drawing). Two products:
+Taller 3D pro (full engine control) and the customer chat (engine hidden, a short list of point edits). D2–D5 still
+use the PLAN recommendations unless the owner says otherwise; D4 (the exact edit list) still needs the owner.
+
+## D-020 · REQ-007 D4: what the customer can edit · 2026-10-09
+Context: D4 asked which edits the customer chat exposes. Owner: the customer asks the AI for changes and "más o menos
+lo haga"; can change colours (colour references and colour proportions) and size proportions; cannot drag things,
+create pieces or any fine control that depends on the browser 3D environment ("lo bonito del otro motor"). Later the
+customer-side AI will be limited so it doesn't do "pro" things ("tiempo al tiempo").
+Decision: customer edits = (1) natural-language requests to the AI, (2) colour references, (3) colour proportions,
+(4) size proportions. No direct manipulation (drag/move/create/select-in-viewer) in the customer product. A future
+capability limit for the customer AI is a separate, later item (not now).
+
+## D-021 · Taller AI UX: direction B (side assistant with per-turn change cards) · 2026-10-09
+Context: AI-UX audit of the Taller (10 ranked problems) and two directions (artifact Nuv9GST6YR9HmGgAMoDdMr). Owner:
+"Me gusta la B".
+Decision: build B — AI tab in the right panel ("Pieza | ✦ IA"), each turn a card (what it did, scene diff before→after
+with 3D highlight on hover, steps, "Deshacer turno" reverting only AI-touched pieces, "Ver antes"), question cards,
+scope chips (piece / several / whole scene), FLUX render card with time and cost, half-height sheet on phones,
+conversation saved with the scene. Common base first: pure scene diff by piece id, per-turn undo as one named step in
+the global history, abort for every request, streamed steps (NDJSON) if cheap. The "✦ Pedir a la IA" chip from A is
+not in scope unless the owner asks.

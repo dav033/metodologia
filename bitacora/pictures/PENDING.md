@@ -5,14 +5,36 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Now
-REQ-003 · Scene agent v2 (5 agents in worktrees e3a/c/d/e/f) · high · added 2026-10-08 · requirements/REQ-003-scene-agent-v2
+REQ-003 · Scene agent v2 — merged and pushed (main 0046ab80); left: paid eval (cap US$0.50) + P-013 · high · added 2026-10-08 · requirements/REQ-003-scene-agent-v2
 REQ-004 · Users (email+password, admin|staff) + AI spend ledger & dashboard for Gemini and fal.ai (no caps yet) · high · added 2026-10-08 · requirements/REQ-004-users-and-spend-control
-REQ-002 · Workshop library RAG + celebrations taxonomy (planned, no code) · high · added 2026-10-08 · requirements/REQ-002-workshop-library-rag
+REQ-002 · Workshop library RAG + celebrations taxonomy — LIVE 2026-10-09 (Neon indexed + vectors, flag on in Vercel; photo-search eval pending) — started 2026-10-08 (steps 0–2 in worktrees e4a/e4b + embeddings research + infra map; no code merged yet) · high · added 2026-10-08 · requirements/REQ-002-workshop-library-rag
 REQ-001 · Photo → scene + flexible structures (13 owner photos) · high · added 2026-10-08 · requirements/REQ-001-photo-to-scene
 
+REQ-007 · Engine behind the customer journey (hidden 3D, 2D views, basic edits, two products) — PLAN v2 after 3 antagonistic architects; BLOCKED on owner decisions D1–D5 (canonical engine, real separation, 2D style, edits, approved quotes) · critical · added 2026-10-08 · requirements/REQ-007-engine-behind-the-customer-journey-2d-vi
+REQ-008 · Complex event compositions ("quiero una boda": venue layout, centrepiece per table, ceiling) — IN PROGRESS 2026-10-09 (e4v + e4w) · high · added 2026-10-08 · requirements/REQ-008-complex-event-compositions-wedding-hall
+P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) — implementer fixing 4 BLOCKER/9 MAJOR + orphan-field ledger test; then Claude reference → Gemini parity per photo · high · added 2026-10-08
+P-019 · Furniture (37+2 items, agregar_mobiliario) — MERGED into integ/foto-taller b6f58535 (was: fixing review (params lost on placement, Gemini schema size) · high · added 2026-10-08
+P-020 · Materials/ambience feat/realismo-ambiente (e4q) — MERGED into integ/foto-taller d138cf83 (was: fixing review (global env map → per-viewer, Sala.ambiente orphan, confetti colour/cost, squash knot) · high · added 2026-10-08
+P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was: fixing review (rule misses pared→piso/delete, verdict not audited server-side, margin uncalibrated → calibration script); owner-labelled A/B rounds (ROC) pending · high · added 2026-10-08
+P-022 · Owner: blind A/B labelling of ~30 refine rounds (photo vs before/after) to set the acceptance threshold; until then automatic refinement stays OFF (calibration 2026-10-08: embeddings can't separate small changes) · medium · added 2026-10-08
+P-023 · Confetti colour as data (`confeti: {colores}` in ColorOrganico/GloboDecoracion, ColorLeido.colorConfeti, SKU per confetti product) replacing the viewer heuristic — at integration · medium · added 2026-10-08
+P-024 · DONE 2026-10-09 (APP_ORIGINS set on advin-vps, web recreated healthy) — was: VPS: set APP_ORIGINS=https://<public domain> in /etc/demo-decoracion/demo.env and verify with curl -X POST -H "Origin: …" on happie/recomendar (pre-existing 403 risk behind nginx; hand deploy, owner notice required) · high · added 2026-10-08
+P-025 · Cursive text signs + `marco_tela` — MERGED into integ/foto-taller (was: feat/rotulos (e4s) in progress; needed by photos 02, 04, 05 · high · added 2026-10-09
+P-026 · Pampas foliage (real plumes) — feat/pampas (e4t) in progress; needed by photos 02, 03, 05 · medium · added 2026-10-09
+P-027 · Burgundy chrome: no wine Reflex in the Sempertex table (915 used) and 915 renders too bright/red in the viewer — check swatch fidelity · low · added 2026-10-09
+P-028 · FIXED in main a0fad72a — was: BUG in main: an agreeing/plural foliage colour in a photo reading ("monstera rosadas", "pampas doradas") throws in floresPedidas and drops the whole garland — fix in feat/pampas (two-level: normalise + never drop the piece) · high · added 2026-10-09
+P-029 · CI health: deterministic-tests fails at test-python-adapter (pre-existing) and stops, so later suites never run in CI; python-quality red too. Fix the adapter test/contract and make the job report all suites · high · added 2026-10-09
+P-030 · RAG: `taller_taxonomia` (migration 028) has no writer and the search reads the taxonomy from code — orphan table: drop it or load it from src/lib/taller/taxonomia (decide with the reader) · low · added 2026-10-09
+P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — was: owner to pick A or B (proposal artifact Nuv9GST6YR9HmGgAMoDdMr); common base first: scene diff by piece id, per-turn undo of only AI-touched pieces, abort, optional streamed steps · high · added 2026-10-09
+
 ## Next
-P-013 · Scene-AI bank: 8 requests tools still can't satisfy (2nd «más R-24» saturates; «menos tupida»/«menos R-5» refill raises totals; ajustar_tamanos drops a requested colour; colours not made in a format fall back to white silently; loose R-36 on top of a column; letter painted inside a mesh; size mix by side «pata izquierda») · high · added 2026-10-08 · scripts/test/fixtures/banco-escena-ia.json backlog
-P-012 · Occasion ids inconsistent (owner references use cumpleanos/graduacion; list uses cumpleaños/grado) → fix with taxonomy (REQ-002 step 0) · med · added 2026-10-08
+P-016 · Photo refine round: add an acceptance criterion (keep a round only if photo↔capture similarity rises and no wall piece drops/hides), then re-enable 1 automatic round · med · added 2026-10-08 · REQ-001
+P-017 · Cursive gold foil «Love» (metalizado letras script, dorado) renders black in the viewer · med · added 2026-10-08 · REQ-001 E2E
+P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer --aplicar + upsert vectors, rebuild agente-core dist, visual review of Library filters/photo search, turn TALLER_RAG_ENABLED on only after the tuned eval beats today's search · high · added 2026-10-08 · REQ-002
+P-014 · 14 factory library items have no ficha/render (extractor dedups them against derived pieces: decoracion:mono_fucsia, flor_corazones, idea:forky/gallina/pollito…) · med · added 2026-10-08 · REQ-002
+REQ-005 · Decorations from scratch (mural from image, free sculpture, bulk placement) + photo → model → save to Library (documented, questions pending) · high · added 2026-10-08 · requirements/REQ-005-decorations-from-scratch
+REQ-006 · Venue photo → 3D space (MVP: photo backdrop with matched camera) (documented, questions pending) · med · added 2026-10-08 · requirements/REQ-006-venue-photo-to-3d
+P-013 · Scene-AI bank: 1 request left (estilo-30, size mix on one leg only: needs per-tramo RNG/colour quotas in organico.ts) · low · added 2026-10-08 · bank
 P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · high · added 2026-10-08 · REQ-001
 P-011 · «Más tupida» barely changes stroke garlands (engine saturated at density 1.25) · low · added 2026-10-08
 P-008 · Split organico.ts (1529 lines) and escena.ts (740) by responsibility · med · added 2026-10-08
@@ -29,5 +51,6 @@ P-005 · Selecting a piece costs 60–90 ms in dev (side-panel re-render) · low
 P-006 · test-figuras3d fails: rizo_resorte uses 970 in T-160 (pre-existing, also on 6b2a4391) · low · added 2026-10-08
 
 ## Recently closed
+P-012 · Occasion ids unified to the taxonomy (REQ-002 step 0) · closed 2026-10-08 · 5fd36426
 P-009 · Chrome/metal balloons rendered almost black · closed 2026-10-08 · 89857ada
 P-001 · Implement the approved 3D editor redesign · closed 2026-10-08 · commits 5adaa808..f0c2895a

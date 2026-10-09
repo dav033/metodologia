@@ -31,8 +31,10 @@ references used `cumpleanos`/`graduacion` vs list `cumpleaños`/`grado`).
 
 ## 1. Classification of every item
 - Rules first (source titles, Sempertex idea occasions, names) → confident tags.
-- Then a reviewed Gemini pass (text-only, reads the item ficha + its photo URL description when available) proposing
-  celebraciones + temáticas with confidence; low confidence → «general». Paid, cap US$1.00, every decision logged.
+- Then a reviewed model pass — **Claude Sonnet 5.5 subagents at medium effort, NOT paid API calls** (owner,
+  2026-10-08, D-011): batches of fichas + rule tags → celebraciones + temáticas with confidence and a short reason;
+  low confidence → «general». Output merged into a versioned JSON in the repo's data path; disagreements with the
+  rules listed for review.
 - Owner review sheet (artifact) to correct tags in bulk.
 
 ## 2. Fichas (the text that is embedded)
