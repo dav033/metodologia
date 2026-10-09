@@ -23,6 +23,9 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 - P-022 · Owner: blind A/B labelling of ~30 refine rounds (photo vs before/after) to set the acceptance threshold; until then automatic refinement stays OFF (calibration 2026-10-08: embeddings can't separate small changes) · urgency: med · complexity: ? · added 2026-10-08
 - P-023 · Confetti colour as data (`confeti: {colores}` in ColorOrganico/GloboDecoracion, ColorLeido.colorConfeti, SKU per confetti product) replacing the viewer heuristic — at integration · urgency: med · complexity: ? · added 2026-10-08
 - P-026 · Pampas foliage (real plumes) — feat/pampas (e4t) in progress; needed by photos 02, 03, 05 · urgency: med · complexity: ? · added 2026-10-09
+- P-033 · Prod-build guard: tsc/tests miss Next 16 prerender errors (Date.now in client render broke deploy of 3bb9b5fc). Add a cheap check (lint rule or test scanning useState initializers / render bodies for Date.now/Math.random) or a pre-push `next build` on a machine with RAM · urgency: med · complexity: ? · medium/S
+- P-034 · BalloonBuilder ideas (artifact SH28k1k2DhKHHDA2JMhApt): owner to pick; quick-win batch (S) pump seconds/dimensions/helium/recipe cards/size profiles/light presets, then build sheet, palette→Sempertex ΔE, 3-tier quote · urgency: med · complexity: ? · medium/M
+- P-035 · ~~ (closed by D-026) · urgency: med · complexity: ? · Pricing policy for the 3D engine BOM: cheapest pack that covers the merma'd quantity (engine) vs Python's bigger packs (26 ideas: engine 0.67× Python in COP) — owner decision before switching GUIADA_MOTOR · high/S
 - P-004 · Viewer: export depth map and limit capture crop margin · urgency: low · complexity: ? · added 2026-10-08 · D-003
 - P-005 · [bug] Selecting a piece costs 60–90 ms in dev (side-panel re-render) · urgency: low · complexity: ? · added 2026-10-08 · D-002
 - P-006 · [bug] test-figuras3d fails: rizo_resorte uses 970 in T-160 (pre-existing, also on 6b2a4391) · urgency: low · complexity: ? · added 2026-10-08
@@ -48,6 +51,8 @@ _None_
 ## Notes
 One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
+One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
+Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 Move items between sections as they change; closed items keep 14 days in "Recently closed", then go to the
 month summary._
 REQ-003 · Scene agent v2 — merged and pushed (main 0046ab80); left: paid eval (cap US$0.50) + P-013 · high · added 2026-10-08 · requirements/REQ-003-scene-agent-v2
@@ -56,6 +61,3 @@ REQ-002 · Workshop library RAG + celebrations taxonomy — LIVE 2026-10-09 (Neo
 REQ-001 · Photo → scene + flexible structures (13 owner photos) · high · added 2026-10-08 · requirements/REQ-001-photo-to-scene
 REQ-007 · Engine behind the customer journey (hidden 3D, 2D views, basic edits, two products) — PLAN v2 after 3 antagonistic architects; BLOCKED on owner decisions D1–D5 (canonical engine, real separation, 2D style, edits, approved quotes) · critical · added 2026-10-08 · requirements/REQ-007-engine-behind-the-customer-journey-2d-vi
 REQ-008 · Complex event compositions ("quiero una boda": venue layout, centrepiece per table, ceiling) — IN PROGRESS 2026-10-09 (e4v + e4w) · high · added 2026-10-08 · requirements/REQ-008-complex-event-compositions-wedding-hall
-- P-033 · Prod-build guard: tsc/tests miss Next 16 prerender errors (Date.now in client render broke deploy of 3bb9b5fc). Add a cheap check (lint rule or test scanning useState initializers / render bodies for Date.now/Math.random) or a pre-push `next build` on a machine with RAM · medium/S
-- P-034 · BalloonBuilder ideas (artifact SH28k1k2DhKHHDA2JMhApt): owner to pick; quick-win batch (S) pump seconds/dimensions/helium/recipe cards/size profiles/light presets, then build sheet, palette→Sempertex ΔE, 3-tier quote · medium/M
-- ~~P-035~~ (closed by D-026) · Pricing policy for the 3D engine BOM: cheapest pack that covers the merma'd quantity (engine) vs Python's bigger packs (26 ideas: engine 0.67× Python in COP) — owner decision before switching GUIADA_MOTOR · high/S

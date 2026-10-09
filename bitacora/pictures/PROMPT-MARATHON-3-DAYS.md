@@ -208,6 +208,19 @@ Use the installed agent types (`explorer`, `researcher`, `implementer`, `reviewe
 5. **Researchers** — external docs/APIs (Anthropic models, fal.ai Kontext, Sempertex catalogue/store JSON at
    `https://sempertex.com/products.json?limit=250&page=N`).
 
+**Models & escalation (owner rule — pass `model` and `effort` explicitly on every Agent / workflow `agent()` call;
+they override the role's default model):**
+
+| Who | Default | When it escalates |
+|---|---|---|
+| implementers, PMs, explorers, runners, researchers | `haiku` (Haiku 5.5), effort default | failed twice, same error repeated, or "can't find a solution" → relaunch the task on `sonnet` with effort `xhigh`; fails again on Sonnet, or it is a **hard architecture/design problem** → `opus` with effort `xhigh` |
+| antagonist, product judge, visual judge | `sonnet`, effort `xhigh` | reviews of architecture-level changes (new module boundaries, data model, engine core, repository abstraction W6) → `opus`, effort `xhigh` |
+| you (the lead) | the session model | — |
+
+Record every escalation in STATE.md and the day log (task, from → to, why). Never start a task directly on Opus unless
+it is clearly architecture (W6 repository ADR, engine-core redesign, provider abstraction W5): then go straight to
+`opus` + `xhigh`. A task that fails on Opus too goes to PENDING as blocked with the evidence — don't loop on it.
+
 Concurrency: at most **3 implementers + 1 reviewer/antagonist + 1 runner** at once (PC has 15.7 GB RAM; check free
 RAM before launching; dev servers one at a time on 127.0.0.1 ports ≠ 3010/8000, stopped after use; Turbopack needs a
 temporary `turbopack.root` because of the junction — revert it).
