@@ -46,16 +46,24 @@ def _own_task(task_id: str) -> None:
 
 
 def task_done(rdir: Path, task_id: str, evidence: str) -> str:
-    """Mark the task done in RUN.json. Under a supervisor (env BITACORA_RUN) the PLAN.md tick is deferred until the
-    supervisor's own verify passes (bt_runsettle); run by hand it ticks right away."""
+    """Mark the task done in RUN.json. Under a supervisor (env BITACORA_RUN) this is only a claim (`claimed_done`): the
+    task becomes `done` and the PLAN.md tick happens once the supervisor's own verify passes (bt_runsettle), also after
+    a restart. Run by hand it is done and ticked right away."""
     _own_task(task_id)
+    supervised = bool(os.environ.get("BITACORA_RUN"))
 
     def fn(state):
-        rs.mark(state, task_id, "done", evidence=evidence or "(none given)", last_error=None)
+        fields = {"evidence": evidence or "(none given)", "last_error": None}
+        if supervised:
+            if (rs.get_task(state, task_id) or {}).get("status") in ("done", "blocked"):
+                return  # a late or duplicate `done` must not reopen a verified or blocked task
+            rs.mark(state, task_id, "in_progress", claimed_done=True, **fields)
+        else:
+            rs.mark(state, task_id, "done", **fields).pop("claimed_done", None)
     rs.update(rdir, fn)
-    if not os.environ.get("BITACORA_RUN"):
+    if not supervised:
         tick_plan(rdir, task_id, f"{task_id} done (marathon) — {_one_line(evidence, 200)}")
-    return f"{task_id} marked done"
+    return f"{task_id} marked done" + (" (the supervisor verifies it next)" if supervised else "")
 
 
 def task_fail(rdir: Path, task_id: str, reason: str, blocked: bool = False) -> str:
@@ -67,6 +75,7 @@ def task_fail(rdir: Path, task_id: str, reason: str, blocked: bool = False) -> s
             raise SystemExit(f"{task_id} is not in RUN.json")
         t["last_error"] = reason or "(no reason given)"
         t["status"] = "blocked" if blocked else "todo"
+        t.pop("claimed_done", None)  # the agent took its `done` back
     rs.update(rdir, fn)
     return f"{task_id} marked {'blocked' if blocked else 'failed (the supervisor will retry or block it)'}"
 

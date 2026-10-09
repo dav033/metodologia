@@ -15,7 +15,7 @@ import bt_runprompt as rp
 import bt_runstate as rs
 import bt_runtier as tier_
 from bt_runsession import AgentNotFound, run_session, session_tier
-from bt_runsettle import detect_limit, settle_final, settle_task, enter_wait
+from bt_runsettle import LIMIT_RESULTS, detect_limit, enter_wait, recover_claims, settle_final, settle_task
 from bt_runutil import (autostart, backoff_override, beat, commit_bitacora, keep_awake, notify, pid_alive, say,
                         set_fields, wait_or_control)
 
@@ -123,6 +123,9 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
         return None
     if state["status"] != "running" or state.get("waiting_until"):
         set_fields(rdir, status="running", waiting_until=None)
+    if any(t.get("claimed_done") and t["status"] in ("todo", "in_progress") for t in state["tasks"]):
+        recover_claims(project, rdir, c["workdir"])  # a claimed `done` is never trusted until verify passed
+        state = rs.load(rdir)
     task = rs.next_task(state)
     if task is None and not all(t["status"] == "done" for t in state["tasks"]):
         left = [t["id"] for t in state["tasks"] if t["status"] != "done"]
@@ -167,7 +170,7 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     say(state, f"S{n:04d} {tid} -> {result} ({info['seconds']}s{ended})")
     beat(rdir, task=tid, session=n, state=f"{result}")
     commit_bitacora(project, f"marathon {state['req']} S{n:04d} {tid} {result}")
-    if result == "usage_limit":
+    if result in LIMIT_RESULTS:
         enter_wait(rdir, project, state["req"], detect_limit(info) or 0, c["notified_wait"])
         c["notified_wait"] = True
         if once:

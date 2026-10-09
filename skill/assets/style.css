@@ -132,7 +132,7 @@ table.matrix td:first-child { text-align: left; }
 
 /* marathon */
 .badge.running, .badge.waiting { background: var(--info-soft); color: var(--info); }
-.badge.paused, .badge.blocked, .badge.todo, .badge.failed, .badge.timeout, .badge.usage_limit, .badge.verify_failed { background: var(--warn-soft); color: var(--warn); }
+.badge.paused, .badge.blocked, .badge.todo, .badge.failed, .badge.timeout, .badge.usage_limit, .badge.limit_streak,.badge.verify_failed { background: var(--warn-soft); color: var(--warn); }
 .badge.stopped { background: var(--accent-soft); color: var(--accent); }
 tr.current td { background: var(--info-soft); }
 progress { height: 10px; accent-color: var(--info); }

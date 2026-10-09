@@ -15,7 +15,8 @@ from bt_runutil import backoff_override, notify, say
 LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|hit your limit|"
                       r"limit will reset|overloaded_error", re.I)
 VERIFY_TIMEOUT = 600
-LIMIT_STREAK_MAX = 8  # consecutive usage-limit results on one task before the next one counts as a failed attempt
+LIMIT_STREAK_MAX = 8  # consecutive usage-limit results on one task before the next one counts as an attempt
+LIMIT_RESULTS = ("usage_limit", "limit_streak")  # results that send the supervisor to wait
 
 
 def _json(text: str):
@@ -146,7 +147,7 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
     escalation = _escalation(t, n)
     if info["stopped"]:
         result, summary = "failed", "stopped by the user"
-    elif t["status"] == "done":
+    elif t.get("claimed_done") or t["status"] == "done":  # a bare "done" is a RUN.json from before claims existed
         ok, out = verify_task(project, t, workdir)
         result = "done" if ok else "verify_failed"
         err = None if ok else f"verify failed: {t['verify']} -> {out}"
@@ -162,18 +163,27 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
     elif detect_limit(info) is not None:
         result = "usage_limit"
         if t.get("limit_streak", 0) + 1 >= LIMIT_STREAK_MAX:  # never-ending 'limit' = a misread failure, not a limit
-            result, err = "failed", f"usage-limit message {LIMIT_STREAK_MAX} sessions in a row: {summary[:160]}"
+            result = "limit_streak"
+            summary = f"usage-limit message {LIMIT_STREAK_MAX} sessions in a row: {summary[:160]}"
     else:
         result, err = "failed", f"session ended without task done/fail (rc={info['rc']}): {summary[:200]}"
+    if info.get("recovered"):
+        summary = f"re-verified after a supervisor restart: {summary}"
     stuck = {}
 
     def fn(s):
         task = rs.get_task(s, task_id)
         task.pop("escalation", None)
+        if not info["stopped"]:  # a claim cut short by a stop is verified on the next start (recover_claims)
+            task.pop("claimed_done", None)
         task["limit_streak"] = task.get("limit_streak", 0) + 1 if result == "usage_limit" else 0
         reason = None
-        if result == "usage_limit" or info["stopped"]:
+        if result == "done":
+            task["status"] = "done"
+        elif result == "usage_limit" or info["stopped"]:
             task["status"] = "todo"
+        elif result == "limit_streak":  # not an attempt nor a failure: no error_hash, no tier climb, never blocks
+            task.update(status="todo", limit_streaks=task.get("limit_streaks", 0) + 1)
         elif result == "escalated":  # counts toward max_attempts, not toward 'same error twice'
             task.update(status="todo", attempts=task["attempts"] + 1)
             if task["attempts"] >= s["limits"]["max_attempts"]:
@@ -186,18 +196,35 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
         if reason:
             stuck.update(reason=reason, task=dict(task))
             task["status"] = "blocked"
-        if result != "usage_limit":
+        if result not in LIMIT_RESULTS:
             s["wait_step"] = 0
         rs.record(s, n, task_id, result, summary, info["seconds"], **_session_fields(info))
     state = rs.update(rdir, fn)
     if result == "done":  # the checkbox is ticked only once verify passed, so --resume can trust it
         rt.tick_plan(rdir, task_id, f"{task_id} done (marathon) — {rt._one_line(t['evidence'] or summary, 200)}")
+    if result == "limit_streak":  # a real limit or a misread failure: only a human can tell, so say it every time
+        count = rs.get_task(state, task_id)["limit_streaks"]
+        notify(f"{project} {state['req']}: {task_id} limit streak #{count}",
+               f"{LIMIT_STREAK_MAX} sessions in a row hit a usage-limit message; check the session logs")
     if stuck:
         pid = rt.add_blocked_pending(project, state["req"], stuck["task"], stuck["reason"])
         rs.update(rdir, lambda s: rs.mark(s, task_id, "blocked", pending_id=pid))
         notify(f"{project} {state['req']}: {task_id} blocked", f"{stuck['reason'][:120]} ({pid})")
         say(state, f"{task_id} BLOCKED -> {pid}")
     return result
+
+
+def recover_claims(project: str, rdir: Path, workdir: Path) -> None:
+    """After a crash between the agent's `task done` and the supervisor's verify, the claim is still unverified: verify
+    it now, before any new work is picked, and settle it like a finished session (done, or a failed attempt)."""
+    for task in list(rs.load(rdir)["tasks"]):
+        if task.get("claimed_done") and task["status"] in ("todo", "in_progress"):
+            state = rs.load(rdir)
+            info = {"rc": 0, "text": "", "stopped": False, "timed_out": False, "seconds": 0, "model": None,
+                    "effort": None, "recovered": True}
+            say(state, f"{task['id']} claimed done before a restart; re-running its verify")
+            result = settle_task(project, rdir, task["id"], state["sessions"], info, workdir)
+            say(rs.load(rdir), f"{task['id']} re-verified -> {result}")
 
 
 def settle_final(project: str, rdir: Path, n: int, info: dict, started: float) -> str:

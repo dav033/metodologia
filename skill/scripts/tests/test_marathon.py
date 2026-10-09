@@ -297,7 +297,7 @@ class Hardening(MarathonCase):
         self.assertEqual(detect_limit({"text": json.dumps({"result": "usage limit reached", "is_error": True}), "rc": 1}), 0)
         self.assertEqual(detect_limit({"text": "Claude AI usage limit reached|1900000000", "rc": 1}), 1900000000)
 
-    def test_endless_usage_limit_messages_end_up_as_a_failed_attempt(self):
+    def test_endless_usage_limit_messages_are_logged_as_a_streak_not_a_failure(self):
         import bt_runsettle
         self.make_req(["- [ ] T1 — big"], {"T1": ["limit"]})
         bt_runsettle.LIMIT_STREAK_MAX = 2
@@ -308,8 +308,10 @@ class Hardening(MarathonCase):
             self.run_sup(once=True)
         finally:
             bt_runsettle.LIMIT_STREAK_MAX = 8
-        self.assertEqual(self.task("T1")["attempts"], 1)
-        self.assertEqual(self.state()["log"][-1]["result"], "failed")
+        self.assertEqual(self.task("T1")["attempts"], 0)
+        self.assertEqual(self.state()["log"][-1]["result"], "limit_streak")
+        self.assertEqual((self.task("T1")["error_hashes"], self.task("T1")["tier"], self.task("T1")["limit_streaks"]),
+                         ([], 0, 1))
 
     def test_restart_keeps_an_explicit_pause_and_a_pending_usage_limit_wait(self):
         self.make_req(["- [ ] T1 — a"])

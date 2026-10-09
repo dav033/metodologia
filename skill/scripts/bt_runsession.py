@@ -68,7 +68,8 @@ def _reported(rdir: Path, task: dict | None, n: int, started: float) -> bool:
     except Exception:  # a locked RUN.json is retried on the next poll
         return False
     esc = t.get("escalation") or {}
-    return t.get("status") in ("done", "blocked", "todo") or str(esc.get("session")) == str(n)
+    return (t.get("status") in ("done", "blocked", "todo") or bool(t.get("claimed_done"))
+            or str(esc.get("session")) == str(n))
 
 
 def _beat(rdir: Path, **fields) -> dict:

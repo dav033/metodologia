@@ -75,7 +75,7 @@ task, and the rules:
   bitacora.py --project P task done REQ-001 T3 --evidence "<what proves it>"
   bitacora.py --project P task fail REQ-001 T3 --reason "<why>"
   ```
-  `done` marks the task in RUN.json; the supervisor ticks the PLAN.md checkbox (and appends to the Progress log) only
+  `done` records the claim in RUN.json; the supervisor ticks the PLAN.md checkbox (and appends to the Progress log) only
   after its own `verify` passes. The session can only mark **its own task** (`task done|fail|note` for another id is
   rejected). `task fail REQ T --reason "..." --blocked` blocks the task at once. A note for the next attempt:
   `task note REQ-001 T3 --text "..."`.
@@ -108,7 +108,16 @@ this task.*
   rate limit, 429, quota, "try again at"…; a successful run that merely mentions them is not a limit): status
   `waiting`, `waiting_until` = now + backoff (30 min, doubling, max 4 h). It does **not** count as an attempt; one
   notification. The supervisor sleeps and retries by itself. After 8 limit results in a row on the same task, the
-  next one counts as a failed attempt (a misread failure must not stall the run for weeks).
+  next one is logged as `limit_streak`: it is **not an attempt and never a failure** (no `error_hash`, no "same
+  error twice", no tier climb, `attempts` untouched), so limits alone never block a task or use up the ladder. It
+  is counted in the task's `limit_streaks`, the supervisor waits after it like after any limit, and the user is
+  notified on every streak (a misread failure that keeps looking like a limit can only be told apart by a human;
+  `max_sessions` bounds it).
+- **Done is a claim until verified.** Under the supervisor `task done` only sets `claimed_done` on the task (status
+  stays `in_progress`); the task becomes `done`, and the PLAN.md box is ticked, once the supervisor's own `verify`
+  passes. If the supervisor dies in between, the next start (`--resume`, autostart) re-runs the `verify` of every
+  claimed-but-unverified task **before** picking new work (a failed verify is a normal failed attempt). A RUN.json
+  from before this change, with a bare `done`, is trusted as it was.
 - **Supervisor errors** (RUN.json locked by git/antivirus, a missing file…) are logged, notified once, retried with a
   growing pause and only given up on after 10 in a row. A missing agent executable stops the run and notifies.
 
