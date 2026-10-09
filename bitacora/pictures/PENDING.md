@@ -11,7 +11,6 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was: fixing review (rule misses pared→piso/delete, verdict not audited server-side, margin uncalibrated → calibration script); owner-labelled A/B rounds (ROC) pending · urgency: high · complexity: ? · added 2026-10-08
 - P-029 · CI health: deterministic-tests fails at test-python-adapter (pre-existing) and stops, so later suites never run in CI; python-quality red too. Fix the adapter test/contract and make the job report all suites · urgency: high · complexity: ? · added 2026-10-09
 - P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — was: owner to pick A or B (proposal artifact Nuv9GST6YR9HmGgAMoDdMr); common base first: scene diff by piece id, per-turn undo of only AI-touched pieces, abort, optional streamed steps · urgency: high · complexity: ? · added 2026-10-09
-P-032 · Laya fine-tune for routing / customer pro-guardrail — researched (laya.train, head-only CPU or RLCD Kaggle; ~3–5k Gemini-labelled Spanish rows, US$1–3); not worth it vs Gemini today; revisit when the customer chat has volume · low · added 2026-10-09
 - P-002 · FLUX photo color fidelity: residual ΔE ~15 after hex prompt (c25490f1); next: photoreal capture or per-piece correction · urgency: med · complexity: ? · added 2026-10-08 · D-003, D-006
 - P-003 · Resume idea digitization: 110 covered ideas left after lot 26, then new generators · urgency: med · complexity: ? · added 2026-10-08 · D-005
 - P-007 · Split Taller3D.tsx (1022 lines) by responsibility: top bar, rail panels, viewer overlay, inspector, solo editor wiring · urgency: med · complexity: ? · added 2026-10-08
@@ -31,6 +30,7 @@ P-032 · Laya fine-tune for routing / customer pro-guardrail — researched (lay
 - P-013 · Scene-AI bank: 1 request left (estilo-30, size mix on one leg only: needs per-tramo RNG/colour quotas in organico.ts) · urgency: low · complexity: ? · added 2026-10-08 · bank
 - P-027 · Burgundy chrome: no wine Reflex in the Sempertex table (915 used) and 915 renders too bright/red in the viewer — check swatch fidelity · urgency: low · complexity: ? · added 2026-10-09
 - P-030 · RAG: `taller_taxonomia` (migration 028) has no writer and the search reads the taxonomy from code — orphan table: drop it or load it from src/lib/taller/taxonomia (decide with the reader) · urgency: low · complexity: ? · added 2026-10-09
+- P-032 · Laya fine-tune for routing / customer pro-guardrail — researched (laya.train, head-only CPU or RLCD Kaggle; ~3–5k Gemini-labelled Spanish rows, US$1–3); not worth it vs Gemini today; revisit when the customer chat has volume · urgency: low · complexity: ? · added 2026-10-09
 
 ## Blocked
 _None_
@@ -46,6 +46,8 @@ _None_
 - P-001 · Implement the approved 3D editor redesign · urgency: med · complexity: ? · closed 2026-10-08 · commits 5adaa808..f0c2895a
 
 ## Notes
+One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
+Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 Move items between sections as they change; closed items keep 14 days in "Recently closed", then go to the
 month summary._
 REQ-003 · Scene agent v2 — merged and pushed (main 0046ab80); left: paid eval (cap US$0.50) + P-013 · high · added 2026-10-08 · requirements/REQ-003-scene-agent-v2
