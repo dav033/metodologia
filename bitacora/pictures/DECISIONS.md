@@ -182,3 +182,7 @@ Safety instead of the gate: one runtime flag (`GUIADA_MOTOR=3d|python`) for inst
 per structure type (information, not a gate), golden fixtures for the BOM. Pricing keeps the existing price service
 (Python prices a given material list) in this step; moving pricing off Python is a later item. Classic chat follows
 after the guided chat is stable.
+
+## D-025 · Taller "Foto realista · Igual al visor" uses FLUX.1 Kontext max · 2026-10-09
+Context: owner said the render was "supremamente mal" (FLUX.2 /edit dropped tables, moved the camera). Two paid rounds (US$0.597) on a 12×9 m wedding test: FLUX.1 img2img kept the layout but stayed a CG render; FLUX.2 /edit was photoreal but re-framed and changed counts; Kontext max was the only one both photoreal and faithful (camera, 6 tables × 4 chairs, centrepieces, frame, sign).
+Decision: "Igual al visor" = Kontext max with a layout-to-photo instruction and the full-room capture from the current view; other "Lugar" options keep FLUX.2 /edit. Cost US$0.08 per photo (cap 30/h). Kontext is a FLUX base model (no LoRA), consistent with the fal-only/FLUX-base rule.
