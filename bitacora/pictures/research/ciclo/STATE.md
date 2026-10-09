@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **1**
-- main = `703b509b` (d05a52b8 Phase 5 → 53502782 prerender guard + dense asym column → 703b509b boundary hotfix)
+- main = `8c397842` (… 703b509b boundary hotfix → 8c397842 W5 local Claude provider)
 - Last status message to owner: 2026-10-09 16:44 (start)
 
 ## Health (cycle 0)
@@ -18,7 +18,7 @@
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
 | REQ-013 Phase 1 | e7e @44f90092 | opus review SHIP-level, fixing A1–A7 (qualified ids, lock churn, allowlist) a1954957 | fixing |
 | Kontext colour fidelity (cap US$0.96 total) | e7g @7fe5e4ce | haiku failed twice → ESCALATED sonnet xhigh | running |
-| W5 local Claude provider | e7c ship/ia-local @8c397842 (squash) | review SHIP after A1–A4 | runner verifying → push |
+| W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
