@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **1**
-- main = `d05a52b8` (Phase 5) · Vercel prod Ready (q6z7v15kd)
+- main = `703b509b` (d05a52b8 Phase 5 → 53502782 prerender guard + dense asym column → 703b509b boundary hotfix)
 - Last status message to owner: 2026-10-09 16:44 (start)
 
 ## Health (cycle 0)
@@ -15,10 +15,10 @@
 | Item | Worktree / branch | Agent (model) | Status |
 |---|---|---|---|
 | W1 REQ-007 Phase 5 | main d05a52b8 | PUSHED (verified: tsc, 11 suites, contracts) | watch Vercel; product judge at switch dossier (D-028) |
-| W1 P-033 prerender guard + columna_asimetrica density | e7d @f9851645 | re-review SHIP; small follow-ups (M1,M2,m1-m3) by a57400c6 | then squash-merge + push |
-| REQ-013 Phase 1 pure refactor | e7e @44f90092 | built (opus xhigh), all gates green | antagonist (opus xhigh) a2a143f3 running |
-| Kontext colour fidelity (cap US$0.60) | e7g exp/kontext-color | implementer (haiku) a774050f | running |
-| W5 local Claude provider | e7c @654f1f4c | built + 6 direct callers via registry; Gemini sha256-identical | antagonist (opus xhigh) aac84ee8 running |
+| W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
+| REQ-013 Phase 1 | e7e @44f90092 | opus review SHIP-level, fixing A1–A7 (qualified ids, lock churn, allowlist) a1954957 | fixing |
+| Kontext colour fidelity (cap US$0.96 total) | e7g @7fe5e4ce | haiku failed twice → ESCALATED sonnet xhigh | running |
+| W5 local Claude provider | e7c ship/ia-local @8c397842 (squash) | review SHIP after A1–A4 | runner verifying → push |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
@@ -43,11 +43,12 @@
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)
 
 ## Escalations
+- 19:0x Kontext colour exp: haiku failed twice (script bug, timeout) → sonnet xhigh.
 - 18:2x W3 quick wins: haiku failed hostile review twice → sonnet xhigh (rule §5).
 - none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
 
 ## Spend (24 h window from start) vs caps
-FLUX 0.00/3 · Gemini 0.00/2 · Anthropic 0.00/8 · total 0.00/13
+FLUX 0.48/3 (Kontext exp: 6 failed calls — script bug ×5, timeout ×1; cap 0.96) · Gemini 0.00/2 · Anthropic 0.00/8 · total 0.40/13
 
 ## Metrics
 - Scenario pass rate (c0): seed1 99.1 % (1315/1327 valid; 673 rejected = 7–8 colours > schema cap 6), seed2 98.8 %; only banda_conteo fails (aro_circular 87 %, pared_densa 92 %). Remaining: aro calibration, band vs tube cross-section, classic columns over band, short garlands, lighting/furniture not varied.
