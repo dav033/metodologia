@@ -105,6 +105,13 @@ Source of truth: `PENDING.md`, the last day log, and these open items from 2026-
 - Stored library data issues: ideas 29 (LOL arch stored as two columns), 30 (figure lost), 31 (asymmetric arch stored
   as semiarc) in `planes-ideas.json`.
 - Feedback UI: stored rating not shown after reload; mount-time registration burst.
+- Unmerged branch **feat/pampas** (worktree `C:/Users/davidt/Downloads/e4t`, P-026, needed by lote-02 photos 02/03/05):
+  its hostile review said do not merge yet — plural/masculine foliage colour words drop the whole garland
+  (`herramientas-escena-trazo.ts:104`, `compilar-lectura.ts:115`; main fixed the underscore case, re-check the
+  plural/gender case), squash its two commits, split out the unrelated regex edits in `generate/route.ts:1045` and
+  `presentacion-cliente.ts:565`, resolve the trivial conflict in `escenografia-visor.ts`. Also audit every other
+  unmerged `e3*/e4*` branch (`git branch --no-merged origin/main`) and either finish, merge or close each one with a
+  note.
 - P-033 prod-build guard: add a static check (AST/lint) for non-deterministic values in client render/initialisers.
 - P-029 CI health; P-030 orphan `taller_taxonomia`; P-017 cursive gold foil renders black; P-027 burgundy chrome;
   P-006 test-figuras3d; P-011 «más tupida»; split giant files (VistaGuiada 2146, herramientas-escena 1245, Taller3D
