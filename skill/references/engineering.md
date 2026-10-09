@@ -77,8 +77,8 @@ src/features/<feature>/
 src/shared/        truly cross-feature code only (ui kit, errors, utils, config)
 ```
 
-Scale it to the size: a small feature is one flat folder with a few files; add the layer folders when it grows.
-Each stack names the layers its own way; the architecture tests (§9) check the same rules at both sizes:
+Scale it to the size: a small backend feature is one flat folder; add the layer folders when it grows (Next.js
+features always use them). Each stack names the layers its own way; the architecture tests (§9) check them:
 
 | Layer | Next.js | NestJS | FastAPI |
 |---|---|---|---|

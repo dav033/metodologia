@@ -13,7 +13,7 @@ include_external_packages = true
 [[tool.importlinter.contracts]]
 name = "Top level: main > features > ai > core"
 type = "layers"
-layers = ["app.main", "app.features", "app.ai", "app.core"]
+layers = ["app.main", "app.features", "(app.ai)", "app.core"]
 
 [[tool.importlinter.contracts]]
 name = "Inside a feature: router > dependencies > service > repository > models | schemas > domain"
@@ -39,14 +39,14 @@ allow_indirect_imports = true
 [[tool.importlinter.contracts]]
 name = "Business code does not know HTTP"
 type = "forbidden"
-source_modules = ["app.features.*.service", "app.features.*.repository", "app.features.*.models", "app.ai"]
+source_modules = ["app.features.*.service", "app.features.*.repository", "app.features.*.models", "app.ai.**"]
 forbidden_modules = ["fastapi", "starlette"]
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
 name = "Only repositories, models and dependencies touch SQLAlchemy"
 type = "forbidden"
-source_modules = ["app.features.*.service", "app.features.*.schemas", "app.ai"]
+source_modules = ["app.features.*.service", "app.features.*.schemas", "app.ai.**"]
 forbidden_modules = ["sqlalchemy"]
 allow_indirect_imports = true
 

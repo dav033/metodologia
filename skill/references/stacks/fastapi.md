@@ -21,8 +21,12 @@ tests/
 migrations/                 Alembic
 ```
 - A grown feature turns a module into a package with the same name (`service.py` → `service/`); the rules hold.
-- Routers get repositories and services only through `dependencies.py`; services and schemas never import
-  SQLAlchemy; services, repositories and `ai/` never import FastAPI.
+- Routers get repositories and sessions only through `dependencies.py` (they may import services directly);
+  services and schemas never import SQLAlchemy; services, repositories and `ai/` never import FastAPI.
+- `core/` sits below features, so it never reaches into one: `core/security` only verifies the token and returns
+  a principal (id, roles), with no DB access; loading the user goes through the users feature's facade.
+- `core/errors.py` imports only the standard library (domain code imports it); the problem+json model lives with
+  the exception handlers.
 - Another feature is reached only through its `__init__.py` facade; each allowed edge is listed, with its reason,
   in the import-linter independence contract.
 - Enforced by `templates/arch/fastapi/importlinter.toml` (import-linter), see `../engineering.md` §9.

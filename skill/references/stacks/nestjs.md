@@ -15,7 +15,8 @@ src/
     presentation/           controllers only (HTTP: DTO in, call service, DTO out)
     application/            services (use cases), the facade other features call, dto/, entity → DTO mappers
     domain/                 pure classes and rules, domain errors, events (only when there are real invariants)
-    infrastructure/         repositories (the only DB access), TypeORM entities, external clients
+    infrastructure/         repositories (the only DB access), TypeORM entities and subscribers, external clients
+    # outside domain/, *.entity.ts means a TypeORM entity; inside domain/ it is a pure class
   common/  errors/ filters/ guards/ interceptors/ database/ pagination/ idempotency/
   config/  env.validation.ts, typed config
 db/migrations/

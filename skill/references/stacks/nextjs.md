@@ -17,7 +17,10 @@ src/
   shared/
     ui/atoms|molecules|organisms   design system (shadcn-based), domain-free; no index.ts barrels
     lib/ errors/ config/
+  mocks/ test/ types/       MSW handlers, test setup, global *.d.ts
 ```
+- A feature always uses the layer folders, even with one file each; its root holds only `index.ts` and
+  `index.server.ts`.
 - Imports: `app` → `features` (only `index.ts` / `index.server.ts`) → `shared`. Features never import each other;
   combine them in the route. Inside a feature use relative imports; across slices the alias (`@/features/orders`).
 - `application/` may import its own `infrastructure/` (TanStack hooks call the feature's API client): the explicit
