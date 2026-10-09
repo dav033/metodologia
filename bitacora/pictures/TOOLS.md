@@ -34,3 +34,13 @@ _None registered yet._
 ## Storage & data
 
 _None registered yet._
+
+### advin-vps (production VPS)
+- **Type:** VPS (8 vCPU AMD EPYC, 15 GB RAM, no GPU) · **Access:** `ssh advin-vps` (alias in ~/.ssh/config)
+- **What runs here:** Docker: demo-decoracion (Next, env /etc/demo-decoracion/demo.env) + demo-decoracion-ai-api (Python,
+  /etc/demo-decoracion-ai/ai.env), other projects (maros, lotm, trainingapp, fichas-fotos); Caddy edge proxy
+  (/opt/edge-proxy/Caddyfile): web https://185-147-157-25.sslip.io, ai-api https://api-decoracion.185-147-157-25.sslip.io.
+- **Releases:** /opt/deployments/pictures/releases/<sha> (compose.vps.yml); recreate web only:
+  `docker compose -p demo-decoracion -f <release>/compose.vps.yml up -d --no-deps --no-build web`.
+- **Model trials:** /opt/modelos-prueba (compose project `modelos-prueba`, Whisper :8610 / Laya :8611 on 127.0.0.1, stopped).
+- **Notes:** never restart the ai-api without owner notice; never print env files.
