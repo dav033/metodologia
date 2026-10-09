@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-09 10:32 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-09 10:47 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -38,11 +38,11 @@ _Generated 2026-10-09 10:32 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-023 — 2026-10-09 · The AI must never claim an action that failed
 - D-022 — AI feedback (REQ-010): full form everywhere, non-blocking, Neon + dedicated file storage · 2026-10-09
 - D-021 — Taller AI UX: direction B (side assistant with per-turn change cards) · 2026-10-09
 - D-020 — REQ-007 D4: what the customer can edit · 2026-10-09
 - D-019 — REQ-007 owner rulings: the 3D engine becomes canonical; two products, one engine · 2026-10-09
-- D-018 — Bundled script font for text signs: Great Vibes (SIL OFL 1.1) · 2026-10-09
 
 ## Timeline
 

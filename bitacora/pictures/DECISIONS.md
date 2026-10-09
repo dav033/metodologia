@@ -168,3 +168,6 @@ Decision (owner answers): full form in the Taller AND the customer chat; always 
 turn, opening the "why" panel automatically on undo/correction; data + scenes in Neon, before/after images in a
 DEDICATED Garage S3 for demo-decoracion on advin-vps (the existing Garage serves Maros Construction and must not be
 mixed); admin panel + automatic periodic gap analysis.
+
+## D-023 · 2026-10-09 · The AI must never claim an action that failed
+After the owner incident (4 false confirmations), the server enforces disclosure: the scene check describes furniture from the catalogue (never the model-chosen name) and any failed step in a turn is appended as "No pude: …" if the answer omits it. Voice dictation goes on directly in production (VOZ_ENABLED=true): owner asked for it everywhere, route needs login, cost 0.
