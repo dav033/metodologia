@@ -160,3 +160,11 @@ scope chips (piece / several / whole scene), FLUX render card with time and cost
 conversation saved with the scene. Common base first: pure scene diff by piece id, per-turn undo as one named step in
 the global history, abort for every request, streamed steps (NDJSON) if cheap. The "✦ Pedir a la IA" chip from A is
 not in scope unless the owner asks.
+
+## D-022 · AI feedback (REQ-010): full form everywhere, non-blocking, Neon + dedicated file storage · 2026-10-09
+Context: owner wants every AI action rated (1–10, multiple-choice reasons, comment on gaps/improvements) with the full
+render state (images, current and previous states) to find the AI's gaps.
+Decision (owner answers): full form in the Taller AND the customer chat; always visible and non-blocking on each AI
+turn, opening the "why" panel automatically on undo/correction; data + scenes in Neon, before/after images in a
+DEDICATED Garage S3 for demo-decoracion on advin-vps (the existing Garage serves Maros Construction and must not be
+mixed); admin panel + automatic periodic gap analysis.
