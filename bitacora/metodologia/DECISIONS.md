@@ -39,3 +39,11 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Context:** Research (2025–2026) shows modest/mixed evidence for graph context; KG stacks (Graphiti, GraphRAG, cognee) need infra and LLM edge extraction of links the bitácora already declares.
 - **Decision:** a stdlib trace graph built from IDs (REQ/US/R/T/D/P), commits and files, with lint + web view; optional CodeGraph MCP for code navigation, A/B-tested first.
 - **Source:** research notes, [day log](2026-10/W2/2026-10-08.md)
+
+## D-005 — Antagonist gate before every commit, parent decides
+- **Date:** 2026-10-09 · **Status:** Accepted
+- **Context:** The user wants harsh architectural review before each commit without infinite loops.
+- **Decision:** `antagonist` subagent reviews the staged diff; the parent agent triages each finding — fix if relevant now, otherwise defer to PENDING.md (urgency × complexity) or drop. One review + at most one re-review per commit; the antagonist can't delegate or edit.
+- **Alternatives:** blocking review until clean (rejected: loops, interruptions).
+- **Consequences:** + design issues caught pre-commit, deferred work tracked / − extra tokens and time per commit.
+- **Source:** [day log](2026-10/W2/2026-10-09.md)
