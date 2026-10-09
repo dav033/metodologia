@@ -1,5 +1,5 @@
-"""Marathon outcomes: classify a finished session (done / failed / timeout / usage limit / verify failed / blocked),
-update the task and the log, and turn stuck tasks into PENDING items."""
+"""Marathon outcomes: classify a finished session (done / failed / timeout / usage limit / verify failed / blocked /
+escalated), update the task (attempts, model tier) and the log, and turn stuck tasks into PENDING items."""
 from __future__ import annotations
 
 import subprocess
@@ -9,6 +9,7 @@ from bt_core import *  # noqa: F403
 import bt_runprompt as rp
 import bt_runstate as rs
 import bt_runtask as rt
+import bt_runtier as tier_
 from bt_runutil import backoff_override, notify, say
 
 LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|hit your limit|"
@@ -17,16 +18,43 @@ VERIFY_TIMEOUT = 600
 LIMIT_STREAK_MAX = 8  # consecutive usage-limit results on one task before the next one counts as a failed attempt
 
 
-def _result_text(info: dict) -> tuple[str, bool]:
-    """(human text of the session output, looks like an error). Claude's --output-format json is unwrapped."""
-    raw = info["text"].strip()
+def _json(text: str):
     try:
-        obj = json.loads(raw)
-        if isinstance(obj, dict):
-            return str(obj.get("result") or obj.get("error") or ""), bool(obj.get("is_error"))
+        return json.loads(text)
     except ValueError:
-        pass
-    return raw[-4000:], False
+        return None
+
+
+def _from_result(obj: dict) -> dict:
+    return {"text": str(obj.get("result") or obj.get("error") or ""), "cost": obj.get("total_cost_usd"),
+            "is_error": bool(obj.get("is_error")) or str(obj.get("subtype") or "").startswith("error")}
+
+
+def parse_output(raw: str) -> dict:
+    """{text, is_error, cost} of a session. Claude stream-json: the last `result` event (when it never came, only the
+    non-JSON lines count, so tool output inside the transcript is not mistaken for the agent's verdict); a single JSON
+    object (--output-format json) is unwrapped; anything else is plain text."""
+    raw = (raw or "").strip()
+    whole = _json(raw) if raw.startswith("{") else None
+    if isinstance(whole, dict):
+        return _from_result(whole)
+    plain, events = [], False
+    for line in reversed(raw.splitlines()):
+        if line.startswith("{"):  # an event, even one cut in half by a kill
+            obj = _json(line)
+            if isinstance(obj, dict) and obj.get("type") == "result":
+                return _from_result(obj)
+            events = True
+        elif len(plain) < 200:
+            plain.append(line)
+    text = "\n".join(reversed(plain)) if events else raw
+    return {"text": text[-4000:], "is_error": False, "cost": None}
+
+
+def _result_text(info: dict) -> tuple[str, bool]:
+    out = info.get("parsed") or parse_output(info["text"])
+    info["parsed"] = out
+    return out["text"], out["is_error"]
 
 
 def detect_limit(info: dict) -> int | None:
@@ -35,8 +63,15 @@ def detect_limit(info: dict) -> int | None:
     text, is_error = _result_text(info)
     if not (info["rc"] or is_error) or not LIMIT_RE.search(text[-4000:]):
         return None
-    m = re.search(r"limit reached\|(\d{9,10})", info["text"])
+    m = re.search(r"limit reached\|(\d{9,10})", text) or re.search(r"limit reached\|(\d{9,10})", info["text"][-20000:])
     return int(m.group(1)) if m else 0
+
+
+def _session_fields(info: dict) -> dict:
+    """What the session ran with, for its log entry."""
+    _result_text(info)
+    return {"model": info.get("model"), "effort": info.get("effort"), "cost_usd": info["parsed"].get("cost"),
+            "early_exit": True if info.get("early_exit") else None}
 
 
 def verify_task(project: str, t: dict, workdir: Path) -> tuple[bool, str]:
@@ -81,17 +116,34 @@ def enter_wait(rdir: Path, project: str, req: str, epoch: int, notified: bool) -
     return True
 
 
-def _stuck_reason(t: dict, max_attempts: int, repeated: bool) -> str | None:
-    if repeated:
-        return "same error twice"
-    return f"{t['attempts']} failed attempts" if t["attempts"] >= max_attempts else None
+def _fail_attempt(task: dict, err: str, max_attempts: int) -> str | None:
+    """Count a failed attempt and climb one tier. Returns why the task is stuck, or None. A repeated error only
+    blocks once the task already failed at the top tier; below it, it escalates like any other failure."""
+    h = rs.error_hash(err)
+    repeated = h in task["error_hashes"]
+    tier = tier_.tier_of(task)
+    task.update(status="todo", attempts=task["attempts"] + 1, last_error=err,
+                error_hashes=(task["error_hashes"] + [h])[-10:])
+    if task["attempts"] >= max_attempts:
+        return f"{task['attempts']} failed attempts"
+    if repeated and tier >= tier_.TOP:
+        return "same error twice, the second time at the top model tier"
+    task["tier"] = min(tier + 1, tier_.TOP)
+    return None
+
+
+def _escalation(t: dict, n: int) -> dict | None:
+    """The `task escalate` this very session asked for, if any."""
+    esc = t.get("escalation")
+    return esc if esc and str(esc.get("session")) == str(n) else None
 
 
 def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, workdir: Path) -> str:
-    """Classify the finished session, update the task, record the log. Returns the result label."""
+    """Classify the finished session, update the task (attempts, model tier), record the log. Returns the result."""
     state = rs.load(rdir)
     t = rs.get_task(state, task_id)
     err, summary = None, _result_text(info)[0][:300]
+    escalation = _escalation(t, n)
     if info["stopped"]:
         result, summary = "failed", "stopped by the user"
     elif t["status"] == "done":
@@ -101,37 +153,42 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
         summary = (t["evidence"] or summary) if ok else err
     elif t["status"] == "blocked":
         result, summary = "blocked", t["last_error"] or "blocked by the agent"
+    elif escalation:
+        result, summary = "escalated", f"escalated to {escalation['to']}: {escalation['reason']}"
+    elif t["status"] == "todo" and t["last_error"]:  # the agent called task fail (the session began as in_progress)
+        result, err = "failed", t["last_error"]
+    elif info["timed_out"]:  # before the limit check: a killed session's half-written output proves nothing
+        result, err = "timeout", f"session timeout after {state['limits']['session_timeout_min']} min"
     elif detect_limit(info) is not None:
         result = "usage_limit"
         if t.get("limit_streak", 0) + 1 >= LIMIT_STREAK_MAX:  # never-ending 'limit' = a misread failure, not a limit
             result, err = "failed", f"usage-limit message {LIMIT_STREAK_MAX} sessions in a row: {summary[:160]}"
-    elif info["timed_out"]:
-        result, err = "timeout", f"session timeout after {state['limits']['session_timeout_min']} min"
     else:
-        result = "failed"
-        err = t["last_error"] if t["status"] == "todo" and t["last_error"] else \
-            f"session ended without task done/fail (rc={info['rc']}): {summary[:200]}"
+        result, err = "failed", f"session ended without task done/fail (rc={info['rc']}): {summary[:200]}"
     stuck = {}
 
     def fn(s):
         task = rs.get_task(s, task_id)
+        task.pop("escalation", None)
         task["limit_streak"] = task.get("limit_streak", 0) + 1 if result == "usage_limit" else 0
+        reason = None
         if result == "usage_limit" or info["stopped"]:
             task["status"] = "todo"
+        elif result == "escalated":  # counts toward max_attempts, not toward 'same error twice'
+            task.update(status="todo", attempts=task["attempts"] + 1)
+            if task["attempts"] >= s["limits"]["max_attempts"]:
+                reason = f"{task['attempts']} attempts, the last one escalated ({summary})"
         elif result in ("timeout", "failed", "verify_failed"):
-            h = rs.error_hash(err)
-            repeated = h in task["error_hashes"]
-            task.update(status="todo", attempts=task["attempts"] + 1, last_error=err,
-                        error_hashes=(task["error_hashes"] + [h])[-10:])
-            reason = _stuck_reason(task, s["limits"]["max_attempts"], repeated)
-            if reason:
-                stuck.update(reason=f"{reason}: {err}", task=dict(task))
-                task["status"] = "blocked"
+            reason = _fail_attempt(task, err, s["limits"]["max_attempts"])
+            reason = reason and f"{reason}: {err}"
         elif result == "blocked":
             stuck.update(reason=task["last_error"] or "blocked by the agent", task=dict(task))
+        if reason:
+            stuck.update(reason=reason, task=dict(task))
+            task["status"] = "blocked"
         if result != "usage_limit":
             s["wait_step"] = 0
-        rs.record(s, n, task_id, result, summary, info["seconds"])
+        rs.record(s, n, task_id, result, summary, info["seconds"], **_session_fields(info))
     state = rs.update(rdir, fn)
     if result == "done":  # the checkbox is ticked only once verify passed, so --resume can trust it
         rt.tick_plan(rdir, task_id, f"{task_id} done (marathon) — {rt._one_line(t['evidence'] or summary, 200)}")
@@ -160,6 +217,6 @@ def settle_final(project: str, rdir: Path, n: int, info: dict, started: float) -
             fin["attempts"] += 1
         if result != "usage_limit":
             s["wait_step"] = 0
-        rs.record(s, n, rp.FINAL_TASK, result, _result_text(info)[0][:300], info["seconds"])
+        rs.record(s, n, rp.FINAL_TASK, result, _result_text(info)[0][:300], info["seconds"], **_session_fields(info))
     rs.update(rdir, fn)
     return result

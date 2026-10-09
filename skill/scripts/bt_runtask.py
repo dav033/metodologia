@@ -1,4 +1,4 @@
-"""Marathon commands used by the session agent and the user: `task done|fail|note` and `run-control`.
+"""Marathon commands used by the session agent and the user: `task done|fail|note|escalate` and `run-control`.
 
 Also the one place that turns a stuck task into a PENDING.md item, shared with the supervisor (bt_run).
 """
@@ -8,6 +8,7 @@ import re
 
 from bt_core import *  # noqa: F403
 import bt_runstate as rs
+import bt_runtier as tier_
 
 _DONE_WORDS = re.compile(r"\b(DONE|FIXED|MERGED|CLOSED|CERRADO|HECHO|RESUELTO)\b")
 
@@ -81,6 +82,32 @@ def task_note(rdir: Path, task_id: str, text: str) -> str:
         t["notes"] = t["notes"][-10:]
     rs.update(rdir, fn)
     return f"note saved on {task_id}"
+
+
+def task_escalate(rdir: Path, task_id: str, to: str, reason: str) -> str:
+    """Move the task up the model ladder (only up: a target at or below its tier is refused). From inside a supervised
+    session it also flags the session as
+    'escalated': the supervisor counts it toward max_attempts but not as a failure for stuck detection."""
+    _own_task(task_id)
+    target = tier_.TARGETS.get((to or "").strip().lower())
+    if target is None:
+        raise SystemExit(f"--to must be one of: {', '.join(tier_.TARGETS)}")
+    reason = " ".join((reason or "(no reason given)").split())[:500]
+
+    def fn(state):
+        t = rs.get_task(state, task_id)
+        if t is None:
+            raise SystemExit(f"{task_id} is not in RUN.json")
+        if tier_.tier_of(t) >= target:  # escalating in place would burn attempts without changing anything
+            raise SystemExit(f"{task_id} already runs at tier {tier_.tier_of(t)} (>= {to}): nothing to escalate to; "
+                             f"use `task fail --reason \"...\"` (add --blocked if it needs a human)")
+        t["tier"] = target
+        t["notes"] = (t.get("notes", []) + [f"escalated to {to}: {reason}"])[-10:]
+        if os.environ.get("BITACORA_RUN"):
+            t["escalation"] = {"to": to, "reason": reason, "session": os.environ.get("BITACORA_SESSION"),
+                               "at": rs.now_iso()}
+    rs.update(rdir, fn)
+    return f"{task_id} escalated to {to}: stop now, the next session runs on the stronger model"
 
 
 def run_control(rdir: Path, action: str) -> str:

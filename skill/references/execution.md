@@ -63,7 +63,8 @@ python <skill>/scripts/bitacora.py --project <project> launch REQ-NNN [--mode ma
 ```
 
 From the web UI, the plan-approval form has a **Modo** select (Maratón, the default, or Loop) and launches it for
-you. Marathon runs with Haiku 5.5 + ultracode by default; control it from the req's **Maratón** tab or
+you. Marathon runs with Haiku 5.5 + ultracode by default and escalates a failing task to Sonnet, then Opus (effort
+xhigh; `marathon.md` §Escalation ladder); control it from the req's **Maratón** tab or
 `bitacora.py --project <p> run-control REQ-NNN pause|resume|stop`.
 
 `launch` writes `HANDOFF.md` next to the plan (everything the executor needs), and opens a new Windows Terminal window in

@@ -2,95 +2,24 @@
 
 All state lives in RUN.json (bt_runstate). The supervisor enforces the caps itself (attempts, timeout, sessions),
 detects stuck tasks, waits out usage limits, notifies, and can be restarted at any time (`--resume`, autostart).
-Session prompts: bt_runprompt. Agent-facing commands (task done/fail/note, run-control): bt_runtask.
+Sessions: bt_runsession (model tier: bt_runtier). Prompts: bt_runprompt. Outcomes: bt_runsettle.
+Agent-facing commands (task done/fail/note/escalate, run-control): bt_runtask.
 """
 from __future__ import annotations
 
 import socket
-import subprocess
 import time
 
 from bt_core import *  # noqa: F403
 import bt_runprompt as rp
 import bt_runstate as rs
+import bt_runtier as tier_
+from bt_runsession import AgentNotFound, run_session, session_tier
 from bt_runsettle import detect_limit, settle_final, settle_task, enter_wait
 from bt_runutil import (autostart, backoff_override, beat, commit_bitacora, keep_awake, notify, pid_alive, say,
                         set_fields, wait_or_control)
 
-BEAT_EVERY = 60
 MAX_ERRORS = 10  # consecutive failed supervisor iterations before giving up
-
-
-# ---------------------------------------------------------------- one session
-
-def _kill(proc: subprocess.Popen) -> None:
-    """Kill the session's process tree and reap it; never wait forever on a process that refuses to die."""
-    if os.name == "nt":
-        try:
-            subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True, timeout=30)
-        except subprocess.TimeoutExpired:
-            pass
-    else:
-        proc.kill()
-    for _ in range(2):
-        try:
-            proc.wait(timeout=30)
-            return
-        except subprocess.TimeoutExpired:
-            proc.kill()
-    print(f"[run] session process {proc.pid} did not exit after kill; moving on", file=sys.stderr)
-
-
-def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int, workdir: Path,
-                agent_cmd: str | None) -> dict:
-    """Run one fresh agent session with a hard timeout. Returns {rc, timed_out, stopped, text, seconds}."""
-    tid = task["id"] if task else rp.FINAL_TASK
-    run_dir = STATE / "runs" / f"{project}-{state['req']}"
-    run_dir.mkdir(parents=True, exist_ok=True)
-    from bt_review import feature_branch
-    prompt = rp.session_prompt(project, rdir, state, task, n, feature_branch(rdir))
-    prompt_file, log_file = run_dir / f"prompt-{n:04d}.txt", run_dir / f"session-{n:04d}.log"
-    prompt_file.write_text(prompt, encoding="utf-8")
-    env = {**os.environ, "BITACORA_PROJECT": project, "BITACORA_RUN": state["req"], "BITACORA_TASK": tid}
-    stdin_text, shell = None, False
-    if agent_cmd:
-        argv, shell = agent_cmd.format_map({"prompt_file": prompt_file.as_posix(), "workdir": workdir.as_posix(),
-                                            "task": tid, "req": state["req"], "project": project}), True
-    else:
-        argv, stdin_text = rp.agent_argv(state, workdir, prompt)
-    timeout = state["limits"]["session_timeout_min"] * 60
-    start = last_beat = time.time()
-    timed_out = stopped = False
-    with log_file.open("wb") as out:
-        proc = subprocess.Popen(argv, cwd=str(workdir), env=env, shell=shell, stdout=out, stderr=subprocess.STDOUT,
-                                stdin=subprocess.PIPE if stdin_text else subprocess.DEVNULL)
-        if stdin_text:
-            try:
-                proc.stdin.write(stdin_text.encode("utf-8"))
-                proc.stdin.close()
-            except OSError:
-                pass
-        while True:
-            try:
-                proc.wait(timeout=5)
-                break
-            except subprocess.TimeoutExpired:
-                pass
-            if time.time() - start > timeout:
-                timed_out = True
-                _kill(proc)
-                break
-            if time.time() - last_beat >= BEAT_EVERY:
-                last_beat = time.time()
-                current = beat(rdir, task=tid, session=n, state=f"session running {int(last_beat - start) // 60} min")
-                if current.get("control") == "stop":
-                    stopped = True
-                    _kill(proc)
-                    break
-    text = log_file.read_bytes().decode("utf-8", errors="replace")
-    log_file.write_text(text[-200_000:], encoding="utf-8")
-    return {"rc": proc.returncode, "timed_out": timed_out, "stopped": stopped, "text": text,
-            "seconds": int(time.time() - start)}
 
 
 # ---------------------------------------------------------------- supervisor
@@ -127,7 +56,8 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
             if t["status"] == "in_progress":
                 t["status"] = "todo"
             elif t["status"] == "blocked" and o.get("retry_blocked"):
-                t.update(status="todo", attempts=0, error_hashes=[], pending_id=None, limit_streak=0)
+                t.update(status="todo", attempts=0, error_hashes=[], pending_id=None, limit_streak=0,
+                         tier=tier_.start_tier(t.get("level")))
         s["limits"].update(limits)
         for key, value in (("agent", o.get("agent")), ("model", o.get("model"))):
             if value:
@@ -222,17 +152,19 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
         rs.heartbeat(s, task=tid, session=n, state="session starting")
     state = rs.update(rdir, begin)
     started = time.time()
-    say(state, f"S{n:04d} {tid} {task['title'][:60] if task else 'final review + REPORT.md'}")
+    model = tier_.label(*tier_.model_for(state, session_tier(state, task)))
+    say(state, f"S{n:04d} {tid} [{model}] {task['title'][:60] if task else 'final review + REPORT.md'}")
     try:
         info = run_session(project, rdir, state, task, n, c["workdir"], c["agent_cmd"])
-    except FileNotFoundError as exc:
+    except AgentNotFound as exc:
         _reset_in_progress(rdir)
         _finish(project, rdir, "stopped", f"agent executable not found: {exc}", install)
         return 1
     result = settle_task(project, rdir, tid, n, info, c["workdir"]) if task else \
         settle_final(project, rdir, n, info, started)
     state = rs.load(rdir)
-    say(state, f"S{n:04d} {tid} -> {result} ({info['seconds']}s)")
+    ended = ", ended after task done" if info.get("early_exit") else ""
+    say(state, f"S{n:04d} {tid} -> {result} ({info['seconds']}s{ended})")
     beat(rdir, task=tid, session=n, state=f"{result}")
     commit_bitacora(project, f"marathon {state['req']} S{n:04d} {tid} {result}")
     if result == "usage_limit":

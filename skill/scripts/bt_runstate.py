@@ -18,9 +18,10 @@ import time
 from pathlib import Path
 
 from bt_core import STATE
+from bt_runtier import start_tier
 
 LOG_KEEP = 200
-DEFAULT_LIMITS = {"max_attempts": 3, "session_timeout_min": 60, "max_sessions": 300}
+DEFAULT_LIMITS = {"max_attempts": 4, "session_timeout_min": 60, "max_sessions": 300}  # 4 = haiku, sonnet, opus, opus
 TASK_RE = re.compile(r"^\s*[-*]\s+\[( |x|X)\]\s+(T\d+(?:\.\d+)?[a-z]?)\s*(?:—|–|--|-|:)\s*(.+?)\s*$")
 
 
@@ -38,7 +39,8 @@ def _parse_time(text: str | None) -> dt.datetime | None:
 # ---------------------------------------------------------------- PLAN.md tasks
 
 def parse_task_line(rest: str) -> dict:
-    """'<title> · repo: x · after: T1, T2 · verify: `cmd` · covers: R1' -> task fields (verify only if backticked)."""
+    """'<title> · repo: x · after: T1, T2 · verify: `cmd` · level: architecture · covers: R1' -> task fields
+    (verify only if backticked)."""
     verify = None
     m = re.search(r"verify:\s*`([^`]+)`", rest)
     if m:
@@ -50,7 +52,8 @@ def parse_task_line(rest: str) -> dict:
         key, _, value = p.partition(":")
         fields[key.strip().lower()] = value.strip()
     return {"title": parts[0].strip(), "repo": fields.get("repo") or None, "verify": verify,
-            "after": [t for t in re.split(r"[,\s]+", fields.get("after", "")) if re.fullmatch(r"T\d+(?:\.\d+)?[a-z]?", t)]}
+            "after": [t for t in re.split(r"[,\s]+", fields.get("after", "")) if re.fullmatch(r"T\d+(?:\.\d+)?[a-z]?", t)],
+            "level": (fields.get("level") or "").lower() or None}
 
 
 def parse_plan(plan: Path) -> list[dict]:
@@ -68,13 +71,13 @@ def parse_plan(plan: Path) -> list[dict]:
 
 def _new_task(p: dict) -> dict:
     return {"id": p["id"], "title": p["title"], "repo": p["repo"], "after": p["after"], "verify": p["verify"],
-            "status": "done" if p["done"] else "todo", "attempts": 0, "last_error": None, "error_hashes": [],
-            "evidence": None, "pending_id": None, "notes": []}
+            "level": p["level"], "tier": start_tier(p["level"]), "status": "done" if p["done"] else "todo",
+            "attempts": 0, "last_error": None, "error_hashes": [], "evidence": None, "pending_id": None, "notes": []}
 
 
 def sync_plan(state: dict, rdir: Path) -> dict:
     """Merge PLAN.md into the state. New tasks are added and titles refreshed. What the supervisor acts on
-    (verify, after, repo) and the done status are frozen from the approved plan: a change in PLAN.md is only reported
+    (verify, after, repo, level) and the done status are frozen from the approved plan: a change in PLAN.md is only reported
     in state['plan_drift'], never adopted, so the agent cannot rewrite its own gate or tick its way past verify."""
     by_id = {t["id"]: t for t in state["tasks"]}
     drift = []
@@ -84,7 +87,7 @@ def sync_plan(state: dict, rdir: Path) -> dict:
             state["tasks"].append(_new_task(p))
             continue
         t["title"] = p["title"]
-        drift += [f"{t['id']}.{k}" for k in ("repo", "after", "verify") if t.get(k) != p[k]]
+        drift += [f"{t['id']}.{k}" for k in ("repo", "after", "verify", "level") if t.get(k) != p[k]]
     state["plan_drift"] = drift
     return state
 
@@ -193,9 +196,11 @@ def mark(state: dict, task_id: str, status: str, **fields) -> dict:
     return t
 
 
-def record(state: dict, session: int, task_id: str, result: str, summary: str, seconds: int) -> None:
+def record(state: dict, session: int, task_id: str, result: str, summary: str, seconds: int, **extra) -> None:
+    """Append a log entry; extra = what the session ran with (model, effort, cost_usd, early_exit)."""
     state.setdefault("log", []).append({"at": now_iso(), "session": session, "task": task_id, "result": result,
-                                         "summary": " ".join(summary.split())[:300], "seconds": int(seconds)})
+                                         "summary": " ".join(summary.split())[:300], "seconds": int(seconds),
+                                         **{k: v for k, v in extra.items() if v is not None}})
     state["log"] = state["log"][-LOG_KEEP:]
 
 

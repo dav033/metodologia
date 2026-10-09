@@ -32,17 +32,32 @@ expect to finish in a few hours.
    then status `done`, PLAN `status: done`, notification, autostart removed.
 5. If the only tasks left are blocked: status `blocked`, notification, exit.
 
-The session output is saved machine-locally under `.state/runs/<project>-<REQ>/session-0007.log`.
+**Live session logs.** The agent writes straight into `.state/runs/<project>-<REQ>/session-0007.log` (machine-local)
+while it runs, so `tail -f` shows it live and a killed or timed-out session still leaves its transcript. Claude runs
+with `--output-format stream-json --verbose`: one JSON event per line (turns, tool calls, tool results) and a final
+`result` event whose `is_error`, `result` and `total_cost_usd` the supervisor reads (the cost goes into the log
+entry). Usage-limit detection reads that `result` event; when it never came, only the non-JSON lines (stderr) count,
+so tool output in the transcript is never mistaken for a limit. Logs are capped at the last ~1 MB.
+
+**Early termination.** `claude -p` can stay alive long after the agent finished (background jobs), and run into the
+session timeout. While a session runs the supervisor polls RUN.json; once the agent has given its verdict for the
+current task (`task done`, `task fail`, `task escalate`; for the final session, a fresh REPORT.md) it waits a 90 s
+grace period (`BITACORA_RUN_GRACE_SEC` overrides it, for tests), then kills the session's process tree and settles
+normally (verify, tick, log with `early_exit`; a `task fail` keeps the agent's reason, not "timeout"). If the agent
+takes its verdict back (done, then fail) the grace starts over. Hence the prompt rule: the verdict is the **last**
+command, after the day log and every commit, and nothing may be left running in the background.
 
 ### Task lines the supervisor parses
 
 ```
 - [ ] T3 — <what> · repo: backend · after: T1, T2 · verify: `npm test -- orders` · covers: R1, US-2
+- [ ] T4 — <design the sync protocol> · level: architecture · verify: `pytest tests/sync`
 ```
 
-`repo:`, `after:` and `verify:` are optional. `verify:` is run by the supervisor **only if it is inside backticks**
+`repo:`, `after:`, `verify:` and `level:` are optional. `level: architecture` marks a hard architecture/design task:
+it starts at the top of the escalation ladder (opus, effort xhigh) instead of haiku. `verify:` is run by the supervisor **only if it is inside backticks**
 (from the task's repo dir, 10-minute timeout); free text is just guidance for the agent. Already-ticked `[x]` tasks
-start as done. `repo`, `after` and `verify` are **frozen when the run starts**: later edits to PLAN.md (even by the
+start as done. `repo`, `after`, `verify` and `level` are **frozen when the run starts**: later edits to PLAN.md (even by the
 agent) are reported as plan drift and not adopted, so a session cannot rewrite its own gate; to change them, edit
 RUN.json. New task lines are added. Write tasks small enough to finish in one session (minutes, not hours) and give each a machine-runnable
 `verify` whenever possible: it is the supervisor's independent proof, the agent's claim alone is not trusted.
@@ -64,19 +79,29 @@ task, and the rules:
   after its own `verify` passes. The session can only mark **its own task** (`task done|fail|note` for another id is
   rejected). `task fail REQ T --reason "..." --blocked` blocks the task at once. A note for the next attempt:
   `task note REQ-001 T3 --text "..."`.
-- Log the session in the day log.
+- If the task turns out to be a hard architecture/design problem, or it can't find a solution, it does not flail:
+  `task escalate REQ-001 T3 --to opus --reason "..."` (architecture) or `--to sonnet` (stuck), then stops (see
+  the escalation ladder below).
+- Wait for every workflow/subagent/background job it started before `task done`; leave nothing running.
+- Log the session in the day log **before** the verdict: `task done|fail|escalate` is the last command (the
+  supervisor ends the session shortly after it).
 
 When `ultracode` is on (default) the prompt adds: *ultracode: use the Workflow tool for substantive multi-step work in
 this task.*
 
 ## Caps, stuck tasks, usage limits
 
-- **max_attempts** (default 3) per task, **session_timeout_min** (default 60) per session, **max_sessions** (default
-  300) per run. Reaching max_sessions stops the run (status `stopped`) and notifies.
+- **max_attempts** (default 4: haiku, sonnet, opus, opus) per task, **session_timeout_min** (default 60) per
+  session, **max_sessions** (default 300) per run. Reaching max_sessions stops the run (status `stopped`) and
+  notifies. A RUN.json created before the default changed keeps its own value.
 - **Failed attempt** = timeout, the agent called `task fail`, the agent exited without marking `done`, or `done` but
-  the backticked `verify` failed (`verify_failed`; the task goes back to `todo`).
+  the backticked `verify` failed (`verify_failed`; the task goes back to `todo`). Every failed attempt moves the task
+  **one tier up** the escalation ladder for its next session.
+- **Escalated session** = the agent called `task escalate`: it counts toward max_attempts but is not a failure (no
+  `error_hash`, never "same error twice").
 - **Stuck** = attempts >= max_attempts, or the same normalized error (`error_hash`: numbers, paths and hex stripped)
-  twice. The task becomes `blocked`, a PENDING item is added
+  twice **with the second one already at the top tier** (opus); a repeated error below the top just escalates. The
+  task becomes `blocked`, a PENDING item is added
   (`P-0xx · [blocked] REQ T: title — reason · urgency: high · … · marathon`), `pending_id` is set, the user is
   notified, and the run **continues with other tasks** that do not depend on it.
 - **Usage / rate limit** (a **failed** session — non-zero exit or `is_error` — whose output mentions usage limit,
@@ -103,11 +128,12 @@ CLI to start by hand:
 
 ```
 bitacora.py --project P run REQ-001 [--agent claude|codex] [--model haiku] [--no-ultracode]
-    [--max-attempts 3] [--session-timeout 60] [--resume]
+    [--max-attempts 4] [--session-timeout 60] [--resume]
 bitacora.py --project P launch REQ-001 --mode marathon --model haiku
 ```
 
-`--agent-cmd "<template>"` (placeholders `{prompt_file} {workdir} {task} {req} {project}`) replaces the agent command;
+`--agent-cmd "<template>"` (placeholders `{prompt_file} {workdir} {task} {req} {project} {model_args}`, the last one
+being the tier's `--model … --effort …`) replaces the agent command;
 it exists for tests only. `--once` runs a single session. `--retry-blocked` puts blocked tasks back to `todo` with
 fresh attempts (use it after fixing the cause listed in PENDING.md). `--no-autostart` skips the Startup entry.
 `--resume` is accepted for readability but implicit: the supervisor always continues from RUN.json if it exists.
@@ -145,8 +171,33 @@ subscribe to that topic in the ntfy app. Notification failures never stop the ru
 Marathon work is many small, well-specified tasks with an independent `verify`; a fast, cheap model burns far less of
 the usage limit over days and the clean-session design removes its main weakness (long-context drift).
 **ultracode** gives it the Workflow tool for the multi-step parts inside a task, and the verify + antagonist gate catch
-its mistakes. A task that keeps failing is escalated by blocking it (and a PENDING item), not by silent retries; the
-user can rerun a blocked task with a stronger `--model` after fixing the cause.
+its mistakes. A task that Haiku cannot finish climbs the escalation ladder instead of being retried blindly; only a
+task that also fails at the top is blocked (with a PENDING item).
+
+## Escalation ladder
+
+| Tier | Claude | Codex |
+|---|---|---|
+| 0 | the run's `--model` (default **haiku**), default effort | its model, default effort |
+| 1 | **sonnet** `--effort xhigh` | same model, `-c model_reasoning_effort="xhigh"` |
+| 2 (top) | **opus** `--effort xhigh` | same model, `-c model_reasoning_effort="xhigh"` |
+
+A configured model already stronger than a tier's (e.g. `--model opus`) is kept; only the effort rises. Codex never
+switches model: from tier 1 up it only raises the reasoning effort.
+
+- Each task keeps its `tier` (0–2) in RUN.json; each log entry records the `model` and `effort` of that session
+  (the web tab shows both: the task table's **Modelo** column and the log's).
+- **Up one tier** after every failed attempt (`failed`, `verify_failed`, `timeout`), capped at opus. A usage limit
+  or a user stop does not move it.
+- **Same error twice** below the top → escalate; at the top (opus) → `blocked`. With the default max_attempts 4 a
+  task gets haiku, sonnet, opus, opus.
+- **`level: architecture`** on the PLAN line → the task starts at tier 2 (opus xhigh).
+- **`task escalate REQ T --to sonnet|opus --reason "..."`** (only for the session's own task) raises the tier, stores
+  the reason in the task's notes so the next session reads it, and marks the session `escalated`. A target at or
+  below the current tier is refused (the agent uses `task fail` instead), so an opus session cannot burn attempts
+  "escalating" in place. Run by hand (no supervisor), it only changes the tier.
+- `--retry-blocked` puts the task back at its starting tier (0, or 2 for `level: architecture`).
+- The final review session climbs the same ladder with each failed attempt.
 
 ## Context care
 

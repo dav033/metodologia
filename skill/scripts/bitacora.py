@@ -59,21 +59,23 @@ def main() -> None:
     p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task (days)")
     p_run.add_argument("req", help="REQ-NNN")
     p_run.add_argument("--agent", choices=["claude", "codex"])
-    p_run.add_argument("--model", help="default haiku")
+    p_run.add_argument("--model", help="tier 0 of the escalation ladder (default haiku)")
     p_run.add_argument("--no-ultracode", action="store_true")
-    p_run.add_argument("--max-attempts", type=int)
+    p_run.add_argument("--max-attempts", type=int, help="per task (default 4: haiku, sonnet, opus, opus)")
     p_run.add_argument("--session-timeout", type=int, help="minutes per session (default 60)")
     p_run.add_argument("--resume", action="store_true", help="continue from RUN.json (autostart uses this)")
     p_run.add_argument("--retry-blocked", action="store_true", help="with --resume: give blocked tasks a fresh start")
-    p_run.add_argument("--agent-cmd", help="tests: command template with {prompt_file} {workdir} {task} {req} {project}")
+    p_run.add_argument("--agent-cmd", help="tests: command template with {prompt_file} {workdir} {task} {req} {project} "
+                                           "{model_args}")
     p_run.add_argument("--once", action="store_true", help="run a single session and exit")
     p_run.add_argument("--no-autostart", action="store_true", help="do not install the Windows Startup entry")
-    p_task = sub.add_parser("task", help="marathon agent report: done / fail / note on a plan task")
-    p_task.add_argument("action", choices=["done", "fail", "note"])
+    p_task = sub.add_parser("task", help="marathon agent report: done / fail / note / escalate on a plan task")
+    p_task.add_argument("action", choices=["done", "fail", "note", "escalate"])
     p_task.add_argument("req", help="REQ-NNN")
     p_task.add_argument("task", help="T3")
     p_task.add_argument("--evidence", default="", help="done: what proves it")
-    p_task.add_argument("--reason", default="", help="fail: why")
+    p_task.add_argument("--reason", default="", help="fail / escalate: why")
+    p_task.add_argument("--to", choices=["sonnet", "opus"], help="escalate: opus (architecture) or sonnet (stuck)")
     p_task.add_argument("--text", default="", help="note: advice for the next attempt")
     p_task.add_argument("--blocked", action="store_true", help="fail: needs a human, do not retry")
     p_rc = sub.add_parser("run-control", help="pause / resume / stop a running marathon")
@@ -232,7 +234,8 @@ def main() -> None:
         else:
             print({"done": lambda: rt.task_done(rdir, a.task, a.evidence),
                    "fail": lambda: rt.task_fail(rdir, a.task, a.reason, a.blocked),
-                   "note": lambda: rt.task_note(rdir, a.task, a.text)}[a.action]())
+                   "note": lambda: rt.task_note(rdir, a.task, a.text),
+                   "escalate": lambda: rt.task_escalate(rdir, a.task, a.to or "", a.reason)}[a.action]())
     elif a.cmd == "workspace":
         if a.action == "add":
             if not (a.role and a.path):

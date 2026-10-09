@@ -10,6 +10,7 @@ from html import escape as e
 
 from bt_core import *  # noqa: F403
 from bt_pages import badge, purl
+import bt_runtier as tier_
 
 ACTIVE = ("running", "waiting", "paused")
 CONTROLS = {"pause": "pause", "stop": "stop", "resume": None}
@@ -97,6 +98,11 @@ def apply_control(rdir: Path, action: str) -> str:
     return f"Orden '{action}' enviada: el supervisor la aplica {where}."
 
 
+def _tier_cell(run: dict, t: dict) -> str:
+    tier = tier_.tier_of(t)
+    return f'{e(tier_.label(*tier_.model_for(run, tier)))} <span class="muted">(nivel {tier})</span>'
+
+
 def _task_rows(run: dict) -> str:
     cur = (run.get("heartbeat") or {}).get("task")
     rows = []
@@ -106,19 +112,20 @@ def _task_rows(run: dict) -> str:
         rows.append(
             f'<tr{" class=current" if t.get("id") == cur and run.get("status") == "running" else ""}>'
             f'<td>{e(str(t.get("id", "")))}</td><td>{e(str(t.get("title", "")))}</td><td>{e(str(t.get("repo") or "—"))}</td>'
-            f'<td>{badge(str(t.get("status", "todo")))}</td><td>{t.get("attempts", 0)}</td>'
+            f'<td>{badge(str(t.get("status", "todo")))}</td><td>{_tier_cell(run, t)}</td><td>{t.get("attempts", 0)}</td>'
             f'<td class="muted">{e(err)}</td><td>{e(pid) if pid else ""}</td></tr>')
-    return ('<table><tr><th>ID</th><th>Tarea</th><th>Repo</th><th>Estado</th><th>Intentos</th>'
+    return ('<table><tr><th>ID</th><th>Tarea</th><th>Repo</th><th>Estado</th><th>Modelo</th><th>Intentos</th>'
             f'<th>Último error</th><th>Pendiente</th></tr>{"".join(rows)}</table>')
 
 
 def _log_rows(run: dict) -> str:
     rows = []
     for x in reversed((run.get("log") or [])[-30:]):
+        model = tier_.label(x["model"], x.get("effort")) if x.get("model") else "—"
         rows.append(f'<tr><td>{e(str(x.get("at", ""))[:19].replace("T", " "))}</td><td>#{e(str(x.get("session", "")))}</td>'
-                    f'<td>{e(str(x.get("task", "")))}</td><td>{badge(str(x.get("result", "")))}</td>'
+                    f'<td>{e(str(x.get("task", "")))}</td><td>{e(model)}</td><td>{badge(str(x.get("result", "")))}</td>'
                     f'<td>{e(str(x.get("seconds", "")))}s</td><td>{e(str(x.get("summary", "")))}</td></tr>')
-    return ('<table><tr><th>Hora</th><th>Sesión</th><th>Tarea</th><th>Resultado</th><th>Duración</th>'
+    return ('<table><tr><th>Hora</th><th>Sesión</th><th>Tarea</th><th>Modelo</th><th>Resultado</th><th>Duración</th>'
             f'<th>Resumen</th></tr>{"".join(rows)}</table>') if rows else '<p class="muted">Sin sesiones todavía.</p>'
 
 

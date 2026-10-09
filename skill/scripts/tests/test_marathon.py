@@ -153,11 +153,11 @@ class Failures(MarathonCase):
         self.assertEqual(self.task("T1")["status"], "done")
         self.assertEqual(self.state()["log"][-1]["result"], "done")
 
-    def test_same_error_twice_blocks_the_task_and_files_a_pending_item(self):
+    def test_same_error_escalates_to_the_top_tier_then_blocks_and_files_a_pending_item(self):
         self.make_req(["- [ ] T1 — flaky thing", "- [ ] T2 — independent"], {"T1": ["fail"]})
         code = self.run_sup()
         t = self.task("T1")
-        self.assertEqual((t["status"], t["attempts"]), ("blocked", 2))
+        self.assertEqual((t["status"], t["attempts"], t["tier"]), ("blocked", 3, 2))  # haiku, sonnet, opus
         self.assertEqual(self.task("T2")["status"], "done")  # the run continued with other tasks
         self.assertEqual(code, 2)
         self.assertEqual(self.state()["status"], "blocked")
@@ -382,8 +382,14 @@ class Units(unittest.TestCase):
         import bt_runprompt as rp
         argv, stdin = rp.agent_argv({"agent": "claude", "model": "haiku"}, Path("."), "PROMPT")
         self.assertEqual((argv[1:4], argv[-1], stdin), (["-p", "--model", "haiku"], "PROMPT", None))
+        self.assertNotIn("--effort", argv)
+        self.assertIn("stream-json", argv)
+        argv, _ = rp.agent_argv({"agent": "claude", "model": "haiku"}, Path("."), "PROMPT", "opus", "xhigh")
+        self.assertEqual(argv[1:6], ["-p", "--model", "opus", "--effort", "xhigh"])
         argv, stdin = rp.agent_argv({"agent": "codex", "model": "haiku"}, Path("."), "PROMPT")
-        self.assertEqual((argv[1], argv[-1], stdin, "-m" in argv), ("exec", "-", "PROMPT", False))
+        self.assertEqual((argv[1], argv[-1], stdin, "-m" in argv, "-c" in argv), ("exec", "-", "PROMPT", False, False))
+        argv, _ = rp.agent_argv({"agent": "codex", "model": "gpt-5"}, Path("."), "PROMPT", "gpt-5", "xhigh")
+        self.assertEqual(argv[-5:], ["-m", "gpt-5", "-c", 'model_reasoning_effort="xhigh"', "-"])
 
 
 if __name__ == "__main__":

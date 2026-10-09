@@ -6,8 +6,11 @@ import shutil
 
 from bt_core import *  # noqa: F403
 import bt_runstate as rs
+import bt_runtier as tier_
 
 FINAL_TASK = "FINAL"
+NO_BACKGROUND = ("- Wait for any workflow/subagent/background job you start to finish before calling task done; leave "
+                 "nothing running in the background.")
 
 
 def _paths(project: str, rdir: Path) -> list[str]:
@@ -46,11 +49,18 @@ def _rules(project: str, req: str, task_id: str, branch: str) -> list[str]:
         f"- Commit on the feature branch `{branch}` of the repo you touch (create it if missing). NEVER push, "
         "deploy or publish.",
         "- Use subagents for noisy work (long searches, test output, logs) so this context stays small.",
-        f"- When finished, run exactly one of:\n  `{cli} task done {req} {task_id} --evidence \"<what proves it>\"`\n"
-        f"  `{cli} task fail {req} {task_id} --reason \"<why it cannot be done>\"` "
-        "(add `--blocked` if it needs a human decision or secret).",
         f"- Leave advice for the next attempt with `{cli} task note {req} {task_id} --text \"...\"`.",
         "- Log this session in today's day log of the bitácora (Done / Decisions / Not done / Next).",
+        NO_BACKGROUND,
+        "- Your verdict is the LAST command of the session, after the day log and every commit: the supervisor ends "
+        f"the session shortly after it. Run exactly one of:\n"
+        f"  `{cli} task done {req} {task_id} --evidence \"<what proves it>\"`\n"
+        f"  `{cli} task fail {req} {task_id} --reason \"<why it cannot be done>\"` "
+        "(add `--blocked` if it needs a human decision or secret)\n"
+        f"  `{cli} task escalate {req} {task_id} --to opus|sonnet --reason \"...\"`: if this task turns out to be a "
+        "hard architecture/design problem (--to opus), or you can't find a solution (--to sonnet), don't flail: "
+        "escalate with a reason, then stop. The next session runs on the stronger model; if you already run on it, "
+        "use task fail instead.",
     ]
 
 
@@ -69,7 +79,7 @@ def session_prompt(project: str, rdir: Path, state: dict, task: dict | None, ses
                 "- update the bitácora (day log + walkthrough, PENDING, SUMMARY).", *ultra, "", "## Pointers",
                 *_paths(project, rdir), "", "## Rules",
                 "- Headless session: nobody answers questions. Decide, record a ruling, keep going. No `Aye`.",
-                f"- Commit fixes on the feature branch `{branch}`; NEVER push, deploy or publish.",
+                f"- Commit fixes on the feature branch `{branch}`; NEVER push, deploy or publish.", NO_BACKGROUND,
                 "- Use subagents for noisy work. Log this session in today's day log."]
         return "\n".join(head)
     out = [f"# Marathon {project} {req} — session {session}, task {task['id']}", "",
@@ -77,7 +87,9 @@ def session_prompt(project: str, rdir: Path, state: dict, task: dict | None, ses
            f"- repo (role): {task['repo'] or '(workspace root)'}",
            f"- verify: {('`' + task['verify'] + '`') if task['verify'] else '(none machine-runnable; prove it yourself)'}",
            f"- depends on: {', '.join(task['after']) or 'nothing'} (already done)",
-           f"- attempt {task['attempts'] + 1} of {state['limits']['max_attempts']}", *ultra, "", "## Pointers",
+           f"- attempt {task['attempts'] + 1} of {state['limits']['max_attempts']} · model "
+           f"{tier_.label(*tier_.model_for(state, tier_.tier_of(task)))} (escalation tier "
+           f"{tier_.tier_of(task)}/{tier_.TOP})", *ultra, "", "## Pointers",
            *_paths(project, rdir)]
     bundle = _bundle(project, req)
     if bundle:
@@ -93,18 +105,19 @@ def session_prompt(project: str, rdir: Path, state: dict, task: dict | None, ses
     return "\n".join(out + [""] + _rules(project, req, task["id"], branch))
 
 
-def agent_argv(state: dict, workdir: Path, prompt: str) -> tuple[list[str], str | None]:
-    """(argv, stdin_text). Claude takes the prompt as the last argument; Codex reads it from stdin ('-')."""
-    model = state.get("model")
+def agent_argv(state: dict, workdir: Path, prompt: str, model: str | None = None,
+               effort: str | None = None) -> tuple[list[str], str | None]:
+    """(argv, stdin_text) for a session at the given model/effort (default: tier 0). Claude takes the prompt as the
+    last argument and streams JSON events (one per line, live in the session log); Codex reads it from stdin ('-')."""
+    if model is None and effort is None:
+        model, effort = tier_.model_for(state, 0)
+    args = tier_.model_args(state.get("agent"), model, effort)
     if state.get("agent") == "codex":
         exe = shutil.which("codex") or "codex"
-        argv = [exe, "exec", "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check",
-                "-C", str(workdir)]
-        if model and model != "haiku":
-            argv += ["-m", model]
-        return argv + ["-"], prompt
+        return [exe, "exec", "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check",
+                "-C", str(workdir), *args, "-"], prompt
     exe = shutil.which("claude") or "claude"
-    return [exe, "-p", "--model", model or "haiku", "--dangerously-skip-permissions", "--output-format", "json",
+    return [exe, "-p", *args, "--dangerously-skip-permissions", "--output-format", "stream-json", "--verbose",
             prompt], None
 
 
@@ -131,6 +144,8 @@ def marathon_block() -> str:
     if task.get("last_error"):
         lines.append(f"- last error: {task['last_error'][:400]}")
     lines += [f"- note: {n}" for n in task.get("notes", [])]
-    lines.append(f"Rule: work ONLY on this task; finish with `{cli} task done {req} {task['id']} --evidence \"...\"` "
-                 f"or `task fail ... --reason \"...\"`.")
+    lines.append(f"Rule: work ONLY on this task; as the LAST command (after the day log and commits, nothing left in the "
+                 f"background) run `{cli} task done {req} {task['id']} --evidence \"...\"` or `task fail ... --reason "
+                 f"\"...\"`; a hard architecture problem or no way forward: `task escalate {req} {task['id']} "
+                 f"--to opus|sonnet --reason \"...\"`, then stop.")
     return "\n".join(lines)
