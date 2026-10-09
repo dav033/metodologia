@@ -21,8 +21,11 @@ not stop to ask questions that you can resolve by exploring, measuring or decidi
   bitácora files in **English**; code in the repo's language (Spanish identifiers/comments, as the repo does).
 - Start every message to the owner with `Aye`.
 - Use the `/loop` skill in **dynamic mode** to self-pace (no fixed cron). Each wake-up = one *cycle tick* (§6).
-- Read first, in this order: `C:/Users/davidt/bitacora/pictures/SUMMARY.md`, `PENDING.md`, `DECISIONS.md`, the
+- Read first, in this order: **`C:/Users/davidt/bitacora/pictures/research/ciclo/STATE.md` if it exists (then you are
+  RESUMING — see §13)**, `C:/Users/davidt/bitacora/pictures/SUMMARY.md`, `PENDING.md`, `DECISIONS.md`, the
   last day log (`2026-10/W2/2026-10-09.md`, section `46a78670`), `INDEX.md`, and the REQ folders listed in §3.
+- This brief lives at `C:/Users/davidt/bitacora/pictures/PROMPT-MARATHON-3-DAYS.md`. It is your contract for 72 h:
+  **re-read it after every context compaction** and at the start of every 4th cycle (§13).
 
 ## 1. The product (what exists today)
 
@@ -274,6 +277,36 @@ vs pro-only; (5) REQ-004 real user accounts (today a shared password; admin gate
 Ask them together in one short Spanish message with recommendations; meanwhile take the recommended default where
 it is reversible and flag-gated.
 
+### Owner answers (filled in by the owner before launch — treat a filled line as final; empty = ask once, batched)
+- (1) R-12 inflation in classic arches: 
+- (2) GUIADA_MOTOR switch: no switch during these 72 h — bring the dossier (fixed).
+- (3) `ANTHROPIC_API_KEY` in `demo-decoracion/.env.local`: 
+- (4) BalloonBuilder features customer vs pro: 
+- (5) REQ-004 real accounts: 
+- Deploy policy: §6 step 5 (fast-forward to `main` = production deploy) is **authorized** unless this line says
+  otherwise: 
+
+## 13. Staying alive for 72 h (context, crashes, limits)
+
+You are ONE long session; your context will be compacted many times and the session may die (window closed, reboot,
+crash). Design for that:
+- **Cycle state on disk.** Keep `C:/Users/davidt/bitacora/pictures/research/ciclo/STATE.md` current (rewrite it at
+  the end of every cycle, ≤ 60 lines): start time of the 72 h, current cycle number, main sha, items in progress
+  (worktree, branch, agent, status), next 3–5 items, open owner questions, spend so far per provider vs §8 caps,
+  scenario pass rate, W4 leaderboard summary, last status message time. Commit it with the bitácora.
+- **After every compaction** (you'll notice the conversation summary): re-read this brief and STATE.md before doing
+  anything else. Never trust a summary for rules, caps or what's in flight — check STATE.md, `git worktree list` and
+  running agents.
+- **Keep your own context light.** You orchestrate; agents do. Read results, not files; send noisy work to runners and
+  explorers; never paste large logs into the conversation.
+- **Usage limits.** If a limit pauses you, nothing is lost: on wake-up, re-read STATE.md and continue. Shrink the
+  fleet (≤ 2 implementers) for the first cycle after a limit.
+- **Resuming in a new session.** If this session dies, the owner opens a new one in the same folder and says:
+  «Continúa el maratón de C:/Users/davidt/bitacora/pictures/PROMPT-MARATHON-3-DAYS.md desde STATE.md». Then: read
+  §0 + STATE.md, run the §12 health check, reconcile in-flight items (worktrees, branches, unmerged work), restart the
+  `/loop`, and post one status line.
+- **End of the 72 h**: finish in-flight items, final status + visual report (§6), STATE.md marked FINISHED, stop the loop.
+
 ## 12. First 60 minutes (do this, in order)
 
 1. Read §0 files; run `bitacora.py where`; write the session section header in today's log.
@@ -282,4 +315,7 @@ it is reversible and flag-gated.
 3. Health check: `git fetch`, main sha, Vercel last deploy Ready, failing tests baseline (runner), free RAM.
 4. Launch in parallel: implementer W1 (finish Phase 5 from `d2590cd4`), researcher W5 (Anthropic models + tool-use
    + vision mapping), Plan agent W6 (repository ADR), PM ×2 (initial backlog).
-5. Start the `/loop` (dynamic) with the cycle of §6 as its prompt.
+5. Write the first `research/ciclo/STATE.md` (§13) with the 72 h start time.
+6. Start the `/loop` (dynamic) with this prompt: «Ciclo del maratón: re-lee research/ciclo/STATE.md (y el brief
+   PROMPT-MARATHON-3-DAYS.md si hubo compactación o cada 4 ciclos), ejecuta el siguiente ciclo de §6 y actualiza
+   STATE.md». Use long wake-ups (20–60 min) while agents work; you are re-invoked when they finish.
