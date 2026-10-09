@@ -24,6 +24,7 @@ agent that builds and edits scenes with tools. Users: Sempertex staff and decora
   key (migration 031) — implementer in e5m feat/estudio-modulos.
 
 ## Active focus
+- **72 h marathon running** (since 2026-10-09 16:44, session 83576a42): live state in `research/ciclo/STATE.md`.
 - Review → push: voice (e4y), events (e4v). Then REQ-010 backend + migration, REQ-011 studio.
 
 ## Top pending (see PENDING.md)

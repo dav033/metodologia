@@ -256,13 +256,17 @@ export type Repositorio = {
   porIdLocal(idLocal: string): EntradaCatalogo | undefined;
   /** Searchable records for the RAG (fichas); `sempertex` delegates to `fichaDeItem`. */
   registrosParaIndice(opciones: OpcionesFicha): Iterable<RegistroTaller>;
-  precio: FuentePrecio;            // runtime port (§8)
 };
 ```
 
+The price source is *declared* in the manifest (`precio`) and resolved at runtime by `fuentePrecioDe(id)` in the
+server-only `src/lib/catalogo/precio.ts` (§8), never as a member of `Repositorio`: the registry is also used by the
+Taller client/worker and must not drag the Python adapter into a browser bundle.
+
 The registry (`src/lib/catalogo/registro.ts`) holds the three founding repositories as lazy getters
 (`perezoso`), plus `terceros/*` loaded from `data/catalogos/terceros/<slug>/` only when `CATALOGO_TERCEROS` is on.
-Importing `src/lib/catalogo` must not import `ideas-sempertex/*` or build any entry (`test-carga-3d`).
+Importing it builds no entry and stays inside the `test-carga-3d` budget (the library modules it reaches are already
+lazy, D-001); the leaf modules `ids.ts`/`tipos.ts` import nothing.
 
 ### 4.2 Item schema per kind (`ClaseEntrada`, zod-validated, discriminated on `clase`)
 
@@ -318,7 +322,7 @@ starts with `sempertex:`, `mobiliario:`, `escenografia:` or `terceros/` (verifie
 API:
 ```ts
 parsearId(s): { repositorio: IdRepositorio; idLocal: string; forma: "calificada" | "corta" } | { error: "desconocido" | "ambiguo" }
-calificar(idLocal): string             // throws on unknown in tests, returns undefined at runtime
+calificar(idLocal): string | undefined  // undefined for an unclaimed id (tests assert it never happens for founding entries)
 resolverEntrada(s): EntradaCatalogo | undefined   // accepts both forms
 ```
 Derived ids resolve through their prefix (`escena:x~n3` → `escena:` → sempertex). Owner items (`propio`) are not
@@ -331,8 +335,10 @@ claimed by any prefix: they resolve to `sempertex` for visibility unless their c
 - **Qualified form** is emitted (behind `CATALOGO_IDS_CALIFICADOS`) at catalogue boundaries: `/api/taller/buscar`
   results (`id` stays local; new field `idCalificado`), AI tool results (`buscar_en_biblioteca`, catalogue listings),
   «Añadir» keys, telemetry/feedback records. Every reader accepts both forms.
-- **`terceros/*` entries are always referenced qualified**, including inside pieces
-  (`mueble.id = "terceros/acme:silla-x"`, ≤ 60 chars: slug ≤ 24, local ≤ 34).
+- **`terceros/*` entries are always referenced qualified** and never enter the engine as such: a `mueble-ref` /
+  `fondo-ref` is expanded when inserted into a piece whose `mueble.id` is the *founding base* local id (so the engine
+  builds it with no registry import, R8) plus `mueble.ref = "terceros/acme:silla-x"` (new optional field, ≤ 60 chars:
+  slug ≤ 24, local ≤ 34). Consumers of `ref` (D-013): price source, shopping-list name, item detail/provenance.
 
 ### 5.3 Collision rules
 1. The local-id index must be injective: a test builds it over all repositories and fails on any duplicate or on a
@@ -384,8 +390,9 @@ AND repositorio = $1`), so indexing `mobiliario` never deactivates `sempertex` r
 ### 6.3 Generated data
 `sempertex` keeps `data/taller/{fichas.jsonl, embeddings/, renders/}`. New repositories write
 `data/catalogos/<id>/{fichas.jsonl, embeddings/}` (git-ignored like today). The Python batch
-(`services/ai-api/app/taller/embeber_biblioteca.py`) takes the folder as an argument already (`--fichas`); no
-Python change beyond documentation.
+(`services/ai-api/app/taller/embeber_biblioteca.py`) already takes `--fichas`; whether its vector-cache folder is
+configurable is unverified — if it is fixed to `data/taller/embeddings`, Phase 3 adds a `--cache` argument (the only
+Python change) rather than mixing repositories in one cache.
 
 ### 6.4 New content (Phase 3)
 Fichas for the 28 `mobiliario` + 25 `escenografia` entries (Spanish text from name, description, colours-de,
@@ -438,7 +445,7 @@ export type FuentePrecio = { cotizar(lineas: readonly LineaACotizar[]): Promise<
   today — pricing them is a separate owner decision.
 - `escenografia` → `sin-precio` ("escenografía del montaje: no se vende").
 - `mobiliario` → `sin-precio` until a rental list exists; with `CATALOGO_PRECIO_ALQUILER` → `lista-alquiler` reading
-  `data/catalogos/mobiliario/precios-alquiler-<vigencia>.json` (`{ idLocal | generator type → precio por unidad/día }`),
+  `data/catalogos/mobiliario/precios-alquiler-<vigencia>.json` (`{ idLocal | generator type → price per unit per event }`, unit and currency declared in the file),
   never inventing a price for an id not in the list (`sin-cobertura`).
 - The Taller shopping list (`productosDe`) splits today's `escenografia` lines by repository (behind
   `CATALOGO_UI_REPOSITORIOS`); the guided quote is unchanged (it only sees `sempertex`).
@@ -497,7 +504,7 @@ export type FuentePrecio = { cotizar(lineas: readonly LineaACotizar[]): Promise<
   furniture.
 - **AC-2** RAG eval acierto@5 ≥ the baseline measured at the start of Phase 2 (97.5 % on b4433bc9) and MRR does not
   drop by more than 0.01, with default flags, on PGlite and on Neon.
-- **AC-3** `test-carga-3d` stays < 500 ms; importing `src/lib/catalogo` builds no entry.
+- **AC-3** `test-carga-3d` stays < 500 ms; importing `src/lib/catalogo/registro.ts` builds no entry.
 - **AC-4** `test-esquema-gemini` green: declarations ≤ 122 880 B, enum values ≤ 170, tools ≤ 46, reading schema
   ≤ 22 528 B; REQ-013 adds ≤ 1 024 B and 0 enum values; with flags off the declarations and the photo prompt are
   byte-identical to b4433bc9 (sha256 snapshot).
@@ -517,7 +524,7 @@ export type FuentePrecio = { cotizar(lineas: readonly LineaACotizar[]): Promise<
   without the explicit permit.
 - **AC-10** Sempertex priced golden fixtures (`test-motor-guiada-precio`, `generar-golden-precio`) unchanged; with
   `CATALOGO_PRECIO_ALQUILER` on, mobiliario lines are priced from the list or `sin-cobertura`, never 0.
-- **AC-11** «Añadir» with the UI flag shows Sempertex / Mobiliario / Escenografía with the AC-5 counts and finds an
+- **AC-11** «Añadir» with the UI flag shows Sempertex / Mobiliario / Escenografía (Sempertex = today's four tabs; Mobiliario 26 + 2 generators; Escenografía 25) and finds an
   item by name inside each; flag off = today's panel.
 - **AC-12** The lock test fails when a repository's content hash changes without a version bump.
 - **AC-13** A `terceros` pack without licence, with a colliding local id, or referencing an unknown base is refused
