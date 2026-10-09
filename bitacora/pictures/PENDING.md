@@ -11,6 +11,8 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was: fixing review (rule misses pared→piso/delete, verdict not audited server-side, margin uncalibrated → calibration script); owner-labelled A/B rounds (ROC) pending · urgency: high · complexity: ? · added 2026-10-08
 - P-029 · CI health: deterministic-tests fails at test-python-adapter (pre-existing) and stops, so later suites never run in CI; python-quality red too. Fix the adapter test/contract and make the job report all suites · urgency: high · complexity: ? · added 2026-10-09
 - P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — was: owner to pick A or B (proposal artifact Nuv9GST6YR9HmGgAMoDdMr); common base first: scene diff by piece id, per-turn undo of only AI-touched pieces, abort, optional streamed steps · urgency: high · complexity: ? · added 2026-10-09
+- P-036 · Pre-existing test failures on main: test-biblioteca (C-12 010 store list), test-estructuras-oficiales (caption regex `organic balloon arch`), test-tabla-globos (5 !== 4) — triage and fix · urgency: med · complexity: S · added 2026-10-09 · marathon reviews
+- P-037 · Prerender guard (P-033) scans only "use client" files; next.config has cacheComponents: true, so 11 server pages/layouts are exposed — extend the scan or document · urgency: med · complexity: M · added 2026-10-09 · marathon e7d review
 - P-002 · FLUX photo color fidelity: residual ΔE ~15 after hex prompt (c25490f1); next: photoreal capture or per-piece correction · urgency: med · complexity: ? · added 2026-10-08 · D-003, D-006
 - P-003 · Resume idea digitization: 110 covered ideas left after lot 26, then new generators · urgency: med · complexity: ? · added 2026-10-08 · D-005
 - P-007 · Split Taller3D.tsx (1022 lines) by responsibility: top bar, rail panels, viewer overlay, inspector, solo editor wiring · urgency: med · complexity: ? · added 2026-10-08
@@ -49,6 +51,8 @@ _None_
 - P-001 · Implement the approved 3D editor redesign · urgency: med · complexity: ? · closed 2026-10-08 · commits 5adaa808..f0c2895a
 
 ## Notes
+One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
+Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
