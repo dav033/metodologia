@@ -47,3 +47,11 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Alternatives:** blocking review until clean (rejected: loops, interruptions).
 - **Consequences:** + design issues caught pre-commit, deferred work tracked / − extra tokens and time per commit.
 - **Source:** [day log](2026-10/W2/2026-10-09.md)
+
+## D-006 — Multi-day runs: marathon supervisor, fresh session per task
+- **Date:** 2026-10-09 · **Status:** Accepted
+- **Context:** /goal and /loop alone can't run for days (loops expire after 7 days and aren't restored on resume, --bg doesn't survive reboot, compaction loses detail — Codex goal completes early after compaction).
+- **Decision:** `bitacora.py run` supervisor: state on disk (RUN.json), one fresh headless session per task (Haiku 5.5 + ultracode by default), external verify, caps and stuck detection in the supervisor, usage-limit backoff, autostart after reboot, Windows toast. Loop mode stays for hours-long work.
+- **Alternatives:** one long /goal session (rejected: context rot, no reboot survival).
+- **Consequences:** + days of unattended work with bounded risk / − more moving parts to maintain.
+- **Source:** [day log](2026-10/W2/2026-10-09.md)
