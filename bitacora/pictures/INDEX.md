@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-09 13:26 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-09 15:08 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -39,11 +39,11 @@ _Generated 2026-10-09 13:26 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-026 — Quotes use the Sempertex standard presentations (closes P-035) · 2026-10-09
 - D-025 — Taller "Foto realista · Igual al visor" uses FLUX.1 Kontext max · 2026-10-09
 - D-024 — Guided chat moves to the 3D engine now (supersedes D-019's parity gate) · 2026-10-09
 - D-023 — 2026-10-09 · The AI must never claim an action that failed
 - D-022 — AI feedback (REQ-010): full form everywhere, non-blocking, Neon + dedicated file storage · 2026-10-09
-- D-021 — Taller AI UX: direction B (side assistant with per-turn change cards) · 2026-10-09
 
 ## Timeline
 

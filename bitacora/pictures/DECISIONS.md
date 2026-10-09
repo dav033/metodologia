@@ -186,3 +186,7 @@ after the guided chat is stable.
 ## D-025 · Taller "Foto realista · Igual al visor" uses FLUX.1 Kontext max · 2026-10-09
 Context: owner said the render was "supremamente mal" (FLUX.2 /edit dropped tables, moved the camera). Two paid rounds (US$0.597) on a 12×9 m wedding test: FLUX.1 img2img kept the layout but stayed a CG render; FLUX.2 /edit was photoreal but re-framed and changed counts; Kontext max was the only one both photoreal and faithful (camera, 6 tables × 4 chairs, centrepieces, frame, sign).
 Decision: "Igual al visor" = Kontext max with a layout-to-photo instruction and the full-room capture from the current view; other "Lugar" options keep FLUX.2 /edit. Cost US$0.08 per photo (cap 30/h). Kontext is a FLUX base model (no LoRA), consistent with the fal-only/FLUX-base rule.
+
+## D-026 · Quotes use the Sempertex standard presentations (closes P-035) · 2026-10-09
+Context: the 3D engine had to choose which bags (presentaciones) to buy; the stored library plans had an allowlist of mostly 50-packs. Owner: «no entiendo lo de las bolsas, usa el estándar Sempertex».
+Decision: quote with the presentations Sempertex sells for each balloon (PAQ X 12 / X 50 / etc. as published in the store catalogue), choosing the combination the Python resolver chooses (cheapest combination that covers the need, one 8 % reserve for the whole plan covered first by leftovers) = `POLITICA_PAQUETES = "python"`, already the default. No per-idea allowlist restriction; no "cheapest regardless" variant in production.
