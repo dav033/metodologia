@@ -104,7 +104,7 @@ Flags: `featureEnabled(name)` (`src/lib/ia/nucleo/feature-flags.ts:68`, reads `p
   (162 today → **8 left**), ≤ 46 tools (42 today), photo-reading schema ≤ 22 528 B. `MuebleDePiezaSchema.id` ≤ 60.
 - The guided motor import closure is policed by `scripts/test/test-motor-guiada-fronteras.ts` (only `motor/v1` from
   outside; `globos3d/biblioteca.ts` and `ideas-sempertex/` forbidden) and `test-motor3d-frontera.ts` (browser side).
-- Hard rules (brief §2): migrations additive/idempotent, next free number 033, dry-run then `--allow-remote`;
+- Hard rules (brief §2): migrations additive/idempotent, next free number 034, dry-run then `--allow-remote`;
   risky things behind a flag default off; never flip `GUIADA_MOTOR`; no customer-visible pricing change without the
   owner; TypeScript without `any`; files ≤ 500 lines (`biblioteca.ts` is already 1 075 — do not grow it).
 - Stored data that must keep loading: localStorage scenes and owner items, scene JSON inside `ai_feedback`, hand-read
@@ -144,7 +144,7 @@ Key rulings (each one argued in §3):
 - **R3 Views first, moves later.** Phase 1 builds repositories as *views* over the existing modules, preserving
   every existing order (the photo prompt and `z.enum` order are behaviour). Physical relocation of source files is
   out of scope (Proposal P-1).
-- **R4 RAG partition = column + hard filter**, not separate tables: `taller_items.repositorio` (migration 033),
+- **R4 RAG partition = column + hard filter**, not separate tables: `taller_items.repositorio` (migration 034),
   `repositorio = ANY(visible)` in `condicionesDuras`, same in the in-memory fallback.
 - **R5 Price source is a port per repository**; a quote groups lines by repository and never shows a `sin-precio`
   line as 0.
@@ -365,7 +365,7 @@ claimed by any prefix: they resolve to `sempertex` for visibility unless their c
 Phase 1 (their output must be byte-identical: snapshot hash test). `entradaDeCatalogo(id)` additionally accepts the
 qualified form (additive). Nothing else changes.
 
-### 6.2 Database (Phase 2 — migration `033_catalogo_repositorios.sql`)
+### 6.2 Database (Phase 2 — migration `034_catalogo_repositorios.sql`)
 ```sql
 -- REQ-013: partición lógica de la biblioteca por repositorio de catálogo. Aditiva e idempotente.
 -- Todas las filas existentes vienen de la biblioteca de fábrica o de dueños → 'sempertex' (regla R2).
@@ -513,7 +513,7 @@ export type FuentePrecio = { cotizar(lineas: readonly LineaACotizar[]): Promise<
 - **AC-6** For 100 % of entries `resolverEntrada(idLocal) === resolverEntrada(idCalificado)`; the local-id index is
   injective; a corpus of stored scenes (golden fixture, `referencias-dueno` readings, saved owner items sample, scene
   JSON from AI feedback rows) loads and builds with 0 diffs.
-- **AC-7** Migration 033 runs twice without error or change; dry-run clean; every existing row has `repositorio =
+- **AC-7** Migration 034 runs twice without error or change; dry-run clean; every existing row has `repositorio =
   'sempertex'`; rollback statement documented and tested on PGlite.
 - **AC-8** With `CATALOGO_REPOS_RAG=sempertex,mobiliario`, a filtered query returns only that repository's rows and
   the vector branch returns ≥ min(k, rows) candidates for a 28-row repository.
@@ -536,7 +536,7 @@ export type FuentePrecio = { cotizar(lineas: readonly LineaACotizar[]): Promise<
 
 | # | Risk | Mitigation |
 |---|---|---|
-| R-1 | **Ordering/leak at the RAG boundary**: if non-Sempertex rows are indexed before every reader filters by `repositorio`, furniture leaks into library search, the scene AI and the photo search; if the filtering code ships before 033 is on Neon, queries fail (`42703`) and silently fall back to memory. | Phase 2 order: apply 033 on Neon (dry-run, notice) → merge code with the always-on filter (default `sempertex`, results identical) → only then Phase 3 indexes new rows. A test asserts every SQL builder that reads `taller_items` includes the filter; the indexer refuses to write a non-sempertex row unless the deployed version supports it (`--permitir-otros-repos`). |
+| R-1 | **Ordering/leak at the RAG boundary**: if non-Sempertex rows are indexed before every reader filters by `repositorio`, furniture leaks into library search, the scene AI and the photo search; if the filtering code ships before 034 is on Neon, queries fail (`42703`) and silently fall back to memory. | Phase 2 order: apply 034 on Neon (dry-run, notice) → merge code with the always-on filter (default `sempertex`, results identical) → only then Phase 3 indexes new rows. A test asserts every SQL builder that reads `taller_items` includes the filter; the indexer refuses to write a non-sempertex row unless the deployed version supports it (`--permitir-otros-repos`). |
 | R-2 | HNSW post-filter starvation for small repositories (28 rows among 9 k vectors). | AC-8 test; if starved, `SET LOCAL hnsw.ef_search` / `hnsw.iterative_scan` (check Neon's pgvector version) or a partial HNSW per repository (additive migration). |
 | R-3 | Hidden behaviour change through order: `FONDOS_CATALOGO` order feeds the Gemini photo prompt and `z.enum`. | Byte-identity snapshot of the prompt text and of the tool declarations in Phase 1. |
 | R-4 | Lazy-import regression (D-001) from a registry that touches heavy modules. | Registry entries are `perezoso` getters; `test-carga-3d` gate on every phase. |

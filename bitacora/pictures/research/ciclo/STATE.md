@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **0 (bootstrap)**
-- main = `b4433bc9` · Vercel prod Ready
+- main = `d05a52b8` (Phase 5, pushed 18:1x) · Vercel deploy watching
 - Last status message to owner: 2026-10-09 16:44 (start)
 
 ## Health (cycle 0)
@@ -14,10 +14,10 @@
 ## In flight (relaunched 16:50 with explicit models per brief §5 model rule)
 | Item | Worktree / branch | Agent (model) | Status |
 |---|---|---|---|
-| W1 REQ-007 Phase 5 | e6g @7521aefb | re-review aa15ea3f running | then squash-merge; check Neon ajustes_runtime guiada_motor row ≠ 3d before deploy |
-| W1 P-033 prerender guard + columna_asimetrica density | e7d @3bfed2e5 | antagonist FIX FIRST: guard misses the real incident (imported helper), bare refs, CI order → implementer a57400c6 | fixing (density commit sound) |
+| W1 REQ-007 Phase 5 | main d05a52b8 | PUSHED (verified: tsc, 11 suites, contracts) | watch Vercel; product judge at switch dossier (D-028) |
+| W1 P-033 prerender guard (partial, one-hop) + columna_asimetrica density | e7d @f9851645 | fixes done | queued for re-review |
 | REQ-013 Phase 1 pure refactor | e7e feat/repositorios-fase1 | implementer (opus xhigh) a1954957 | running |
-| W5 local Claude provider | e7c feat/ia-local-claude | implementer (opus xhigh, architecture) a3def6b1 | running |
+| W5 local Claude provider | e7c @7710d7b7 | built (opus xhigh): scene agent via registry, local-only gate, audit, migration 033 | extending coverage (photo reading, interpreters) → then antagonist (opus xhigh) |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
@@ -38,6 +38,8 @@
 (5) REQ-004 accounts. (2) fixed: no switch, bring dossier. Deploy to main authorized.
 
 ## Decisions taken alone (D-027+)
+- D-028 flag-gated, customer-invisible work ships after antagonist SHIP + verified merge; the product judge (screenshots) runs on it in the W7 switch dossier
+- Migration numbers: 033 = W5 proveedor anthropic, 034 = REQ-013 repositorio (lead ruling)
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)
 
 ## Escalations

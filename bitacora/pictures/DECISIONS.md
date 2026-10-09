@@ -194,3 +194,7 @@ Decision: quote with the presentations Sempertex sells for each balloon (PAQ X 1
 ## D-027 · Helium litres = sphere volume of the inflated diameter (marathon, taken alone) · 2026-10-09
 Context: PM backlog PRO-02 asked for "10 balloons of 30 cm with 7 % loss → 97 L"; that figure came from a 6-balloon BalloonBuilder example, not from 10 × 30 cm. Sphere maths gives 151.3 L.
 Decision: helium per balloon = 4/3·π·(infladoCm/2)³ of each balloon as drawn (same size the pump list uses), × (1 + 7 % loss); tank = one nominal constant, labelled as an estimate in the UI and in the copied text. Reversible; owner can supply real supplier figures.
+
+## D-028 · Product judge for flag-gated work runs at the switch dossier (marathon, taken alone) · 2026-10-09
+Context: the marathon's definition of done asks for a product judge ≥ 8 with screenshots; customer edits on the 3D engine (REQ-007 Phase 5) are invisible to customers (GUIADA_MOTOR=python, Neon ajustes_runtime empty, no env var) and screenshots need a dev server on a low-RAM PC.
+Decision: flag-gated, customer-invisible work ships after the antagonist says SHIP and the merged tree is verified; the product judge scores it (with screenshots, desktop + phone) as part of the W7 switch dossier, before any switch. Visible features keep the judge before merge.
