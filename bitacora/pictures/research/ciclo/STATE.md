@@ -11,14 +11,14 @@
 - Ports in use: 3010 (owner dev, untouchable), 3020 (unknown dev server, left alone).
 - `ANTHROPIC_API_KEY` absent in `.env.local` (IA_PROVEEDOR=gemini) → owner question (3).
 
-## In flight
-| Item | Worktree / branch | Agent | Status |
+## In flight (relaunched 16:50 with explicit models per brief §5 model rule)
+| Item | Worktree / branch | Agent (model) | Status |
 |---|---|---|---|
-| W1 REQ-007 Phase 5 (finish from d2590cd4) | e6g feat/guiada-motor-ediciones | implementer | launched c0 |
-| W5 Anthropic provider research | — | researcher | launched c0 |
-| W6 REQ-013 repositories ADR | — | Plan | launched c0 |
-| PM backlog (pro + customer) | — | general-purpose ×2 | launched c0 |
-| W2 scenario matrix | e7a feat/escenarios-matriz | implementer | launched c0 |
+| W1 REQ-007 Phase 5 (from d2590cd4, main merged 8b07f6a0) | e6g feat/guiada-motor-ediciones | implementer (haiku) a20f3aba | running |
+| W2 scenario matrix | e7a feat/escenarios-matriz | implementer (haiku) ae4bd443 | running |
+| W6 REQ-013 ADR | — | general-purpose (opus xhigh) a9b97ee7 | running |
+| W5 Anthropic research | — | researcher (haiku) a83c6aca | running |
+| PM pro / PM customer | — | general-purpose (haiku) a4aa3f94 / a9aa53fe | running |
 
 ## Next items (queue)
 1. Baseline test run (runner) — failing tests list.
@@ -33,6 +33,9 @@
 
 ## Decisions taken alone (D-027+)
 - none yet
+
+## Escalations
+- none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
 
 ## Spend (24 h window from start) vs caps
 FLUX 0.00/3 · Gemini 0.00/2 · Anthropic 0.00/8 · total 0.00/13
