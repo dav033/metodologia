@@ -28,6 +28,9 @@ Paths for the current session come from the SessionStart context, or `python <sk
 folder) and push in the background; SessionStart and every new ID pull first, so several machines stay in sync.
 If the start context warns that sync failed, tell the user; nothing is lost locally. Changes to the skill itself
 are normal commits. A new machine: clone the repo and run `python ~/metodologia/install.py`.
+**Never run `git add -A` / `git commit -a` inside `~/bitacora`**: it's a folder of the monorepo, so that would sweep the
+skill's work in progress into a log commit. Commit the bitácora only with `bitacora.py commit "<msg>"` (scoped to
+bitacora/); a pre-commit guard in the repo rejects commits that mix bitacora/ with other files.
 
 **Trace graph:** `bitacora.py trace` builds a graph from the IDs (REQ, US, R, T, D, P), the commits that cite them
 (`Refs:` trailers) and the files those commits touched, and lints drift (requirements no task covers, tasks

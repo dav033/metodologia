@@ -171,6 +171,10 @@ class Handler(BaseHTTPRequestHandler):
         return f"Plan aprobado. {kind} ({info['agent']}) en {info['workdir']}."
 
     def run_control(self, project: str, rid: str, rdir: Path, form: dict) -> str:
+        if form.get("action") == "monitor":
+            from bt_monitor import open_monitor
+            info = open_monitor(project, rid)
+            return f"Monitor abierto: conéctate a «{info['session']}» desde claude.ai/code o la app de Claude."
         from bt_page_run import apply_control
         msg = apply_control(rdir, form.get("action", ""))
         commit(ROOT, f"{project}: {rid} marathon {form.get('action')} (web)")

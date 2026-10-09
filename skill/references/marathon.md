@@ -42,7 +42,9 @@ The session output is saved machine-locally under `.state/runs/<project>-<REQ>/s
 
 `repo:`, `after:` and `verify:` are optional. `verify:` is run by the supervisor **only if it is inside backticks**
 (from the task's repo dir, 10-minute timeout); free text is just guidance for the agent. Already-ticked `[x]` tasks
-start as done. Write tasks small enough to finish in one session (minutes, not hours) and give each a machine-runnable
+start as done. `repo`, `after` and `verify` are **frozen when the run starts**: later edits to PLAN.md (even by the
+agent) are reported as plan drift and not adopted, so a session cannot rewrite its own gate; to change them, edit
+RUN.json. New task lines are added. Write tasks small enough to finish in one session (minutes, not hours) and give each a machine-runnable
 `verify` whenever possible: it is the supervisor's independent proof, the agent's claim alone is not trusted.
 
 ## What the session agent does (and must not do)
@@ -58,7 +60,9 @@ task, and the rules:
   bitacora.py --project P task done REQ-001 T3 --evidence "<what proves it>"
   bitacora.py --project P task fail REQ-001 T3 --reason "<why>"
   ```
-  `done` ticks the PLAN.md checkbox and appends to the Progress log. A note for the next attempt:
+  `done` marks the task in RUN.json; the supervisor ticks the PLAN.md checkbox (and appends to the Progress log) only
+  after its own `verify` passes. The session can only mark **its own task** (`task done|fail|note` for another id is
+  rejected). `task fail REQ T --reason "..." --blocked` blocks the task at once. A note for the next attempt:
   `task note REQ-001 T3 --text "..."`.
 - Log the session in the day log.
 
@@ -75,9 +79,13 @@ this task.*
   twice. The task becomes `blocked`, a PENDING item is added
   (`P-0xx · [blocked] REQ T: title — reason · urgency: high · … · marathon`), `pending_id` is set, the user is
   notified, and the run **continues with other tasks** that do not depend on it.
-- **Usage / rate limit** (output mentions usage limit, rate limit, 429, quota, "try again at"…): status `waiting`,
-  `waiting_until` = now + backoff (30 min, doubling, max 4 h). It does **not** count as an attempt; one
-  notification. The supervisor sleeps and retries by itself.
+- **Usage / rate limit** (a **failed** session — non-zero exit or `is_error` — whose output mentions usage limit,
+  rate limit, 429, quota, "try again at"…; a successful run that merely mentions them is not a limit): status
+  `waiting`, `waiting_until` = now + backoff (30 min, doubling, max 4 h). It does **not** count as an attempt; one
+  notification. The supervisor sleeps and retries by itself. After 8 limit results in a row on the same task, the
+  next one counts as a failed attempt (a misread failure must not stall the run for weeks).
+- **Supervisor errors** (RUN.json locked by git/antivirus, a missing file…) are logged, notified once, retried with a
+  growing pause and only given up on after 10 in a row. A missing agent executable stops the run and notifies.
 
 ## Controls
 
@@ -100,14 +108,30 @@ bitacora.py --project P launch REQ-001 --mode marathon --model haiku
 ```
 
 `--agent-cmd "<template>"` (placeholders `{prompt_file} {workdir} {task} {req} {project}`) replaces the agent command;
-it exists for tests only. `--once` runs a single session.
+it exists for tests only. `--once` runs a single session. `--retry-blocked` puts blocked tasks back to `todo` with
+fresh attempts (use it after fixing the cause listed in PENDING.md). `--no-autostart` skips the Startup entry.
+`--resume` is accepted for readability but implicit: the supervisor always continues from RUN.json if it exists.
+Codex receives its prompt on stdin (`exec ... -`) instead of as an argument; Claude takes it as the last argument.
+
+## Remote monitoring (Remote Control)
+
+Task sessions are headless, and Remote Control only attaches to interactive sessions — so a marathon launched with
+Claude also opens a **monitor**: an interactive Haiku session named "`<project> <REQ> maratón`", started with
+`claude --remote-control`, briefed by `MONITOR.md` (written next to the plan). The user opens it from claude.ai/code or
+the Claude app and asks "¿cómo va?", "¿por qué se bloqueó T4?", "muéstrame el último commit", or "pausa / reanuda /
+detén". The monitor reads RUN.json, the session logs, git and PENDING, and steers only through `run-control` and
+`task note`; it never edits code. It is independent of the supervisor (closing it never stops the run) and idle
+until asked.
+- Open it again any time: `bitacora.py --project P monitor REQ-001`, or the web tab's **Abrir monitor remoto**.
+- To start HQ sessions from the phone too, run `claude remote-control --name HQ` inside `~/bitacora`.
 
 ## Reboots and the stale heartbeat
 
 On start the supervisor installs an autostart `.cmd` in the user's Startup folder
 (`metodologia-run-<project>-<REQ>.cmd`) that reopens the terminal with `run <REQ> --resume`; it removes it when the run
-ends as `done` or `stopped`. `--resume` continues from RUN.json and sends any `in_progress` task back to `todo`
-(its session died with the machine). The heartbeat (`at`, `pid`, `machine`, `task`, `session`, `state`) is written
+ends as `done` or `stopped`; it also sets `BITACORA_ROOT`. A restart continues from RUN.json, sends any
+`in_progress` task back to `todo` (its session died with the machine), and **keeps an explicit pause and a pending
+usage-limit wait** (only `run-control resume` lifts a pause). The heartbeat (`at`, `pid`, `machine`, `task`, `session`, `state`) is written
 before and after every session: if it is stale the supervisor is dead — reopen it with `run REQ --resume`.
 
 ## Notifications

@@ -1,6 +1,7 @@
 """Marathon tab of a requirement: live view of RUN.json (progress, heartbeat, tasks, log) and pause/resume/stop.
 
-Reads and writes RUN.json directly (plain JSON) so the web UI does not depend on the supervisor's modules.
+Reads RUN.json directly (plain JSON, tolerant of a half-written file) and writes the controls through
+bt_runstate.update (locked read-modify-write), so a button never clobbers what the supervisor saved meanwhile.
 """
 from __future__ import annotations
 
@@ -56,8 +57,9 @@ def fmt_age(minutes: float | None) -> str:
 
 
 def is_stale(run: dict) -> bool:
-    """A 'running' marathon whose heartbeat is older than one session timeout plus a margin: the supervisor is gone."""
-    if run.get("status") != "running":
+    """An active (running/waiting/paused) marathon whose heartbeat is older than one session timeout plus a margin:
+    the supervisor is gone. Waits and pauses heartbeat too, so they are checked the same way."""
+    if run.get("status") not in ACTIVE:
         return False
     limit = ((run.get("limits") or {}).get("session_timeout_min") or 60) + STALE_EXTRA_MIN
     age = age_minutes((run.get("heartbeat") or {}).get("at"))
@@ -155,6 +157,9 @@ def run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
         return (f'<form method="post" action="{act}" style="display:inline">'
                 f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="action" value="{action}">'
                 f'<button class="{cls}" type="submit">{label}</button></form>')
-    controls = f'<div class="actions">{btn("pause", "Pausar")}{btn("resume", "Reanudar", "")}{btn("stop", "Detener")}</div>'
+    controls = (f'<div class="actions">{btn("pause", "Pausar")}{btn("resume", "Reanudar", "")}{btn("stop", "Detener")}'
+                f'{btn("monitor", "Abrir monitor remoto")}</div>'
+                f'<p class="muted">Monitor remoto: sesión «{e(project)} {e(rid)} maratón» en claude.ai/code o la app de '
+                f'Claude (Remote Control) — pregúntale cómo va, o pídele pausar/reanudar/detener.</p>')
     return (f'<div class="kpis">{"".join(kpis)}</div>{bar}{notes}{controls}<h2>Tareas</h2>{_task_rows(run)}'
             f'<h2>Últimas sesiones</h2>{_log_rows(run)}')

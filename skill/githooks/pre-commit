@@ -1,0 +1,28 @@
+#!/bin/sh
+# metodologia repo guard (installed by install.py into .git/hooks/pre-commit)
+# 1) The bitácora is committed only through `bitacora.py commit` (scoped to bitacora/). A commit that mixes
+#    bitacora/ with skill/ or other files usually means someone ran `git add -A` from ~/bitacora and is about to
+#    sweep work-in-progress on the skill into a bitácora log commit.
+# 2) Secret scan of the staged changes with gitleaks, when installed.
+staged=$(git diff --cached --name-only)
+in_bt=$(printf '%s\n' "$staged" | grep -c '^bitacora/')
+out_bt=$(printf '%s\n' "$staged" | grep -v '^bitacora/' | grep -c .)
+if [ "$in_bt" -gt 0 ] && [ "$out_bt" -gt 0 ] && [ -z "$METODOLOGIA_ALLOW_MIXED" ]; then
+  echo "metodologia: este commit mezcla bitacora/ con otros archivos ($out_bt fuera de bitacora/)."
+  echo "  La bitácora se commitea con:  python ~/.claude/skills/metodologia/scripts/bitacora.py commit \"<mensaje>\""
+  echo "  Los cambios a la skill, en un commit aparte con sus propios archivos (git add skill/...)."
+  echo "  Si de verdad quieres mezclarlos: METODOLOGIA_ALLOW_MIXED=1 git commit ..."
+  exit 1
+fi
+GL=$(command -v gitleaks 2>/dev/null)
+if [ -z "$GL" ] && [ -n "$LOCALAPPDATA" ]; then
+  LAD=$(printf '%s' "$LOCALAPPDATA" | sed 's#\\#/#g')
+  GL=$(ls "$LAD"/Microsoft/WinGet/Links/gitleaks.exe "$LAD"/Microsoft/WinGet/Packages/Gitleaks.Gitleaks*/gitleaks.exe 2>/dev/null | head -1)
+fi
+if [ -n "$GL" ]; then
+  "$GL" git --pre-commit --staged --redact --no-banner --no-color -v || {
+    echo "gitleaks: posible secreto en este commit; quítalo y vuelve a intentar."
+    exit 1
+  }
+fi
+exit 0

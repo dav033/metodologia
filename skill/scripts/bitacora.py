@@ -79,6 +79,10 @@ def main() -> None:
     p_rc = sub.add_parser("run-control", help="pause / resume / stop a running marathon")
     p_rc.add_argument("req", help="REQ-NNN")
     p_rc.add_argument("action", choices=["pause", "resume", "stop"])
+    p_mon = sub.add_parser("monitor", help="open the marathon's Remote Control monitor session (watch it from the phone)")
+    p_mon.add_argument("req", help="REQ-NNN")
+    p_mon.add_argument("--model", default="haiku")
+    p_mon.add_argument("--dry-run", action="store_true")
     p_round = sub.add_parser("round", help="question rounds shared with the web UI")
     p_round.add_argument("action", choices=["new", "wait", "answer", "show"])
     p_round.add_argument("req", help="REQ-NNN")
@@ -217,6 +221,9 @@ def main() -> None:
                            max_attempts=a.max_attempts, session_timeout=a.session_timeout,
                            retry_blocked=a.retry_blocked, agent_cmd=a.agent_cmd, once=a.once,
                            no_autostart=a.no_autostart))
+    elif a.cmd == "monitor":
+        from bt_monitor import open_monitor
+        print(json.dumps(open_monitor(project, a.req, a.model, a.dry_run), indent=1, ensure_ascii=False))
     elif a.cmd in ("task", "run-control"):
         import bt_runtask as rt
         rdir = find_req(pdir, a.req)

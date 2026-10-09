@@ -187,6 +187,15 @@ def main() -> None:
             for role, path in ws.repos(root, d.name).items():
                 if path.exists() and path.resolve() != REPO.resolve():
                     say(f"{d.name}/{role}: pre-commit {bt_secrets.install_hook(path)}")
+    print("6b. guard for this repo (no commits mixing bitacora/ with the skill; gitleaks)")
+    if (REPO / ".git").exists():
+        hook = REPO / ".git" / "hooks" / "pre-commit"
+        hook.write_bytes((REPO / "skill" / "githooks" / "pre-commit").read_bytes())
+        try:
+            hook.chmod(0o755)
+        except OSError:
+            pass
+        say(f"installed {hook}")
     print("7. optional: CodeGraph (code-graph MCP, see skill/references/codegraph.md)")
     npm = shutil.which("npm")
     if shutil.which("codegraph"):

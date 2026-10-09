@@ -170,8 +170,15 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
             f"{exe} $prompt\n", encoding="utf-8")
         title, what = f"{project} {rid}", f"executor ({agent}, {mode})"
     cmd = "(dry run: not opened)"
+    monitor = None
     if not dry_run:
         cmd = open_window(repo_path, ps1, title)
+        if marathon and agent == "claude":  # companion session reachable from the phone through Remote Control
+            from bt_monitor import open_monitor
+            try:
+                monitor = open_monitor(project, rid)["session"]
+            except Exception as exc:  # the marathon must start even if the monitor can't
+                monitor = f"monitor not opened: {exc}"
         with plan.open("a", encoding="utf-8") as fh:
             fh.write(f"- {dt.datetime.now():%Y-%m-%d %H:%M} launched {what} from HQ "
                      f"in `{repo_path.as_posix()}`\n")
@@ -181,4 +188,5 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
         commit(ROOT, f"{project}: launch {rid} ({agent}{', marathon' if marathon else ''})")
     return {"project": project, "req": rid, "agent": agent, "mode": mode, "model": model, "workdir": workdir.as_posix(),
             "repos": {r: p.as_posix() for r, p in repos.items()}, "new_repos": new_repos,
-            "handoff": handoff.as_posix(), "script": ps1.as_posix(), "prompt": prompt, "opened": cmd}
+            "handoff": handoff.as_posix(), "script": ps1.as_posix(), "prompt": prompt, "opened": cmd,
+            "monitor": monitor}
