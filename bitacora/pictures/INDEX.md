@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-09 09:27 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-09 10:29 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -22,6 +22,9 @@ _Generated 2026-10-09 09:27 by `bitacora.py index`. Do not edit by hand._
 | [REQ-006](requirements/REQ-006-venue-photo-to-3d/SPEC.md) | Venue photo → 3D space | `clarifying` | — |  |
 | [REQ-007](requirements/REQ-007-engine-behind-the-customer-journey-2d-vi/SPEC.md) | The globos3d engine behind the customer journey (2D views, basic edits, two products) | `draft (awaiting antagonistic architecture review + owner approval)` | [draft v2 — rewritten after the antagonistic architecture panel (3 reviewers: boundaries, contracts/truth,](requirements/REQ-007-engine-behind-the-customer-journey-2d-vi/PLAN.md) |  |
 | [REQ-008](requirements/REQ-008-complex-event-compositions-wedding-hall/SPEC.md) | Complex event compositions ("I want a wedding") | `clarifying (after REQ-007 D1 and the furniture branch merge)` | [in progress 2026-10-09 — owner asked to build it now ("Gemini only put a table and a chair on the existing](requirements/REQ-008-complex-event-compositions-wedding-hall/PLAN.md) |  |
+| [REQ-009](requirements/REQ-009-voice-input-whisper/SPEC.md) | Voice input everywhere there is free text (Whisper) | `in progress 2026-10-09` | — |  |
+| [REQ-010](requirements/REQ-010-ai-feedback/SPEC.md) | AI feedback: rate every AI action and keep its full state | `in progress 2026-10-09` | — |  |
+| [REQ-011](requirements/REQ-011-module-studio-with-cached-ai-renders/SPEC.md) | Module studio with cached AI renders | `in-progress` | — |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -35,11 +38,11 @@ _Generated 2026-10-09 09:27 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-022 — AI feedback (REQ-010): full form everywhere, non-blocking, Neon + dedicated file storage · 2026-10-09
 - D-021 — Taller AI UX: direction B (side assistant with per-turn change cards) · 2026-10-09
 - D-020 — REQ-007 D4: what the customer can edit · 2026-10-09
 - D-019 — REQ-007 owner rulings: the 3D engine becomes canonical; two products, one engine · 2026-10-09
 - D-018 — Bundled script font for text signs: Great Vibes (SIL OFL 1.1) · 2026-10-09
-- D-017 — Viewer resources are per viewer, never module-level · 2026-10-09
 
 ## Timeline
 
