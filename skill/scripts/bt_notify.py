@@ -97,7 +97,7 @@ def autostart_path(project: str, req: str) -> Path:
 
 
 def install_autostart(project: str, req: str) -> Path:
-    from bt_core import SCRIPT
+    from bt_core import ROOT, SCRIPT
 
     run = f'""{sys.executable}" "{SCRIPT}" --project {project} run {req} --resume"'  # outer quotes: cmd /k strips one pair
     title = f"{project} {req} marathon"
@@ -107,7 +107,7 @@ def install_autostart(project: str, req: str) -> Path:
         launch = f'start "{title}" cmd /k {run}'
     path = autostart_path(project, req)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"@echo off\r\n{launch}\r\n", encoding="mbcs", errors="replace")
+    path.write_text(f'@echo off\r\nset "BITACORA_ROOT={ROOT}"\r\n{launch}\r\n', encoding="mbcs", errors="replace")
     return path
 
 

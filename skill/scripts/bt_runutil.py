@@ -34,8 +34,8 @@ def commit_bitacora(project: str, message: str) -> None:
     try:
         from bt_vcs import commit
         commit(ROOT, f"{project}: {message}")
-    except Exception:
-        pass
+    except Exception as exc:
+        print(f"[run] bitacora commit failed: {exc}", file=sys.stderr)
 
 
 def pid_alive(pid: int) -> bool:

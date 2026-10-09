@@ -14,6 +14,7 @@ from bt_runutil import backoff_override, notify, say
 LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|hit your limit|"
                       r"limit will reset|overloaded_error", re.I)
 VERIFY_TIMEOUT = 600
+LIMIT_STREAK_MAX = 8  # consecutive usage-limit results on one task before the next one counts as a failed attempt
 
 
 def _result_text(info: dict) -> tuple[str, bool]:
@@ -29,12 +30,26 @@ def _result_text(info: dict) -> tuple[str, bool]:
 
 
 def detect_limit(info: dict) -> int | None:
-    """A usage/rate-limit message in a failed or short output. Returns the reset epoch (0 = unknown) or None."""
+    """A usage/rate-limit message in the output of a FAILED session (non-zero exit or is_error): a successful run whose
+    text merely mentions '429' or 'quota' is never a limit. Returns the reset epoch (0 = unknown) or None."""
     text, is_error = _result_text(info)
-    if not LIMIT_RE.search(text[-4000:]) or not (info["rc"] or is_error or len(text) < 600):
+    if not (info["rc"] or is_error) or not LIMIT_RE.search(text[-4000:]):
         return None
     m = re.search(r"limit reached\|(\d{9,10})", info["text"])
     return int(m.group(1)) if m else 0
+
+
+def verify_task(project: str, t: dict, workdir: Path) -> tuple[bool, str]:
+    """Run the task's verify command in its repo. An unknown repo role fails (it must not fall back to another dir)."""
+    if not t["verify"]:
+        return True, ""
+    cwd = workdir
+    if t["repo"]:
+        repos = ws.repos(ROOT, project)
+        if t["repo"] not in repos:
+            return False, f"unknown repo role '{t['repo']}' (registered: {', '.join(repos) or 'none'})"
+        cwd = repos[t["repo"]]
+    return run_verify(t["verify"], cwd)
 
 
 def run_verify(cmd: str, cwd: Path) -> tuple[bool, str]:
@@ -80,8 +95,7 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
     if info["stopped"]:
         result, summary = "failed", "stopped by the user"
     elif t["status"] == "done":
-        ok, out = (True, "") if not t["verify"] else run_verify(
-            t["verify"], ws.repos(ROOT, project).get(t["repo"] or "", workdir))
+        ok, out = verify_task(project, t, workdir)
         result = "done" if ok else "verify_failed"
         err = None if ok else f"verify failed: {t['verify']} -> {out}"
         summary = (t["evidence"] or summary) if ok else err
@@ -89,6 +103,8 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
         result, summary = "blocked", t["last_error"] or "blocked by the agent"
     elif detect_limit(info) is not None:
         result = "usage_limit"
+        if t.get("limit_streak", 0) + 1 >= LIMIT_STREAK_MAX:  # never-ending 'limit' = a misread failure, not a limit
+            result, err = "failed", f"usage-limit message {LIMIT_STREAK_MAX} sessions in a row: {summary[:160]}"
     elif info["timed_out"]:
         result, err = "timeout", f"session timeout after {state['limits']['session_timeout_min']} min"
     else:
@@ -99,6 +115,7 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
 
     def fn(s):
         task = rs.get_task(s, task_id)
+        task["limit_streak"] = task.get("limit_streak", 0) + 1 if result == "usage_limit" else 0
         if result == "usage_limit" or info["stopped"]:
             task["status"] = "todo"
         elif result in ("timeout", "failed", "verify_failed"):
@@ -116,6 +133,8 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
             s["wait_step"] = 0
         rs.record(s, n, task_id, result, summary, info["seconds"])
     state = rs.update(rdir, fn)
+    if result == "done":  # the checkbox is ticked only once verify passed, so --resume can trust it
+        rt.tick_plan(rdir, task_id, f"{task_id} done (marathon) — {rt._one_line(t['evidence'] or summary, 200)}")
     if stuck:
         pid = rt.add_blocked_pending(project, state["req"], stuck["task"], stuck["reason"])
         rs.update(rdir, lambda s: rs.mark(s, task_id, "blocked", pending_id=pid))

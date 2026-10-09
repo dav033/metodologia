@@ -73,16 +73,19 @@ def _new_task(p: dict) -> dict:
 
 
 def sync_plan(state: dict, rdir: Path) -> dict:
-    """Merge PLAN.md into the state: new tasks are added, static fields refreshed, ticked [x] means done."""
+    """Merge PLAN.md into the state. New tasks are added and titles refreshed. What the supervisor acts on
+    (verify, after, repo) and the done status are frozen from the approved plan: a change in PLAN.md is only reported
+    in state['plan_drift'], never adopted, so the agent cannot rewrite its own gate or tick its way past verify."""
     by_id = {t["id"]: t for t in state["tasks"]}
+    drift = []
     for p in parse_plan(rdir / "PLAN.md"):
         t = by_id.get(p["id"])
         if t is None:
             state["tasks"].append(_new_task(p))
             continue
-        t.update(title=p["title"], repo=p["repo"], after=p["after"], verify=p["verify"])
-        if p["done"] and t["status"] != "done":
-            t["status"] = "done"
+        t["title"] = p["title"]
+        drift += [f"{t['id']}.{k}" for k in ("repo", "after", "verify") if t.get(k) != p[k]]
+    state["plan_drift"] = drift
     return state
 
 
@@ -100,15 +103,22 @@ def run_path(rdir: Path) -> Path:
     return Path(rdir) / "RUN.json"
 
 
+class RunStateError(RuntimeError):
+    """RUN.json exists but could not be read (locked by git/AV/web, or corrupt)."""
+
+
 def load(rdir: Path) -> dict | None:
-    for attempt in range(3):  # a concurrent atomic replace can make a read fail for a moment on Windows
+    """The state, or None if RUN.json does not exist. Raises RunStateError if it exists but stays unreadable."""
+    last = None
+    for attempt in range(8):  # a concurrent atomic replace or a scanner can make a read fail for a moment on Windows
         try:
             return json.loads(run_path(rdir).read_text(encoding="utf-8"))
         except FileNotFoundError:
             return None
-        except (OSError, ValueError):
-            time.sleep(0.1)
-    return None
+        except (OSError, ValueError) as exc:
+            last = exc
+            time.sleep(0.25)
+    raise RunStateError(f"cannot read {run_path(rdir)}: {last}")
 
 
 def save(rdir: Path, state: dict) -> None:

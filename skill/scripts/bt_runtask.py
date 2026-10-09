@@ -18,24 +18,48 @@ def _one_line(text: str, limit: int = 160) -> str:
     return _DONE_WORDS.sub(lambda m: m.group(0).lower(), text)
 
 
-def _tick_plan(rdir: Path, task_id: str, line: str) -> None:
+def _comment_spans(text: str) -> list[tuple[int, int]]:
+    return [m.span() for m in re.finditer(r"<!--.*?-->", text, re.S)]
+
+
+def tick_plan(rdir: Path, task_id: str, line: str) -> None:
+    """Tick the task's checkbox (first match OUTSIDE html comments: the template keeps examples there) and log it."""
     plan = rdir / "PLAN.md"
     if not plan.exists():
         return
     text = plan.read_text(encoding="utf-8")
-    text = re.sub(rf"^(\s*[-*]\s+)\[ \](\s+{re.escape(task_id)}\b)", r"\1[x]\2", text, count=1, flags=re.M)
+    spans = _comment_spans(text)
+    pat = re.compile(rf"^([ \t]*[-*][ \t]+)\[ \](\s+{re.escape(task_id)}\b)", re.M)
+    for m in pat.finditer(text):
+        if not any(a <= m.start() < b for a, b in spans):
+            text = text[:m.start()] + m.group(1) + "[x]" + m.group(2) + text[m.end():]
+            break
     plan.write_text(text.rstrip("\n") + f"\n- {dt.datetime.now():%Y-%m-%d %H:%M} {line}\n", encoding="utf-8")
 
 
+def _own_task(task_id: str) -> None:
+    """Inside a supervised session the agent may only touch the task it was given."""
+    current = os.environ.get("BITACORA_TASK")
+    if current and current != task_id:
+        raise SystemExit(f"this session works on {current}, not {task_id}: only {current} can be marked")
+
+
 def task_done(rdir: Path, task_id: str, evidence: str) -> str:
+    """Mark the task done in RUN.json. Under a supervisor (env BITACORA_RUN) the PLAN.md tick is deferred until the
+    supervisor's own verify passes (bt_runsettle); run by hand it ticks right away."""
+    _own_task(task_id)
+
     def fn(state):
         rs.mark(state, task_id, "done", evidence=evidence or "(none given)", last_error=None)
     rs.update(rdir, fn)
-    _tick_plan(rdir, task_id, f"{task_id} done (marathon) — {_one_line(evidence, 200)}")
+    if not os.environ.get("BITACORA_RUN"):
+        tick_plan(rdir, task_id, f"{task_id} done (marathon) — {_one_line(evidence, 200)}")
     return f"{task_id} marked done"
 
 
 def task_fail(rdir: Path, task_id: str, reason: str, blocked: bool = False) -> str:
+    _own_task(task_id)
+
     def fn(state):
         t = rs.get_task(state, task_id)
         if t is None:
@@ -47,6 +71,8 @@ def task_fail(rdir: Path, task_id: str, reason: str, blocked: bool = False) -> s
 
 
 def task_note(rdir: Path, task_id: str, text: str) -> str:
+    _own_task(task_id)
+
     def fn(state):
         t = rs.get_task(state, task_id)
         if t is None:

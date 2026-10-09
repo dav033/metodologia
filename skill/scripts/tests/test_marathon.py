@@ -220,6 +220,16 @@ class Controls(MarathonCase):
         self.assertEqual(opened["tasks"][0]["status"], "todo")
         self.assertEqual((opened["status"], opened["control"]), ("running", None))
 
+    def test_web_buttons_write_control_without_clobbering_the_state(self):
+        import bt_page_run
+        self.make_req(["- [ ] T1 — a"])
+        rs.save(self.rdir, rs.init_state(self.project, self.rdir, "claude", "haiku", True))
+        bt_page_run.apply_control(self.rdir, "pause")
+        self.assertEqual(self.state()["control"], "pause")
+        self.assertEqual(self.state()["tasks"][0]["id"], "T1")
+        bt_page_run.apply_control(self.rdir, "resume")
+        self.assertIsNone(self.state()["control"])
+
     def test_session_cap_stops_the_run(self):
         self.make_req(["- [ ] T1 — a"], {"T1": ["nothing"]})
         state = rs.init_state(self.project, self.rdir, "claude", "haiku", True, {"max_sessions": 1, "max_attempts": 9})
@@ -232,6 +242,7 @@ class Controls(MarathonCase):
 class ReinjectAfterCompact(MarathonCase):
     def test_session_start_after_compact_restates_the_current_task(self):
         self.make_req(["- [ ] T1 — wire the thing · verify: `echo ok`"])
+        rs.save(self.rdir, rs.init_state(self.project, self.rdir, "claude", "haiku", True))
         rt.task_note(self.rdir, "T1", "try the other API")
         rt.task_fail(self.rdir, "T1", "first attempt exploded")
         env = {**os.environ, "BITACORA_PROJECT": self.project, "BITACORA_RUN": "REQ-001", "BITACORA_TASK": "T1"}
@@ -247,6 +258,119 @@ class ReinjectAfterCompact(MarathonCase):
         for key in ("BITACORA_RUN", "BITACORA_TASK"):
             os.environ.pop(key, None)
         self.assertEqual(bt_runprompt.marathon_block(), "")
+
+
+class Hardening(MarathonCase):
+    def verify_cmd(self, code: int) -> str:
+        return f'`"{sys.executable}" -c "import sys; sys.exit({code})"`'
+
+    def test_failed_verify_is_never_ticked_so_resume_cannot_turn_it_into_done(self):
+        self.make_req([f"- [ ] T1 — check me · verify: {self.verify_cmd(1)}"])
+        self.run_sup(once=True)
+        self.assertIn("[ ] T1", (self.rdir / "PLAN.md").read_text(encoding="utf-8"))
+        reopened = bt_run._open(self.project, self.rdir, {})
+        self.assertEqual(reopened["tasks"][0]["status"], "todo")
+
+    def test_ticking_skips_html_comments_and_happens_after_verify(self):
+        self.make_req([])
+        text = bt_core.render("PLAN.md", id="REQ-001", title="Demo", date="2026-01-01") + "\n- [ ] T1 — real work\n"
+        (self.rdir / "PLAN.md").write_text(text, encoding="utf-8")
+        self.run_sup(once=True)
+        plan = (self.rdir / "PLAN.md").read_text(encoding="utf-8")
+        self.assertIn("- [ ] T1 — <what>", plan)
+        self.assertIn("- [x] T1 — real work", plan)
+
+    def test_plan_ticks_do_not_override_a_blocked_or_todo_task(self):
+        self.make_req(["- [ ] T1 — a", "- [ ] T2 — b"])
+        state = rs.init_state(self.project, self.rdir, "claude", "haiku", True)
+        rs.mark(state, "T1", "blocked")
+        rs.save(self.rdir, state)
+        (self.rdir / "PLAN.md").write_text("# Plan\n- [x] T1 — a\n- [x] T2 — b\n", encoding="utf-8")
+        opened = bt_run._open(self.project, self.rdir, {})
+        self.assertEqual([t["status"] for t in opened["tasks"]], ["blocked", "todo"])
+
+    def test_limit_words_in_a_successful_session_are_not_a_usage_limit(self):
+        from bt_runsettle import detect_limit
+        ok = json.dumps({"result": "tests got 429 from the mock", "is_error": False})
+        self.assertIsNone(detect_limit({"text": ok, "rc": 0}))
+        self.assertIsNone(detect_limit({"text": "quota notes, all fine", "rc": 0}))
+        self.assertEqual(detect_limit({"text": json.dumps({"result": "usage limit reached", "is_error": True}), "rc": 1}), 0)
+        self.assertEqual(detect_limit({"text": "Claude AI usage limit reached|1900000000", "rc": 1}), 1900000000)
+
+    def test_endless_usage_limit_messages_end_up_as_a_failed_attempt(self):
+        import bt_runsettle
+        self.make_req(["- [ ] T1 — big"], {"T1": ["limit"]})
+        bt_runsettle.LIMIT_STREAK_MAX = 2
+        try:
+            self.run_sup(once=True)
+            self.assertEqual(self.task("T1")["attempts"], 0)
+            time.sleep(1.5)
+            self.run_sup(once=True)
+        finally:
+            bt_runsettle.LIMIT_STREAK_MAX = 8
+        self.assertEqual(self.task("T1")["attempts"], 1)
+        self.assertEqual(self.state()["log"][-1]["result"], "failed")
+
+    def test_restart_keeps_an_explicit_pause_and_a_pending_usage_limit_wait(self):
+        self.make_req(["- [ ] T1 — a"])
+        state = rs.init_state(self.project, self.rdir, "claude", "haiku", True)
+        state.update(status="paused", control="pause")
+        rs.save(self.rdir, state)
+        opened = bt_run._open(self.project, self.rdir, {})
+        self.assertEqual((opened["status"], opened["control"]), ("paused", "pause"))
+        until = (time.time() + 3600)
+        opened = rs.update(self.rdir, lambda s: s.update(control=None, status="waiting",
+                                                         waiting_until=time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(until))))
+        opened = bt_run._open(self.project, self.rdir, {})
+        self.assertEqual(opened["status"], "waiting")
+        self.assertTrue(opened["waiting_until"])
+
+    def test_plan_edits_cannot_rewrite_verify_after_approval(self):
+        self.make_req([f"- [ ] T1 — a · verify: {self.verify_cmd(1)}"])
+        rs.save(self.rdir, rs.init_state(self.project, self.rdir, "claude", "haiku", True))
+        (self.rdir / "PLAN.md").write_text("# Plan\n- [ ] T1 — a · verify: `echo ok`\n", encoding="utf-8")
+        opened = bt_run._open(self.project, self.rdir, {})
+        self.assertIn("exit(1)", opened["tasks"][0]["verify"])
+        self.assertEqual(opened["plan_drift"], ["T1.verify"])
+
+    def test_the_session_cannot_mark_a_task_that_is_not_its_own(self):
+        self.make_req(["- [ ] T1 — a", "- [ ] T2 — b"])
+        rs.save(self.rdir, rs.init_state(self.project, self.rdir, "claude", "haiku", True))
+        os.environ["BITACORA_TASK"] = "T1"
+        try:
+            with self.assertRaises(SystemExit):
+                rt.task_done(self.rdir, "T2", "sneaky")
+        finally:
+            del os.environ["BITACORA_TASK"]
+        self.assertEqual(self.task("T2")["status"], "todo")
+
+    def test_unknown_repo_role_fails_verify_instead_of_running_elsewhere(self):
+        self.make_req([f"- [ ] T1 — a · repo: nope · verify: {self.verify_cmd(0)}"])
+        self.run_sup(once=True)
+        self.assertEqual(self.state()["log"][-1]["result"], "verify_failed")
+        self.assertIn("unknown repo role 'nope'", self.task("T1")["last_error"])
+
+    def test_unreadable_run_json_raises_and_the_supervisor_survives_a_failed_iteration(self):
+        self.make_req(["- [ ] T1 — a"])
+        rs.save(self.rdir, rs.init_state(self.project, self.rdir, "claude", "haiku", True))
+        original = bt_run._step
+        calls = []
+
+        def flaky(*args):
+            calls.append(1)
+            if len(calls) == 1:
+                raise rs.RunStateError("locked")
+            return original(*args)
+        bt_run._step = flaky
+        try:
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(self.run_sup(), 0)
+        finally:
+            bt_run._step = original
+        self.assertEqual(self.state()["status"], "done")
+        (self.rdir / "RUN.json").write_text("{half", encoding="utf-8")
+        with self.assertRaises(rs.RunStateError):
+            rs.load(self.rdir)
 
 
 class Units(unittest.TestCase):
