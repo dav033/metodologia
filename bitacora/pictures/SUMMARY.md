@@ -8,24 +8,23 @@ product is the **3D workshop** at `/3d`: a parametric three.js editor (balloon �
 decorations) whose shopping list comes from the leaves, plus a FLUX photo render of the 3D view and a Gemini Flash
 agent that builds and edits scenes with tools. Users: Sempertex staff and decorators.
 
-## Current state (main = `3bb9b5fc`, 2026-10-09)
+## Current state (main = `7245991f`, 2026-10-09)
 - **Library RAG LIVE** (REQ-002): Neon indexed (3 217 items, 12 567 parts, 6 447 vectors), `TALLER_RAG_ENABLED` on in
-  Vercel; on the gold set RAG beats in-memory (acierto@5 97.5 % vs 87.5 %, nDCG@10 0.687 vs 0.564). Found and fixed:
-  no vector uploader existed; TS/Python text-hash mismatch. Orphan table `taller_taxonomia` (P-030).
-- **Photo → scene** (REQ-001, main a0fad72a + integ): tilted photo camera, cluster-box review (Gemini counts balloons
-  in oversized boxes), same-colour giants, clear acrylic, fragment boxes, signs in front of balloons, pedestal
-  counting; proportion metric + rounds 1–2 on integ/foto-taller (not yet on main: last review fix in progress).
-- **Furniture** (39 items + agregar_mobiliario), cursive signs, pampas, studio materials — on main.
-- **In parallel branches (not merged):** REQ-008 complete events (e4v: halls to 30×30×10 m, armar_salon/ajustar/
-  mover/quitar zona, planificar_evento with alcance solo_decoracion|rincon|salon, venue registry; merged with e4w
-  centrepieces decorar_mesas… + techo_por_zona + golden snapshot test; + empty starting scene and varied
-  decorations by theme in progress); Taller AI panel B (e4x, D-021: per-turn change cards, undo only AI-touched
-  pieces, NDJSON steps + stop, phone sheet; review fixes in progress).
-- VPS advin-vps: APP_ORIGINS set (P-024 done); Whisper + Laya benchmark being set up in an isolated compose project.
+  Vercel; RAG beats in-memory on the gold set (acierto@5 97.5 % vs 87.5 %). Orphan table `taller_taxonomia` (P-030).
+- **Taller AI panel B LIVE** (D-021): per-turn change cards, undo only AI-touched pieces, NDJSON steps + stop, phone
+  sheet. Its first deploy broke the prod build (Date.now in prerender) → hotfix 7245991f, prod Ready (P-033 guard).
+- **Photo → scene** (REQ-001): tilted camera, cluster review, proportion passes, colour-by-stretch — on main.
+- **Voice (REQ-009):** Whisper service LIVE on the VPS (/opt/voz-decoracion); app button + /api/voz/transcribir done
+  on e4y `fb8477b6`, hostile review running; then Vercel env (VOZ_URL/VOZ_SECRETO/VOZ_ENABLED off) + push.
+- **REQ-008 complete events** (e4v, main merged at 4ff9bdd4): re-review BLOCKING (starter discard, variante once,
+  foil letters overlap, ceiling clearance) + 2 post-merge test failures → back with the fix agent.
+- **REQ-010 AI feedback** backend in e4z (dedicated Garage, migration 030 not applied, admin + analysis); S3 client
+  being made shared (`src/lib/almacen/objetos-s3.ts`).
+- **REQ-011 module studio** (new): dúo…sexteto, colours/finishes, clean studio 3D, FLUX render cached by canonical
+  key (migration 031) — implementer in e5m feat/estudio-modulos.
 
 ## Active focus
-- REQ-008 merge + variety → hostile review → push. Panel B review fixes → push. Photo zone fix → verify → push.
-- Whisper/Laya benchmark → decide integration.
+- Review → push: voice (e4y), events (e4v). Then REQ-010 backend + migration, REQ-011 studio.
 
 ## Top pending (see PENDING.md)
 - P-022 owner A/B labelling for refine · P-027 burgundy chrome · P-029 CI health · P-030 orphan taxonomy table ·
