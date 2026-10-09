@@ -17,15 +17,16 @@
 | W1 REQ-007 Phase 5 (from d2590cd4, main merged 8b07f6a0) | e6g feat/guiada-motor-ediciones | implementer (haiku) a20f3aba | running |
 | W2 scenario matrix | e7a feat/escenarios-matriz | implementer (haiku) ae4bd443 | running |
 | W6 REQ-013 ADR | — | general-purpose (opus xhigh) a9b97ee7 | running |
-| W5 Anthropic research | — | researcher (haiku) a83c6aca | running |
-| PM pro / PM customer | — | general-purpose (haiku) a4aa3f94 / a9aa53fe | running |
+| W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
+| PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
+| W3 quick wins (PRO-02 helium/ribbon, PRO-03 pump s, dims) | e7b feat/bb-rapidos | implementer (haiku) a96635ab | running |
 
 ## Next items (queue)
 1. Baseline test run (runner) — failing tests list.
 2. W2 scenario matrix generator (`scripts/escenarios/`) — offline, free.
 3. W1 quick fixes: columna_asimetrica density, P-033 prerender guard, feedback rating reload.
 4. W3 quick wins batch (pump seconds, dimension labels, helium line, recipe cards).
-5. W5 provider implementation once research lands (key needed to run it).
+5. W5 provider implementation (opus xhigh — provider abstraction) when an implementer slot frees; key needed to run it.
 
 ## Owner questions (batched, asked 2026-10-09 16:5x)
 (1) R-12 inflation classic arches · (3) ANTHROPIC_API_KEY + Haiku id · (4) BalloonBuilder customer vs pro ·
