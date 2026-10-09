@@ -86,3 +86,7 @@ antagonistic panels at Phase −1 (ADR), Phase 2 (ledger), Phase 5 (customer-vis
 - Products: Taller 3D pro (full control) vs customer chat (engine hidden, point edits only). D4 list pending.
 - D4 (D-020): customer edits = AI requests + colour references + colour proportions + size proportions; no direct
   manipulation in the viewer. Customer-AI capability limits: later.
+
+## 2026-10-09 — D-024 supersedes the parity gate
+Owner ordered the guided-chat migration now. Phases 4 (shadow gate) and 7 (row-by-row switch) collapse into: one
+flag `GUIADA_MOTOR`, a one-off parity report, golden BOM fixtures, then switch. Plan v3 below (written after mapping).

@@ -171,3 +171,14 @@ mixed); admin panel + automatic periodic gap analysis.
 
 ## D-023 · 2026-10-09 · The AI must never claim an action that failed
 After the owner incident (4 false confirmations), the server enforces disclosure: the scene check describes furniture from the catalogue (never the model-chosen name) and any failed step in a turn is appended as "No pude: …" if the answer omits it. Voice dictation goes on directly in production (VOZ_ENABLED=true): owner asked for it everywhere, route needs login, cost 0.
+
+## D-024 · Guided chat moves to the 3D engine now (supersedes D-019's parity gate) · 2026-10-09
+Context: owner asked whether the guided chat uses the new engine (it does not: Python plan + pricing). Owner: «hagamos
+la migración ahora, reemplacemos la decisión».
+Decision: the guided customer chat switches to globos3d now, without waiting for per-structure shadow parity (D-019 (b)
+gate removed). Kept from D-019/D-020: two products (engine hidden in the customer chat), customer 2D = the plan's 3D
+render lightly modified, customer edits = AI requests + colour refs/proportions + size proportions, no drag/create.
+Safety instead of the gate: one runtime flag (`GUIADA_MOTOR=3d|python`) for instant rollback, a one-off parity report
+per structure type (information, not a gate), golden fixtures for the BOM. Pricing keeps the existing price service
+(Python prices a given material list) in this step; moving pricing off Python is a later item. Classic chat follows
+after the guided chat is stable.
