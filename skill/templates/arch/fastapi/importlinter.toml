@@ -1,0 +1,57 @@
+# Architecture contracts for a FastAPI app (layout: stacks/fastapi.md). Verified with import-linter 2.15.
+# Paste into pyproject.toml, or keep as a file and run: lint-imports --config importlinter.toml
+# Install: uv add --dev import-linter
+#
+# Indirect imports: import-linter follows chains (router -> dependencies -> repository -> sqlalchemy).
+# Contracts about framework packages set allow_indirect_imports = true so they check direct imports only;
+# the domain contract stays strict.
+
+[tool.importlinter]
+root_packages = ["app"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Top level: main > features > ai > core"
+type = "layers"
+layers = ["app.main", "app.features", "app.ai", "app.core"]
+
+[[tool.importlinter.contracts]]
+name = "Inside a feature: router > dependencies > service > repository > models | schemas > domain"
+type = "layers"
+containers = ["app.features.*"]
+layers = ["(router)", "(dependencies)", "(service)", "(repository)", "(models) | (schemas)", "(domain)"]
+
+[[tool.importlinter.contracts]]
+name = "Features are independent; each allowed edge goes to the other feature's facade (__init__)"
+type = "independence"
+modules = ["app.features.*"]
+ignore_imports = [
+  # "app.features.orders.service -> app.features.billing",  # why: orders asks billing for the invoice
+]
+
+[[tool.importlinter.contracts]]
+name = "Routers reach data only through dependencies"
+type = "forbidden"
+source_modules = ["app.features.*.router"]
+forbidden_modules = ["app.features.*.repository", "app.features.*.models", "sqlalchemy"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Business code does not know HTTP"
+type = "forbidden"
+source_modules = ["app.features.*.service", "app.features.*.repository", "app.features.*.models", "app.ai"]
+forbidden_modules = ["fastapi", "starlette"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Only repositories, models and dependencies touch SQLAlchemy"
+type = "forbidden"
+source_modules = ["app.features.*.service", "app.features.*.schemas", "app.ai"]
+forbidden_modules = ["sqlalchemy"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Domain is plain Python"
+type = "forbidden"
+source_modules = ["app.features.*.domain"]
+forbidden_modules = ["fastapi", "starlette", "sqlalchemy", "pydantic"]

@@ -50,10 +50,35 @@ def main() -> None:
     p_launch = sub.add_parser("launch", help="HQ: open a new executor session for an approved plan")
     p_launch.add_argument("req", help="REQ-NNN")
     p_launch.add_argument("--agent", choices=["claude", "codex"], default="claude")
-    p_launch.add_argument("--mode", choices=["loop", "goal"], default="loop", help="claude only; codex always uses /goal")
+    p_launch.add_argument("--mode", choices=["loop", "goal", "marathon"], default="loop",
+                          help="loop/goal: one long session (codex always /goal); marathon: supervisor, a fresh session per task")
+    p_launch.add_argument("--model", help="marathon: model alias for the sessions (default haiku)")
     p_launch.add_argument("--repo", help="repo path (remembered for next time)")
     p_launch.add_argument("--force", action="store_true", help="launch even if PLAN.md is not 'approved'")
     p_launch.add_argument("--dry-run", action="store_true")
+    p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task (days)")
+    p_run.add_argument("req", help="REQ-NNN")
+    p_run.add_argument("--agent", choices=["claude", "codex"])
+    p_run.add_argument("--model", help="default haiku")
+    p_run.add_argument("--no-ultracode", action="store_true")
+    p_run.add_argument("--max-attempts", type=int)
+    p_run.add_argument("--session-timeout", type=int, help="minutes per session (default 60)")
+    p_run.add_argument("--resume", action="store_true", help="continue from RUN.json (autostart uses this)")
+    p_run.add_argument("--retry-blocked", action="store_true", help="with --resume: give blocked tasks a fresh start")
+    p_run.add_argument("--agent-cmd", help="tests: command template with {prompt_file} {workdir} {task} {req} {project}")
+    p_run.add_argument("--once", action="store_true", help="run a single session and exit")
+    p_run.add_argument("--no-autostart", action="store_true", help="do not install the Windows Startup entry")
+    p_task = sub.add_parser("task", help="marathon agent report: done / fail / note on a plan task")
+    p_task.add_argument("action", choices=["done", "fail", "note"])
+    p_task.add_argument("req", help="REQ-NNN")
+    p_task.add_argument("task", help="T3")
+    p_task.add_argument("--evidence", default="", help="done: what proves it")
+    p_task.add_argument("--reason", default="", help="fail: why")
+    p_task.add_argument("--text", default="", help="note: advice for the next attempt")
+    p_task.add_argument("--blocked", action="store_true", help="fail: needs a human, do not retry")
+    p_rc = sub.add_parser("run-control", help="pause / resume / stop a running marathon")
+    p_rc.add_argument("req", help="REQ-NNN")
+    p_rc.add_argument("action", choices=["pause", "resume", "stop"])
     p_round = sub.add_parser("round", help="question rounds shared with the web UI")
     p_round.add_argument("action", choices=["new", "wait", "answer", "show"])
     p_round.add_argument("req", help="REQ-NNN")
@@ -183,8 +208,24 @@ def main() -> None:
             print(plan.as_posix())
     elif a.cmd == "launch":
         from bt_launch import launch
-        print(json.dumps(launch(project, a.req, a.agent, a.mode, a.repo, a.force, a.dry_run), indent=1,
+        extra = {"model": a.model or "haiku"} if a.mode == "marathon" or a.model else {}
+        print(json.dumps(launch(project, a.req, a.agent, a.mode, a.repo, a.force, a.dry_run, **extra), indent=1,
                          ensure_ascii=False))
+    elif a.cmd == "run":
+        from bt_run import supervise
+        sys.exit(supervise(project, a.req, agent=a.agent, model=a.model, ultracode=False if a.no_ultracode else None,
+                           max_attempts=a.max_attempts, session_timeout=a.session_timeout,
+                           retry_blocked=a.retry_blocked, agent_cmd=a.agent_cmd, once=a.once,
+                           no_autostart=a.no_autostart))
+    elif a.cmd in ("task", "run-control"):
+        import bt_runtask as rt
+        rdir = find_req(pdir, a.req)
+        if a.cmd == "run-control":
+            print(rt.run_control(rdir, a.action))
+        else:
+            print({"done": lambda: rt.task_done(rdir, a.task, a.evidence),
+                   "fail": lambda: rt.task_fail(rdir, a.task, a.reason, a.blocked),
+                   "note": lambda: rt.task_note(rdir, a.task, a.text)}[a.action]())
     elif a.cmd == "workspace":
         if a.action == "add":
             if not (a.role and a.path):

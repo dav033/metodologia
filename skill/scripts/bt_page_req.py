@@ -6,6 +6,7 @@ from html import escape as e
 import bt_rounds as rounds
 from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _front
+from bt_page_run import ACTIVE, load_run, run_panel
 from bt_pages import badge, layout, md, purl, read
 
 REQ_TABS = [("rounds", "Preguntas"), ("spec", "Spec"), ("plan", "Plan"), ("trace", "Trazabilidad"), ("review", "Revisar"), ("handoff", "Handoff")]
@@ -17,14 +18,20 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> 
     spec, plan = rdir / "SPEC.md", rdir / "PLAN.md"
     plan_status = _front(plan, "status") if plan.exists() else None
     open_round = rounds.open_round(rdir) if rounds.rounds_dir(rdir).exists() else None
+    run = load_run(rdir)
+    live = bool(run) and run.get("status") in ACTIVE
     if not tab:
         tab = "rounds" if open_round else ("plan" if plan_status == "review" else
-                                           ("review" if plan_status in ("done", "launched") else "spec"))
+                                           ("run" if live else
+                                            ("review" if plan_status in ("done", "launched") else "spec")))
+    tab_list = REQ_TABS + ([("run", "Maratón")] if run else [])
     tabs = "".join(
         f'<a class="{"on" if k == tab else ""}" href="{purl(project, "req", rid)}?tab={k}">{v}'
-        f'{" ●" if (k == "rounds" and open_round) or (k == "plan" and plan_status == "review") else ""}</a>'
-        for k, v in REQ_TABS)
-    if tab == "rounds":
+        f'{" ●" if (k == "rounds" and open_round) or (k == "plan" and plan_status == "review") or (k == "run" and live) else ""}</a>'
+        for k, v in tab_list)
+    if tab == "run":
+        content = run_panel(project, rid, rdir, token)
+    elif tab == "rounds":
         content = rounds_panel(project, rid, rdir, token)
     elif tab == "plan":
         content = plan_panel(project, rid, plan, plan_status, token) if plan.exists() else \
@@ -96,8 +103,10 @@ def plan_panel(project: str, rid: str, plan: Path, status: str | None, token: st
 <input type="hidden" name="token" value="{e(token)}">
 <div class="question"><strong>Comentarios</strong> <span class="muted">(opcional; obligatorio si pides cambios)</span>
 <textarea name="comments"></textarea>
-<div class="actions" style="margin-top:10px"><label>Ejecutor
-<select name="agent"><option value="claude">Claude Code (/loop)</option><option value="codex">Codex (/goal)</option></select>
+<div class="actions" style="margin-top:10px"><label>Modo
+<select name="mode"><option value="marathon">Maratón (días · Haiku 5.5 · ultracode)</option><option value="loop">Loop (una sesión)</option></select>
+</label><label>Ejecutor
+<select name="agent"><option value="claude">Claude Code</option><option value="codex">Codex</option></select>
 </label></div></div>
 <div class="actions"><button type="submit" name="decision" value="approve">Aprobar y lanzar ejecutor</button>
 <button class="secondary" type="submit" name="decision" value="changes">Pedir cambios</button></div></form>"""

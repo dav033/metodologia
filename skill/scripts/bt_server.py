@@ -126,6 +126,9 @@ class Handler(BaseHTTPRequestHandler):
             if action == "review":
                 msg = self.review(project, rid, rdir, form)
                 return self.redirect(f"{base}?tab=review&msg={quote(msg)}")
+            if action == "run":
+                msg = self.run_control(project, rid, rdir, form)
+                return self.redirect(f"{base}?tab=run&msg={quote(msg)}")
             if action == "plan":
                 msg = self.decide(project, rid, rdir, form)
                 return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
@@ -162,8 +165,16 @@ class Handler(BaseHTTPRequestHandler):
         if not approve:
             return "Cambios pedidos. El agente del HQ los verá en PLAN.md."
         from bt_launch import launch
-        info = launch(project, rid, agent=form.get("agent", "claude"))
-        return f"Plan aprobado. Ejecutor lanzado ({info['agent']}) en {info['repo']}."
+        mode = "marathon" if form.get("mode", "marathon") == "marathon" else "loop"
+        info = launch(project, rid, agent=form.get("agent", "claude"), mode=mode, model="haiku")
+        kind = "Maratón lanzada" if mode == "marathon" else "Ejecutor lanzado"
+        return f"Plan aprobado. {kind} ({info['agent']}) en {info['workdir']}."
+
+    def run_control(self, project: str, rid: str, rdir: Path, form: dict) -> str:
+        from bt_page_run import apply_control
+        msg = apply_control(rdir, form.get("action", ""))
+        commit(ROOT, f"{project}: {rid} marathon {form.get('action')} (web)")
+        return msg
 
 
     def review(self, project: str, rid: str, rdir: Path, form: dict) -> str:

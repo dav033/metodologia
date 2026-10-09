@@ -65,35 +65,88 @@ In a **new project**, these standards plus the default stack apply directly.
 ## 3. Architecture
 
 **Feature-first.** Organize by business feature, not by technical type. A feature folder owns everything about
-that feature and exposes a small public API (`index.ts`); other features import only from that entry point.
+that feature and exposes a small public API; nothing outside the feature imports its internals.
 
 ```
 src/features/<feature>/
   domain/          entities, value objects, business rules (no framework, no DB, no HTTP)
-  application/     use cases / services orchestrating the domain
+  application/     use cases / services orchestrating the domain, their DTOs
   infrastructure/  repositories, API clients, DB access
-  presentation/    UI (frontend) or controllers/DTOs (backend)
-  index.ts         public surface
+  presentation/    UI (frontend) or controllers (backend)
+  index.ts         public API
 src/shared/        truly cross-feature code only (ui kit, errors, utils, config)
 ```
 
-Scale it to the size: a small feature can be one folder with a few files; add the layers when the feature grows.
-What never changes: business rules don't live in UI components or controllers, and the domain doesn't import
-infrastructure.
+Scale it to the size: a small feature is one flat folder with a few files; add the layer folders when it grows.
+Each stack names the layers its own way; the architecture tests (§9) check the same rules at both sizes:
 
-**Frontend: Atomic Design** inside the shared UI kit and each feature's presentation layer:
-- `atoms/` (button, input, badge) → `molecules/` (search field, form row) → `organisms/` (table with filters,
-  header) → `templates/` (page layouts) → `pages` (the framework's routes, thin: compose and fetch, no logic).
-- Atoms and molecules are presentational: props in, events out, no data fetching, no business rules.
-- Logic goes to hooks (`useX`) and the application layer, not into components.
-- A component that grows past ~150 lines is usually two components.
+| Layer | Next.js | NestJS | FastAPI |
+|---|---|---|---|
+| presentation | `presentation/` | `*.controller.ts` | `router.py` |
+| application (+ DTOs) | `application/` | `*.service.ts`, `*.facade.ts`, `dto/` | `service.py`, `schemas.py` |
+| domain | `domain/` | `domain/` | `domain.py` |
+| infrastructure | `infrastructure/` | `*.repository.ts`, `*.entity.ts` | `repository.py`, `models.py` |
+| wiring (any own layer) | — | `*.module.ts` | `dependencies.py` |
+| public API | `index.ts`, `index.server.ts` | `index.ts` | `__init__.py` with `__all__` |
 
-**Dependencies point inward:** presentation → application → domain; infrastructure implements interfaces the
-application needs. Pass dependencies in, don't create them inside; return results rather than causing hidden side
-effects. That is what makes code testable without heavy mocking.
+**Dependency rules** (checkable):
+- Imports are one-way: entry points (routes, `app.module`, `main`) → features → shared. `shared` never imports
+  features; features never import entry points.
+- `domain` imports only domain code and shared errors/utils: no framework, ORM or HTTP.
+- `presentation` never imports `infrastructure`: components, controllers and routers don't touch repositories,
+  ORM entities or API clients.
+- `application` may call its own feature's infrastructure directly (concrete repository, API client). An
+  interface (port) only when a second real implementation exists (§2).
+- Public API: `index.ts` with explicit named exports, never `export *`. No `index.ts` barrels inside layer folders
+  or in `shared/`: import the file directly. Server-only exports go in `index.server.ts`.
+- Not everything is a feature: code with one consumer (one route, one endpoint) stays next to it until a second
+  consumer exists.
+- Pass dependencies in, don't create them inside; return results rather than causing hidden side effects.
 
-**Data:** PostgreSQL by default. Schema changes only through migrations, never auto-sync. Constraints and
-indexes in the database, not only in code.
+**Between features.** Frontend: features never import each other; compose them in the route (`app/`).
+Backend: a feature reaches another only through its facade (exported by its public API) or through events.
+Reference other features' records by ID. Each feature owns its tables (table-name prefix); no joins into another
+feature's tables in write paths, no transaction spanning two features.
+
+**Frontend.** Atomic Design (atoms/molecules/organisms) applies only to `shared/ui`, the domain-free design
+system. Feature presentation is flat, files named for what they are (`order-table.tsx`); no `templates/` or
+`pages/` folders (layouts and route files are those). Route-only UI lives in the route's `_components/`. Routes
+are thin: `page.tsx` reads params, calls feature public APIs and composes. Components are props in, events out;
+logic goes to hooks and the application layer; past ~150 lines a component is usually two. Data access, client
+boundary, server state and errors: `stacks/nextjs.md`.
+
+**Backend API contract** (NestJS and FastAPI; how-to in the stack files):
+- **Versioning:** `/v1` prefix from day one; changes are additive only. A breaking change is a new version plus a
+  DECISIONS.md entry.
+- **Errors:** one shape, RFC 9457 `application/problem+json` (`type`, `title`, `status`, `detail`, `code`,
+  `request_id`). `code` is stable UPPER_SNAKE and part of the API. No stack traces in responses. Domain and
+  application code throw domain errors, never HTTP exceptions; one handler maps them. Unknown errors → 500, logged
+  with the `request_id`. Check permission before existence, so a 404 never leaks what a 403 would hide.
+- **Pagination:** every list endpoint is cursor-paginated from day one: `{ items, next_cursor }`, opaque cursor,
+  `limit` with a documented default and max (above max is clamped, invalid is a 400); `next_cursor` is null only
+  at the end.
+- **Idempotency:** POSTs with side effects (create, charge, send, paid LLM call) accept an `Idempotency-Key`
+  header; store key + request hash + response under a unique constraint; same key with another body → 422.
+- **Background work:** fire-and-forget (FastAPI `BackgroundTasks`, an un-awaited promise) only for work you can
+  afford to lose. Retries, long jobs, money or LLM cost → a queue or a DB job table with a status endpoint. Events
+  that must follow a DB write go through an outbox row written in the same transaction; consumers are idempotent
+  (dedupe by event ID).
+
+**Data:** PostgreSQL by default. Schema changes only through migrations, never auto-sync. Migrations are
+reversible (or state why not), named date + slug, and run as an explicit deploy step, never on app boot. Explicit
+naming convention for PK/FK/unique/check/index constraints; snake_case tables and columns; `_at` for timestamps
+(`timestamptz`), `_date` for dates. Constraints and indexes in the database, not only in code.
+- Repositories: single-purpose methods named for the question (`findByEmail`, `listOverdueByCustomer`), no
+  catch-all criteria object.
+- Decide once per project, in DECISIONS.md, whether the ORM entity is the domain entity (default for CRUD-ish
+  features) or maps to a pure domain entity (when real invariants exist).
+
+**Monolith first.** One deployable API per product (plus the FastAPI process when Python is needed). Split out a
+service only on a trigger recorded in DECISIONS.md (independent scaling, different runtime, separate deploy
+cadence or team), and only for a feature that already talks through its facade/events.
+
+**Not adopted by default** (only inside a genuinely complex feature, via DECISIONS.md): CQRS/command bus, a value
+object for every primitive, separate domain and persistence models everywhere.
 
 **Decisions:** a choice that is hard to reverse, surprising without context, or the result of a real trade-off
 goes to DECISIONS.md (see `documentation.md`). Read existing decisions before proposing to change something
@@ -142,8 +195,10 @@ there to give confidence to change code, not to hit a number.
 Before closing, review your own diff (the `reviewer` subagent for larger changes, see `subagents.md`) against this checklist:
 - Every change traces to the request; nothing out of scope slipped in.
 - No file crossed 500 lines; responsibilities still single.
-- Layers respected: no business logic in UI/controllers, no infrastructure in domain.
+- Layers respected: no business logic in UI/controllers, no infrastructure in domain; architecture tests pass.
+- Backend contract held (§3): cross-feature facade/events, error shape, pagination, idempotency.
 - Errors handled at boundaries, inputs validated, no secrets, no leftover debug code.
+- ARCHITECTURE.md still true (modules, public APIs, owned tables, integrations, key flows).
 - Tests cover the new behavior and pass; no test was weakened.
 - No speculative abstractions, no obvious comments, no dead code.
 
@@ -176,10 +231,19 @@ existing one, use what's there and list what's missing as a proposal in your fin
 
 - **Formatter + linter:** Prettier + ESLint (TS) / ruff format + ruff check (Python). Include `max-lines` (warn at
   500), no-explicit-any, unused-imports, import sorting.
-- **Architecture boundaries:** `eslint-plugin-boundaries` (or dependency-cruiser) so features import each other
-  only through `index.ts` and the domain can't import infrastructure.
+- **Architecture tests:** a boundary rule no tool checks is a suggestion. Copy the tested templates from the
+  skill's `templates/arch/` (paths match the stack layouts; each file says what it checks and how to install it):
+
+  | Stack | Files | Command |
+  |---|---|---|
+  | Next.js | `nextjs/eslint-boundaries.config.mjs` + `nextjs/.dependency-cruiser.cjs` | `eslint` + `depcruise src` |
+  | NestJS | `nestjs/.dependency-cruiser.cjs` + `nestjs/eslint-arch.config.mjs` | `depcruise src` + `eslint` |
+  | FastAPI | `fastapi/importlinter.toml` (into `pyproject.toml`) | `lint-imports` |
+
+  Not tool-checkable, so reviewed (the antagonist checks them): thin routes, data access only through the DAL,
+  error shape, permission before existence, pagination, idempotency, async misuse.
 - **Typecheck:** `tsc --noEmit` / pyright or mypy.
-- **One verify command:** `npm run verify` (lint + typecheck + test + build) or equivalent. Run it before
+- **One verify command:** `npm run verify` (lint + typecheck + arch + test + build) or equivalent. Run it before
   claiming done.
 - **CI** running the verify command on every push.
 

@@ -16,9 +16,11 @@ Design with `references/engineering.md` (and the matching `references/stacks/*.m
 - **Verification first:** the end-to-end check that proves the acceptance criteria — the exact command(s) or
   steps (tests, `npm run verify`, run the app and exercise the flow, a dry run of the process). Define it before
   writing code; it's your finish line.
-- **Tasks:** small steps (minutes, not hours) in dependency order, each with its repo role (`[backend]`,
-  `[frontend]`) when the workspace has several, files (or for business work:
-  deliverable/owner), how to verify it, and which requirements (R1, US-2…) it covers. Every requirement must be
+- **Tasks:** small steps (minutes, not hours) in dependency order, one line each, in the template's format:
+  ``- [ ] T3 — <what> · repo: backend · after: T1, T2 · verify: `npm test -- orders` · covers: R1, US-2``.
+  `repo:` when the workspace has several, `after:` for dependencies, files (or for business work:
+  deliverable/owner), how to verify it (a command inside backticks is machine-runnable — marathon mode runs it),
+  and which requirements (R1, US-2…) it covers. Every requirement must be
   covered by some task. Group them in phases that each end in a green, committable state.
 
 Keep the plan short enough to read in two minutes. Set the spec's `status: planned`.
@@ -46,18 +48,28 @@ log, and from there on **run autonomously to the end** (§2) — no further chec
 
 Skip the gate only for Quick-track work (a change that fits in one sentence) or if the user said "hazlo directo".
 
-## 1c. Run the approved plan as a loop / goal
+## 1c. Run the approved plan: marathon, loop or goal
+
+**Marathon is the default for plans that will take days** (many tasks, or anything that won't finish in one
+sitting): an external supervisor runs one fresh headless session per task, with caps, stuck detection, usage-limit
+waits and reboot recovery — see `references/marathon.md`. Keep the **loop** (or Codex goal) for a plan of a few
+hours. Rule of thumb: more than ~8 tasks or "this will run overnight" → marathon.
 
 **From the HQ (planning room)** — the session runs inside the bitácora root (`~/bitacora`), the SessionStart
 context says HQ MODE: don't execute here. Set PLAN.md `status: approved`, then launch a separate executor session:
 
 ```
-python <skill>/scripts/bitacora.py --project <project> launch REQ-NNN [--agent codex] [--mode goal] [--repo <path>]
+python <skill>/scripts/bitacora.py --project <project> launch REQ-NNN [--mode marathon|loop] [--model haiku] [--agent codex] [--repo <path>]
 ```
 
-It writes `HANDOFF.md` next to the plan (everything the executor needs), and opens a new Windows Terminal window in
+From the web UI, the plan-approval form has a **Modo** select (Maratón, the default, or Loop) and launches it for
+you. Marathon runs with Haiku 5.5 + ultracode by default; control it from the req's **Maratón** tab or
+`bitacora.py --project <p> run-control REQ-NNN pause|resume|stop`.
+
+`launch` writes `HANDOFF.md` next to the plan (everything the executor needs), and opens a new Windows Terminal window in
 the project's repo running Claude Code with `--dangerously-skip-permissions` and a self-paced `/loop` (or Codex with `--yolo`
-and `/goal`). Executor sessions always start with these flags — that's the user's rule; never launch one without them. The repo path is remembered per project
+and `/goal`; or, in marathon mode, the supervisor, which starts each session with the same permission flags). Executor
+sessions always start with these flags — that's the user's rule; never launch one without them. The repo path is remembered per project
 (`<project>/project.json`); pass `--repo` the first time or for a new project (the folder is created). Then log the
 launch in today's log, tell the user in one line, and stay available in the HQ for the next requirement.
 Default agent: Claude Code unless the user says Codex.

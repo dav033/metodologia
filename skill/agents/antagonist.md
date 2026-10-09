@@ -21,6 +21,11 @@ Attack, hard and concretely:
 - **Architecture:** responsibilities mixed, wrong layer (business rules in UI/controllers, infra in domain), hidden
   coupling, a seam that will hurt, an abstraction that is speculative or one that is missing, files growing toward
   500 lines.
+- **Contracts** (`engineering.md` §3): import direction and layers (an architecture-test config loosened to pass
+  counts), cross-feature access only via facade/events with IDs and no foreign-table writes or cross-feature
+  transactions, problem+json errors with a stable code and no HTTP exceptions in business code, permission
+  checked before existence, cursor pagination with a clamped limit, `Idempotency-Key` on side-effect POSTs, async
+  misuse (blocking calls in `async def`, work that must not be lost sent to fire-and-forget).
 - **Correctness:** edge cases, error paths, concurrency, partial failure, data integrity, migrations, off-by-one,
   null/empty, time zones, idempotency.
 - **Security:** input validation, authz, injection, secrets, data exposure.

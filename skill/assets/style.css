@@ -129,3 +129,12 @@ table.matrix td, table.matrix th { text-align: center; }
 table.matrix td:first-child { text-align: left; }
 @media (max-width: 860px) { .graph-wrap { grid-template-columns: 1fr; } #graph { height: 58vh; }
   .graph-toolbar input[type=text] { margin-left: 0; max-width: none; } }
+
+/* marathon */
+.badge.running, .badge.waiting { background: var(--info-soft); color: var(--info); }
+.badge.paused, .badge.blocked, .badge.todo, .badge.failed, .badge.timeout, .badge.usage_limit, .badge.verify_failed { background: var(--warn-soft); color: var(--warn); }
+.badge.stopped { background: var(--accent-soft); color: var(--accent); }
+tr.current td { background: var(--info-soft); }
+progress { height: 10px; accent-color: var(--info); }
+form.q .actions label { margin-right: 14px; }
+.badge.in_progress { background: var(--info-soft); color: var(--info); }

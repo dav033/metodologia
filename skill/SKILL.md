@@ -42,7 +42,8 @@ current state, pending items, what the last session said to start with, and any 
 When the session runs inside the bitácora root (`~/bitacora`), the context says **HQ MODE**. The HQ is where the user
 plans: pick or create the project (`bind`), run the requirements interview (reading the project's repo, path in
 `<project>/project.json`), write spec and plan, get the plan approved — then `launch` it into a separate executor
-session with full permissions (`references/execution.md` §1c). Don't edit project repos from the HQ.
+session with full permissions (`references/execution.md` §1c) — **marathon mode** (a supervisor running one fresh
+session per task, for multi-day plans) is the default. Don't edit project repos from the HQ.
 
 The HQ also starts the **local web UI** (`bitacora.py web`): dashboard, documents, artifacts, question rounds
 answerable by form, and plan approval with a button that launches the executor. Everything it shows or receives is
@@ -54,6 +55,7 @@ files in the bitácora, versioned with local git — no dependency on any agent 
 |---|---|
 | The user hands over a requirement, feature, change, idea, problem to solve, or asks "hazme preguntas" | `references/requirements.md` |
 | A spec is ready (or the request was Quick track) → plan, get it approved, run it as a loop (Claude Code) or goal (Codex) | `references/execution.md` |
+| An approved plan that will run for days; "maratón"; supervised run, pause/resume/stop, stuck or blocked tasks, usage limits | `references/marathon.md` (launch details in `execution.md` §1c) |
 | Designing, writing, refactoring, reviewing or debugging code | `references/engineering.md` (+ the `references/stacks/*.md` it points to) |
 | Anything worth recording happened; wrap-up; Stop hook reminder; rollups; "¿en qué estamos?"; a visual page/artifact would help; the web UI | `references/documentation.md` |
 | Deciding whether/how to delegate: exploring, researching, running tests, implementing plan tasks, reviewing | `references/subagents.md` |

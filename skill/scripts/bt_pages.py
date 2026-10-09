@@ -90,12 +90,17 @@ def dashboard() -> str:
         rows = "".join(
             f'<li><a href="{purl(pdir.name, "req", r["id"])}">{e(r["title"])}</a> {badge(r["plan"] or r["status"])}'
             f'{" <strong>· te espera</strong>" if r in waiting else ""}</li>' for r in active[:6])
+        from bt_page_run import active_runs, fmt_age
+        runs = "".join(
+            f'<li>Maratón <a href="{purl(pdir.name, "req", m["req"])}?tab=run">{e(m["req"])}</a> {badge(m["status"])} '
+            f'{m["done"]}/{m["total"]} · latido {fmt_age(m["age"])}'
+            f'{" <strong>· ¿detenida?</strong>" if m["stale"] else ""}</li>' for m in active_runs(pdir))
         cards.append(f"""<div class="card"><h3><a href="{purl(pdir.name)}">{e(pdir.name)}</a></h3>
 <div class="muted" style="font-size:13px">{e(repo) or "sin repos registrados"}</div>
 <div class="kpis"><span class="kpi">{len(active)} activos</span><span class="kpi">{len(open_pending(pdir))} pendientes</span>
 <span class="kpi">{len(artifacts(pdir))} artifacts</span>
 <span class="kpi">último log: {e(days[0].stem) if days else "—"}</span></div>
-<ul class="plain">{rows or '<li class="muted">Sin requerimientos activos</li>'}</ul></div>""")
+<ul class="plain">{runs}{rows or '<li class="muted">Sin requerimientos activos</li>'}</ul></div>""")
     body = "<h1>Proyectos</h1>" + (f'<div class="grid">{"".join(cards)}</div>' if cards
                                    else '<p class="muted">Aún no hay proyectos en la bitácora.</p>')
     return layout("Proyectos", body)

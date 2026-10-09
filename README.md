@@ -76,6 +76,8 @@ hacer push, ni aprobar los hooks de Codex por ti.
 | Saber en qué estamos | "¿en qué estamos?" |
 | Registrar un proyecto de varios repos | `bitacora.py --project <p> workspace add <rol> <ruta>` |
 | Clonar en esta máquina los repos que falten | `bitacora.py --project <p> workspace clone` |
+| Correr un plan aprobado por días (maratón: una sesión limpia por tarea, Haiku 5.5 + ultracode) | Aprobar con **Modo: Maratón** en el panel · `bitacora.py --project <p> launch REQ-001 --mode marathon` · reanudar tras reiniciar: `bitacora.py --project <p> run REQ-001 --resume` |
+| Pausar, reanudar o detener un maratón | Pestaña **Maratón** del requerimiento · `bitacora.py --project <p> run-control REQ-001 pause\|resume\|stop` |
 | Revisar la trazabilidad | `bitacora.py --project <p> trace` |
 | Correr las evaluaciones de la skill | `python ~/metodologia/evals/run.py` (≈ USD 1.5, tope configurable) |
 

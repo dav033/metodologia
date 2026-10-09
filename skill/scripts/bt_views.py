@@ -68,6 +68,12 @@ def build_context(project: str | None, session_id: str, cwd: Path, source: str) 
            f"Today's log (your session section is `{session_id[:8]}`): `{day.as_posix()}`",
            f"Week summary: `{paths['week'].as_posix()}` · Month summary: `{paths['month'].as_posix()}`",
            f"Script: python \"{SCRIPT.as_posix()}\" <cmd>   (cmds: where, id D|P|REQ, req new, index, rollups)"]
+    try:  # supervised marathon session: whatever the source (startup, compact…), restate the one task at hand
+        from bt_runprompt import marathon_block
+        if block := marathon_block():
+            out += ["", block]
+    except Exception:
+        pass
     if in_hq(cwd):
         repo = ws.describe(ROOT, project)
         out.append(f"HQ MODE (planning room): do requirements → spec → plan here; read the code at "

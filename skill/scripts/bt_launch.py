@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 
 from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _front
@@ -77,6 +78,10 @@ def write_handoff(project: str, rdir: Path, workdir: Path, repos: dict[str, Path
     if agent == "claude" and mode == "loop":
         steps += ["", "## Run mode", "This session was started with a self-paced `/loop`. Do as much as is sensible "
                   "per iteration (a whole phase or more). End the loop yourself when done or blocked."]
+    if mode == "marathon":
+        steps += ["", "## Run mode", "A marathon supervisor runs this plan: each session is fresh and handles exactly "
+                  "ONE task (given in its prompt). Do only that task, then report with `bitacora.py task done` or "
+                  "`task fail`. Do not run the final review or write REPORT.md unless the prompt says so."]
     out = rdir / "HANDOFF.md"
     out.write_text("# Handoff — executor\n\n" + "\n".join(steps) + "\n", encoding="utf-8")
     return out
@@ -104,8 +109,22 @@ def open_window(repo: Path, script: Path, title: str) -> str:
     return " ".join(cmd)
 
 
+def marathon_script(project: str, rid: str, agent: str, model: str, repo_path: Path, launch_dir: Path) -> Path:
+    """.ps1 that runs the marathon supervisor (it launches a fresh headless session per task)."""
+    model_arg = f" --model {model}" if agent == "claude" or model != "haiku" else ""
+    ps1 = launch_dir / f"{project}-{rid}-marathon.ps1"
+    ps1.write_text(
+        f"$Host.UI.RawUI.WindowTitle = '{project} {rid} marathon'\n"
+        f"$env:BITACORA_PROJECT = '{project}'\n"
+        f"$env:BITACORA_ROOT = '{ROOT}'\n"
+        f"Set-Location -LiteralPath '{repo_path}'\n"
+        f"& '{sys.executable}' '{SCRIPT}' --project {project} run {rid} --agent {agent}{model_arg}\n",
+        encoding="utf-8")
+    return ps1
+
+
 def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", repo: str | None = None,
-           force: bool = False, dry_run: bool = False) -> dict:
+           force: bool = False, dry_run: bool = False, model: str = "haiku") -> dict:
     pdir = ROOT / project
     rdir = find_req(pdir, req)
     plan = rdir / "PLAN.md"
@@ -131,28 +150,35 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
     repo_path = workdir
     rid = req_id(rdir)
     handoff = write_handoff(project, rdir, workdir, repos, agent, mode, new_repos)
-    prompt = initial_prompt(agent, mode, rid, handoff)
     launch_dir = STATE / "launch"
     launch_dir.mkdir(parents=True, exist_ok=True)
-    (launch_dir / f"{project}-{rid}.prompt.txt").write_text(prompt, encoding="utf-8")
-    exe = " ".join(AGENTS[agent])
-    ps1 = launch_dir / f"{project}-{rid}.ps1"
-    ps1.write_text(
-        f"$Host.UI.RawUI.WindowTitle = '{project} {rid} ({agent})'\n"
-        f"$env:BITACORA_PROJECT = '{project}'\n"
-        f"Set-Location -LiteralPath '{repo_path}'\n"
-        f"$prompt = Get-Content -Raw -LiteralPath '{launch_dir / f'{project}-{rid}.prompt.txt'}'\n"
-        f"{exe} $prompt\n", encoding="utf-8")
+    marathon = mode == "marathon"
+    if marathon:
+        prompt = ""  # no /loop prompt: the supervisor builds one prompt per task
+        ps1 = marathon_script(project, rid, agent, model, repo_path, launch_dir)
+        title, what = f"{project} {rid} marathon", f"marathon supervisor ({agent}, {model})"
+    else:
+        prompt = initial_prompt(agent, mode, rid, handoff)
+        (launch_dir / f"{project}-{rid}.prompt.txt").write_text(prompt, encoding="utf-8")
+        exe = " ".join(AGENTS[agent])
+        ps1 = launch_dir / f"{project}-{rid}.ps1"
+        ps1.write_text(
+            f"$Host.UI.RawUI.WindowTitle = '{project} {rid} ({agent})'\n"
+            f"$env:BITACORA_PROJECT = '{project}'\n"
+            f"Set-Location -LiteralPath '{repo_path}'\n"
+            f"$prompt = Get-Content -Raw -LiteralPath '{launch_dir / f'{project}-{rid}.prompt.txt'}'\n"
+            f"{exe} $prompt\n", encoding="utf-8")
+        title, what = f"{project} {rid}", f"executor ({agent}, {mode})"
     cmd = "(dry run: not opened)"
     if not dry_run:
-        cmd = open_window(repo_path, ps1, f"{project} {rid}")
+        cmd = open_window(repo_path, ps1, title)
         with plan.open("a", encoding="utf-8") as fh:
-            fh.write(f"- {dt.datetime.now():%Y-%m-%d %H:%M} launched executor ({agent}, {mode}) from HQ "
+            fh.write(f"- {dt.datetime.now():%Y-%m-%d %H:%M} launched {what} from HQ "
                      f"in `{repo_path.as_posix()}`\n")
         # "launched" guards against a second launch (e.g. approved on the web and in the terminal at once)
         set_front(plan, "status", "launched")
         from bt_vcs import commit
-        commit(ROOT, f"{project}: launch {rid} ({agent})")
-    return {"project": project, "req": rid, "agent": agent, "mode": mode, "workdir": workdir.as_posix(),
+        commit(ROOT, f"{project}: launch {rid} ({agent}{', marathon' if marathon else ''})")
+    return {"project": project, "req": rid, "agent": agent, "mode": mode, "model": model, "workdir": workdir.as_posix(),
             "repos": {r: p.as_posix() for r, p in repos.items()}, "new_repos": new_repos,
             "handoff": handoff.as_posix(), "script": ps1.as_posix(), "prompt": prompt, "opened": cmd}
