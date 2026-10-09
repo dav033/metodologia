@@ -18,6 +18,7 @@
 | W5 Anthropic provider research | — | researcher | launched c0 |
 | W6 REQ-013 repositories ADR | — | Plan | launched c0 |
 | PM backlog (pro + customer) | — | general-purpose ×2 | launched c0 |
+| W2 scenario matrix | e7a feat/escenarios-matriz | implementer | launched c0 |
 
 ## Next items (queue)
 1. Baseline test run (runner) — failing tests list.
