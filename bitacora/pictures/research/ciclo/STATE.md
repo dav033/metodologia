@@ -30,6 +30,8 @@
 | W4 training harness | main fb956d8c | tramo 1 done (10/10); tramo 2 (20 photos) running; analysis → fix list | — |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
 | Small-fix bundle | main 55475888 | PUSHED | — |
+| W4 fixes A (recolourable backdrops, otro→catalogue resolver, racimo range, cake on pedestal) | e7w fix/entrenamiento-capacidades | implementer (haiku) a281c578 | running |
+| W4 fixes B (scale anchored on catalogue pieces + lote-02 gate, visibility-aware metric, convergence) | e7x fix/entrenamiento-escala-metrica | implementer (sonnet) a6f0f9c2 | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
