@@ -30,7 +30,7 @@
 | W4 training harness | main | baseline pass over 30 photos done | re-run after fixes A+B |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
 | Small-fix bundle | main 55475888 | PUSHED | — |
-| W4 fixes A (capabilities) | e7w | haiku failed 2nd review (otro resolver 4 false positives of 9, placement in front of structures, volume budget only on one path) → ESCALATED sonnet xhigh; sonnet DONE 78bdb5e7 (0/6 old false positives; lote-02 identical; goldens 0 diffs; 10 M cm³ budget → arch 500×320 thickness 120→105 cm) | 3rd hostile review (sonnet xhigh) running |
+| W4 fixes A (capabilities) | e7w | haiku failed 2nd review (otro resolver 4 false positives of 9, placement in front of structures, volume budget only on one path) → ESCALATED sonnet xhigh; sonnet DONE 78bdb5e7 (0/6 old false positives; lote-02 identical; goldens 0 diffs; 10 M cm³ budget → arch 500×320 thickness 120→105 cm) | 3rd review FIX (blocker: ajustar_tamanos densidad bypasses volume budget → 22.9 M cm³/18 s; lentejuelas/tapete false positives; duplicate otro dropped; guided column range widened = pricing surface) → ESCALATED opus xhigh |
 | W4 fixes B (scale policy, visible metric, convergence) | main ad6a3710 | PUSHED 07:0x (verified tsc, 11 suites, boundary, eslint changed files) | re-run 30 photos after A |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
@@ -70,6 +70,7 @@
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)
 
 ## Escalations
+- 08:4x W4 capabilities: sonnet failed 3rd review (budget bypass) → opus xhigh.
 - 08:3x build sheet: sonnet failed 3rd review (dead dialog blocker) → opus xhigh.
 - 06:5x W4 capabilities: haiku failed review twice → sonnet xhigh.
 - 06:xx build sheet: haiku failed review twice → sonnet xhigh.
