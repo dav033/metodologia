@@ -23,11 +23,11 @@
 | REQ-013 Phase 3 | main 318c5aaa | PUSHED (fichas + exact branch; Neon NOT applied — VPS must run ≥ d4b4020d first) | Phase 4 later |
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
-| W2 property tests + colour resolver (incl. P-047) | e7l | haiku failed review twice (resolver regression «dorado rosa» → false «No pude») → ESCALATED sonnet xhigh | fixing |
-| W7 switch dossier + P-045 graceful rollback | e7p @bf4a6c62 | opus review FIX FIRST: notices never visible (card hides content), kill fails open on Neon error, token chaining, python→3d redo, edit hint → opus a74cf67b | fixing |
+| W2 property tests + colour resolver (P-047) | e7l @464d4363 | sonnet redesign done: table audit 0 failures (was 67/90 names wrong), ambiguity asks «dime cuál» | 3rd review (opus) running |
+| W7 switch dossier + P-045 graceful rollback | e7p @af0eedde | A1–A5 fixed (visible banner, last-good kill, origenEn 24 h, python redo stays, hint by plan engine) | opus re-review running |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
-| W4 training harness | e7s @ad0b7302 | review FIX FIRST (cap escape, blind spots, Gemini embeddings leak, no audit trail, leaderboard validity) → haiku ac5546f3 | fixing |
+| W4 training harness | e7s @5eb825a4 | review fixes done; seco 30/30 (synthetic) | re-review running; real run after W5b merge |
 | W5b Claude Code CLI transport | e7t @81f4afce | built (opus); smoke OK: tool calls round-trip; latency 196 s / 5 s / photo 242 s | opus review running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
