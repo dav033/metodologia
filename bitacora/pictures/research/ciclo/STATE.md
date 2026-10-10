@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **8**
-- main = `77b4af27` (… 7aafc12c P-045 → a8247ecc W5b CLI transport → 77b4af27 python-quality)
+- main = `fb956d8c` (… 77b4af27 python → 55475888 small-fix bundle → fb956d8c W4 training harness)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
@@ -27,9 +27,9 @@
 | W7 switch dossier + P-045 graceful rollback | main 7aafc12c | PUSHED (verified 25 suites, eslint 0) | dossier still missing: judge screenshots, live Python check, rollback drill |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
-| W4 training harness | e7s @08978426 | FIRST REAL PHOTO (images 25, CLI Haiku): 153 s, 16 calls, US$0; proporciones 0.528, colores 0.403, IoU 0.591; class capacidad_faltante; detector 88 balloons vs scene 664 (finding) | stop ai_call_log rows in prod Neon, then final review → ship → full 30-photo run in tramos |
+| W4 training harness | main fb956d8c | PUSHED; tramo 1 (10 photos, --turnos 2, CLI Haiku, US$0) running in background | then tramos 2–3, analyse failure classes → engine/tool fixes |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
-| Small-fix bundle (P-041, P-046, arch chip, CUS-02 test) | e7v @ed288c2f | built; P-043 not a bug | antagonist running |
+| Small-fix bundle | main 55475888 | PUSHED | — |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
