@@ -4,10 +4,11 @@
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **11** (09:5x: all 3 branches in hostile review)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `888637d0` (… 390ac0a2 P-050 → 082a34fb P-037 → 888637d0 build sheet PRO-01, flag taller_hoja_armado off)
+- main = `b2ee1e39` (… 888637d0 build sheet PRO-01 (flag off) → 2a3105c6 P-055 → b2ee1e39 CI hotfix: new route classified in provider guard)
 - Last status message to owner: 2026-10-10 05:35 (12 h status)
 
 ## Health (cycle 0)
+- NOTE: ship verification MUST include `npm run kontext:test` (provider guard is strict on new /api routes) — 888637d0 shipped an unclassified route; hotfixed b2ee1e39 within 10 min.
 - NOTE: create worktree junctions ONLY with the PowerShell tool (bash quoting created a stray `Downloads$2` junction twice; removed safely).
 - RAM: 15.7 GB, ~2.3 GB free after cleanup (commit 24.6/32.7 GB) → max 2 implementers at once until RAM improves.
 - Ports in use: 3010 (owner dev, untouchable), 3020 (unknown dev server, left alone).
@@ -49,7 +50,7 @@
 
 | P-049 kill switch on imagen/armada routes + proactive notice | e7y fix/corte-rutas | implementer (haiku) | aa3c4534; review FIX (banner not marked → double notice; «Recalcular» via chat text depends on the model; copy; untested prod guard) → haiku eabef2ba; 2nd review FIX (Ver cómo quedaría dead after notice; propuesta on every plan breaks rollback under .strict()) → ESCALATED sonnet xhigh; sonnet DONE d42676bf → 3rd review running |
 
-| P-055 test-cuerpo-generacion red on main | e7q fix/test-cuerpo-generacion | implementer (haiku) | launched 10:4x |
+| P-055 test-cuerpo-generacion red on main | main 2a3105c6 | PUSHED (stale regex → behavioural, in kontext:test) | e7q free |
 
 ## Next items (queue)
 - Small-fix bundle (haiku, one worktree) when a slot frees: P-041 salon capacity wording, P-043 ideas 30/31 duplicated price (check), P-046 group identical decorations «× N», «Armazón recto» chip on arch scenes, CUS-02 card=quote test, CUS-03 18-structure test (PM delta c8).
