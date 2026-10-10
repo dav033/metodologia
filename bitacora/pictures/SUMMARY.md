@@ -7,7 +7,8 @@ Sempertex balloon-decoration demo (`demo-decoracion`: Next 16 on Vercel + Python
 engine: the **Taller 3D** (`/3d`, pro tool with a scene AI agent) and the **guided customer chat** (`/asistente`,
 quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
-## Current state (main = `e7b7aeaa`, 2026-10-10 ~11:40)
+## Current state (main = `d9a9a6b5`, VPS = d9a9a6b5, 2026-10-10 ~14:30)
+- **Beta, everything on for everyone (D-039):** guided chat runs the 3D engine for all customers, Taller build sheet on, solo-guiada mode being removed; VPS deploys follow every green main (D-037).
 - **72 h marathon running** (since 2026-10-09 16:44, session 83576a42; owner away all weekend, D-032/D-033).
   Live state: `research/ciclo/STATE.md`.
 - **CI fully green for the first time** (77b4af27). VPS deploy is manual and gated on green CI (D-031); no VPS deploy
@@ -29,6 +30,6 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
 ## Recent decisions (see DECISIONS.md)
 - D-027 helium sphere volume · D-028/D-030 product judge timing · D-029 class-prefixed ids · D-031 manual VPS deploy ·
-  D-032 owner-away defaults · D-033 dev servers allowed · D-034 no VPS deploy this weekend · D-035 reader-first persisted fields · D-036 review stop-rule.
+  D-032 owner-away defaults · D-033 dev servers allowed · D-034 no VPS deploy this weekend · D-035 reader-first persisted fields · D-036 review stop-rule · D-037 VPS approved · D-038 one quote · D-039 everything on.
 
 _Last updated: 2026-10-10_
