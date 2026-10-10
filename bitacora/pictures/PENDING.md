@@ -5,6 +5,7 @@ One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 
 ## Open
+- P-047 · Colour name → code resolution does not round-trip: «dorado metal» resolves to 970 (reflex), «rojo reflex» to 015 while the catalogue code is 915 — audit the resolver against the Sempertex colour table (affects guided edits and Taller AI colour changes) · urgency: high · complexity: S · added 2026-10-09 · W2 property tests
 - P-046 · Shopping list «Por pieza» lists identical decorations one per row («Ojo con venas 1…14 · 1 globo»): group identical pieces (× 14) · urgency: low · complexity: S · added 2026-10-09 · judge
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversations get edits refused (409 MOTOR_PYTHON), Python routes refuse 3D tokens, and adding an idea/redoing silently re-prices in Python (~×1.4). Design a graceful rollback (keep 3D plans priced by the engine until the conversation ends, or tell the customer) — BLOCKER for the switch · urgency: high · complexity: M · added 2026-10-09 · W7 dossier review
 - P-044 · Flowers on solo_grandes balloons dip ~3 cm under the floor (10 cm flower radius too small for the anchor rule) — currently whitelisted in the scenario matrix; fix the anchor and bump VERSION_MOTOR · urgency: med · complexity: S · added 2026-10-09 · W2 matrix

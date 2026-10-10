@@ -22,15 +22,15 @@
 | REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o feat/repositorios-fase3 | implementer (opus xhigh) a2903e43 | running (dry-run only; lead applies, ≤US$0.05) |
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
-| W2 property tests + owner-phrases corpus | e7l @59e0594f | built (tests only; 0 violations; 8/8 phrases) | queued for antagonist |
-| W7 switch dossier | main a7014966 (integration test in CI) + DOSSIER-SWITCH.md corrected | P-045 graceful rollback is the BLOCKER before proposing a switch | next: design graceful rollback (opus) |
+| W2 property tests + owner phrases + colour-resolver fix | e7l @6c643ea6 | fixes done; found resolver idempotence bug (fixed) + P-047 name→code mismatches | re-review running |
+| W7 switch dossier | main a7014966 + DOSSIER-SWITCH.md | — | P-045 graceful rollback: e7p feat/guiada-rollback-ordenado, implementer (opus xhigh) running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @1b5b0c79 | A1–A8 fixed (VERSION_MOTOR 1.2.3) | re-review running |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
 | W3 quick wins (PRO-02/03/13) | main | judge re-score after P-040: Bomba collapsed «Bomba · 2 min 46,1 s» 8/10; minor: «Por pieza» lists 14 «Ojo con venas N · 1 globo» rows (group identical decorations) | — |
-| CI green (P-036 + P-029) + manual VPS deploy (D-031) | e7h fix/ci-verde-2 | merging main + deploy.yml → workflow_dispatch (haiku a61d5a41) | then review |
+| CI green + manual VPS deploy (D-031) | e7h | review FIX FIRST: no workspace build in CI, 4 stale plan:test suites, LINT RED on main from c69e307b (set-state-in-effect in useAmbienteVisor/usePerfilesTamano) → haiku a61d5a41 | fixing |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
 
