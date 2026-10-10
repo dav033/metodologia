@@ -6,7 +6,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `b3f66d39` (… eb7d0abd P-049 → e7b7aeaa P-056 → b3f66d39 W4 capabilities) · VPS = b3f66d39 (rule: VPS follows every green main)
+- main = `d9a9a6b5` (… e7b7aeaa P-056 → b3f66d39 W4 capabilities → d9a9a6b5 P-052) · VPS = b3f66d39 (rule: VPS follows every green main)
 - Last status message to owner: 2026-10-10 11:2x (18 h status) · CI green on eb7d0abd · next: 24 h visual report due 16:44
 
 ## Health (cycle 0)
@@ -55,7 +55,7 @@
 | P-055 test-cuerpo-generacion red on main | main 2a3105c6 | PUSHED (stale regex → behavioural, in kontext:test) | e7q free |
 
 | P-056 P-049 follow-ups (title, motor3d:test in CI, body drain, useCorte3d) | e7y fix/corte-seguimiento | implementer (haiku) | PUSHED main e7b7aeaa (review SHIP; minors → P-057) |
-| P-052 colour resolver limits | e7q fix/resolutor-limites | implementer (haiku) | 38bdf09f → review FIX (b regressed: exact card name «Rosa» no longer wins; needless ask on rosa→blanco; property tests blind) → sonnet ff5b5024 (exact name wins; anti-alternation only step 2 on edited specs; generator/oracle cover 011/009, sensitivity proven) → review round 2 |
+| P-052 colour resolver limits | e7q fix/resolutor-limites | implementer (haiku) | 38bdf09f → review FIX (b regressed: exact card name «Rosa» no longer wins; needless ask on rosa→blanco; property tests blind) → sonnet ff5b5024 (exact name wins; anti-alternation only step 2 on edited specs; generator/oracle cover 011/009, sensitivity proven) → review 2 SHIP → PUSHED main d9a9a6b5 (leftovers P-058) | e7q free |
 
 | D-038 single quote everywhere (analysis + one pricer + parity test) | e7y feat/cotizacion-unica | implementer (opus xhigh) | DONE 71b67d4b (8 commits; 3D model kept, Python buys same packs+reserve; card quotes the plan the customer gets; Taller «Precio en la tienda»; 19-BOM shared fixture in CI; ×1.18 = size mix 1.07 × fragmentation 1.07) → opus hostile review; needs VPS deploy after merge |
 | VPS deploy (D-037) | — | lead | DONE 11:56 run 38069265687 DEPLOY_OK e7b7aeaa (first attempt failed: checkout needs the full SHA) |
