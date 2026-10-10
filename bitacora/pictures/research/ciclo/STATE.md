@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **4**
-- main = `c69e307b` (… 21ba148c P-040 → c69e307b W3 batch 2 recipes/profiles/light)
+- main = `a7014966` (… c69e307b W3 batch 2 → a7014966 W7 integration test)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
@@ -23,7 +23,7 @@
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + owner-phrases corpus | e7l @59e0594f | built (tests only; 0 violations; 8/8 phrases) | queued for antagonist |
-| W7 switch dossier prep | e7n @39fae60a | review: test needs CI + stronger asserts; dossier FIX FIRST (rollback breaks open 3D plans → P-045 blocker) → haiku a0ad4967 | fixing |
+| W7 switch dossier | main a7014966 (integration test in CI) + DOSSIER-SWITCH.md corrected | P-045 graceful rollback is the BLOCKER before proposing a switch | next: design graceful rollback (opus) |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @1b5b0c79 | A1–A8 fixed (VERSION_MOTOR 1.2.3) | re-review running |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
