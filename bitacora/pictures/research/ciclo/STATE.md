@@ -66,7 +66,7 @@
 
 | Owner question «qué mejoras veo en producción» | — | workflow wf_35ff8442-93b (4 map + 4 verify + synth) | running |
 
-| REQ-013 Phase 4 (T19–T22, flags off = byte-identical) | e7x feat/catalogo-fase4 | implementer (sonnet xhigh) | launched 13:1x |
+| REQ-013 Phase 4 (T19–T22, flags off = byte-identical) | e7x feat/catalogo-fase4 | implementer (sonnet xhigh) | DONE 89e66b14 (T19–T22; defaults byte-identical; +306 B with CATALOGO_FILTRO_IA) → review round 1; after ship: row catalogo_repos_rag=sempertex,mobiliario,escenografia + env CATALOGO_FILTRO_IA=true (D-039) |
 
 | W4 diagnostics (deterministic detection cache, specific failure classes, ver_escena claim) | e7w feat/entrenamiento-diagnostico | implementer (sonnet xhigh) | DONE ca1a2f24 (cache key = photo hash + detector config; capacidad_faltante → figura 18, mueble/fondo 14, pared 7, arco 2, tamaño 3; ver_escena = model tries native tool under CLI) → squashing |
 
