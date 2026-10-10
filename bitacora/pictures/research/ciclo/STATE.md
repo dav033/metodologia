@@ -2,7 +2,7 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **5**
+- Current cycle: **6**
 - main = `15c74eb7` (… a7014966 W7 integration test → 15c74eb7 scenario matrix, VERSION_MOTOR 1.2.3)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
@@ -24,9 +24,10 @@
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + colour resolver (incl. P-047) | e7l | haiku failed review twice (resolver regression «dorado rosa» → false «No pude») → ESCALATED sonnet xhigh | fixing |
-| W7 switch dossier + P-045 graceful rollback | e7p @bf4a6c62 | built (opus): flag decides only new plans, kill switch with notice; dossier §4 updated | opus review running |
-| W3 build sheet (PRO-01) + 19-idea TRACKER.md | e7q feat/hoja-armado | implementer (haiku) a912b7f0 | running |
-| CUS-04 honesty forced-failure tests | e7r test/honestidad-ediciones | implementer (haiku) a2846bed | running |
+| W7 switch dossier + P-045 graceful rollback | e7p @bf4a6c62 | opus review FIX FIRST: notices never visible (card hides content), kill fails open on Neon error, token chaining, python→3d redo, edit hint → opus a74cf67b | fixing |
+| W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | built; tracker in research/balloonbuilder/TRACKER.md | antagonist running |
+| CUS-04 honesty forced-failure tests | e7r @f981597a | 21 cases, 5 honesty fixes | antagonist running |
+| W4 training harness skeleton (dry-run only) | e7s feat/entrenamiento-arnes | implementer (haiku) ac5546f3 | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
