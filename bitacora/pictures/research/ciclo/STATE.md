@@ -26,7 +26,7 @@
 | W3 quick wins (PRO-02/03/13) | e7b ship/bb-rapidos @b423c64e (squash) | 3 reviews done, A1–A4 fixed | runner verifying → push → product judge on prod (D-030) |
 | CI green (P-036 + P-029) | e7h fix/ci-verde-2 (9 commits) | built (haiku); python-quality unverified (no venv) | HELD: green CI on main auto-deploys the VPS (deploy.yml workflow_run) — today every deploy is 'skipped' because CI is red → owner question (6) |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
-| Feedback rating reload/burst | e7j @99369f0a | fixes + deterministic produced-set | re-review ae7a1b84 running |
+| Feedback rating reload/burst | e7j ship/feedback @51129697 (squash) | SHIP | runner verifying → push |
 
 ## Next items (queue)
 1. Baseline test run (runner) — failing tests list.
