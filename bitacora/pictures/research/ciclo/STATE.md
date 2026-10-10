@@ -10,7 +10,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `8955d367` (… b5f32b06 no solo-guiada → bbb3fe4d e2e smoke → 8955d367 REQ-013 Phase 4) · VPS = 8955d367 (rule: VPS follows every green main); CATALOGO_FILTRO_IA takes effect on the next Vercel build
+- main = `0e47760f` (… bbb3fe4d e2e smoke → 8955d367 REQ-013 Phase 4 → 0e47760f W4 figures) · VPS = 8955d367 (rule: VPS follows every green main); CATALOGO_FILTRO_IA takes effect on the next Vercel build
 - Last status message to owner: 2026-10-10 17:10 (24 h status) · next ≈23:10
 
 ## Health (cycle 0)
@@ -78,7 +78,7 @@
 
 | D-039 remove solo-guiada mode | e7z feat/sin-solo-guiada | implementer (sonnet xhigh) | PUSHED main b5f32b06 (this build also picks up MODULOS_ESCRITURA=abierta and the removed NEXT_PUBLIC_SOLO_GUIADA) | e7z free |
 
-| W4 figures capability (falta_figura 18 photos) | e7w feat/w4-figuras | implementer (sonnet xhigh) | DONE c1bcafef (reader→pumpkins/rizos/balloon flowers/filled numbers; agregar_pieza forma+texto; offline falta_figura 18→14; 2 internal antagonist rounds) → squashing |
+| W4 figures capability (falta_figura 18 photos) | e7w feat/w4-figuras | implementer (sonnet xhigh) | DONE c1bcafef (reader→pumpkins/rizos/balloon flowers/filled numbers; agregar_pieza forma+texto; offline falta_figura 18→14; 2 internal antagonist rounds) → PUSHED main 0e47760f | e7w free |
 
 | E2E smoke per release (npm run e2e:humo) | main bbb3fe4d | PUSHED; run vs :3010 @b5f32b06: 14/14 PASS in 83 s, 0 paid calls — run it on every release | e7z free |
 
