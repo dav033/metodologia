@@ -3,40 +3,32 @@
 _Rewritten (not appended) whenever the state changes. Keep it under ~60 lines._
 
 ## Purpose
-Sempertex balloon-decoration demo (`demo-decoracion`, Next 16 on Vercel + Python `plan.py` on a VPS). The active
-product is the **3D workshop** at `/3d`: a parametric three.js editor (balloon → module → structure → hanging
-decorations) whose shopping list comes from the leaves, plus a FLUX photo render of the 3D view and a Gemini Flash
-agent that builds and edits scenes with tools. Users: Sempertex staff and decorators.
+Sempertex balloon-decoration demo (`demo-decoracion`: Next 16 on Vercel + Python ai-api on a VPS). Two products on one
+engine: the **Taller 3D** (`/3d`, pro tool with a scene AI agent) and the **guided customer chat** (`/asistente`,
+quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
-## Current state (main = `b4433bc9`, 2026-10-09)
-- **Library RAG LIVE** (REQ-002): Neon indexed (3 217 items, 12 567 parts, 6 447 vectors), `TALLER_RAG_ENABLED` on in
-  Vercel; RAG beats in-memory on the gold set (acierto@5 97.5 % vs 87.5 %). Orphan table `taller_taxonomia` (P-030).
-- **Taller AI panel B LIVE** (D-021): per-turn change cards, undo only AI-touched pieces, NDJSON steps + stop, phone
-  sheet. Its first deploy broke the prod build (Date.now in prerender) → hotfix 7245991f, prod Ready (P-033 guard).
-- **Photo → scene** (REQ-001): tilted camera, cluster review, proportion passes, colour-by-stretch — on main.
-- **Voice (REQ-009):** Whisper service LIVE on the VPS (/opt/voz-decoracion); app button + /api/voz/transcribir done
-  on e4y `fb8477b6`, hostile review running; then Vercel env (VOZ_URL/VOZ_SECRETO/VOZ_ENABLED off) + push.
-- **REQ-008 complete events** (e4v, main merged at 4ff9bdd4): re-review BLOCKING (starter discard, variante once,
-  foil letters overlap, ceiling clearance) + 2 post-merge test failures → back with the fix agent.
-- **REQ-010 AI feedback** backend in e4z (dedicated Garage, migration 030 not applied, admin + analysis); S3 client
-  being made shared (`src/lib/almacen/objetos-s3.ts`).
-- **REQ-011 module studio** (new): dúo…sexteto, colours/finishes, clean studio 3D, FLUX render cached by canonical
-  key (migration 031) — implementer in e5m feat/estudio-modulos.
+## Current state (main = `ad6a3710` pending push / `0c7cc72e` pushed, 2026-10-10 ~07:00)
+- **72 h marathon running** (since 2026-10-09 16:44, session 83576a42; owner away all weekend, D-032/D-033).
+  Live state: `research/ciclo/STATE.md`.
+- **CI fully green for the first time** (77b4af27). VPS deploy is manual and gated on green CI (D-031); no VPS deploy
+  this weekend (D-034) — main carries Python quote changes never deployed there.
+- **Local AI = Claude Haiku via Claude Code CLI** (no API key; `.env.local` IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli,
+  IA_LOCAL_ESFUERZO=medium); production stays on Gemini. Dev server :3010 runs origin/main.
+- **Shipped this marathon:** REQ-007 Phase 5 (customer 3D edits) + P-045 graceful rollback; REQ-013 catalogue
+  repositories Phases 1–3 (Neon migrations 033/034 applied; furniture fichas not indexed yet); Taller helium/pump/
+  measures, recipe cards, size profiles, light/lens; Kontext resume (no double charge) + metallic tint; AI rating fix;
+  honesty tests (CUS-04); scenario matrix + property tests; colour resolver rewrite; prerender guard; W4 training harness.
+- **W4 training baseline** (30 owner photos, Haiku CLI, US$0): proporciones 0.446, colores 0.366, IoU 0.525.
 
 ## Active focus
-- **72 h marathon running** (since 2026-10-09 16:44, session 83576a42): live state in `research/ciclo/STATE.md`.
-- Review → push: voice (e4y), events (e4v). Then REQ-010 backend + migration, REQ-011 studio.
+- W4 fixes (capabilities, scale/metric) → re-run the 30 photos; build sheet (PRO-01); switch dossier evidence.
 
 ## Top pending (see PENDING.md)
-- P-022 owner A/B labelling for refine · P-027 burgundy chrome · P-029 CI health · P-030 orphan taxonomy table ·
-  REQ-005 / REQ-006 (room scan: import RoomPlan USDZ suggested by the market study).
+- P-039 library ideas 29–31 need live Python; P-045 follow-ups P-049; P-050/P-051 tool/engine gaps; P-052 resolver
+  limits; owner on Monday: VPS deploy note, REQ-013 Phase 3 Neon apply, D-027…D-034 review, R-36→R-24 wording.
 
 ## Recent decisions (see DECISIONS.md)
-- D-019/D-020: 3D engine canonical via (b); two products; customer edits = AI requests + colour refs/proportions +
-  size proportions. D-021: Taller AI direction B. Market study artifact 5i7KgEc4b9J5aSCmLnfqTb.
+- D-027 helium sphere volume · D-028/D-030 product judge timing · D-029 class-prefixed ids · D-031 manual VPS deploy ·
+  D-032 owner-away defaults · D-033 dev servers allowed · D-034 no VPS deploy this weekend.
 
-## Known issues
-- Default workshop scene + CRUD rule made every new decoration the same arch+columns+garland (fix in progress).
-- Burgundy chrome renders red (no wine Reflex in the table); photo metric biased by sparse small-balloon detections.
-
-_Last updated: 2026-10-09_
+_Last updated: 2026-10-10_
