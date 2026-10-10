@@ -2,7 +2,8 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **17** (14:5x: main b5f32b06 no solo-guiada; VPS chain pending; RAM 4.5 GB)
+- Current cycle: **18** (16:0x: Phase 4 on; Phase 5 launched; RAM 1.4 GB → one launch only)
+- Prev: cycle 17 (14:5x: main b5f32b06 no solo-guiada; VPS chain pending; RAM 4.5 GB)
 - Prev: cycle 16 (14:1x: brief §7 re-read — still missing: e2e browser pass per release, visual baselines, owner-phrases corpus; VPS follows d9a9a6b5 when CI green)
 - Prev: cycle 15 (13:4x: D-039 flags on; inventory workflow wf_2c1a2e9f-d6d running; D-038 opus ad858971; P-052 round 2; Phase 4 at T20; W4 diagnostics)
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
@@ -79,6 +80,8 @@
 | W4 figures capability (falta_figura 18 photos) | e7w feat/w4-figuras | implementer (sonnet xhigh) | launched 14:4x; pass-2 detections frozen into cache (30/30) |
 
 | E2E smoke per release (npm run e2e:humo) | main bbb3fe4d | PUSHED; run vs :3010 @b5f32b06: 14/14 PASS in 83 s, 0 paid calls — run it on every release | e7z free |
+
+| REQ-013 Phase 5 (Taller «Añadir» by repository; catalogo_ui_repositorios row, ON by default per D-039) | e7x feat/catalogo-fase5 | implementer (sonnet xhigh) | launched 16:0x |
 
 ## Next items (queue)
 - W4 next by evidence: figures (falta_figura 18 photos, 12 dominant) and furniture/backdrops (14 photos, 10 dominant); cache the photo reader too; intercept native tool_use in the CLI transport.
