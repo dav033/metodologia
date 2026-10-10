@@ -115,4 +115,5 @@ FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.002/2 · Anthr
 
 ## Metrics
 - Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
+- W4 PASS 2 (b3f66d39, same settings): proporciones 0.482, colores 0.385, IoU all 0.559 / visible 0.541; noise caveat: detection cache never hit, reader/assistant resampled.
 - W4 BASELINE (all 30 photos, main fb956d8c, Haiku CLI medium, 2 turns, US$0, 552 calls): mean proporciones 0.446, colores 0.366, IoU 0.525 (old all-balloons metric); failures: capacidad_faltante 29/30, compilacion 7. Next pass after fixes A+B merge (compare same metric).
