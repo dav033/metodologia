@@ -284,3 +284,60 @@ Next after top 10: CUS-12 full rating form, CUS-10 measurement (M each); PRO-07 
   Acceptance: a chip is shown only if the scene has that structure; an arch scene never shows «Armazón recto»; test over the catalogue.
 
 Out of this section: P-045 (graceful GUIADA_MOTOR rollback, high, blocker for the switch) is already in PENDING and must close before any switch.
+
+## Delta c20 (2026-10-10)
+
+Both PMs, read-only. Sources: this file (c0, c8), STATE c20, CRITICO-c12, MEJORAS-EN-PRODUCCION, JUEZ-2026-10-10, D-035..D-039,
+PENDING, `git log origin/main` since 16:40 (head 0e47760f). Context: beta, everything on for everyone (D-039; guiada_motor=3d and
+taller_hoja_armado=activo since 12:32); D-038 single quote is NOT on main yet (final review). No code or live calls checked this cycle.
+Status key: DONE / PART (partly) / NOT (not started). Changes vs c8 are marked with ">".
+
+### (a) Pro (PRO-xx)
+- PRO-01 build sheet: DONE (888637d0, on for all; judge 8/10). Gaps -> NP-1. PRO-02 helium: DONE. PRO-03 pump: DONE > calibration
+  form shipped ("Calibrar mi bomba"). PRO-09 profiles: DONE. PRO-11 recipe card: DONE. PRO-13 height/width ruler: DONE (e109cc8).
+- PRO-06 PNG/GLB: PART (capture only). PRO-10 paint counter: NOT (unverified). PRO-04 quote from scene, PRO-05 tiers, PRO-07 stock,
+  PRO-08 approval link, PRO-12 colour pins, PRO-14 plano-vs-armado: NOT (c12 flagged PRO-04/05 as the main untouched value).
+### (a) Customer (CUS-xx)
+- CUS-04 honesty: DONE (21 forced cases). CUS-06 arch inflation: DONE by ruling (D-032 Q1: keep 5 quartets/m).
+- CUS-01 3D plan card: PART > live for everyone (D-039); judge could not reach it (Python :8000 was down). CUS-08 voice: PART (code
+  done, flag state unconfirmed). CUS-02 card = quote: PART > count test exists (c12), single pricer waits on D-038 ship.
+- CUS-03 unrepresentable structures: PART (P-051: 4 of 18 fall back; no 18-structure test). CUS-09 edits: PART (Phase 5 live).
+  CUS-11 photo from same geometry: PART (image respects plan; Kontext resume P-038 shipped). CUS-12 rating: PART (reload fix 51129697;
+  judge saw stacked widgets and a double POST). CUS-14 spares: PART (capped spare rule in D-038 branch; no spares = packs - needed test).
+- CUS-05 burgundy 915 (P-027), CUS-07 density sign-off, CUS-10 4G measurement, CUS-13 quote-request fields: NOT.
+- Closed by ruling: D-038 supersedes the CUS-02/14 "which price" question; P-043 was not a bug (NEW-01 void).
+
+### (b) New Pro items (decorator, first things hit in beta)
+- NP-1 · Build sheet completeness · V H · E S · judge: sheet lacks helium litres/ribbon, position of printed balloons, foil digits
+  ("4","0" only in "solo se nombran"). Test: helium-column sheet shows litres/tanks equal to Lista de compra (73,8 L, 1 tank) and one step line per foil digit.
+- NP-2 · Progress + cancel for Taller AI calls · V H · E M · P-054 shows 76-128 s blocking with no abort. Test: any call over 10 s shows
+  progress and Cancel; cancel leaves the scene byte-identical; at 75 s the reply is «No pude: tardé demasiado» and the scene is unchanged.
+- NP-3 · Spend guard for open FLUX modules (MODULOS_ESCRITURA=abierta) · V H · E M · anyone logged in can spend ~US$0.08 a render. Test:
+  per-user hourly cap; the next render answers «No pude: límite por hora» with the wait time; every call writes a ledger row.
+- NP-4 · Taller copy polish from the judge · V M · E S · dev-note wall in library ficha, "1 globos", "Tramo 5: de 83 a 83 cm", "a 5 cm de la
+  base" ambiguity. Test: grep fixtures show none of these strings; pluralisation test over 0/1/n.
+- NP-5 · Organic arch/column build recipe in the sheet (cluster order per band, not only a table) · V M · E M · sheet says "no sirve para
+  armar por capas". Test: organic arch sheet gives per-band cluster steps whose colour totals equal the shopping list.
+- NP-6 · Production price parity after D-038 ships · V H · E S · Taller «Precio en la tienda» (5-8 s "Calculando...") must equal the
+  /asistente quote. Test: 3 ideas priced in Taller and /asistente on prod differ by 0 COP; Taller shows a skeleton, not blank, while loading.
+
+### (b) New Customer items
+- NC-1 · Plan creation survives Python being down · V H · E M · judge: «No pude terminar este plan» twice with :8000 off; now 3D for all.
+  Test: with Python stopped, "Crear mi plan" returns a plan with a plain notice or «No pude:» plus a working Reintentar; prod smoke alerts.
+- NC-2 · Reference relevance by age/occasion/colour · V H · E M · 7-year-old unicorn request returned baby-shower garlands, none lilac.
+  Test: that request returns 0 baby-shower items and at least 2 of 4 with lilac or pink-gold.
+- NC-3 · Server audit of every guided-3D plan and edit · V H · E S · plan_audit_log empty since 10-09 11:15Z (fix e7z in flight; owner rule
+  "no AI decision without server record"). Test: e2e run of 1 plan + 2 edits writes 3 rows with before/after spec.
+- NC-4 · Rollback drill with 3D live for all · V H · E S · P-045 shipped but never timed; D-035 needs both builds to accept `propuesta`. Test:
+  kill on, an open 3D conversation shows «Recalcular mi plan» and keeps its data; kill off restores it; steps timed in the log.
+- NC-5 · One rating widget, one POST per turn · V M · E S · stacked "Calificar" and an empty second POST. Test: 3 turns -> 1 expanded widget,
+  3 POSTs total, rating survives F5.
+- NC-6 · CRUD-by-chat corpus + undo identity (P-042) · V H · E M · owner rule: add/query/change/remove, no silent failure. Test: 12 phrases
+  across the 4 verbs each change the plan or answer «No pude:»; enlarge then shrink returns the stored spec exactly.
+
+### (c) Ranked top 8, next 12 h (score = value 3/2/1 x confidence / effort S1 M2 L4)
+1. NC-3 audit of 3D plans (2.7, in flight) 2. NP-1 sheet completeness (2.4) 3. NP-6 price parity on prod after D-038 (2.4)
+4. NC-4 rollback drill (2.4) 5. NP-4 copy polish (1.8) 6. CUS-03 18-structure test + CUS-14 spares test, one bundle (1.6)
+7. NC-5 rating widget (1.4) 8. NC-1 plan creation without Python (1.35). Next: PRO-04 quote from scene, NP-2, NP-3, NC-6 (0.9 each), NC-2 (0.75).
+Standing rules respected: quality bar CASE-001/002 (NP-5 serves it), «No pude:» (NP-2/3, NC-1/6), CRUD by chat (NC-6), per-product
+decorations (REQ-013 Phase 5 in flight), guided = classic engine quality (NC-1, NP-6, CUS-02).
