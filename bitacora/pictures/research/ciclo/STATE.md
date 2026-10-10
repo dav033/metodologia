@@ -53,13 +53,15 @@
 | P-055 test-cuerpo-generacion red on main | main 2a3105c6 | PUSHED (stale regex → behavioural, in kontext:test) | e7q free |
 
 | P-056 P-049 follow-ups (title, motor3d:test in CI, body drain, useCorte3d) | e7y fix/corte-seguimiento | implementer (haiku) | PUSHED main e7b7aeaa (review SHIP; minors → P-057) |
-| P-052 colour resolver limits | e7q fix/resolutor-limites | implementer (haiku) | 38bdf09f → review FIX (b regressed: exact card name «Rosa» no longer wins; needless ask on rosa→blanco; property tests blind) → sonnet xhigh (D-036) |
+| P-052 colour resolver limits | e7q fix/resolutor-limites | implementer (haiku) | 38bdf09f → review FIX (b regressed: exact card name «Rosa» no longer wins; needless ask on rosa→blanco; property tests blind) → sonnet ff5b5024 (exact name wins; anti-alternation only step 2 on edited specs; generator/oracle cover 011/009, sensitivity proven) → review round 2 |
 
 | D-038 single quote everywhere (analysis + one pricer + parity test) | e7y feat/cotizacion-unica | implementer (opus xhigh) | launched 11:5x |
 | VPS deploy (D-037) | — | lead | DONE 11:56 run 38069265687 DEPLOY_OK e7b7aeaa (first attempt failed: checkout needs the full SHA) |
 | REQ-013 Phase 3 Neon apply | main checkout | general-purpose (sonnet) | DONE 12:1x: mobiliario 28 + escenografia 25 rows/vectors on Neon; sempertex untouched (3217 rows, md5 identical); acierto@5 catalogue 95 % hybrid, sempertex 100 %; US$0.0018 Gemini; CATALOGO_REPOS_RAG still off (Phase 4) |
 
 | Product judge (screenshots) | :3010 | general-purpose (sonnet) | DONE research/juez/JUEZ-2026-10-10.md: build sheet 8/10, Taller cards 8/10, /asistente 5/10 blocked (local :8000 was down → restarted 12:05 via scratchpad/arrancar-ai-api.py); re-judge /asistente |
+
+| Owner question «qué mejoras veo en producción» | — | workflow wf_35ff8442-93b (4 map + 4 verify + synth) | running |
 
 ## Next items (queue)
 - REQ-013 Phase 4 (visibility per surface + AI catalogue filter; gate met: catalogue acierto@5 95 %) — sonnet in e7x when RAM > 2.5 GB (12:2x: 1.4 GB free; 4 agents + :3010 + :8000).
