@@ -72,6 +72,8 @@
 
 | P-054 scene AI time bounds (cheap searches, balloon-weighted budget, maxDuration + deadline) | e7q fix/escena-ia-tiempo | implementer (sonnet xhigh) | launched 14:0x |
 
+| D-039 remove solo-guiada mode | e7z feat/sin-solo-guiada | implementer (sonnet xhigh) | launched 14:0x; Vercel env: MODULOS_ESCRITURA=abierta added, NEXT_PUBLIC_SOLO_GUIADA removed (effective next prod build) |
+
 ## Next items (queue)
 - Brief §7 gaps (critic c12 too): Playwright e2e smoke per release for /3d and /asistente (local Chrome), 20-scene visual baseline, owner-phrases corpus test with mocked model.
 - 24 h visual report due 16:44 → update artifact https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU.
