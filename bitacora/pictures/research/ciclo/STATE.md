@@ -17,14 +17,17 @@
 | W1 REQ-007 Phase 5 | main d05a52b8 | PUSHED (verified: tsc, 11 suites, contracts) | watch Vercel; product judge at switch dossier (D-028) |
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
-| Kontext P-038 + per-metal wording | e7g @243fdbf0 | A1–A8 fixed; silver check: no harm (n=1) | re-review running; VPS Caddy has no response timeout (ok for 115 s) |
-| REQ-013 Phase 2 RAG partition | e7i @cab041e7 | built (opus): filter always on, 42703 fallback, eval unchanged acierto@5 100 %, spend 0 | opus review running; then apply 033+034 to Neon (dry-run first) BEFORE pushing code |
+| Kontext P-038 + per-metal wording | e7g ship/kontext @9f8687a7 (squash) | SHIP after M1–M5 | runner verifying → push |
+| P-040 pump rows per size (judge 6/10) | e7m fix/bomba-por-tamano | implementer (haiku) af605af2 | running |
+| REQ-013 Phase 2 RAG partition | e7i @cab041e7 | opus review SHIP-level; fixing A1–A7 (lock_timeout, rollback note, indexer guards, policy out of engine, real PGlite run) | then dry-run + apply 033+034 → push code |
+| W3 batch 2: recipe cards, size profiles, light/lens presets | e7k @cf8c5ed7 | built (haiku) | antagonist running |
+| W2 property tests + owner-phrases corpus | e7l feat/motor-propiedades | implementer (haiku) a2ca1ace | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
-| W3 quick wins (PRO-02/03/13) | main e7109cc8 | PUSHED (verified) | product judge on prod (D-030) |
+| W3 quick wins (PRO-02/03/13) | main e7109cc8 | product judge on prod: Bomba 6/10 (too many per-cm rows) → P-040 fix next; helium not judged (no helium scene in that template) | fix queued |
 | CI green (P-036 + P-029) | e7h fix/ci-verde-2 (9 commits) | built (haiku); python-quality unverified (no venv) | HELD: green CI on main auto-deploys the VPS (deploy.yml workflow_run) — today every deploy is 'skipped' because CI is red → owner question (6) |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
