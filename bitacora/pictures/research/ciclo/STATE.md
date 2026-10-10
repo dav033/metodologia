@@ -84,7 +84,7 @@
 
 | E2E smoke per release (npm run e2e:humo) | main bbb3fe4d | PUSHED; run vs :3010 @b5f32b06: 14/14 PASS in 83 s, 0 paid calls — run it on every release | e7z free |
 
-| REQ-013 Phase 5 (Taller «Añadir» by repository; catalogo_ui_repositorios row, ON by default per D-039) | e7x feat/catalogo-fase5 | implementer (sonnet xhigh) | launched 16:0x |
+| REQ-013 Phase 5 (Taller «Añadir» by repository; catalogo_ui_repositorios row, ON by default per D-039) | e7x feat/catalogo-fase5 | implementer (sonnet xhigh) | DONE 9fe707ec (T23–T26; route /api/catalogo/repositorios; Todos/Sempertex/Mobiliario/Escenografía; list split; OFF = byte-identical; 17/18 browser harness, 1 todo: phone tap on «Nuevas · ajustables» read as drag) → review round 1 |
 
 | System check fixes: prod /catalogo empty on Vercel (SQLite in /tmp), /3d crash clasificacionDe(undefined id), guided-3D plans not audited server-side (plan_audit_log empty since 10-09 11:15Z), pg SSL log noise | e7z fix/catalogo-vercel | implementer (sonnet xhigh) | launched 17:4x |
 

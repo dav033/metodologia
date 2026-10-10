@@ -84,17 +84,18 @@ Per idea, COP, final model (Python counts and engine counts both bought with it)
 Review case (146 R-5 green 826 + 39 R-24 white 005): first version 200,047; old plan-wide loose pack 168,864 (15 spares, any
 colour); per-balloon without cap 183,110; final 162,862 (12 green spares for 3,311 more with 2×50 + 3×20; the 4 white R-24
 spares need two more ×3 packs, 20,248, above the cap, so they are reported missing). Vector 24: 140,000 (plan-wide) → 110,000 (no ×25 bought for
-2 gold spares; the gap is reported). Customer wording: «incluye repuestos de cada globo (el 8 %, al menos uno, cuando el
-paquete lo permite)»; the real reserve averages about 16 % of a plan.
+2 gold spares; the gap is reported). Customer wording: «incluye repuestos de cada globo (el 8 %, al menos uno) salvo cuando
+comprarlos encarece de más»; the real reserve averages about 16 % of a plan.
 
 ## 4. One source of truth, and why it is the least fragile
 
 - **The pricer is TS `cotizarBom`** (BOM → `planearCompra` → Python `lista-materiales`, in chunks of 256 lines): the 3D plan,
   the 3D card and the Taller (`POST /api/taller/cotizacion`, priced partially when the store lacks a balloon) call it.
 - **Python prices its own plans with the identical rules** (`app/presentaciones.py`, `plan.py` `_buy`). The allowlist still
-  decides products and sizes; packs and reserve are purchase decisions.
-- **Pinned by one shared fixture** (`contracts/domain/v1/golden/cotizacion-unica/`, 40 BOMs: 3 synthetic, the review case,
-  20 seeded random catalogue BOMs, 8 engine and 8 Python ideas): `test-cotizacion-unica` runs every TS surface on it;
+  decides products and sizes; packs and reserve are purchase decisions. A balloon is product + size code + shape + real
+  colour (review 3: LOL 6 and LOL 660 are both 6″ and used to merge in Python).
+- **Pinned by one shared fixture** (`contracts/domain/v1/golden/cotizacion-unica/`, 42 BOMs: 3 synthetic, 3 review cases,
+  20 seeded random catalogue BOMs, 8 engine and 8 Python ideas; plus the reviewers' 6,663-list differential, 0 differences): `test-cotizacion-unica` runs every TS surface on it;
   pytest runs the resolver's purchase path with the allowlist cut to one pack per balloon. The real-Python oracle of
   `test-motor-guiada-precio` agrees on 39 plans.
 - Not a new Python endpoint: it would need a contract, a VPS deploy before the Taller or the 3D path could quote at all,
