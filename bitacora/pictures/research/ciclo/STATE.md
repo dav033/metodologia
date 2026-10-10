@@ -46,7 +46,7 @@
 
 | P-037 prerender guard on server components | main 082a34fb | PUSHED (test-only; lead-reviewed diff; 28 server files clean) | e7y free |
 
-| P-049 kill switch on imagen/armada routes + proactive notice | e7y fix/corte-rutas | implementer (haiku) | launched 09:2x |
+| P-049 kill switch on imagen/armada routes + proactive notice | e7y fix/corte-rutas | implementer (haiku) | aa3c4534; review FIX (banner not marked → double notice; «Recalcular» via chat text depends on the model; copy; untested prod guard) → haiku fixing (1st failure) |
 
 ## Next items (queue)
 - Small-fix bundle (haiku, one worktree) when a slot frees: P-041 salon capacity wording, P-043 ideas 30/31 duplicated price (check), P-046 group identical decorations «× N», «Armazón recto» chip on arch scenes, CUS-02 card=quote test, CUS-03 18-structure test (PM delta c8).
