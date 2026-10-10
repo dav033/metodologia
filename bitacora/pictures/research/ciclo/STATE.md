@@ -2,8 +2,8 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **6**
-- main = `318c5aaa` (… 15c74eb7 scenario matrix → 318c5aaa REQ-013 phase 3 fichas, not indexed)
+- Current cycle: **7**
+- main = `870ca99b` (… 318c5aaa REQ-013 P3 → 870ca99b CI green + manual gated VPS deploy D-031)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
@@ -27,7 +27,7 @@
 | W7 switch dossier + P-045 graceful rollback | e7p @bf4a6c62 | opus review FIX FIRST: notices never visible (card hides content), kill fails open on Neon error, token chaining, python→3d redo, edit hint → opus a74cf67b | fixing |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty forced-failure tests | e7r @f981597a | review SHIP-level but 3 mutations survived → strengthen (haiku a2846bed) | fixing |
-| W4 training harness skeleton (dry-run only) | e7s feat/entrenamiento-arnes | implementer (haiku) ac5546f3 | running |
+| W4 training harness | e7s @ad0b7302 | review FIX FIRST (cap escape, blind spots, Gemini embeddings leak, no audit trail, leaderboard validity) → haiku ac5546f3 | fixing |
 | W5b Claude Code CLI transport (owner has no API key) | e7t feat/ia-local-claude-cli | implementer (opus xhigh) | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
@@ -35,7 +35,7 @@
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
 | W3 quick wins (PRO-02/03/13) | main | judge re-score after P-040: Bomba collapsed «Bomba · 2 min 46,1 s» 8/10; minor: «Por pieza» lists 14 «Ojo con venas N · 1 globo» rows (group identical decorations) | — |
-| CI green + manual VPS deploy (D-031) | e7h | re-review: only re-merge conflict + minors → haiku a61d5a41; then push branch to observe CI | fixing |
+| CI green + manual VPS deploy (D-031) | main 870ca99b | PUSHED; watching the first full CI run | — |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
 
@@ -73,4 +73,4 @@ FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.00/2 · Anthro
 
 ## Metrics
 - Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
-- W4 leaderboard: n/a
+- W4 leaderboard: research/entrenamiento/LEADERBOARD.md (dry-run placeholders only)
