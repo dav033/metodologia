@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **2**
-- main = `e7109cc8` (… 51129697 AI-rating fix → e7109cc8 Taller helium/pump/measures)
+- main = `9f8687a7` (… e7109cc8 Taller helium → 9f8687a7 Kontext resume P-038 + per-metal wording)
 - Last status message to owner: 2026-10-09 16:44 (start)
 
 ## Health (cycle 0)
@@ -17,11 +17,11 @@
 | W1 REQ-007 Phase 5 | main d05a52b8 | PUSHED (verified: tsc, 11 suites, contracts) | watch Vercel; product judge at switch dossier (D-028) |
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
-| Kontext P-038 + per-metal wording | e7g ship/kontext @9f8687a7 (squash) | SHIP after M1–M5 | runner verifying → push |
-| P-040 pump rows per size (judge 6/10) | e7m fix/bomba-por-tamano | implementer (haiku) af605af2 | running |
+| Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
 | REQ-013 Phase 2 RAG partition | e7i ship/repositorios-f2 @8bb21f1c (squash) | SHIP; MIGRATIONS 033+034 APPLIED to Neon 21:29 | runner verifying → push |
-| W3 batch 2: recipe cards, size profiles, light/lens presets | e7k @cf8c5ed7 | built (haiku) | antagonist running |
-| W2 property tests + owner-phrases corpus | e7l feat/motor-propiedades | implementer (haiku) a2ca1ace | running |
+| W3 batch 2: recipe cards, size profiles, light/lens presets | e7k @cf8c5ed7 | review FIX FIRST (neutral light overrides warm rooms, FLUX capture picks up UV/lens, recipe measures ignore tubes, chip mismatch + 78 KB import) → haiku a6dd27f4 | fixing |
+| P-040 pump rows per size | e7m @f7b03429 | built | antagonist running |
+| W2 property tests + owner-phrases corpus | e7l @59e0594f | built (tests only; 0 violations; 8/8 phrases) | queued for antagonist |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
