@@ -24,7 +24,7 @@
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + colour resolver (P-047) | e7l @464d4363 | sonnet redesign done: table audit 0 failures (was 67/90 names wrong), ambiguity asks «dime cuál» | 3rd review (opus) running |
-| W7 switch dossier + P-045 graceful rollback | e7p @af0eedde | A1–A5 fixed (visible banner, last-good kill, origenEn 24 h, python redo stays, hint by plan engine) | opus re-review running |
+| W7 switch dossier + P-045 graceful rollback | e7p @af0eedde | re-review SHIP; A7 (Python redo audit row lost — prod today) + A6 (expired token silent recalc) being fixed | then squash + push |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
 | W4 training harness | e7s | haiku failed review twice (cache shares seco/real ground truth, leaderboard means) → ESCALATED sonnet xhigh | fixing |

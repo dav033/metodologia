@@ -5,6 +5,7 @@ One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 
 ## Open
+- P-049 · Kill switch (guiada_motor_corte) never tells customers who already hold a wrong 3D plan, and the imagen/armada routes ignore it — proactive notice + block those routes under the kill · urgency: med · complexity: M · added 2026-10-10 · P-045 review A9
 - P-048 · Scenario matrix gaps: 18 % of representable pieces fall to noRepresentables («colour doesn't reach the materials list») and skip geometry checks; seed 11 E-00146 arco+arco_no_denso overlap 8 cm (anchoEstimadoCm underestimates arc + flower overhang); seed 3 E-00077 garland sencilla under band · urgency: med · complexity: M · added 2026-10-09 · matrix re-review
 - P-047 · Colour name → code resolution does not round-trip: «dorado metal» resolves to 970 (reflex), «rojo reflex» to 015 while the catalogue code is 915 — audit the resolver against the Sempertex colour table (affects guided edits and Taller AI colour changes) · urgency: high · complexity: S · added 2026-10-09 · W2 property tests
 - P-046 · Shopping list «Por pieza» lists identical decorations one per row («Ojo con venas 1…14 · 1 globo»): group identical pieces (× 14) · urgency: low · complexity: S · added 2026-10-09 · judge
