@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **5**
-- main = `a7014966` (… c69e307b W3 batch 2 → a7014966 W7 integration test)
+- main = `15c74eb7` (… a7014966 W7 integration test → 15c74eb7 scenario matrix, VERSION_MOTOR 1.2.3)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
@@ -19,13 +19,13 @@
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
 | Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
 | REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED | — |
-| REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o feat/repositorios-fase3 | implementer (opus xhigh) a2903e43 | running (dry-run only; lead applies, ≤US$0.05) |
+| REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o @38b1c027 | built (53 fichas; exact vector branch for small repos; apply cost ≈US$0.0025) | opus review running; then lead applies to Neon |
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
-| W2 property tests + owner phrases + colour-resolver fix | e7l @6c643ea6 | fixes done; found resolver idempotence bug (fixed) + P-047 name→code mismatches | re-review running |
-| W7 switch dossier | main a7014966 + DOSSIER-SWITCH.md | — | P-045 graceful rollback: e7p feat/guiada-rollback-ordenado, implementer (opus xhigh) running |
+| W2 property tests + colour resolver (incl. P-047) | e7l | haiku failed review twice (resolver regression «dorado rosa» → false «No pude») → ESCALATED sonnet xhigh | fixing |
+| W7 switch dossier + P-045 graceful rollback | e7p @bf4a6c62 | built (opus): flag decides only new plans, kill switch with notice; dossier §4 updated | opus review running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
-| W2 scenario matrix | e7a ship/escenarios @15c74eb7 (squash) | SHIP-ready | runner verifying → push |
+| W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
@@ -55,6 +55,7 @@
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)
 
 ## Escalations
+- 23:3x property tests/colour resolver: haiku failed hostile review twice → sonnet xhigh.
 - 19:0x Kontext colour exp: haiku failed twice (script bug, timeout) → sonnet xhigh.
 - 18:2x W3 quick wins: haiku failed hostile review twice → sonnet xhigh (rule §5).
 - none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
