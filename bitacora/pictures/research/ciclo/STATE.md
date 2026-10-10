@@ -4,7 +4,7 @@
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **8**
 - main = `0c7cc72e` (… fb956d8c W4 harness → 0c7cc72e colour resolver + property tests)
-- Last status message to owner: 2026-10-09 22:30 (6 h status)
+- Last status message to owner: 2026-10-10 05:35 (12 h status)
 
 ## Health (cycle 0)
 - NOTE: create worktree junctions ONLY with the PowerShell tool (bash quoting created a stray `Downloads$2` junction twice; removed safely).
@@ -31,7 +31,7 @@
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
 | Small-fix bundle | main 55475888 | PUSHED | — |
 | W4 fixes A (recolourable backdrops, otro→catalogue resolver, racimo range, cake on pedestal) | e7w fix/entrenamiento-capacidades | implementer (haiku) a281c578 | running |
-| W4 fixes B (scale anchored on catalogue pieces + lote-02 gate, visibility-aware metric, convergence) | e7x fix/entrenamiento-escala-metrica | implementer (sonnet) a6f0f9c2 | running |
+| W4 fixes B (scale policy, visible metric, convergence) | e7x @e51e511c | built; lote-02 gate passes; tramo-1 re-score: proporciones 0.503 → 0.519 (visible), armed/detected 6.6×→2.1× etc. | antagonist running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
