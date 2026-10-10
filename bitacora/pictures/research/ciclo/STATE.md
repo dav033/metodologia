@@ -7,7 +7,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `b1fdf465` (… b3f66d39 W4 capabilities → d9a9a6b5 P-052 → b1fdf465 W4 diagnostics) · VPS = d9a9a6b5 (rule: VPS follows every green main)
+- main = `b5f32b06` (… d9a9a6b5 P-052 → b1fdf465 W4 diagnostics → b5f32b06 no solo-guiada mode, D-039) · VPS = d9a9a6b5 (rule: VPS follows every green main)
 - Last status message to owner: 2026-10-10 11:2x (18 h status) · CI green on eb7d0abd · next: 24 h visual report due 16:44
 
 ## Health (cycle 0)
@@ -72,7 +72,7 @@
 
 | P-054 scene AI time bounds (cheap searches, balloon-weighted budget, maxDuration + deadline) | e7q fix/escena-ia-tiempo | implementer (sonnet xhigh) | launched 14:0x |
 
-| D-039 remove solo-guiada mode | e7z feat/sin-solo-guiada | implementer (sonnet xhigh) | launched 14:0x; Vercel env: MODULOS_ESCRITURA=abierta added, NEXT_PUBLIC_SOLO_GUIADA removed (effective next prod build) |
+| D-039 remove solo-guiada mode | e7z feat/sin-solo-guiada | implementer (sonnet xhigh) | PUSHED main b5f32b06 (this build also picks up MODULOS_ESCRITURA=abierta and the removed NEXT_PUBLIC_SOLO_GUIADA) | e7z free |
 
 | W4 figures capability (falta_figura 18 photos) | e7w feat/w4-figuras | implementer (sonnet xhigh) | launched 14:4x; pass-2 detections frozen into cache (30/30) |
 
