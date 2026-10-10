@@ -16,8 +16,8 @@
 |---|---|---|---|
 | W1 REQ-007 Phase 5 | main d05a52b8 | PUSHED (verified: tsc, 11 suites, contracts) | watch Vercel; product judge at switch dossier (D-028) |
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
-| REQ-013 Phase 1 | e7e @44f90092 | opus review SHIP-level, fixing A1–A7 (qualified ids, lock churn, allowlist) a1954957 | fixing |
-| Kontext colour fidelity | e7g @17d55508 | DONE: no clear winner (ΔE 9.6–12.9, noise); prompt pinned by golden test; sheet research/kontext-color/hoja-comparativa.png | next: fix prod Kontext 105 s timeout (paid image lost, flux.ts:839) + 'metal-coloured reflections' wording test (US$0.24) |
+| REQ-013 Phase 1 | e7e @870a1c3e | A1–A7 fixed; D-029 recorded | re-review af3c493c running |
+| Kontext colour fidelity + P-038 prod timeout | e7g | sonnet a2b1a2f7: fix 105 s timeout (re-fetch by request_id) + 'metal-tinted reflections' wording (cap +0.24) | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
@@ -38,6 +38,7 @@
 (5) REQ-004 accounts. (2) fixed: no switch, bring dossier. Deploy to main authorized.
 
 ## Decisions taken alone (D-027+)
+- D-029 REQ-013 class-prefixed local ids for Sempertex kinds without catalogue id
 - D-028 flag-gated, customer-invisible work ships after antagonist SHIP + verified merge; the product judge (screenshots) runs on it in the W7 switch dossier
 - Migration numbers: 033 = W5 proveedor anthropic, 034 = REQ-013 repositorio (lead ruling)
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)

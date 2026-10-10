@@ -567,3 +567,6 @@ export type FuentePrecio = { cotizar(lineas: readonly LineaACotizar[]): Promise<
 2. Cakes and pedestals are scenery (`escenografia`), tables/chairs/lounges are furniture (`mobiliario`) — default as
    the brief says.
 3. Rental prices: currency and unit (per event / per day) — default COP per event, only when a list is provided.
+
+
+> Amendment 2026-10-09 (D-029, Phase 1 review): IdLocal := today's id, unchanged, for every entry that already had one (library, FONDOS, generators); for Sempertex kinds without a catalogue id, `<clase>:<código>`. Stored `mueble.id` is always the short form; qualified ids are normalised where scenes are written; a qualified id whose repository does not match is rejected. Locks are per repository (`repositorios/<id>/lock.json`), bumped by `test-catalogo-lock --escribir`; the fingerprint covers what a repository offers, not engine output.
