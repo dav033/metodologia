@@ -25,7 +25,7 @@
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + colour resolver (P-047) | main 0c7cc72e | PUSHED | P-052 follow-ups |
 | W7 switch dossier + P-045 graceful rollback | main 7aafc12c | PUSHED (verified 25 suites, eslint 0) | dossier still missing: judge screenshots, live Python check, rollback drill |
-| W3 build sheet (PRO-01) | e7q | haiku failed 2nd review (one page per piece → 118 pages; tilted columns broken rings) → ESCALATED sonnet xhigh; sonnet DONE 9a51054a (pages p90 32→6, max 119→13; all 1511 pages fit Letter/A4 measured in Chrome) | 3rd hostile review (sonnet xhigh) running |
+| W3 build sheet (PRO-01) | e7q | haiku failed 2nd review (one page per piece → 118 pages; tilted columns broken rings) → ESCALATED sonnet xhigh; sonnet DONE 9a51054a (pages p90 32→6, max 119→13; all 1511 pages fit Letter/A4 measured in Chrome) | 3rd review FIX (blocker: Radix dialog inert inside native showModal → Imprimir dead; helio/estampado merged; handedness mirrored for sobre/ancla; no flag) → ESCALATED opus xhigh |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
 | W4 training harness | main | baseline pass over 30 photos done | re-run after fixes A+B |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
@@ -70,6 +70,7 @@
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)
 
 ## Escalations
+- 08:3x build sheet: sonnet failed 3rd review (dead dialog blocker) → opus xhigh.
 - 06:5x W4 capabilities: haiku failed review twice → sonnet xhigh.
 - 06:xx build sheet: haiku failed review twice → sonnet xhigh.
 - 03:1x colour resolver: sonnet failed review → opus xhigh.
