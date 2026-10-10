@@ -56,7 +56,8 @@
 | P-052 colour resolver limits | e7q fix/resolutor-limites | implementer (haiku) | 38bdf09f (b,c,d; a deferred → P-057) → review running |
 
 | D-038 single quote everywhere (analysis + one pricer + parity test) | e7y feat/cotizacion-unica | implementer (opus xhigh) | launched 11:5x |
-| VPS deploy (D-037) | — | lead | waiting CI green on e7b7aeaa, then workflow_dispatch; then REQ-013 P3 Neon apply (dry run first) and P-039 live Python |
+| VPS deploy (D-037) | — | lead | DONE 11:56 run 38069265687 DEPLOY_OK e7b7aeaa (first attempt failed: checkout needs the full SHA) |
+| REQ-013 Phase 3 Neon apply | main checkout | general-purpose (sonnet) | running (dry runs first, Gemini cap US$0.05/repo) |
 
 ## Next items (queue)
 - Critic c12 (research/ciclo/CRITICO-c12.md) top: (1) time-box W4, ship if strictly better, re-run 30 photos (report both IoU metrics; restart :3010 on origin/main first); (2) screenshot judge sweep → feeds 24 h visual report 16:44; (3) switch dossier incl. rollback drill; (4) W3 money flow PRO-04/05. D-036 stop-rule.
