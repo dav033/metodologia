@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **3**
-- main = `d4b4020d` (… 9f8687a7 Kontext → d4b4020d REQ-013 phase 2 RAG partition)
+- main = `21ba148c` (… d4b4020d REQ-013 P2 → 21ba148c P-040 pump rows per size)
 - Last status message to owner: 2026-10-09 16:44 (start)
 
 ## Health (cycle 0)
@@ -20,7 +20,7 @@
 | Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
 | REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED (migrations 033+034 on Neon) | Phase 3 next (index mobiliario/escenografía, ~US$0.05 embeddings) |
 | W3 batch 2: recipe cards, size profiles, light/lens presets | e7k @cf8c5ed7 | review FIX FIRST (neutral light overrides warm rooms, FLUX capture picks up UV/lens, recipe measures ignore tubes, chip mismatch + 78 KB import) → haiku a6dd27f4 | fixing |
-| P-040 pump rows per size | e7m ship/bomba (squash) | SHIP | verifying → push |
+| P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + owner-phrases corpus | e7l @59e0594f | built (tests only; 0 violations; 8/8 phrases) | queued for antagonist |
 | W7 switch dossier prep (integration test 28 ideas, parity refresh, DOSSIER-SWITCH.md) | e7n feat/dossier-guiada | implementer (haiku) a0ad4967 | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
@@ -34,6 +34,7 @@
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
 
 ## Next items (queue)
+0. REQ-013 Phase 3 (opus), P-041 salon capacity wording, P-037 guard server components, W4 harness skeleton (needs key to run), completeness critic at cycle 4.
 1. Baseline test run (runner) — failing tests list.
 2. W2 scenario matrix generator (`scripts/escenarios/`) — offline, free.
 3. W1 quick fixes: columna_asimetrica density, P-033 prerender guard, feedback rating reload.

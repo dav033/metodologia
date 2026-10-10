@@ -6,9 +6,7 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 
 ## Open
 - P-041 · ajustar_salon reports grid capacity («40 invitados, caben 96») while only 5 tables of 8 are placed — confusing; report the placed capacity · urgency: med · complexity: S · added 2026-10-09 · W2 owner-phrases corpus
-- P-040 · Product judge (prod, Halloween eye arch, 140 balloons): Bomba section 6/10 — ~20 per-cm rows (R-5 at 8, 9, 10, 11, 12 cm…, «T-160 inflado a 3 cm») bury the list. Fix: one row per Sempertex size with cm range + total, section collapsed by default with the total time in its header · urgency: high · complexity: S · added 2026-10-09 · D-030 judge
 - P-039 · Finish library ideas 29/30/31 fix (branch fix/biblioteca-feedback 998a7b18, e7f): re-resolve stored plans with a live Python (precomputar-planes-ideas.ts --verificar needs PYTHON_BACKEND_URL + INTERNAL_HMAC_SECRET; this PC can't reach sslip → run where Python is reachable), write nueva-sempertex-09/10/11.plan.json, regenerate planes-ideas.json, align decoraciones.json cards, regenerate only 29/30/31 goldens · urgency: med · complexity: M · added 2026-10-09 · marathon
-- P-038 · Kontext max production timeout 105 s (flux.ts:839) loses paid images (one took 112.9 s): longer deadline + re-fetch by request_id, with a test · urgency: high · complexity: S · added 2026-10-09 · Kontext colour experiment
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer --aplicar + upsert vectors, rebuild agente-core dist, visual review of Library filters/photo search, turn TALLER_RAG_ENABLED on only after the tuned eval beats today's search · urgency: high · complexity: ? · added 2026-10-08 · REQ-002
 - P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) — implementer fixing 4 BLOCKER/9 MAJOR + orphan-field ledger test; then Claude reference → Gemini parity per photo · urgency: high · complexity: ? · added 2026-10-08
@@ -29,7 +27,6 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 - P-022 · Owner: blind A/B labelling of ~30 refine rounds (photo vs before/after) to set the acceptance threshold; until then automatic refinement stays OFF (calibration 2026-10-08: embeddings can't separate small changes) · urgency: med · complexity: ? · added 2026-10-08
 - P-023 · Confetti colour as data (`confeti: {colores}` in ColorOrganico/GloboDecoracion, ColorLeido.colorConfeti, SKU per confetti product) replacing the viewer heuristic — at integration · urgency: med · complexity: ? · added 2026-10-08
 - P-026 · Pampas foliage (real plumes) — feat/pampas (e4t) in progress; needed by photos 02, 03, 05 · urgency: med · complexity: ? · added 2026-10-09
-- P-033 · Prod-build guard: tsc/tests miss Next 16 prerender errors (Date.now in client render broke deploy of 3bb9b5fc). Add a cheap check (lint rule or test scanning useState initializers / render bodies for Date.now/Math.random) or a pre-push `next build` on a machine with RAM · urgency: med · complexity: ? · medium/S
 - P-034 · BalloonBuilder ideas (artifact SH28k1k2DhKHHDA2JMhApt): owner to pick; quick-win batch (S) pump seconds/dimensions/helium/recipe cards/size profiles/light presets, then build sheet, palette→Sempertex ΔE, 3-tier quote · urgency: med · complexity: ? · medium/M
 - P-035 · ~~ (closed by D-026) · urgency: med · complexity: ? · Pricing policy for the 3D engine BOM: cheapest pack that covers the merma'd quantity (engine) vs Python's bigger packs (26 ideas: engine 0.67× Python in COP) — owner decision before switching GUIADA_MOTOR · high/S
 - P-004 · Viewer: export depth map and limit capture crop margin · urgency: low · complexity: ? · added 2026-10-08 · D-003
@@ -45,6 +42,9 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 _None_
 
 ## Recently closed
+- P-040 · Pump section one row per size, collapsed (judge 6/10 fixed) · closed 2026-10-09 · 21ba148c
+- P-038 · Kontext resume by request_id · closed 2026-10-09 · 9f8687a7
+- P-033 · Prerender guard (partial; server components → P-037) · closed 2026-10-09 · 53502782
 - P-019 · Furniture (37+2 items, agregar_mobiliario) — MERGED into integ/foto-taller b6f58535 (was: fixing review (params lost on placement, Gemini schema size) · urgency: high · complexity: ? · added 2026-10-08
 - P-020 · Materials/ambience feat/realismo-ambiente (e4q) — MERGED into integ/foto-taller d138cf83 (was: fixing review (global env map → per-viewer, Sala.ambiente orphan, confetti colour/cost, squash knot) · urgency: high · complexity: ? · added 2026-10-08
 - P-024 · DONE 2026-10-09 (APP_ORIGINS set on advin-vps, web recreated healthy) — was: VPS: set APP_ORIGINS=https://<public domain> in /etc/demo-decoracion/demo.env and verify with curl -X POST -H "Origin: …" on happie/recomendar (pre-existing 403 risk behind nginx; hand deploy, owner notice required) · urgency: high · complexity: ? · added 2026-10-08
