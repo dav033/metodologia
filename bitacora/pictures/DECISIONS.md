@@ -206,3 +206,7 @@ Decision: those entries get `<clase>:<código>` local ids (`formato:R-12`, `colo
 ## D-030 · Product judge for staff-visible Taller features runs on the production deploy (marathon, taken alone) · 2026-10-09
 Context: the definition of done asks for a product judge ≥ 8 with screenshots before merge, but a local dev server for screenshots competes for RAM on this 15.7 GB PC (and needs a turbopack.root hack per worktree).
 Decision: Taller (staff/pro) features ship after hostile review SHIP + verified merge; the product judge scores them on the production deploy (desktop + phone screenshots via the browser) within the same cycle; a score < 8 opens a fix item immediately, and a broken experience is reverted. Customer-visible chat changes still get the judge before merge, or ship behind a flag.
+
+## D-031 · VPS deploy becomes manual (workflow_dispatch) before CI goes green (marathon, taken alone) · 2026-10-09
+Context: `deploy.yml` deploys main to the VPS (incl. the Python ai-api that prices customer quotes) on every green "Quality checks" run. CI has been red for a long time, so every automatic deploy is "skipped"; the CI-green branch would silently turn automatic VPS deploys on. Owner question (6) went unanswered; the brief says take the reversible default.
+Decision: switch the deploy trigger to `workflow_dispatch` (manual, input `ref`, default main) in the same branch that makes CI green. This keeps today's behaviour (no automatic VPS deploys; the owner deploys by hand at milestones) and is reversible by restoring the `workflow_run` trigger.

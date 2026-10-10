@@ -2,9 +2,9 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **3**
+- Current cycle: **4**
 - main = `21ba148c` (… d4b4020d REQ-013 P2 → 21ba148c P-040 pump rows per size)
-- Last status message to owner: 2026-10-09 16:44 (start)
+- Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
 - RAM: 15.7 GB, ~2.3 GB free after cleanup (commit 24.6/32.7 GB) → max 2 implementers at once until RAM improves.
@@ -30,12 +30,12 @@
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
 | W3 quick wins (PRO-02/03/13) | main e7109cc8 | product judge on prod: Bomba 6/10 (too many per-cm rows) → P-040 fix next; helium not judged (no helium scene in that template) | fix queued |
-| CI green (P-036 + P-029) | e7h fix/ci-verde-2 (9 commits) | built (haiku); python-quality unverified (no venv) | HELD: green CI on main auto-deploys the VPS (deploy.yml workflow_run) — today every deploy is 'skipped' because CI is red → owner question (6) |
+| CI green (P-036 + P-029) + manual VPS deploy (D-031) | e7h fix/ci-verde-2 | merging main + deploy.yml → workflow_dispatch (haiku a61d5a41) | then review |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
 
 ## Next items (queue)
-0. REQ-013 Phase 3 (opus), P-041 salon capacity wording, P-037 guard server components, W4 harness skeleton (needs key to run), completeness critic at cycle 4.
+0. Critic c4 (research/ciclo/CRITICO-c4.md): judge shipped features with screenshots; CUS-04 forced-failure honesty tests; W3 19-idea tracker + build sheet; W2 visual regression; W4 harness dry-run skeleton. Also: REQ-013 Phase 3 (opus), P-041 salon capacity wording, P-037 guard server components, W4 harness skeleton (needs key to run), completeness critic at cycle 4.
 1. Baseline test run (runner) — failing tests list.
 2. W2 scenario matrix generator (`scripts/escenarios/`) — offline, free.
 3. W1 quick fixes: columna_asimetrica density, P-033 prerender guard, feedback rating reload.
@@ -47,6 +47,7 @@
 (5) REQ-004 accounts. (6) asked ~20:05: making CI green turns on automatic VPS deploys (incl. Python ai-api) on every push to main — ok, or make deploy manual (workflow_dispatch) first? (2) fixed: no switch, bring dossier. Deploy to main authorized.
 
 ## Decisions taken alone (D-027+)
+- D-031 VPS deploy manual (workflow_dispatch) before CI goes green (Q6 reversible default)
 - D-030 product judge for staff Taller features on the production deploy
 - D-029 REQ-013 class-prefixed local ids for Sempertex kinds without catalogue id
 - D-028 flag-gated, customer-invisible work ships after antagonist SHIP + verified merge; the product judge (screenshots) runs on it in the W7 switch dossier
