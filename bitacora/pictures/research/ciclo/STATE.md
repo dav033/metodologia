@@ -28,7 +28,7 @@
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
 | W4 training harness | e7s @ad0b7302 | review FIX FIRST (cap escape, blind spots, Gemini embeddings leak, no audit trail, leaderboard validity) → haiku ac5546f3 | fixing |
-| W5b Claude Code CLI transport (owner has no API key) | e7t feat/ia-local-claude-cli | implementer (opus xhigh) | running |
+| W5b Claude Code CLI transport | e7t @81f4afce | built (opus); smoke OK: tool calls round-trip; latency 196 s / 5 s / photo 242 s | opus review running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
