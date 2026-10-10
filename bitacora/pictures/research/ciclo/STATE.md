@@ -17,7 +17,7 @@
 | W1 REQ-007 Phase 5 | main d05a52b8 | PUSHED (verified: tsc, 11 suites, contracts) | watch Vercel; product judge at switch dossier (D-028) |
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
-| Kontext colour fidelity + P-038 prod timeout | e7g | sonnet a2b1a2f7: fix 105 s timeout (re-fetch by request_id) + 'metal-tinted reflections' wording (cap +0.24) | running |
+| Kontext P-038 resume-by-request_id + FRASE_METALICOS (gold stays gold 3/3) | e7g exp/kontext-color | done (sonnet) | antagonist running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
@@ -25,7 +25,8 @@
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
 | W3 quick wins (PRO-02/03/13) | e7b @eefcfc3c | sonnet fixed A1–A6 (helio = flag, 669 balloons/104 ideas marked, piece-local width) | 3rd review ac099fe9 running |
 | CI green (P-036 + P-029) | e7h fix/ci-verde-2 (9 commits) | built (haiku); python-quality unverified (no venv) | HELD: green CI on main auto-deploys the VPS (deploy.yml workflow_run) — today every deploy is 'skipped' because CI is red → owner question (6) |
-| W1 library ideas 29/30/31 + feedback rating reload/burst | e7f fix/biblioteca-feedback | implementer (haiku) a67080a1 | running |
+| W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
+| Feedback rating reload/burst | split to fix/feedback-calificacion | a67080a1 cherry-picking | then review |
 
 ## Next items (queue)
 1. Baseline test run (runner) — failing tests list.
@@ -50,7 +51,7 @@
 - none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
 
 ## Spend (24 h window from start) vs caps
-FLUX 0.88/3 (Kontext exp done: 11 calls, conservative; 5 were 422s probably unbilled) · Gemini 0.00/2 · Anthropic 0.00/8 · total 0.88/13
+FLUX 1.12/3 (Kontext exp complete: 14 calls logged conservatively) · Gemini 0.00/2 · Anthropic 0.00/8 · total 1.12/13
 
 ## Metrics
 - Scenario pass rate (c0): seed1 99.1 % (1315/1327 valid; 673 rejected = 7–8 colours > schema cap 6), seed2 98.8 %; only banda_conteo fails (aro_circular 87 %, pared_densa 92 %). Remaining: aro calibration, band vs tube cross-section, classic columns over band, short garlands, lighting/furniture not varied.
