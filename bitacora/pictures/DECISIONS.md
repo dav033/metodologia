@@ -229,3 +229,11 @@ Decision: any new persisted field on a customer widget/session is added as `.opt
 ## D-036 · Review stop-rule and model start for M tasks (marathon, taken alone) · 2026-10-10
 Context: critic c12 — W4 capabilities spent ~4.5 h over 6 hostile rounds; rounds 5–6 found bounds main already has; build sheet and P-049 took 7 rounds on flag-gated code; ~8 of 11 M tasks escalated from haiku.
 Decision: at most 3 hostile rounds per branch; from round 4 only correctness, pricing, security or data-loss findings block, the rest go to PENDING. M-size tasks start on sonnet xhigh (S stays haiku). W4 capabilities ships after the current opus round if it is strictly better than main (lote-02 not worse, budget holes closed), then the 30-photo re-run reports old and new IoU. Reversible: process rule.
+
+## D-037 · Owner: not real production — VPS deploy approved, go hard (owner) · 2026-10-10
+Context: owner, 11:4x: «La app no está en producción real así que dale duro» · «Aprobado» (VPS deploy, answering the D-034 question).
+Decision: D-034 is lifted. Dispatch the VPS deploy on the first green main, then the REQ-013 Phase 3 Neon apply (dry run first), the live Python checks (P-039 ideas 29–31, dossier price check). Customer-visibility caution is lowered; hard rules (secrets, spend caps, FLUX base only, no Gemini images) stay.
+
+## D-038 · One quote everywhere — pick the best model (owner) · 2026-10-10
+Context: the guided 3D engine quotes ≈0.70× Python for the same idea; the dossier also notes an unexplained ×1.18 effect. Owner: «La cotización tiene que ser la misma en todos lados escoge la mejor».
+Decision: a single pricing source of truth for classic, guided-python and guided-3D (same plan → same price, to the cent). An opus analysis compares both models against the Sempertex price list and real build counts, picks the more correct one, and every surface calls it; a cross-surface parity test pins it.

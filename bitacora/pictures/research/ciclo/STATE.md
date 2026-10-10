@@ -72,6 +72,10 @@
 (5) REQ-004 accounts. (6) asked ~20:05: making CI green turns on automatic VPS deploys (incl. Python ai-api) on every push to main — ok, or make deploy manual (workflow_dispatch) first? (2) fixed: no switch, bring dossier. Deploy to main authorized.
 
 ## Decisions taken alone (D-027+)
+- D-038 (owner) one quote everywhere, pick the best model
+- D-037 (owner) not real production: VPS deploy approved, go hard (lifts D-034)
+- D-036 review stop-rule; M tasks start on sonnet
+- D-035 reader-first persisted fields
 - D-034 no VPS deploy this weekend (Python quote changes pending owner); REQ-013 P3 Neon apply waits for it
 - D-033 (owner) dev servers :3010/:8000 may be restarted this weekend
 - D-032 owner away all weekend (full control): Q1 keep 5 quartets/m, Q4 BB features pro-only (customer ones flag-off), Q5 shared password; Q3 → CLI transport
