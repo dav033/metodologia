@@ -5,6 +5,7 @@ One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 
 ## Open
+- P-038 · Kontext max production timeout 105 s (flux.ts:839) loses paid images (one took 112.9 s): longer deadline + re-fetch by request_id, with a test · urgency: high · complexity: S · added 2026-10-09 · Kontext colour experiment
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer --aplicar + upsert vectors, rebuild agente-core dist, visual review of Library filters/photo search, turn TALLER_RAG_ENABLED on only after the tuned eval beats today's search · urgency: high · complexity: ? · added 2026-10-08 · REQ-002
 - P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) — implementer fixing 4 BLOCKER/9 MAJOR + orphan-field ledger test; then Claude reference → Gemini parity per photo · urgency: high · complexity: ? · added 2026-10-08

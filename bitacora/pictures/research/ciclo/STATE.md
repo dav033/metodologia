@@ -17,7 +17,7 @@
 | W1 REQ-007 Phase 5 | main d05a52b8 | PUSHED (verified: tsc, 11 suites, contracts) | watch Vercel; product judge at switch dossier (D-028) |
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
 | REQ-013 Phase 1 | e7e @44f90092 | opus review SHIP-level, fixing A1–A7 (qualified ids, lock churn, allowlist) a1954957 | fixing |
-| Kontext colour fidelity (cap US$0.96 total) | e7g @7fe5e4ce | haiku failed twice → ESCALATED sonnet xhigh | running |
+| Kontext colour fidelity | e7g @17d55508 | DONE: no clear winner (ΔE 9.6–12.9, noise); prompt pinned by golden test; sheet research/kontext-color/hoja-comparativa.png | next: fix prod Kontext 105 s timeout (paid image lost, flux.ts:839) + 'metal-coloured reflections' wording test (US$0.24) |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
@@ -48,7 +48,7 @@
 - none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
 
 ## Spend (24 h window from start) vs caps
-FLUX 0.48/3 (Kontext exp: 6 failed calls — script bug ×5, timeout ×1; cap 0.96) · Gemini 0.00/2 · Anthropic 0.00/8 · total 0.40/13
+FLUX 0.88/3 (Kontext exp done: 11 calls, conservative; 5 were 422s probably unbilled) · Gemini 0.00/2 · Anthropic 0.00/8 · total 0.88/13
 
 ## Metrics
 - Scenario pass rate (c0): seed1 99.1 % (1315/1327 valid; 673 rejected = 7–8 colours > schema cap 6), seed2 98.8 %; only banda_conteo fails (aro_circular 87 %, pared_densa 92 %). Remaining: aro calibration, band vs tube cross-section, classic columns over band, short garlands, lighting/furniture not varied.
