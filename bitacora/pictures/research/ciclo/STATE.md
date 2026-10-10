@@ -77,7 +77,7 @@
 
 | D-039 remove solo-guiada mode | e7z feat/sin-solo-guiada | implementer (sonnet xhigh) | PUSHED main b5f32b06 (this build also picks up MODULOS_ESCRITURA=abierta and the removed NEXT_PUBLIC_SOLO_GUIADA) | e7z free |
 
-| W4 figures capability (falta_figura 18 photos) | e7w feat/w4-figuras | implementer (sonnet xhigh) | launched 14:4x; pass-2 detections frozen into cache (30/30) |
+| W4 figures capability (falta_figura 18 photos) | e7w feat/w4-figuras | implementer (sonnet xhigh) | DONE c1bcafef (reader→pumpkins/rizos/balloon flowers/filled numbers; agregar_pieza forma+texto; offline falta_figura 18→14; 2 internal antagonist rounds) → squashing |
 
 | E2E smoke per release (npm run e2e:humo) | main bbb3fe4d | PUSHED; run vs :3010 @b5f32b06: 14/14 PASS in 83 s, 0 paid calls — run it on every release | e7z free |
 

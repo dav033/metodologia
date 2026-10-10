@@ -25,12 +25,12 @@ chat alone (card, Python plan, 3D plan), and the classic chat priced the same BO
 four factors whose product is exactly the ratio: **count**, **size** (reference unit price per size), **colour/finish**
 (consumption value ÷ size reference) and **packaging** (purchase cost ÷ consumption value: what closed packs cost above
 the balloons used). Over the 24 comparable ideas the dossier's **1.18 = count 1.01 × size 1.07 × colour 1.02 × packaging
-1.07**; under the final model of §3 it is 1.19 (packaging 1.08).
+1.07**; under the final model of §3 it is 1.17 with the same factors.
 - **Size mix (+7 %)**: the engine puts more balloons in R-18/R-24 (04: 1.32; 13: 1.30; 30: 1.30; 31: 1.50).
-- **Fragmentation (+7–8 %)**: the engine spreads colours over more sizes, 198 → 263 size × colour lines; each extra line
+- **Fragmentation (+7 %)**: the engine spreads colours over more sizes, 198 → 263 size × colour lines; each extra line
   opens a closed pack that is mostly unused (11: 11 → 23 lines, packaging 1.79; 18: 1.50; 30: 1.41; 31: 1.34).
 - Premium colours add 2 %; the total count is at parity. Separately, **stored Python ÷ the same counts under the final
-  model = 1.58×** (26 ideas): that is the 50-pack allowlist, a pricing defect, not a count.
+  model = 1.59×** (26 ideas): that is the 50-pack allowlist, a pricing defect, not a count.
 
 Per idea, COP, final model (Python counts and engine counts both bought with it):
 
@@ -48,7 +48,7 @@ Per idea, COP, final model (Python counts and engine counts both bought with it)
 | 10 | 172,299 | 84,948 | 132,093 | 1.55 | 1.08 | 1.25 | 1.01 | 1.15 | 15 → 24 |
 | 11 | 109,852 | 51,476 | 93,663 | 1.82 | 0.94 | 1.08 | 1.00 | 1.79 | 11 → 23 |
 | 12 | 128,660 | 95,739 | 151,131 | 1.58 | 1.17 | 1.17 | 1.06 | 1.09 | 8 → 12 |
-| 13 | 88,296 | 73,147 | 133,205 | 1.82 | 1.09 | 1.30 | 0.98 | 1.31 | 6 → 9 |
+| 13 | 88,296 | 73,147 | 115,501 | 1.58 | 1.09 | 1.30 | 0.98 | 1.13 | 6 → 9 |
 | 14 | 52,148 | 46,058 | 34,000 | 0.74 | 0.77 | 1.00 | 1.00 | 0.96 | 2 → 2 |
 | 15 | 112,782 | 80,180 | 110,792 | 1.38 | 1.08 | 1.18 | 1.04 | 1.05 | 9 → 14 |
 | 16 | 105,583 | 78,019 | 80,385 | 1.03 | 0.98 | 0.97 | 0.95 | 1.14 | 8 → 11 |
@@ -59,34 +59,38 @@ Per idea, COP, final model (Python counts and engine counts both bought with it)
 | 22 | 115,802 | 61,414 | 67,820 | 1.10 | 1.07 | 0.87 | 1.07 | 1.11 | 11 → 14 |
 | 24 | 26,074 | 17,000 | 17,000 | 1.00 | 1.02 | 1.00 | 1.00 | 0.98 | 1 → 1 |
 | 25 | 51,027 | — multicolor not crossed | 22,323 | — | — | — | — | — | — → 3 |
-| 27 | 62,247 | 73,519 | — partial hoop | — | — | — | — | — | 5 → — |
+| 27 | 62,247 | 63,395 | — partial hoop | — | — | — | — | — | 5 → — |
 | 28 | 148,746 | 108,581 | 66,834 | 0.62 | 1.12 | 0.63 | 0.95 | 0.92 | 12 → 9 |
 | 29 | 13,037 | 11,889 | 11,889 | 1.00 | 1.07 | 1.00 | 1.00 | 0.94 | 1 → 1 |
 | 30 | 57,603 | 23,396 | 51,554 | 2.20 | 1.20 | 1.30 | 1.00 | 1.41 | 6 → 11 |
 | 31 | 57,603 | 25,462 | 71,558 | 2.81 | 1.40 | 1.50 | 1.00 | 1.34 | 6 → 14 |
 
-## 3. The model chosen: standard presentations, each balloon with its own reserve (after the review)
+## 3. The model chosen: standard presentations, each balloon with its own spares (after two reviews)
 
 1. **One need per product and size for the whole plan** (pieces consolidated).
 2. **Right presentations:** every closed pack the store sells of that same balloon (×3 … ×80), never a subset chosen by a
    search ranking or a curated list.
 3. **Reserve per balloon (size and colour):** `ceil(n × 0.08)` of that same balloon: a decorator who pops a red 12″ needs
    a red 12″. The first version kept one plan-wide reserve, which could be all 5″ whites for a red arch.
-4. **No overbuying:** the cheapest combination that covers `n + reserve` in one search (`comprarGlobo` / `comprar_globo`).
-   It is never dearer than covering the design and adding loose packs for that balloon's reserve, nor than `mas_barato`
-   (2,000 random catalogue BOMs, 0 exceptions; `mas_barato` is dearer in 6 of 26 ideas, never cheaper). Every pack bought
-   carries design balloons (each variant gets one first), so no line is skipped and no pack is reserve-only.
+4. **No overbuying:** the cheapest combination that covers `n + reserve` in one search (`comprarGlobo` / `comprar_globo`),
+   bought only if it costs over the design alone at most `max(10,000 COP, 10 % of that balloon's design)`; otherwise the
+   design alone, its own pack leftover as spares, and the gap reported (`uncovered_waste_reserve` / `sinCubrir`). Never
+   dearer than design plus loose packs, nor than `mas_barato` (2,000 random catalogue BOMs, 0 exceptions; 442 balloons
+   with incomplete spares; `mas_barato` is dearer in 6 of 26 ideas, never cheaper). Every pack bought carries design
+   balloons (each variant gets one first), so no line is skipped and no pack is reserve-only.
 5. **Price:** packs × catalogue pack price, integer COP, IVA included; Python owns prices (`lista-materiales`, resolver).
 6. **Extras:** the online store sells no helium; every quote says "no incluye helio ni montaje"; the Taller keeps its
    litres/tanks estimate. Labour and margin stay in the professional quote.
 Review case (146 R-5 green 826 + 39 R-24 white 005): first version 200,047; old plan-wide loose pack 168,864 (15 spares, any
-colour); final 183,110 (12 green R-5 + 4 white R-24 spares). Cost of the rule: with large packs one colour's spares can
-cost a whole pack (vector 24: 140,000 → 220,000, a second ×25 R-24 gold for 2 spares).
+colour); per-balloon without cap 183,110; final 162,862 (12 green spares for 3,311 more with 2×50 + 3×20; the 4 white R-24
+spares need two more ×3 packs, 20,248, above the cap, so they are reported missing). Vector 24: 140,000 (plan-wide) → 110,000 (no ×25 bought for
+2 gold spares; the gap is reported). Customer wording: «incluye repuestos de cada globo (el 8 %, al menos uno, cuando el
+paquete lo permite)»; the real reserve averages about 16 % of a plan.
 
 ## 4. One source of truth, and why it is the least fragile
 
-- **The pricer is TS `cotizarBom`** (BOM → `planearCompra` → Python `lista-materiales`): the 3D plan, the 3D card and the
-  Taller (`POST /api/taller/cotizacion`, priced partially when the store lacks a balloon) call it with their BOM.
+- **The pricer is TS `cotizarBom`** (BOM → `planearCompra` → Python `lista-materiales`, in chunks of 256 lines): the 3D plan,
+  the 3D card and the Taller (`POST /api/taller/cotizacion`, priced partially when the store lacks a balloon) call it.
 - **Python prices its own plans with the identical rules** (`app/presentaciones.py`, `plan.py` `_buy`). The allowlist still
   decides products and sizes; packs and reserve are purchase decisions.
 - **Pinned by one shared fixture** (`contracts/domain/v1/golden/cotizacion-unica/`, 40 BOMs: 3 synthetic, the review case,
@@ -111,4 +115,5 @@ cost a whole pack (vector 24: 140,000 → 220,000, a second ×25 R-24 gold for 2
 | 28 | 148,746 → 108,581 | 172,179 → 108,581 | 66,834 → 66,834 | none → 66,834 |
 
 "Before" for the classic chat is the stored-allowlist price (live it varied with the search). Python "after" needs the VPS.
-Other 3D movements from the per-balloon reserve: 02 +6 %, 07 +7 %, 12 +6 %, 13 +34 %, 17 +5 %, 30 +4 %.
+The spare cap (second review) leaves these five unchanged. Other 3D movements against the first version: 02 +6 %,
+07 +7 %, 12 +6 %, 13 +16 % (99,581 → 115,501), 17 +5 %, 30 +4 %.
