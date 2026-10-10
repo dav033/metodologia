@@ -2,7 +2,8 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **19** (17:10: 6 h status sent; figures verifying; D-038 capped rule; P-054 round 2; Phase 5)
+- Current cycle: **20** (17:5x: brief re-read due (every 4 cycles) — hard rules unchanged except owner D-037/D-039; PM delta c20 running; VPS 0e47760f)
+- Prev: cycle 19 (17:10: 6 h status sent; figures verifying; D-038 capped rule; P-054 round 2; Phase 5)
 - Prev: cycle 18 (16:0x: Phase 4 on; Phase 5 launched; RAM 1.4 GB → one launch only)
 - Prev: cycle 17 (14:5x: main b5f32b06 no solo-guiada; VPS chain pending; RAM 4.5 GB)
 - Prev: cycle 16 (14:1x: brief §7 re-read — still missing: e2e browser pass per release, visual baselines, owner-phrases corpus; VPS follows d9a9a6b5 when CI green)
