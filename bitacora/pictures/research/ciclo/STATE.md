@@ -4,7 +4,7 @@
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **12** (11:2x: CI green eb7d0abd; completeness critic c12 running; e7w opus round 6, e7y P-056 in review, e7q P-052 haiku)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `e7b7aeaa` (… b2ee1e39 CI hotfix → eb7d0abd P-049 → e7b7aeaa P-056)
+- main = `b3f66d39` (… eb7d0abd P-049 → e7b7aeaa P-056 → b3f66d39 W4 capabilities) · VPS = e7b7aeaa
 - Last status message to owner: 2026-10-10 11:2x (18 h status) · CI green on eb7d0abd · next: 24 h visual report due 16:44
 
 ## Health (cycle 0)
@@ -32,7 +32,7 @@
 | W4 training harness | main | baseline pass over 30 photos done | re-run after fixes A+B |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
 | Small-fix bundle | main 55475888 | PUSHED | — |
-| W4 fixes A (capabilities) | e7w | haiku failed 2nd review (otro resolver 4 false positives of 9, placement in front of structures, volume budget only on one path) → ESCALATED sonnet xhigh; sonnet DONE 78bdb5e7 (0/6 old false positives; lote-02 identical; goldens 0 diffs; 10 M cm³ budget → arch 500×320 thickness 120→105 cm) | 3rd review FIX (blocker: ajustar_tamanos densidad bypasses volume budget → 22.9 M cm³/18 s; lentejuelas/tapete false positives; duplicate otro dropped; guided column range widened = pricing surface) → ESCALATED opus xhigh; opus DONE 99837810 (13 M budget on every ajustar path, guided range kept, lote-02 byte-identical) → 4th review FIX (A1: budget metric changes after comoOrganico → converted arch + cambiar_pieza 160 = 22.9 M) → opus 628a1e9b (one body metric, 8 M cm³, length cap 2000 cm; arch 500×320 cap 133 cm; lote-02 identical) → 5th review FIX (A1 stretch estimate) → opus fa0af65c → squashed ship/capacidades b3f66d39 (D-036: no 7th review), verifying |
+| W4 fixes A (capabilities) | e7w | haiku failed 2nd review (otro resolver 4 false positives of 9, placement in front of structures, volume budget only on one path) → ESCALATED sonnet xhigh; sonnet DONE 78bdb5e7 (0/6 old false positives; lote-02 identical; goldens 0 diffs; 10 M cm³ budget → arch 500×320 thickness 120→105 cm) | 3rd review FIX (blocker: ajustar_tamanos densidad bypasses volume budget → 22.9 M cm³/18 s; lentejuelas/tapete false positives; duplicate otro dropped; guided column range widened = pricing surface) → ESCALATED opus xhigh; opus DONE 99837810 (13 M budget on every ajustar path, guided range kept, lote-02 byte-identical) → 4th review FIX (A1: budget metric changes after comoOrganico → converted arch + cambiar_pieza 160 = 22.9 M) → opus 628a1e9b (one body metric, 8 M cm³, length cap 2000 cm; arch 500×320 cap 133 cm; lote-02 identical) → 5th review FIX (A1 stretch estimate) → opus fa0af65c → PUSHED main b3f66d39 (verified 18 suites incl. kontext/motor3d/dorado/lectura-foto) | 30-photo re-run running |
 | W4 fixes B (scale policy, visible metric, convergence) | main ad6a3710 | PUSHED 07:0x (verified tsc, 11 suites, boundary, eslint changed files) | re-run 30 photos after A |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
@@ -58,6 +58,8 @@
 | D-038 single quote everywhere (analysis + one pricer + parity test) | e7y feat/cotizacion-unica | implementer (opus xhigh) | launched 11:5x |
 | VPS deploy (D-037) | — | lead | DONE 11:56 run 38069265687 DEPLOY_OK e7b7aeaa (first attempt failed: checkout needs the full SHA) |
 | REQ-013 Phase 3 Neon apply | main checkout | general-purpose (sonnet) | running (dry runs first, Gemini cap US$0.05/repo) |
+
+| Product judge (screenshots) | :3010 | general-purpose (sonnet) | DONE research/juez/JUEZ-2026-10-10.md: build sheet 8/10, Taller cards 8/10, /asistente 5/10 blocked (local :8000 was down → restarted 12:05 via scratchpad/arrancar-ai-api.py); re-judge /asistente |
 
 ## Next items (queue)
 - Critic c12 (research/ciclo/CRITICO-c12.md) top: (1) time-box W4, ship if strictly better, re-run 30 photos (report both IoU metrics; restart :3010 on origin/main first); (2) screenshot judge sweep → feeds 24 h visual report 16:44; (3) switch dossier incl. rollback drill; (4) W3 money flow PRO-04/05. D-036 stop-rule.
