@@ -57,7 +57,7 @@
 
 | D-038 single quote everywhere (analysis + one pricer + parity test) | e7y feat/cotizacion-unica | implementer (opus xhigh) | launched 11:5x |
 | VPS deploy (D-037) | — | lead | DONE 11:56 run 38069265687 DEPLOY_OK e7b7aeaa (first attempt failed: checkout needs the full SHA) |
-| REQ-013 Phase 3 Neon apply | main checkout | general-purpose (sonnet) | running (dry runs first, Gemini cap US$0.05/repo) |
+| REQ-013 Phase 3 Neon apply | main checkout | general-purpose (sonnet) | DONE 12:1x: mobiliario 28 + escenografia 25 rows/vectors on Neon; sempertex untouched (3217 rows, md5 identical); acierto@5 catalogue 95 % hybrid, sempertex 100 %; US$0.0018 Gemini; CATALOGO_REPOS_RAG still off (Phase 4) |
 
 | Product judge (screenshots) | :3010 | general-purpose (sonnet) | DONE research/juez/JUEZ-2026-10-10.md: build sheet 8/10, Taller cards 8/10, /asistente 5/10 blocked (local :8000 was down → restarted 12:05 via scratchpad/arrancar-ai-api.py); re-judge /asistente |
 
@@ -106,7 +106,7 @@
 - none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
 
 ## Spend (24 h window from start) vs caps
-FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.00/2 · Anthropic 0.00/8 · total 1.28/13
+FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.002/2 · Anthropic 0.00/8 · total 1.28/13 (+US$0.002 Gemini)
 
 ## Metrics
 - Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
