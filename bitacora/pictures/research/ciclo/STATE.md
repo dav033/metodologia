@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **3**
-- main = `9f8687a7` (… e7109cc8 Taller helium → 9f8687a7 Kontext resume P-038 + per-metal wording)
+- main = `d4b4020d` (… 9f8687a7 Kontext → d4b4020d REQ-013 phase 2 RAG partition)
 - Last status message to owner: 2026-10-09 16:44 (start)
 
 ## Health (cycle 0)
@@ -18,9 +18,9 @@
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
 | Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
-| REQ-013 Phase 2 RAG partition | e7i ship/repositorios-f2 @d4b4020d (rebased on 9f8687a7) | runner PASS; quick re-check after rebase | → push |
+| REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED (migrations 033+034 on Neon) | Phase 3 next (index mobiliario/escenografía, ~US$0.05 embeddings) |
 | W3 batch 2: recipe cards, size profiles, light/lens presets | e7k @cf8c5ed7 | review FIX FIRST (neutral light overrides warm rooms, FLUX capture picks up UV/lens, recipe measures ignore tubes, chip mismatch + 78 KB import) → haiku a6dd27f4 | fixing |
-| P-040 pump rows per size | e7m @f7b03429 | built | antagonist running |
+| P-040 pump rows per size | e7m ship/bomba (squash) | SHIP | verifying → push |
 | W2 property tests + owner-phrases corpus | e7l @59e0594f | built (tests only; 0 violations; 8/8 phrases) | queued for antagonist |
 | W7 switch dossier prep (integration test 28 ideas, parity refresh, DOSSIER-SWITCH.md) | e7n feat/dossier-guiada | implementer (haiku) a0ad4967 | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
