@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **9** (07:2x: brief re-read after compaction; ad6a3710 Vercel Ready; 3 worktrees busy e7w/e7q/e7y → no new launches)
-- main = `390ac0a2` (… ad6a3710 W4 scale policy + visible metric → 390ac0a2 P-050 error message)
+- main = `082a34fb` (… ad6a3710 W4 scale → 390ac0a2 P-050 → 082a34fb P-037 server prerender guard)
 - Last status message to owner: 2026-10-10 05:35 (12 h status)
 
 ## Health (cycle 0)
@@ -44,7 +44,7 @@
 
 | P-050 ajustar_tamanos formats | main 390ac0a2 | PUSHED (antagonist SHIP; premise not reproduced, only error message) | e7y free |
 
-| P-037 prerender guard on server components | e7y fix/guardia-servidor | implementer (haiku) | launched 09:0x |
+| P-037 prerender guard on server components | main 082a34fb | PUSHED (test-only; lead-reviewed diff; 28 server files clean) | e7y free |
 
 ## Next items (queue)
 - Small-fix bundle (haiku, one worktree) when a slot frees: P-041 salon capacity wording, P-043 ideas 30/31 duplicated price (check), P-046 group identical decorations «× N», «Armazón recto» chip on arch scenes, CUS-02 card=quote test, CUS-03 18-structure test (PM delta c8).
