@@ -2,7 +2,8 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **13** (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
+- Current cycle: **14** (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
+- Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
 - main = `b3f66d39` (… eb7d0abd P-049 → e7b7aeaa P-056 → b3f66d39 W4 capabilities) · VPS = e7b7aeaa
 - Last status message to owner: 2026-10-10 11:2x (18 h status) · CI green on eb7d0abd · next: 24 h visual report due 16:44
@@ -63,8 +64,9 @@
 
 | Owner question «qué mejoras veo en producción» | — | workflow wf_35ff8442-93b (4 map + 4 verify + synth) | running |
 
+| REQ-013 Phase 4 (T19–T22, flags off = byte-identical) | e7x feat/catalogo-fase4 | implementer (sonnet xhigh) | launched 13:1x |
+
 ## Next items (queue)
-- REQ-013 Phase 4 (visibility per surface + AI catalogue filter; gate met: catalogue acierto@5 95 %) — sonnet in e7x when RAM > 2.5 GB (12:2x: 1.4 GB free; 4 agents + :3010 + :8000).
 - Critic c12 (research/ciclo/CRITICO-c12.md) top: (1) time-box W4, ship if strictly better, re-run 30 photos (report both IoU metrics; restart :3010 on origin/main first); (2) screenshot judge sweep → feeds 24 h visual report 16:44; (3) switch dossier incl. rollback drill; (4) W3 money flow PRO-04/05. D-036 stop-rule.
 - Owner report artifact: https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU (update at 24 h).
 - Small-fix bundle (haiku, one worktree) when a slot frees: P-041 salon capacity wording, P-043 ideas 30/31 duplicated price (check), P-046 group identical decorations «× N», «Armazón recto» chip on arch scenes, CUS-02 card=quote test, CUS-03 18-structure test (PM delta c8).
