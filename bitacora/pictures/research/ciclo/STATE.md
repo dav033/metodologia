@@ -16,14 +16,15 @@
 |---|---|---|---|
 | W1 REQ-007 Phase 5 | main d05a52b8 | PUSHED (verified: tsc, 11 suites, contracts) | watch Vercel; product judge at switch dossier (D-028) |
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
-| REQ-013 Phase 1 | e7e @870a1c3e | A1–A7 fixed; D-029 recorded | re-review af3c493c running |
+| REQ-013 Phase 1 | e7e ship/repositorios-f1 @6a760e21 (squash) | SHIP | runner verifying → push |
 | Kontext colour fidelity + P-038 prod timeout | e7g | sonnet a2b1a2f7: fix 105 s timeout (re-fetch by request_id) + 'metal-tinted reflections' wording (cap +0.24) | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
-| W3 quick wins (PRO-02/03/13) | e7b @fd0b811d | 2nd review FIX FIRST (partes test, 28+ unmarked helium, rotated width) → ESCALATED to sonnet xhigh aec50d49 | fixing |
+| W3 quick wins (PRO-02/03/13) | e7b @eefcfc3c | sonnet fixed A1–A6 (helio = flag, 669 balloons/104 ideas marked, piece-local width) | 3rd review ac099fe9 running |
+| CI green (P-036 + P-029) | e7h fix/ci-verde-2 | implementer (haiku) a61d5a41 | running |
 | W1 library ideas 29/30/31 + feedback rating reload/burst | e7f fix/biblioteca-feedback | implementer (haiku) a67080a1 | running |
 
 ## Next items (queue)
