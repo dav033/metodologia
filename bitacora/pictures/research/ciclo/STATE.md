@@ -14,6 +14,7 @@
 - Last status message to owner: 2026-10-10 17:10 (24 h status) · next ≈23:10
 
 ## Health (cycle 0)
+- NOTE: system check 17:3x (workflow wf_a968de44-14c): all layers amber, nothing down; prod smoke 11 PASS / 1 FAIL (catalogue) / 2 SKIP; stopped idle :3020 dev server (e4r, 37 h) per D-033 → RAM 2.7 GB; :3010 → 0e47760f. Old claude.exe sessions left alone.
 - NOTE: before/after each release run `npm run e2e:humo -- --env-file <demo-decoracion>/.env.local` (local :3010 on the shipped sha).
 - NOTE: ship verification MUST include `npm run kontext:test` (provider guard is strict on new /api routes) — 888637d0 shipped an unclassified route; hotfixed b2ee1e39 within 10 min.
 - NOTE: create worktree junctions ONLY with the PowerShell tool (bash quoting created a stray `Downloads$2` junction twice; removed safely).
@@ -83,6 +84,8 @@
 | E2E smoke per release (npm run e2e:humo) | main bbb3fe4d | PUSHED; run vs :3010 @b5f32b06: 14/14 PASS in 83 s, 0 paid calls — run it on every release | e7z free |
 
 | REQ-013 Phase 5 (Taller «Añadir» by repository; catalogo_ui_repositorios row, ON by default per D-039) | e7x feat/catalogo-fase5 | implementer (sonnet xhigh) | launched 16:0x |
+
+| System check fixes: prod /catalogo empty on Vercel (SQLite in /tmp), /3d crash clasificacionDe(undefined id), guided-3D plans not audited server-side (plan_audit_log empty since 10-09 11:15Z), pg SSL log noise | e7z fix/catalogo-vercel | implementer (sonnet xhigh) | launched 17:4x |
 
 ## Next items (queue)
 - W4 next by evidence: figures (falta_figura 18 photos, 12 dominant) and furniture/backdrops (14 photos, 10 dominant); cache the photo reader too; intercept native tool_use in the CLI transport.
