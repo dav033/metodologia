@@ -217,3 +217,7 @@ Decision: (1) keep the engine's official 5 quartets/m (no change; customers are 
 
 ## D-033 · Owner allows touching the local dev servers this weekend · 2026-10-10
 Owner: «Si puedes tocar los servidores de desarrollo». This lifts, for the weekend, the brief's rule «never restart/kill :3010 or :8000»: the lead may restart the owner's Next dev server on :3010 (e.g. after merges, to switch the local AI provider) and start/stop a local Python ai-api on :8000 (needed to re-resolve stored plans, P-039). Still never: Claude, Chrome, system processes; no `next build`.
+
+## D-034 · No VPS deploy during the weekend, even with CI green (marathon, taken alone) · 2026-10-10
+Context: main 77b4af27 is the first fully green CI run; D-031 makes the VPS deploy a manual `workflow_dispatch` gated on green CI. The VPS also serves the Python ai-api that prices customer quotes (Vercel calls it), and main carries Python changes never deployed there (R-36 served as R-24 b7f5cfe2, organic column silhouette a09b638b, guide tones bccc07f0, ruff format) plus the REQ-013 repository filter the Neon indexing (Phase 3 apply) depends on.
+Decision: do not dispatch the VPS deploy while the owner is away; Vercel (customer UI + Taller) keeps auto-deploying main as before. On Monday the owner gets a deploy note (what changes in quotes) and decides; after that the REQ-013 Phase 3 Neon apply can run. Reversible: one `workflow_dispatch`.
