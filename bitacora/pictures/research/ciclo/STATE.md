@@ -30,8 +30,8 @@
 | W4 training harness | main | baseline pass over 30 photos done | re-run after fixes A+B |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
 | Small-fix bundle | main 55475888 | PUSHED | — |
-| W4 fixes A (recolourable backdrops, otro→catalogue, thickness range, cake on pedestal) | e7w @82cbfcce | built (golden +3 nodes intentional); lote-02 not run by implementer | antagonist running (incl. lote-02 from e4r data) |
-| W4 fixes B (scale policy, visible metric, convergence) | e7x | review: harness OK; scale FIX FIRST (pedestal ruler 100→75, union vs tallest box, formats not re-derived, 1.5× cap shrinks big scenes) → sonnet a6f0f9c2 | fixing |
+| W4 fixes A (capabilities) | e7w | haiku failed 2nd review (otro resolver 4 false positives of 9, placement in front of structures, volume budget only on one path) → ESCALATED sonnet xhigh | fixing |
+| W4 fixes B (scale policy, visible metric, convergence) | e7x | re-review: gate identical; policy = safeguard (net +0.002 over 30 photos); M1 dead-band format flip → fixing | then ship |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
@@ -68,6 +68,7 @@
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)
 
 ## Escalations
+- 06:5x W4 capabilities: haiku failed review twice → sonnet xhigh.
 - 06:xx build sheet: haiku failed review twice → sonnet xhigh.
 - 03:1x colour resolver: sonnet failed review → opus xhigh.
 - 03:xx W4 harness: haiku failed hostile review twice → sonnet xhigh.

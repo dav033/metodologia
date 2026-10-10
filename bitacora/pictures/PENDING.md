@@ -5,6 +5,7 @@ One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 
 ## Open
+- P-053 · Photo→3D scale notes never reach the user (foto.notas not rendered; only the agent context) — decide whether/how to tell the decorator when the scale is a bound, not a measurement · urgency: low · complexity: M · added 2026-10-10 · scale review
 - P-052 · Guided 3D colour resolver limits (after P-047 rewrite): (a) needless «dime cuál» when the plan has a single shop-only shade (Metal Dorado) and the new colour is already in the piece — needs stored repeat state; (b) Fashion Rosa 011 / Rosado 009 alternate on repeated «rosa»; (c) wording «no lleva azul claro; lleva azul» → «no encontré «azul claro»; tu plan lleva azul: ¿es ese?»; (d) test-propiedades-herramientas still uses additive seeds and a 10 % invalid-accept tolerance · urgency: med · complexity: M · added 2026-10-10 · resolver review 4
 - P-050 · Scene tool `ajustar_tamanos` declaration accepts T-260/LOL-12 in colores_por_tamano.formatos but its zod only accepts R-* → model calls fail validation · urgency: med · complexity: S · added 2026-10-10 · property tests
 - P-051 · TS motor builds 0 balloons for pared_organica, figura, pared_no_densa, centro_mesa (fall back to Python / curated price) · urgency: med · complexity: M · added 2026-10-10 · property tests
