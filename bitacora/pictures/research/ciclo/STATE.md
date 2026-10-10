@@ -7,6 +7,7 @@
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
+- NOTE: create worktree junctions ONLY with the PowerShell tool (bash quoting created a stray `Downloads$2` junction twice; removed safely).
 - RAM: 15.7 GB, ~2.3 GB free after cleanup (commit 24.6/32.7 GB) → max 2 implementers at once until RAM improves.
 - Ports in use: 3010 (owner dev, untouchable), 3020 (unknown dev server, left alone).
 - `ANTHROPIC_API_KEY` absent in `.env.local` (IA_PROVEEDOR=gemini) → owner question (3).
@@ -24,6 +25,8 @@
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + colour resolver (incl. P-047) | e7l | haiku failed review twice (resolver regression «dorado rosa» → false «No pude») → ESCALATED sonnet xhigh | fixing |
 | W7 switch dossier + P-045 graceful rollback | e7p @bf4a6c62 | built (opus): flag decides only new plans, kill switch with notice; dossier §4 updated | opus review running |
+| W3 build sheet (PRO-01) + 19-idea TRACKER.md | e7q feat/hoja-armado | implementer (haiku) a912b7f0 | running |
+| CUS-04 honesty forced-failure tests | e7r test/honestidad-ediciones | implementer (haiku) a2846bed | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
