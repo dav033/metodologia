@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **7**
-- main = `870ca99b` (… 318c5aaa REQ-013 P3 → 870ca99b CI green + manual gated VPS deploy D-031)
+- main = `eb17544e` (… 870ca99b CI → eb17544e CUS-04 honesty)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
@@ -26,7 +26,7 @@
 | W2 property tests + colour resolver (incl. P-047) | e7l | haiku failed review twice (resolver regression «dorado rosa» → false «No pude») → ESCALATED sonnet xhigh | fixing |
 | W7 switch dossier + P-045 graceful rollback | e7p @bf4a6c62 | opus review FIX FIRST: notices never visible (card hides content), kill fails open on Neon error, token chaining, python→3d redo, edit hint → opus a74cf67b | fixing |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
-| CUS-04 honesty forced-failure tests | e7r @f981597a | review SHIP-level but 3 mutations survived → strengthen (haiku a2846bed) | fixing |
+| CUS-04 honesty | main eb17544e | PUSHED | — |
 | W4 training harness | e7s @ad0b7302 | review FIX FIRST (cap escape, blind spots, Gemini embeddings leak, no audit trail, leaderboard validity) → haiku ac5546f3 | fixing |
 | W5b Claude Code CLI transport (owner has no API key) | e7t feat/ia-local-claude-cli | implementer (opus xhigh) | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
