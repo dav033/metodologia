@@ -83,7 +83,7 @@
 ## Next items (queue)
 - W4 next by evidence: figures (falta_figura 18 photos, 12 dominant) and furniture/backdrops (14 photos, 10 dominant); cache the photo reader too; intercept native tool_use in the CLI transport.
 - Brief §7 gaps left: 20-scene visual baseline, owner-phrases corpus test with mocked model.
-- 24 h visual report due 16:44 → update artifact https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU.
+- 24 h visual report PUBLISHED 15:50 (artifact v2 https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU). Next 6 h status due ≈17:15; 48 h report ≈16:44 Sunday.
 - Critic c12 (research/ciclo/CRITICO-c12.md) top: (1) time-box W4, ship if strictly better, re-run 30 photos (report both IoU metrics; restart :3010 on origin/main first); (2) screenshot judge sweep → feeds 24 h visual report 16:44; (3) switch dossier incl. rollback drill; (4) W3 money flow PRO-04/05. D-036 stop-rule.
 - Owner report artifact: https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU (update at 24 h).
 - Small-fix bundle (haiku, one worktree) when a slot frees: P-041 salon capacity wording, P-043 ideas 30/31 duplicated price (check), P-046 group identical decorations «× N», «Armazón recto» chip on arch scenes, CUS-02 card=quote test, CUS-03 18-structure test (PM delta c8).
