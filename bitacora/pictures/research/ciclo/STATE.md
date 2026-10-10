@@ -4,7 +4,7 @@
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **11** (09:5x: all 3 branches in hostile review)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `b2ee1e39` (… 888637d0 build sheet PRO-01 (flag off) → 2a3105c6 P-055 → b2ee1e39 CI hotfix: new route classified in provider guard)
+- main = `eb7d0abd` (… 888637d0 build sheet (flag off) → 2a3105c6 P-055 → b2ee1e39 CI hotfix → eb7d0abd P-049 kill covers armada/imagen)
 - Last status message to owner: 2026-10-10 05:35 (12 h status)
 
 ## Health (cycle 0)
@@ -48,7 +48,7 @@
 
 | P-037 prerender guard on server components | main 082a34fb | PUSHED (test-only; lead-reviewed diff; 28 server files clean) | e7y free |
 
-| P-049 kill switch on imagen/armada routes + proactive notice | e7y fix/corte-rutas | implementer (haiku) | aa3c4534; review FIX (banner not marked → double notice; «Recalcular» via chat text depends on the model; copy; untested prod guard) → haiku eabef2ba; 2nd review FIX (Ver cómo quedaría dead after notice; propuesta on every plan breaks rollback under .strict()) → ESCALATED sonnet xhigh; sonnet DONE d42676bf → 3rd review running |
+| P-049 kill switch on imagen/armada routes + proactive notice | e7y fix/corte-rutas | implementer (haiku) | aa3c4534; review FIX (banner not marked → double notice; «Recalcular» via chat text depends on the model; copy; untested prod guard) → haiku eabef2ba; 2nd review FIX (Ver cómo quedaría dead after notice; propuesta on every plan breaks rollback under .strict()) → ESCALATED sonnet xhigh; sonnet d42676bf → 3rd review SHIP → PUSHED main eb7d0abd (verified incl. kontext:test); follow-ups P-056; D-035 |
 
 | P-055 test-cuerpo-generacion red on main | main 2a3105c6 | PUSHED (stale regex → behavioural, in kontext:test) | e7q free |
 
