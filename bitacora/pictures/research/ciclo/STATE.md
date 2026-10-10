@@ -27,8 +27,8 @@
 | W7 switch dossier + P-045 graceful rollback | e7p @af0eedde | A1–A5 fixed (visible banner, last-good kill, origenEn 24 h, python redo stays, hint by plan engine) | opus re-review running |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
-| W4 training harness | e7s @5eb825a4 | review fixes done; seco 30/30 (synthetic) | re-review running; real run after W5b merge |
-| W5b Claude Code CLI transport | e7t @81f4afce | built (opus); smoke OK: tool calls round-trip; latency 196 s / 5 s / photo 242 s | opus review running |
+| W4 training harness | e7s | haiku failed review twice (cache shares seco/real ground truth, leaderboard means) → ESCALATED sonnet xhigh | fixing |
+| W5b Claude Code CLI transport | e7t @81f4afce | opus review: prod-safe; fix local deadlines (calls 3–4 min vs 60–110 s limits), thinking-off dropped, cost 0 tracking, slot leak, retries, HMR counter, marker forgery → opus abaffba9 | fixing |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
@@ -63,6 +63,7 @@
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)
 
 ## Escalations
+- 03:xx W4 harness: haiku failed hostile review twice → sonnet xhigh.
 - 23:3x property tests/colour resolver: haiku failed hostile review twice → sonnet xhigh.
 - 19:0x Kontext colour exp: haiku failed twice (script bug, timeout) → sonnet xhigh.
 - 18:2x W3 quick wins: haiku failed hostile review twice → sonnet xhigh (rule §5).
