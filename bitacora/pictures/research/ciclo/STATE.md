@@ -27,7 +27,7 @@
 | W7 switch dossier + P-045 graceful rollback | main 7aafc12c | PUSHED (verified 25 suites, eslint 0) | dossier still missing: judge screenshots, live Python check, rollback drill |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
-| W4 training harness | main fb956d8c | PUSHED; tramo 1 (10 photos, --turnos 2, CLI Haiku, US$0) running in background | then tramos 2–3, analyse failure classes → engine/tool fixes |
+| W4 training harness | main fb956d8c | tramo 1 done (10/10); tramo 2 (20 photos) running; analysis → fix list | — |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
 | Small-fix bundle | main 55475888 | PUSHED | — |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
@@ -78,4 +78,4 @@ FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.00/2 · Anthro
 
 ## Metrics
 - Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
-- W4 leaderboard: 1 real photo (25): prop 0.528 / col 0.403 / IoU 0.591, capacidad_faltante; scene armed 664 vs 88 detected
+- W4 leaderboard (tramo 1, 10 photos 25–34, Haiku CLI, 2 turns, US$0, 181 calls, ~26 min): proporciones 0.40–0.66 (≈0.50), colores 0.15–0.87 (≈0.46), IoU 0.29–0.74; dominant failure capacidad_faltante (10/10), compilacion 3. Tramo 2 (35–54) running; failure analysis agent running.
