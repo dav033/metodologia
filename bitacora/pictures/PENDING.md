@@ -5,11 +5,11 @@ One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 
 ## Open
+- P-052 · Guided 3D colour resolver limits (after P-047 rewrite): (a) needless «dime cuál» when the plan has a single shop-only shade (Metal Dorado) and the new colour is already in the piece — needs stored repeat state; (b) Fashion Rosa 011 / Rosado 009 alternate on repeated «rosa»; (c) wording «no lleva azul claro; lleva azul» → «no encontré «azul claro»; tu plan lleva azul: ¿es ese?»; (d) test-propiedades-herramientas still uses additive seeds and a 10 % invalid-accept tolerance · urgency: med · complexity: M · added 2026-10-10 · resolver review 4
 - P-050 · Scene tool `ajustar_tamanos` declaration accepts T-260/LOL-12 in colores_por_tamano.formatos but its zod only accepts R-* → model calls fail validation · urgency: med · complexity: S · added 2026-10-10 · property tests
 - P-051 · TS motor builds 0 balloons for pared_organica, figura, pared_no_densa, centro_mesa (fall back to Python / curated price) · urgency: med · complexity: M · added 2026-10-10 · property tests
 - P-049 · Kill switch (guiada_motor_corte) never tells customers who already hold a wrong 3D plan, and the imagen/armada routes ignore it — proactive notice + block those routes under the kill · urgency: med · complexity: M · added 2026-10-10 · P-045 review A9
 - P-048 · Scenario matrix gaps: 18 % of representable pieces fall to noRepresentables («colour doesn't reach the materials list») and skip geometry checks; seed 11 E-00146 arco+arco_no_denso overlap 8 cm (anchoEstimadoCm underestimates arc + flower overhang); seed 3 E-00077 garland sencilla under band · urgency: med · complexity: M · added 2026-10-09 · matrix re-review
-- P-047 · Colour name → code resolution does not round-trip: «dorado metal» resolves to 970 (reflex), «rojo reflex» to 015 while the catalogue code is 915 — audit the resolver against the Sempertex colour table (affects guided edits and Taller AI colour changes) · urgency: high · complexity: S · added 2026-10-09 · W2 property tests
 - P-046 · Shopping list «Por pieza» lists identical decorations one per row («Ojo con venas 1…14 · 1 globo»): group identical pieces (× 14) · urgency: low · complexity: S · added 2026-10-09 · judge
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversations get edits refused (409 MOTOR_PYTHON), Python routes refuse 3D tokens, and adding an idea/redoing silently re-prices in Python (~×1.4). Design a graceful rollback (keep 3D plans priced by the engine until the conversation ends, or tell the customer) — BLOCKER for the switch · urgency: high · complexity: M · added 2026-10-09 · W7 dossier review
 - P-042 · Guided 3D edits undo: inverse size edits drift (enlarge-then-shrink ≠ identity) and name-based colour returns can change the code — undo must restore the stored previous spec, not apply an inverse edit · urgency: med · complexity: S · added 2026-10-09 · W7 integration test
@@ -48,6 +48,7 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 _None_
 
 ## Recently closed
+- P-047 · Colour name→code audit + resolver rewrite (568/568 matrix, repeat changes 184→6) · closed 2026-10-10
 - P-043 · Ideas 30/31 same stored price — NOT a bug: both are 3 × (6164 + 13037) = 57,603 from their own plan lines · closed 2026-10-10
 - P-029/P-036 · CI fully green on main (first time) · closed 2026-10-10 · 77b4af27
 - P-040 · Pump section one row per size, collapsed (judge 6/10 fixed) · closed 2026-10-09 · 21ba148c
