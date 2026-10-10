@@ -4,7 +4,7 @@
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **11** (09:5x: all 3 branches in hostile review)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `082a34fb` (… ad6a3710 W4 scale → 390ac0a2 P-050 → 082a34fb P-037 server prerender guard)
+- main = `888637d0` (… 390ac0a2 P-050 → 082a34fb P-037 → 888637d0 build sheet PRO-01, flag taller_hoja_armado off)
 - Last status message to owner: 2026-10-10 05:35 (12 h status)
 
 ## Health (cycle 0)
@@ -26,7 +26,7 @@
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + colour resolver (P-047) | main 0c7cc72e | PUSHED | P-052 follow-ups |
 | W7 switch dossier + P-045 graceful rollback | main 7aafc12c | PUSHED (verified 25 suites, eslint 0) | dossier still missing: judge screenshots, live Python check, rollback drill |
-| W3 build sheet (PRO-01) | e7q | haiku failed 2nd review (one page per piece → 118 pages; tilted columns broken rings) → ESCALATED sonnet xhigh; sonnet DONE 9a51054a (pages p90 32→6, max 119→13; all 1511 pages fit Letter/A4 measured in Chrome) | 3rd review FIX (blocker: Radix dialog inert inside native showModal → Imprimir dead; helio/estampado merged; handedness mirrored for sobre/ancla; no flag) → ESCALATED opus xhigh; opus DONE 3b7964d9 (DialogoCompra + esbuild/Playwright smoke; flag taller_hoja_armado default off; 1604 pages, all fit Letter/A4 with Geist) → 4th review FIX small (A1 focus not returned to opener; A2 estampado hash over-splits 8 scenes; env doc; log prefix; test deps) → opus 85e47f62; lead-reviewed; squashed ship/hoja-armado 888637d0, verifying |
+| W3 build sheet (PRO-01) | e7q | haiku failed 2nd review (one page per piece → 118 pages; tilted columns broken rings) → ESCALATED sonnet xhigh; sonnet DONE 9a51054a (pages p90 32→6, max 119→13; all 1511 pages fit Letter/A4 measured in Chrome) | 3rd review FIX (blocker: Radix dialog inert inside native showModal → Imprimir dead; helio/estampado merged; handedness mirrored for sobre/ancla; no flag) → ESCALATED opus xhigh; opus DONE 3b7964d9 (DialogoCompra + esbuild/Playwright smoke; flag taller_hoja_armado default off; 1604 pages, all fit Letter/A4 with Geist) → 4th review FIX small (A1 focus not returned to opener; A2 estampado hash over-splits 8 scenes; env doc; log prefix; test deps) → opus 85e47f62; lead-reviewed; PUSHED main 888637d0 (verified tsc, eslint, globos3d, catalogo, contracts, dorado, fronteras) | product judge needs flag on (local) |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
 | W4 training harness | main | baseline pass over 30 photos done | re-run after fixes A+B |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
