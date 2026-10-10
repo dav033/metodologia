@@ -8,7 +8,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `bbb3fe4d` (… b1fdf465 W4 diagnostics → b5f32b06 no solo-guiada (D-039) → bbb3fe4d e2e smoke) · VPS = b5f32b06 (rule: VPS follows every green main)
+- main = `8955d367` (… b5f32b06 no solo-guiada → bbb3fe4d e2e smoke → 8955d367 REQ-013 Phase 4) · VPS = b5f32b06 (rule: VPS follows every green main)
 - Last status message to owner: 2026-10-10 11:2x (18 h status) · CI green on eb7d0abd · next: 24 h visual report due 16:44
 
 ## Health (cycle 0)
@@ -68,7 +68,7 @@
 
 | Owner question «qué mejoras veo en producción» | — | workflow wf_35ff8442-93b (4 map + 4 verify + synth) | running |
 
-| REQ-013 Phase 4 (T19–T22, flags off = byte-identical) | e7x feat/catalogo-fase4 | implementer (sonnet xhigh) | DONE 89e66b14 (T19–T22; defaults byte-identical; +306 B with CATALOGO_FILTRO_IA) → review SHIP (fix before flip: A1 settings read without deadline on critical path, A2 garbage row drops Sempertex, A3 prompt hint, A4 error text, A7 tests in CI) → sonnet 827b6aec → squashing ship/catalogo-fase4; after ship: row catalogo_repos_rag=sempertex,mobiliario,escenografia + env CATALOGO_FILTRO_IA=true (D-039) |
+| REQ-013 Phase 4 (T19–T22, flags off = byte-identical) | e7x feat/catalogo-fase4 | implementer (sonnet xhigh) | DONE 89e66b14 (T19–T22; defaults byte-identical; +306 B with CATALOGO_FILTRO_IA) → review SHIP (fix before flip: A1 settings read without deadline on critical path, A2 garbage row drops Sempertex, A3 prompt hint, A4 error text, A7 tests in CI) → PUSHED main 8955d367; ON 15:50: Neon row catalogo_repos_rag=sempertex,mobiliario,escenografia + Vercel CATALOGO_FILTRO_IA=true (next build) — was: row catalogo_repos_rag=sempertex,mobiliario,escenografia + env CATALOGO_FILTRO_IA=true (D-039) |
 
 | W4 diagnostics (deterministic detection cache, specific failure classes, ver_escena claim) | e7w feat/entrenamiento-diagnostico | implementer (sonnet xhigh) | DONE ca1a2f24 (cache key = photo hash + detector config; capacidad_faltante → figura 18, mueble/fondo 14, pared 7, arco 2, tamaño 3; ver_escena = model tries native tool under CLI) → PUSHED main b1fdf465 | e7w free |
 
