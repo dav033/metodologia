@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **8**
-- main = `eb17544e` (… 870ca99b CI → eb17544e CUS-04 honesty)
+- main = `7aafc12c` (… eb17544e honesty → 7aafc12c P-045 graceful rollback)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
@@ -24,11 +24,11 @@
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + colour resolver (P-047) | e7l | sonnet redesign failed 3rd review (card names not unique handles → «dime cuál» loops in 13/20 palettes; panel sends store word) → ESCALATED opus xhigh | fixing |
-| W7 switch dossier + P-045 graceful rollback | e7p ship/rollback @7aafc12c (squash) | SHIP | runner verifying → push |
+| W7 switch dossier + P-045 graceful rollback | main 7aafc12c | PUSHED (verified 25 suites, eslint 0) | dossier still missing: judge screenshots, live Python check, rollback drill |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
 | W4 training harness | e7s | haiku failed review twice (cache shares seco/real ground truth, leaderboard means) → ESCALATED sonnet xhigh | fixing |
-| W5b Claude Code CLI transport | e7t @02d2f8f2 | A1–A7 fixed; photo read 242 s → 44.7 s with thinking off; ×4 deadlines only with CLI | opus re-review running |
+| W5b Claude Code CLI transport | e7t ship/cli @3407db01 (squash on eb17544e) | SHIP after 3 opus passes | runner verifying → REBASE on 7aafc12c (VistaGuiada/asistente-guiado overlap) → push → local :3010 switch |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
