@@ -2,7 +2,7 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **4**
+- Current cycle: **5**
 - main = `a7014966` (… c69e307b W3 batch 2 → a7014966 W7 integration test)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
@@ -25,7 +25,7 @@
 | W2 property tests + owner phrases + colour-resolver fix | e7l @6c643ea6 | fixes done; found resolver idempotence bug (fixed) + P-047 name→code mismatches | re-review running |
 | W7 switch dossier | main a7014966 + DOSSIER-SWITCH.md | — | P-045 graceful rollback: e7p feat/guiada-rollback-ordenado, implementer (opus xhigh) running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
-| W2 scenario matrix | e7a @1b5b0c79 | A1–A8 fixed (VERSION_MOTOR 1.2.3) | re-review running |
+| W2 scenario matrix | e7a ship/escenarios @15c74eb7 (squash) | SHIP-ready | runner verifying → push |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
