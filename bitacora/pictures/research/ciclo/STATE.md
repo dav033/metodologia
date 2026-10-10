@@ -27,7 +27,7 @@
 | W7 switch dossier + P-045 graceful rollback | main 7aafc12c | PUSHED (verified 25 suites, eslint 0) | dossier still missing: judge screenshots, live Python check, rollback drill |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
-| W4 training harness | e7s | haiku failed review twice (cache shares seco/real ground truth, leaderboard means) → ESCALATED sonnet xhigh | fixing |
+| W4 training harness | e7s @f419d910 | sonnet fixed A1–A6 (cache keyed by mode/model/detector, comparable leaderboard, audit context) | after W5b push: merge main, final review incl. CLI abort path, then first real run (CLI, tramos) |
 | W5b Claude Code CLI transport | e7t ship/cli @3407db01 (squash on eb17544e) | SHIP after 3 opus passes | runner verifying → REBASE on 7aafc12c (VistaGuiada/asistente-guiado overlap) → push → local :3010 switch |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
