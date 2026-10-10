@@ -20,7 +20,7 @@
 | Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
 | REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED | — |
 | REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o feat/repositorios-fase3 | implementer (opus xhigh) a2903e43 | running (dry-run only; lead applies, ≤US$0.05) |
-| W3 batch 2: recipe cards, size profiles, light/lens presets | e7k @247d579c | fixes A1–A8 done | re-review ad1c22a8 running |
+| W3 batch 2 | e7k ship/bb-recetas @c69e307b (squash) | SHIP | verifying → push |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + owner-phrases corpus | e7l @59e0594f | built (tests only; 0 violations; 8/8 phrases) | queued for antagonist |
 | W7 switch dossier prep | e7n @39fae60a (integration test 46 cases) + PARIDAD-2026-10-09b + DOSSIER-SWITCH.md draft | done: counts ×1.00 vs Python, price 0.70× | test queued for review; dossier needs judge screenshots, live Python check, rollback drill |
