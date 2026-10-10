@@ -35,7 +35,7 @@
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
 | W3 quick wins (PRO-02/03/13) | main | judge re-score after P-040: Bomba collapsed «Bomba · 2 min 46,1 s» 8/10; minor: «Por pieza» lists 14 «Ojo con venas N · 1 globo» rows (group identical decorations) | — |
-| CI green + manual VPS deploy (D-031) | main 870ca99b | PUSHED; watching the first full CI run | — |
+| CI green + manual VPS deploy (D-031) | main 870ca99b | FIRST FULL CI RUN: types-and-build (incl. next build) GREEN, deterministic-tests GREEN, secret-scan GREEN; python-quality red (8 mypy + ~6 pytest) | python fix e7u fix/python-quality (sonnet xhigh) running |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
 
