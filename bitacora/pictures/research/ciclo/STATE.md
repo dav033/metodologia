@@ -27,8 +27,9 @@
 | W7 switch dossier + P-045 graceful rollback | main 7aafc12c | PUSHED (verified 25 suites, eslint 0) | dossier still missing: judge screenshots, live Python check, rollback drill |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
-| W4 training harness | e7s @f419d910 | sonnet fixed A1–A6 (cache keyed by mode/model/detector, comparable leaderboard, audit context) | after W5b push: merge main, final review incl. CLI abort path, then first real run (CLI, tramos) |
+| W4 training harness | e7s @08978426 | FIRST REAL PHOTO (images 25, CLI Haiku): 153 s, 16 calls, US$0; proporciones 0.528, colores 0.403, IoU 0.591; class capacidad_faltante; detector 88 balloons vs scene 664 (finding) | stop ai_call_log rows in prod Neon, then final review → ship → full 30-photo run in tramos |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
+| Small-fix bundle (P-041, P-046, arch chip, CUS-02 test) | e7v @ed288c2f | built; P-043 not a bug | antagonist running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
@@ -77,4 +78,4 @@ FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.00/2 · Anthro
 
 ## Metrics
 - Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
-- W4 leaderboard: research/entrenamiento/LEADERBOARD.md (dry-run placeholders only)
+- W4 leaderboard: 1 real photo (25): prop 0.528 / col 0.403 / IoU 0.591, capacidad_faltante; scene armed 664 vs 88 detected
