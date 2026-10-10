@@ -2,7 +2,8 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **18** (16:0x: Phase 4 on; Phase 5 launched; RAM 1.4 GB → one launch only)
+- Current cycle: **19** (17:10: 6 h status sent; figures verifying; D-038 capped rule; P-054 round 2; Phase 5)
+- Prev: cycle 18 (16:0x: Phase 4 on; Phase 5 launched; RAM 1.4 GB → one launch only)
 - Prev: cycle 17 (14:5x: main b5f32b06 no solo-guiada; VPS chain pending; RAM 4.5 GB)
 - Prev: cycle 16 (14:1x: brief §7 re-read — still missing: e2e browser pass per release, visual baselines, owner-phrases corpus; VPS follows d9a9a6b5 when CI green)
 - Prev: cycle 15 (13:4x: D-039 flags on; inventory workflow wf_2c1a2e9f-d6d running; D-038 opus ad858971; P-052 round 2; Phase 4 at T20; W4 diagnostics)
@@ -10,7 +11,7 @@
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
 - main = `8955d367` (… b5f32b06 no solo-guiada → bbb3fe4d e2e smoke → 8955d367 REQ-013 Phase 4) · VPS = 8955d367 (rule: VPS follows every green main); CATALOGO_FILTRO_IA takes effect on the next Vercel build
-- Last status message to owner: 2026-10-10 11:2x (18 h status) · CI green on eb7d0abd · next: 24 h visual report due 16:44
+- Last status message to owner: 2026-10-10 17:10 (24 h status) · next ≈23:10
 
 ## Health (cycle 0)
 - NOTE: before/after each release run `npm run e2e:humo -- --env-file <demo-decoracion>/.env.local` (local :3010 on the shipped sha).
