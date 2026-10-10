@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **6**
-- main = `15c74eb7` (… a7014966 W7 integration test → 15c74eb7 scenario matrix, VERSION_MOTOR 1.2.3)
+- main = `318c5aaa` (… 15c74eb7 scenario matrix → 318c5aaa REQ-013 phase 3 fichas, not indexed)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
@@ -20,13 +20,13 @@
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
 | Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
 | REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED | — |
-| REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o @38b1c027 | opus review SHIP merge; DO NOT --aplicar until VPS runs ≥ d4b4020d (filter); small fixes A2/A3/A6 + confirm flag | fixing |
+| REQ-013 Phase 3 | main 318c5aaa | PUSHED (fichas + exact branch; Neon NOT applied — VPS must run ≥ d4b4020d first) | Phase 4 later |
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + colour resolver (incl. P-047) | e7l | haiku failed review twice (resolver regression «dorado rosa» → false «No pude») → ESCALATED sonnet xhigh | fixing |
 | W7 switch dossier + P-045 graceful rollback | e7p @bf4a6c62 | opus review FIX FIRST: notices never visible (card hides content), kill fails open on Neon error, token chaining, python→3d redo, edit hint → opus a74cf67b | fixing |
-| W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | built; tracker in research/balloonbuilder/TRACKER.md | antagonist running |
-| CUS-04 honesty forced-failure tests | e7r @f981597a | 21 cases, 5 honesty fixes | antagonist running |
+| W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
+| CUS-04 honesty forced-failure tests | e7r @f981597a | review SHIP-level but 3 mutations survived → strengthen (haiku a2846bed) | fixing |
 | W4 training harness skeleton (dry-run only) | e7s feat/entrenamiento-arnes | implementer (haiku) ac5546f3 | running |
 | W5b Claude Code CLI transport (owner has no API key) | e7t feat/ia-local-claude-cli | implementer (opus xhigh) | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
@@ -35,11 +35,12 @@
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
 | W3 quick wins (PRO-02/03/13) | main | judge re-score after P-040: Bomba collapsed «Bomba · 2 min 46,1 s» 8/10; minor: «Por pieza» lists 14 «Ojo con venas N · 1 globo» rows (group identical decorations) | — |
-| CI green + manual VPS deploy (D-031) | e7h | review FIX FIRST: no workspace build in CI, 4 stale plan:test suites, LINT RED on main from c69e307b (set-state-in-effect in useAmbienteVisor/usePerfilesTamano) → haiku a61d5a41 | fixing |
+| CI green + manual VPS deploy (D-031) | e7h | re-review: only re-merge conflict + minors → haiku a61d5a41; then push branch to observe CI | fixing |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
 
 ## Next items (queue)
+- After W5b merges: main checkout (clean, branch fix/color-organico-conteo, 0 ahead / 179 behind origin/main) → `git checkout main && git merge --ff-only origin/main`, `npm run build --workspaces --if-present`, set .env.local IA_PROVEEDOR=claude + IA_CLAUDE_TRANSPORTE=cli + IA_LOCAL_ESFUERZO=medium, restart :3010 (`node --use-system-ca node_modules/next/dist/bin/next dev -p 3010`, parent pid 12980) — D-033.
 0. Critic c4 (research/ciclo/CRITICO-c4.md): judge shipped features with screenshots; CUS-04 forced-failure honesty tests; W3 19-idea tracker + build sheet; W2 visual regression; W4 harness dry-run skeleton. Also: REQ-013 Phase 3 (opus), P-041 salon capacity wording, P-037 guard server components, W4 harness skeleton (needs key to run), completeness critic at cycle 4.
 1. Baseline test run (runner) — failing tests list.
 2. W2 scenario matrix generator (`scripts/escenarios/`) — offline, free.
