@@ -28,6 +28,7 @@
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | built; tracker in research/balloonbuilder/TRACKER.md | antagonist running |
 | CUS-04 honesty forced-failure tests | e7r @f981597a | 21 cases, 5 honesty fixes | antagonist running |
 | W4 training harness skeleton (dry-run only) | e7s feat/entrenamiento-arnes | implementer (haiku) ac5546f3 | running |
+| W5b Claude Code CLI transport (owner has no API key) | e7t feat/ia-local-claude-cli | implementer (opus xhigh) | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
@@ -47,7 +48,7 @@
 5. W5 provider implementation (opus xhigh — provider abstraction) when an implementer slot frees; key needed to run it.
 
 ## Owner questions (batched, asked 2026-10-09 16:5x)
-(1) R-12 inflation classic arches · (3) ANTHROPIC_API_KEY + Haiku id · (4) BalloonBuilder customer vs pro ·
+(1) R-12 inflation classic arches · (3) ANTHROPIC_API_KEY — owner 00:3x: no key; asked for a Claude Code CLI patch (W5b) · (4) BalloonBuilder customer vs pro ·
 (5) REQ-004 accounts. (6) asked ~20:05: making CI green turns on automatic VPS deploys (incl. Python ai-api) on every push to main — ok, or make deploy manual (workflow_dispatch) first? (2) fixed: no switch, bring dossier. Deploy to main authorized.
 
 ## Decisions taken alone (D-027+)
