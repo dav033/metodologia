@@ -73,7 +73,7 @@
 
 | W4 diagnostics (deterministic detection cache, specific failure classes, ver_escena claim) | e7w feat/entrenamiento-diagnostico | implementer (sonnet xhigh) | DONE ca1a2f24 (cache key = photo hash + detector config; capacidad_faltante → figura 18, mueble/fondo 14, pared 7, arco 2, tamaño 3; ver_escena = model tries native tool under CLI) → PUSHED main b1fdf465 | e7w free |
 
-| P-054 scene AI time bounds (cheap searches, balloon-weighted budget, maxDuration + deadline) | e7q fix/escena-ia-tiempo | implementer (sonnet xhigh) | launched 14:0x |
+| P-054 scene AI time bounds (cheap searches, balloon-weighted budget, maxDuration + deadline) | e7q fix/escena-ia-tiempo | implementer (sonnet xhigh) | DONE 22a39c8e (arch «más R-24» 40.6→10.4 s; R-5 column 59 s→instant reject; balloon-count budget 430; maxDuration 75 + deadline; marco 500×320@100 in a 320 cm room now errors instead of refit) → review round 1 |
 
 | D-039 remove solo-guiada mode | e7z feat/sin-solo-guiada | implementer (sonnet xhigh) | PUSHED main b5f32b06 (this build also picks up MODULOS_ESCRITURA=abierta and the removed NEXT_PUBLIC_SOLO_GUIADA) | e7z free |
 
