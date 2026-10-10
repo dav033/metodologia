@@ -5,6 +5,7 @@ One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 
 ## Open
+- P-044 · Flowers on solo_grandes balloons dip ~3 cm under the floor (10 cm flower radius too small for the anchor rule) — currently whitelisted in the scenario matrix; fix the anchor and bump VERSION_MOTOR · urgency: med · complexity: S · added 2026-10-09 · W2 matrix
 - P-042 · Guided 3D edits undo: inverse size edits drift (enlarge-then-shrink ≠ identity) and name-based colour returns can change the code — undo must restore the stored previous spec, not apply an inverse edit · urgency: med · complexity: S · added 2026-10-09 · W7 integration test
 - P-043 · Ideas 30 and 31 store the same price ($57,603) in the guided library — probably a copied value; verify before any quote · urgency: med · complexity: S · added 2026-10-09 · W7 parity refresh
 - P-041 · ajustar_salon reports grid capacity («40 invitados, caben 96») while only 5 tables of 8 are placed — confusing; report the placed capacity · urgency: med · complexity: S · added 2026-10-09 · W2 owner-phrases corpus

@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **4**
-- main = `21ba148c` (… d4b4020d REQ-013 P2 → 21ba148c P-040 pump rows per size)
+- main = `c69e307b` (… 21ba148c P-040 → c69e307b W3 batch 2 recipes/profiles/light)
 - Last status message to owner: 2026-10-09 22:30 (6 h status)
 
 ## Health (cycle 0)
@@ -20,12 +20,12 @@
 | Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
 | REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED | — |
 | REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o feat/repositorios-fase3 | implementer (opus xhigh) a2903e43 | running (dry-run only; lead applies, ≤US$0.05) |
-| W3 batch 2 | e7k ship/bb-recetas @c69e307b (squash) | SHIP | verifying → push |
+| W3 batch 2 | main c69e307b | PUSHED | product judge on prod (D-030) |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + owner-phrases corpus | e7l @59e0594f | built (tests only; 0 violations; 8/8 phrases) | queued for antagonist |
 | W7 switch dossier prep | e7n @39fae60a (integration test 46 cases) + PARIDAD-2026-10-09b + DOSSIER-SWITCH.md draft | done: counts ×1.00 vs Python, price 0.70× | test queued for review; dossier needs judge screenshots, live Python check, rollback drill |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
-| W2 scenario matrix | e7a | review FIX FIRST (VERSION_MOTOR 1.2.3, flaky time, silent rejections, weak bands) → haiku ae4bd443 | fixing |
+| W2 scenario matrix | e7a @1b5b0c79 | A1–A8 fixed (VERSION_MOTOR 1.2.3) | re-review running |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
@@ -63,5 +63,5 @@
 FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.00/2 · Anthropic 0.00/8 · total 1.28/13
 
 ## Metrics
-- Scenario pass rate (c0): seed1 99.1 % (1315/1327 valid; 673 rejected = 7–8 colours > schema cap 6), seed2 98.8 %; only banda_conteo fails (aro_circular 87 %, pared_densa 92 %). Remaining: aro calibration, band vs tube cross-section, classic columns over band, short garlands, lighting/furniture not varied.
+- Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
 - W4 leaderboard: n/a
