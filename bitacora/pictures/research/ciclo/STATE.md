@@ -19,7 +19,7 @@
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
 | Kontext P-038 + per-metal wording | e7g ship/kontext @9f8687a7 (squash) | SHIP after M1–M5 | runner verifying → push |
 | P-040 pump rows per size (judge 6/10) | e7m fix/bomba-por-tamano | implementer (haiku) af605af2 | running |
-| REQ-013 Phase 2 RAG partition | e7i @cab041e7 | opus review SHIP-level; fixing A1–A7 (lock_timeout, rollback note, indexer guards, policy out of engine, real PGlite run) | then dry-run + apply 033+034 → push code |
+| REQ-013 Phase 2 RAG partition | e7i ship/repositorios-f2 @8bb21f1c (squash) | SHIP; MIGRATIONS 033+034 APPLIED to Neon 21:29 | runner verifying → push |
 | W3 batch 2: recipe cards, size profiles, light/lens presets | e7k @cf8c5ed7 | built (haiku) | antagonist running |
 | W2 property tests + owner-phrases corpus | e7l feat/motor-propiedades | implementer (haiku) a2ca1ace | running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
