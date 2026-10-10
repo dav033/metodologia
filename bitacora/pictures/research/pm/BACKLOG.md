@@ -194,3 +194,93 @@ Ranked by value to the decorator, then size.
 
 Out of scope for the pro persona, kept for a later cycle: mosaic module for numbers and letters (idea 16, L) and wall
 colour from photo (idea 17, customer-side). The mosaic detection code in e6f is detection only, not a module.
+
+## PM delta — 2026-10-10 cycle 8
+
+Sources: BACKLOG.md (cycle 0), balloonbuilder/TRACKER.md, ciclo/STATE.md, ciclo/CRITICO-c4.md, day log 2026-10-10,
+PENDING.md. Code verified on `origin/main` = eb17544e with `git grep` / `git ls-tree` in `pictures-workspace/demo-decoracion`
+(no worktree, no fetch, no servers, no paid calls). Status key: DONE = marker and behaviour found on main; PARTIAL = part of
+the acceptance found, rest missing; OPEN = not found on main.
+
+### (a) Status of cycle-0 items
+
+Pro (PRO-xx)
+- PRO-02 helium lines · DONE. `components/tres-d/SeccionHelio.tsx`, `lib/globos3d/helio-cinta.ts` (`PERDIDA_HELIO = 0.07`).
+  The cycle-0 acceptance "10 balloons of 30 cm = 97 L" is WRONG; D-027 set litres = sphere volume of the inflated diameter.
+- PRO-03 pump seconds · DONE for the default table (`SeccionBomba.tsx`, `lib/globos3d/bomba-segundos.ts`, one row per size, P-040).
+  PARTIAL: per-workshop calibration form not found.
+- PRO-09 size profiles · DONE (`SelectorPerfilTamano.tsx`, `usePerfilesTamano.ts`, used by `ParametrosPieza.tsx`).
+- PRO-11 recipe card · DONE (`TarjetaReceta.tsx`, `lib/globos3d/receta-idea.ts`). Occasion/technique chips not verified.
+- PRO-06 export · PARTIAL: `CapturaRender.tsx` exists; no GLB export and no 3000 px PNG found (grep glb/gltf: no hits).
+- PRO-01 build sheet · OPEN on main (`HojaArmadoEscena` not found). In flight in e7q (review fix).
+- PRO-04 quote from scene · OPEN (no quote or budget path under `components/tres-d/`).
+- PRO-05 three tiers + surcharges · OPEN (no tier code seen in `components/cotizacion/` or `lib/cotizacion/`).
+- PRO-07 own stock · OPEN (only `leftoverInventory` in `lib/cotizacion/motor.ts` and `lib/plan/python-mapper.ts`).
+- PRO-08 approval link for scene · OPEN (`BotonAprobar` exists only under `components/propuesta/`).
+- PRO-10 paint + live count · OPEN/UNVERIFIED (paint tools exist; per-colour live counter not confirmed).
+- PRO-12 colour pins · OPEN (`ControlFotoIA.tsx` reads colour; no pin or per-pin ΔE component).
+- PRO-13 height/width marks · OPEN (ListaCompra shows room size only, not the piece bounding box).
+- PRO-14 plano vs armado block · OPEN (no "Plano vs" string on main).
+
+Customer (CUS-xx)
+- CUS-01 3D still on plan card · PARTIAL: `lib/guiada-motor/bandera.ts` (GUIADA_MOTOR), `components/guiado/motor3d/`,
+  `components/guiado/TarjetaPlan.tsx`. Acceptance (WebGL fallback, legend = BOM, ModificarPieza hidden) not verified.
+- CUS-02 card = quote count · PARTIAL: `lib/guiada-motor/cotizar-idea.ts` derives `globos` from the BOM; no test asserts card total = quote total.
+- CUS-03 unrepresentable structures · PARTIAL: `lib/globos3d/motor/representable.ts` (`avisoAproximada`, `avisoDeclarada`) used by
+  `espec-a-escena.ts` and `ediciones-pieza.ts`. No test of the 18 official structures found.
+- CUS-04 honesty tests · DONE. eb17544e: `scripts/test/test-honestidad-forzada.ts` (363 lines, 21 forced-failure cases,
+  exceeds the 10 asked); `lib/globos3d/honestidad-respuesta.ts`; wired in `.github/workflows/checks.yml`.
+- CUS-05 burgundy 915 · OPEN (P-027 still open; owner decision not recorded).
+- CUS-06 classic arch inflation · OPEN (owner question).
+- CUS-07 visual sign-off density · OPEN (no evidence of captures or sign-off).
+- CUS-08 voice · DONE in code: `components/voz/` (BotonVoz, dictado), `lib/voz/config.ts` (VOZ_ENABLED). Critic c4 says live in
+  prod (dca3aebd); owner confirmation still needed for the flag state (cycle-0 "no voice code" was a stale checkout).
+- CUS-09 edit ops · PARTIAL: `HERRAMIENTAS_EDICION` in `lib/ia/guiado/edicion-plan-chat.ts`; `tamano_pieza` and `proporcion_color`
+  in `lib/globos3d/motor/ediciones-*.ts`. The "no op adds geometry outside the list" test not found.
+- CUS-10 lazy 3D chunk · PARTIAL: `dynamic(` in `Taller3D.tsx`; `webglcontextlost` handled in `motor3d/HojaOrbita.tsx` and
+  `motor3d/visor-compartido.ts`. The 3 s throttled-4G measurement is not documented.
+- CUS-11 photo from same geometry · PARTIAL: `app/api/guiada/motor/imagen/route.ts`, `lib/guiada-motor/imagen-contrato.ts`.
+  Token-mismatch and retry acceptance not verified.
+- CUS-12 rating per AI turn · PARTIAL: `components/feedback-ia/CalificacionIA.tsx`, `CalificacionCliente.tsx`,
+  `components/guiado/CalificacionGuiada.tsx`. Rating reload/burst fix shipped (51129697). Full 1–10 form with before/after state not verified.
+- CUS-13 quote request fields · OPEN (no response-window copy or field validation found in `CotizacionPersonalGuiada.tsx`).
+- CUS-14 spares · PARTIAL: `components/cotizacion/MaterialesGranel.tsx` shows «sobrante»; no spares = packs - needed test.
+
+Count: DONE 6 (PRO-02, PRO-03 default table, PRO-09, PRO-11, CUS-04, CUS-08 code). PARTIAL 10 (PRO-06, PRO-03 calibration,
+CUS-01, 02, 03, 09, 10, 11, 12, 14). OPEN the rest (PRO-01, 04, 05, 07, 08, 10, 12, 13, 14; CUS-05, 06, 07, 13).
+
+### (b) Re-ranked top 10 (value to owner / effort; S before M within equal value)
+
+1. CUS-02 · card total = quote total test · S · trust in the number the customer sees (PARTIAL).
+2. CUS-03 · test of the 18 official structures + customer aviso · S · honesty item the code already half-does.
+3. CUS-14 · spares = packs - needed test, listed per colour · S · price makes sense (PARTIAL).
+4. PRO-01 · printable build sheet for /3d (in flight, e7q) · M · highest pro value; the decorator takes it to the venue.
+5. CUS-05 · burgundy 915 decision (accept / substitute / "aprox.") · S decision · colour is the first check a customer makes.
+6. PRO-13 · overall height and width marks, within 1 cm · S · pro sheet detail.
+7. PRO-14 · "plano vs armado" block in proposal · S · differentiator from the inspiration set.
+8. CUS-13 · quote request fields + response window (owner confirms) · M · fewer back-and-forth messages.
+9. PRO-04 · quote from a Taller scene (reuse `lib/cotizacion/borrador-profesional.ts`) · M · one flow from design to price.
+10. CUS-11 · photo generated from the same geometry as the 3D still · M · the photo the customer keeps matches the quote.
+
+Next after top 10: CUS-12 full rating form, CUS-10 measurement (M each); PRO-07 stock (L).
+
+### (c) New items (from code, PENDING and tracker evidence)
+
+- NEW-01 · Ideas 30 and 31 store the same price ($57,603) in the guided library (P-043, not in cycle 0). Customer-visible
+  quote risk. Evidence: PENDING P-043; `lib/biblioteca-sempertex/` JSON. Size S.
+  Acceptance: after re-resolve, a test asserts 29/30/31 prices are distinct and each equals the live Python price for its plan
+  (run once where Python is reachable); no duplicated price is quoted.
+- NEW-02 · `ajustar_salon` reports grid capacity ("40 invitados, caben 96") while 5 tables of 8 are placed (P-041).
+  Evidence: PENDING P-041. Size S.
+  Acceptance: reply capacity = seats of placed tables only (5 tables = 40, tested); the grid figure is not shown to the customer.
+- NEW-03 · Shopping list "Por pieza" lists 14 identical decorations as 14 rows (P-046). Evidence: PENDING P-046; judge note
+  in STATE.md (W3 quick wins). Size S.
+  Acceptance: identical (product, colour, size) pieces collapse to one row "× N"; row total = sum of the pieces; test with 14 identical pieces.
+- NEW-04 · Test to pin the D-027 helium formula (sphere volume). The cycle-0 "97 L" was wrong and no test guards the formula.
+  Evidence: D-027 (STATE.md); `lib/globos3d/helio-cinta.ts`. Size S.
+  Acceptance: fixture test computes litres from the inflated diameter as D-027 states; fails if the 0.07 loss factor changes silently.
+- NEW-05 · Recipe-card chips must follow the scene's structure. Judge scored 8/10 but flagged «Armazón recto» on an arch scene
+  (STATE.md, batch 2). Evidence: STATE.md; `components/tres-d/TarjetaReceta.tsx`. Size S.
+  Acceptance: a chip is shown only if the scene has that structure; an arch scene never shows «Armazón recto»; test over the catalogue.
+
+Out of this section: P-045 (graceful GUIADA_MOTOR rollback, high, blocker for the switch) is already in PENDING and must close before any switch.
