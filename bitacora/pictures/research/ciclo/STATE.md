@@ -20,7 +20,7 @@
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
 | Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
 | REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED | — |
-| REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o @38b1c027 | built (53 fichas; exact vector branch for small repos; apply cost ≈US$0.0025) | opus review running; then lead applies to Neon |
+| REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o @38b1c027 | opus review SHIP merge; DO NOT --aplicar until VPS runs ≥ d4b4020d (filter); small fixes A2/A3/A6 + confirm flag | fixing |
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + colour resolver (incl. P-047) | e7l | haiku failed review twice (resolver regression «dorado rosa» → false «No pude») → ESCALATED sonnet xhigh | fixing |
@@ -52,6 +52,7 @@
 (5) REQ-004 accounts. (6) asked ~20:05: making CI green turns on automatic VPS deploys (incl. Python ai-api) on every push to main — ok, or make deploy manual (workflow_dispatch) first? (2) fixed: no switch, bring dossier. Deploy to main authorized.
 
 ## Decisions taken alone (D-027+)
+- D-032 owner away all weekend (full control): Q1 keep 5 quartets/m, Q4 BB features pro-only (customer ones flag-off), Q5 shared password; Q3 → CLI transport
 - D-031 VPS deploy manual (workflow_dispatch) before CI goes green (Q6 reversible default)
 - D-030 product judge for staff Taller features on the production deploy
 - D-029 REQ-013 class-prefixed local ids for Sempertex kinds without catalogue id
