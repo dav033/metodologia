@@ -23,19 +23,19 @@
 | REQ-013 Phase 3 | main 318c5aaa | PUSHED (fichas + exact branch; Neon NOT applied — VPS must run ≥ d4b4020d first) | Phase 4 later |
 | W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
-| W2 property tests + colour resolver (P-047) | e7l @464d4363 | sonnet redesign done: table audit 0 failures (was 67/90 names wrong), ambiguity asks «dime cuál» | 3rd review (opus) running |
-| W7 switch dossier + P-045 graceful rollback | e7p @af0eedde | re-review SHIP; A7 (Python redo audit row lost — prod today) + A6 (expired token silent recalc) being fixed | then squash + push |
+| W2 property tests + colour resolver (P-047) | e7l | sonnet redesign failed 3rd review (card names not unique handles → «dime cuál» loops in 13/20 palettes; panel sends store word) → ESCALATED opus xhigh | fixing |
+| W7 switch dossier + P-045 graceful rollback | e7p ship/rollback @7aafc12c (squash) | SHIP | runner verifying → push |
 | W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
 | W4 training harness | e7s | haiku failed review twice (cache shares seco/real ground truth, leaderboard means) → ESCALATED sonnet xhigh | fixing |
-| W5b Claude Code CLI transport | e7t @81f4afce | opus review: prod-safe; fix local deadlines (calls 3–4 min vs 60–110 s limits), thinking-off dropped, cost 0 tracking, slot leak, retries, HMR counter, marker forgery → opus abaffba9 | fixing |
+| W5b Claude Code CLI transport | e7t @02d2f8f2 | A1–A7 fixed; photo read 242 s → 44.7 s with thinking off; ×4 deadlines only with CLI | opus re-review running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
 | W3 quick wins (PRO-02/03/13) | main | judge re-score after P-040: Bomba collapsed «Bomba · 2 min 46,1 s» 8/10; minor: «Por pieza» lists 14 «Ojo con venas N · 1 globo» rows (group identical decorations) | — |
-| CI green + manual VPS deploy (D-031) | main 870ca99b | FIRST FULL CI RUN: types-and-build (incl. next build) GREEN, deterministic-tests GREEN, secret-scan GREEN; python-quality red (8 mypy + ~6 pytest) | python fix e7u fix/python-quality (sonnet xhigh) running |
+| CI python-quality | e7u fix/python-quality | 6 pytest failures were stale tests; 8 mypy fixed behaviour-neutral; local python-quality fully green (9223 passed) | review running; owner note: R-36 quoted as R-24 (b7f5cfe2) |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
 
@@ -64,6 +64,7 @@
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)
 
 ## Escalations
+- 03:1x colour resolver: sonnet failed review → opus xhigh.
 - 03:xx W4 harness: haiku failed hostile review twice → sonnet xhigh.
 - 23:3x property tests/colour resolver: haiku failed hostile review twice → sonnet xhigh.
 - 19:0x Kontext colour exp: haiku failed twice (script bug, timeout) → sonnet xhigh.
