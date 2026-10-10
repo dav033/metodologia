@@ -62,6 +62,7 @@
 | Product judge (screenshots) | :3010 | general-purpose (sonnet) | DONE research/juez/JUEZ-2026-10-10.md: build sheet 8/10, Taller cards 8/10, /asistente 5/10 blocked (local :8000 was down → restarted 12:05 via scratchpad/arrancar-ai-api.py); re-judge /asistente |
 
 ## Next items (queue)
+- REQ-013 Phase 4 (visibility per surface + AI catalogue filter; gate met: catalogue acierto@5 95 %) — sonnet in e7x when RAM > 2.5 GB (12:2x: 1.4 GB free; 4 agents + :3010 + :8000).
 - Critic c12 (research/ciclo/CRITICO-c12.md) top: (1) time-box W4, ship if strictly better, re-run 30 photos (report both IoU metrics; restart :3010 on origin/main first); (2) screenshot judge sweep → feeds 24 h visual report 16:44; (3) switch dossier incl. rollback drill; (4) W3 money flow PRO-04/05. D-036 stop-rule.
 - Owner report artifact: https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU (update at 24 h).
 - Small-fix bundle (haiku, one worktree) when a slot frees: P-041 salon capacity wording, P-043 ideas 30/31 duplicated price (check), P-046 group identical decorations «× N», «Armazón recto» chip on arch scenes, CUS-02 card=quote test, CUS-03 18-structure test (PM delta c8).
