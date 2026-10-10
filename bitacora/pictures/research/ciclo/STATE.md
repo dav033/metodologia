@@ -74,6 +74,8 @@
 
 | D-039 remove solo-guiada mode | e7z feat/sin-solo-guiada | implementer (sonnet xhigh) | launched 14:0x; Vercel env: MODULOS_ESCRITURA=abierta added, NEXT_PUBLIC_SOLO_GUIADA removed (effective next prod build) |
 
+| W4 figures capability (falta_figura 18 photos) | e7w feat/w4-figuras | implementer (sonnet xhigh) | launched 14:4x; pass-2 detections frozen into cache (30/30) |
+
 ## Next items (queue)
 - W4 next by evidence: figures (falta_figura 18 photos, 12 dominant) and furniture/backdrops (14 photos, 10 dominant); cache the photo reader too; intercept native tool_use in the CLI transport.
 - Brief §7 gaps (critic c12 too): Playwright e2e smoke per release for /3d and /asistente (local Chrome), 20-scene visual baseline, owner-phrases corpus test with mocked model.
