@@ -5,6 +5,8 @@ One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 
 ## Open
+- P-042 · Guided 3D edits undo: inverse size edits drift (enlarge-then-shrink ≠ identity) and name-based colour returns can change the code — undo must restore the stored previous spec, not apply an inverse edit · urgency: med · complexity: S · added 2026-10-09 · W7 integration test
+- P-043 · Ideas 30 and 31 store the same price ($57,603) in the guided library — probably a copied value; verify before any quote · urgency: med · complexity: S · added 2026-10-09 · W7 parity refresh
 - P-041 · ajustar_salon reports grid capacity («40 invitados, caben 96») while only 5 tables of 8 are placed — confusing; report the placed capacity · urgency: med · complexity: S · added 2026-10-09 · W2 owner-phrases corpus
 - P-039 · Finish library ideas 29/30/31 fix (branch fix/biblioteca-feedback 998a7b18, e7f): re-resolve stored plans with a live Python (precomputar-planes-ideas.ts --verificar needs PYTHON_BACKEND_URL + INTERNAL_HMAC_SECRET; this PC can't reach sslip → run where Python is reachable), write nueva-sempertex-09/10/11.plan.json, regenerate planes-ideas.json, align decoraciones.json cards, regenerate only 29/30/31 goldens · urgency: med · complexity: M · added 2026-10-09 · marathon
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001

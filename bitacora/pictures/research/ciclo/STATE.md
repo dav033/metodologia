@@ -18,11 +18,12 @@
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
 | Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
-| REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED (migrations 033+034 on Neon) | Phase 3 next (index mobiliario/escenografía, ~US$0.05 embeddings) |
-| W3 batch 2: recipe cards, size profiles, light/lens presets | e7k @cf8c5ed7 | review FIX FIRST (neutral light overrides warm rooms, FLUX capture picks up UV/lens, recipe measures ignore tubes, chip mismatch + 78 KB import) → haiku a6dd27f4 | fixing |
+| REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED | — |
+| REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o feat/repositorios-fase3 | implementer (opus xhigh) a2903e43 | running (dry-run only; lead applies, ≤US$0.05) |
+| W3 batch 2: recipe cards, size profiles, light/lens presets | e7k @247d579c | fixes A1–A8 done | re-review ad1c22a8 running |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + owner-phrases corpus | e7l @59e0594f | built (tests only; 0 violations; 8/8 phrases) | queued for antagonist |
-| W7 switch dossier prep (integration test 28 ideas, parity refresh, DOSSIER-SWITCH.md) | e7n feat/dossier-guiada | implementer (haiku) a0ad4967 | running |
+| W7 switch dossier prep | e7n @39fae60a (integration test 46 cases) + PARIDAD-2026-10-09b + DOSSIER-SWITCH.md draft | done: counts ×1.00 vs Python, price 0.70× | test queued for review; dossier needs judge screenshots, live Python check, rollback drill |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a | review FIX FIRST (VERSION_MOTOR 1.2.3, flaky time, silent rejections, weak bands) → haiku ae4bd443 | fixing |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
