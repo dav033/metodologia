@@ -5,6 +5,7 @@ One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 
 ## Open
+- P-039 · Finish library ideas 29/30/31 fix (branch fix/biblioteca-feedback 998a7b18, e7f): re-resolve stored plans with a live Python (precomputar-planes-ideas.ts --verificar needs PYTHON_BACKEND_URL + INTERNAL_HMAC_SECRET; this PC can't reach sslip → run where Python is reachable), write nueva-sempertex-09/10/11.plan.json, regenerate planes-ideas.json, align decoraciones.json cards, regenerate only 29/30/31 goldens · urgency: med · complexity: M · added 2026-10-09 · marathon
 - P-038 · Kontext max production timeout 105 s (flux.ts:839) loses paid images (one took 112.9 s): longer deadline + re-fetch by request_id, with a test · urgency: high · complexity: S · added 2026-10-09 · Kontext colour experiment
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer --aplicar + upsert vectors, rebuild agente-core dist, visual review of Library filters/photo search, turn TALLER_RAG_ENABLED on only after the tuned eval beats today's search · urgency: high · complexity: ? · added 2026-10-08 · REQ-002
