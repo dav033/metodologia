@@ -20,16 +20,16 @@
 | Kontext P-038 + per-metal wording | main 9f8687a7 | PUSHED (verified; test-espera-imagen is a UI test, passes without --conditions) | — |
 | REQ-013 Phase 2 RAG partition | main d4b4020d | PUSHED | — |
 | REQ-013 Phase 3 index mobiliario/escenografía (hidden) | e7o feat/repositorios-fase3 | implementer (opus xhigh) a2903e43 | running (dry-run only; lead applies, ≤US$0.05) |
-| W3 batch 2 | main c69e307b | PUSHED | product judge on prod (D-030) |
+| W3 batch 2 | main c69e307b | PUSHED; judge on prod: recipe card 8/10 (clear matrix, measures 306×503×140 cm; chip «Armazón recto» on an arch scene is odd), light/lens selector 8/10 (UV look not checked) | — |
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + owner-phrases corpus | e7l @59e0594f | built (tests only; 0 violations; 8/8 phrases) | queued for antagonist |
-| W7 switch dossier prep | e7n @39fae60a (integration test 46 cases) + PARIDAD-2026-10-09b + DOSSIER-SWITCH.md draft | done: counts ×1.00 vs Python, price 0.70× | test queued for review; dossier needs judge screenshots, live Python check, rollback drill |
+| W7 switch dossier prep | e7n @39fae60a | review: test needs CI + stronger asserts; dossier FIX FIRST (rollback breaks open 3D plans → P-045 blocker) → haiku a0ad4967 | fixing |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @1b5b0c79 | A1–A8 fixed (VERSION_MOTOR 1.2.3) | re-review running |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
 | W5 Anthropic research | — | researcher (haiku) | DONE: claude-haiku-5-5 exists (effort param, $0.10/$0.50 MTok); notes research/w5-anthropic/NOTES.md |
 | PM pro / PM customer | — | general-purpose (haiku) | DONE: research/pm/BACKLOG.md PRO-01..14, CUS-01..14 (customer read stale checkout; flagged) |
-| W3 quick wins (PRO-02/03/13) | main e7109cc8 | product judge on prod: Bomba 6/10 (too many per-cm rows) → P-040 fix next; helium not judged (no helium scene in that template) | fix queued |
+| W3 quick wins (PRO-02/03/13) | main | judge re-score after P-040: Bomba collapsed «Bomba · 2 min 46,1 s» 8/10; minor: «Por pieza» lists 14 «Ojo con venas N · 1 globo» rows (group identical decorations) | — |
 | CI green (P-036 + P-029) + manual VPS deploy (D-031) | e7h fix/ci-verde-2 | merging main + deploy.yml → workflow_dispatch (haiku a61d5a41) | then review |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
