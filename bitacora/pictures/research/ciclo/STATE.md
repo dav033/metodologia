@@ -5,7 +5,7 @@
 - Current cycle: **11** (09:5x: all 3 branches in hostile review)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
 - main = `eb7d0abd` (… 888637d0 build sheet (flag off) → 2a3105c6 P-055 → b2ee1e39 CI hotfix → eb7d0abd P-049 kill covers armada/imagen)
-- Last status message to owner: 2026-10-10 05:35 (12 h status)
+- Last status message to owner: 2026-10-10 11:2x (18 h status) · CI green on eb7d0abd · next: 24 h visual report due 16:44
 
 ## Health (cycle 0)
 - NOTE: ship verification MUST include `npm run kontext:test` (provider guard is strict on new /api routes) — 888637d0 shipped an unclassified route; hotfixed b2ee1e39 within 10 min.
