@@ -52,6 +52,9 @@
 
 | P-055 test-cuerpo-generacion red on main | main 2a3105c6 | PUSHED (stale regex → behavioural, in kontext:test) | e7q free |
 
+| P-056 P-049 follow-ups (title, motor3d:test in CI, body drain, useCorte3d) | e7y fix/corte-seguimiento | implementer (haiku) | launched 11:0x |
+| P-052 colour resolver limits | e7q fix/resolutor-limites | implementer (haiku) | launched 11:0x |
+
 ## Next items (queue)
 - Small-fix bundle (haiku, one worktree) when a slot frees: P-041 salon capacity wording, P-043 ideas 30/31 duplicated price (check), P-046 group identical decorations «× N», «Armazón recto» chip on arch scenes, CUS-02 card=quote test, CUS-03 18-structure test (PM delta c8).
 - DONE 03:37: main checkout (clean, branch fix/color-organico-conteo, 0 ahead / 179 behind origin/main) → `git checkout main && git merge --ff-only origin/main`, `npm run build --workspaces --if-present`, set .env.local IA_PROVEEDOR=claude + IA_CLAUDE_TRANSPORTE=cli + IA_LOCAL_ESFUERZO=medium, restart :3010 (`node --use-system-ca node_modules/next/dist/bin/next dev -p 3010`, parent pid 12980) — D-033.
