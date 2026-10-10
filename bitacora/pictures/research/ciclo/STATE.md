@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **9** (07:2x: brief re-read after compaction; ad6a3710 Vercel Ready; 3 worktrees busy e7w/e7q/e7y → no new launches)
-- main = `ad6a3710` (… 0c7cc72e colour resolver → ad6a3710 W4 scale policy + visible-balloon metric)
+- main = `390ac0a2` (… ad6a3710 W4 scale policy + visible metric → 390ac0a2 P-050 error message)
 - Last status message to owner: 2026-10-10 05:35 (12 h status)
 
 ## Health (cycle 0)
@@ -42,7 +42,7 @@
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
 | Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
 
-| P-050 ajustar_tamanos formats | e7y fix/herramientas-p050 | implementer (haiku) | launched 07:0x |
+| P-050 ajustar_tamanos formats | main 390ac0a2 | PUSHED (antagonist SHIP; premise not reproduced, only error message) | e7y free |
 
 ## Next items (queue)
 - Small-fix bundle (haiku, one worktree) when a slot frees: P-041 salon capacity wording, P-043 ideas 30/31 duplicated price (check), P-046 group identical decorations «× N», «Armazón recto» chip on arch scenes, CUS-02 card=quote test, CUS-03 18-structure test (PM delta c8).

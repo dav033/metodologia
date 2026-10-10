@@ -13,7 +13,6 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 - P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — was: owner to pick A or B (proposal artifact Nuv9GST6YR9HmGgAMoDdMr); common base first: scene diff by piece id, per-turn undo of only AI-touched pieces, abort, optional streamed steps · urgency: high · complexity: ? · added 2026-10-09
 - P-041 · ajustar_salon reports grid capacity («40 invitados, caben 96») while only 5 tables of 8 are placed — confusing; report the placed capacity · urgency: med · complexity: S · added 2026-10-09 · W2 owner-phrases corpus
 - P-042 · Guided 3D edits undo: inverse size edits drift (enlarge-then-shrink ≠ identity) and name-based colour returns can change the code — undo must restore the stored previous spec, not apply an inverse edit · urgency: med · complexity: S · added 2026-10-09 · W7 integration test
-- P-050 · Scene tool `ajustar_tamanos` declaration accepts T-260/LOL-12 in colores_por_tamano.formatos but its zod only accepts R-* → model calls fail validation · urgency: med · complexity: S · added 2026-10-10 · property tests
 - P-037 · Prerender guard (P-033) scans only "use client" files; next.config has cacheComponents: true, so 11 server pages/layouts are exposed — extend the scan or document · urgency: med · complexity: M · added 2026-10-09 · marathon e7d review
 - P-039 · Finish library ideas 29/30/31 fix (branch fix/biblioteca-feedback 998a7b18, e7f): re-resolve stored plans with a live Python (precomputar-planes-ideas.ts --verificar needs PYTHON_BACKEND_URL + INTERNAL_HMAC_SECRET; this PC can't reach sslip → run where Python is reachable), write nueva-sempertex-09/10/11.plan.json, regenerate planes-ideas.json, align decoraciones.json cards, regenerate only 29/30/31 goldens · urgency: med · complexity: M · added 2026-10-09 · marathon
 - P-048 · Scenario matrix gaps: 18 % of representable pieces fall to noRepresentables («colour doesn't reach the materials list») and skip geometry checks; seed 11 E-00146 arco+arco_no_denso overlap 8 cm (anchoEstimadoCm underestimates arc + flower overhang); seed 3 E-00077 garland sencilla under band · urgency: med · complexity: M · added 2026-10-09 · matrix re-review
@@ -49,6 +48,7 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 _None_
 
 ## Recently closed
+- P-050 · ajustar_tamanos formats: premise not reproduced (declaration and zod share FORMATOS_AJUSTABLES); rejection now names valid sizes (390ac0a2) · urgency: med · complexity: S · closed 2026-10-10
 - P-047 · Colour name→code audit + resolver rewrite (568/568 matrix, repeat changes 184→6) · urgency: med · complexity: ? · closed 2026-10-10
 - P-043 · Ideas 30/31 same stored price — NOT a bug: both are 3 × (6164 + 13037) = 57,603 from their own plan lines · urgency: med · complexity: ? · closed 2026-10-10
 - P-029 · /P-036 · urgency: med · complexity: ? · CI fully green on main (first time) · closed 2026-10-10 · 77b4af27
