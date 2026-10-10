@@ -68,13 +68,14 @@
 
 | REQ-013 Phase 4 (T19–T22, flags off = byte-identical) | e7x feat/catalogo-fase4 | implementer (sonnet xhigh) | launched 13:1x |
 
-| W4 diagnostics (deterministic detection cache, specific failure classes, ver_escena claim) | e7w feat/entrenamiento-diagnostico | implementer (sonnet xhigh) | launched 13:2x |
+| W4 diagnostics (deterministic detection cache, specific failure classes, ver_escena claim) | e7w feat/entrenamiento-diagnostico | implementer (sonnet xhigh) | DONE ca1a2f24 (cache key = photo hash + detector config; capacidad_faltante → figura 18, mueble/fondo 14, pared 7, arco 2, tamaño 3; ver_escena = model tries native tool under CLI) → squashing |
 
 | P-054 scene AI time bounds (cheap searches, balloon-weighted budget, maxDuration + deadline) | e7q fix/escena-ia-tiempo | implementer (sonnet xhigh) | launched 14:0x |
 
 | D-039 remove solo-guiada mode | e7z feat/sin-solo-guiada | implementer (sonnet xhigh) | launched 14:0x; Vercel env: MODULOS_ESCRITURA=abierta added, NEXT_PUBLIC_SOLO_GUIADA removed (effective next prod build) |
 
 ## Next items (queue)
+- W4 next by evidence: figures (falta_figura 18 photos, 12 dominant) and furniture/backdrops (14 photos, 10 dominant); cache the photo reader too; intercept native tool_use in the CLI transport.
 - Brief §7 gaps (critic c12 too): Playwright e2e smoke per release for /3d and /asistente (local Chrome), 20-scene visual baseline, owner-phrases corpus test with mocked model.
 - 24 h visual report due 16:44 → update artifact https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU.
 - Critic c12 (research/ciclo/CRITICO-c12.md) top: (1) time-box W4, ship if strictly better, re-run 30 photos (report both IoU metrics; restart :3010 on origin/main first); (2) screenshot judge sweep → feeds 24 h visual report 16:44; (3) switch dossier incl. rollback drill; (4) W3 money flow PRO-04/05. D-036 stop-rule.
