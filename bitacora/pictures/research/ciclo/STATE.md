@@ -25,12 +25,12 @@
 | P-040 pump rows per size | main 21ba148c | PUSHED | — |
 | W2 property tests + colour resolver (P-047) | main 0c7cc72e | PUSHED | P-052 follow-ups |
 | W7 switch dossier + P-045 graceful rollback | main 7aafc12c | PUSHED (verified 25 suites, eslint 0) | dossier still missing: judge screenshots, live Python check, rollback drill |
-| W3 build sheet (PRO-01) + TRACKER.md | e7q @f5212672 | review FIX FIRST: rings meaningless for organic/walls (466-balloon «rings»), empty pages, tests too weak → haiku a912b7f0 | fixing |
+| W3 build sheet (PRO-01) | e7q @c4ef78f8 | fixes done (rings only columns/modules, tables otherwise) | 2nd review running |
 | CUS-04 honesty | main eb17544e | PUSHED | — |
-| W4 training harness | main fb956d8c | tramo 1 done (10/10); tramo 2 (20 photos) running; analysis → fix list | — |
+| W4 training harness | main | baseline pass over 30 photos done | re-run after fixes A+B |
 | W5b Claude Code CLI transport | main a8247ecc | PUSHED; LOCAL :3010 now runs origin/main (detached) with IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli, IA_LOCAL_ESFUERZO=medium — /api/ia/salud: predeterminado claude (haiku, medium), factorPlazo 4 | .env.local backup in %TEMP%/env.local.bak-* |
 | Small-fix bundle | main 55475888 | PUSHED | — |
-| W4 fixes A (recolourable backdrops, otro→catalogue resolver, racimo range, cake on pedestal) | e7w fix/entrenamiento-capacidades | implementer (haiku) a281c578 | running |
+| W4 fixes A (recolourable backdrops, otro→catalogue, thickness range, cake on pedestal) | e7w @82cbfcce | built (golden +3 nodes intentional); lote-02 not run by implementer | antagonist running (incl. lote-02 from e4r data) |
 | W4 fixes B (scale policy, visible metric, convergence) | e7x @e51e511c | built; lote-02 gate passes; tramo-1 re-score: proporciones 0.503 → 0.519 (visible), armed/detected 6.6×→2.1× etc. | antagonist running |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | main 15c74eb7 | PUSHED (verified) | P-048 follow-ups |
@@ -80,4 +80,4 @@ FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.00/2 · Anthro
 
 ## Metrics
 - Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
-- W4 leaderboard (tramo 1, 10 photos 25–34, Haiku CLI, 2 turns, US$0, 181 calls, ~26 min): proporciones 0.40–0.66 (≈0.50), colores 0.15–0.87 (≈0.46), IoU 0.29–0.74; dominant failure capacidad_faltante (10/10), compilacion 3. Tramo 2 (35–54) running; failure analysis agent running.
+- W4 BASELINE (all 30 photos, main fb956d8c, Haiku CLI medium, 2 turns, US$0, 552 calls): mean proporciones 0.446, colores 0.366, IoU 0.525 (old all-balloons metric); failures: capacidad_faltante 29/30, compilacion 7. Next pass after fixes A+B merge (compare same metric).
