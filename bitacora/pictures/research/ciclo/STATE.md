@@ -55,6 +55,9 @@
 | P-056 P-049 follow-ups (title, motor3d:test in CI, body drain, useCorte3d) | e7y fix/corte-seguimiento | implementer (haiku) | PUSHED main e7b7aeaa (review SHIP; minors → P-057) |
 | P-052 colour resolver limits | e7q fix/resolutor-limites | implementer (haiku) | 38bdf09f (b,c,d; a deferred → P-057) → review running |
 
+| D-038 single quote everywhere (analysis + one pricer + parity test) | e7y feat/cotizacion-unica | implementer (opus xhigh) | launched 11:5x |
+| VPS deploy (D-037) | — | lead | waiting CI green on e7b7aeaa, then workflow_dispatch; then REQ-013 P3 Neon apply (dry run first) and P-039 live Python |
+
 ## Next items (queue)
 - Critic c12 (research/ciclo/CRITICO-c12.md) top: (1) time-box W4, ship if strictly better, re-run 30 photos (report both IoU metrics; restart :3010 on origin/main first); (2) screenshot judge sweep → feeds 24 h visual report 16:44; (3) switch dossier incl. rollback drill; (4) W3 money flow PRO-04/05. D-036 stop-rule.
 - Owner report artifact: https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU (update at 24 h).
