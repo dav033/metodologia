@@ -3,7 +3,7 @@
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **2**
-- main = `6a760e21` (REQ-013 phase 1) · Vercel prod Ready (dy05o6kaz)
+- main = `51129697` (… 6a760e21 REQ-013 P1 → 51129697 AI-rating fix)
 - Last status message to owner: 2026-10-09 16:44 (start)
 
 ## Health (cycle 0)
@@ -17,7 +17,8 @@
 | W1 REQ-007 Phase 5 | main d05a52b8 | PUSHED (verified: tsc, 11 suites, contracts) | watch Vercel; product judge at switch dossier (D-028) |
 | W1 P-033 prerender guard + dense asym column | main 53502782 | PUSHED | — |
 | REQ-013 Phase 1 | main 6a760e21 | PUSHED (verified tsc, catalogo:test, 16 suites, contracts) | Phase 2 next (migration 034 must be applied before its code) |
-| Kontext P-038 + metal wording | e7g @e6a86250 | review FIX FIRST (fronteras import → CI red, gold clause for all metals, failed resume repays, one-use tokens, CI tests) → sonnet a2b1a2f7 (+US$0.16 silver check) | fixing |
+| Kontext P-038 + per-metal wording | e7g @243fdbf0 | A1–A8 fixed; silver check: no harm (n=1) | re-review running; VPS Caddy has no response timeout (ok for 115 s) |
+| REQ-013 Phase 2 RAG partition | e7i @cab041e7 | built (opus): filter always on, 42703 fallback, eval unchanged acierto@5 100 %, spend 0 | opus review running; then apply 033+034 to Neon (dry-run first) BEFORE pushing code |
 | W5 local Claude provider | main 8c397842 | PUSHED (verified 17 suites + unit + contracts) | needs ANTHROPIC_API_KEY + migration 033 before first local run |
 | W2 scenario matrix | e7a @8e78c1a6 (+8029d0c0 room height/flowers under floor) | built (haiku) | queued for antagonist |
 | W6 REQ-013 ADR | — | opus xhigh | DONE: SPEC+PLAN 7 phases (requirements/REQ-013-catalogue-repositories); risk = migration 033 before Phase 2 code; eval data copy from e4r/data/taller |
@@ -26,7 +27,7 @@
 | W3 quick wins (PRO-02/03/13) | e7b ship/bb-rapidos @b423c64e (squash) | 3 reviews done, A1–A4 fixed | runner verifying → push → product judge on prod (D-030) |
 | CI green (P-036 + P-029) | e7h fix/ci-verde-2 (9 commits) | built (haiku); python-quality unverified (no venv) | HELD: green CI on main auto-deploys the VPS (deploy.yml workflow_run) — today every deploy is 'skipped' because CI is red → owner question (6) |
 | W1 library ideas 29/30/31 | e7f fix/biblioteca-feedback @998a7b18 | HELD: customer-visible (stale stored Python counts → mismatch warnings); needs Python re-resolve | — |
-| Feedback rating reload/burst | e7j ship/feedback @51129697 (squash) | SHIP | runner verifying → push |
+| Feedback rating reload/burst | main 51129697 | PUSHED (verified) | product judge on prod (customer chats) |
 
 ## Next items (queue)
 1. Baseline test run (runner) — failing tests list.
@@ -52,7 +53,7 @@
 - none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
 
 ## Spend (24 h window from start) vs caps
-FLUX 1.12/3 (Kontext exp complete: 14 calls logged conservatively) · Gemini 0.00/2 · Anthropic 0.00/8 · total 1.12/13
+FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.00/2 · Anthropic 0.00/8 · total 1.28/13
 
 ## Metrics
 - Scenario pass rate (c0): seed1 99.1 % (1315/1327 valid; 673 rejected = 7–8 colours > schema cap 6), seed2 98.8 %; only banda_conteo fails (aro_circular 87 %, pared_densa 92 %). Remaining: aro calibration, band vs tube cross-section, classic columns over band, short garlands, lighting/furniture not varied.
