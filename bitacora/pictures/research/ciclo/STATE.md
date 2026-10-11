@@ -12,11 +12,12 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `14545f54` (… 3a390153 Phase 5 → 4e27a72a P-054 → 14545f54 D-038 single quote, VPS first) · VPS = 14545f54
+- main = `95a8ad57` (… 14545f54 D-038 single quote → e4216c98 NC-5/CUS-03/CUS-14 → 95a8ad57 test fix) · VPS = 14545f54
 - Last status message to owner: 2026-10-10 17:10 (24 h status) · next ≈23:10
 
 ## Health (cycle 0)
 - NOTE: system check 17:3x (workflow wf_a968de44-14c): all layers amber, nothing down; prod smoke 11 PASS / 1 FAIL (catalogue) / 2 SKIP; stopped idle :3020 dev server (e4r, 37 h) per D-033 → RAM 2.7 GB; :3010 → 0e47760f. Old claude.exe sessions left alone.
+- NOTE: ship chains must stop on ANY failing test before pushing (e4216c98 was pushed with ui-sobrantes red; fixed by the next commit).
 - NOTE: local Python is 3.14 (deferred annotations) but CI uses 3.11 — run Python-touching scripts with `py -3.13` before shipping.
 - NOTE: before/after each release run `npm run e2e:humo -- --env-file <demo-decoracion>/.env.local` (local :3010 on the shipped sha).
 - NOTE: ship verification MUST include `npm run kontext:test` (provider guard is strict on new /api routes) — 888637d0 shipped an unclassified route; hotfixed b2ee1e39 within 10 min.
@@ -92,7 +93,7 @@
 
 | NP-1 complete build sheet (helium in hoja, printed positions, foil/forma lines, organic «cómo armar», copy polish) | e7w feat/hoja-completa | implementer (sonnet xhigh) | DONE b681e493 (internal adversarial: 8 fixed; 1597→1704 pages, all fit; helium total = list on 405 scenes) → PUSHED main df620c43 | e7w free |
 
-| NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | DONE 34f6fddf (NC-5: empty POST + redundant GET fixed, Playwright test; CUS-03: 18 structures covered — 11 built, 3 approximated with aviso, 4 Python with «La vista 3D todavía no dibuja…»; CUS-14: leftovers already shown, 2 tests) → squash verified green (ship/calificacion-y-pruebas) → HOLD until D-038 lands, then rebase + push |
+| NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | DONE 34f6fddf (NC-5: empty POST + redundant GET fixed, Playwright test; CUS-03: 18 structures covered — 11 built, 3 approximated with aviso, 4 Python with «La vista 3D todavía no dibuja…»; CUS-14: leftovers already shown, 2 tests) → PUSHED e4216c98 after D-038; ui-sobrantes failed post-rebase (hard-coded lila 12″ leftover 0, D-038 spares changed it) and my chain pushed anyway → test fix 95a8ad57 |
 
 | OWNER CASE quince backdrop read as guest table (research/entrenamiento/casos/2026-10-10-quince-mesa) | e7w fix/foto-quince | implementer (opus xhigh) | launched 21:5x; Gemini cap US$0.30 for repro |
 
