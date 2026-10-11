@@ -123,7 +123,7 @@
 
 | Flag-read timeout 1000→2500 ms + durable PLAN_3D_FALLBACK bandera_* + `npm run prod:pulso` (excludes +local / anthropic as «propio») | e7y fix/bandera-plazo-pulso | implementer (sonnet high) | DONE ef3a0212 (2500 ms; reuses plan route `{desde:"bandera_fallida"}` → PLAN_3D_FALLBACK bandera_*; no new route/schema; prod:pulso first real run «sano»: 2 PLAN_3D_CREADO in 6 h (drill), 0 errors) → lead-reviewed SHIP (small, session-gated; spam risk minor) → rebased 302d6e3d → GATE OK + 8 tests → PUSHED main → CI green → VPS DEPLOY_OK → prod smoke 13/0/2 (02:47) |
 
-| c24#4 durable spend counters (migration 035_topes_gasto additive; fotos/hora, imágenes/navegador, cupo escena IA, módulos FLUX) | e7z feat/topes-durables | implementer (sonnet xhigh) | launched 03:2x; lead applies 035 after review |
+| c24#4 durable spend counters (migration 035_topes_gasto additive; fotos/hora, imágenes/navegador, cupo escena IA, módulos FLUX) | e7z feat/topes-durables | implementer (sonnet xhigh) | DONE a545d3a6 (topes_gasto one row per clave, atomic SQL take/refund, Postgres clock; 1.5 s deadline → in-memory fallback + 30 s skip; on only in Next prod server with DATABASE_URL, TOPES_DURABLES override; caps: fotos/hora, imágenes/navegador (sha256), escena-ia/foto/similitud; limits unchanged; topes:test in gate+CI; dry run lists only 035) → opus antagonist round 1 running 03:4x; lead applies 035 after SHIP |
 
 | c24#3 product judge /asistente on PROD (desktop + phone, 3 journeys, ≤4 free-text turns, cap US$0.05; no FLUX) | scratchpad/juez (e7q infra) | general-purpose (sonnet xhigh) | launched 03:0x → research/juez/JUEZ-ASISTENTE-2026-10-11.md |
 
