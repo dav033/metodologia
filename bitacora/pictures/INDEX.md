@@ -1,14 +1,18 @@
 # Index — pictures
 
-_Generated 2026-10-09 16:55 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-10 23:53 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-10-09
+**Last activity:** 2026-10-10
 
 ## Workspace
 
 - **demo-decoracion** → `C:/Users/davidt/Downloads/pictures-workspace/demo-decoracion`
+
+## Needs attention
+
+- REQ-014: plan waiting for approval
 
 ## Requirements
 
@@ -26,27 +30,28 @@ _Generated 2026-10-09 16:55 by `bitacora.py index`. Do not edit by hand._
 | [REQ-010](requirements/REQ-010-ai-feedback/SPEC.md) | AI feedback: rate every AI action and keep its full state | `in progress 2026-10-09` | — |  |
 | [REQ-011](requirements/REQ-011-module-studio-with-cached-ai-renders/SPEC.md) | Module studio with cached AI renders | `in-progress` | — |  |
 | [REQ-012](requirements/REQ-012-furniture-freedom-tables-and-chairs-deco/SPEC.md) | Furniture freedom: tables and chairs decoupled | `in-progress` | — |  |
-| [REQ-013](requirements/REQ-013-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `ready` | [in-progress](requirements/REQ-013-72h-marathon-autonomous-product-developm/PLAN.md) |  |
+| [REQ-013](requirements/REQ-013-catalogue-repositories/SPEC.md) | Catalogue repositories (ADR) | `ready` | [planned](requirements/REQ-013-catalogue-repositories/PLAN.md) |  |
+| [REQ-014](requirements/REQ-014-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `ready` | [review](requirements/REQ-014-72h-marathon-autonomous-product-developm/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
+- P-066 · Verify on prod that the Taller «Precio en la tienda» equals the /asistente card and plan p · high/S
+- P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversation · high/M
+- P-067 · Owner quince photo case, remaining gaps after ead764a0: gold over-read in the compiled gar · high/M
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/?
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer - · high/?
 - P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) — implemen · high/?
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/?
-- P-029 · CI health: deterministic-tests fails at test-python-adapter (pre-existing) and stops, so l · high/?
-- P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — was: owner · high/?
-- P-002 · FLUX photo color fidelity: residual ΔE ~15 after hex prompt (c25490f1); next: photoreal ca · med/?
 
 ## Recent decisions
 
-- D-026 — Quotes use the Sempertex standard presentations (closes P-035) · 2026-10-09
-- D-025 — Taller "Foto realista · Igual al visor" uses FLUX.1 Kontext max · 2026-10-09
-- D-024 — Guided chat moves to the 3D engine now (supersedes D-019's parity gate) · 2026-10-09
-- D-023 — 2026-10-09 · The AI must never claim an action that failed
-- D-022 — AI feedback (REQ-010): full form everywhere, non-blocking, Neon + dedicated file storage · 2026-10-09
+- D-039 — Beta: production is the same for everyone, everything on everywhere (owner) · 2026-10-10
+- D-038 — One quote everywhere — pick the best model (owner) · 2026-10-10
+- D-037 — Owner: not real production — VPS deploy approved, go hard (owner) · 2026-10-10
+- D-036 — Review stop-rule and model start for M tasks (marathon, taken alone) · 2026-10-10
+- D-035 — Persisted guided-plan fields: the reader ships one deploy before the writer (marathon, taken alone) · 2026-10-10
 
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W2](2026-10/W2/WEEK.md): [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)
+  - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

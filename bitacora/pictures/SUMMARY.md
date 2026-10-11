@@ -7,27 +7,38 @@ Sempertex balloon-decoration demo (`demo-decoracion`: Next 16 on Vercel + Python
 engine: the **Taller 3D** (`/3d`, pro tool with a scene AI agent) and the **guided customer chat** (`/asistente`,
 quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
-## Current state (main = `14545f54`, VPS = 14545f54, 2026-10-10 ~22:50; single quote D-038 live)
-- **One quote everywhere (D-038) live:** same plan = same price on every surface; per-balloon spares with a cost cap; Python = engine (42-BOM shared fixture in CI).
-- **Beta, everything on for everyone (D-039):** guided chat runs the 3D engine for all customers, Taller build sheet on, solo-guiada mode being removed; VPS deploys follow every green main (D-037).
+## Current state (main = `59a06582`, VPS = b22e4eef → 59a06582 when CI is green, 2026-10-10 ~23:55)
+- **One quote everywhere (D-038) live:** same plan = same price on every surface; per-balloon spares with a cost cap;
+  Python = engine (42-BOM shared fixture in CI). API parity test: 26 engine ideas card = Taller to the peso; the 18
+  curated ideas are still priced «as listed» (fix in progress).
+- **Beta, everything on for everyone (D-039):** guided chat runs the 3D engine for all customers, Taller build sheet on,
+  solo-guiada mode removed, catalogue repositories on; VPS deploys follow every green main (D-037). Only the AI-feedback
+  admin panel stays closed (third-party data).
+- **Owner photo case (quinceañera backdrop) fixed in main 59a06582:** the backdrop is the subject (no guest table),
+  scale and floor come from the installation, the garland spans the real balloons. Gaps left in P-067 (gold over-read,
+  garland thickness, plum chrome, extra panels).
 - **72 h marathon running** (since 2026-10-09 16:44, session 83576a42; owner away all weekend, D-032/D-033).
-  Live state: `research/ciclo/STATE.md`.
-- **CI fully green for the first time** (77b4af27). VPS deploy is manual and gated on green CI (D-031); no VPS deploy
-  this weekend (D-034) — main carries Python quote changes never deployed there.
+  Live state: `research/ciclo/STATE.md`. Every ship: full local suite gate → push → CI (checks.yml) → VPS deploy
+  (deploy.yml, full SHA) → production smoke `npm run e2e:humo -- --base https://demo-decoracion.vercel.app`.
 - **Local AI = Claude Haiku via Claude Code CLI** (no API key; `.env.local` IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli,
-  IA_LOCAL_ESFUERZO=medium); production stays on Gemini. Dev server :3010 runs origin/main e7b7aeaa with the build sheet flag on locally.
-- **Shipped this marathon:** REQ-007 Phase 5 (customer 3D edits) + P-045 graceful rollback; REQ-013 catalogue
-  repositories Phases 1–3 (Neon migrations 033/034 applied; furniture fichas not indexed yet); Taller helium/pump/
-  measures, recipe cards, size profiles, light/lens; Kontext resume (no double charge) + metallic tint; AI rating fix;
-  honesty tests (CUS-04); scenario matrix + property tests; colour resolver rewrite; prerender guard (client + server); W4 training harness + scale policy; Taller build sheet (flag taller_hoja_armado, off); kill switch on armada/imagen (P-049/P-056).
-- **W4 training baseline** (30 owner photos, Haiku CLI, US$0): proporciones 0.446, colores 0.366, IoU 0.525.
+  IA_LOCAL_ESFUERZO=medium); production stays on Gemini.
+- **Shipped this marathon:** D-038 single quote; REQ-007 Phase 5 (customer 3D edits) + P-045 graceful rollback; REQ-013
+  catalogue repositories Phases 1–5; Taller build sheet (complete: helium, positions, foil lines) + helium/pump/measures,
+  recipe cards, size profiles, light/lens; Kontext resume + metallic tint; AI rating (one POST per turn); honesty tests
+  (CUS-03/CUS-04); scenario matrix + property tests; colour resolver rewrite + limits; prerender guard; W4 training
+  harness, scale policy, figures capability, diagnostics; scene-AI time bounds (P-054); kill switch on armada/imagen;
+  production fixes (catalogue on Vercel, /3d id guard, guided-3D plan audit); e2e smoke per release.
+- **W4 training** (30 owner photos, Haiku CLI, US$0): pass 1 → pass 2: proporciones 0.447 → 0.482, colores 0.365 →
+  0.385, IoU 0.524 → 0.559.
 
 ## Active focus
-- W4 capabilities (round 6, time-boxed by D-036) → re-run the 30 photos; screenshot product judge; switch dossier evidence. Owner report: https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU
+- Curated ideas through the single pricer + «Ideas del asistente» in the Taller (e7x); P-067 photo gaps; PM top-8
+  (NC-4 rollback drill, NP-4 copy, NC-1 plan creation without Python). Owner report:
+  https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU (48 h update ≈ Sunday 16:44).
 
 ## Top pending (see PENDING.md)
-- P-039 library ideas 29–31 need live Python; P-045 follow-ups P-049; P-050/P-051 tool/engine gaps; P-052 resolver
-  limits; owner on Monday: VPS deploy note, REQ-013 Phase 3 Neon apply, D-027…D-034 review, R-36→R-24 wording.
+- P-066 curated-idea price parity; P-067 photo case gaps; P-057…P-065 review leftovers; owner on Monday: D-027…D-039
+  review, R-36→R-24 wording, feedback-panel decision.
 
 ## Recent decisions (see DECISIONS.md)
 - D-027 helium sphere volume · D-028/D-030 product judge timing · D-029 class-prefixed ids · D-031 manual VPS deploy ·
