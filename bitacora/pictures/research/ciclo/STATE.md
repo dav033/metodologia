@@ -15,7 +15,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `6274a079` (… 14545f54 D-038 → e4216c98 NC-5 bundle → 95a8ad57 test fix → b22e4eef card↔Taller parity test → 59a06582 owner photo fix → 6274a079 CI gate) · VPS = 59a06582 (6274a079 is CI/test-only: no VPS deploy needed) (CI 38112921316 green, deploy 38113722622 DEPLOY_OK 00:11; prod smoke 13 PASS / 0 FAIL / 2 SKIP)
+- main = `302d6e3d` (… 14545f54 D-038 → e4216c98 NC-5 bundle → 95a8ad57 test fix → b22e4eef card↔Taller parity test → 59a06582 owner photo fix → 6274a079 CI gate → 302d6e3d flag timeout 2.5 s + prod:pulso) · VPS = 302d6e3d (DEPLOY_OK 02:4x; prod smoke 13/0/2) (CI 38112921316 green, deploy 38113722622 DEPLOY_OK 00:11; prod smoke 13 PASS / 0 FAIL / 2 SKIP)
 - Last status message to owner: 2026-10-10 23:10 (30 h status) · next ≈05:10
 
 ## Health (cycle 0)
@@ -121,7 +121,7 @@
 
 | Timed rollback drill (guiada_motor → python → 3d; guiada_motor_corte on → off; open-tab behaviour; restore verified) | e7z (read-only) + scratchpad drill script | general-purpose (sonnet xhigh) | DONE 03:1x ALL PASS (2 runs, 07:04–07:14Z): flips take effect 0–30 s (30 s cache bound met); python flip → new plan from Python ($117,655 vs $176,591 3D); open 3D plan keeps editing (P-045); kill switch → 409 MOTOR_3D_CORTADO before spend, honest «No pude…», proactive «Tu plan necesita recalcularse»; restore verified 07:15:45Z (guiada_motor=3d, no corte row). Bug confirmed in prod: 1 s client flag read aborted → 3D-flag plan priced by Python (fix 302d6e3d in ship chain). Spend ≤ US$0.02. Evidence SIMULACRO-ROLLBACK-2026-10-11.md + 8 PNGs + DOSSIER-SWITCH section |
 
-| Flag-read timeout 1000→2500 ms + durable PLAN_3D_FALLBACK bandera_* + `npm run prod:pulso` (excludes +local / anthropic as «propio») | e7y fix/bandera-plazo-pulso | implementer (sonnet high) | DONE ef3a0212 (2500 ms; reuses plan route `{desde:"bandera_fallida"}` → PLAN_3D_FALLBACK bandera_*; no new route/schema; prod:pulso first real run «sano»: 2 PLAN_3D_CREADO in 6 h (drill), 0 errors) → lead-reviewed SHIP (small, session-gated; spam risk minor) → rebased 302d6e3d → gate + tests → push → CI → VPS → prod smoke chain running 03:0x |
+| Flag-read timeout 1000→2500 ms + durable PLAN_3D_FALLBACK bandera_* + `npm run prod:pulso` (excludes +local / anthropic as «propio») | e7y fix/bandera-plazo-pulso | implementer (sonnet high) | DONE ef3a0212 (2500 ms; reuses plan route `{desde:"bandera_fallida"}` → PLAN_3D_FALLBACK bandera_*; no new route/schema; prod:pulso first real run «sano»: 2 PLAN_3D_CREADO in 6 h (drill), 0 errors) → lead-reviewed SHIP (small, session-gated; spam risk minor) → rebased 302d6e3d → GATE OK + 8 tests → PUSHED main → CI green → VPS DEPLOY_OK → prod smoke 13/0/2 (02:47) |
 
 | c24#4 durable spend counters (migration 035_topes_gasto additive; fotos/hora, imágenes/navegador, cupo escena IA, módulos FLUX) | e7z feat/topes-durables | implementer (sonnet xhigh) | launched 03:2x; lead applies 035 after review |
 
