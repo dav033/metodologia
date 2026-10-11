@@ -130,3 +130,14 @@ one-week watch in §5, and keep `python` as the one-step rollback for new plans.
 Automated verification for this draft: `test-motor-guiada-integracion` (46 cases; four independent categories: build,
 price, counts, edits), `-golden`, `-fronteras`, `-precio` pass; full typecheck shows only the known `LayoutProps` artefact
 in `src/app/layout.tsx`.
+
+## Rollback drill — 2026-10-11
+
+Evidence: [SIMULACRO-ROLLBACK-2026-10-11.md](../../research/ciclo/SIMULACRO-ROLLBACK-2026-10-11.md) (timeline, screenshots, restore confirmation). It closes the "Rollback drill" item of §5, steps 2 and 4 of §4, on production (app `6274a079ca55`), with no customer traffic.
+
+- **Flag to `python`:** read by new requests in 0–10 s (first) and 0–30 s (all instances); a new plan comes from Python; an open 3D plan keeps editing in 3D (audit `bandera=python, efectivo=3d`), no crash, conversation intact. PASS.
+- **Back to `3d`:** 5–20 s; new plans 3D, open plan editable. PASS.
+- **Kill switch `guiada_motor_corte=activo`:** 5–30 s; armada, imagen and plan answer 409 `MOTOR_3D_CORTADO` before any spend; an edit of the open plan is refused with "No pude… Tu plan sigue como estaba"; reloading shows "Tu plan necesita recalcularse" with "Recalcular mi plan"; new plans use Python. Release 15–30 s. PASS.
+- **Timing vs the ≤ 30 s criterion (§6 c):** met at the 30 s cache bound (5 s polling resolution); instances disagree inside the window.
+- **Spend:** 2 chat turns, 0 paid calls. **Restore:** `ajustes_runtime` equal to the "before" rows, no `guiada_motor_corte` row.
+- **Open finding:** the client gives up on the flag read after 1 s (`usarMotorGuiada.ts:16`), so a new plan can silently come from Python with the flag on `3d` ($117,655 instead of $176,591 for the same idea; seen once). Detail in the drill file.
