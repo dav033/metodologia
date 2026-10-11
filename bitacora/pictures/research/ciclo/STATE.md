@@ -98,7 +98,7 @@
 
 | NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | DONE 34f6fddf (NC-5: empty POST + redundant GET fixed, Playwright test; CUS-03: 18 structures covered — 11 built, 3 approximated with aviso, 4 Python with «La vista 3D todavía no dibuja…»; CUS-14: leftovers already shown, 2 tests) → PUSHED e4216c98 after D-038; ui-sobrantes failed post-rebase (hard-coded lila 12″ leftover 0, D-038 spares changed it) and my chain pushed anyway → test fix 95a8ad57 |
 
-| OWNER CASE quince backdrop read as guest table (research/entrenamiento/casos/2026-10-10-quince-mesa) | e7w fix/foto-quince | implementer (opus xhigh) | launched 21:5x; Gemini cap US$0.30 for repro |
+| OWNER CASE quince backdrop read as guest table (research/entrenamiento/casos/2026-10-10-quince-mesa) | e7w fix/foto-quince | implementer (opus xhigh) | DONE ead764a0 (subject = backdrop, scale+floor from the installation, garland to last balloons; case: table gone, garland 5.7 m/139 balloons at 1.3–2.6 m, lentejuelas+arcos_chiara+sillón; gold over-read 59 % vs ~35 %; lote-02 identical; Gemini US$0.052) → squashing; image sent to owner |
 
 | P-066 prod price parity (asistente card = Taller «Precio en la tienda»), e2e step, prod run with --con-chat (Gemini cap US$0.05) | e7q feat/humo-paridad | implementer (sonnet high) | PUSHED b22e4eef: API parity test (26 engine ideas card = Taller to the peso; live :3010 3/3 equal); gap: 18 curated ideas priced «as listed» without spares |
 
@@ -154,7 +154,7 @@
 - none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
 
 ## Spend (24 h window from start) vs caps
-FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.002/2 · Anthropic 0.00/8 · total 1.28/13 (+US$0.002 Gemini)
+FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.054/2 · Anthropic 0.00/8 · total 1.28/13 (+US$0.002 Gemini)
 
 ## Metrics
 - Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
