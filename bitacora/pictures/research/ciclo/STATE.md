@@ -97,9 +97,10 @@
 
 | OWNER CASE quince backdrop read as guest table (research/entrenamiento/casos/2026-10-10-quince-mesa) | e7w fix/foto-quince | implementer (opus xhigh) | launched 21:5x; Gemini cap US$0.30 for repro |
 
-| P-066 prod price parity (asistente card = Taller «Precio en la tienda»), e2e step, prod run with --con-chat (Gemini cap US$0.05) | e7q feat/humo-paridad | implementer (sonnet high) | launched 22:5x; :3010 → origin/main |
+| P-066 prod price parity (asistente card = Taller «Precio en la tienda»), e2e step, prod run with --con-chat (Gemini cap US$0.05) | e7q feat/humo-paridad | implementer (sonnet high) | finding: the 46 guided ideas are NOT in the Taller Ideas tab (0 of 557 match) → no UI path; switched to API-level parity test over all 46 + 3 live checks on :3010 |
 
 ## Next items (queue)
+- NEW (D-039 parity gap): the guided chat's 46 ideas (decoraciones.json) are not in the Taller «Añadir → Ideas» — add them as an «Ideas del asistente» group, insertable in /3d with their saved plan/spec, so the same idea exists everywhere.
 - PM delta c20 (research/pm/BACKLOG.md): top 8 = NC-3 audit (in flight), NP-1 build sheet (in flight), NP-6 prod price parity check after D-038, NC-4 rollback drill (careful: local .env.local points at prod Neon — drill flips prod), NP-4 copy polish, CUS-03+CUS-14 tests, NC-5 one rating POST per turn, NC-1 plan creation survives Python down.
 - W4 next by evidence: figures (falta_figura 18 photos, 12 dominant) and furniture/backdrops (14 photos, 10 dominant); cache the photo reader too; intercept native tool_use in the CLI transport.
 - Brief §7 gaps left: 20-scene visual baseline, owner-phrases corpus test with mocked model.
