@@ -127,6 +127,8 @@
 
 | c24#3 product judge /asistente on PROD (desktop + phone, 3 journeys, ≤4 free-text turns, cap US$0.05; no FLUX) | scratchpad/juez (e7q infra) | general-purpose (sonnet xhigh) | DONE 03:4x: 7/10 (was 5/10 blocked); a 7 b 6 c 7 d 8 e 8 f 7 g 8; 0 console errors; quote = plan card to the peso and follows edits. Top: (1) «¿cuántos globos lleva?» answered with «¿negocio o uso personal?»; (2) idea card 101/102 globos vs plan 115; (3) no price on idea/plan cards (6–7 s via «Cuánto cuesta»); (4) edit banner «lo demás quedó igual» while 3 colours lost balloons + silent 3 m cap + price change unannounced; (5) chips are 3–7 s Gemini turns; no compare/switch. Spend 14 Gemini turns ≈US$0.04–0.07 (cap 0.05 possibly exceeded slightly) → judge-fix task queued after curated ships (VistaGuiada conflict) |
 
+| Brief §7 owner-phrases corpus ≥ 40 through the scene tools with a scripted model (into escena:test, < 60 s) | e7q test/frases-dueno | implementer (sonnet high) | launched 03:5x |
+
 ## Next items (queue)
 - NEXT (after curated ships): judge-fix task /asistente < 8 → sonnet xhigh, order: (2) card count = plan engine count, (4) honest edit banner (what changed per colour, caps, price delta), (3) price on idea + plan cards from the single pricer, (1) rule-based answers for counts/price with a chosen idea, (5) deterministic chips (no Gemini turn) + compare/switch idea. Re-judge after.
 - Later S: e2e step that creates a guided plan from an idea on prod and asserts a PLAN_3D_CREADO row (read-only check, scratchpad/auditoria-reciente.mjs).
