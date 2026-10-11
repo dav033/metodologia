@@ -2,7 +2,8 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **25** (04:3x: PR #5 durable caps CI GREEN incl. real pg 8-conn concurrency; migration 035_topes_gasto APPLIED to Neon 04:37 after dry run (35 applied, nothing pending); curated PR #6 CI running; corpus agent running; judge-fix next)
+- Current cycle: **26** (06:0x: corpus 65edd83b pushed (CI → VPS chain); PM pro + PM customer deltas c26 (haiku; customer writes research/pm/BACKLOG-c26-cliente.md to avoid a race); judge-fix + W4 pass 3 running)
+- Prev: cycle 25 (04:3x: PR #5 durable caps CI GREEN incl. real pg 8-conn concurrency; migration 035_topes_gasto APPLIED to Neon 04:37 after dry run (35 applied, nothing pending); curated PR #6 CI running; corpus agent running; judge-fix next)
 - Prev: cycle 24 (00:4x day 3: completeness critic c24 launched (sonnet xhigh); VPS 59a06582 + prod smoke 13/0/2; e7x curated pricing + e7w P-067 running; day log now 2026-10-11.md)
 - Prev: cycle 23 (23:5x: post-compaction re-read of brief + STATE; owner photo fix PUSHED 59a06582 after the gated chain caught test-honestidad-escena (route-shape patterns) → CI → VPS chain running; curated pricing (sonnet) running)
 - Prev: cycle 22 (23:10: D-038 live; P-054, NP-1, Phase 5, NC-5 shipped; owner photo case (opus) + curated pricing/«Ideas del asistente» (sonnet) running)
