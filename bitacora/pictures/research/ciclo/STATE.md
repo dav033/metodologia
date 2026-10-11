@@ -13,7 +13,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `95a8ad57` (… 14545f54 D-038 single quote → e4216c98 NC-5/CUS-03/CUS-14 → 95a8ad57 test fix) · VPS = b22e4eef
+- main = `b22e4eef` (… 14545f54 D-038 → e4216c98 NC-5 bundle → 95a8ad57 test fix → b22e4eef card↔Taller parity test) · VPS = b22e4eef
 - Last status message to owner: 2026-10-10 23:10 (30 h status) · next ≈05:10
 
 ## Health (cycle 0)
