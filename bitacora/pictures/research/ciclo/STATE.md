@@ -111,6 +111,10 @@
 
 | P-067 owner photo gaps (gold share one source of truth, 3 panels + glitter sides, plum chrome, garland thickness vs lote-02, flowers in reader, low-camera capture, 0x08 regex) | e7w fix/foto-quince-2 | implementer (sonnet xhigh, D-036) | launched 23:58; Gemini cap US$0.25 (≤4 readings) |
 
+| Prod pulse 01:0x (runner, free) | — | runner (haiku) | DONE: audit errors 0 (24 h/6 h); Vercel CLI logs capped at 50 entries (0 5xx; CLI cannot give a 24 h count); ai_feedback 86 turns all time, 0 ever rated (7 undo writes landed) → ALERT A; plan_audit_log 4 COTIZACION_IDEA_3D in 24 h, NO PLAN_3D_* row ever → ALERT B; /api/ia/salud 307 to login (not a probe) |
+
+| Diagnose ALERT A (ratings never stored?) + ALERT B (guided-3D plans not audited?) + self-traffic share | e7z lectura/pulso (read-only) | general-purpose (sonnet xhigh) | launched 01:1x |
+
 ## Next items (queue)
 - Critic c24 (research/ciclo/CRITICO-c24.md) top-8 → plan: (1) prod pulse — runner collecting audit errors / ai_feedback aggregates / plan_audit_log / Vercel 5xx / Python liveness now (00:5x), then `npm run prod:pulso` script (haiku); (2) `npm run gate` + dorado/honestidad/agente/herramientas/foto-a-escena/lectura-foto suites into checks.yml (haiku, next free slot); (5) rollback drill (guiada_motor + kill switch, timed) + previous-release saved-state fixtures parse test — run the drill in the 02:00–06:00 low-traffic window; (4) Neon-backed photo/image spend counters (sonnet); (3) /asistente judge ≥ 8 desktop+phone + one --con-chat prod smoke (cap US$0.05) + owner-phrases corpus ≥ 40; (6) W4 pass 3 + 8-photo Gemini cross-check (cap US$0.60) + triptychs; (7) branch/worktree audit RAMAS.md, ideas 29/30/31 (D-039 removed the hold); (8) PRO-04/05 Taller «Cotizar», then 20-scene visual baseline.
 - PM delta c20 (research/pm/BACKLOG.md): top 8 = NC-3 audit (in flight), NP-1 build sheet (in flight), NP-6 prod price parity check after D-038, NC-4 rollback drill (careful: local .env.local points at prod Neon — drill flips prod), NP-4 copy polish, CUS-03+CUS-14 tests, NC-5 one rating POST per turn, NC-1 plan creation survives Python down.
