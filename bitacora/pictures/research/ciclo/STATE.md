@@ -13,7 +13,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `95a8ad57` (… 14545f54 D-038 single quote → e4216c98 NC-5/CUS-03/CUS-14 → 95a8ad57 test fix) · VPS = 14545f54
+- main = `95a8ad57` (… 14545f54 D-038 single quote → e4216c98 NC-5/CUS-03/CUS-14 → 95a8ad57 test fix) · VPS = b22e4eef
 - Last status message to owner: 2026-10-10 23:10 (30 h status) · next ≈05:10
 
 ## Health (cycle 0)
@@ -22,6 +22,7 @@
 - NOTE: standard tsc verify config must include scripts/**/*.tsx (test-ui-calificacion-chat.ts uses Window globals declared in a .tsx fixture).
 - NOTE: local Python is 3.14 (deferred annotations) but CI uses 3.11 — run Python-touching scripts with `py -3.13` before shipping.
 - NOTE: before/after each release run `npm run e2e:humo -- --env-file <demo-decoracion>/.env.local` (local :3010 on the shipped sha).
+- NOTE: never type a full SHA by hand — always `git rev-parse` it (a made-up SHA was dispatched once at 23:3x and cancelled).
 - NOTE: deploy.yml run list `headSha` is main at dispatch time, NOT the deployed ref — read DEPLOY_OK sha=… in the log instead.
 - NOTE: ship verification MUST include `npm run kontext:test` (provider guard is strict on new /api routes) — 888637d0 shipped an unclassified route; hotfixed b2ee1e39 within 10 min.
 - NOTE: create worktree junctions ONLY with the PowerShell tool (bash quoting created a stray `Downloads$2` junction twice; removed safely).
