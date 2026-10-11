@@ -91,7 +91,7 @@
 
 | NP-1 complete build sheet (helium in hoja, printed positions, foil/forma lines, organic «cómo armar», copy polish) | e7w feat/hoja-completa | implementer (sonnet xhigh) | DONE b681e493 (internal adversarial: 8 fixed; 1597→1704 pages, all fit; helium total = list on 405 scenes) → PUSHED main df620c43 | e7w free |
 
-| NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | launched 20:0x |
+| NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | DONE 34f6fddf (NC-5: empty POST + redundant GET fixed, Playwright test; CUS-03: 18 structures covered — 11 built, 3 approximated with aviso, 4 Python with «La vista 3D todavía no dibuja…»; CUS-14: leftovers already shown, 2 tests) → ship after D-038 (package.json) |
 
 ## Next items (queue)
 - PM delta c20 (research/pm/BACKLOG.md): top 8 = NC-3 audit (in flight), NP-1 build sheet (in flight), NP-6 prod price parity check after D-038, NC-4 rollback drill (careful: local .env.local points at prod Neon — drill flips prod), NP-4 copy polish, CUS-03+CUS-14 tests, NC-5 one rating POST per turn, NC-1 plan creation survives Python down.
