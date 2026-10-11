@@ -109,13 +109,15 @@
 
 | Curated ideas via single pricer + «Ideas del asistente» in the Taller + browser parity step | e7x fix/curadas-cotizador-unico | implementer (sonnet xhigh) | DONE f902f5ab + 2daa002a (curated via cotizarBom; parity asserted on 44/46; 26 engine ideas in Taller «Ideas del asistente» from precomputed escenas.json; e2e paridad step) — CONCERN: 8 ej-* ideas with printed balloons unknown to the crosswalk now EXCLUDE them («No incluido») → card drops 30–40 k (boda/xv 61.8k→21.5k) → LEAD BLOCKER (a quote missing ~60 % of cost is not «the best», D-038) → opus round 1 FIX (lead blocker downgraded to MAJOR: the 8 ej-* ideas are origen «ejemplo», filtered by bibliotecaVisible → unreachable; still must price printed variants by their own packs; MAJOR D-035 strict schema noIncluidos; minors: label under kill switch, audit row detail, live crosswalk retry, one WebGL renderer, e2e by data id) → fix round sent 02:0x (last round, D-036) |
 
-| P-067 owner photo gaps (gold share one source of truth, 3 panels + glitter sides, plum chrome, garland thickness vs lote-02, flowers in reader, low-camera capture, 0x08 regex) | e7w fix/foto-quince-2 | implementer (sonnet xhigh, D-036) | launched 23:58; Gemini cap US$0.25 (≤4 readings) |
+| P-067 owner photo gaps (gold share one source of truth, 3 panels + glitter sides, plum chrome, garland thickness vs lote-02, flowers in reader, low-camera capture, 0x08 regex) | e7w fix/foto-quince-2 | implementer (sonnet xhigh, D-036) | DONE 02:1x 5f83aaa0 fed3378e 6710da6f f4224af8 (internal hostile pass, 8 fixed): gold 59→37 % (photo 36 %), merlot 2→25 %, 2 glitter walls (`cantidad` → copies in a row), plum chrome → Reflex Violeta, flowers → follaje in prompt (Gemini still reports none), 0x08 regex fixed; gap 2 not a defect by measures; gap 6 (low camera) not reproduced; doors still 1 (reader). lote-02 worst −0.006; golden 0 diffs; Gemini US$0.0276 → lead antagonist (sonnet xhigh) running |
 
 | Prod pulse 01:0x (runner, free) | — | runner (haiku) | DONE: audit errors 0 (24 h/6 h); Vercel CLI logs capped at 50 entries (0 5xx; CLI cannot give a 24 h count); ai_feedback 86 turns all time, 0 ever rated (7 undo writes landed) → ALERT A; plan_audit_log 4 COTIZACION_IDEA_3D in 24 h, NO PLAN_3D_* row ever → ALERT B; /api/ia/salud 307 to login (not a probe) |
 
 | Diagnose ALERT A (ratings never stored?) + ALERT B (guided-3D plans not audited?) + self-traffic share | e7z lectura/pulso (read-only) | general-purpose (sonnet xhigh) | DONE 01:4x: both FALSE ALARMS — A: rating path works (PGlite + Playwright 7/7 + SQL 11/11); nobody has rated: all 32 cliente rows are `+local` (ours), 0 real customer chat rows; B: no plan created in prod by anyone since 10-09 (no Gemini chat calls); risk w/o evidence: usarMotorGuiada TIMEOUT_BANDERA_MS = 1000 → silent fallback to Python, no durable trace. Self-traffic ≈ 92–100 % (marker: version_app ends `+local`, server-written; provider anthropic = local). Then PROD SMOKE --con-chat 01:5x: 15 PASS / 0 FAIL / 0 SKIP (2 chat turns, 0 paid calls; «cuánto cuesta» $176.591); 2 COTIZACION_IDEA_3D rows landed in prod |
 
 | c24#2 `npm run gate` + escena:test (dorado, honestidad, agente, herramientas, foto-a-escena, lectura-foto…) into checks.yml | e7q ci/compuerta | implementer (haiku, S) | launched 01:2x |
+
+| Timed rollback drill (guiada_motor → python → 3d; guiada_motor_corte on → off; open-tab behaviour; restore verified) | e7z (read-only) + scratchpad drill script | general-purpose (sonnet xhigh) | launched 02:2x; Gemini cap US$0.05; evidence → research/ciclo/SIMULACRO-ROLLBACK-2026-10-11.md + DOSSIER-SWITCH |
 
 ## Next items (queue)
 - NEXT S task: e2e step that creates a guided plan from an idea on prod and asserts a PLAN_3D_CREADO row (read-only check, scratchpad/auditoria-reciente.mjs) + flag-read timeout 1000 ms → ~2.5 s and a durable PLAN_3D_FALLBACK reason when it times out; prod pulse must exclude `+local` rows.
@@ -169,7 +171,7 @@
 - none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
 
 ## Spend (24 h window from start) vs caps
-FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini ≈0.11/2 (0.054 + owner photo case 0.052 + 0.002; P-067 capped 0.25) · Anthropic 0.00/8 · total ≈1.39/13
+FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini ≈0.14/2 (0.054 + owner photo case 0.052 + 0.002 + P-067 0.0276) · Anthropic 0.00/8 · total ≈1.42/13
 
 ## Metrics
 - Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
