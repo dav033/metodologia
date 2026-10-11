@@ -18,6 +18,7 @@
 ## Health (cycle 0)
 - NOTE: system check 17:3x (workflow wf_a968de44-14c): all layers amber, nothing down; prod smoke 11 PASS / 1 FAIL (catalogue) / 2 SKIP; stopped idle :3020 dev server (e4r, 37 h) per D-033 → RAM 2.7 GB; :3010 → 0e47760f. Old claude.exe sessions left alone.
 - NOTE: ship chains must stop on ANY failing test before pushing (e4216c98 was pushed with ui-sobrantes red; fixed by the next commit).
+- NOTE: standard tsc verify config must include scripts/**/*.tsx (test-ui-calificacion-chat.ts uses Window globals declared in a .tsx fixture).
 - NOTE: local Python is 3.14 (deferred annotations) but CI uses 3.11 — run Python-touching scripts with `py -3.13` before shipping.
 - NOTE: before/after each release run `npm run e2e:humo -- --env-file <demo-decoracion>/.env.local` (local :3010 on the shipped sha).
 - NOTE: ship verification MUST include `npm run kontext:test` (provider guard is strict on new /api routes) — 888637d0 shipped an unclassified route; hotfixed b2ee1e39 within 10 min.
@@ -97,10 +98,11 @@
 
 | OWNER CASE quince backdrop read as guest table (research/entrenamiento/casos/2026-10-10-quince-mesa) | e7w fix/foto-quince | implementer (opus xhigh) | launched 21:5x; Gemini cap US$0.30 for repro |
 
-| P-066 prod price parity (asistente card = Taller «Precio en la tienda»), e2e step, prod run with --con-chat (Gemini cap US$0.05) | e7q feat/humo-paridad | implementer (sonnet high) | finding: the 46 guided ideas are NOT in the Taller Ideas tab (0 of 557 match) → no UI path; switched to API-level parity test over all 46 + 3 live checks on :3010 |
+| P-066 prod price parity (asistente card = Taller «Precio en la tienda»), e2e step, prod run with --con-chat (Gemini cap US$0.05) | e7q feat/humo-paridad | implementer (sonnet high) | PUSHED b22e4eef: API parity test (26 engine ideas card = Taller to the peso; live :3010 3/3 equal); gap: 18 curated ideas priced «as listed» without spares |
+
+| Curated ideas via single pricer + «Ideas del asistente» in the Taller + browser parity step | e7x fix/curadas-cotizador-unico | implementer (sonnet xhigh) | launched 23:0x |
 
 ## Next items (queue)
-- NEW (D-039 parity gap): the guided chat's 46 ideas (decoraciones.json) are not in the Taller «Añadir → Ideas» — add them as an «Ideas del asistente» group, insertable in /3d with their saved plan/spec, so the same idea exists everywhere.
 - PM delta c20 (research/pm/BACKLOG.md): top 8 = NC-3 audit (in flight), NP-1 build sheet (in flight), NP-6 prod price parity check after D-038, NC-4 rollback drill (careful: local .env.local points at prod Neon — drill flips prod), NP-4 copy polish, CUS-03+CUS-14 tests, NC-5 one rating POST per turn, NC-1 plan creation survives Python down.
 - W4 next by evidence: figures (falta_figura 18 photos, 12 dominant) and furniture/backdrops (14 photos, 10 dominant); cache the photo reader too; intercept native tool_use in the CLI transport.
 - Brief §7 gaps left: 20-scene visual baseline, owner-phrases corpus test with mocked model.
