@@ -12,7 +12,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `5e61dde6` (… 8955d367 Phase 4 → 0e47760f W4 figures → 5e61dde6 prod fixes: catalogue, /3d guard, 3D audit) · VPS = 5e61dde6 (rule: VPS follows every green main)
+- main = `df620c43` (… 0e47760f W4 figures → 5e61dde6 prod fixes → df620c43 NP-1 complete build sheet) · VPS = 5e61dde6 (rule: VPS follows every green main)
 - Last status message to owner: 2026-10-10 17:10 (24 h status) · next ≈23:10
 
 ## Health (cycle 0)
@@ -89,7 +89,7 @@
 
 | System check fixes: prod /catalogo empty on Vercel (SQLite in /tmp), /3d crash clasificacionDe(undefined id), guided-3D plans not audited server-side (plan_audit_log empty since 10-09 11:15Z), pg SSL log noise | e7z fix/catalogo-vercel | implementer (sonnet xhigh) | DONE (catalogue seeded from committed public snapshot, 1615 products; clasificacionDe guard; guided-3D plans → plan_audit_log via after(); pg sslmode verify-full) → PUSHED main 5e61dde6; VPS deployed; PROD SMOKE 12 PASS / 0 FAIL / 2 SKIP (chat skipped on remote): /catalogo 1445 products; Vercel env LORA_GENERATION_PYTHON_ENABLED renamed to FLUX_GENERATION_PYTHON_ENABLED (value copied unprinted) |
 
-| NP-1 complete build sheet (helium in hoja, printed positions, foil/forma lines, organic «cómo armar», copy polish) | e7w feat/hoja-completa | implementer (sonnet xhigh) | DONE b681e493 (internal adversarial: 8 fixed; 1597→1704 pages, all fit; helium total = list on 405 scenes) → squashing |
+| NP-1 complete build sheet (helium in hoja, printed positions, foil/forma lines, organic «cómo armar», copy polish) | e7w feat/hoja-completa | implementer (sonnet xhigh) | DONE b681e493 (internal adversarial: 8 fixed; 1597→1704 pages, all fit; helium total = list on 405 scenes) → PUSHED main df620c43 | e7w free |
 
 | NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | launched 20:0x |
 
