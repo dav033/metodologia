@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-10-10 23:53 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-11 03:46 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-10-10
+**Last activity:** 2026-10-11
 
 ## Workspace
 
@@ -37,11 +37,11 @@ _Generated 2026-10-10 23:53 by `bitacora.py index`. Do not edit by hand._
 
 - P-066 · Verify on prod that the Taller «Precio en la tienda» equals the /asistente card and plan p · high/S
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversation · high/M
-- P-067 · Owner quince photo case, remaining gaps after ead764a0: gold over-read in the compiled gar · high/M
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/?
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer - · high/?
 - P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) — implemen · high/?
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/?
+- P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — was: owner · high/?
 
 ## Recent decisions
 
@@ -54,4 +54,4 @@ _Generated 2026-10-10 23:53 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)
+  - [W2](2026-10/W2/WEEK.md): [11](2026-10/W2/2026-10-11.md), [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

@@ -7,7 +7,7 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 ## Open
 - P-066 · Verify on prod that the Taller «Precio en la tienda» equals the /asistente card and plan price for the same idea (NP-6), now that D-038 is live; also re-run e2e:humo on prod · urgency: high · complexity: S · added 2026-10-10 (D-038 single quote shipped 14545f54)
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversations get edits refused (409 MOTOR_PYTHON), Python routes refuse 3D tokens, and adding an idea/redoing silently re-prices in Python (~×1.4). Design a graceful rollback (keep 3D plans priced by the engine until the conversation ends, or tell the customer) — BLOCKER for the switch · urgency: high · complexity: M · added 2026-10-09 · W7 dossier review
-- P-067 · Owner quince photo case, remaining gaps after ead764a0: gold over-read in the compiled garland (59 % vs ~35 %: gold-dominated stretches counted on top of the garland-wide share); garland thinner than the photo (139–153 balloons; thickness measure trade-off with lote-02); only one door/one sequin panel built (photo has 3 arched panels + gold glitter sides); plum chrome read as matte violeta; flowers not reported by Gemini; seated/low camera breaks the refine capture; literal 0x08 in avisos-color-escena.ts:45 regex · urgency: high · complexity: M · added 2026-10-10
+- P-068 · Owner quince photo, left after 9f86d67b (P-067): the reader gives 1 door piece where the photo has 3 arched panels (needs a fondos-detector fixture that finds the doors); pink fabric roses missing from the catalogue (only white/ivory); low/seated camera breaks the refine capture (unreproduced, needs a headless capture check); a failed colour tweak (ajustarColoresSiPuede) also adds a misleading «no se armó» entry · urgency: med · complexity: M · added 2026-10-11
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer --aplicar + upsert vectors, rebuild agente-core dist, visual review of Library filters/photo search, turn TALLER_RAG_ENABLED on only after the tuned eval beats today's search · urgency: high · complexity: ? · added 2026-10-08 · REQ-002
 - P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) — implementer fixing 4 BLOCKER/9 MAJOR + orphan-field ledger test; then Claude reference → Gemini parity per photo · urgency: high · complexity: ? · added 2026-10-08
@@ -56,6 +56,7 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 _None_
 
 ## Recently closed
+- P-067 · closed 2026-10-11 by 9f86d67b: garland colour shares match the reading (gold 59→37 %, photo ~36 %), second glitter wall, plum/mauve chrome → Reflex, 0x08 regex; prompt = main + one validated sentence.
 - P-054 · Scene AI time bounds shipped 4e27a72a (arch «más R-24» 40.6→~10 s; R-5 column instant reject; maxDuration 75 + deadline; 430 structure-balloon cap); leftovers P-065 · urgency: med · complexity: M · closed 2026-10-10
 - P-052 · Colour resolver: exact card name wins, no rosa alternation, plural wording, property tests see 011/009 (shipping 2026-10-10); leftovers P-058 · urgency: med · complexity: M · closed 2026-10-10
 - P-056 · P-049 follow-ups shipped (e7b7aeaa): neutral title, 409 drain, useCorte3d, motor3d:test in CI · urgency: med · complexity: S · closed 2026-10-10
@@ -79,6 +80,8 @@ _None_
 - P-001 · Implement the approved 3D editor redesign · urgency: med · complexity: ? · closed 2026-10-08 · commits 5adaa808..f0c2895a
 
 ## Notes
+One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
+Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
