@@ -20,6 +20,7 @@
 ## Health (cycle 0)
 - NOTE: system check 17:3x (workflow wf_a968de44-14c): all layers amber, nothing down; prod smoke 11 PASS / 1 FAIL (catalogue) / 2 SKIP; stopped idle :3020 dev server (e4r, 37 h) per D-033 → RAM 2.7 GB; :3010 → 0e47760f. Old claude.exe sessions left alone.
 - NOTE: ship chains must stop on ANY failing test before pushing (e4216c98 was pushed with ui-sobrantes red; fixed by the next commit). The gate worked at 23:50 (honesty test caught the photo-fix merge).
+- NOTE: `git add bitacora/pictures/` staged the owner photos once (23:53, local only, amended out before any push); `research/entrenamiento/casos/.gitignore` now ignores images — keep it.
 - NOTE: the CI workflow file is `checks.yml` ("Quality checks"), not ci.yml.
 - NOTE: standard tsc verify config must include scripts/**/*.tsx (test-ui-calificacion-chat.ts uses Window globals declared in a .tsx fixture).
 - NOTE: local Python is 3.14 (deferred annotations) but CI uses 3.11 — run Python-touching scripts with `py -3.13` before shipping.
@@ -28,7 +29,7 @@
 - NOTE: deploy.yml run list `headSha` is main at dispatch time, NOT the deployed ref — read DEPLOY_OK sha=… in the log instead.
 - NOTE: ship verification MUST include `npm run kontext:test` (provider guard is strict on new /api routes) — 888637d0 shipped an unclassified route; hotfixed b2ee1e39 within 10 min.
 - NOTE: create worktree junctions ONLY with the PowerShell tool (bash quoting created a stray `Downloads$2` junction twice; removed safely).
-- RAM: 15.7 GB, ~2.3 GB free after cleanup (commit 24.6/32.7 GB) → max 2 implementers at once until RAM improves.
+- RAM 23:57: 2.5 GB free, 2 implementers running (e7x, e7w). Earlier: 15.7 GB, ~2.3 GB free after cleanup (commit 24.6/32.7 GB) → max 2 implementers at once until RAM improves.
 - Ports in use: 3010 (owner dev, untouchable), 3020 (unknown dev server, left alone).
 - `ANTHROPIC_API_KEY` absent in `.env.local` (IA_PROVEEDOR=gemini) → owner question (3).
 
@@ -105,7 +106,9 @@
 
 | P-066 prod price parity (asistente card = Taller «Precio en la tienda»), e2e step, prod run with --con-chat (Gemini cap US$0.05) | e7q feat/humo-paridad | implementer (sonnet high) | PUSHED b22e4eef: API parity test (26 engine ideas card = Taller to the peso; live :3010 3/3 equal); gap: 18 curated ideas priced «as listed» without spares |
 
-| Curated ideas via single pricer + «Ideas del asistente» in the Taller + browser parity step | e7x fix/curadas-cotizador-unico | implementer (sonnet xhigh) | launched 23:0x |
+| Curated ideas via single pricer + «Ideas del asistente» in the Taller + browser parity step | e7x fix/curadas-cotizador-unico | implementer (sonnet xhigh) | launched 23:0x; running test-cotizar-curada |
+
+| P-067 owner photo gaps (gold share one source of truth, 3 panels + glitter sides, plum chrome, garland thickness vs lote-02, flowers in reader, low-camera capture, 0x08 regex) | e7w fix/foto-quince-2 | implementer (sonnet xhigh, D-036) | launched 23:58; Gemini cap US$0.25 (≤4 readings) |
 
 ## Next items (queue)
 - PM delta c20 (research/pm/BACKLOG.md): top 8 = NC-3 audit (in flight), NP-1 build sheet (in flight), NP-6 prod price parity check after D-038, NC-4 rollback drill (careful: local .env.local points at prod Neon — drill flips prod), NP-4 copy polish, CUS-03+CUS-14 tests, NC-5 one rating POST per turn, NC-1 plan creation survives Python down.
@@ -157,7 +160,7 @@
 - none yet (16:50: first wave was launched without explicit model, stopped after ~3 min and relaunched per the model rule)
 
 ## Spend (24 h window from start) vs caps
-FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini 0.054/2 · Anthropic 0.00/8 · total 1.28/13 (+US$0.002 Gemini)
+FLUX 1.28/3 (Kontext exp complete incl. silver check) · Gemini ≈0.11/2 (0.054 + owner photo case 0.052 + 0.002; P-067 capped 0.25) · Anthropic 0.00/8 · total ≈1.39/13
 
 ## Metrics
 - Scenario pass rate (c4, after review fixes): seed1 98.5 % of 2,000 (0 rejected; 2,612 pieces without a band); open: flowers on solo_grandes dip 3 cm under floor (whitelisted), aro lujoso/medio under band, thin columns 20/m.
