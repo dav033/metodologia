@@ -2,7 +2,8 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **20** (17:5x: brief re-read due (every 4 cycles) — hard rules unchanged except owner D-037/D-039; PM delta c20 running; VPS 0e47760f)
+- Current cycle: **21** (20:0x: prod smoke 12/12; D-038 merging; P-054 r2 review; Phase 5 final fixes; NP-1; NC-5 bundle)
+- Prev: cycle 20 (17:5x: brief re-read due (every 4 cycles) — hard rules unchanged except owner D-037/D-039; PM delta c20 running; VPS 0e47760f)
 - Prev: cycle 19 (17:10: 6 h status sent; figures verifying; D-038 capped rule; P-054 round 2; Phase 5)
 - Prev: cycle 18 (16:0x: Phase 4 on; Phase 5 launched; RAM 1.4 GB → one launch only)
 - Prev: cycle 17 (14:5x: main b5f32b06 no solo-guiada; VPS chain pending; RAM 4.5 GB)
@@ -89,6 +90,8 @@
 | System check fixes: prod /catalogo empty on Vercel (SQLite in /tmp), /3d crash clasificacionDe(undefined id), guided-3D plans not audited server-side (plan_audit_log empty since 10-09 11:15Z), pg SSL log noise | e7z fix/catalogo-vercel | implementer (sonnet xhigh) | DONE (catalogue seeded from committed public snapshot, 1615 products; clasificacionDe guard; guided-3D plans → plan_audit_log via after(); pg sslmode verify-full) → PUSHED main 5e61dde6; VPS deployed; PROD SMOKE 12 PASS / 0 FAIL / 2 SKIP (chat skipped on remote): /catalogo 1445 products; Vercel env LORA_GENERATION_PYTHON_ENABLED renamed to FLUX_GENERATION_PYTHON_ENABLED (value copied unprinted) |
 
 | NP-1 complete build sheet (helium in hoja, printed positions, foil/forma lines, organic «cómo armar», copy polish) | e7w feat/hoja-completa | implementer (sonnet xhigh) | launched 18:0x |
+
+| NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | launched 20:0x |
 
 ## Next items (queue)
 - PM delta c20 (research/pm/BACKLOG.md): top 8 = NC-3 audit (in flight), NP-1 build sheet (in flight), NP-6 prod price parity check after D-038, NC-4 rollback drill (careful: local .env.local points at prod Neon — drill flips prod), NP-4 copy polish, CUS-03+CUS-14 tests, NC-5 one rating POST per turn, NC-1 plan creation survives Python down.
