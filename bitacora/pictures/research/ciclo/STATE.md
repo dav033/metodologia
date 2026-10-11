@@ -125,6 +125,8 @@
 
 | c24#4 durable spend counters (migration 035_topes_gasto additive; fotos/hora, imágenes/navegador, cupo escena IA, módulos FLUX) | e7z feat/topes-durables | implementer (sonnet xhigh) | launched 03:2x; lead applies 035 after review |
 
+| c24#3 product judge /asistente on PROD (desktop + phone, 3 journeys, ≤4 free-text turns, cap US$0.05; no FLUX) | scratchpad/juez (e7q infra) | general-purpose (sonnet xhigh) | launched 03:0x → research/juez/JUEZ-ASISTENTE-2026-10-11.md |
+
 ## Next items (queue)
 - Later S: e2e step that creates a guided plan from an idea on prod and asserts a PLAN_3D_CREADO row (read-only check, scratchpad/auditoria-reciente.mjs).
 - Critic c24 (research/ciclo/CRITICO-c24.md) top-8 → plan: (1) prod pulse — runner collecting audit errors / ai_feedback aggregates / plan_audit_log / Vercel 5xx / Python liveness now (00:5x), then `npm run prod:pulso` script (haiku); (2) `npm run gate` + dorado/honestidad/agente/herramientas/foto-a-escena/lectura-foto suites into checks.yml (haiku, next free slot); (5) rollback drill (guiada_motor + kill switch, timed) + previous-release saved-state fixtures parse test — run the drill in the 02:00–06:00 low-traffic window; (4) Neon-backed photo/image spend counters (sonnet); (3) /asistente judge ≥ 8 desktop+phone + one --con-chat prod smoke (cap US$0.05) + owner-phrases corpus ≥ 40; (6) W4 pass 3 + 8-photo Gemini cross-check (cap US$0.60) + triptychs; (7) branch/worktree audit RAMAS.md, ideas 29/30/31 (D-039 removed the hold); (8) PRO-04/05 Taller «Cotizar», then 20-scene visual baseline.
