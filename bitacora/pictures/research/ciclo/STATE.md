@@ -14,7 +14,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `59a06582` (… 14545f54 D-038 → e4216c98 NC-5 bundle → 95a8ad57 test fix → b22e4eef card↔Taller parity test → 59a06582 owner photo fix) · VPS = b22e4eef (→ 59a06582 when CI green)
+- main = `59a06582` (… 14545f54 D-038 → e4216c98 NC-5 bundle → 95a8ad57 test fix → b22e4eef card↔Taller parity test → 59a06582 owner photo fix) · VPS = 59a06582 (CI 38112921316 green, deploy 38113722622 DEPLOY_OK 00:11; prod smoke 13 PASS / 0 FAIL / 2 SKIP)
 - Last status message to owner: 2026-10-10 23:10 (30 h status) · next ≈05:10
 
 ## Health (cycle 0)
@@ -102,7 +102,7 @@
 
 | NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | DONE 34f6fddf (NC-5: empty POST + redundant GET fixed, Playwright test; CUS-03: 18 structures covered — 11 built, 3 approximated with aviso, 4 Python with «La vista 3D todavía no dibuja…»; CUS-14: leftovers already shown, 2 tests) → PUSHED e4216c98 after D-038; ui-sobrantes failed post-rebase (hard-coded lila 12″ leftover 0, D-038 spares changed it) and my chain pushed anyway → test fix 95a8ad57 |
 
-| OWNER CASE quince backdrop read as guest table (research/entrenamiento/casos/2026-10-10-quince-mesa) | e7w fix/foto-quince | implementer (opus xhigh) | DONE ead764a0 (subject = backdrop, scale+floor from the installation, garland to last balloons; case: table gone, garland 5.7 m/139 balloons at 1.3–2.6 m, lentejuelas+arcos_chiara+sillón; gold over-read 59 % vs ~35 %; lote-02 identical; Gemini US$0.052) → squash conflicted with P-054 in escena-ia route (resolved: time-aware notice + photo «No pude» notices) 70d390a3 → gated chain FAIL=1 (test-honestidad-escena pins the route's avisosUsuario wiring; now conAvisoDeFoto(...) — patterns updated, plus one asserting tool avisos still flow) → PUSHED main 59a06582 (17/18 checks green on 70d390a3 + honesty 25/25 on the amended tree); CI → VPS → prod smoke chain running; image sent to owner |
+| OWNER CASE quince backdrop read as guest table (research/entrenamiento/casos/2026-10-10-quince-mesa) | e7w fix/foto-quince | implementer (opus xhigh) | DONE ead764a0 (subject = backdrop, scale+floor from the installation, garland to last balloons; case: table gone, garland 5.7 m/139 balloons at 1.3–2.6 m, lentejuelas+arcos_chiara+sillón; gold over-read 59 % vs ~35 %; lote-02 identical; Gemini US$0.052) → squash conflicted with P-054 in escena-ia route (resolved: time-aware notice + photo «No pude» notices) 70d390a3 → gated chain FAIL=1 (test-honestidad-escena pins the route's avisosUsuario wiring; now conAvisoDeFoto(...) — patterns updated, plus one asserting tool avisos still flow) → PUSHED main 59a06582 (17/18 checks green on 70d390a3 + honesty 25/25 on the amended tree); CI green → VPS DEPLOY_OK 59a06582 → prod smoke 13/0/2 (00:1x); image sent to owner |
 
 | P-066 prod price parity (asistente card = Taller «Precio en la tienda»), e2e step, prod run with --con-chat (Gemini cap US$0.05) | e7q feat/humo-paridad | implementer (sonnet high) | PUSHED b22e4eef: API parity test (26 engine ideas card = Taller to the peso; live :3010 3/3 equal); gap: 18 curated ideas priced «as listed» without spares |
 
