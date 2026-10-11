@@ -7,7 +7,7 @@ Sempertex balloon-decoration demo (`demo-decoracion`: Next 16 on Vercel + Python
 engine: the **Taller 3D** (`/3d`, pro tool with a scene AI agent) and the **guided customer chat** (`/asistente`,
 quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
-## Current state (main = `392fff68`, VPS = 392fff68, 2026-10-11 05:27; prod smoke 13/0/3)
+## Current state (main = `65edd83b`, VPS = 65edd83b, 2026-10-11 06:14; prod smoke 13/0/3)
 - **One quote everywhere (D-038) live:** same plan = same price on every surface; per-balloon spares with a cost cap;
   Python = engine (42-BOM shared fixture in CI). Every guided idea (engine and curated) is priced by the single pricer;
   prod e2e «paridad de precio» checks assistant = Taller on every release.
