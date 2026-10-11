@@ -2,7 +2,8 @@
 
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
-- Current cycle: **21** (20:0x: prod smoke 12/12; D-038 merging; P-054 r2 review; Phase 5 final fixes; NP-1; NC-5 bundle)
+- Current cycle: **22** (23:10: D-038 live; P-054, NP-1, Phase 5, NC-5 shipped; owner photo case (opus) + curated pricing/«Ideas del asistente» (sonnet) running)
+- Prev: cycle 21 (20:0x: prod smoke 12/12; D-038 merging; P-054 r2 review; Phase 5 final fixes; NP-1; NC-5 bundle)
 - Prev: cycle 20 (17:5x: brief re-read due (every 4 cycles) — hard rules unchanged except owner D-037/D-039; PM delta c20 running; VPS 0e47760f)
 - Prev: cycle 19 (17:10: 6 h status sent; figures verifying; D-038 capped rule; P-054 round 2; Phase 5)
 - Prev: cycle 18 (16:0x: Phase 4 on; Phase 5 launched; RAM 1.4 GB → one launch only)
@@ -13,7 +14,7 @@
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
 - main = `95a8ad57` (… 14545f54 D-038 single quote → e4216c98 NC-5/CUS-03/CUS-14 → 95a8ad57 test fix) · VPS = 14545f54
-- Last status message to owner: 2026-10-10 17:10 (24 h status) · next ≈23:10
+- Last status message to owner: 2026-10-10 23:10 (30 h status) · next ≈05:10
 
 ## Health (cycle 0)
 - NOTE: system check 17:3x (workflow wf_a968de44-14c): all layers amber, nothing down; prod smoke 11 PASS / 1 FAIL (catalogue) / 2 SKIP; stopped idle :3020 dev server (e4r, 37 h) per D-033 → RAM 2.7 GB; :3010 → 0e47760f. Old claude.exe sessions left alone.
@@ -21,6 +22,7 @@
 - NOTE: standard tsc verify config must include scripts/**/*.tsx (test-ui-calificacion-chat.ts uses Window globals declared in a .tsx fixture).
 - NOTE: local Python is 3.14 (deferred annotations) but CI uses 3.11 — run Python-touching scripts with `py -3.13` before shipping.
 - NOTE: before/after each release run `npm run e2e:humo -- --env-file <demo-decoracion>/.env.local` (local :3010 on the shipped sha).
+- NOTE: deploy.yml run list `headSha` is main at dispatch time, NOT the deployed ref — read DEPLOY_OK sha=… in the log instead.
 - NOTE: ship verification MUST include `npm run kontext:test` (provider guard is strict on new /api routes) — 888637d0 shipped an unclassified route; hotfixed b2ee1e39 within 10 min.
 - NOTE: create worktree junctions ONLY with the PowerShell tool (bash quoting created a stray `Downloads$2` junction twice; removed safely).
 - RAM: 15.7 GB, ~2.3 GB free after cleanup (commit 24.6/32.7 GB) → max 2 implementers at once until RAM improves.
