@@ -15,7 +15,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `59a06582` (… 14545f54 D-038 → e4216c98 NC-5 bundle → 95a8ad57 test fix → b22e4eef card↔Taller parity test → 59a06582 owner photo fix) · VPS = 59a06582 (CI 38112921316 green, deploy 38113722622 DEPLOY_OK 00:11; prod smoke 13 PASS / 0 FAIL / 2 SKIP)
+- main = `6274a079` (… 14545f54 D-038 → e4216c98 NC-5 bundle → 95a8ad57 test fix → b22e4eef card↔Taller parity test → 59a06582 owner photo fix → 6274a079 CI gate) · VPS = 59a06582 (6274a079 is CI/test-only: no VPS deploy needed) (CI 38112921316 green, deploy 38113722622 DEPLOY_OK 00:11; prod smoke 13 PASS / 0 FAIL / 2 SKIP)
 - Last status message to owner: 2026-10-10 23:10 (30 h status) · next ≈05:10
 
 ## Health (cycle 0)
@@ -116,7 +116,7 @@
 
 | Diagnose ALERT A (ratings never stored?) + ALERT B (guided-3D plans not audited?) + self-traffic share | e7z lectura/pulso (read-only) | general-purpose (sonnet xhigh) | DONE 01:4x: both FALSE ALARMS — A: rating path works (PGlite + Playwright 7/7 + SQL 11/11); nobody has rated: all 32 cliente rows are `+local` (ours), 0 real customer chat rows; B: no plan created in prod by anyone since 10-09 (no Gemini chat calls); risk w/o evidence: usarMotorGuiada TIMEOUT_BANDERA_MS = 1000 → silent fallback to Python, no durable trace. Self-traffic ≈ 92–100 % (marker: version_app ends `+local`, server-written; provider anthropic = local). Then PROD SMOKE --con-chat 01:5x: 15 PASS / 0 FAIL / 0 SKIP (2 chat turns, 0 paid calls; «cuánto cuesta» $176.591); 2 COTIZACION_IDEA_3D rows landed in prod |
 
-| c24#2 `npm run gate` + escena:test (dorado, honestidad, agente, herramientas, foto-a-escena, lectura-foto…) into checks.yml | e7q ci/compuerta | implementer (haiku, S) | DONE e4fe38ec → trailer fixed (haiku wrote its own model) → 6274a079; gate 797 s GATE OK; escena:test 11 suites 116 s (tiempo/esquema/catalogo-identidad already in CI); lead-reviewed; PR #4 → CI → ff main chain running |
+| c24#2 `npm run gate` + escena:test (dorado, honestidad, agente, herramientas, foto-a-escena, lectura-foto…) into checks.yml | e7q ci/compuerta | implementer (haiku, S) | DONE e4fe38ec → trailer fixed (haiku wrote its own model) → 6274a079; gate 797 s GATE OK; escena:test 11 suites 116 s (tiempo/esquema/catalogo-identidad already in CI); lead-reviewed; PR #4 CI 38119109263 GREEN on Linux incl. escena:test → PUSHED main 6274a079 02:03 |
 
 | Timed rollback drill (guiada_motor → python → 3d; guiada_motor_corte on → off; open-tab behaviour; restore verified) | e7z (read-only) + scratchpad drill script | general-purpose (sonnet xhigh) | launched 02:2x; Gemini cap US$0.05; evidence → research/ciclo/SIMULACRO-ROLLBACK-2026-10-11.md + DOSSIER-SWITCH |
 
