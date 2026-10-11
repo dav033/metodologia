@@ -341,3 +341,100 @@ Status key: DONE / PART (partly) / NOT (not started). Changes vs c8 are marked w
 7. NC-5 rating widget (1.4) 8. NC-1 plan creation without Python (1.35). Next: PRO-04 quote from scene, NP-2, NP-3, NC-6 (0.9 each), NC-2 (0.75).
 Standing rules respected: quality bar CASE-001/002 (NP-5 serves it), «No pude:» (NP-2/3, NC-1/6), CRUD by chat (NC-6), per-product
 decorations (REQ-013 Phase 5 in flight), guided = classic engine quality (NC-1, NP-6, CUS-02).
+
+## Delta c26 — PM pro (2026-10-11)
+
+Scope: decorator (pro) side of demo-decoracion: the /3d Taller, and the decorator's proposal and quote in `/` (app/page.tsx). Read-only: no code, servers or paid calls. Code checked with `git grep origin/main` in `C:/Users/davidt/Downloads/e7q` after `fetch -q`; origin/main = 65edd83b, 19 commits since the c20 head 0e47760f.
+
+Sources read: BACKLOG (c0, c8, c20); ciclo/STATE.md (cycle 26 header and the last 24 h); CRITICO-c24.md; juez/JUEZ-2026-10-10.md and JUEZ-ASISTENTE-2026-10-11.md; balloonbuilder/TRACKER.md and notas.md (ranked 1–15, "Idea for us" 16–19); entrenamiento/LEADERBOARD.md and PASADA-2026-10-10b.md (PASADA-2026-10-11.md was not on disk at 06:04, not used); casos/2026-10-10-quince-mesa/CASO.md (text only; the photos were not opened).
+
+Correction: c20 cited PRO-13 as e109cc8. The commit is e7109cc8.
+
+### Status of PRO-xx on origin/main (c20 → c26)
+
+| PRO | c20 | c26 | Evidence |
+|---|---|---|---|
+| 01 printable build sheet | DONE | DONE | 888637d0 (HojaArmadoEscena.tsx); df620c43 (NP-1: helium, printed positions, foil lines) |
+| 02 helium lines | DONE | DONE | e7109cc8 (SeccionHelio.tsx; helio-cinta.ts PERDIDA_HELIO = 0.07); litres per D-027 |
+| 03 pump seconds | DONE, calibration shipped | DONE | 21ba148c (one row per size); e7109cc8 (seconds); "Calibrar mi bomba" at SeccionBomba.tsx:75 |
+| 04 quote from scene | NOT | PARTIAL | 81718d69 + d33219cd: "Cotizar en la tienda" gives the materials total incl. IVA only (SeccionPrecio.tsx:23, :41 "No incluye helio ni montaje"). The professional quote is still mounted only from the plan (app/page.tsx:1836) |
+| 05 three tiers + surcharges | NOT | NOT | no recargo / urgencia / exterior / niveles logic in lib/cotizacion, components/cotizacion, lib/plan, lib/globos3d/motor |
+| 06 PNG 3000 px / GLB | PART | PART (no change) | CapturaRender.tsx (cc20ffad) is a screen capture; no 3000 px export, no GLTFExporter |
+| 07 own stock | NOT | NOT | no store; only quote leftovers (lib/cotizacion/granel.ts) |
+| 08 approval link for scene | NOT | NOT | approval lives only in the plan chat (app/page.tsx:1831, :1974); no shareable route (src/app pages: /, /3d, /asistente, /catalogo, /admin, /estadisticas, /happie, /login, laboratorio-*) |
+| 09 size profiles | DONE | DONE | c69e307b (SelectorPerfilTamano.tsx) |
+| 10 paint + live count | NOT (unverified) | NOT | paint tools exist; no per-colour live counter found |
+| 11 recipe card | DONE | DONE | c69e307b (TarjetaReceta.tsx); «Armazón recto» on arches fixed in 55475888, test receta-idea.test.ts:48-60 |
+| 12 colour pins | NOT | NOT | no pin component; ΔE only in the plan's colour reading |
+| 13 height / width marks | DONE | DONE | e7109cc8 |
+| 14 plano vs armado block | NOT | NOT | no "Plano vs" string on main |
+
+### BalloonBuilder ranked ideas on origin/main (TRACKER of 10-10 was stale)
+
+- DONE (5): 3 build sheet by layer (888637d0, df620c43); 4 recipe card (c69e307b); 9 size profiles (c69e307b); 11 helium line (e7109cc8); 12 lens and light presets (c69e307b, ambiente-visor.ts).
+- PARTIAL (3): 2 palette → Sempertex with ΔE (CIELAB in lib/plan/analisis-color.ts:32, not in the Taller); 6 margin view (margin % in the plan quote: CampoGanancia.tsx, ResumenPrecio.tsx; not for scenes); 15 backdrop props (FondosYMuebles.tsx: panels, curtain, sign; drapes not verified).
+- NOT (8): 5, 7, 8, 13, 14, 16, 17, 18.
+- NOT VERIFIED (3): 1 (customer stepper), 10 (live counter), 19 (racimo / cadena toggles).
+
+### Photo → 3D, decorator view
+
+- LEADERBOARD (13 newest photos): 12 fail with capacidad_faltante (a figure, furniture or backdrop the engine cannot build). PASADA-10-10b: 27 of 30.
+- Owner case (quince): gold share, glitter walls and plum chrome fixed (9f86d67b, P-067). Still open per STATE.md P-067: doors (reader gives 1), pink flowers (catalogue has white and ivory roses only), low-camera capture not reproduced.
+
+### Ranked list (≤ 8)
+
+Rule: value to the decorator's sale and event delivery first; dependencies next (items 2 and 4 build on item 1); then size S before M before L. Owner decisions are flagged in items 2 and 4.
+
+**1. PRO-04 · Taller scene → professional quote (materials, helium, labour, margin)** · value H · size M
+- Problem: the Taller prices materials only. Helium, labour, equipment and margin are missing, and the professional quote opens only from the plan.
+- Evidence: SeccionPrecio.tsx:23, :41; lib/taller/cotizacion-taller.ts (total only); app/page.tsx:1836 (CotizacionProfesional mounted for the plan); lib/cotizacion/profesional.ts:71-80 (input: materiales, mano_de_obra, equipos_transporte, indirectos, utilidad_porcentaje); app/api/cotizacion-profesional/route.ts:68 (Python computes it).
+- Value: one flow from design to price; the margin is the decorator's own number.
+- Acceptance: from a saved scene, "Pasar a cotización" opens the professional quote with one material line per catalogue variant of the Taller BOM (packs and catalogue price give the Taller total, tested on 3 scenes); helium line from SeccionHelio (litres and tanks equal the Lista); labour, equipment and utilidad start empty; a scene change shows "vuelve a cotizar"; with Python down it shows «No pude» and Reintentar, never an empty panel. Price math stays in Python (D-038 single pricer).
+
+**2. PRO-05 · Three tiers and surcharges from one scene** · value H · size M
+- Problem: one price only; no tiers; no rush, outdoor or peak rule; montaje and desmontaje are free rows with no rule.
+- Evidence: zero hits for recargo | urgencia | exterior | sobreprecio | temporada in the cotización, plan and motor code; conceptos-gasto.ts:14; notas.md:251 (Academy: outdoor +20–40 %, rush 3–7 days +25 %, under 72 h +50 %, peak +15–25 %); notas.md:254-255 ("3 tiers ... apply ... automatically"); CRITICO-c24 item 8.
+- Value: consistent quotes; a rush job is where the decorator loses margin.
+- Acceptance: three tiers (sencilla, estandar, lujosa) from one scene, differing only in material choice and labour rows; rush, outdoor and peak show as separate named rows with the rule that fired; an event 2 days out gets +50 % (tested, date from the event field); the rules live in Python next to profesional (no second pricer in TS); the percentages ship as defaults marked "por confirmar" in the UI (owner confirms; reversible under the weekend rule).
+
+**3. Delivery checklist for the event day** · value H · size S
+- Problem: the Taller gives a shopping list and a build sheet, but nothing for the day: tanks to collect, total inflation time, pieces and install order, what comes back.
+- Evidence: zero hits for checklist | entrega | transporte | llevar | empacar in src/components/tres-d, the sheet files and the plan components. The data already exists: SeccionBomba.tsx (seconds per row), SeccionHelio.tsx (litres, tanks), PRO-13 height and width (e7109cc8). JUEZ-2026-10-10 §1: the sheet says "No sirve para armar por capas" on organic pieces.
+- Value: the decorator leaves with the right tanks and the right time; no second trip.
+- Acceptance: section "Entrega" on screen and in print: tanks = SeccionHelio tanks; total inflation minutes = sum of the sheet's pump seconds (tested); each piece with height × width (PRO-13) and install order; per-row check boxes kept in localStorage (per-viewer convenience only); counts equal the Lista de compra row by row (tested).
+
+**4. Client-ready quote (PDF or print, no internal costs)** · value H · size M
+- Problem: the client sees the quote only inside the decorator's chat, and the component they see is the decorator's editor (costs, labour, "Tu ganancia"). There is no printable or PDF quote.
+- Evidence: zero hits for window.print | imprimir | pdf | compartir in src/components/cotizacion, src/components/propuesta, src/lib/cotizacion, SeccionPrecio.tsx, ListaCompra.tsx; app/page.tsx:1836 (editor used as precioCliente); CampoGanancia.tsx ("Tu ganancia"); notas.md:205-214 (Quote Builder: branded PDF; idea "proposal PDF that embeds the photo + plan").
+- Value: the client keeps a document and forwards it; the decorator stops retyping.
+- Acceptance: "Descargar PDF" from a plan quote or a scene quote: decorator name, client name, event date, validity (vigencia.ts), totals with IVA, lines by material and by labour, the scene still (CapturaRender); no utilidad, margin, per-line cost or "Tu ganancia" text (test asserts absence); A4 and Letter, at most 3 pages; total equals the on-screen total; any new persisted field follows D-035 (reader first).
+
+**5. Photo gaps visible before quoting** · value H · size S
+- Problem: a photo scene can leave out what the photo shows (doors, a colour with no catalogue product), and the price does not say so.
+- Evidence: STATE.md P-067 line (open: doors, pink flowers, low camera); CASO.md (failures: wrong subject, garland scale, gold, missing panels and furniture); LEADERBOARD (12 of 13 capacidad_faltante); ListaCompra.tsx:114 shows only the scene's own avisos; SeccionPrecio.tsx reads no aviso.
+- Value: the decorator sees what the scene does not build before promising it.
+- Acceptance: after a photo reading, a list "Lo que muestra la foto y la escena no arma", one line per element not built, in decorator words (no engine terms), also shown in the price section; the foto-quince fixture produces the pink-flower line; a photo with nothing missing shows no list (both tested).
+
+**6. PRO-08 · Approval link for a scene or quote** · value H · size M
+- Problem: approval exists only in the plan chat; there is no shareable page and no record of who approved.
+- Evidence: app/page.tsx:1831, :1974; no shareable route in src/app (see PRO-08 row); lib/cotizacion/vigencia.ts (validity).
+- Value: closes the sale without a chat; the decorator sees the state.
+- Acceptance: link with a signed token that expires with the validity date; read-only page with quote and still; "Aprobar" stores date and name; "Pedir cambios" stores a comment the decorator sees in the Taller; a bad or expired token returns 404 with no data; the client cannot change the price.
+
+**7. PRO-06 remainder · PNG 3000 px of the scene** · value M · size S
+- Problem: the capture is screen size; there is no 3000 px export and no GLB.
+- Evidence: CapturaRender.tsx (cc20ffad); no 3000 px or GLTFExporter hit in src.
+- Value: a proof image for the client.
+- Acceptance: "Descargar PNG" in the Taller, long edge 3000 px, file name = scene name, no server call. GLB stays out of this item.
+
+**8. PRO-07 · Own stock, deducted when a scene is built** · value H · size L
+- Problem: the shopping list assumes everything is bought; stock exists only as quote leftovers (lib/cotizacion/granel.ts, MaterialesGranel.tsx).
+- Evidence: no stock store in src/components/tres-d, src/lib/globos3d or src/lib/cotizacion (the "inventario" hits are scene and analysis inventories).
+- Value: avoids buying twice; shows what is missing for next week.
+- Acceptance: as in c0 (add and remove per product, colour and size; marking a scene built deducts; never below 0 without a warning; purchase = required − stock; tests). Size L: it will not fit before 2026-10-12 16:44; open for the next cycle.
+
+### Timing and dependencies
+
+- Before the marathon ends (2026-10-12 16:44): items 3 and 5 (S); then 1 and 2 (same engine, M each); items 4 and 6 only if a new route and PDF start now.
+- Items 1, 2, 4 and 6 call Python or write new persisted fields: NC-1 pattern (Python down → «No pude»), D-035 reader-first, D-038 single pricer.
+- Still open, not ranked: PRO-10 live counter, PRO-12 pins, PRO-14 plano vs armado, BalloonBuilder 13, 14, 16, 17, 18.

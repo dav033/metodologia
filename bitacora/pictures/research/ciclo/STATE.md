@@ -133,7 +133,10 @@
 
 | W4 pass 3 (30 photos, Haiku CLI, same settings as pass 2) + 8-photo Gemini cross-check (cap US$0.60) + ≥6 triptychs; restarts :3010 on main | main checkout + scratchpad | general-purpose (sonnet high) | launched 05:3x → research/entrenamiento/PASADA-2026-10-11.md |
 
+| PRO-04 «Cotización profesional» from a Taller scene (materials = Precio en la tienda + helium + labour + transport + margin, editable, no invented surcharges) + «Lista de entrega del día» printable | e7y feat/cotizacion-decorador | implementer (sonnet xhigh) | launched 06:1x |
+
 ## Next items (queue)
+- PM pro c26 (BACKLOG.md «Delta c26 — PM pro»): PRO-04 pro quote from a scene + delivery-day checklist → LAUNCHED (below); then PRO-05 tiers/surcharges (owner sets %), client PDF quote without costs, photo gaps visible before quoting, PRO-08 approval link, PRO-06 3000 px PNG, PRO-07 own stock (L). BalloonBuilder done 5/19 (3, 4, 9, 11, 12), partial 2, 6, 15.
 - PM customer c26 (research/pm/BACKLOG-c26-cliente.md): after the judge fix → CUS-15 «Elegir este decorador» reaches nobody (4 decorators with contacto null) · CUS-16 share plan + total via wa.me (no number needed) S/M · CUS-19 go-live gate for real customers (login for customers, privacy/terms, leads, caps, judge ≥ 8) · CUS-18 quote trust copy (what's included, deposit, cancellation) S · CUS-17 read-only family share link · CUS-20 owner funnel · CUS-21 compare/switch ideas · CUS-22 judge «Ver cómo quedaría» (cap US$0.25). Owner questions (batch for Monday): decorators' WhatsApp numbers; how real customers log in; deposit and cancellation rule.
 - LAUNCHED 04:5x (e7x fix/asistente-juez, sonnet xhigh): judge-fix task /asistente < 8 → sonnet xhigh, order: (2) card count = plan engine count, (4) honest edit banner (what changed per colour, caps, price delta), (3) price on idea + plan cards from the single pricer, (1) rule-based answers for counts/price with a chosen idea, (5) deterministic chips (no Gemini turn) + compare/switch idea. Re-judge after.
 - Later S: e2e step that creates a guided plan from an idea on prod and asserts a PLAN_3D_CREADO row (read-only check, scratchpad/auditoria-reciente.mjs).
