@@ -23,6 +23,7 @@
 - NOTE: ship chains must stop on ANY failing test before pushing (e4216c98 was pushed with ui-sobrantes red; fixed by the next commit). The gate worked at 23:50 (honesty test caught the photo-fix merge).
 - NOTE: `git add bitacora/pictures/` staged the owner photos once (23:53, local only, amended out before any push); `research/entrenamiento/casos/.gitignore` now ignores images — keep it.
 - NOTE: haiku agents write «Claude Haiku 5.5» in Co-Authored-By — the brief wants the exact Opus line: say «even if you are another model» in prompts and check trailers before push.
+- NOTE: `npm run prod:pulso -- --env-file <.env.local>` = the free prod pulse (feedback/plan_audit/ai_call_log aggregates; own +local/anthropic traffic split; plan_audit_log and ai_call_log have no version marker, so they include ours). Run it every ~6 h.
 - NOTE: the CI workflow file is `checks.yml` ("Quality checks"), not ci.yml.
 - NOTE: standard tsc verify config must include scripts/**/*.tsx (test-ui-calificacion-chat.ts uses Window globals declared in a .tsx fixture).
 - NOTE: local Python is 3.14 (deferred annotations) but CI uses 3.11 — run Python-touching scripts with `py -3.13` before shipping.
@@ -120,7 +121,7 @@
 
 | Timed rollback drill (guiada_motor → python → 3d; guiada_motor_corte on → off; open-tab behaviour; restore verified) | e7z (read-only) + scratchpad drill script | general-purpose (sonnet xhigh) | launched 02:2x; Gemini cap US$0.05; evidence → research/ciclo/SIMULACRO-ROLLBACK-2026-10-11.md + DOSSIER-SWITCH |
 
-| Flag-read timeout 1000→2500 ms + durable PLAN_3D_FALLBACK bandera_* + `npm run prod:pulso` (excludes +local / anthropic as «propio») | e7y fix/bandera-plazo-pulso | implementer (sonnet high) | launched 02:5x |
+| Flag-read timeout 1000→2500 ms + durable PLAN_3D_FALLBACK bandera_* + `npm run prod:pulso` (excludes +local / anthropic as «propio») | e7y fix/bandera-plazo-pulso | implementer (sonnet high) | DONE ef3a0212 (2500 ms; reuses plan route `{desde:"bandera_fallida"}` → PLAN_3D_FALLBACK bandera_*; no new route/schema; prod:pulso first real run «sano»: 2 PLAN_3D_CREADO in 6 h (drill), 0 errors) → lead-reviewed SHIP (small, session-gated; spam risk minor) → rebased 302d6e3d → gate + tests → push → CI → VPS → prod smoke chain running 03:0x |
 
 ## Next items (queue)
 - Later S: e2e step that creates a guided plan from an idea on prod and asserts a PLAN_3D_CREADO row (read-only check, scratchpad/auditoria-reciente.mjs).
