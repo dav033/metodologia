@@ -92,7 +92,7 @@
 
 | NP-1 complete build sheet (helium in hoja, printed positions, foil/forma lines, organic «cómo armar», copy polish) | e7w feat/hoja-completa | implementer (sonnet xhigh) | DONE b681e493 (internal adversarial: 8 fixed; 1597→1704 pages, all fit; helium total = list on 405 scenes) → PUSHED main df620c43 | e7w free |
 
-| NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | DONE 34f6fddf (NC-5: empty POST + redundant GET fixed, Playwright test; CUS-03: 18 structures covered — 11 built, 3 approximated with aviso, 4 Python with «La vista 3D todavía no dibuja…»; CUS-14: leftovers already shown, 2 tests) → ship after D-038 (package.json) |
+| NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | DONE 34f6fddf (NC-5: empty POST + redundant GET fixed, Playwright test; CUS-03: 18 structures covered — 11 built, 3 approximated with aviso, 4 Python with «La vista 3D todavía no dibuja…»; CUS-14: leftovers already shown, 2 tests) → merged main cleanly → squashing ship/calificacion-y-pruebas, verifying |
 
 | OWNER CASE quince backdrop read as guest table (research/entrenamiento/casos/2026-10-10-quince-mesa) | e7w fix/foto-quince | implementer (opus xhigh) | launched 21:5x; Gemini cap US$0.30 for repro |
 
