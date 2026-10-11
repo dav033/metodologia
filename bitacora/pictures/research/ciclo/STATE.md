@@ -86,7 +86,7 @@
 
 | REQ-013 Phase 5 (Taller «Añadir» by repository; catalogo_ui_repositorios row, ON by default per D-039) | e7x feat/catalogo-fase5 | implementer (sonnet xhigh) | DONE 9fe707ec (T23–T26; route /api/catalogo/repositorios; Todos/Sempertex/Mobiliario/Escenografía; list split; OFF = byte-identical; 17/18 browser harness, 1 todo: phone tap on «Nuevas · ajustables» read as drag) → review round 1 |
 
-| System check fixes: prod /catalogo empty on Vercel (SQLite in /tmp), /3d crash clasificacionDe(undefined id), guided-3D plans not audited server-side (plan_audit_log empty since 10-09 11:15Z), pg SSL log noise | e7z fix/catalogo-vercel | implementer (sonnet xhigh) | launched 17:4x |
+| System check fixes: prod /catalogo empty on Vercel (SQLite in /tmp), /3d crash clasificacionDe(undefined id), guided-3D plans not audited server-side (plan_audit_log empty since 10-09 11:15Z), pg SSL log noise | e7z fix/catalogo-vercel | implementer (sonnet xhigh) | DONE (catalogue seeded from committed public snapshot, 1615 products; clasificacionDe guard; guided-3D plans → plan_audit_log via after(); pg sslmode verify-full) → squashing ship/catalogo-vercel; Vercel env LORA_GENERATION_PYTHON_ENABLED renamed to FLUX_GENERATION_PYTHON_ENABLED (value copied unprinted) |
 
 | NP-1 complete build sheet (helium in hoja, printed positions, foil/forma lines, organic «cómo armar», copy polish) | e7w feat/hoja-completa | implementer (sonnet xhigh) | launched 18:0x |
 
