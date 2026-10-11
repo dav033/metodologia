@@ -123,6 +123,8 @@
 
 | Flag-read timeout 1000→2500 ms + durable PLAN_3D_FALLBACK bandera_* + `npm run prod:pulso` (excludes +local / anthropic as «propio») | e7y fix/bandera-plazo-pulso | implementer (sonnet high) | DONE ef3a0212 (2500 ms; reuses plan route `{desde:"bandera_fallida"}` → PLAN_3D_FALLBACK bandera_*; no new route/schema; prod:pulso first real run «sano»: 2 PLAN_3D_CREADO in 6 h (drill), 0 errors) → lead-reviewed SHIP (small, session-gated; spam risk minor) → rebased 302d6e3d → gate + tests → push → CI → VPS → prod smoke chain running 03:0x |
 
+| c24#4 durable spend counters (migration 035_topes_gasto additive; fotos/hora, imágenes/navegador, cupo escena IA, módulos FLUX) | e7z feat/topes-durables | implementer (sonnet xhigh) | launched 03:2x; lead applies 035 after review |
+
 ## Next items (queue)
 - Later S: e2e step that creates a guided plan from an idea on prod and asserts a PLAN_3D_CREADO row (read-only check, scratchpad/auditoria-reciente.mjs).
 - Critic c24 (research/ciclo/CRITICO-c24.md) top-8 → plan: (1) prod pulse — runner collecting audit errors / ai_feedback aggregates / plan_audit_log / Vercel 5xx / Python liveness now (00:5x), then `npm run prod:pulso` script (haiku); (2) `npm run gate` + dorado/honestidad/agente/herramientas/foto-a-escena/lectura-foto suites into checks.yml (haiku, next free slot); (5) rollback drill (guiada_motor + kill switch, timed) + previous-release saved-state fixtures parse test — run the drill in the 02:00–06:00 low-traffic window; (4) Neon-backed photo/image spend counters (sonnet); (3) /asistente judge ≥ 8 desktop+phone + one --con-chat prod smoke (cap US$0.05) + owner-phrases corpus ≥ 40; (6) W4 pass 3 + 8-photo Gemini cross-check (cap US$0.60) + triptychs; (7) branch/worktree audit RAMAS.md, ideas 29/30/31 (D-039 removed the hold); (8) PRO-04/05 Taller «Cotizar», then 20-scene visual baseline.
@@ -158,7 +160,7 @@
 - D-030 product judge for staff Taller features on the production deploy
 - D-029 REQ-013 class-prefixed local ids for Sempertex kinds without catalogue id
 - D-028 flag-gated, customer-invisible work ships after antagonist SHIP + verified merge; the product judge (screenshots) runs on it in the W7 switch dossier
-- Migration numbers: 033 = W5 proveedor anthropic, 034 = REQ-013 repositorio (lead ruling)
+- Migration numbers: 033 = W5 proveedor anthropic, 034 = REQ-013 repositorio, 035 = topes de gasto (lead ruling)
 - D-027 helium litres = sphere volume of inflated diameter (PRO-02 '97 L' was wrong)
 
 ## Escalations
