@@ -94,6 +94,8 @@
 
 | NC-5 one rating POST/turn + CUS-03 18-structure honesty test + CUS-14 leftovers per colour | e7z fix/calificacion-y-pruebas | implementer (sonnet xhigh) | DONE 34f6fddf (NC-5: empty POST + redundant GET fixed, Playwright test; CUS-03: 18 structures covered — 11 built, 3 approximated with aviso, 4 Python with «La vista 3D todavía no dibuja…»; CUS-14: leftovers already shown, 2 tests) → ship after D-038 (package.json) |
 
+| OWNER CASE quince backdrop read as guest table (research/entrenamiento/casos/2026-10-10-quince-mesa) | e7w fix/foto-quince | implementer (opus xhigh) | launched 21:5x; Gemini cap US$0.30 for repro |
+
 ## Next items (queue)
 - PM delta c20 (research/pm/BACKLOG.md): top 8 = NC-3 audit (in flight), NP-1 build sheet (in flight), NP-6 prod price parity check after D-038, NC-4 rollback drill (careful: local .env.local points at prod Neon — drill flips prod), NP-4 copy polish, CUS-03+CUS-14 tests, NC-5 one rating POST per turn, NC-1 plan creation survives Python down.
 - W4 next by evidence: figures (falta_figura 18 photos, 12 dominant) and furniture/backdrops (14 photos, 10 dominant); cache the photo reader too; intercept native tool_use in the CLI transport.
