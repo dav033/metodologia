@@ -7,10 +7,10 @@ Sempertex balloon-decoration demo (`demo-decoracion`: Next 16 on Vercel + Python
 engine: the **Taller 3D** (`/3d`, pro tool with a scene AI agent) and the **guided customer chat** (`/asistente`,
 quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
-## Current state (main = `9f86d67b`, VPS = 9f86d67b, 2026-10-11 03:46; prod smoke 13/0/2)
+## Current state (main = `d33219cd`, VPS = d33219cd, 2026-10-11 04:47; prod smoke with chat 16/0/0)
 - **One quote everywhere (D-038) live:** same plan = same price on every surface; per-balloon spares with a cost cap;
-  Python = engine (42-BOM shared fixture in CI). API parity test: 26 engine ideas card = Taller to the peso; the 18
-  curated ideas are still priced «as listed» (fix in progress).
+  Python = engine (42-BOM shared fixture in CI). Every guided idea (engine and curated) is priced by the single pricer;
+  prod e2e «paridad de precio» checks assistant = Taller on every release.
 - **Beta, everything on for everyone (D-039):** guided chat runs the 3D engine for all customers, Taller build sheet on,
   solo-guiada mode removed, catalogue repositories on; VPS deploys follow every green main (D-037). Only the AI-feedback
   admin panel stays closed (third-party data).

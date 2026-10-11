@@ -5,7 +5,6 @@ One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 
 ## Open
-- P-066 · Verify on prod that the Taller «Precio en la tienda» equals the /asistente card and plan price for the same idea (NP-6), now that D-038 is live; also re-run e2e:humo on prod · urgency: high · complexity: S · added 2026-10-10 (D-038 single quote shipped 14545f54)
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversations get edits refused (409 MOTOR_PYTHON), Python routes refuse 3D tokens, and adding an idea/redoing silently re-prices in Python (~×1.4). Design a graceful rollback (keep 3D plans priced by the engine until the conversation ends, or tell the customer) — BLOCKER for the switch · urgency: high · complexity: M · added 2026-10-09 · W7 dossier review
 - P-068 · Owner quince photo, left after 9f86d67b (P-067): the reader gives 1 door piece where the photo has 3 arched panels (needs a fondos-detector fixture that finds the doors); pink fabric roses missing from the catalogue (only white/ivory); low/seated camera breaks the refine capture (unreproduced, needs a headless capture check); a failed colour tweak (ajustarColoresSiPuede) also adds a misleading «no se armó» entry · urgency: med · complexity: M · added 2026-10-11
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001
@@ -56,6 +55,7 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 _None_
 
 ## Recently closed
+- P-066 · closed 2026-10-11 by d33219cd: every guided idea priced by the single pricer (curated ones too, printed balloons by their own packs); prod e2e «paridad de precio» PASS ($51.554 card = Taller).
 - P-067 · closed 2026-10-11 by 9f86d67b: garland colour shares match the reading (gold 59→37 %, photo ~36 %), second glitter wall, plum/mauve chrome → Reflex, 0x08 regex; prompt = main + one validated sentence.
 - P-054 · Scene AI time bounds shipped 4e27a72a (arch «más R-24» 40.6→~10 s; R-5 column instant reject; maxDuration 75 + deadline; 430 structure-balloon cap); leftovers P-065 · urgency: med · complexity: M · closed 2026-10-10
 - P-052 · Colour resolver: exact card name wins, no rosa alternation, plural wording, property tests see 011/009 (shipping 2026-10-10); leftovers P-058 · urgency: med · complexity: M · closed 2026-10-10

@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-11 03:46 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-11 04:48 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -35,13 +35,13 @@ _Generated 2026-10-11 03:46 by `bitacora.py index`. Do not edit by hand._
 
 ## Top pending (urgency, then complexity)
 
-- P-066 · Verify on prod that the Taller «Precio en la tienda» equals the /asistente card and plan p · high/S
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversation · high/M
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/?
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer - · high/?
 - P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) — implemen · high/?
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/?
 - P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — was: owner · high/?
+- P-041 · ajustar_salon reports grid capacity («40 invitados, caben 96») while only 5 tables of 8 ar · med/S
 
 ## Recent decisions
 
