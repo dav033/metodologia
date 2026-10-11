@@ -11,7 +11,7 @@
 - Prev: cycle 14 (13:1x: D-038 opus at 3 commits incl. parity test; P-052 review round 2; Phase 4 launched)
 - Prev: cycle 13 (12:4x: VPS e7b7aeaa; main b3f66d39; agents: D-038 opus e7y, P-052 sonnet e7q, W4 re-run e7w; RAM 2.0 GB → Phase 4 held)
 - Previous: cycle 10 (09:3x: 082a34fb Vercel Ready; 3 worktrees busy: e7q opus, e7w opus, e7y haiku P-049)
-- main = `0e47760f` (… bbb3fe4d e2e smoke → 8955d367 REQ-013 Phase 4 → 0e47760f W4 figures) · VPS = 0e47760f (rule: VPS follows every green main); CATALOGO_FILTRO_IA live since the 0e47760f Vercel build
+- main = `5e61dde6` (… 8955d367 Phase 4 → 0e47760f W4 figures → 5e61dde6 prod fixes: catalogue, /3d guard, 3D audit) · VPS = 0e47760f (rule: VPS follows every green main); CATALOGO_FILTRO_IA live since the 0e47760f Vercel build
 - Last status message to owner: 2026-10-10 17:10 (24 h status) · next ≈23:10
 
 ## Health (cycle 0)
@@ -86,7 +86,7 @@
 
 | REQ-013 Phase 5 (Taller «Añadir» by repository; catalogo_ui_repositorios row, ON by default per D-039) | e7x feat/catalogo-fase5 | implementer (sonnet xhigh) | DONE 9fe707ec (T23–T26; route /api/catalogo/repositorios; Todos/Sempertex/Mobiliario/Escenografía; list split; OFF = byte-identical; 17/18 browser harness, 1 todo: phone tap on «Nuevas · ajustables» read as drag) → review SHIP (A1 search doesn't narrow in Mobiliario; touch defect pre-existing; small fixes) → sonnet final commit |
 
-| System check fixes: prod /catalogo empty on Vercel (SQLite in /tmp), /3d crash clasificacionDe(undefined id), guided-3D plans not audited server-side (plan_audit_log empty since 10-09 11:15Z), pg SSL log noise | e7z fix/catalogo-vercel | implementer (sonnet xhigh) | DONE (catalogue seeded from committed public snapshot, 1615 products; clasificacionDe guard; guided-3D plans → plan_audit_log via after(); pg sslmode verify-full) → squashing ship/catalogo-vercel; Vercel env LORA_GENERATION_PYTHON_ENABLED renamed to FLUX_GENERATION_PYTHON_ENABLED (value copied unprinted) |
+| System check fixes: prod /catalogo empty on Vercel (SQLite in /tmp), /3d crash clasificacionDe(undefined id), guided-3D plans not audited server-side (plan_audit_log empty since 10-09 11:15Z), pg SSL log noise | e7z fix/catalogo-vercel | implementer (sonnet xhigh) | DONE (catalogue seeded from committed public snapshot, 1615 products; clasificacionDe guard; guided-3D plans → plan_audit_log via after(); pg sslmode verify-full) → PUSHED main 5e61dde6; prod smoke after deploy pending; Vercel env LORA_GENERATION_PYTHON_ENABLED renamed to FLUX_GENERATION_PYTHON_ENABLED (value copied unprinted) |
 
 | NP-1 complete build sheet (helium in hoja, printed positions, foil/forma lines, organic «cómo armar», copy polish) | e7w feat/hoja-completa | implementer (sonnet xhigh) | launched 18:0x |
 
