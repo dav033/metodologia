@@ -11,17 +11,15 @@
   "max_sessions": 300,
   "workers": 1
  },
- "control": "pause",
+ "control": "stop",
  "heartbeat": {
-  "at": "2026-10-13T15:26:01",
+  "at": "2026-10-13T15:27:01",
   "pid": 1864427,
   "machine": "precision7760",
   "task": "T1",
   "session": 4,
-  "state": "session running 1 min",
-  "session_pids": {
-   "4": 1931947
-  },
+  "state": "failed",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -39,7 +37,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 2,
    "last_error": "verify failed: npx tsx --conditions=react-server scripts/test/test-corte-motor3d.ts -> :10932)\n    at resolveDirectorySync (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:12238)\n    at resolveTsPathsSync (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:13445)\n    at resolve (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:15991) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///home/david/dev/pictures-wt/scripts/test/test-corte-motor3d.ts'\n}\n\nNode.js v24.21.0\n",
    "error_hashes": [
@@ -53,11 +51,11 @@
    ],
    "limit_streak": 0,
    "last_route": {
-    "agent": "claude",
-    "profile": "claude-work",
-    "model": "sonnet",
+    "agent": "codex",
+    "profile": "codex-1",
+    "model": "gpt-6.1-sol",
     "effort": "xhigh",
-    "result": "verify_failed"
+    "result": "stopped"
    }
   },
   {
@@ -188,6 +186,18 @@
    "cost_usd": 5.4775984,
    "agent": "claude",
    "profile": "claude-work"
+  },
+  {
+   "at": "2026-10-13T15:27:01",
+   "session": 4,
+   "task": "T1",
+   "result": "stopped",
+   "summary": "stopped by the user",
+   "seconds": 120,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-1"
   }
  ],
  "pool": [
