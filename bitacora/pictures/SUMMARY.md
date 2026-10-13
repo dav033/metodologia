@@ -23,6 +23,9 @@ agent that builds and edits scenes with tools. Users: Sempertex staff and decora
 - **REQ-011 module studio** (new): dúo…sexteto, colours/finishes, clean studio 3D, FLUX render cached by canonical
   key (migration 031) — implementer in e5m feat/estudio-modulos.
 
+## Reconciled 2026-10-13 (see research/2026-10-13-reconstruction.md)
+- origin/main `65edd83b` (2026-10-11): REQ-001/002/003/007/008/009/010/011 DONE and merged; REQ-012 (free furniture) and REQ-013 (multi-repo catalogue) exist in code but not in this bitácora; CI gate + prod deploy green. Work stopped 2026-10-11 05:28 in hardening (D-036/D-038/D-039). Open: P-068, REQ-004 remainder, REQ-005/006, P-022.
+
 ## Active focus
 - Review → push: voice (e4y), events (e4v). Then REQ-010 backend + migration, REQ-011 studio.
 

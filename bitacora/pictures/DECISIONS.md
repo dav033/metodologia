@@ -190,3 +190,5 @@ Decision: "Igual al visor" = Kontext max with a layout-to-photo instruction and 
 ## D-026 · Quotes use the Sempertex standard presentations (closes P-035) · 2026-10-09
 Context: the 3D engine had to choose which bags (presentaciones) to buy; the stored library plans had an allowlist of mostly 50-packs. Owner: «no entiendo lo de las bolsas, usa el estándar Sempertex».
 Decision: quote with the presentations Sempertex sells for each balloon (PAQ X 12 / X 50 / etc. as published in the store catalogue), choosing the combination the Python resolver chooses (cheapest combination that covers the need, one 8 % reserve for the whole plan covered first by leftovers) = `POLITICA_PAQUETES = "python"`, already the default. No per-idea allowlist restriction; no "cheapest regardless" variant in production.
+
+D-040 · 2026-10-13 · Bitácora temporarily lives inside the private metodologia monorepo (symlinked from ~/bitacora) so it syncs across machines; revisit a dedicated private repo.
