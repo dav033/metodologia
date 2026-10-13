@@ -7,6 +7,10 @@
   "t7": {
    "remote": "",
    "hint": "~/dev/pictures-wt/t7"
+  },
+  "audit": {
+   "remote": "",
+   "hint": "~/dev/pictures-wt/audit"
   }
  }
 }
