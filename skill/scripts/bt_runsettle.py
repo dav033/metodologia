@@ -67,6 +67,20 @@ def _result_text(info: dict) -> tuple[str, bool]:
     return out["text"], out["is_error"]
 
 
+_RESETS_IN = re.compile(r"resets?\s+in\s+(?:(\d+)\s*d(?:ays?)?\s*)?(?:(\d+)\s*h(?:ours?)?\s*)?(?:(\d+)\s*m(?:in(?:ute)?s?)?\s*)?"
+                        r"(?:(\d+)\s*s(?:ec(?:ond)?s?)?)?", re.I)
+
+
+def reset_epoch(text: str, now: float | None = None) -> int:
+    """Epoch of a relative reset announcement ('Resets in 166h43m25s'); 0 when the text carries none."""
+    for m in _RESETS_IN.finditer(text or ""):
+        days, hours, minutes, seconds = (int(g or 0) for g in m.groups())
+        total = days * 86400 + hours * 3600 + minutes * 60 + seconds
+        if total > 0:
+            return int((time.time() if now is None else now) + total)
+    return 0
+
+
 def detect_limit(info: dict) -> int | None:
     """A usage/rate-limit message in the output of a FAILED session (non-zero exit or is_error): a successful run whose
     text merely mentions '429' or 'quota' is never a limit. Returns the reset epoch (0 = unknown) or None."""
@@ -74,7 +88,9 @@ def detect_limit(info: dict) -> int | None:
     if not (info["rc"] or is_error) or not LIMIT_RE.search(text[-4000:]):
         return None
     m = re.search(r"limit reached\|(\d{9,10})", text) or re.search(r"limit reached\|(\d{9,10})", info["text"][-20000:])
-    return int(m.group(1)) if m else 0
+    if m:
+        return int(m.group(1))
+    return reset_epoch(text) or reset_epoch(info["text"][-4000:])
 
 
 def _session_fields(info: dict) -> dict:
@@ -113,8 +129,11 @@ def enter_wait(rdir: Path, project: str, req: str, epoch: int, notified: bool) -
         step = s.get("wait_step", 0)
         minutes = min(30 * 2 ** step, 240)
         override = backoff_override()
-        until = dt.datetime.fromtimestamp(epoch) if epoch and 0 < epoch - time.time() < 8 * 3600 \
-            else dt.datetime.now() + dt.timedelta(minutes=minutes)
+        remaining = epoch - time.time() if epoch else 0
+        if remaining > 0:  # a known reset: wait for it, but wake at least every 12 h (a wrong parse can't lock a run)
+            until = dt.datetime.now() + dt.timedelta(seconds=min(remaining + 60, 12 * 3600))
+        else:
+            until = dt.datetime.now() + dt.timedelta(minutes=minutes)
         if override is not None:
             until = dt.datetime.now() + dt.timedelta(seconds=override)
         s.update(status="waiting", waiting_until=until.isoformat(timespec="seconds"), wait_step=step + 1)
