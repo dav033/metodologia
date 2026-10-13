@@ -1,10 +1,10 @@
 # Index — proposal-studio
 
-_Generated 2026-10-11 23:36 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-13 13:57 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/proposal-studio) · [graph](http://127.0.0.1:8765/p/proposal-studio/graph)  
-**Last activity:** 2026-10-11
+**Last activity:** 2026-10-13
 
 ## Workspace
 
@@ -26,7 +26,7 @@ _Generated 2026-10-11 23:36 by `bitacora.py index`. Do not edit by hand._
 | [REQ-006](requirements/REQ-006-proposal-pages-with-matched-comparisons/SPEC.md) | Proposal pages with matched comparisons | `done` | [done](requirements/REQ-006-proposal-pages-with-matched-comparisons/PLAN.md) |  |
 | [REQ-007](requirements/REQ-007-production-mcp-server-for-proposal-studi/SPEC.md) | Production MCP server for Proposal Studio | `done` | [done](requirements/REQ-007-production-mcp-server-for-proposal-studi/PLAN.md) |  |
 | [REQ-008](requirements/REQ-008-minimal-clean-ui-and-smooth-motion/SPEC.md) | Minimal clean UI and smooth motion | `done` | [done](requirements/REQ-008-minimal-clean-ui-and-smooth-motion/PLAN.md) |  |
-| [REQ-009](requirements/REQ-009-material-3-redesign-for-complete-proposa/SPEC.md) | Material 3 redesign for complete proposal workflows | `clarifying` | [in-progress](requirements/REQ-009-material-3-redesign-for-complete-proposa/PLAN.md) |  |
+| [REQ-009](requirements/REQ-009-material-3-redesign-for-complete-proposa/SPEC.md) | Material 3 redesign for complete proposal workflows | `done` | [done](requirements/REQ-009-material-3-redesign-for-complete-proposa/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -36,13 +36,14 @@ _Generated 2026-10-11 23:36 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-007 — Render the draft preview through the shared proposal component
 - D-006 — Use Starwind UI with a scoped 21st.dev React island
 - D-005 — Enforce sensitive admin request limits in Postgres
 - D-004 — Keep the Vercel hostname public and authorize administration in the app
 - D-003 — Use Vercel-hosted Astro SSR for the managed studio
-- D-002 — Keep the prototype interactive beside the divider
 
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
+  - [W3](2026-10/W3/WEEK.md): [13](2026-10/W3/2026-10-13.md)
   - [W2](2026-10/W2/WEEK.md): [11](2026-10/W2/2026-10-11.md), [10](2026-10/W2/2026-10-10.md)
