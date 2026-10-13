@@ -100,6 +100,8 @@ def report(project: str, req: str, state: dict, lines: list[str]) -> str:
             out.append(f"now running: {snap['current'] or ', '.join(running)}")
         elif nxt:
             out.append(f"next: {rs.unit_label(nxt)}")
+        elif snap["done"] == snap["total"] and snap["total"]:
+            out.append("now running: final review + REPORT.md")
         out.append("terminal: false (run this watch again to hear the next event)")
     return "\n".join(out)
 
