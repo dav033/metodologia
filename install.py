@@ -232,11 +232,12 @@ def main(argv: list[str] | None = None) -> None:
             gone = ws.missing(root, d.name)
             say(f"{d.name}: {'all repos found' if not gone else 'not cloned here: ' + ', '.join(gone)}")
     print("6. secret scanning (gitleaks)")
+    import bt_platform
     import bt_secrets
     if not bt_secrets.find_gitleaks() and os.name == "nt":
         subprocess.run(["winget", "install", "--id", "Gitleaks.Gitleaks", "-e", "--accept-source-agreements",
                         "--accept-package-agreements", "--disable-interactivity"], check=False, capture_output=True)
-    say(f"gitleaks: {bt_secrets.find_gitleaks() or 'NOT installed — ' + bt_secrets.gitleaks_install_hint()}")
+    say(f"gitleaks: {bt_secrets.find_gitleaks() or 'NOT installed — ' + bt_platform.gitleaks_install_hint()}")
     for d in sorted(root.iterdir()):
         if (d / "project.json").exists():
             for role, path in ws.repos(root, d.name).items():
