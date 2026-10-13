@@ -5,6 +5,11 @@ headless agent session per task**, keeps all state on disk, enforces the caps it
 usage limits, survives reboots and notifies the user. Context never rots because every session starts clean; the
 agent never has to "remember" anything — PLAN.md, RUN.json and the bitácora are the memory.
 
+For a user asking for overnight or multi-day autonomous development, explain this mode and its resume/pause controls
+before choosing it. Use [`agent-orchestration.md`](agent-orchestration.md) to decide task dependencies, worker
+ownership, and verification. Marathon is a bounded execution mechanism: it does not authorize external or destructive
+actions, permission bypass changes, or skipping the existing plan approval gate.
+
 ## Marathon vs loop
 
 | | Loop / goal (`execution.md` §1c) | Marathon |
@@ -16,12 +21,13 @@ agent never has to "remember" anything — PLAN.md, RUN.json and the bitácora a
 | State | PLAN.md only | PLAN.md + `RUN.json` |
 
 Default to marathon for plans with many tasks or that will outlast one sitting; keep the loop for a short plan you
-expect to finish in a few hours.
+expect to finish in a few hours. The decision also depends on whether each task can be expressed as a small,
+independently verifiable unit; break down oversized tasks before launching.
 
 ## How it works
 
-1. Plan approved (with **Modo: Maratón** on the web form, or via CLI). `launch --mode marathon` opens a Windows
-   Terminal window titled `<project> <REQ> marathon` running the supervisor. The window stays visible: it prints one
+1. Plan approved (with **Modo: Maratón** on the web form, or via CLI). `launch --mode marathon` opens a native
+   terminal window running the supervisor (Linux, macOS or Windows). The window stays visible: it prints one
    status line per session.
 2. The supervisor creates/reads `RUN.json` (next to the spec, git-synced): task list parsed from PLAN.md, statuses,
    attempts, heartbeat, log of the last 200 sessions.
@@ -31,6 +37,11 @@ expect to finish in a few hours.
 4. When every task is done: a final session does the fresh-eyes review and writes `REPORT.md` (`execution.md` §4),
    then status `done`, PLAN `status: done`, notification, autostart removed.
 5. If the only tasks left are blocked: status `blocked`, notification, exit.
+
+The coordinator's plan remains the source of truth for scope and dependencies. The current supervisor dispatches one
+task session at a time in dependency order. Parallelism within a task is appropriate only when the harness supports
+it and ownership is disjoint. Each task session must return its status and evidence, while the supervisor's
+verification decides whether `done` is accepted.
 
 **Live session logs.** The agent writes straight into `.state/runs/<project>-<REQ>/session-0007.log` (machine-local)
 while it runs, so `tail -f` shows it live and a killed or timed-out session still leaves its transcript. Claude runs
@@ -118,6 +129,10 @@ this task.*
   passes. If the supervisor dies in between, the next start (`--resume`, autostart) re-runs the `verify` of every
   claimed-but-unverified task **before** picking new work (a failed verify is a normal failed attempt). A RUN.json
   from before this change, with a bare `done`, is trusted as it was.
+- **Checkpoint is a resume hint, not fresh evidence.** On resume, load the approved plan and RUN.json, inspect the
+  worktree and logs, and re-run each claimed task's verification before scheduling new work. Re-check any external
+  fact, approval or environment assumption that may have changed since the checkpoint; never infer that a checkpoint
+  authorizes an external side effect.
 - **Supervisor errors** (RUN.json locked by git/antivirus, a missing file…) are logged, notified once, retried with a
   growing pause and only given up on after 10 in a row. A missing agent executable stops the run and notifies.
 
@@ -144,7 +159,7 @@ bitacora.py --project P launch REQ-001 --mode marathon --model haiku
 `--agent-cmd "<template>"` (placeholders `{prompt_file} {workdir} {task} {req} {project} {model_args}`, the last one
 being the tier's `--model … --effort …`) replaces the agent command;
 it exists for tests only. `--once` runs a single session. `--retry-blocked` puts blocked tasks back to `todo` with
-fresh attempts (use it after fixing the cause listed in PENDING.md). `--no-autostart` skips the Startup entry.
+fresh attempts (use it after fixing the cause listed in PENDING.md). `--no-autostart` skips the per-user login entry.
 `--resume` is accepted for readability but implicit: the supervisor always continues from RUN.json if it exists.
 Codex receives its prompt on stdin (`exec ... -`) instead of as an argument; Claude takes it as the last argument.
 
@@ -162,18 +177,21 @@ until asked.
 
 ## Reboots and the stale heartbeat
 
-On start the supervisor installs an autostart `.cmd` in the user's Startup folder
-(`metodologia-run-<project>-<REQ>.cmd`) that reopens the terminal with `run <REQ> --resume`; it removes it when the run
-ends as `done` or `stopped`; it also sets `BITACORA_ROOT`. A restart continues from RUN.json, sends any
+On start the supervisor installs a per-user login entry that runs `run <REQ> --resume`:
+Windows Startup `.cmd`, Linux systemd user service (XDG `.desktop` when systemd is absent), or
+macOS `~/Library/LaunchAgents/*.plist`. POSIX entries resume headlessly; inspect RUN.json, logs or the web UI.
+Entries take effect at the next login and are removed when the run ends as `done` or `stopped`.
+The generated scripts preserve `BITACORA_ROOT` and the launch PATH. A Linux session without a user
+systemd manager must support XDG Autostart or resume manually; errors are reported, not hidden. A restart continues from RUN.json, sends any
 `in_progress` task back to `todo` (its session died with the machine), and **keeps an explicit pause and a pending
 usage-limit wait** (only `run-control resume` lifts a pause). The heartbeat (`at`, `pid`, `machine`, `task`, `session`, `state`) is written
 before and after every session: if it is stale the supervisor is dead — reopen it with `run REQ --resume`.
 
 ## Notifications
 
-Windows toast ("Bitácora") on: blocked task, usage-limit wait, run done, run blocked, run stopped / cap reached.
+Native notifications (Windows toast, Linux notify-send, macOS osascript) on: blocked task, usage-limit wait, run done, run blocked, run stopped / cap reached.
 Optional phone push through ntfy: create `.state/notify.json` with `{"ntfy_topic": "<secret-topic-name>"}` and
-subscribe to that topic in the ntfy app. Notification failures never stop the run.
+subscribe to that topic in the ntfy app. Notification failures are reported to stderr and never stop the run.
 
 ## Why Haiku 5.5 + ultracode
 

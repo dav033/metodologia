@@ -3,6 +3,10 @@
 Goal: turn a vague request into a spec precise enough that you can plan and build it without coming back to the
 user. The user's time is the scarce resource — every question must earn its place.
 
+If the user's goal directly matches a methodology capability that could change the approach or outcome, briefly
+explain that capability in context before continuing. Avoid generic feature pitches and repeated explanations; see
+[`self-improvement.md`](self-improvement.md).
+
 ## 1. Size the request
 
 The interview is where questions belong: front-load them here so planning and execution can run without
@@ -77,6 +81,24 @@ Round format:
 Before round 1, play back in 2–4 lines what you understood and what you found while exploring, separating **what the
 user said** from **what you're assuming**. That surfaces wrong assumptions cheaply.
 
+### Grill Me depth check
+
+When the user says "grill me", "grill-me", "interrógame" or asks to stress-test a design, use this same interview
+with extra attention to the weakest unresolved decisions. After each answer, recompute the frontier: an answer
+can invalidate a branch or expose a new dependency. Resolve facts from the code/tools before putting a decision
+to the user; independent questions need not wait for unrelated exploration.
+
+Challenge a consequential assumption with its concrete failure case or trade-off, then offer a recommended
+answer. Do not invent objections to settled decisions. Track each branch as decided, deferred or an explicit
+assumption; "exhaustive" does not mean an endless interview. The existing Quick track, five-question bound and
+user stop conditions (§5) still apply. Before planning, play back the resulting understanding; plan approval
+confirms it without adding another approval gate. A request to stress-test an existing approved plan does not
+authorize implementation of proposed changes.
+
+This adapts Matt Pocock's Grill Me/grilling prompts; source excerpts, revisions and license notices are in
+[communication-and-context.md](communication-and-context.md). Do not call an unavailable `grilling` skill:
+the interview lives here and works across harnesses.
+
 ### Rounds as files + web form (always, once a spec exists)
 
 Every round is also posted as a file so the user can answer from the local web UI (works the same for Claude
@@ -130,3 +152,9 @@ Then show the user a short summary (5–8 lines: what will be built, what won't,
 straight into planning** — the approval gate is on the plan, not the spec (unless the user asked to review the
 spec too). Log the
 requirement and its key decisions in today's file. Next: `references/execution.md`.
+
+When user feedback or exploration reveals a reproducible defect, an agreed-requirement mismatch, or recurring
+friction in this skill, investigate and make the smallest validated persistent improvement in the canonical skill
+source as part of the approved scope. Record speculative ideas as proposals. If a user-controlled rule blocks the
+requested behavior, pause that behavior and ask whether the user wants a one-time exception or a permanent change;
+follow [`self-improvement.md`](self-improvement.md) for source boundaries and higher-priority rules.

@@ -4,6 +4,14 @@ Each project has `TOOLS.md` in its bitácora folder; infrastructure shared by se
 `~/bitacora/TOOLS.md`. Together they say how to reach everything the project runs on: servers (SSH), hosting
 (Vercel, Netlify, AWS…), CLIs, storage, databases, external services. The SessionStart context lists the names.
 
+## Optional RTK output reduction
+
+For long shell output, read the RTK section of [communication-and-context.md](communication-and-context.md).
+Check availability and the installed command's help before using it. Prefer supported filters for noisy read-only
+inspection and planned checks; use native commands when RTK is absent or exact content is needed. Preserve the
+exit code and recover saved raw diagnostics before considering another execution. This guidance installs no
+binary, hook or proxy and grants no new permission to run the wrapped command.
+
 ## Using them
 
 When the user asks things like "revisa el deploy en el VPS", "conéctate a Vercel y mira los logs", "haz el deploy en

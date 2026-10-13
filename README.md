@@ -25,6 +25,18 @@ metodologia/
 
 ### Requisitos
 
+Compatible con Windows, Linux y macOS (Python 3.12+). En Linux, el lanzador busca
+kitty, GNOME Terminal, Konsole, xterm o x-terminal-emulator. En macOS usa Terminal
+mediante `osascript`; el sistema puede pedir permiso para automatizar Terminal.
+Sin terminal gráfica se puede ejecutar el supervisor directamente con `bitacora.py run`.
+
+La reanudación después de iniciar sesión utiliza systemd de usuario en Linux
+(sin sudo), XDG Autostart si no hay systemd, LaunchAgents en macOS y Startup en Windows.
+Los compositores que no procesen XDG Autostart necesitan un gestor de sesión compatible
+o ejecutar `run --resume` manualmente. `--no-autostart` desactiva el registro.
+Las notificaciones usan notify-send en Linux, osascript en macOS y WinRT en Windows.
+No hay cambios de configuración ni servicios hasta ejecutar el instalador o iniciar un maratón.
+
 | | Para qué | ¿Obligatorio? |
 |---|---|---|
 | **Git** | clonar y sincronizar | sí |
@@ -33,6 +45,13 @@ metodologia/
 | **Claude Code** y/o **Codex** | los agentes | al menos uno |
 | **winget** (viene con Windows 11) | instalar gitleaks (escaneo de secretos) | opcional |
 | **npm** | instalar CodeGraph (grafo de código para el explorer) | opcional |
+| **RTK** | comprimir salida de comandos para la skill madre | opcional; `python install.py --rtk-only` en Linux x86_64 |
+
+Para gitleaks: `brew install gitleaks` en macOS; el gestor de paquetes de la
+distribución en Linux (`pacman -S gitleaks` en Arch, requiere permisos de administrador).
+El instalador sólo intenta instalarlo automáticamente en Windows. Si está instalado
+pero no puede completar el escaneo, el commit queda bloqueado; si no está instalado,
+se conserva el comportamiento anterior de escaneo opcional.
 
 ### Pasos
 
@@ -96,3 +115,51 @@ Los cambios a la skill misma son commits normales en este repo.
 | Aviso de **posible secreto** en la bitácora | Reemplaza el valor por una referencia (ruta de la llave, nombre de variable, alias SSH) y corre `bitacora.py commit "fix: remove secret"` |
 | Un commit de tus repos bloqueado por gitleaks | Quita el secreto del código; si es falso positivo, agrégalo a `.gitleaksignore` |
 | El panel no abre | `bitacora.py web` lo levanta (puerto 8765); se reinicia solo si su código cambió |
+
+## RTK dentro de la skill madre
+
+Caveman y Grill Me aportan instrucciones adaptadas dentro de `metodologia`; no se instalan como otras skills.
+RTK es el ejecutable opcional para reducir la salida de comandos, con instalación y pautas propias de este repo:
+
+```bash
+python install.py --rtk-only
+```
+
+Instala RTK **0.51.0** en `~/.local/bin/rtk`, con SHA-256 fijados para el archivo y el binario, sin sudo,
+hooks ni cambios de configuración. Esta versión del instalador soporta Linux x86_64; otras plataformas
+necesitan un paquete oficial. Conserva cualquier binario distinto que ya exista y avisa del conflicto.
+La ruta debe estar en PATH (`fish_add_path ~/.local/bin` en fish, si hace falta).
+Para incluir RTK al configurar deliberadamente todo el marco: `python install.py --with-rtk`.
+
+La medición local con tres repeticiones por comando observó un 27,5 % menos tokens de salida para `git status`,
+64,7 % para `git log -n 20`, 0,4 % para un diff pequeño y 96,4–99,8 % para pytest verboso.
+Con pytest ya silencioso (`-q`), la reducción fue 33,8 %. Se conservaron códigos y los tres diagnósticos.
+Recuperar la salida completa de un fallo elevó el total 1,8 % frente a pytest nativo. Son tokens de **salida de
+comandos**, contados con `o200k_base`; no son ahorro total de sesión ni de facturación. RTK añadió 3–7 ms a las
+consultas Git de esta muestra; mide también el tiempo si importa.
+
+Benchmark reproducible, sin modelos de pago ni ejecutar suites de tus proyectos:
+
+```bash
+uv run --no-project --with pytest --with tiktoken python evals/benchmark_rtk.py --output /tmp/metodologia-rtk-bench-1
+```
+
+Guarda los resultados y la salida original, compara Git en este repo y ejecuta un fixture aislado de pytest.
+Valida el SHA-256 del binario RTK v0.51.0, el código de recuperación, los diagnósticos recuperados y que pytest
+no vuelva a ejecutarse. Usa un directorio nuevo y vacío por corrida; rechaza sobrescribir evidencia.
+La skill elige filtros explícitos y recupera evidencia existente; la instalación no activa interceptación automática.
+
+## Comprobaciones de portabilidad
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s skill/scripts/tests -v
+```
+
+Las pruebas aíslan los archivos y sustituyen los agentes por stubs; no consumen modelos.
+La matriz de CI incluye Linux y macOS. Las pruebas de macOS comprueban comandos y plist;
+la automatización gráfica y los permisos de Terminal necesitan una prueba manual en Mac.
+El instalador y el flujo de sincronización mantienen sus políticas de commits/push
+automáticos: revisarlas antes de activar la skill si tus reglas locales los prohíben.
+
+Referencias: [LaunchAgents de Apple](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html),
+[formato de entradas XDG](https://specifications.freedesktop.org/desktop-entry/latest-single/).
