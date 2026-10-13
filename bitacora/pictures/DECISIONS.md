@@ -248,3 +248,5 @@ D-040 · 2026-10-13 · Bitácora temporarily lives inside the private metodologi
 D-041 · 2026-10-13 · Development of pictures is done entirely from this laptop from now on (owner); the Windows marathon clone is no longer an executor. Its unpushed work (judge-fix e7x) must be re-done or recovered.
 
 D-042 · 2026-10-13 · Delegation picks the best model per situation regardless of the hosting session's provider; audits go to a different provider than the builder (owner). Router fixed in bt_agents.py.
+
+D-043 · 2026-10-13 · REQ-015 A1: on 404/422 of /api/plan-idea the canned chips are answered by rules (shared costear_decoracion body + local steps), never by a model turn; chosen by debate (3 haiku-medium debaters, haiku-max judge) over a server tool filter and over accepting the risk.
