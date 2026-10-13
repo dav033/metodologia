@@ -44,6 +44,27 @@ class ResetParsing(unittest.TestCase):
         self.assertIn("usage limit", settle.limit_line(text))
         self.assertNotIn("tokens used", settle.limit_line(text))
 
+    def test_claude_session_limit_message_is_a_limit_with_its_reset(self):
+        """Seen for real (maros-lab REQ-001): it was read as a plain failure, burned attempts, climbed tiers and
+        blocked an audit."""
+        import datetime as dt
+        text = "You've hit your session limit · resets 12:50am (America/Bogota)"
+        now = dt.datetime(2026, 10, 12, 23, 40).timestamp()
+        self.assertEqual(dt.datetime.fromtimestamp(settle.absolute_reset_epoch(text, now)), dt.datetime(2026, 10, 13, 0, 50))
+        result = json.dumps({"type": "result", "subtype": "success", "is_error": True, "result": text})
+        epoch = settle.detect_limit({"rc": 1, "text": result, "seconds": 3, "timed_out": False, "stopped": False})
+        self.assertTrue(epoch and epoch > 0)
+        for other in ("You've hit your weekly limit · resets Oct 20, 9am", "Opus limit reached", "5-hour limit · resets 3pm"):
+            self.assertIsNotNone(settle.detect_limit({"rc": 1, "text": other, "seconds": 1, "timed_out": False,
+                                                      "stopped": False}), other)
+        self.assertEqual(settle.absolute_reset_epoch("the cache resets 3 files", now), 0)
+
+    def test_structured_usage_limit_verdict_is_enough_whatever_the_wording(self):
+        result = json.dumps({"type": "result", "is_error": True, "api_error_status": 429,
+                             "api_error": "usage_limit_reached", "result": "Come back later."})
+        self.assertIsNotNone(settle.detect_limit({"rc": 1, "text": result, "seconds": 1, "timed_out": False,
+                                                  "stopped": False}))
+
     def test_no_announcement_is_zero(self):
         self.assertEqual(settle.reset_epoch("something unrelated", now=5), 0)
         self.assertEqual(settle.reset_epoch("", now=5), 0)

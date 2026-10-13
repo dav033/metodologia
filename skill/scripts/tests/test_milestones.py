@@ -36,9 +36,8 @@ provider = "codex" if env.get("CODEX_HOME") else "claude"
 cfg_path = pathlib.Path(env["STUB_CFG"])
 cfg = json.loads(cfg_path.read_text())
 rows_path = pathlib.Path(env["STUB_ORDER"])
-rows = json.loads(rows_path.read_text()) if rows_path.exists() else []
-rows.append({"tasks": task_list, "kind": kind, "provider": provider})
-rows_path.write_text(json.dumps(rows))
+with rows_path.open("a") as fh:  # one appended line per session: concurrent sessions must not lose each other's row
+    fh.write(json.dumps({"tasks": task_list, "kind": kind, "provider": provider}) + "\n")
 if task_list == ["FINAL"]:
     pathlib.Path(env["STUB_RDIR"], "REPORT.md").write_text("# report\n")
     raise SystemExit(0)
@@ -136,7 +135,7 @@ class MilestoneTests(MarathonCase):
         return ["claude-test", "codex-test"]
 
     def rows(self):
-        return json.loads(self.order.read_text(encoding="utf-8"))
+        return [json.loads(line) for line in self.order.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
 class PlanUnits(MilestoneTests):

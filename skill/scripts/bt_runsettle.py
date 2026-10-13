@@ -12,8 +12,9 @@ import bt_runtask as rt
 import bt_runtier as tier_
 from bt_runutil import backoff_override, notify, say
 
-LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|hit your limit|"
-                      r"limit will reset|overloaded_error", re.I)
+LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|"
+                      r"hit your (\w+ ){0,2}limit|(session|weekly|daily|hourly|opus|sonnet) limit|"
+                      r"limit will reset|limit\W{1,4}resets|overloaded_error", re.I)
 VERIFY_TIMEOUT = 600
 LIMIT_STREAK_MAX = 8  # consecutive usage-limit results on one task before the next one counts as an attempt
 LIMIT_RESULTS = ("usage_limit", "limit_streak")  # results that send the supervisor to wait
@@ -28,7 +29,9 @@ def _json(text: str):
 
 def _from_result(obj: dict) -> dict:
     return {"text": str(obj.get("result") or obj.get("error") or ""), "cost": obj.get("total_cost_usd"),
-            "is_error": bool(obj.get("is_error")) or str(obj.get("subtype") or "").startswith("error")}
+            "is_error": bool(obj.get("is_error")) or str(obj.get("subtype") or "").startswith("error"),
+            # the CLI's own structured verdict, when it gives one, beats reading the message
+            "limit": obj.get("api_error") == "usage_limit_reached" or obj.get("api_error_status") == 429}
 
 
 def parse_output(raw: str) -> dict:
@@ -75,7 +78,7 @@ def reset_epoch(text: str, now: float | None = None) -> int:
 _MONTHS = {m: i + 1 for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov",
                                             "dec"))}
 _MONTHS.update({"ene": 1, "abr": 4, "ago": 8, "set": 9, "dic": 12, "fev": 2, "avr": 4, "mai": 5, "out": 10, "dez": 12})
-_TRY_AT = re.compile(r"(?:try again|resets?|available again)\s+(?:at|on)\s+(?:([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})"
+_TRY_AT = re.compile(r"(?:(?:try again|available again)\s+(?:at|on)|resets?(?:\s+(?:at|on))?)\s+(?:([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})"
                      r"(?:st|nd|rd|th)?,?\s+(?:(\d{4}),?\s+)?(?:at\s+)?)?(\d{1,2})(?::(\d{2}))?\s*([AaPp]\.?[Mm]\.?)?")
 
 
@@ -125,7 +128,7 @@ def detect_limit(info: dict) -> int | None:
     """A usage/rate-limit message in the output of a FAILED session (non-zero exit or is_error): a successful run whose
     text merely mentions '429' or 'quota' is never a limit. Returns the reset epoch (0 = unknown) or None."""
     text, is_error = _result_text(info)
-    if not (info["rc"] or is_error) or not LIMIT_RE.search(text[-4000:]):
+    if not (info["rc"] or is_error) or not (LIMIT_RE.search(text[-4000:]) or (info.get("parsed") or {}).get("limit")):
         return None
     m = re.search(r"limit reached\|(\d{9,10})", text) or re.search(r"limit reached\|(\d{9,10})", info["text"][-20000:])
     if m:

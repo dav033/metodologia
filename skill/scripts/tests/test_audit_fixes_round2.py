@@ -262,7 +262,7 @@ class RunBatchRound2(IsolatedCase):
         state = rs.load(self.rdir)
         self.assertEqual(state["sessions"], 3)  # two implementations, then the final session
         self.assertGreaterEqual(self.batch_sizes[0], 2)
-        self.assertEqual({row["provider"] for row in json.loads(self.order.read_text(encoding="utf-8"))
+        self.assertEqual({row["provider"] for row in [json.loads(line) for line in self.order.read_text(encoding="utf-8").splitlines() if line.strip()]
                           if row["tasks"] != ["FINAL"]}, {"claude", "codex"})
 
 
