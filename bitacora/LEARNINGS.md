@@ -10,7 +10,8 @@
 
 ## Candidates
 
-_None._
+- **LG-004 · preference** Pick the best model for the situation regardless of which provider hosts the current session: no preference for the active account; route through the router/delegate (best measured route for the kind), and audits go to a different provider than the builder
+  - 2026-10-13T12:01:18.599649-05:00 · REQ-015: Session 553c2466: all subagents were Claude because the host Agent tool only offers Claude; bt_agents.py also ranked non-Claude audit routes last (uncommitted change); owner asked why no Codex
 
 ## Rejected
 

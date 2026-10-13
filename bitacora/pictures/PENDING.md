@@ -7,7 +7,6 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
-- P-074 · Per-leg randomness/colour quotas in the organic arch so «más R-24 solo en la pata izquierda» changes only that leg (known failure in test-frases-dueno; touches organico.ts + golden tests; owner to confirm) · urgency: low · complexity: M · added 2026-10-13 · scripts/test/frases-dueno/casos-tamanos.ts
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversations get edits refused (409 MOTOR_PYTHON), Python routes refuse 3D tokens, and adding an idea/redoing silently re-prices in Python (~×1.4). Design a graceful rollback (keep 3D plans priced by the engine until the conversation ends, or tell the customer) — BLOCKER for the switch · urgency: high · complexity: M · added 2026-10-09 · W7 dossier review
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer --aplicar + upsert vectors, rebuild agente-core dist, visual review of Library filters/photo search, turn TALLER_RAG_ENABLED on only after the tuned eval beats today's search · urgency: high · complexity: ? · added 2026-10-08 · REQ-002
@@ -20,6 +19,7 @@ month summary._
 - P-048 · Scenario matrix gaps: 18 % of representable pieces fall to noRepresentables («colour doesn't reach the materials list») and skip geometry checks; seed 11 E-00146 arco+arco_no_denso overlap 8 cm (anchoEstimadoCm underestimates arc + flower overhang); seed 3 E-00077 garland sencilla under band · urgency: med · complexity: M · added 2026-10-09 · matrix re-review
 - P-051 · TS motor builds 0 balloons for pared_organica, figura, pared_no_densa, centro_mesa (fall back to Python / curated price) · urgency: med · complexity: M · added 2026-10-10 · property tests
 - P-068 · Owner quince photo, left after 9f86d67b (P-067): the reader gives 1 door piece where the photo has 3 arched panels (needs a fondos-detector fixture that finds the doors); pink fabric roses missing from the catalogue (only white/ivory); low/seated camera breaks the refine capture (unreproduced, needs a headless capture check); a failed colour tweak (ajustarColoresSiPuede) also adds a misleading «no se armó» entry · urgency: med · complexity: M · added 2026-10-11
+- P-075 · Pre-existing debt on main: `npx tsc --noEmit` 180 errors; test-colores-claros-guiada and test-ui-cotizacion-guiada fail; five guided tests have no npm script (edicion-plan-chat, crud-plan-chat, precio-chat, ajuste-plan, usabilidad-97) · urgency: med · complexity: M · added 2026-10-13 · REQ-015 baseline
 - P-002 · FLUX photo color fidelity: residual ΔE ~15 after hex prompt (c25490f1); next: photoreal capture or per-piece correction · urgency: med · complexity: ? · added 2026-10-08 · D-003, D-006
 - P-003 · Resume idea digitization: 110 covered ideas left after lot 26, then new generators · urgency: med · complexity: ? · added 2026-10-08 · D-005
 - P-007 · Split Taller3D.tsx (1022 lines) by responsibility: top bar, rail panels, viewer overlay, inspector, solo editor wiring · urgency: med · complexity: ? · added 2026-10-08
@@ -41,6 +41,7 @@ month summary._
 - P-053 · Photo→3D scale notes never reach the user (foto.notas not rendered; only the agent context) — decide whether/how to tell the decorator when the scale is a bound, not a measurement · urgency: low · complexity: M · added 2026-10-10 · scale review
 - P-063 · Taller «Añadir» (Phase 5 review): phone half-sheet at 390×844 shows no cards (header 302 px; collapse taxonomy/photo rows at half height); client reads catalogo_ui_repositorios once per mount (rollback needs reload; selector pops in ~100 ms with 62 px shift); same 6 px touch-as-drag rule in useArrastreDesdePanel.fueArrastre (FondosYMuebles, murals, shapes tiles); SPEC §7/§9 need the D-039 amendment (flag ON by default) · urgency: low · complexity: M · added 2026-10-10
 - P-065 · P-054 leftovers (round 3): unreachable target burns 2 arms per thickening step (R-5 1200 = 13 s); loop breaks at first factor over the cap instead of trying one in between (par-columnas «más R-5» 237 vs main 287); «son relleno de huecos…» text wrong when the cap is the cause; percent-mode note says «40 R-12» for 40 %; `quitar` has no aplicar so it is refused over 430; spent-time accounting uses min(formula, ms) — >3.5× slower machines exceed 14 s; «menos» over-removal (pasto R-5 62→15, goal 31) · urgency: low · complexity: M · added 2026-10-10
+- P-074 · Per-leg randomness/colour quotas in the organic arch so «más R-24 solo en la pata izquierda» changes only that leg (known failure in test-frases-dueno; touches organico.ts + golden tests; owner to confirm) · urgency: low · complexity: M · added 2026-10-13 · scripts/test/frases-dueno/casos-tamanos.ts
 - P-004 · Viewer: export depth map and limit capture crop margin · urgency: low · complexity: ? · added 2026-10-08 · D-003
 - P-005 · [bug] Selecting a piece costs 60–90 ms in dev (side-panel re-render) · urgency: low · complexity: ? · added 2026-10-08 · D-002
 - P-006 · [bug] test-figuras3d fails: rizo_resorte uses 970 in T-160 (pre-existing, also on 6b2a4391) · urgency: low · complexity: ? · added 2026-10-08
@@ -54,8 +55,8 @@ month summary._
 _None_
 
 ## Recently closed
-- P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n)  · closed 2026-10-13 · merged aee7b5a5 (tuning continues in P-067/P-068) (reconciled from git evidence)
-- P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel —  · closed 2026-10-13 · merged 3bb9b5fc (+ prerender hotfix) (reconciled from git evidence)
+- P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) · closed 2026-10-13 · merged aee7b5a5 (tuning continues in P-067/P-068) (reconciled from git evidence)
+- P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — · closed 2026-10-13 · merged 3bb9b5fc (+ prerender hotfix) (reconciled from git evidence)
 - P-026 · Pampas foliage (real plumes) — feat/pampas (e4t) in progress; needed by photos 0 · closed 2026-10-13 · merged 96ea2038 (reconciled from git evidence)
 - P-035 · (closed by D-026) · closed 2026-10-13 · closed by D-026; single quote 81718d69 (D-038) (reconciled from git evidence)
 - P-066 · closed 2026-10-11 by d33219cd: every guided idea priced by the single pricer (curated ones too, printed balloons by their own packs); prod e2e «paridad de precio» PASS ($51.554 card = Taller).
