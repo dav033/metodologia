@@ -7,6 +7,7 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
+- P-074 · Per-leg randomness/colour quotas in the organic arch so «más R-24 solo en la pata izquierda» changes only that leg (known failure in test-frases-dueno; touches organico.ts + golden tests; owner to confirm) · urgency: low · complexity: M · added 2026-10-13 · scripts/test/frases-dueno/casos-tamanos.ts
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversations get edits refused (409 MOTOR_PYTHON), Python routes refuse 3D tokens, and adding an idea/redoing silently re-prices in Python (~×1.4). Design a graceful rollback (keep 3D plans priced by the engine until the conversation ends, or tell the customer) — BLOCKER for the switch · urgency: high · complexity: M · added 2026-10-09 · W7 dossier review
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer --aplicar + upsert vectors, rebuild agente-core dist, visual review of Library filters/photo search, turn TALLER_RAG_ENABLED on only after the tuned eval beats today's search · urgency: high · complexity: ? · added 2026-10-08 · REQ-002

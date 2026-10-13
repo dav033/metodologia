@@ -1,3 +1,5 @@
+> SUPERSEDED 2026-10-13: the real bitácora from the other clone reached origin (c1e39c0); use it, not this file.
+
 # Reconstruction of pictures state, 2026-10-09 -> 2026-10-11 (written 2026-10-13)
 
 Source: `git log origin/main` at 65edd83b (112 commits since Oct 9 on main; ~1063 across all refs). Bitacora from the
