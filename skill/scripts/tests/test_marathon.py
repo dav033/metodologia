@@ -16,7 +16,9 @@ import time
 import unittest
 from pathlib import Path
 
-TMP = Path(tempfile.mkdtemp(prefix="marathon-test-"))
+# test_00_isolation.py (first in discovery) may already have chosen the throwaway root; reuse it.
+TMP = Path(os.environ.get("BITACORA_TEST_ROOT") or tempfile.mkdtemp(prefix="marathon-test-"))
+os.environ["BITACORA_TEST_ROOT"] = str(TMP)
 os.environ["BITACORA_ROOT"] = str(TMP / "bitacora")
 os.environ["BITACORA_PORT"] = "8797"
 os.environ["BITACORA_RUN_BACKOFF_SEC"] = "1"
