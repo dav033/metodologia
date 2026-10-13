@@ -63,6 +63,17 @@ prompt or the first session, and again on every marathon session. Every other pr
 launcher guarantee, not a sandbox: calling the provider binary directly bypasses it. Over SSH (no display) the
 launcher opens a `tmux` session (`BITACORA_TERMINAL=tmux` forces it) or a transient `systemd-run --user` unit.
 
+### Agile: delegate one task, read a compact result
+
+`bitacora.py [--project P] delegate start "<task>" --profile ID|--agent A [--workdir DIR] [--allow PATH]...
+[--verify "<command>"] [--timeout MIN] [--model M] [--effort E] [--background]` runs ONE task in a headless session.
+The work gate runs first (profile and folder); then the agent reports in `RESULT.json` and the supervisor, not the
+agent, runs `--verify`. You receive only `status` (`verified` · `verify_failed` · `claimed` · `partial` · `blocked` ·
+`failed` · `timeout` · `usage_limit`), a ≤400-character summary, changed files, files outside `--allow` and the
+follow-ups; the full log stays in `.state/delegations/<id>/session.log`. `claimed` means done by the agent's word
+only, so ask for a `--verify` command whenever one exists. `delegate status <id>` and `delegate list` read back.
+Delegate only when the task is independent and checkable; edits to the same worktree must not run in parallel.
+
 **Attempt telemetry**: every marathon session appends one line to `<root>/.state/events/attempts-YYYY-MM.jsonl`
 (profile, agent, model, effort, seconds, result, tokens). A measure the provider did not report is `null`, never 0;
 Codex only reports a grand total. `bitacora.py metrics` summarizes per agent/profile/model with the share of attempts

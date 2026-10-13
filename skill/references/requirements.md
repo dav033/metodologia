@@ -15,8 +15,14 @@ interrupting the user. Not every request needs a full interview. Pick a track; w
 | Track | When | What you do |
 |---|---|---|
 | **Quick** | One obvious change, no real decisions (rename, small bug with clear repro, copy change) | No interview. State your understanding in one line, log it in today's file, go build. |
+| **Agile** | A mid-size technical change with a clear goal and few decisions (a contained feature, a bug with several causes, a refactor of one module) | No interview rounds and no PLAN.md. Write the objective and 2–5 acceptance criteria (one of them a command that can verify it) in today's log, ask only what blocks, then build directly or delegate single tasks (`delegate`, see `execution.md` §Agile). |
 | **Standard** | A feature, a process change, anything with 2+ real decisions | Full flow below. |
 | **Deep** | New product/system, cross-team process, money/security/data at stake, irreversible choices | Full flow + the extra lenses in §6 before closing. |
+
+The track (how much to specify) and the execution mode (how the work runs: `direct` in this session, `coordinated`
+with a leader plus delegated tasks, or `marathon`) are different axes. Never start a marathon only because the track
+is Deep, and never require an interview or a plan only because the work is delegated. Pick the mode from the plan:
+a few hours or fewer tasks → direct/coordinated; days of independent work → marathon.
 
 ## 2. Explore before asking
 

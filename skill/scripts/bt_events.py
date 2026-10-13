@@ -134,7 +134,8 @@ def summary(rows: list[dict]) -> list[dict]:
                                     "tokens_measured": 0})
         g["attempts"] += 1
         res = r.get("result")
-        g["done" if res == "done" else "failed" if res in ("failed", "verify_failed", "timeout") else "other"] += 1
+        g["done" if res in ("done", "verified") else
+          "failed" if res in ("failed", "verify_failed", "timeout") else "other"] += 1
         g["seconds"] += r.get("seconds") or 0
         u = r.get("usage") or {}
         total = u.get("total_tokens")

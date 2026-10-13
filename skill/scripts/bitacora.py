@@ -112,6 +112,19 @@ def main() -> None:
     p_prof.add_argument("--dir", help="wrapper: directory for the launcher (default ~/.local/bin)")
     p_work = sub.add_parser("work", help="show or set the project's work flag (gates work-only profiles)")
     p_work.add_argument("value", nargs="?", choices=["true", "false"])
+    p_del = sub.add_parser("delegate", help="run ONE task in a headless agent session and get a compact checked result")
+    p_del.add_argument("action", choices=["start", "exec", "status", "list"])
+    p_del.add_argument("target", nargs="?", help="start: the task text; exec/status: delegation id")
+    p_del.add_argument("--profile", help="account profile (sets the agent; work gate applies)")
+    p_del.add_argument("--agent", choices=["claude", "codex", "antigravity"], help="when no --profile")
+    p_del.add_argument("--workdir", help="folder the agent works in (default: --cwd)")
+    p_del.add_argument("--allow", action="append", default=[], help="path the agent may modify (repeatable)")
+    p_del.add_argument("--verify", help="command whose exit status decides success (run by the supervisor)")
+    p_del.add_argument("--timeout", type=float, default=30, help="minutes (default 30)")
+    p_del.add_argument("--model")
+    p_del.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"])
+    p_del.add_argument("--background", action="store_true", help="start: return the id immediately")
+    p_del.add_argument("--agent-cmd", help="tests: command template with {prompt_file} {workdir} {result} {id}")
     sub.add_parser("metrics", help="attempt telemetry summary per agent/profile/model (null = not reported)")
     sub.add_parser("audit", help="prepare a read-only inventory for a workspace architecture audit")
     p_serve = sub.add_parser("serve", help="run the local web server in the foreground")
@@ -183,6 +196,34 @@ def main() -> None:
             for role, path in ws.repos(ROOT, d.name).items():
                 if path.exists() and path.resolve() != ROOT.resolve().parent:
                     print(f"{d.name}/{role}: {install_hook(path)}")
+        return
+
+    if a.cmd == "delegate":  # no project binding needed beyond the name
+        import bt_delegate
+        if a.action == "list":
+            print(json.dumps(bt_delegate.listing(), indent=1, ensure_ascii=False))
+            return
+        if a.action == "status":
+            print(json.dumps(bt_delegate.summary(a.target or ""), indent=1, ensure_ascii=False))
+            return
+        if a.action == "exec":  # internal: runs a delegation that `start --background` created
+            print(json.dumps(bt_delegate.execute(a.target or "", a.agent_cmd), indent=1, ensure_ascii=False))
+            return
+        project = slugify(a.project, 60) if a.project else (
+            slugify(os.environ["BITACORA_PROJECT"], 60) if os.environ.get("BITACORA_PROJECT") else None)
+        if not project:
+            import bt_audit
+            project = bt_audit.project_for_cwd(ROOT, Path(a.workdir or a.cwd))
+        if not project:
+            sys.exit("No project resolved; pass --project <name>.")
+        if not a.target:
+            sys.exit("delegate start needs the task text")
+        order = bt_delegate.create(project, a.target, a.profile, a.agent, Path(a.workdir or a.cwd), a.allow,
+                                   a.verify, a.timeout, a.model, a.effort)
+        if a.background:
+            print(json.dumps({"id": order["id"], "status": "started", "pid": bt_delegate.start_background(order["id"])}))
+        else:
+            print(json.dumps(bt_delegate.execute(order["id"], a.agent_cmd), indent=1, ensure_ascii=False))
         return
 
     if a.cmd == "metrics":  # machine-level: reads <root>/.state/events

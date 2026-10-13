@@ -87,12 +87,13 @@ class RecordingTests(unittest.TestCase):
         self._record(session=1)
         self._record(session=2, result="failed", text="no usage here")
         self._record(session=3, agent="codex", text=CODEX_TEXT)
+        self._record(session=4, result="verified")  # a delegation verified by its independent check counts as done
         rows = bt_events.read_all()
         by_agent = {g["agent"]: g for g in bt_events.summary(rows)}
         claude = by_agent["claude"]
-        self.assertEqual((claude["attempts"], claude["done"], claude["failed"]), (2, 1, 1))
-        self.assertEqual(claude["coverage"], 0.5)
-        self.assertEqual(claude["tokens_measured"], 2 + 7 + 8607 + 18058)
+        self.assertEqual((claude["attempts"], claude["done"], claude["failed"]), (3, 2, 1))
+        self.assertAlmostEqual(claude["coverage"], 0.67)
+        self.assertEqual(claude["tokens_measured"], 2 * (2 + 7 + 8607 + 18058))
         self.assertEqual(by_agent["codex"]["tokens_measured"], 5604)
 
 
