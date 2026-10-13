@@ -102,13 +102,14 @@ def main() -> None:
     p_ws.add_argument("role", nargs="?", help="add/remove: role name (frontend, backend…); root: the folder")
     p_ws.add_argument("path", nargs="?", help="add: repo path")
     p_prof = sub.add_parser("profiles", help="account profiles: list, doctor, or check one against a project")
-    p_prof.add_argument("action", choices=["list", "doctor", "check", "add"])
+    p_prof.add_argument("action", choices=["list", "doctor", "check", "add", "gate", "wrapper"])
     p_prof.add_argument("profile", nargs="?", help="check/add: profile id")
     p_prof.add_argument("--provider", choices=["claude", "codex", "antigravity"], help="add: provider")
     p_prof.add_argument("--env", action="append", default=[], metavar="KEY=VALUE",
                         help="add: environment selecting the account, e.g. CLAUDE_CONFIG_DIR=~/.claude-work")
     p_prof.add_argument("--work-only", action="store_true", help="add: only runs projects with work=true")
     p_prof.add_argument("--bin", help="add: executable name if not the provider default")
+    p_prof.add_argument("--dir", help="wrapper: directory for the launcher (default ~/.local/bin)")
     p_work = sub.add_parser("work", help="show or set the project's work flag (gates work-only profiles)")
     p_work.add_argument("value", nargs="?", choices=["true", "false"])
     sub.add_parser("audit", help="prepare a read-only inventory for a workspace architecture audit")
@@ -183,8 +184,19 @@ def main() -> None:
                     print(f"{d.name}/{role}: {install_hook(path)}")
         return
 
-    if a.cmd == "profiles" and a.action in ("list", "doctor", "add"):  # machine-level: no project needed
+    if a.cmd == "profiles" and a.action in ("list", "doctor", "add", "gate", "wrapper"):  # machine-level
         import bt_profiles
+        if a.action == "gate":  # exit status 0 = allowed; used by generated launchers before the CLI starts
+            ok, why = bt_profiles.gate_cwd(a.profile or "", a.cwd)
+            if not ok:
+                print(why, file=sys.stderr)
+            sys.exit(0 if ok else 1)
+        if a.action == "wrapper":
+            if not a.profile:
+                sys.exit("profiles wrapper needs a profile id")
+            target = Path(a.dir).expanduser() if a.dir else Path.home() / ".local" / "bin"
+            print(bt_profiles.write_wrapper(a.profile, target))
+            return
         if a.action == "add":
             if not (a.profile and a.provider):
                 sys.exit("profiles add needs a profile id and --provider")
