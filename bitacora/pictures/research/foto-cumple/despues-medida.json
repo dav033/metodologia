@@ -1,0 +1,264 @@
+{
+ "modo": "medida",
+ "escala": 303,
+ "sala": {
+  "ancho": 503,
+  "fondo": 500
+ },
+ "piezasLeidas": [
+  "guirnalda_organica",
+  "fondo:cortina_luces",
+  "fondo:mesa_postres",
+  "fondo:rotulo_acrilico",
+  "racimo_piso",
+  "racimo_piso",
+  "otro",
+  "otro"
+ ],
+ "omitidas": [
+  "tortas y postres sobre la mesa",
+  "mariposas doradas de papel decorativas sobre los globos y el fondo"
+ ],
+ "nodos": [
+  {
+   "id": "guirnalda-organica",
+   "nombre": "Guirnalda orgánica",
+   "tipo": "organico",
+   "colocacion": "pared",
+   "z": [
+    -250,
+    -151
+   ],
+   "x": [
+    -143,
+    142
+   ],
+   "y": [
+    87,
+    276
+   ],
+   "globos": 121,
+   "porCodigo": {
+    "R-18 027": 25,
+    "R-18 971": 15,
+    "R-18 390": 6,
+    "R-18 005": 12,
+    "R-12 027": 21,
+    "R-12 971": 4,
+    "R-5 971": 16,
+    "R-5 027": 15,
+    "R-5 005": 2,
+    "R-12 005": 3,
+    "R-12 390": 2
+   }
+  },
+  {
+   "id": "cortina-luces",
+   "nombre": "cortina luces",
+   "tipo": "escenografia",
+   "colocacion": "pared",
+   "z": [
+    -250,
+    -248
+   ],
+   "x": [
+    -97,
+    108
+   ],
+   "y": [
+    0,
+    205
+   ],
+   "globos": 0,
+   "porCodigo": {},
+   "solidos": 1
+  },
+  {
+   "id": "mesa-postres",
+   "nombre": "Mesa de postres",
+   "tipo": "escenografia",
+   "colocacion": "piso",
+   "z": [
+    -189,
+    -156
+   ],
+   "x": [
+    -53,
+    57
+   ],
+   "y": [
+    0,
+    76
+   ],
+   "globos": 0,
+   "porCodigo": {},
+   "coloresMueble": [
+    "#f0ebdf",
+    "#f0ebdf",
+    "#c5a76e"
+   ],
+   "solidos": 34
+  },
+  {
+   "id": "rotulo-acrilico",
+   "nombre": "Nombre de acrílico",
+   "tipo": "escenografia",
+   "colocacion": "libre",
+   "z": [
+    -162,
+    -162
+   ],
+   "x": [
+    -66,
+    66
+   ],
+   "y": [
+    142,
+    174
+   ],
+   "globos": 0,
+   "porCodigo": {},
+   "coloresMueble": [
+    "#d6b25a"
+   ],
+   "solidos": 1
+  },
+  {
+   "id": "racimo-piso",
+   "nombre": "Racimo de piso",
+   "tipo": "organico",
+   "colocacion": "piso",
+   "z": [
+    -229,
+    -181
+   ],
+   "x": [
+    -133,
+    -66
+   ],
+   "y": [
+    0,
+    49
+   ],
+   "globos": 13,
+   "porCodigo": {
+    "R-12 027": 5,
+    "R-12 005": 2,
+    "R-9 005": 3,
+    "R-9 027": 3
+   }
+  },
+  {
+   "id": "racimo-piso-2",
+   "nombre": "Racimo de piso",
+   "tipo": "organico",
+   "colocacion": "piso",
+   "z": [
+    -248,
+    -158
+   ],
+   "x": [
+    47,
+    135
+   ],
+   "y": [
+    0,
+    82
+   ],
+   "globos": 29,
+   "porCodigo": {
+    "R-24 027": 1,
+    "R-24 005": 1,
+    "R-18 005": 3,
+    "R-12 027": 12,
+    "R-12 005": 5,
+    "R-9 005": 3,
+    "R-9 027": 4
+   }
+  }
+ ],
+ "materiales": [
+  {
+   "formatoId": "R-18",
+   "codigo": "027",
+   "cantidad": 25
+  },
+  {
+   "formatoId": "R-12",
+   "codigo": "027",
+   "cantidad": 38
+  },
+  {
+   "formatoId": "R-5",
+   "codigo": "971",
+   "cantidad": 16
+  },
+  {
+   "formatoId": "R-18",
+   "codigo": "971",
+   "cantidad": 15
+  },
+  {
+   "formatoId": "R-5",
+   "codigo": "027",
+   "cantidad": 15
+  },
+  {
+   "formatoId": "R-18",
+   "codigo": "005",
+   "cantidad": 15
+  },
+  {
+   "formatoId": "R-18",
+   "codigo": "390",
+   "cantidad": 6
+  },
+  {
+   "formatoId": "R-12",
+   "codigo": "971",
+   "cantidad": 4
+  },
+  {
+   "formatoId": "R-12",
+   "codigo": "005",
+   "cantidad": 10
+  },
+  {
+   "formatoId": "R-12",
+   "codigo": "390",
+   "cantidad": 2
+  },
+  {
+   "formatoId": "R-5",
+   "codigo": "005",
+   "cantidad": 2
+  },
+  {
+   "formatoId": "R-9",
+   "codigo": "005",
+   "cantidad": 6
+  },
+  {
+   "formatoId": "R-9",
+   "codigo": "027",
+   "cantidad": 7
+  },
+  {
+   "formatoId": "R-24",
+   "codigo": "005",
+   "cantidad": 1
+  },
+  {
+   "formatoId": "R-24",
+   "codigo": "027",
+   "cantidad": 1
+  }
+ ],
+ "notas": [
+  "«Fashion Eucalipto» → 027 Fashion Eucalipto",
+  "«Reflex Champaña» → 971 Reflex Champaña",
+  "«Fashion Blanco» → 005 Fashion Blanco",
+  "«Racimo de piso» se salía de la sala (21 cm por la pared del fondo): se corrió hacia dentro.",
+  "«Nombre de acrílico» quedaba detrás de los globos que le pasan por delante: va delante de ellos."
+ ]
+}

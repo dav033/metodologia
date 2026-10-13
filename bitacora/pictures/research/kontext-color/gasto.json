@@ -1,0 +1,168 @@
+{
+  "total": 1.28,
+  "llamadas": [
+    {
+      "variante": "base",
+      "semilla": 11,
+      "archivo": "base-s11.png",
+      "cuando": "2026-10-09T23:39:37.871Z",
+      "costo": 0.08,
+      "resultado": "fallo",
+      "motivo": "Cannot read properties of undefined (reading 'replace')"
+    },
+    {
+      "variante": "a",
+      "semilla": 11,
+      "archivo": "a-s11.png",
+      "cuando": "2026-10-09T23:40:08.040Z",
+      "costo": 0.08,
+      "resultado": "fallo",
+      "motivo": "Cannot read properties of undefined (reading 'replace')"
+    },
+    {
+      "variante": "b",
+      "semilla": 11,
+      "archivo": "b-s11.png",
+      "cuando": "2026-10-09T23:40:40.593Z",
+      "costo": 0.08,
+      "resultado": "fallo",
+      "motivo": "Cannot read properties of undefined (reading 'replace')"
+    },
+    {
+      "variante": "c",
+      "semilla": 11,
+      "archivo": "c-s11.png",
+      "cuando": "2026-10-09T23:41:05.111Z",
+      "costo": 0.08,
+      "resultado": "fallo",
+      "motivo": "Cannot read properties of undefined (reading 'replace')"
+    },
+    {
+      "variante": "base",
+      "semilla": 11,
+      "archivo": "base-s11.png",
+      "cuando": "2026-10-09T23:41:26.137Z",
+      "costo": 0.08,
+      "resultado": "fallo",
+      "motivo": "Cannot read properties of undefined (reading 'replace')"
+    },
+    {
+      "variante": "base",
+      "semilla": 11,
+      "archivo": "base-s11.png",
+      "cuando": "2026-10-09T23:45:42.707Z",
+      "costo": 0.08,
+      "resultado": "ok",
+      "motivo": "recuperada por request_id tras: fal.ai tardó demasiado en completar FLUX.1.",
+      "requestId": "01a1230e-ef48-7f13-a66d-429b391007a3",
+      "inferenciaS": 112.9
+    },
+    {
+      "variante": "a",
+      "semilla": 11,
+      "archivo": "a-s11.png",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-09T23:58:36.433Z",
+      "requestId": "01a1231a-bd9a-7032-b8d9-c3a08226d6d8",
+      "ms": 20124,
+      "inferenciaS": 14.4
+    },
+    {
+      "variante": "b",
+      "semilla": 11,
+      "archivo": "b-s11.png",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-09T23:59:24.917Z",
+      "requestId": "01a1231b-79ed-7e62-8505-d88129c5814f",
+      "ms": 16663,
+      "inferenciaS": 11.9
+    },
+    {
+      "variante": "c",
+      "semilla": 11,
+      "archivo": "c-s11.png",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-10T00:00:12.037Z",
+      "requestId": "01a1231c-3244-7091-9581-2c6d37f5009d",
+      "ms": 23477,
+      "inferenciaS": 17.2
+    },
+    {
+      "variante": "c",
+      "semilla": 12,
+      "archivo": "c-s12.png",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-10T00:04:07.429Z",
+      "requestId": "01a1231f-ca45-7410-8013-6c73a235dc52",
+      "ms": 17125,
+      "inferenciaS": 12.2
+    },
+    {
+      "variante": "b",
+      "semilla": 12,
+      "archivo": "b-s12.png",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-10T00:04:53.141Z",
+      "requestId": "01a12320-7c37-7c32-924b-6b13516938de",
+      "ms": 16960,
+      "inferenciaS": 11.1
+    },
+    {
+      "variante": "d",
+      "semilla": 11,
+      "archivo": "d-s11.png",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-10T00:37:10.547Z",
+      "requestId": "01a1233e-0cfb-7cc1-8a00-aaafa398b2ea",
+      "ms": 17273
+    },
+    {
+      "variante": "d",
+      "semilla": 12,
+      "archivo": "d-s12.png",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-10T00:38:12.829Z",
+      "requestId": "01a1233e-ffb3-7a93-b207-e680951d67ab",
+      "ms": 16205
+    },
+    {
+      "variante": "d",
+      "semilla": 13,
+      "archivo": "d-s13.png",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-10T00:39:06.165Z",
+      "requestId": "01a1233f-cfa2-7bf2-9d76-17d54b76f1fa",
+      "ms": 16187
+    },
+    {
+      "variante": "d",
+      "semilla": 11,
+      "archivo": "e10-d-s11.png",
+      "escena": "10",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-10T01:29:24.173Z",
+      "requestId": "01a1236d-de31-7a92-963c-d73741ed330f",
+      "ms": 16181
+    },
+    {
+      "variante": "base",
+      "semilla": 11,
+      "archivo": "e10-base-s11.png",
+      "escena": "10",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-10T01:30:15.360Z",
+      "requestId": "01a1236e-a566-7032-832a-83ecef61f4eb",
+      "ms": 18194
+    }
+  ]
+}
