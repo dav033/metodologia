@@ -40,9 +40,17 @@ def tick_plan(rdir: Path, task_id: str, line: str) -> None:
         plan.write_text(text.rstrip("\n") + f"\n- {dt.datetime.now():%Y-%m-%d %H:%M} {line}\n", encoding="utf-8")
 
 
-def _own_task(task_id: str) -> None:
-    """Inside a supervised session the agent may only touch the task it was given."""
-    current = os.environ.get("BITACORA_TASK")
+def _own_task(task_id: str, rdir: Path) -> None:
+    """Inside a supervised session the agent may only touch the task it was given, in the run it belongs to: a task id
+    alone is ambiguous across requirements (every plan has a T1) and projects."""
+    run, project, current = os.environ.get("BITACORA_RUN"), os.environ.get("BITACORA_PROJECT"), \
+        os.environ.get("BITACORA_TASK")
+    req = "-".join(Path(rdir).name.split("-")[:2])
+    owner = Path(rdir).parents[1].name
+    if run and run != req:
+        raise SystemExit(f"this session belongs to {run}, not {req}: it cannot change that run's tasks")
+    if project and project != owner:
+        raise SystemExit(f"this session belongs to project {project}, not {owner}")
     if current and current != task_id:
         raise SystemExit(f"this session works on {current}, not {task_id}: only {current} can be marked")
 
@@ -51,7 +59,7 @@ def task_done(rdir: Path, task_id: str, evidence: str) -> str:
     """Mark the task done in RUN.json. Under a supervisor (env BITACORA_RUN) this is only a claim (`claimed_done`): the
     task becomes `done` and the PLAN.md tick happens once the supervisor's own verify passes (bt_runsettle), also after
     a restart. Run by hand it is done and ticked right away."""
-    _own_task(task_id)
+    _own_task(task_id, rdir)
     supervised = bool(os.environ.get("BITACORA_RUN"))
 
     def fn(state):
@@ -69,7 +77,7 @@ def task_done(rdir: Path, task_id: str, evidence: str) -> str:
 
 
 def task_fail(rdir: Path, task_id: str, reason: str, blocked: bool = False) -> str:
-    _own_task(task_id)
+    _own_task(task_id, rdir)
 
     def fn(state):
         t = rs.get_task(state, task_id)
@@ -83,7 +91,7 @@ def task_fail(rdir: Path, task_id: str, reason: str, blocked: bool = False) -> s
 
 
 def task_note(rdir: Path, task_id: str, text: str) -> str:
-    _own_task(task_id)
+    _own_task(task_id, rdir)
 
     def fn(state):
         t = rs.get_task(state, task_id)
@@ -99,7 +107,7 @@ def task_escalate(rdir: Path, task_id: str, to: str, reason: str) -> str:
     """Move the task up the model ladder (only up: a target at or below its tier is refused). From inside a supervised
     session it also flags the session as
     'escalated': the supervisor counts it toward max_attempts but not as a failure for stuck detection."""
-    _own_task(task_id)
+    _own_task(task_id, rdir)
     target = tier_.TARGETS.get((to or "").strip().lower())
     if target is None:
         raise SystemExit(f"--to must be one of: {', '.join(tier_.TARGETS)}")
