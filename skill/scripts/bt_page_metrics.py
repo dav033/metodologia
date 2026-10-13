@@ -97,12 +97,46 @@ def _recent_rows(rows) -> str:
     return "".join(out)
 
 
+def _complexity_rows(groups) -> str:
+    return "".join(
+        f"<tr><td>{_value(g.get('kind'))}</td><td>{_value(g.get('complexity'))}</td><td>{_value(g.get('agent'))}</td>"
+        f"<td>{_value(g.get('model'))}</td><td>{_effort(g)}</td><td>{g['attempts']}</td><td>{g['done']}</td>"
+        f"<td>{g['failed']}</td><td>{_rate(g.get('success_rate'))}</td><td>{_number(g.get('avg_seconds'))}</td>"
+        f"<td>{_number(g.get('tokens_per_done'))}</td></tr>" for g in groups)
+
+
+def _reason_rows(groups) -> str:
+    def cell(items) -> str:
+        return "<br>".join(e(i[:240]) for i in items) or DASH
+    return "".join(
+        f"<tr><td>{_value(g.get('kind'))}</td><td>{_value(g.get('complexity'))}</td>"
+        f"<td>{_value(g.get('agent'))} · {_value(g.get('model'))} · {_effort(g)}</td><td>{g['attempts']}</td>"
+        f"<td>{e(', '.join(f'{k}: {v}' for k, v in sorted(g['outcomes'].items())))}</td>"
+        f"<td>{cell(g['failed_because'])}</td><td>{cell(g['worked_because'])}</td></tr>" for g in groups)
+
+
+def _attempt_cards(rows, count: int = 8) -> str:
+    """Each recent attempt as a key/value table: what it was, who ran it, what it cost, how and why it ended."""
+    cards = []
+    for r in reversed(rows[-count:]):
+        pairs = "".join(f"<tr><th style=\"text-align:left;white-space:nowrap\">{e(k)}</th><td>{e(v)}</td></tr>"
+                        for k, v in bt_events.key_values(r))
+        cls = OUTCOME_CLASS.get(r.get("result"), "")
+        cards.append(f'<details class="card"><summary><span class="badge {cls}">{_value(r.get("result"))}</span> '
+                     f'{_value(r.get("task"))} · {_value(r.get("agent"))} {_value(r.get("model"))} · '
+                     f'{_value(r.get("kind"))} · {_number(r.get("seconds"))} s</summary>'
+                     f'<table class="matrix">{pairs}</table></details>')
+    return "".join(cards)
+
+
 def metrics_page() -> str:
     rows = bt_events.read_all()
     catalog = bt_agents.catalog()
     work_profiles = {a["profile"] for a in catalog["accounts"] if a.get("work_only")}
     groups = bt_events.summary(rows, ("agent", "profile", "model", "effort"))
     kinds = bt_events.summary(rows, ("kind", "agent", "model", "effort"))
+    sized = bt_events.summary(rows, ("kind", "complexity", "agent", "model", "effort"))
+    why = bt_events.reasons(rows)
     advice = "".join(f"<li>{e(text)}</li>" for text in bt_events.advice(rows))
     body = f"""<h1>Métricas de agentes</h1>
 <p class="muted">Cada fila agrupa intentos de maratón y delegaciones. Un dato que el proveedor no informó queda en «—»,
@@ -112,6 +146,13 @@ nunca en 0; los tokens solo cuentan intentos con medición (columna cobertura). 
 {_table(["Agente", "Perfil", "Modelo", "Esfuerzo", "Intentos", "Hechos", "Fallidos", "Otros", "Tasa", "Seg. medio", "Tokens medidos", "Tokens/hecho", "Coste USD informado", "Cobertura"], _main_rows(groups, work_profiles, rows)) if groups else '<p class="muted">Aún no hay intentos registrados.</p>'}
 <h2>Por tipo de trabajo</h2>
 {_table(["Tipo", "Agente", "Modelo", "Esfuerzo", "Intentos", "Hechos", "Fallidos", "Tasa", "Seg. medio"], _kind_rows(kinds, rows)) if kinds else '<p class="muted">Aún no hay intentos registrados.</p>'}
+<h2>Por tipo y complejidad</h2>
+<p class="muted">Complejidad S/M/L: la declarada en el plan (<code>complexity: M</code>) o, si falta, inferida (se indica en cada intento).</p>
+{_table(["Tipo", "Complejidad", "Agente", "Modelo", "Esfuerzo", "Intentos", "Hechos", "Fallidos", "Tasa", "Seg. medio", "Tokens/hecho"], _complexity_rows(sized)) if sized else '<p class="muted">Aún no hay intentos registrados.</p>'}
+<h2>Por qué falló y por qué salió bien</h2>
+{_table(["Tipo", "Complejidad", "Agente · modelo · esfuerzo", "Intentos", "Cómo terminaron", "Falló porque", "Funcionó porque"], _reason_rows(why)) if why else '<p class="muted">Aún no hay intentos registrados.</p>'}
+<h2>Intentos recientes, clave por clave</h2>
+{_attempt_cards(rows) if rows else '<p class="muted">Aún no hay intentos registrados.</p>'}
 <h2>Cuentas y cuotas</h2>
 {_table(["Perfil", "Proveedor", "Solo trabajo", "CLI instalado", "En espera hasta"], _account_rows(catalog["accounts"]))}
 <h3>Escalera de modelos</h3>

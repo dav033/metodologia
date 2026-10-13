@@ -66,7 +66,8 @@ command, after the day log and every commit, and nothing may be left running in 
 ```
 
 `repo:`, `after:`, `verify:`, `level:`, `kind:` (implement, test, docs, audit, research; inferred from the title when
-absent) and `risk:` (`high` makes the automatic hand-off ask for approval) are optional. `level: architecture` marks a hard architecture/design task:
+absent), `complexity:` (S, M, L: recorded in telemetry so agents can be compared on comparable work) and `risk:`
+(`high` makes the automatic hand-off ask for approval) are optional. `level: architecture` marks a hard architecture/design task:
 it starts at the top of the escalation ladder (opus, effort xhigh) instead of haiku. `verify:` is run by the supervisor **only if it is inside backticks**
 (from the task's repo dir, 10-minute timeout); free text is just guidance for the agent. Already-ticked `[x]` tasks
 start as done. `repo`, `after`, `verify` and `level` are **frozen when the run starts**: later edits to PLAN.md (even by the

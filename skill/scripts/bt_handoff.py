@@ -71,12 +71,13 @@ VERIFY_RISK = re.compile(r"(^|[\s;&|(`$])(sudo|rm|rmdir|mv|dd|chmod|chown|kill|p
 
 
 def _negated(text: str, start: int) -> bool:
-    """The risky phrase is the object of a stated limit in ITS OWN clause ("never push", "out of scope: payments").
-    A negation elsewhere on the line ("Deploy billing change; no tests") does not excuse it."""
-    clause = re.split(r"[.;:!?\n]|\s+-\s+|\s+—\s+", text[max(0, start - 80):start])[-1]
-    before = text[max(0, start - 80):start]
-    tail = before[len(before) - len(clause) - 14:]  # keep "out of scope:" attached to what follows its colon
-    return bool(_NEGATION.search(clause) or re.search(r"(out of scope|excluded?)\s*:\s*(\w+[\s,]+){0,6}$", tail, re.I))
+    """The risky phrase is the object of a stated limit in ITS OWN sentence ("never push", "out of scope: payments,
+    refunds"). A negation elsewhere on the line ("Deploy billing change; no tests") does not excuse it."""
+    sentence = re.split(r"[.;!?\n]", text[max(0, start - 100):start])[-1]
+    if re.search(r"\b(out of scope|excluded?|not included|non-goals?)\b[^.;]*$", sentence, re.I):
+        return True
+    clause = re.split(r":|\s+-\s+|\s+—\s+", sentence)[-1]
+    return bool(_NEGATION.search(clause))
 
 
 def _risky_text(text: str) -> list[str]:

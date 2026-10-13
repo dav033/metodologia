@@ -76,7 +76,8 @@ def auto_route(project: str, kind: str, tier: int | None, avoid: set | None = No
 
 def create(project: str, task: str, profile: str | None, agent: str | None, workdir: Path, allow: list[str],
            verify: str | None, timeout_min: int, model: str | None, effort: str | None,
-           kind: str | None = None, tier: int | None = None) -> dict:
+           kind: str | None = None, tier: int | None = None, complexity: str | None = None,
+           wait_quota: bool = False) -> dict:
     """Validate and write TASK.json. The permission gate runs here, before any prompt with code exists. With neither
     --profile nor --agent the router picks account, model and effort for the task's kind and tier."""
     kind = kind if kind in bt_agents.KINDS else bt_agents.infer_kind(task[:200])
@@ -107,7 +108,8 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
     order = {"id": did, "project": project, "profile": profile, "agent": agent, "task": task.strip(),
              "workdir": str(workdir), "allow": allow, "verify": verify, "timeout_min": timeout_min,
              "model": model, "effort": effort, "kind": kind, "tier": tier if tier is not None else (routed or {}).get("tier"),
-             "routed": (routed or {}).get("why"),
+             "routed": (routed or {}).get("why"), "auto": bool(routed),
+             "complexity": complexity if complexity in ("S", "M", "L") else None, "wait_quota": bool(wait_quota),
              "created": dt.datetime.now().astimezone().isoformat(timespec="seconds")}
     d = path_of(did)
     d.mkdir(parents=True, exist_ok=True)
@@ -167,20 +169,67 @@ def _verify(command: str, workdir: Path) -> dict:
         return {"command": command, "exit": None, "seconds": VERIFY_TIMEOUT_SEC, "tail": "verify timed out"}
 
 
+MAX_REROUTES = 4
+QUOTA_WAIT_CAP_SEC = 12 * 3600
+
+
 def execute(did: str, agent_cmd: str | None = None) -> dict:
-    """Run the delegation to completion (blocking) and write RESULT.json + OUTCOME.json. Returns summary()."""
+    """Run the delegation to completion (blocking) and write RESULT.json + OUTCOME.json. Returns summary().
+    A usage limit does not end a delegation the router placed: it is sent again to another account; when every
+    account is cooling down it waits for the earliest reset if the order asked for it (--wait-quota), otherwise the
+    outcome says when to retry."""
     d = path_of(did)
     order = json.loads((d / "TASK.json").read_text(encoding="utf-8"))
+    try:  # one execution per delegation id: a second `exec` of the same id must not run the task again
+        os.close(os.open(d / "CLAIMED", os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+    except FileExistsError:
+        raise SystemExit(f"Delegation {did} was already started; read it with: delegate status {did}") from None
+    outcome, tried = {}, []
+    for attempt in range(1, MAX_REROUTES + 2):
+        order["attempt"] = attempt
+        outcome = _attempt(d, order, agent_cmd)
+        tried.append(f"{order.get('profile') or order['agent']}:{outcome['status']}")
+        if outcome["status"] != "usage_limit" or not (order.get("auto") or order.get("wait_quota")):
+            break
+        nxt = _next_route(order)
+        if nxt is None:
+            break
+        order.update(profile=nxt["profile"], agent=nxt["agent"], model=nxt["model"], effort=nxt["effort"],
+                     routed=nxt.get("why"))
+    if len(tried) > 1:
+        outcome["rerouted"] = tried
+        (d / "TASK.json").write_text(json.dumps(order, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        (d / "OUTCOME.json").write_text(json.dumps(outcome, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    return outcome
+
+
+def _next_route(order: dict) -> dict | None:
+    """Another account for a delegation that hit a usage limit; waits for the earliest reset when the order allows
+    it. None = give up now (the outcome carries retry_after)."""
+    pool = bt_agents.pool_for(order["project"], bt_agents._config("routing.pool", []) or None)
+    if not order.get("auto"):  # pinned to an account: only that one will do, so only waiting helps
+        pool = [p for p in pool if p == order.get("profile")]
+    tier = order.get("tier") if order.get("tier") is not None else bt_agents.start_tier(None, order.get("kind"))
+    for _ in range(2):
+        routes, soonest = bt_agents.candidates(order["project"], pool, tier, order.get("kind") or "implement")
+        if routes:
+            return routes[0]
+        if not (order.get("wait_quota") and soonest):
+            return None
+        wait = min(max(soonest - time.time(), 0) + 30, QUOTA_WAIT_CAP_SEC)
+        override = os.environ.get("BITACORA_RUN_BACKOFF_SEC")
+        time.sleep(float(override) if override else wait)
+    return None
+
+
+def _attempt(d: Path, order: dict, agent_cmd: str | None) -> dict:
+    did = order["id"]
     workdir = Path(order["workdir"])
     result_file, log_file, prompt_file = d / "RESULT.json", d / "session.log", d / "prompt.txt"
     if order.get("profile"):  # again: nothing runs on a stale permission
         bt_profiles.authorize(order["profile"], order["project"])
     else:  # the order was written under one environment and may be executed under another
         bt_profiles.authorize_ambient(order["agent"], order["project"])
-    try:  # one execution per delegation id: a second `exec` of the same id must not run the task again
-        os.close(os.open(d / "CLAIMED", os.O_CREAT | os.O_EXCL | os.O_WRONLY))
-    except FileExistsError:
-        raise SystemExit(f"Delegation {did} was already started; read it with: delegate status {did}") from None
     prompt = _prompt(order, result_file)
     prompt_file.write_text(prompt, encoding="utf-8")
     state = {"agent": order["agent"], "model": order.get("model"), "req": did, "profile": order.get("profile")}
@@ -256,9 +305,20 @@ def _finish(d: Path, order: dict, base: dict, rc, report: dict | None, seconds: 
         "followups": (report or {}).get("followups", []), "verify": verify,
         "result_file": (d / "RESULT.json").as_posix() if report else None, "log": (d / "session.log").as_posix()}
     (d / "OUTCOME.json").write_text(json.dumps(outcome, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    limit = settle.detect_limit(info) if status == "usage_limit" else None
+    if status == "usage_limit":
+        until = bt_agents.cooling_until(order.get("profile"), order["agent"])
+        outcome["retry_after"] = dt.datetime.fromtimestamp(until).isoformat(timespec="minutes") if until else None
+        (d / "OUTCOME.json").write_text(json.dumps(outcome, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    why = (f"verify `{verify['command']}` exit {verify['exit']}: {verify['tail'][-200:]}" if verify else
+           settle.limit_line(text[-4000:]) if limit is not None else outcome["summary"])
+    detail = {"complexity": order.get("complexity") or "S",
+              "complexity_source": "declared" if order.get("complexity") else "inferred",
+              "attempt": order.get("attempt", 1), "milestone": None, "titles": [order["task"][:90]],
+              "outcome": bt_events.outcome_of(status, why), "why": " ".join(str(why).split())[:700]}
     bt_events.record_attempt(order["project"], {"agent": order["agent"], "req": order["id"],
                                                 "profile": order.get("profile")},
-                             order["id"], 1, info, status)
+                             order["id"], order.get("attempt", 1), info, status, detail)
     return outcome
 
 

@@ -129,6 +129,9 @@ def main() -> None:
     p_del.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research"],
                        help="what the work is (routing; default: inferred from the task text)")
     p_del.add_argument("--tier", type=int, choices=[0, 1, 2], help="capability tier: 0 light, 1 standard, 2 top")
+    p_del.add_argument("--complexity", choices=["S", "M", "L"], help="how big the task is (telemetry)")
+    p_del.add_argument("--wait-quota", action="store_true",
+                       help="when every account is waiting for a usage-limit reset, wait and run it then")
     p_del.add_argument("--workdir", help="folder the agent works in (default: --cwd)")
     p_del.add_argument("--allow", action="append", default=[], help="path the agent may modify (repeatable)")
     p_del.add_argument("--verify", help="command whose exit status decides success (run by the supervisor)")
@@ -140,6 +143,9 @@ def main() -> None:
     p_met = sub.add_parser("metrics", help="attempt telemetry per agent/profile/model/effort (null = not reported)")
     p_met.add_argument("--by", help="group keys, comma separated: agent,profile,model,effort,kind,tier,project")
     p_met.add_argument("--advice", action="store_true", help="plain-language observations instead of the table")
+    p_met.add_argument("--attempts", type=int, metavar="N", help="the last N attempts, each as a key/value table")
+    p_met.add_argument("--why", action="store_true", help="how attempts ended per agent/model/effort/kind/complexity, "
+                                                          "with the reasons they failed or worked")
     p_ag = sub.add_parser("agents", help="agent catalog: models, ladder, accounts and usage-limit state; route preview")
     p_ag.add_argument("action", nargs="?", choices=["list", "route", "brief", "quota-clear"], default="list")
     p_ag.add_argument("profile", nargs="?", help="quota-clear: profile id")
@@ -259,7 +265,7 @@ def main() -> None:
         if not a.target:
             sys.exit("delegate start needs the task text")
         order = bt_delegate.create(project, a.target, a.profile, a.agent, Path(a.workdir or a.cwd), a.allow,
-                                   a.verify, a.timeout, a.model, a.effort, a.kind, a.tier)
+                                   a.verify, a.timeout, a.model, a.effort, a.kind, a.tier, a.complexity, a.wait_quota)
         if a.background:
             print(json.dumps({"id": order["id"], "status": "started", "pid": bt_delegate.start_background(order["id"])}))
         else:
@@ -271,6 +277,15 @@ def main() -> None:
         rows = bt_events.read_all()
         if a.advice:
             print("\n".join(bt_events.advice(rows)))
+            return
+        if a.attempts:
+            for row in rows[-a.attempts:]:
+                pairs = bt_events.key_values(row)
+                width = max(len(k) for k, _ in pairs)
+                print("\n".join(f"{k.ljust(width)} : {v}" for k, v in pairs) + "\n" + "-" * 60)
+            return
+        if a.why:
+            print(json.dumps(bt_events.reasons(rows), indent=1, ensure_ascii=False))
             return
         by = [k.strip() for k in (a.by or "").split(",") if k.strip()] or None
         print(json.dumps(bt_events.summary(rows, by), indent=1, ensure_ascii=False))

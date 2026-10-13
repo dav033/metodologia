@@ -275,7 +275,13 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     else:
         results, result = {}, settle_final(project, rdir, n, info, started)
     state = rs.load(rdir)
-    bt_events.record_attempt(project, state, tid, n, info, "stopped" if info.get("stopped") else result)
+    shown = "stopped" if info.get("stopped") else result
+    settled = [rs.get_task(state, t["id"]) for t in unit]
+    bt_events.record_attempt(project, state, tid, n, info, shown,
+                             bt_events.detail_for(settled, shown, results) if settled else
+                             {"complexity": "M", "complexity_source": "inferred", "outcome": bt_events.outcome_of(shown, None),
+                              "why": "final review: REPORT.md written" if result == "done" else "final review did not produce REPORT.md",
+                              "titles": ["final review + REPORT.md"]})
     ended = ", ended after task done" if info.get("early_exit") else ""
     detail = " [" + " ".join(f"{k}:{v}" for k, v in results.items()) + "]" if len(results) > 1 else ""
     say(state, f"S{n:04d} {tid} -> {result}{detail} ({info['seconds']}s{ended})")
@@ -334,7 +340,7 @@ def _run_batch(project: str, rdir: Path, c: dict, state: dict, units: list[list[
         n = nums[label]
         info = run_session(project, rdir, rs.load(rdir), unit[0], n, c["workdir"], c["agent_cmd"], unit, route)
         results = _settle_unit(project, rdir, unit, n, info, c["workdir"])
-        return label, n, info, (results[unit[0]["id"]] if len(unit) == 1 else _overall(results)), results
+        return label, n, info, (results[unit[0]["id"]] if len(unit) == 1 else _overall(results)), results, unit
 
     outcomes, missing = [], None
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(plan)) as pool:
@@ -349,12 +355,14 @@ def _run_batch(project: str, rdir: Path, c: dict, state: dict, units: list[list[
         _finish(project, rdir, "stopped", f"agent executable not found: {missing}", c["install"])
         return 1
     state = rs.load(rdir)
-    for label, n, info, result, _ in outcomes:
-        bt_events.record_attempt(project, state, label, n, info, "stopped" if info.get("stopped") else result)
+    for label, n, info, result, results, unit in outcomes:
+        shown = "stopped" if info.get("stopped") else result
+        bt_events.record_attempt(project, state, label, n, info, shown,
+                                 bt_events.detail_for([rs.get_task(state, t["id"]) for t in unit], shown, results))
         say(state, f"S{n:04d} {label} -> {result} ({info['seconds']}s)")
     beat(rdir, task=",".join(o[0] for o in outcomes), state="batch settled")
-    commit_bitacora(project, f"marathon {state['req']} " + " ".join(f"S{n:04d} {t} {r}" for t, n, _, r, _ in outcomes))
-    limited = [info for _, _, info, r, results in outcomes
+    commit_bitacora(project, f"marathon {state['req']} " + " ".join(f"S{n:04d} {t} {r}" for t, n, _, r, _, _ in outcomes))
+    limited = [info for _, _, info, r, results, _ in outcomes
                if r in LIMIT_RESULTS or any(v in LIMIT_RESULTS for v in results.values())]
     if limited:
         _limited(project, rdir, c, state, limited)

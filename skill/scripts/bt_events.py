@@ -19,7 +19,52 @@ import bt_profiles
 from bt_core import ROOT, STATE
 
 SCHEMA = 2
-GROUP_KEYS = ("agent", "profile", "model", "effort", "kind", "tier", "project")
+GROUP_KEYS = ("agent", "profile", "model", "effort", "kind", "tier", "project", "complexity", "outcome")
+# Why an attempt ended the way it did, in words that can be counted.
+OUTCOMES = {"done": "verified", "verified": "verified", "claimed": "claimed_unverified",
+            "verify_failed": "verify_failed", "timeout": "timeout", "usage_limit": "usage_limit",
+            "limit_streak": "usage_limit", "blocked": "blocked_needs_human", "escalated": "escalated_by_agent",
+            "skipped": "skipped_dependency", "partial": "partial", "stopped": "stopped_by_user"}
+ORDER = {"S": 0, "M": 1, "L": 2}
+
+
+def complexity_of(tasks: list[dict]) -> tuple[str, str]:
+    """(S|M|L, declared|inferred). Declared on the PLAN line (`complexity: M`) wins: the largest of the session's
+    tasks. Otherwise inferred, and said so: an architecture-level task is L, a session carrying three or more
+    tasks is M, anything else S."""
+    declared = [t.get("complexity") for t in tasks if t.get("complexity") in ORDER]
+    if declared:
+        return max(declared, key=ORDER.get), "declared"
+    if any((t.get("level") or "") == "architecture" for t in tasks):
+        return "L", "inferred"
+    return ("M" if len(tasks) >= 3 else "S"), "inferred"
+
+
+def outcome_of(result: str, why: str | None) -> str:
+    if result == "failed":
+        text = (why or "").lower()
+        if "without task done/fail" in text:
+            return "no_verdict"
+        return "agent_reported_failure" if why else "failed"
+    return OUTCOMES.get(result, result or "unknown")
+
+
+def detail_for(tasks: list[dict], result: str, results: dict | None = None) -> dict:
+    """What the attempt was and why it ended as it did, from the tasks as settled (bt_run, bt_delegate)."""
+    complexity, source = complexity_of(tasks)
+    bad = [t for t in tasks if (results or {}).get(t["id"], result) not in ("done", "verified", "skipped")]
+    if bad:
+        why = "; ".join(f"{t['id']}: {' '.join(str(t.get('last_error') or 'no reason recorded').split())[:220]}"
+                        for t in bad[:3])
+    else:
+        why = "; ".join(f"{t['id']}: {' '.join(str(t.get('evidence') or 'verify passed').split())[:160]}"
+                        for t in tasks[:3])
+    return {"complexity": complexity, "complexity_source": source,
+            "attempt": max((t.get("attempts") or 0) for t in tasks) + (0 if bad else 1) if tasks else 1,
+            "milestone": tasks[0].get("milestone") if tasks else None,
+            "titles": [str(t.get("title") or "")[:90] for t in tasks][:6],
+            "outcome": outcome_of(result, why if bad else None), "why": why[:700]}
+
 DEFAULT_BY = ("agent", "profile", "model", "effort")
 _CODEX_TOTAL = re.compile(r"tokens used\s*\n\s*([\d,\.]+)\s*$", re.I | re.M)
 
@@ -79,8 +124,10 @@ def _seen(path: Path, event_id: str) -> bool:
         return False
 
 
-def record_attempt(project: str, state: dict, task_id: str, session: int, info: dict, result: str) -> Path | None:
-    """Append the attempt; idempotent per (project, run, session). Returns the file, or None when nothing was written."""
+def record_attempt(project: str, state: dict, task_id: str, session: int, info: dict, result: str,
+                   detail: dict | None = None) -> Path | None:
+    """Append the attempt; idempotent per (project, run, session). Returns the file, or None when nothing was written.
+    `detail` (detail_for): complexity, attempt number, the outcome class and why it ended that way."""
     try:
         now = dt.datetime.now().astimezone()
         agent = info.get("agent") or state.get("agent")  # the session's route, not the run's default
@@ -95,7 +142,11 @@ def record_attempt(project: str, state: dict, task_id: str, session: int, info: 
             "rc": info.get("rc"), "timed_out": bool(info.get("timed_out")), "stopped": bool(info.get("stopped")),
             "early_exit": bool(info.get("early_exit")), "recovered": bool(info.get("recovered")), "result": result,
             "usage": extract_usage(agent, info.get("text") or ""),
+            "route_why": info.get("why"),
+            **{k: (detail or {}).get(k) for k in ("complexity", "complexity_source", "attempt", "milestone", "titles",
+                                                   "outcome", "why")},
         }
+        row["outcome"] = row["outcome"] or outcome_of(result, None)
         path = _path(now)
         if _seen(path, event_id):
             return None
@@ -182,3 +233,53 @@ def advice(rows: list[dict], min_samples: int = 5) -> list[str]:
     if not out:
         out.append(f"not enough data yet: a group needs {min_samples} judged attempts before it is compared")
     return out
+
+
+def key_values(row: dict) -> list[tuple[str, str]]:
+    """One attempt as an ordered key/value table (CLI `metrics --attempts`, the /metrics page)."""
+    u = row.get("usage") or {}
+    tokens = _tokens(u)
+
+    def show(value) -> str:
+        return "—" if value is None or value == "" or value == [] else str(value)
+    pairs = [
+        ("when", str(row.get("ts") or "")[:19].replace("T", " ")), ("project", row.get("project")),
+        ("run / task", f"{row.get('req')} / {row.get('task')}"), ("tasks", ", ".join(row.get("tasks") or []) or None),
+        ("what", "; ".join(row.get("titles") or []) or None), ("kind of work", row.get("kind")),
+        ("complexity", f"{row.get('complexity')} ({row.get('complexity_source')})" if row.get("complexity") else None),
+        ("tier", row.get("tier")), ("attempt", row.get("attempt")),
+        ("agent", row.get("agent")), ("account", row.get("profile")), ("model", row.get("model")),
+        ("effort", row.get("effort") or "CLI default"), ("routed because", row.get("route_why")),
+        ("result", row.get("result")),
+        ("outcome", row.get("outcome") or outcome_of(str(row.get("result")), None)), ("why", row.get("why")),
+        ("duration", f"{row.get('seconds')} s" if row.get("seconds") is not None else None),
+        ("tokens (measured)", f"{tokens:,}" if tokens is not None else None),
+        ("  input / output", f"{u.get('input_tokens')} / {u.get('output_tokens')}"
+         if u.get("input_tokens") is not None else None),
+        ("  cache read / write", f"{u.get('cache_read_tokens')} / {u.get('cache_write_tokens')}"
+         if u.get("cache_read_tokens") is not None else None),
+        ("cost reported (USD)", u.get("cost_usd_reported")),
+        ("usage source", f"{u.get('source')} ({u.get('quality')})" if u.get("source") else "not reported by the CLI"),
+    ]
+    return [(k, show(v)) for k, v in pairs]
+
+
+def reasons(rows: list[dict], top: int = 3) -> list[dict]:
+    """Per (agent, model, effort, kind, complexity): how attempts ended and the most frequent reasons, for failures
+    and for successes."""
+    groups: dict[tuple, dict] = {}
+    for r in rows:
+        key = (r.get("agent"), r.get("model"), r.get("effort"), r.get("kind") or "implement", r.get("complexity"))
+        g = groups.setdefault(key, {"agent": key[0], "model": key[1], "effort": key[2], "kind": key[3],
+                                    "complexity": key[4], "attempts": 0, "outcomes": {}, "_bad": [], "_good": []})
+        g["attempts"] += 1
+        outcome = r.get("outcome") or outcome_of(str(r.get("result")), None)
+        g["outcomes"][outcome] = g["outcomes"].get(outcome, 0) + 1
+        if r.get("why"):
+            (g["_good"] if outcome == "verified" else g["_bad"]).append(str(r["why"]))
+    out = []
+    for g in groups.values():
+        g["failed_because"] = g.pop("_bad")[-top:]
+        g["worked_because"] = g.pop("_good")[-top:]
+        out.append(g)
+    return sorted(out, key=lambda g: tuple(str(g[k]) for k in ("kind", "complexity", "agent", "model", "effort")))

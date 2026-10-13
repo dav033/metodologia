@@ -61,7 +61,15 @@ def parse_task_line(rest: str) -> dict:
             "after": [t for t in re.split(r"[,\s]+", fields.get("after", "")) if re.fullmatch(r"T\d+(?:\.\d+)?[a-z]?", t)],
             "level": (fields.get("level") or "").lower() or None,
             "kind": bt_agents.infer_kind(title, fields.get("kind")),
-            "risk": (fields.get("risk") or "").lower() or None}
+            "risk": (fields.get("risk") or "").lower() or None,
+            "complexity": _complexity(fields.get("complexity") or fields.get("size"))}
+
+
+def _complexity(text: str | None) -> str | None:
+    """`complexity: S|M|L` (also small/medium/large, low/med/high) on the PLAN line; None when not declared."""
+    word = (text or "").strip().lower()
+    return {"s": "S", "small": "S", "low": "S", "m": "M", "medium": "M", "med": "M", "l": "L", "large": "L",
+            "high": "L", "xl": "L"}.get(word)
 
 
 def parse_plan(plan: Path) -> list[dict]:
@@ -103,6 +111,7 @@ def milestones(plan: Path) -> list[dict]:
 def _new_task(p: dict) -> dict:
     return {"id": p["id"], "title": p["title"], "repo": p["repo"], "after": p["after"], "verify": p["verify"],
             "level": p["level"], "kind": p.get("kind") or "implement", "risk": p.get("risk"),
+            "complexity": p.get("complexity"),
             "milestone": p.get("milestone"), "tier": start_tier(p["level"], p.get("kind")),
             "status": "done" if p["done"] else "todo",
             "attempts": 0, "last_error": None, "error_hashes": [], "evidence": None, "pending_id": None, "notes": []}
@@ -157,7 +166,7 @@ def sync_plan(state: dict, rdir: Path) -> dict:
             state["tasks"].append(_new_task(p))
             continue
         t["title"] = p["title"]
-        for key in ("milestone", "kind", "risk"):  # a RUN.json from before these fields existed adopts them once
+        for key in ("milestone", "kind", "risk", "complexity"):  # a RUN.json from before these fields existed adopts them once
             if key not in t:
                 t[key] = p.get(key)
         drift += [f"{t['id']}.{k}" for k in ("repo", "after", "verify", "level") if t.get(k) != p[k]]

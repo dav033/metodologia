@@ -44,7 +44,11 @@ Each subscription has its own limits, so the unit of quota is the account. When 
 message the account is recorded in `.state/quota.json` until the reset it announced (unknown reset: 30 min, doubling
 on consecutive hits, capped at 4 h; `config set quota.default_cooldown_min N`). The next session simply runs on
 another account. A run waits only when **every** account of its pool is cooling down, and then until the earliest
-reset. `bitacora.py agents quota-clear <profile>` forgets a cooldown by hand.
+reset, when it **starts again by itself** (the wait survives a reboot through the login-resume entry). Reset
+announcements are understood in both forms: relative ("Resets in 166h43m") and absolute ("try again at Oct 13th,
+2026 1:08 AM"). A delegation the router placed is sent again to another account when it hits a limit; add
+`--wait-quota` to make it wait for the earliest reset when every account is out, instead of returning `usage_limit`
+with `retry_after`. `bitacora.py agents quota-clear <profile>` forgets a cooldown by hand.
 
 ## Delegating from any session
 
@@ -78,11 +82,25 @@ change, the documentation the change makes stale, decisions in `DECISIONS.md`, a
 
 Every marathon session and every delegation appends one row to `.state/events/attempts-YYYY-MM.jsonl`: agent,
 profile, model, effort, kind, tier, tasks, result, seconds, and the provider's own usage figures (a figure it did not
-report is `null`, never 0).
+report is `null`, never 0). Each row also says **what** the work was and **why** it ended as it did:
 
-- `bitacora.py metrics` — per agent, profile, model and effort. `--by kind,agent,model,effort` regroups
-  (`agent, profile, model, effort, kind, tier, project`). `--advice` prints plain-language observations.
-- Web: `/metrics` — the same tables, account/quota state and the ladder.
+| Key | Meaning |
+|---|---|
+| `kind` | implement, test, docs, audit, research |
+| `complexity` + `complexity_source` | S, M or L: `declared` on the PLAN line (`· complexity: M`, `delegate --complexity`), else `inferred` (architecture-level → L, a session with 3+ tasks → M, otherwise S) |
+| `attempt`, `tier`, `route_why` | which try this was, at which capability tier, and why the router chose that account |
+| `outcome` | `verified`, `verify_failed`, `timeout`, `no_verdict` (the session ended without reporting), `agent_reported_failure`, `usage_limit`, `blocked_needs_human`, `escalated_by_agent`, `skipped_dependency`, `partial`, `stopped_by_user`, `claimed_unverified` |
+| `why` | for a failure: each task's error (the verify output, the agent's reason); for a success: the evidence given |
+| `usage` | tokens in/out, cache read/write, reasoning, total, cost reported; `quality` says what the CLI actually reported |
+
+- `bitacora.py metrics` — per agent, profile, model and effort. `--by kind,complexity,agent,model,effort` regroups
+  (`agent, profile, model, effort, kind, tier, project, complexity, outcome`). `--advice` prints plain-language
+  observations.
+- `bitacora.py metrics --attempts 5` — the last attempts, each as a key/value table (what, who, cost, outcome, why).
+- `bitacora.py metrics --why` — per agent/model/effort/kind/complexity: how attempts ended, the reasons they failed
+  and the evidence when they worked.
+- Web: `/metrics` — the same tables (by agent, by kind, by kind and complexity, why it failed / why it worked, each
+  recent attempt key by key), account/quota state and the ladder.
 - `success_rate` only counts attempts that had a verdict (a usage limit is not the agent's failure);
   `tokens_per_done` appears only when every attempt of the group was measured.
 - The router reads the same rows: a route with a clearly better record for a kind of work is preferred.
