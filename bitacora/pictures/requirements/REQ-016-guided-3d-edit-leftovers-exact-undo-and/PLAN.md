@@ -29,7 +29,7 @@ AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before t
 - [x] T1 — Reproduce P-042 (enlarge-then-shrink drift, name-based colour return changing the code) with a failing test; make undo restore the stored previous spec instead of applying an inverse edit · files: src/lib/guiada-motor/editar-motor.ts, src/lib/globos3d/motor/ediciones-pieza.ts · repo: t12 · verify: `npx tsx --conditions=react-server scripts/test/test-deshacer-ajuste-3d.ts` · covers: R1, US-1
 ### M2 — Colour resolver
 - [x] T2 — Store the last colour order; no ask when the destination is already selected; count «puede ser» in no_aplicadas audit (A1) · repo: t12 · after: T1 · verify: `npx tsx --conditions=react-server scripts/test/test-confirmacion-color-motor3d.ts` · covers: R2
-- [ ] T3 — A2 keep `origen` in sumarIdeaAEspec; A3 `!entran.includes(codigo)` for «rosa → rosado»; A4 origen.tipo in consumo · repo: t12 · after: T2 · verify: `npm run gate` · covers: R3, R4
+- [x] T3 — A2 keep `origen` in sumarIdeaAEspec; A3 `!entran.includes(codigo)` for «rosa → rosado»; A4 origen.tipo in consumo · repo: t12 · after: T2 · verify: `npm run gate` · covers: R3, R4
 ## Verification
 `npm run gate`; `npx tsc --noEmit`; `npm run lint`.
 - 2026-10-13 14:56 plan APPROVED (terminal)
@@ -42,3 +42,4 @@ AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before t
 - 2026-10-13 15:42 M1-audit done (marathon) — PASS: test-deshacer-ajuste-3d 8/8, test-ui-plan-motor3d 16/16, motor3d:test 27/27, guiada:test 14 suites pass; D-045 and P-042 verified byte-for-byte; AUDIT-M1.md written
 - 2026-10-13 17:55 T2 done (marathon, top tier) — t12 branch feat/req-016-guided-3d-edit-leftovers-exact-undo-and: 84fa287a (almacenar última orden de color en payload v3 y evitar aclaración si destino ya está seleccionado, P-058 A1, D-046); test-confirmacion-color-motor3d green, test-ultima-orden-color-motor3d (14 cases) green, test-motor-guiada-fronteras green, gate OK; antagonist: 3 fixed (A1 circular import/boundary via src/lib/plan/orden-color.ts, A2 accent folding with plegar, A3 incremental selection retention), 1 triaged (A4 quizaRepetida tuned per D-046), 1 dropped (A5 piezasSolicitadas required by contract).
 - 2026-10-13 17:56 T2 done (marathon) — Commit 84fa287a on feat/req-016-guided-3d-edit-leftovers-exact-undo-and in t12. test-confirmacion-color-motor3d ok, test-ultima-orden-color-motor3d 14/14 pass, test-motor-guiada-fronteras ok, full npm
+- 2026-10-13 18:21 T3 done (marathon) — commit c6dd13d4 on feat/req-016-guided-3d-edit-leftovers-exact-undo-and; npm run gate GATE_EXIT=0; tsc --noEmit clean; Caso 15-16 (test-ultima-orden-color-motor3d) fail without the fix; antagonist A1 

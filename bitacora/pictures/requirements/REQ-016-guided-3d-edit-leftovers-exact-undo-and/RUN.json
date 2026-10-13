@@ -13,15 +13,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T18:11:22",
+  "at": "2026-10-13T18:21:29",
   "pid": 1936968,
   "machine": "precision7760",
   "task": "T3",
   "session": 10,
-  "state": "session running 15 min",
-  "session_pids": {
-   "10": 2202135
-  },
+  "state": "done",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -141,16 +139,23 @@
    "complexity": null,
    "milestone": "M2",
    "tier": 0,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
    "evidence": "commit c6dd13d4 on feat/req-016-guided-3d-edit-leftovers-exact-undo-and; npm run gate GATE_EXIT=0; tsc --noEmit clean; Caso 15-16 (test-ultima-orden-color-motor3d) fail without the fix; antagonist A1 (multicolor) fixed with Caso 16; M1-M3 in P-081",
    "pending_id": null,
    "notes": [],
-   "claimed_done": true,
    "findings": null,
-   "severity": null
+   "severity": null,
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "haiku",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "M2-audit",
@@ -283,6 +288,18 @@
    "model": "gemini-3.8-flash-medium",
    "agent": "antigravity",
    "profile": "antigravity"
+  },
+  {
+   "at": "2026-10-13T18:21:29",
+   "session": 10,
+   "task": "T3",
+   "result": "done",
+   "summary": "commit c6dd13d4 on feat/req-016-guided-3d-edit-leftovers-exact-undo-and; npm run gate GATE_EXIT=0; tsc --noEmit clean; Caso 15-16 (test-ultima-orden-color-motor3d) fail without the fix; antagonist A1 (multicolor) fixed with Caso 16; M1-M3 in P-081",
+   "seconds": 948,
+   "model": "haiku",
+   "cost_usd": 0.9725622399999998,
+   "agent": "claude",
+   "profile": "claude-personal"
   }
  ],
  "pool": [
