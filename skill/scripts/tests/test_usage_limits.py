@@ -11,7 +11,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import bt_runsettle as settle  # noqa: E402  (imports bt_core: this file must sort after test_marathon.py)
 
-AGY_QUOTA = json.dumps({"event": "result", "result": {
+QUOTA_ERROR = json.dumps({"event": "result", "result": {
     "status": "ERROR", "error": "Individual quota reached. Please upgrade your subscription to increase your limits. "
                                 "Resets in 166h43m25s."}})
 
@@ -22,12 +22,34 @@ class ResetParsing(unittest.TestCase):
         self.assertEqual(settle.reset_epoch("limit resets in 45m", now=0), 45 * 60)
         self.assertEqual(settle.reset_epoch("Resets in 2 days 3 hours", now=0), 2 * 86400 + 3 * 3600)
 
+    def test_absolute_resets_in_local_time(self):
+        import datetime as dt
+        now = dt.datetime(2026, 10, 12, 22, 36).timestamp()
+        at = lambda text: dt.datetime.fromtimestamp(settle.absolute_reset_epoch(text, now))  # noqa: E731
+        codex = ("ERROR: You've hit your usage limit. Upgrade to Pro, visit the usage page to purchase more credits or "
+                 "try again at Oct 13th, 2026 1:08 AM.")
+        self.assertEqual(at(codex), dt.datetime(2026, 10, 13, 1, 8))
+        self.assertEqual(at("limit reached, try again at 3pm"), dt.datetime(2026, 10, 13, 15, 0))  # next occurrence
+        self.assertEqual(at("resets at 11:30 PM"), dt.datetime(2026, 10, 12, 23, 30))
+        self.assertEqual(at("Your limit will reset at Oct 20, 9am"), dt.datetime(2026, 10, 20, 9, 0))
+        for text in ("try again at 5", "look at 3 files", "", "try again at Foo 99th 1:08 AM"):
+            self.assertEqual(settle.absolute_reset_epoch(text, now), 0, text)
+
+    def test_a_failed_codex_session_with_an_absolute_reset_is_a_limit_until_then(self):
+        import time
+        text = ("lots of transcript\nERROR: You've hit your usage limit. Upgrade to Pro or try again at "
+                + time.strftime("%b %d, %Y %I:%M %p", time.localtime(time.time() + 3 * 3600)) + ".\ntokens used\n31,792\n")
+        epoch = settle.detect_limit({"rc": 1, "text": text, "seconds": 42, "timed_out": False, "stopped": False})
+        self.assertTrue(2.9 * 3600 < epoch - time.time() < 3.1 * 3600)
+        self.assertIn("usage limit", settle.limit_line(text))
+        self.assertNotIn("tokens used", settle.limit_line(text))
+
     def test_no_announcement_is_zero(self):
         self.assertEqual(settle.reset_epoch("something unrelated", now=5), 0)
         self.assertEqual(settle.reset_epoch("", now=5), 0)
 
-    def test_antigravity_quota_error_is_a_limit_with_its_reset(self):
-        info = {"rc": 1, "text": AGY_QUOTA, "seconds": 6, "timed_out": False, "stopped": False}
+    def test_provider_quota_error_is_a_limit_with_its_reset(self):
+        info = {"rc": 1, "text": QUOTA_ERROR, "seconds": 6, "timed_out": False, "stopped": False}
         epoch = settle.detect_limit(info)
         self.assertIsNotNone(epoch)
         self.assertGreater(epoch - __import__("time").time(), 165 * 3600)

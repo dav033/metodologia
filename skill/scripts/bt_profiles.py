@@ -1,6 +1,6 @@
 """Execution profiles (one per account identity) and the work gate.
 
-A profile is a provider (claude / codex / antigravity) plus the environment that selects its account. Profiles hold
+A profile is a provider (claude / codex) plus the environment that selects its account. Profiles hold
 no credentials: authentication lives in each provider's own config directory. Only `work_only` profiles are gated:
 they may run solely for projects whose project.json says `"work": true` (missing means false). Everything else may
 run anywhere. The gate is a launcher guarantee, not an OS sandbox: invoking the provider binary directly bypasses it.
@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shlex
 import shutil
 import subprocess
 from pathlib import Path
@@ -21,14 +23,15 @@ import bt_workspace as ws
 from bt_core import ROOT, SCRIPT, STATE
 
 HOME = Path.home()
-LAUNCHABLE = ("claude", "codex", "antigravity")  # providers the launcher/supervisor can drive
+LAUNCHABLE = ("claude", "codex")  # providers the launcher/supervisor can drive
+# Variables that select a provider's account. A session of one account must never leak them into a session of another.
+ACCOUNT_VARS = {"claude": ("CLAUDE_CONFIG_DIR",), "codex": ("CODEX_HOME",)}
 
 # Generic, machine-independent: each provider's default account. Named accounts (a second Claude config dir, a team
 # Codex login, which one is work-only) are machine facts: `bitacora.py profiles add`, stored in .state/profiles.json.
 DEFAULTS: dict[str, dict] = {
     "claude": {"provider": "claude", "bin": "claude", "env": {}, "work_only": False},
     "codex": {"provider": "codex", "bin": "codex", "env": {}, "work_only": False},
-    "antigravity": {"provider": "antigravity", "bin": "agy", "env": {}, "work_only": False},
 }
 
 
@@ -52,8 +55,13 @@ def load() -> dict[str, dict]:
 def add(pid: str, provider: str, env: dict[str, str] | None = None, work_only: bool = False,
         binary: str | None = None) -> Path:
     """Create or replace a machine-local profile in <root>/.state/profiles.json (no credentials involved)."""
-    if provider not in ("claude", "codex", "antigravity"):
-        raise ProfileError(f"Unknown provider '{provider}' (claude, codex, antigravity)")
+    if provider not in LAUNCHABLE:
+        raise ProfileError(f"Unknown provider '{provider}' ({', '.join(LAUNCHABLE)})")
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", pid or "") or pid in (".", ".."):
+        raise ProfileError(f"Invalid profile id '{pid}': letters, digits, dot, dash and underscore only")
+    for key in (env or {}):
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+            raise ProfileError(f"Invalid environment variable name '{key}'")
     path = STATE / "profiles.json"
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -86,6 +94,65 @@ def env_of(pid: str | None) -> dict[str, str]:
     if not pid:
         return {}
     return {k: os.path.expanduser(str(v)) for k, v in (get(pid).get("env") or {}).items()}
+
+
+def ambient(provider: str, environ: dict | None = None) -> str | None:
+    """The profile the current environment selects for `provider` (its account variables match), preferring a named
+    profile over the generic one. None when the environment points at an account no profile describes."""
+    environ = os.environ if environ is None else environ
+    current = {k: os.path.expanduser(environ[k]).rstrip("/") for k in ACCOUNT_VARS.get(provider, ()) if environ.get(k)}
+    profiles = load()
+    for pid in sorted(profiles, key=lambda p: (p in DEFAULTS, p)):
+        spec = profiles[pid]
+        if spec.get("provider") != provider:
+            continue
+        env = {k: os.path.expanduser(str(v)).rstrip("/") for k, v in (spec.get("env") or {}).items()
+               if k in ACCOUNT_VARS.get(provider, ())}
+        if env == current:
+            return pid
+    return None
+
+
+def ambient_provider(environ: dict | None = None) -> str | None:
+    """The provider of the agent session this process runs inside, when it can be told (used to send an audit to
+    another provider than the builder's)."""
+    environ = os.environ if environ is None else environ
+    if environ.get("CLAUDECODE") or environ.get("CLAUDE_CODE_ENTRYPOINT"):
+        return "claude"
+    if any(k.startswith("CODEX_") and k != "CODEX_HOME" for k in environ):
+        return "codex"
+    return None
+
+
+def session_env(pid: str | None, provider: str, environ: dict | None = None, project: str | None = None
+                ) -> dict[str, str]:
+    """The full environment of an agent session. With a profile: the inherited account selectors of EVERY provider
+    are dropped and only the profile's own applied, so a session started from inside another account runs with the
+    account it asked for and cannot hand an inherited one down to whatever it launches next. Without a profile the
+    environment is inherited (callers gate the ambient account of their provider with authorize_ambient), minus any
+    selector that belongs to a work-only profile when `project` is not a work project."""
+    env = dict(os.environ if environ is None else environ)
+    if pid:
+        for keys in ACCOUNT_VARS.values():
+            for key in keys:
+                env.pop(key, None)
+        env.update(env_of(pid))
+        return env
+    if project is not None and not is_work_project(project):
+        for other in ACCOUNT_VARS:
+            found = ambient(other, env)
+            if found and load().get(found, {}).get("work_only"):
+                for key in ACCOUNT_VARS[other]:
+                    env.pop(key, None)
+    return env
+
+
+def authorize_ambient(provider: str, project: str) -> None:
+    """No profile was named: the inherited account runs. If that account is a work-only profile, it is gated like one;
+    an account no profile describes is allowed (a plain single-account machine)."""
+    pid = ambient(provider)
+    if pid:
+        authorize(pid, project)
 
 
 def is_work_project(project: str) -> bool:
@@ -140,13 +207,16 @@ def wrapper_text(pid: str, binary: str, windows: bool) -> str:
     env = env_of(pid)
     gate = f'"{sys.executable}" "{SCRIPT}" --cwd'
     if windows:
+        bad = [k for k, v in env.items() if re.search(r'["%\r\n&|<>^]', v)]
+        if bad:
+            raise ProfileError(f"Profile '{pid}': the value of {', '.join(bad)} cannot be written safely to a .cmd file")
         lines = ["@echo off", f"{gate} \"%CD%\" profiles gate {pid} || exit /b 1"]
         lines += [f'set "{k}={v}"' for k, v in env.items()]
         lines.append(f'"{binary}" %*')
         return "\r\n".join(lines) + "\r\n"
     lines = ["#!/usr/bin/env bash", f"# generated by metodologia: bitacora.py profiles wrapper {pid}",
              f'{gate} "$PWD" profiles gate {pid} || exit 1']
-    lines += [f"export {k}='{v}'" for k, v in env.items()]
+    lines += [f"export {k}={shlex.quote(v)}" for k, v in env.items()]
     lines.append(f'exec "{binary}" "$@"')
     return "\n".join(lines) + "\n"
 
@@ -158,11 +228,13 @@ def write_wrapper(pid: str, directory: Path) -> Path:
     if not binary:
         raise ProfileError(f"'{spec.get('bin')}' is not on PATH; install the provider CLI first")
     windows = os.name == "nt"
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", pid):
+        raise ProfileError(f"Profile id '{pid}' cannot be used as a file name")
     path = Path(directory) / (pid + (".cmd" if windows else ""))
     if path.resolve() == Path(binary).resolve() or path.stem == Path(binary).stem:
         raise ProfileError(f"A wrapper named '{path.name}' would shadow the provider CLI; use another profile id")
-    if path.exists() and "generated by metodologia" not in path.read_text(encoding="utf-8", errors="replace") \
-            and not windows:
+    marker = "generated by metodologia" if not windows else f"profiles gate {pid}"
+    if path.exists() and marker not in path.read_text(encoding="utf-8", errors="replace"):
         raise ProfileError(f"{path} exists and was not generated by metodologia; preserved")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(wrapper_text(pid, binary, windows), encoding="utf-8", newline="")
@@ -200,9 +272,6 @@ def _auth_summary(spec: dict, env: dict[str, str]) -> str:
     if provider == "codex":
         out = _probe([spec["bin"], "login", "status"], env)
         return out.splitlines()[-1] if out else "unknown"
-    if provider == "antigravity":
-        token = HOME / ".gemini" / "antigravity-cli" / "antigravity-oauth-token"
-        return "token present (verify with: agy -p ok)" if token.exists() else "NOT signed in"
     return "unknown"
 
 

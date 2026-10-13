@@ -16,9 +16,6 @@ import bt_events  # noqa: E402  (imports bt_core: this file must sort after test
 CLAUDE_RESULT = {"type": "result", "subtype": "success", "is_error": False, "total_cost_usd": 0.0037, "result": "ok",
                  "usage": {"input_tokens": 2, "cache_creation_input_tokens": 18058, "cache_read_input_tokens": 8607,
                            "output_tokens": 7, "output_tokens_details": {"thinking_tokens": 0}}}
-AGY_RESULT = {"event": "result", "result": {"status": "SUCCESS", "response": "ok\n",
-                                            "usage": {"input_tokens": 11723, "output_tokens": 30, "thinking_tokens": 29,
-                                                      "cache_read_tokens": 0, "total_tokens": 11753}}}
 CODEX_TEXT = "model: gpt-5.6-luna\n--------\nuser\nresponde solo: ok\ncodex\nok\ntokens used\n5,604\nok\n"
 
 
@@ -32,11 +29,6 @@ class UsageExtractionTests(unittest.TestCase):
         self.assertIsNone(u["total_tokens"])  # Claude does not report a total: not invented
         self.assertAlmostEqual(u["cost_usd_reported"], 0.0037)
 
-    def test_antigravity_uses_the_last_result_not_the_steps(self):
-        step = {"event": "step_update", "step_update": {"usage": {"input_tokens": 999, "output_tokens": 999}}}
-        u = bt_events.extract_usage("antigravity", json.dumps(step) + "\n" + json.dumps(AGY_RESULT))
-        self.assertEqual((u["input_tokens"], u["total_tokens"], u["reasoning_tokens"]), (11723, 11753, 29))
-
     def test_codex_only_reports_a_grand_total(self):
         u = bt_events.extract_usage("codex", CODEX_TEXT)
         self.assertEqual(u["total_tokens"], 5604)
@@ -44,7 +36,7 @@ class UsageExtractionTests(unittest.TestCase):
         self.assertIsNone(u["input_tokens"])
 
     def test_missing_usage_is_null_never_zero(self):
-        for agent in ("claude", "codex", "antigravity", None):
+        for agent in ("claude", "codex", None):
             u = bt_events.extract_usage(agent, "plain text without any usage")
             self.assertEqual(u["quality"], "unknown")
             self.assertTrue(all(u[k] is None for k in ("input_tokens", "output_tokens", "total_tokens")))
@@ -110,10 +102,10 @@ class MetricsPageTests(unittest.TestCase):
                  "model": None, "seconds": 5, "result": "failed", "usage": {"total_tokens": 5604}}]
         html = self.render(rows)
         self.assertIn("Cobertura", html)
-        self.assertIn("0 %", html)      # claude: no usage reported
-        self.assertIn("100 %", html)    # codex: total reported
+        self.assertIn("<td>0%</td>", html)      # claude: no usage reported
+        self.assertIn("<td>100%</td>", html)    # codex: total reported
         self.assertIn("5.604", html)
-        self.assertIn("<td>—</td><td>0 %</td>", html)  # claude: tokens shown as a dash, not as 0
+        self.assertRegex(html, r"<td>—</td>(<td>—</td>)*<td>0%</td>")  # claude: tokens are a dash, never 0
 
     def test_values_from_the_log_are_escaped(self):
         rows = [{"ts": "t", "project": "<script>alert(1)</script>", "task": "T1", "agent": "claude",
