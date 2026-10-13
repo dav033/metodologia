@@ -1,6 +1,6 @@
 ---
 req: REQ-016
-status: approved
+status: launched
 created: 2026-10-13
 ---
 # Plan — REQ-016 — guided 3D edit leftovers
@@ -20,3 +20,4 @@ AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before t
 ## Verification
 `npm run gate`; `npx tsc --noEmit`; `npm run lint`.
 - 2026-10-13 14:56 plan APPROVED (terminal)
+- 2026-10-13 14:56 launched marathon supervisor (pool auto, haiku) from HQ in `/home/david/dev/pictures-wt`
