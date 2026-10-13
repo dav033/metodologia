@@ -1,0 +1,39 @@
+{
+ "title": "Confirm frontend boundary",
+ "intro": "I inspected both repositories. Bencho is copyable React source, so the work applies mainly to maros-next; maros-nest is included only if an accepted new capability needs API behavior or persistence.",
+ "coverage": "6/10 clear; route boundary needs owner confirmation",
+ "questions": [
+  {
+   "id": "q1",
+   "type": "choice",
+   "text": "Should the full frontend boundary include interactive public/external routes (public project or estimate links, contact and invitation flows) as well as authenticated CRM routes?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Yes, every user-facing interactive route (Recommended)"
+    },
+    {
+     "key": "b",
+     "label": "Authenticated CRM routes only"
+    },
+    {
+     "key": "c",
+     "label": "Authenticated routes plus public project links"
+    }
+   ],
+   "recommended": "a",
+   "why": "You asked for every place that needs interaction; including external-facing workflows gives the audit the same product-wide boundary while backend work remains conditional."
+  }
+ ],
+ "round": 1,
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "This follows the original instruction to cover every interactive part of Maros, including external-facing routes."
+  }
+ },
+ "created_at": "2026-10-11T11:52:25",
+ "answered_at": "2026-10-11T11:54:00",
+ "answered_via": "terminal"
+}

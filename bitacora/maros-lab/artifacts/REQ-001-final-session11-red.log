@@ -1,0 +1,1946 @@
+
+ RUN  v2.1.9 /home/david/dev/maros-lab/maros-next
+
+ ✓ src/features/invoice-scans/domain/partition.test.ts (2 tests) 8ms
+ ✓ src/features/invoice-scans/infra/invoiceScansApi.test.ts (3 tests) 16ms
+ ✓ src/features/invoice-scans/domain/filters.test.ts (8 tests) 13ms
+ ✓ src/features/invoice-scans/domain/filterParams.test.ts (8 tests) 26ms
+ ✓ src/features/invoice-scans/domain/invoiceScanForm.test.ts (2 tests) 56ms
+ ✓ src/features/invoice-scans/presentation/components/CreateCounterpartyDialog.test.tsx (3 tests) 476ms
+   ✓ CreateCounterpartyDialog > hands the created counterparty back to the field 368ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScanDetailPage.test.tsx (6 tests) 414ms
+ ✓ src/features/invoice-scans/presentation/components/InvoiceDetailsForm.test.tsx (2 tests) 920ms
+   ✓ InvoiceDetailsForm > shows the save bar only after an edit and sends the whole patch 691ms
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > asks for confirmation naming the records and the two places
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+A component suspended inside an `act` scope, but the `act` call was not awaited. When testing React components that depend on asynchronous data, you must await the result:
+
+await act(() => ...)
+
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > leaves the counterparty selected with its id and type once created
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > creates a customer when the money comes in
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx (11 tests) 1823ms
+   ✓ CounterpartySelect > creating the counterparty > asks for confirmation naming the records and the two places 326ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.detail-round-trip.test.tsx (2 tests) 2005ms
+   ✓ InvoiceScansPage detail round trip > carries all filters through the desktop detail link and explicit return 1343ms
+   ✓ InvoiceScansPage detail round trip > carries all filters through the mobile detail link and explicit return 660ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.test.tsx (19 tests) 3276ms
+   ✓ InvoiceScansPage > splits scans into 'to enter' and 'entered' and lets the reviewer tick one 873ms
+ ❯ src/features/invoice-scans/presentation/pages/InvoiceScansPage.presence.test.tsx (8 tests | 3 failed) 5705ms
+   × InvoiceScansPage record presence > keeps every checkbox label associated with its own responsive and exiting instance 559ms
+     → expected 1 to be 4 // Object.is equality
+   × InvoiceScansPage record presence > restores both responsive titles after reversing a section move (initial entered: false) 1313ms
+     → Unable to find an accessible element with the role "link" and name `/^Lion plumbing\.pdf/`
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"min-w-0 rounded-2xl border border-line bg-elev-1 p-4 shadow-sm"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-2 border-b border-line bg-elev-2 px-3 py-2 sm:px-4"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Document scans":
+  [36m<h1[39m
+    [33mclass[39m=[32m"min-w-0 break-words font-display text-2xl font-semibold tracking-tight text-balance [overflow-wrap:anywhere]"[39m
+  [36m/>[39m
+
+  Name "To enter1":
+  [36m<h2[39m
+    [33mclass[39m=[32m"font-display text-sm font-semibold"[39m
+    [33mid[39m=[32m"pending-title"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33maria-atomic[39m=[32m"true"[39m
+    [33maria-live[39m=[32m"polite"[39m
+    [33mclass[39m=[32m"py-2 font-mono text-xs text-muted-foreground tabular-nums"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+    [33mid[39m=[32m"invoice-filter-date-help"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"truncate font-medium"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"mt-0.5 truncate text-sm text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"shrink-0 font-mono font-semibold tabular-nums"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "New transaction":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-8 px-3 text-xs rounded-lg"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Clear filters":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Project of Lion plumbing.pdf":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1k_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33maria-label[39m=[32m"Project of Lion plumbing.pdf"[39m
+    [33mclass[39m=[32m"inline-flex h-7 max-w-full items-center gap-1 rounded-md px-1.5 font-mono text-sm tabular-nums hover:bg-elev-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 text-muted-foreground"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Actions for Lion plumbing.pdf":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"menu"[39m
+    [33maria-label[39m=[32m"Actions for Lion plumbing.pdf"[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent size-8 text-muted-foreground hover:text-foreground"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"radix-_r_1l_"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Actions for Lion plumbing.pdf":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"menu"[39m
+    [33maria-label[39m=[32m"Actions for Lion plumbing.pdf"[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent size-8 text-muted-foreground hover:text-foreground"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"radix-_r_1u_"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  region:
+
+  Name "Document filters":
+  [36m<section[39m
+    [33maria-label[39m=[32m"Document filters"[39m
+    [33mclass[39m=[32m"space-y-3 rounded-xl border border-line bg-elev-1 p-3 shadow-sm sm:p-4"[39m
+  [36m/>[39m
+
+  Name "To enter1":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"pending-title"[39m
+    [33mclass[39m=[32m"overflow-hidden rounded-xl border border-line bg-elev-1 shadow-sm"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  searchbox:
+
+  Name "Search documents":
+  [36m<input[39m
+    [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+    [33mid[39m=[32m"invoice-filter-search"[39m
+    [33minputmode[39m=[32m"search"[39m
+    [33mtype[39m=[32m"search"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Record type":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1c_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33mclass[39m=[32m"inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground py-2 h-9 w-full justify-between px-2 font-normal"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"invoice-filter-recordType"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Money direction":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1d_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33mclass[39m=[32m"inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground py-2 h-9 w-full justify-between px-2 font-normal"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"invoice-filter-moneyDirection"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Status":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1e_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33mclass[39m=[32m"inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground py-2 h-9 w-full justify-between px-2 font-normal"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"invoice-filter-status"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Category":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1f_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33mclass[39m=[32m"inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground py-2 h-9 w-full justify-between px-2 font-normal"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"invoice-filter-classification"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Minimum amount":
+  [36m<input[39m
+    [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+    [33mid[39m=[32m"invoice-filter-amountMin"[39m
+    [33minputmode[39m=[32m"decimal"[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Maximum amount":
+  [36m<input[39m
+    [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+    [33mid[39m=[32m"invoice-filter-amountMax"[39m
+    [33minputmode[39m=[32m"decimal"[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Comments on Lion plumbing.pdf":
+  [36m<input[39m
+    [33maria-label[39m=[32m"Comments on Lion plumbing.pdf"[39m
+    [33mclass[39m=[32m"flex rounded-md border border-input py-2 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-7 w-full border-none bg-transparent px-1.5 shadow-none hover:bg-elev-4 focus-visible:ring-2 focus-visible:ring-ring"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mplaceholder[39m=[32m"—"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  table:
+
+  Name "":
+  [36m<table[39m
+    [33mclass[39m=[32m"w-full caption-bottom text-sm"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  rowgroup:
+
+  Name "":
+  [36m<thead[39m
+    [33mclass[39m=[32m"[&_tr]:border-b bg-elev-2"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<tbody[39m
+    [33mclass[39m=[32m"[&_tr:last-child]:border-0 relative"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  row:
+
+  Name "Entered in QuickBooks Document Paid to / from Project Category Comments Total Status Actions":
+  [36m<tr[39m
+    [33mclass[39m=[32m"border-b transition-colors hover:bg-elev-3 data-[state=selected]:bg-elev-4"[39m
+  [36m/>[39m
+
+  Name "Entered in QuickBooks Invoice file — — — — Ready to enter9/2/2026":
+  [36m<tr[39m
+    [33mclass[39m=[32m"border-b data-[state=selected]:bg-elev-4 transition-colors hover:bg-elev-3"[39m
+    [33mstyle[39m=[32m"opacity: 1;"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  columnheader:
+
+  Name "Entered in QuickBooks":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-10 px-2"[39m
+  [36m/>[39m
+
+  Name "Document":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "Paid to / from":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-40 px-2"[39m
+  [36m/>[39m
+
+  Name "Project":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-28 px-2"[39m
+  [36m/>[39m
+
+  Name "Category":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-36 px-2"[39m
+  [36m/>[39m
+
+  Name "Comments":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-44 px-2"[39m
+  [36m/>[39m
+
+  Name "Total":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-24 px-2 text-right"[39m
+  [36m/>[39m
+
+  Name "Status":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-32 px-2"[39m
+  [36m/>[39m
+
+  Name "Actions":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-10 px-2"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  cell:
+
+  Name "Entered in QuickBooks":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "Invoice file":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] max-w-64 px-2"[39m
+  [36m/>[39m
+
+  Name "—":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] max-w-40 px-2 text-sm"[39m
+  [36m/>[39m
+
+  Name "—":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "—":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "—":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2 text-right"[39m
+  [36m/>[39m
+
+  Name "Ready to enter9/2/2026":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  checkbox:
+
+  Name "Entered in QuickBooks":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Entered in QuickBooks"[39m
+    [33mclass[39m=[32m"grid place-content-center peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"[39m
+    [33mdata-state[39m=[32m"unchecked"[39m
+    [33mid[39m=[32m"entered-reversal"[39m
+    [33mrole[39m=[32m"checkbox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m"on"[39m
+  [36m/>[39m
+
+  Name "Entered in QuickBooks":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Entered in QuickBooks"[39m
+    [33mclass[39m=[32m"grid place-content-center peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"[39m
+    [33mdata-state[39m=[32m"unchecked"[39m
+    [33mid[39m=[32m"entered-reversal"[39m
+    [33mrole[39m=[32m"checkbox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m"on"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "":
+  [36m<a[39m
+    [33mclass[39m=[32m"block truncate font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"[39m
+    [33mhref[39m=[32m"/finance/invoices/reversal"[39m
+  [36m/>[39m
+
+  Name "Counterparty not identified — Invoice file · No project · 9/2/2026Ready to enter":
+  [36m<a[39m
+    [33mclass[39m=[32m"min-w-0 flex-1 space-y-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"[39m
+    [33mhref[39m=[32m"/finance/invoices/reversal"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ul[39m
+    [33mclass[39m=[32m"relative divide-y md:hidden"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"flex gap-2 p-4 transition-colors hover:bg-elev-3"[39m
+    [33mstyle[39m=[32m"opacity: 1;"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex w-full flex-1 flex-col gap-3"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"min-w-0 rounded-2xl border border-line bg-elev-1 p-4 shadow-sm"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex min-w-0 flex-wrap items-start justify-between gap-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 items-start gap-3 sm:items-center"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary-container text-primary-on-container"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-file-text h-4 w-4"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M14 2v5a1 1 0 0 0 1 1h5"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M10 9H8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 13H8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 17H8"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"min-w-0"[39m
+            [36m>[39m
+              [36m<h1[39m
+                [33mclass[39m=[32m"min-w-0 break-words font-display text-2xl font-semibold tracking-tight text-balance [overflow-wrap:anywhere]"[39m
+              [36m>[39m
+                [0mDocument scans[0m
+              [36m</h1>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]"[39m
+              [36m>[39m
+                [0mScanned documents and manual transactions waiting to be entered in QuickBooks.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-8 px-3 text-xs rounded-lg"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mNew transaction[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Document filters"[39m
+        [33mclass[39m=[32m"space-y-3 rounded-xl border border-line bg-elev-1 p-3 shadow-sm sm:p-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap items-end gap-3"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1 basis-60 space-y-1.5"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs"[39m
+              [33mfor[39m=[32m"invoice-filter-search"[39m
+            [36m>[39m
+              [0mSearch documents[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+              [33mid[39m=[32m"invoice-filter-search"[39m
+              [33minputmode[39m=[32m"search"[39m
+              [33mtype[39m=[32m"search"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<p[39m
+            [33maria-atomic[39m=[32m"true"[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"py-2 font-mono text-xs text-muted-foreground tabular-nums"[39m
+          [36m>[39m
+            [0m1 of 1[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+  ...
+   × InvoiceScansPage record presence > restores both responsive titles after reversing a section move (initial entered: true) 1143ms
+     → expect(element).toHaveAttribute("inert") // element.hasAttribute("inert")
+
+Expected the element to have attribute:
+  inert
+Received:
+  null
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex w-full flex-1 flex-col gap-3"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"min-w-0 rounded-2xl border border-line bg-elev-1 p-4 shadow-sm"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-wrap items-start justify-between gap-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 flex-1 items-start gap-3 sm:items-center"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary-container text-primary-on-container"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-file-text h-4 w-4"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M14 2v5a1 1 0 0 0 1 1h5"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M10 9H8"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 13H8"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 17H8"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"min-w-0"[39m
+              [36m>[39m
+                [36m<h1[39m
+                  [33mclass[39m=[32m"min-w-0 break-words font-display text-2xl font-semibold tracking-tight text-balance [overflow-wrap:anywhere]"[39m
+                [36m>[39m
+                  [0mDocument scans[0m
+                [36m</h1>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]"[39m
+                [36m>[39m
+                  [0mScanned documents and manual transactions waiting to be entered in QuickBooks.[0m
+                [36m</p>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-8 px-3 text-xs rounded-lg"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-plus"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M5 12h14"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 5v14"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mNew transaction[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</header>[39m
+        [36m<section[39m
+          [33maria-label[39m=[32m"Document filters"[39m
+          [33mclass[39m=[32m"space-y-3 rounded-xl border border-line bg-elev-1 p-3 shadow-sm sm:p-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-wrap items-end gap-3"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"min-w-0 flex-1 basis-60 space-y-1.5"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs"[39m
+                [33mfor[39m=[32m"invoice-filter-search"[39m
+              [36m>[39m
+                [0mSearch documents[0m
+              [36m</label>[39m
+              [36m<input[39m
+                [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+                [33mid[39m=[32m"invoice-filter-search"[39m
+                [33minputmode[39m=[32m"search"[39m
+                [33mtype[39m=[32m"search"[39m
+                [33mvalue[39m=[32m""[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<p[39m
+              [33maria-atomic[39m=[32m"true"[39m
+              [33maria-live[39m=[32m"polite"[39m
+              [33mclass[39m=[32m"py-2 font-mono text-xs text-muted-foreground tabular-nums"[39m
+            [36m>[39m
+              [0m1 of 1[0m
+            [36m</p>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disa...
+   ✓ InvoiceScansPage record presence > makes records interactive again when the filter is cleared while they are leaving 864ms
+   ✓ InvoiceScansPage record presence > removes the leaving rows and cards when the same record enters the other section 422ms
+   ✓ InvoiceScansPage record presence > keeps only the matching records interactive while a changed filter animates 1038ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters-navigation.test.tsx (4 tests) 6063ms
+   ✓ InvoiceScansPage filter URL navigation > writes all criteria through controls and restores them after remounting the URL 2862ms
+   ✓ InvoiceScansPage filter URL navigation > ignores malformed URL criteria and removes them on the next valid edit 708ms
+   ✓ InvoiceScansPage filter URL navigation > restores controls, chips and results on browser Back and Forward popstate events 1140ms
+   ✓ InvoiceScansPage filter URL navigation > retains consecutive edits while Next has not propagated the URL to its hooks 1352ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.motion.test.tsx (7 tests) 6715ms
+   ✓ InvoiceScansPage motion contract > gives desktop rows and mobile cards layout, entrance and exit transitions from shared tokens 1273ms
+   ✓ InvoiceScansPage motion contract > moves an option to its chip and returns the same shared identity when removed 1469ms
+   ✓ InvoiceScansPage motion contract > selects and removes a filter with the keyboard and returns focus to its control 790ms
+   ✓ InvoiceScansPage motion contract > replaces the projection node when changing an active criterion to another option 737ms
+   ✓ InvoiceScansPage motion contract > omits animation props on rows, cards, every chip and option with reduced motion 496ms
+   ✓ InvoiceScansPage motion contract > remounts animation surfaces when the reduced-motion preference is enabled while viewing filters 704ms
+   ✓ InvoiceScansPage motion contract > keeps desktop and mobile title layout IDs unchanged when filters remove and restore other records 1244ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters.test.tsx (40 tests) 30569ms
+   ✓ InvoiceScansPage filters > keeps the last desktop and mobile records mounted for exit when both sections become empty 1014ms
+   ✓ InvoiceScansPage filters > filters both sections from the URL and clears only filter parameters 345ms
+   ✓ InvoiceScansPage filters > keeps spaces while typing and offers a clear action in both filtered empty sections 692ms
+   ✓ InvoiceScansPage filters > names the active chips as a group that is absent without filters 473ms
+   ✓ InvoiceScansPage filters > searches document title in both sections 1201ms
+   ✓ InvoiceScansPage filters > searches file name in both sections 991ms
+   ✓ InvoiceScansPage filters > searches counterparty ignoring case and accents in both sections 948ms
+   ✓ InvoiceScansPage filters > searches invoice number in both sections 845ms
+   ✓ InvoiceScansPage filters > searches project number in both sections 746ms
+   ✓ InvoiceScansPage filters > searches comments in both sections 734ms
+   ✓ InvoiceScansPage filters > searches manual transaction title in both sections 867ms
+   ✓ InvoiceScansPage filters > filters 'Record type'='invoice' through its labeled control 895ms
+   ✓ InvoiceScansPage filters > filters 'Record type'='transaction' through its labeled control 813ms
+   ✓ InvoiceScansPage filters > filters 'Money direction'='in' through its labeled control 821ms
+   ✓ InvoiceScansPage filters > filters 'Money direction'='out' through its labeled control 823ms
+   ✓ InvoiceScansPage filters > filters 'Status'='uploaded' through its labeled control 826ms
+   ✓ InvoiceScansPage filters > filters 'Status'='processing' through its labeled control 758ms
+   ✓ InvoiceScansPage filters > filters 'Status'='needs_review' through its labeled control 819ms
+   ✓ InvoiceScansPage filters > filters 'Status'='failed' through its labeled control 821ms
+   ✓ InvoiceScansPage filters > filters 'Category'='customer_service' through its labeled control 825ms
+   ✓ InvoiceScansPage filters > filters 'Category'='materials_expense' through its labeled control 755ms
+   ✓ InvoiceScansPage filters > filters 'Category'='subcontractor_expense' through its labeled control 809ms
+   ✓ InvoiceScansPage filters > filters 'Category'='other' through its labeled control 821ms
+   ✓ InvoiceScansPage filters > filters 'Category'='unknown' through its labeled control 825ms
+   ✓ InvoiceScansPage filters > uses issue dates before creation dates and falls back when the issue date is missing 1829ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range 100.5 to 100.5 1303ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range 0 to 0 1059ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range -25 to -25 1205ms
+   ✓ InvoiceScansPage filters > AND-combines criteria and removes one chip while retaining the others 1413ms
+   ✓ InvoiceScansPage filters > clears every criterion from the filter bar while preserving other URL state 847ms
+   ✓ InvoiceScansPage filters > clears a filtered empty state in /to enter/i 628ms
+   ✓ InvoiceScansPage filters > clears a filtered empty state in /entered in quickbooks/i 570ms
+   ✓ InvoiceScansPage filters > keeps independent section counts and a clearable mixed empty state for 'matching' 302ms
+   ✓ InvoiceScansPage filters > keeps independent section counts and a clearable mixed empty state for 'entered' 313ms
+   ✓ InvoiceScansPage filters > labels every control, follows keyboard focus order and activates chips and clear with the keyboard 928ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/invoice-scans/presentation/pages/InvoiceScansPage.presence.test.tsx > InvoiceScansPage record presence > keeps every checkbox label associated with its own responsive and exiting instance
+AssertionError: expected 1 to be 4 // Object.is equality
+
+- Expected
++ Received
+
+- 4
++ 1
+
+ ❯ src/features/invoice-scans/presentation/pages/InvoiceScansPage.presence.test.tsx:30:77
+     28|     const checkboxes = document.querySelectorAll<HTMLElement>('[role="…
+     29|     expect(checkboxes).toHaveLength(4);
+     30|     expect(new Set(Array.from(checkboxes, (checkbox) => checkbox.id)).…
+       |                                                                             ^
+     31|     for (const checkbox of checkboxes) {
+     32|       const label = checkbox.closest("label");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/features/invoice-scans/presentation/pages/InvoiceScansPage.presence.test.tsx > InvoiceScansPage record presence > restores both responsive titles after reversing a section move (initial entered: false)
+TestingLibraryElementError: Unable to find an accessible element with the role "link" and name `/^Lion plumbing\.pdf/`
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"min-w-0 rounded-2xl border border-line bg-elev-1 p-4 shadow-sm"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-2 border-b border-line bg-elev-2 px-3 py-2 sm:px-4"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Document scans":
+  [36m<h1[39m
+    [33mclass[39m=[32m"min-w-0 break-words font-display text-2xl font-semibold tracking-tight text-balance [overflow-wrap:anywhere]"[39m
+  [36m/>[39m
+
+  Name "To enter1":
+  [36m<h2[39m
+    [33mclass[39m=[32m"font-display text-sm font-semibold"[39m
+    [33mid[39m=[32m"pending-title"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33maria-atomic[39m=[32m"true"[39m
+    [33maria-live[39m=[32m"polite"[39m
+    [33mclass[39m=[32m"py-2 font-mono text-xs text-muted-foreground tabular-nums"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+    [33mid[39m=[32m"invoice-filter-date-help"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"truncate font-medium"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"mt-0.5 truncate text-sm text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"shrink-0 font-mono font-semibold tabular-nums"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "New transaction":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-8 px-3 text-xs rounded-lg"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Clear filters":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Project of Lion plumbing.pdf":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1k_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33maria-label[39m=[32m"Project of Lion plumbing.pdf"[39m
+    [33mclass[39m=[32m"inline-flex h-7 max-w-full items-center gap-1 rounded-md px-1.5 font-mono text-sm tabular-nums hover:bg-elev-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 text-muted-foreground"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Actions for Lion plumbing.pdf":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"menu"[39m
+    [33maria-label[39m=[32m"Actions for Lion plumbing.pdf"[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent size-8 text-muted-foreground hover:text-foreground"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"radix-_r_1l_"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Actions for Lion plumbing.pdf":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"menu"[39m
+    [33maria-label[39m=[32m"Actions for Lion plumbing.pdf"[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent size-8 text-muted-foreground hover:text-foreground"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"radix-_r_1u_"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  region:
+
+  Name "Document filters":
+  [36m<section[39m
+    [33maria-label[39m=[32m"Document filters"[39m
+    [33mclass[39m=[32m"space-y-3 rounded-xl border border-line bg-elev-1 p-3 shadow-sm sm:p-4"[39m
+  [36m/>[39m
+
+  Name "To enter1":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"pending-title"[39m
+    [33mclass[39m=[32m"overflow-hidden rounded-xl border border-line bg-elev-1 shadow-sm"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  searchbox:
+
+  Name "Search documents":
+  [36m<input[39m
+    [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+    [33mid[39m=[32m"invoice-filter-search"[39m
+    [33minputmode[39m=[32m"search"[39m
+    [33mtype[39m=[32m"search"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Record type":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1c_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33mclass[39m=[32m"inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground py-2 h-9 w-full justify-between px-2 font-normal"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"invoice-filter-recordType"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Money direction":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1d_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33mclass[39m=[32m"inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground py-2 h-9 w-full justify-between px-2 font-normal"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"invoice-filter-moneyDirection"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Status":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1e_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33mclass[39m=[32m"inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground py-2 h-9 w-full justify-between px-2 font-normal"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"invoice-filter-status"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Category":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"radix-_r_1f_"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"dialog"[39m
+    [33mclass[39m=[32m"inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground py-2 h-9 w-full justify-between px-2 font-normal"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"invoice-filter-classification"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Minimum amount":
+  [36m<input[39m
+    [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+    [33mid[39m=[32m"invoice-filter-amountMin"[39m
+    [33minputmode[39m=[32m"decimal"[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Maximum amount":
+  [36m<input[39m
+    [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+    [33mid[39m=[32m"invoice-filter-amountMax"[39m
+    [33minputmode[39m=[32m"decimal"[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Comments on Lion plumbing.pdf":
+  [36m<input[39m
+    [33maria-label[39m=[32m"Comments on Lion plumbing.pdf"[39m
+    [33mclass[39m=[32m"flex rounded-md border border-input py-2 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-7 w-full border-none bg-transparent px-1.5 shadow-none hover:bg-elev-4 focus-visible:ring-2 focus-visible:ring-ring"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mplaceholder[39m=[32m"—"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  table:
+
+  Name "":
+  [36m<table[39m
+    [33mclass[39m=[32m"w-full caption-bottom text-sm"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  rowgroup:
+
+  Name "":
+  [36m<thead[39m
+    [33mclass[39m=[32m"[&_tr]:border-b bg-elev-2"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<tbody[39m
+    [33mclass[39m=[32m"[&_tr:last-child]:border-0 relative"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  row:
+
+  Name "Entered in QuickBooks Document Paid to / from Project Category Comments Total Status Actions":
+  [36m<tr[39m
+    [33mclass[39m=[32m"border-b transition-colors hover:bg-elev-3 data-[state=selected]:bg-elev-4"[39m
+  [36m/>[39m
+
+  Name "Entered in QuickBooks Invoice file — — — — Ready to enter9/2/2026":
+  [36m<tr[39m
+    [33mclass[39m=[32m"border-b data-[state=selected]:bg-elev-4 transition-colors hover:bg-elev-3"[39m
+    [33mstyle[39m=[32m"opacity: 1;"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  columnheader:
+
+  Name "Entered in QuickBooks":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-10 px-2"[39m
+  [36m/>[39m
+
+  Name "Document":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "Paid to / from":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-40 px-2"[39m
+  [36m/>[39m
+
+  Name "Project":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-28 px-2"[39m
+  [36m/>[39m
+
+  Name "Category":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-36 px-2"[39m
+  [36m/>[39m
+
+  Name "Comments":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-44 px-2"[39m
+  [36m/>[39m
+
+  Name "Total":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-24 px-2 text-right"[39m
+  [36m/>[39m
+
+  Name "Status":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-32 px-2"[39m
+  [36m/>[39m
+
+  Name "Actions":
+  [36m<th[39m
+    [33mclass[39m=[32m"h-10 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] w-10 px-2"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  cell:
+
+  Name "Entered in QuickBooks":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "Invoice file":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] max-w-64 px-2"[39m
+  [36m/>[39m
+
+  Name "—":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] max-w-40 px-2 text-sm"[39m
+  [36m/>[39m
+
+  Name "—":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "—":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "—":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2 text-right"[39m
+  [36m/>[39m
+
+  Name "Ready to enter9/2/2026":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<td[39m
+    [33mclass[39m=[32m"p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-2"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  checkbox:
+
+  Name "Entered in QuickBooks":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Entered in QuickBooks"[39m
+    [33mclass[39m=[32m"grid place-content-center peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"[39m
+    [33mdata-state[39m=[32m"unchecked"[39m
+    [33mid[39m=[32m"entered-reversal"[39m
+    [33mrole[39m=[32m"checkbox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m"on"[39m
+  [36m/>[39m
+
+  Name "Entered in QuickBooks":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Entered in QuickBooks"[39m
+    [33mclass[39m=[32m"grid place-content-center peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"[39m
+    [33mdata-state[39m=[32m"unchecked"[39m
+    [33mid[39m=[32m"entered-reversal"[39m
+    [33mrole[39m=[32m"checkbox"[39m
+    [33mtype[39m=[32m"button"[39m
+    [33mvalue[39m=[32m"on"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "":
+  [36m<a[39m
+    [33mclass[39m=[32m"block truncate font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"[39m
+    [33mhref[39m=[32m"/finance/invoices/reversal"[39m
+  [36m/>[39m
+
+  Name "Counterparty not identified — Invoice file · No project · 9/2/2026Ready to enter":
+  [36m<a[39m
+    [33mclass[39m=[32m"min-w-0 flex-1 space-y-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"[39m
+    [33mhref[39m=[32m"/finance/invoices/reversal"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ul[39m
+    [33mclass[39m=[32m"relative divide-y md:hidden"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"flex gap-2 p-4 transition-colors hover:bg-elev-3"[39m
+    [33mstyle[39m=[32m"opacity: 1;"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex w-full flex-1 flex-col gap-3"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"min-w-0 rounded-2xl border border-line bg-elev-1 p-4 shadow-sm"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex min-w-0 flex-wrap items-start justify-between gap-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 items-start gap-3 sm:items-center"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary-container text-primary-on-container"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-file-text h-4 w-4"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M14 2v5a1 1 0 0 0 1 1h5"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M10 9H8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 13H8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 17H8"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"min-w-0"[39m
+            [36m>[39m
+              [36m<h1[39m
+                [33mclass[39m=[32m"min-w-0 break-words font-display text-2xl font-semibold tracking-tight text-balance [overflow-wrap:anywhere]"[39m
+              [36m>[39m
+                [0mDocument scans[0m
+              [36m</h1>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]"[39m
+              [36m>[39m
+                [0mScanned documents and manual transactions waiting to be entered in QuickBooks.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-8 px-3 text-xs rounded-lg"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mNew transaction[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Document filters"[39m
+        [33mclass[39m=[32m"space-y-3 rounded-xl border border-line bg-elev-1 p-3 shadow-sm sm:p-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap items-end gap-3"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1 basis-60 space-y-1.5"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs"[39m
+              [33mfor[39m=[32m"invoice-filter-search"[39m
+            [36m>[39m
+              [0mSearch documents[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+              [33mid[39m=[32m"invoice-filter-search"[39m
+              [33minputmode[39m=[32m"search"[39m
+              [33mtype[39m=[32m"search"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<p[39m
+            [33maria-atomic[39m=[32m"true"[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"py-2 font-mono text-xs text-muted-foreground tabular-nums"[39m
+          [36m>[39m
+            [0m1 of 1[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+  ...
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:109:15
+ ❯ recordSurfaces src/features/invoice-scans/presentation/pages/InvoiceScansPage.presence.test.tsx:11:6
+      9| function recordSurfaces(): Element[] {
+     10|   return screen
+     11|     .getAllByRole("link", { name: /^Lion plumbing\.pdf/ })
+       |      ^
+     12|     .map((link) => link.closest("tr, li"))
+     13|     .filter((surface): surface is Element => surface !== null);
+ ❯ src/features/invoice-scans/presentation/pages/InvoiceScansPage.presence.test.tsx:58:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/features/invoice-scans/presentation/pages/InvoiceScansPage.presence.test.tsx > InvoiceScansPage record presence > restores both responsive titles after reversing a section move (initial entered: true)
+Error: expect(element).toHaveAttribute("inert") // element.hasAttribute("inert")
+
+Expected the element to have attribute:
+  inert
+Received:
+  null
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex w-full flex-1 flex-col gap-3"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"min-w-0 rounded-2xl border border-line bg-elev-1 p-4 shadow-sm"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-wrap items-start justify-between gap-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 flex-1 items-start gap-3 sm:items-center"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary-container text-primary-on-container"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-file-text h-4 w-4"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M14 2v5a1 1 0 0 0 1 1h5"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M10 9H8"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 13H8"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 17H8"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"min-w-0"[39m
+              [36m>[39m
+                [36m<h1[39m
+                  [33mclass[39m=[32m"min-w-0 break-words font-display text-2xl font-semibold tracking-tight text-balance [overflow-wrap:anywhere]"[39m
+                [36m>[39m
+                  [0mDocument scans[0m
+                [36m</h1>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]"[39m
+                [36m>[39m
+                  [0mScanned documents and manual transactions waiting to be entered in QuickBooks.[0m
+                [36m</p>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-8 px-3 text-xs rounded-lg"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-plus"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M5 12h14"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 5v14"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mNew transaction[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</header>[39m
+        [36m<section[39m
+          [33maria-label[39m=[32m"Document filters"[39m
+          [33mclass[39m=[32m"space-y-3 rounded-xl border border-line bg-elev-1 p-3 shadow-sm sm:p-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-wrap items-end gap-3"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"min-w-0 flex-1 basis-60 space-y-1.5"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs"[39m
+                [33mfor[39m=[32m"invoice-filter-search"[39m
+              [36m>[39m
+                [0mSearch documents[0m
+              [36m</label>[39m
+              [36m<input[39m
+                [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+                [33mid[39m=[32m"invoice-filter-search"[39m
+                [33minputmode[39m=[32m"search"[39m
+                [33mtype[39m=[32m"search"[39m
+                [33mvalue[39m=[32m""[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<p[39m
+              [33maria-atomic[39m=[32m"true"[39m
+              [33maria-live[39m=[32m"polite"[39m
+              [33mclass[39m=[32m"py-2 font-mono text-xs text-muted-foreground tabular-nums"[39m
+            [36m>[39m
+              [0m1 of 1[0m
+            [36m</p>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disa...
+ ❯ src/features/invoice-scans/presentation/pages/InvoiceScansPage.presence.test.tsx:52:55
+     50|     expect(original).toHaveLength(2);
+     51|     await waitFor(() => {
+     52|       for (const surface of original) expect(surface).toHaveAttribute(…
+       |                                                       ^
+     53|     });
+     54|     act(() => page.client.setQueryData(invoiceScanKeys.list(), [initia…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed | 14 passed (15)
+      Tests  3 failed | 122 passed (125)
+   Start at  01:54:09
+   Duration  34.00s (transform 1.94s, setup 1.09s, collect 14.55s, tests 58.09s, environment 18.36s, prepare 1.73s)
+

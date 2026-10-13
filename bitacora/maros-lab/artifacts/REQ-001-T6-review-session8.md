@@ -1,0 +1,8 @@
+# REQ-001 T6 — session 8 review evidence
+
+- Independent spec reviewer: 2 major findings (stale chip projection identity; zero-height clipped popLayout exits). Both fixed; sole re-review approves with no new blockers. Title namespace inheritance checked.
+- Antagonist/standards reviewer: same 2 major findings, including selected/available option identity. Both fixed; sole re-review approves production code, conditional on awaiting the query notification in the cached-refetch regression. That test assertion was changed to `await screen.findByText` and the full exact verification was re-run before commit. No third review.
+- Real installed Motion probes (read-only, in-memory): changing props layoutId on an existing chip leaves projection.options.layoutId at its initial value; adding layoutId after mounting a selected option leaves projection identity undefined. Remounting on identity/state changes fixes registration. Unmount-to-mount in the same render does preserve source snapshot/resumeFrom and is valid for the Popover/chip exchange.
+- Triage: 2 major production findings and 1 test synchronization finding fixed; 0 deferred; 0 dropped. Self-review also added a cached-refetch error guard/regression so retained empty surfaces do not fabricate valid match results after a failed request.
+- Verification logs: `REQ-001-T6-verify-session8-commit.log` is the final commit gate; earlier logs retain actual failures and diagnostics. No browser/server/backend calls. Reviewers left no jobs running.
+- Primary references consulted: [Motion layout](https://motion.dev/docs/react-layout-animations), [Motion AnimatePresence](https://motion.dev/docs/react-animate-presence). The installed Motion implementation was checked for version-specific projection behavior.

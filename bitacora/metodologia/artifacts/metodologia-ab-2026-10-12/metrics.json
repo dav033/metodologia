@@ -1,0 +1,188 @@
+{
+  "A": {
+    "agent": "/root/method_ab_a",
+    "session_file": "/home/david/.codex/sessions/2026/10/12/rollout-2026-10-12T11-51-57-01a13107-3194-7873-992f-17f64be5da61.jsonl",
+    "models": [
+      "gpt-6.1-sol"
+    ],
+    "usage": {
+      "input_tokens": 113071,
+      "cached_input_tokens": 99200,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 1156,
+      "reasoning_output_tokens": 84,
+      "total_tokens": 114227
+    },
+    "last_usage": {
+      "input_tokens": 34012,
+      "cached_input_tokens": 33536,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 935,
+      "reasoning_output_tokens": 72,
+      "total_tokens": 34947
+    },
+    "usage_events": [
+      {
+        "input_tokens": 21502,
+        "cached_input_tokens": 20608,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 45,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 21547
+      },
+      {
+        "input_tokens": 23801,
+        "cached_input_tokens": 21376,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 102,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 23903
+      },
+      {
+        "input_tokens": 33756,
+        "cached_input_tokens": 23680,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 74,
+        "reasoning_output_tokens": 12,
+        "total_tokens": 33830
+      },
+      {
+        "input_tokens": 34012,
+        "cached_input_tokens": 33536,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 935,
+        "reasoning_output_tokens": 72,
+        "total_tokens": 34947
+      }
+    ],
+    "types": {
+      "('session_meta', '')": 1,
+      "('event_msg', 'task_started')": 1,
+      "('response_item', 'message')": 5,
+      "('world_state', '')": 1,
+      "('turn_context', '')": 1,
+      "('inter_agent_communication_metadata', '')": 1,
+      "('response_item', 'agent_message')": 1,
+      "('response_item', 'custom_tool_call')": 3,
+      "('event_msg', 'item_completed')": 6,
+      "('token_usage_record', '')": 4,
+      "('response_item', 'custom_tool_call_output')": 3,
+      "('event_msg', 'token_count')": 4,
+      "('response_item', 'reasoning')": 2,
+      "('event_msg', 'task_complete')": 1
+    },
+    "calls": [
+      {
+        "type": "custom_tool_call",
+        "name": "exec",
+        "arguments": null,
+        "input": "text(await tools.exec_command({cmd:\"cat /tmp/metodologia-ab-qiv3uvoc/A/skill/SKILL.md\",max_output_tokens:12000}));\n"
+      },
+      {
+        "type": "custom_tool_call",
+        "name": "exec",
+        "arguments": null,
+        "input": "text(await tools.exec_command({cmd:\"cat /tmp/metodologia-ab-qiv3uvoc/A/skill/references/requirements.md /tmp/metodologia-ab-qiv3uvoc/A/skill/references/engineering.md /tmp/metodologia-ab-qiv3uvoc/A/skill/references/tools.md /tmp/metodologia-ab-qiv3uvoc/A/skill/references/documentation.md\",max_output_tokens:25000}));\n"
+      },
+      {
+        "type": "custom_tool_call",
+        "name": "exec",
+        "arguments": null,
+        "input": "text(await tools.exec_command({cmd:\"rg -n 'rtk|Grill|grill|DROP|destruct' /tmp/metodologia-ab-qiv3uvoc/A/skill/references\",max_output_tokens:6000}));\n"
+      }
+    ],
+    "response_characters": 3722,
+    "response_words": 580,
+    "context_settings": {
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "reasoning_effort": null
+    }
+  },
+  "B": {
+    "agent": "/root/method_ab_b",
+    "session_file": "/home/david/.codex/sessions/2026/10/12/rollout-2026-10-12T11-52-13-01a13107-6f6f-72d1-b109-1fa71b7c0051.jsonl",
+    "models": [
+      "gpt-6.1-sol"
+    ],
+    "usage": {
+      "input_tokens": 78403,
+      "cached_input_tokens": 65536,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 1121,
+      "reasoning_output_tokens": 60,
+      "total_tokens": 79524
+    },
+    "last_usage": {
+      "input_tokens": 33162,
+      "cached_input_tokens": 23552,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 972,
+      "reasoning_output_tokens": 60,
+      "total_tokens": 34134
+    },
+    "usage_events": [
+      {
+        "input_tokens": 21502,
+        "cached_input_tokens": 20608,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 45,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 21547
+      },
+      {
+        "input_tokens": 23739,
+        "cached_input_tokens": 21376,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 104,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 23843
+      },
+      {
+        "input_tokens": 33162,
+        "cached_input_tokens": 23552,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 972,
+        "reasoning_output_tokens": 60,
+        "total_tokens": 34134
+      }
+    ],
+    "types": {
+      "('session_meta', '')": 1,
+      "('event_msg', 'task_started')": 1,
+      "('response_item', 'message')": 5,
+      "('world_state', '')": 1,
+      "('turn_context', '')": 1,
+      "('inter_agent_communication_metadata', '')": 1,
+      "('response_item', 'agent_message')": 1,
+      "('response_item', 'custom_tool_call')": 2,
+      "('token_usage_record', '')": 3,
+      "('event_msg', 'item_completed')": 4,
+      "('response_item', 'custom_tool_call_output')": 2,
+      "('event_msg', 'token_count')": 3,
+      "('response_item', 'reasoning')": 1,
+      "('event_msg', 'task_complete')": 1
+    },
+    "calls": [
+      {
+        "type": "custom_tool_call",
+        "name": "exec",
+        "arguments": null,
+        "input": "text(await tools.exec_command({cmd:\"cat /tmp/metodologia-ab-qiv3uvoc/B/skill/SKILL.md\",max_output_tokens:12000}));\n"
+      },
+      {
+        "type": "custom_tool_call",
+        "name": "exec",
+        "arguments": null,
+        "input": "text(await tools.exec_command({cmd:\"cat /tmp/metodologia-ab-qiv3uvoc/B/skill/references/communication-and-context.md /tmp/metodologia-ab-qiv3uvoc/B/skill/references/requirements.md /tmp/metodologia-ab-qiv3uvoc/B/skill/references/engineering.md /tmp/metodologia-ab-qiv3uvoc/B/skill/references/tools.md\",max_output_tokens:26000}));\n"
+      }
+    ],
+    "response_characters": 3939,
+    "response_words": 599,
+    "context_settings": {
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "reasoning_effort": null
+    }
+  }
+}

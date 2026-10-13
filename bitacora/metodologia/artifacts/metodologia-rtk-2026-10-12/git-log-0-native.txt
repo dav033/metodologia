@@ -1,0 +1,166 @@
+commit 07a8113e761a23fa7b76fea1eaa25afa2c033a36
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 17:09:01 2026 -0500
+
+    fix(marathon): verify claimed done after a crash and keep usage-limit streaks out of failures
+    
+    task done under the supervisor is now a claim (claimed_done) verified by settle or, after a restart, by recover_claims before new work is picked. A limit streak is logged as limit_streak: no attempt, no error_hash, no tier climb, never blocks, notifies and waits.
+    
+    Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+
+commit 692c7e3b25890ef4f8365c53503c1c3e7ac7bd28
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 17:08:04 2026 -0500
+
+    prompt maratón: rama pampas y ramas sin fusionar
+
+commit 77913d78674c94b3e1ad8887b6935566ad188bbb
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 17:01:47 2026 -0500
+
+    pictures: REQ-014 72h marathon spec + plan
+
+commit 89c7478c6ab594fa0980498c349e1519d10c2482
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 17:01:32 2026 -0500
+
+    pictures: REQ-014 plan ready for review
+
+commit ebc2a0ff812891a13bfda37c83a9dd7c18f331a2
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:53:27 2026 -0500
+
+    metodologia: deferred marathon review items P-009..P-012
+
+commit e659f3d85bf823f3db8d3f2f478bda1ecbcd9aa0
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:52:34 2026 -0500
+
+    feat(marathon): model escalation ladder, early termination, live logs
+    
+    - Ladder: tier 0 = run model (haiku), 1 = sonnet --effort xhigh,
+      2 = opus --effort xhigh (codex: model_reasoning_effort="xhigh").
+      Each failed attempt climbs one tier; a repeated error only blocks at
+      the top; max_attempts default 4. `level: architecture` starts at opus.
+    - `task escalate REQ T --to sonnet|opus --reason`: own task only, up
+      only; the session counts as an attempt, not a failure.
+    - Sessions end 90 s after the agent's verdict (done/fail/escalate,
+      REPORT.md for the final); BITACORA_RUN_GRACE_SEC overrides.
+    - Agent output streams into the session log; claude runs with
+      stream-json --verbose and the result event gives is_error/cost.
+    - run_session moved to bt_runsession (kills the agent if the poll loop
+      raises; AgentNotFound only around Popen). Web tab shows model per
+      task and per session.
+    
+    antagonist: 6 fixed (early exit on any verdict, verdict-last prompt,
+    timeout before limit check, cut JSON lines, grace reset, no in-place
+    escalation); re-review skipped.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+commit 3fd2838b5da74ac335d00682a38ebc9386f54f42
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:47:12 2026 -0500
+
+    pictures: marathon STATE — agents relaunched with model rule
+
+commit 37ef1b4c384b217d6cd084cb43843e407f0b1f09
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:45:56 2026 -0500
+
+    pictures: marathon cycle 0 start (STATE.md, day log)
+
+commit efb2a89ece9a77c0663bf292a8bae81e6793d03f
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:45:33 2026 -0500
+
+    pictures: marathon brief — Haiku-first models with Sonnet/Opus xhigh escalation
+
+commit e38f58d98bd6e59aaf4429688ff6922da53199a3
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:39:04 2026 -0500
+
+    fix(marathon): harden supervisor state, verify gate and limit detection
+    
+    RUN.json read errors raise RunStateError and the supervisor loop survives
+    transient failures; plan verify/after/repo frozen after approval (drift is
+    reported); PLAN.md tick only after the supervisor's verify passes; a session
+    may only mark its own task; usage limit detected only on failed sessions,
+    with a streak cap; unknown repo role fails verify; autostart sets
+    BITACORA_ROOT.
+    
+    antagonist: A2/A4 fixed in the following commit; A1, A3, A5-A7 deferred.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+commit 72a6fa3bb1e2950b9d02ed8840a865c4e33b3b3c
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:38:51 2026 -0500
+
+    pictures: marathon brief — resilience (§13 STATE.md, re-read after compaction, resume phrase), owner answers block
+
+commit 7c07e43a207b67c0ffa1864a00ebe565e1d3b1f0
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:35:29 2026 -0500
+
+    feat(marathon): Remote Control monitor session (bitacora.py monitor, auto on launch, web button); repo guard against mixed bitácora/skill commits
+
+commit 8bf3f88eaee69c24a549039317c87f6a73848695
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:34:42 2026 -0500
+
+    prompt maratón 3 días + research
+
+commit 172df0535a8af4eb8f2fce09d66f94f90b00a02f
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:26:47 2026 -0500
+
+    metodologia: log marathon, monitor, repo guard; deferred P-006..P-008
+
+commit 3183482042fec995417687caf49976206b608488
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:16:30 2026 -0500
+
+    log: pulido fase 4 en main
+
+commit 095235e220998dfa9c9c8ff43c0eeddddbb1f23b
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 16:06:13 2026 -0500
+
+    log: foto cumpleaños en main
+
+commit 597467668c725f3cbae6ebae18b073d1ef8f8c8f
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 15:59:16 2026 -0500
+
+    log: foto cumpleaños revisión resuelta
+
+commit 6d52917a1ca427aa48e84f559d00da55a794b1ac
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 15:58:45 2026 -0500
+
+    feat(engineering): enforceable architecture standards and arch-test templates
+    
+    Architecture rules for Next.js, NestJS and FastAPI (layer mapping, one-way
+    imports, cross-feature facade/events, problem+json errors, cursor pagination,
+    Idempotency-Key, durable background work, DB conventions, monolith first),
+    tested config templates in templates/arch/, ARCHITECTURE.md template (C4 L1-2
+    + arc42-lite) and an antagonist contracts check. Most of it landed in the
+    auto-commit eac2cae; this commit applies the antagonist fixes: optional app.ai
+    in import-linter, domain *.entity.ts and subscribers in the Nest rules, Next
+    features always layered, support folders, stricter barrel rules, FastAPI
+    core/security and core/errors placement.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+commit eac2caeab1289b6bf08c4673e9dee09275e525a5
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 15:57:35 2026 -0500
+
+    log: fase 4 en main
+
+commit d8caa4e0f04cec1488188263de2f7c77dd022a53
+Author: David Theran <dav030201@gmail.com>
+Date:   Fri Oct 9 15:46:11 2026 -0500
+
+    metodologia: log architecture + marathon work in progress (D-006)

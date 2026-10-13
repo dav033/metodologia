@@ -1,0 +1,32 @@
+FFF......................................................................................... [ 30%]
+............................................................................................ [ 60%]
+............................................................................................ [ 91%]
+...........................                                                                  [100%]
+============================================= FAILURES =============================================
+_____________________________________ test_touching_intervals ______________________________________
+
+    def test_touching_intervals():
+>       assert True is False, "E_OVERLAP: touching endpoints must not overlap"
+E       AssertionError: E_OVERLAP: touching endpoints must not overlap
+E       assert True is False
+
+test_fail.py:2: AssertionError
+_____________________________________ test_cross_tenant_admin ______________________________________
+
+    def test_cross_tenant_admin():
+>       raise PermissionError("E_TENANT_DENIED: tenant_b must be inaccessible")
+E       PermissionError: E_TENANT_DENIED: tenant_b must be inaccessible
+
+test_fail.py:5: PermissionError
+________________________________________ test_expired_token ________________________________________
+
+    def test_expired_token():
+>       raise ValueError("E_TOKEN_EXPIRED: session is not valid")
+E       ValueError: E_TOKEN_EXPIRED: session is not valid
+
+test_fail.py:8: ValueError
+===================================== short test summary info ======================================
+FAILED test_fail.py::test_touching_intervals - AssertionError: E_OVERLAP: touching endpoints must...
+FAILED test_fail.py::test_cross_tenant_admin - PermissionError: E_TENANT_DENIED: tenant_b must be...
+FAILED test_fail.py::test_expired_token - ValueError: E_TOKEN_EXPIRED: session is not valid
+3 failed, 300 passed in 0.19s

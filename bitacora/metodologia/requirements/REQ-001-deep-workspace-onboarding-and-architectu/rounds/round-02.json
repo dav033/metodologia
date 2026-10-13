@@ -1,0 +1,135 @@
+{
+ "title": "Cross-repository architecture review and evidence",
+ "intro": "Your answers establish a project as one product workspace that may have multiple repos, and choose a deep but safe analysis that updates the bitácora only. This round settles how the review crosses repo boundaries and what evidence makes a finding trustworthy.",
+ "coverage": "Goal and initial scope clear; cross-repository analysis, audit rigor, and incomplete-scan handling open",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "For a project with frontend and backend repos, should the audit trace user flows and verify contracts across the boundary (API/DTOs, auth, data ownership, configuration and deployment), not just map each repo independently?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Yes; produce one product-level architecture and call out mismatches across repos"
+    },
+    {
+     "key": "b",
+     "label": "Map each repo separately and only document obvious links"
+    }
+   ],
+   "recommended": "a",
+   "why": "The project is the product spanning repositories, so the main architectural failures may sit between them."
+  },
+  {
+   "id": "q2",
+   "text": "How should findings distinguish proven architectural failures from ideas?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Separate confirmed violations from risks and improvement opportunities; cite repo/path/line or config/test evidence, impact, confidence and a recommendation"
+    },
+    {
+     "key": "b",
+     "label": "Use one unranked list of observations"
+    },
+    {
+     "key": "c",
+     "label": "Report only findings that have an automated test proving them"
+    }
+   ],
+   "recommended": "a",
+   "why": "Architecture judgment needs evidence and uncertainty labels; not every important boundary problem is mechanically testable."
+  },
+  {
+   "id": "q3",
+   "text": "Which heavy review process should it use?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Inventory every repo, analyze each repo, synthesize end-to-end flows/contracts, then run an independent architecture review and reconcile its findings"
+    },
+    {
+     "key": "b",
+     "label": "One agent reads the entire workspace once and writes the docs"
+    },
+    {
+     "key": "c",
+     "label": "Run a fixed number of review rounds even if findings are already stable"
+    }
+   ],
+   "recommended": "a",
+   "why": "It gives independent coverage and cross-repo synthesis without an arbitrary endless loop; existing explorer/reviewer roles can support it."
+  },
+  {
+   "id": "q4",
+   "text": "What should happen when a repo is missing/inaccessible or a safe check cannot run?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Continue with the accessible repos, show a coverage matrix and limitations, and avoid claiming the audit is complete"
+    },
+    {
+     "key": "b",
+     "label": "Stop the whole process until every repo and check is available"
+    },
+    {
+     "key": "c",
+     "label": "Infer the missing repo from the other code and mark the audit complete"
+    }
+   ],
+   "recommended": "a",
+   "why": "Partial evidence can still help, as long as gaps are visible and no conclusion overstates coverage."
+  },
+  {
+   "id": "q5",
+   "text": "Should the implementation add a dedicated CLI command such as `bitacora.py audit` for reruns, or keep this as an AI-guided workflow around the existing `init` plus a documented manual trigger?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Add a dedicated audit/onboarding entrypoint; the CLI orchestrates the process and the AI performs architectural judgment"
+    },
+    {
+     "key": "b",
+     "label": "Keep the current CLI and define the workflow only in SKILL.md/references"
+    },
+    {
+     "key": "c",
+     "label": "Make `init` itself perform all scanning and require AI context through hooks"
+    }
+   ],
+   "recommended": "a",
+   "why": "A clear entrypoint makes onboarding repeatable while keeping reasoning and findings in the agent instead of embedding LLM behavior in the Python CLI."
+  }
+ ],
+ "round": 2,
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "Treat frontend and backend as one product and report cross-repository mismatches."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "Separate confirmed failures from risks and improvements, with evidence and confidence."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Inventory, analyze each repo, synthesize the product, and run one independent architecture review."
+  },
+  "q4": {
+   "choice": "a",
+   "note": "Continue with a coverage matrix and limitations; never claim completeness with gaps."
+  },
+  "q5": {
+   "choice": "a",
+   "note": "Integrate onboarding for new bitácoras and an explicit rerun trigger; the AI performs the analysis while scripts provide deterministic inventory/context."
+  }
+ },
+ "created_at": "2026-10-10T12:24:32",
+ "answered_at": "2026-10-10T12:29:17",
+ "answered_via": "terminal"
+}

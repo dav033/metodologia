@@ -1,0 +1,139 @@
+{
+ "title": "Purpose, scan boundary, and audit behavior",
+ "intro": "The current init only creates files. I propose a deliberate onboarding/audit that asks about the application first, then maps every registered workspace repository and produces evidence-backed findings. Please choose the boundaries below.",
+ "coverage": "1/10 clear; primary goal established, implementation boundaries open",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "When should this deep onboarding run?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "For a new project during initial bitácora setup, with an explicit command to rerun the audit later"
+    },
+    {
+     "key": "b",
+     "label": "Only when explicitly requested, including for existing projects"
+    },
+    {
+     "key": "c",
+     "label": "Automatically at the start of every project session"
+    }
+   ],
+   "recommended": "a",
+   "why": "It makes initial architecture useful while keeping expensive full scans intentional."
+  },
+  {
+   "id": "q2",
+   "text": "What should count as the full workspace to scan?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Every registered repository plus shared documents/configuration at the workspace root; report missing or inaccessible repos"
+    },
+    {
+     "key": "b",
+     "label": "Every directory recursively beneath the workspace root, including unregistered repos"
+    },
+    {
+     "key": "c",
+     "label": "Only the repository containing the current session"
+    }
+   ],
+   "recommended": "a",
+   "why": "Workspace roles already define project boundaries and avoid accidentally crawling unrelated sibling projects or the whole home directory."
+  },
+  {
+   "id": "q3",
+   "text": "How should the purpose interview work?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Ask first about purpose, users, core workflows, constraints, and what success means; inspect the workspace next and ask follow-ups only for contradictions or gaps"
+    },
+    {
+     "key": "b",
+     "label": "Scan first, then ask questions based on code and docs"
+    },
+    {
+     "key": "c",
+     "label": "Ask only the application purpose, then infer the rest from code"
+    }
+   ],
+   "recommended": "a",
+   "why": "The owner supplies business intent that code cannot reliably reveal; the scan can then validate and deepen it."
+  },
+  {
+   "id": "q4",
+   "text": "Which analysis depth should the heavy process include?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Read docs, source, manifests, schemas/migrations, infrastructure and deployment config; map modules, dependencies, data and flows; run existing safe offline lint/type/test/build checks when available"
+    },
+    {
+     "key": "b",
+     "label": "Read documentation and directory structure only"
+    },
+    {
+     "key": "c",
+     "label": "Run every available check, including networked or environment-changing commands"
+    }
+   ],
+   "recommended": "a",
+   "why": "This gives architecture evidence and useful validation while avoiding network, database, deploy, or other state changes without a separate request."
+  },
+  {
+   "id": "q5",
+   "text": "What should it write or change after the analysis?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Update bitácora architecture and add prioritized findings with evidence, impact, confidence, and suggested remediation; do not edit product code"
+    },
+    {
+     "key": "b",
+     "label": "Write an audit report only, leaving central architecture docs untouched"
+    },
+    {
+     "key": "c",
+     "label": "Apply straightforward architecture fixes automatically"
+    }
+   ],
+   "recommended": "a",
+   "why": "It leaves a durable architecture baseline and actionable backlog while keeping product changes under explicit user direction."
+  }
+ ],
+ "round": 1,
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "Also explicitly invoke the same onboarding/audit for existing projects."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "A project is the whole product workspace and can contain multiple repositories, such as frontend and backend worked on together."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Accepted."
+  },
+  "q4": {
+   "choice": "a",
+   "note": "Accepted, limited to safe local checks."
+  },
+  "q5": {
+   "choice": "a",
+   "note": "Accepted; do not change product code."
+  }
+ },
+ "created_at": "2026-10-10T12:00:00",
+ "answered_at": "2026-10-10T12:24:32",
+ "answered_via": "terminal"
+}

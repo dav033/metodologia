@@ -1,0 +1,203 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "L-001",
+      "scope": "project",
+      "kind": "tooling",
+      "text": "In this lab repo, global Vitest setup changes must be checked against the whole suite, not only the feature folder: compare the failing set with the baseline snapshot (git archive of the baseline commit plus a node_modules symlink in /tmp) to prove no regression.",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-12T23:27:53.571969-05:00",
+          "source": "REQ-001/M1-audit",
+          "note": "Full suite went 37 failed (9 files) at 3ea1a97 to 11 failed (5 files) after the matchMedia stub; all 11 are in the baseline failing set."
+        }
+      ],
+      "created": "2026-10-12T23:27:53.571969-05:00",
+      "updated": "2026-10-13T03:25:17.610917-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "L-002",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "Date-only filter inputs are local calendar days: compare timestamps by their local day (as formatDate renders them) and force process.env.TZ in tests that touch that path.",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-12T23:27:53.706732-05:00",
+          "source": "REQ-001/M1-audit",
+          "note": "createdAt 2026-10-02T03:30:00Z is Oct 1 22:30 in America/Bogota; the UTC-day implementation excluded it from a range ending Oct 1 and the TZ-forced test reproduced it."
+        }
+      ],
+      "created": "2026-10-12T23:27:53.706732-05:00",
+      "updated": "2026-10-13T03:25:17.740354-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "L-003",
+      "scope": "project",
+      "kind": "convention",
+      "text": "filterParams serialize returns only the filter keys: any page that writes it to the URL must merge it into the existing query string.",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-12T23:27:53.830116-05:00",
+          "source": "REQ-001/M1-audit",
+          "note": "serializeInvoiceScanFilters builds a fresh URLSearchParams from the filter object and ignores everything else in the query."
+        }
+      ],
+      "created": "2026-10-12T23:27:53.830116-05:00",
+      "updated": "2026-10-13T03:25:17.862835-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "L-004",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "Native Next App Router query updates must call history.replaceState with null data; passing history.state can bypass hook synchronization because it contains __NA.",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-12T23:37:05.783752-05:00",
+          "source": "REQ-001/T4",
+          "note": "Installed node_modules/next/dist/client/components/app-router.js:256-263 returns early for data.__NA or data._N before applyUrlFromHistoryPushReplace."
+        }
+      ],
+      "created": "2026-10-12T23:37:05.783752-05:00",
+      "updated": "2026-10-13T03:25:17.983031-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "L-005",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "Invoice filter component tests need asymmetric section fixtures and mixed empty/populated states; mirrored fixtures can hide swapped counters and omitted empty sections.",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T00:09:32.379178-05:00",
+          "source": "REQ-001/T5",
+          "note": "T5 antagonist D-20261012-235900-e244 identified mirrored fixtures with identical counters; added two asymmetric cases with anchored section counts and scoped identities, and the full feature suite passes 100 tests."
+        }
+      ],
+      "created": "2026-10-13T00:09:32.379178-05:00",
+      "updated": "2026-10-13T03:25:18.104882-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "L-006",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "Installed Motion fixes layoutId in its projection node at mount, so shared filter chips/options must remount when their identity or selected state changes.",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T00:32:30.523359-05:00",
+          "source": "REQ-001/T6",
+          "note": "Both T6 reviewers confirmed createProjectionNode setOptions at mount; a real Motion/jsdom probe kept projection.options.layoutId=invoice after props changed to transaction, while the replacement-node regression now covers the fix."
+        }
+      ],
+      "created": "2026-10-13T00:32:30.523359-05:00",
+      "updated": "2026-10-13T03:25:18.227754-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "L-007",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "jsdom measures every box as zero, exactly like a display:none responsive variant, so a Motion exit that waits for a shared-layoutId layout animation never completes there: test list presence with real Motion, not only mocked props.",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T01:09:32.302349-05:00",
+          "source": "REQ-001/M3-audit",
+          "note": "A record moved between 'To enter' and 'Entered' kept its leaving row mounted, inert and at opacity 0 after 1.5 s with zero rects, and was removed with stubbed distinct rects (M3 audit scratch tests)."
+        }
+      ],
+      "created": "2026-10-13T01:09:32.302349-05:00",
+      "updated": "2026-10-13T03:25:18.351242-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "L-008",
+      "scope": "project",
+      "kind": "convention",
+      "text": "In invoice-scans page tests import InvoiceScansPage.filters.test-support before any module that imports the API layer (hooks/useInvoiceScans), otherwise the real API module is cached unmocked and the page renders its error state.",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T01:09:32.423750-05:00",
+          "source": "REQ-001/M3-audit",
+          "note": "Importing invoiceScanKeys from ../hooks/useInvoiceScans above the support module made every test fail with 'Unable to find an element with the text: 2 of 2' (M3 audit)."
+        }
+      ],
+      "created": "2026-10-13T01:09:32.423750-05:00",
+      "updated": "2026-10-13T03:25:18.470707-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "L-009",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "In the lab's Vitest page tests useSearchParams is mocked with useSyncExternalStore (synchronous), but real Next 16 delivers history.replaceState URL changes through a transition, so echo/lag races of URL-synced draft inputs cannot be reproduced in jsdom and belong in the real-browser pass.",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T01:46:04.013193-05:00",
+          "source": "REQ-001/M2-audit",
+          "note": "Read node_modules/next/dist/client/components/app-router.js (applyUrlFromHistoryPushReplace dispatches ACTION_RESTORE inside startTransition) against InvoiceScansPage.filters.test-support.tsx (uSES-based mock); the harness cannot produce a stale intermediate query."
+        }
+      ],
+      "created": "2026-10-13T01:46:04.013193-05:00",
+      "updated": "2026-10-13T01:46:04.013193-05:00",
+      "promoted_by": null
+    },
+    {
+      "id": "L-010",
+      "scope": "project",
+      "kind": "convention",
+      "text": "A mutation spot-check that survives the whole suite marks an unprotected line: removing setResetKey from clearFilters kept all 120 invoice-scans tests green until a test of a search draft that never reached the URL was added.",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T01:46:04.135624-05:00",
+          "source": "REQ-001/M2-audit",
+          "note": "Nine mutations on M2 behaviours: eight were caught by 1-40 tests, the resetKey one by none; the new test fails only without it."
+        }
+      ],
+      "created": "2026-10-13T01:46:04.135624-05:00",
+      "updated": "2026-10-13T01:46:04.135624-05:00",
+      "promoted_by": null
+    },
+    {
+      "id": "L-011",
+      "scope": "project",
+      "kind": "tooling",
+      "text": "In headless Bash calls, a backgrounded subshell started with ( ... ) & is killed when the outer call's shell exits and leaves a truncated log; put the commands in a script outside the repo and run it in the foreground or with run_in_background.",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T01:46:04.255465-05:00",
+          "source": "REQ-001/M2-audit",
+          "note": "First verify run wrote only the typecheck banner and no exit lines; the script file run in the foreground produced the full log."
+        }
+      ],
+      "created": "2026-10-13T01:46:04.255465-05:00",
+      "updated": "2026-10-13T01:46:04.255465-05:00",
+      "promoted_by": null
+    }
+  ]
+}

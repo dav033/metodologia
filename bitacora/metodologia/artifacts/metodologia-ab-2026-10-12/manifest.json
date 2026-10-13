@@ -1,0 +1,10 @@
+{
+  "A": {
+    "variant": "old",
+    "skill": "/tmp/metodologia-ab-qiv3uvoc/A/skill/SKILL.md"
+  },
+  "B": {
+    "variant": "new",
+    "skill": "/tmp/metodologia-ab-qiv3uvoc/B/skill/SKILL.md"
+  }
+}

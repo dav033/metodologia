@@ -1,0 +1,39 @@
+{
+ "title": "Changing a rule that blocks a requested task",
+ "intro": "You want the skill to tell you when a skill rule blocks your goal and ask whether its behavior should change. One point remains: the desired change could be a one-time exception for this task or a permanent update to the skill's rule.",
+ "coverage": "Skill explanation, proactive improvement and change-scope clear; rule-conflict handling needs one distinction",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "When a skill-maintained rule blocks what you asked for, what should the skill ask?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Explain the exact rule and its impact, then ask whether you want a one-time exception for this task or a permanent change to the skill rule"
+    },
+    {
+     "key": "b",
+     "label": "Assume a one-time exception unless I ask for a permanent change"
+    },
+    {
+     "key": "c",
+     "label": "Ask only whether to change the rule permanently; never offer a one-time exception"
+    }
+   ],
+   "recommended": "a",
+   "why": "It makes the effect of your answer clear and avoids silently changing a general preference for one task."
+  }
+ ],
+ "round": 2,
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "Explain the specific rule and its effect, then ask whether I want a one-time exception or a permanent rule change."
+  }
+ },
+ "created_at": "2026-10-10T12:34:29",
+ "answered_at": "2026-10-10T12:36:06",
+ "answered_via": "terminal"
+}

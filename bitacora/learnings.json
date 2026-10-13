@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "LG-001",
+      "scope": "skill",
+      "kind": "convention",
+      "text": "An independent audit by another provider finds defects the builder's own tests do not: the first adversarial pass on the router returned 21 verified findings",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-12T22:51:51.423242-05:00",
+          "source": "REQ-006/audit1",
+          "note": "delegation D-20261012-223148-cfc7 (codex-luis gpt-6-luna xhigh): 4 high, 16 medium, 1 low; 18 fixed the same session"
+        }
+      ],
+      "created": "2026-10-12T22:51:51.423242-05:00",
+      "updated": "2026-10-13T03:25:17.354564-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "LG-002",
+      "scope": "owner",
+      "kind": "preference",
+      "text": "The owner wants problems settled by three subagents arguing different alternatives and a clean judge, not by asking him",
+      "status": "confirmed",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-12T22:51:51.541601-05:00",
+          "source": "REQ-006",
+          "note": "explicit instruction when leaving the autonomous loop on 2026-10-12"
+        }
+      ],
+      "created": "2026-10-12T22:51:51.541601-05:00",
+      "updated": "2026-10-13T03:25:17.489079-05:00",
+      "promoted_by": "owner"
+    },
+    {
+      "id": "LG-003",
+      "scope": "skill",
+      "kind": "tooling",
+      "text": "bitacora.py trace only reads requirement lines written '- R1. text'; a SPEC that writes '- **R1 — Title.** text' makes every covers: R<n> an unknown-ref error.",
+      "status": "rejected",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T01:09:32.543784-05:00",
+          "source": "REQ-001/M3-audit",
+          "note": "bt_trace.py _requirements regex '^\\s*-\\s+(R\\d+)\\.\\s+(.+)$' vs REQ-001 SPEC: 14 unknown-ref diagnostics (M3 audit)."
+        },
+        {
+          "at": "2026-10-13T01:35:10.258890-05:00",
+          "source": "owner rejection",
+          "note": "defect fixed in bt_trace (requirement-line styles); no longer something a session must know. I had marked it confirmed by mistake: confirming is the owner's call"
+        }
+      ],
+      "created": "2026-10-13T01:09:32.543784-05:00",
+      "updated": "2026-10-13T01:35:10.258890-05:00",
+      "promoted_by": "owner"
+    }
+  ]
+}

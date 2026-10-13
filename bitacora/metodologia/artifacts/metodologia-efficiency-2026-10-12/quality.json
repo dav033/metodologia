@@ -1,0 +1,42 @@
+{
+  "/root/eff_x1": {
+    "passed": 18,
+    "total": 18,
+    "method": "manual against predeclared rubric; tool traces inspected"
+  },
+  "/root/eff_y1": {
+    "passed": 18,
+    "total": 18,
+    "method": "manual against predeclared rubric; tool traces inspected"
+  },
+  "/root/eff_z1": {
+    "passed": 18,
+    "total": 18,
+    "method": "manual against predeclared rubric; tool traces inspected"
+  },
+  "/root/eff_z2": {
+    "passed": 18,
+    "total": 18,
+    "method": "manual against predeclared rubric; tool traces inspected"
+  },
+  "/root/eff_x2": {
+    "passed": 18,
+    "total": 18,
+    "method": "manual against predeclared rubric; tool traces inspected"
+  },
+  "/root/eff_y2": {
+    "passed": 18,
+    "total": 18,
+    "method": "manual against predeclared rubric; tool traces inspected"
+  },
+  "/root/eff_hold_x": {
+    "passed": 9,
+    "total": 9,
+    "method": "manual against predeclared rubric; tool traces inspected"
+  },
+  "/root/eff_hold_y": {
+    "passed": 9,
+    "total": 9,
+    "method": "manual against predeclared rubric; tool traces inspected"
+  }
+}

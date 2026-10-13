@@ -1,0 +1,9 @@
+{
+ "repos": {
+  "frontend": {
+   "remote": "",
+   "hint": "~/dev/maros-lab/maros-next"
+  }
+ },
+ "root": "~/dev/maros-lab"
+}

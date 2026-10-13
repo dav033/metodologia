@@ -1,0 +1,9 @@
+{
+ "repos": {
+  "app": {
+   "remote": "https://github.com/dav033/proposal-studio.git",
+   "hint": "~/dev/proposal-studio"
+  }
+ },
+ "root": "~/dev/proposal-studio"
+}

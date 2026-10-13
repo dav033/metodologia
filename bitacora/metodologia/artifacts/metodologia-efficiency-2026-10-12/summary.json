@@ -1,0 +1,37 @@
+{
+  "screening_medians": {
+    "control": {
+      "input_tokens": 158689.5,
+      "cached_input_tokens": 134400.0,
+      "output_tokens": 1377.5,
+      "reasoning_output_tokens": 17.5,
+      "total_tokens": 160067.0,
+      "uncached_input": 24289.5,
+      "call_count": 4.0
+    },
+    "focused": {
+      "input_tokens": 149586.0,
+      "cached_input_tokens": 132096.0,
+      "output_tokens": 1603.5,
+      "reasoning_output_tokens": 27.5,
+      "total_tokens": 151189.5,
+      "uncached_input": 17490.0,
+      "call_count": 4.0
+    },
+    "compact": {
+      "input_tokens": 159353.5,
+      "cached_input_tokens": 127616.0,
+      "output_tokens": 1585.5,
+      "reasoning_output_tokens": 12.5,
+      "total_tokens": 160939.0,
+      "uncached_input": 31737.5,
+      "call_count": 4.0
+    }
+  },
+  "benchmark_total_usage": {
+    "input_tokens": 1144827,
+    "cached_input_tokens": 970240,
+    "output_tokens": 10368,
+    "total_tokens": 1155195
+  }
+}

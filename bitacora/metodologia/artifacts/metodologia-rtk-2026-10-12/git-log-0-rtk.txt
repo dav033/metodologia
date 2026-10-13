@@ -1,0 +1,34 @@
+07a8113 fix(marathon): verify claimed done after a crash and keep usage-limit streaks out of failures (3 days ago) <D...
+  task done under the supervisor is now a claim (claimed_done) verified by settle or, after a restart, by recover_claim...
+  Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+692c7e3 prompt maratón: rama pampas y ramas sin fusionar (3 days ago) <David Theran>
+77913d7 pictures: REQ-014 72h marathon spec + plan (3 days ago) <David Theran>
+89c7478 pictures: REQ-014 plan ready for review (3 days ago) <David Theran>
+ebc2a0f metodologia: deferred marathon review items P-009..P-012 (3 days ago) <David Theran>
+e659f3d feat(marathon): model escalation ladder, early termination, live logs (3 days ago) <David Theran>
+  - Ladder: tier 0 = run model (haiku), 1 = sonnet --effort xhigh,
+  2 = opus --effort xhigh (codex: model_reasoning_effort="xhigh").
+  Each failed attempt climbs one tier; a repeated error only blocks at
+  [+14 lines omitted]
+3fd2838 pictures: marathon STATE — agents relaunched with model rule (3 days ago) <David Theran>
+37ef1b4 pictures: marathon cycle 0 start (STATE.md, day log) (3 days ago) <David Theran>
+efb2a89 pictures: marathon brief — Haiku-first models with Sonnet/Opus xhigh escalation (3 days ago) <David Theran>
+e38f58d fix(marathon): harden supervisor state, verify gate and limit detection (3 days ago) <David Theran>
+  RUN.json read errors raise RunStateError and the supervisor loop survives
+  transient failures; plan verify/after/repo frozen after approval (drift is
+  reported); PLAN.md tick only after the supervisor's verify passes; a session
+  [+5 lines omitted]
+72a6fa3 pictures: marathon brief — resilience (§13 STATE.md, re-read after compaction, resume phrase), owner answers ...
+7c07e43 feat(marathon): Remote Control monitor session (bitacora.py monitor, auto on launch, web button); repo guard ...
+8bf3f88 prompt maratón 3 días + research (3 days ago) <David Theran>
+172df05 metodologia: log marathon, monitor, repo guard; deferred P-006..P-008 (3 days ago) <David Theran>
+3183482 log: pulido fase 4 en main (3 days ago) <David Theran>
+095235e log: foto cumpleaños en main (3 days ago) <David Theran>
+5974676 log: foto cumpleaños revisión resuelta (3 days ago) <David Theran>
+6d52917 feat(engineering): enforceable architecture standards and arch-test templates (3 days ago) <David Theran>
+  Architecture rules for Next.js, NestJS and FastAPI (layer mapping, one-way
+  imports, cross-feature facade/events, problem+json errors, cursor pagination,
+  Idempotency-Key, durable background work, DB conventions, monolith first),
+  [+7 lines omitted]
+eac2cae log: fase 4 en main (3 days ago) <David Theran>
+d8caa4e metodologia: log architecture + marathon work in progress (D-006) (3 days ago) <David Theran>

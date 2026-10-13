@@ -1,0 +1,10 @@
+{
+ "repos": {
+  "app": {
+   "remote": "https://github.com/dav033/pictures.git",
+   "hint": "~/dev/pictures"
+  }
+ },
+ "root": "~/dev/pictures",
+ "work": true
+}

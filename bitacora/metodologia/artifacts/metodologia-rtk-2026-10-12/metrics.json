@@ -1,0 +1,917 @@
+{
+  "rtk_version": "rtk 0.51.0",
+  "rtk_binary_sha256": "b947215511bfd8f5f6eb12c6b6d4a9f70b72e9ce37442cfa4df2352b033cd0ea",
+  "pinned_release_match": true,
+  "pinned_archive_sha256": "5028d3b19a8f0990d30fec9fbb07e32782bc5698e618fb1861aad8a9ccba4eb5",
+  "tokenizer": "tiktoken o200k_base",
+  "scope": "combined command stdout/stderr only",
+  "repeats": 3,
+  "fixture_executions": 18,
+  "runs": [
+    {
+      "argv": [
+        "git",
+        "status"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 1998,
+      "tokens": 539,
+      "elapsed_ms": 3.549939000095037,
+      "output_file": "git-status-0-native.txt",
+      "case": "git-status",
+      "repeat": 0,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "git",
+        "status"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 1543,
+      "tokens": 414,
+      "elapsed_ms": 10.520349000216811,
+      "output_file": "git-status-0-rtk.txt",
+      "case": "git-status",
+      "repeat": 0,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--",
+        "skill/SKILL.md"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 9386,
+      "tokens": 2142,
+      "elapsed_ms": 2.5088849999974627,
+      "output_file": "git-diff-0-native.txt",
+      "case": "git-diff",
+      "repeat": 0,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "git",
+        "diff",
+        "--",
+        "skill/SKILL.md"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 9416,
+      "tokens": 2134,
+      "elapsed_ms": 7.7306729999691015,
+      "output_file": "git-diff-0-rtk.txt",
+      "case": "git-diff",
+      "repeat": 0,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "git",
+        "log",
+        "-n",
+        "20"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 6739,
+      "tokens": 2188,
+      "elapsed_ms": 2.0898630000374396,
+      "output_file": "git-log-0-native.txt",
+      "case": "git-log",
+      "repeat": 0,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "git",
+        "log",
+        "-n",
+        "20"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 2793,
+      "tokens": 773,
+      "elapsed_ms": 5.134681999834356,
+      "output_file": "git-log-0-rtk.txt",
+      "case": "git-log",
+      "repeat": 0,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "pytest",
+        "-vv",
+        "--color=no",
+        "test_pass.py"
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 0,
+      "bytes": 30439,
+      "tokens": 5538,
+      "elapsed_ms": 415.8714970001256,
+      "output_file": "pytest-pass-0-native.txt",
+      "case": "pytest-pass",
+      "repeat": 0,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "pytest",
+        "-vv",
+        "--color=no",
+        "test_pass.py"
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 0,
+      "bytes": 28,
+      "tokens": 13,
+      "elapsed_ms": 410.80060400008733,
+      "output_file": "pytest-pass-0-rtk.txt",
+      "case": "pytest-pass",
+      "repeat": 0,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "pytest",
+        "-vv",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 32229,
+      "tokens": 5873,
+      "elapsed_ms": 418.73557799999617,
+      "output_file": "pytest-fail-0-native.txt",
+      "case": "pytest-fail",
+      "repeat": 0,
+      "variant": "native",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "pytest",
+        "-vv",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 746,
+      "tokens": 212,
+      "elapsed_ms": 422.38947999999255,
+      "output_file": "pytest-fail-0-rtk.txt",
+      "case": "pytest-fail",
+      "repeat": 0,
+      "variant": "rtk",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "pytest",
+        "-q",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 1880,
+      "tokens": 320,
+      "elapsed_ms": 396.065500000077,
+      "output_file": "pytest-fail-quiet-0-native.txt",
+      "case": "pytest-fail-quiet",
+      "repeat": 0,
+      "variant": "native",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "pytest",
+        "-q",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 746,
+      "tokens": 210,
+      "elapsed_ms": 402.2690329998113,
+      "output_file": "pytest-fail-quiet-0-rtk.txt",
+      "case": "pytest-fail-quiet",
+      "repeat": 0,
+      "variant": "rtk",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "git",
+        "status"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 1465,
+      "tokens": 391,
+      "elapsed_ms": 9.557667000080983,
+      "output_file": "git-status-1-rtk.txt",
+      "case": "git-status",
+      "repeat": 1,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "git",
+        "status"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 1998,
+      "tokens": 539,
+      "elapsed_ms": 3.1255060000603407,
+      "output_file": "git-status-1-native.txt",
+      "case": "git-status",
+      "repeat": 1,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "git",
+        "diff",
+        "--",
+        "skill/SKILL.md"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 9416,
+      "tokens": 2134,
+      "elapsed_ms": 7.177123000019492,
+      "output_file": "git-diff-1-rtk.txt",
+      "case": "git-diff",
+      "repeat": 1,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--",
+        "skill/SKILL.md"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 9386,
+      "tokens": 2142,
+      "elapsed_ms": 2.2974120001890697,
+      "output_file": "git-diff-1-native.txt",
+      "case": "git-diff",
+      "repeat": 1,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "git",
+        "log",
+        "-n",
+        "20"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 2793,
+      "tokens": 773,
+      "elapsed_ms": 4.9768330000006245,
+      "output_file": "git-log-1-rtk.txt",
+      "case": "git-log",
+      "repeat": 1,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "git",
+        "log",
+        "-n",
+        "20"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 6739,
+      "tokens": 2188,
+      "elapsed_ms": 2.1325530001377047,
+      "output_file": "git-log-1-native.txt",
+      "case": "git-log",
+      "repeat": 1,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "pytest",
+        "-vv",
+        "--color=no",
+        "test_pass.py"
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 0,
+      "bytes": 28,
+      "tokens": 13,
+      "elapsed_ms": 396.16607499988277,
+      "output_file": "pytest-pass-1-rtk.txt",
+      "case": "pytest-pass",
+      "repeat": 1,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "pytest",
+        "-vv",
+        "--color=no",
+        "test_pass.py"
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 0,
+      "bytes": 30439,
+      "tokens": 5538,
+      "elapsed_ms": 394.7464210000362,
+      "output_file": "pytest-pass-1-native.txt",
+      "case": "pytest-pass",
+      "repeat": 1,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "pytest",
+        "-vv",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 746,
+      "tokens": 212,
+      "elapsed_ms": 426.7796729998281,
+      "output_file": "pytest-fail-1-rtk.txt",
+      "case": "pytest-fail",
+      "repeat": 1,
+      "variant": "rtk",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "pytest",
+        "-vv",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 32229,
+      "tokens": 5873,
+      "elapsed_ms": 422.6573619998817,
+      "output_file": "pytest-fail-1-native.txt",
+      "case": "pytest-fail",
+      "repeat": 1,
+      "variant": "native",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "pytest",
+        "-q",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 746,
+      "tokens": 212,
+      "elapsed_ms": 405.0045190001583,
+      "output_file": "pytest-fail-quiet-1-rtk.txt",
+      "case": "pytest-fail-quiet",
+      "repeat": 1,
+      "variant": "rtk",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "pytest",
+        "-q",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 1880,
+      "tokens": 320,
+      "elapsed_ms": 415.2992510000786,
+      "output_file": "pytest-fail-quiet-1-native.txt",
+      "case": "pytest-fail-quiet",
+      "repeat": 1,
+      "variant": "native",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "git",
+        "status"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 1998,
+      "tokens": 539,
+      "elapsed_ms": 3.7785710001116968,
+      "output_file": "git-status-2-native.txt",
+      "case": "git-status",
+      "repeat": 2,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "git",
+        "status"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 1465,
+      "tokens": 391,
+      "elapsed_ms": 9.598286000027656,
+      "output_file": "git-status-2-rtk.txt",
+      "case": "git-status",
+      "repeat": 2,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--",
+        "skill/SKILL.md"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 9386,
+      "tokens": 2142,
+      "elapsed_ms": 2.397514999984196,
+      "output_file": "git-diff-2-native.txt",
+      "case": "git-diff",
+      "repeat": 2,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "git",
+        "diff",
+        "--",
+        "skill/SKILL.md"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 9416,
+      "tokens": 2134,
+      "elapsed_ms": 7.612578000134818,
+      "output_file": "git-diff-2-rtk.txt",
+      "case": "git-diff",
+      "repeat": 2,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "git",
+        "log",
+        "-n",
+        "20"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 6739,
+      "tokens": 2188,
+      "elapsed_ms": 2.3802030000297236,
+      "output_file": "git-log-2-native.txt",
+      "case": "git-log",
+      "repeat": 2,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "git",
+        "log",
+        "-n",
+        "20"
+      ],
+      "cwd": "/home/david/dev/metodologia",
+      "exit_code": 0,
+      "bytes": 2793,
+      "tokens": 773,
+      "elapsed_ms": 5.127246000029118,
+      "output_file": "git-log-2-rtk.txt",
+      "case": "git-log",
+      "repeat": 2,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "pytest",
+        "-vv",
+        "--color=no",
+        "test_pass.py"
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 0,
+      "bytes": 30439,
+      "tokens": 5538,
+      "elapsed_ms": 403.8450789998933,
+      "output_file": "pytest-pass-2-native.txt",
+      "case": "pytest-pass",
+      "repeat": 2,
+      "variant": "native",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "pytest",
+        "-vv",
+        "--color=no",
+        "test_pass.py"
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 0,
+      "bytes": 28,
+      "tokens": 13,
+      "elapsed_ms": 416.0916050000196,
+      "output_file": "pytest-pass-2-rtk.txt",
+      "case": "pytest-pass",
+      "repeat": 2,
+      "variant": "rtk",
+      "expected_exit": 0,
+      "exit_preserved": true
+    },
+    {
+      "argv": [
+        "pytest",
+        "-vv",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 32229,
+      "tokens": 5873,
+      "elapsed_ms": 428.3388210001249,
+      "output_file": "pytest-fail-2-native.txt",
+      "case": "pytest-fail",
+      "repeat": 2,
+      "variant": "native",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "pytest",
+        "-vv",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 746,
+      "tokens": 212,
+      "elapsed_ms": 411.98734799991144,
+      "output_file": "pytest-fail-2-rtk.txt",
+      "case": "pytest-fail",
+      "repeat": 2,
+      "variant": "rtk",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "pytest",
+        "-q",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 1880,
+      "tokens": 320,
+      "elapsed_ms": 406.4673620000576,
+      "output_file": "pytest-fail-quiet-2-native.txt",
+      "case": "pytest-fail-quiet",
+      "repeat": 2,
+      "variant": "native",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    },
+    {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "pytest",
+        "-q",
+        "--color=no",
+        "."
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 1,
+      "bytes": 746,
+      "tokens": 212,
+      "elapsed_ms": 396.14958300012404,
+      "output_file": "pytest-fail-quiet-2-rtk.txt",
+      "case": "pytest-fail-quiet",
+      "repeat": 2,
+      "variant": "rtk",
+      "expected_exit": 1,
+      "exit_preserved": true,
+      "diagnostics": {
+        "test_touching_intervals": true,
+        "test_cross_tenant_admin": true,
+        "test_expired_token": true,
+        "E_OVERLAP": true,
+        "E_TENANT_DENIED": true,
+        "E_TOKEN_EXPIRED": true
+      }
+    }
+  ],
+  "summary": [
+    {
+      "case": "git-status",
+      "native": {
+        "tokens": 539,
+        "bytes": 1998,
+        "elapsed_ms": 3.549939000095037
+      },
+      "rtk": {
+        "tokens": 391,
+        "bytes": 1465,
+        "elapsed_ms": 9.598286000027656
+      },
+      "output_token_reduction_pct": 27.458256029684602
+    },
+    {
+      "case": "git-diff",
+      "native": {
+        "tokens": 2142,
+        "bytes": 9386,
+        "elapsed_ms": 2.397514999984196
+      },
+      "rtk": {
+        "tokens": 2134,
+        "bytes": 9416,
+        "elapsed_ms": 7.612578000134818
+      },
+      "output_token_reduction_pct": 0.37348272642390157
+    },
+    {
+      "case": "git-log",
+      "native": {
+        "tokens": 2188,
+        "bytes": 6739,
+        "elapsed_ms": 2.1325530001377047
+      },
+      "rtk": {
+        "tokens": 773,
+        "bytes": 2793,
+        "elapsed_ms": 5.127246000029118
+      },
+      "output_token_reduction_pct": 64.6709323583181
+    },
+    {
+      "case": "pytest-pass",
+      "native": {
+        "tokens": 5538,
+        "bytes": 30439,
+        "elapsed_ms": 403.8450789998933
+      },
+      "rtk": {
+        "tokens": 13,
+        "bytes": 28,
+        "elapsed_ms": 410.80060400008733
+      },
+      "output_token_reduction_pct": 99.76525821596243
+    },
+    {
+      "case": "pytest-fail",
+      "native": {
+        "tokens": 5873,
+        "bytes": 32229,
+        "elapsed_ms": 422.6573619998817
+      },
+      "rtk": {
+        "tokens": 212,
+        "bytes": 746,
+        "elapsed_ms": 422.38947999999255
+      },
+      "output_token_reduction_pct": 96.3902605142176
+    },
+    {
+      "case": "pytest-fail-quiet",
+      "native": {
+        "tokens": 320,
+        "bytes": 1880,
+        "elapsed_ms": 406.4673620000576
+      },
+      "rtk": {
+        "tokens": 212,
+        "bytes": 746,
+        "elapsed_ms": 402.2690329998113
+      },
+      "output_token_reduction_pct": 33.75
+    }
+  ],
+  "recovery": {
+    "attempted": true,
+    "source_case": "pytest-fail",
+    "result": {
+      "argv": [
+        "/home/david/.local/share/../bin/rtk",
+        "recall",
+        "--full",
+        "29bb8a1f1928"
+      ],
+      "cwd": "/tmp/metodologia-rtk-bench-2026-10-12-v3/fixture",
+      "exit_code": 0,
+      "bytes": 31694,
+      "tokens": 5770,
+      "elapsed_ms": 3.6717319999297615,
+      "output_file": "recall-full.txt"
+    },
+    "exit_code_zero": true,
+    "did_not_rerun_pytest": true,
+    "diagnostics": {
+      "test_touching_intervals": true,
+      "test_cross_tenant_admin": true,
+      "test_expired_token": true,
+      "E_OVERLAP": true,
+      "E_TENANT_DENIED": true,
+      "E_TOKEN_EXPIRED": true,
+      "300 passed": true,
+      "3 failed": true
+    },
+    "diagnostics_all_preserved": true
+  },
+  "exit_codes_all_preserved": true,
+  "diagnostics_all_preserved": true
+}
