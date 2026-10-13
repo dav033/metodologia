@@ -63,6 +63,10 @@ class WatchTests(unittest.TestCase):
         self.assertIn("S1 [codex-luis gpt-6-luna medium] T1:done T2:done (10 min)", second)
         self.assertIn("2/3 tasks done", second)
         self.assertIn("next: T3", second)
+        self.state["tasks"][2]["status"] = "in_progress"
+        self.state["heartbeat"]["task"] = "T3"
+        self.assertIn("now running: T3", bt_watch.report("proj", "REQ-001", self.state, []))
+        self.state["tasks"][2]["status"] = "todo"
         third = self.watch()  # nothing happened in between: waits out its timeout and says so
         self.assertNotIn("S1 [", third)
         self.assertIn("no news in", third)

@@ -94,8 +94,11 @@ def report(project: str, req: str, state: dict, lines: list[str]) -> str:
                 "stopped": "stopped"}[snap["status"]]
         out.append(f"terminal: true ({tail})")
     else:
+        running = [t["id"] for t in state["tasks"] if t["status"] == "in_progress"]
         nxt = rs.next_unit(state)
-        if nxt:
+        if running:  # the session after the one just told has usually started already
+            out.append(f"now running: {snap['current'] or ', '.join(running)}")
+        elif nxt:
             out.append(f"next: {rs.unit_label(nxt)}")
         out.append("terminal: false (run this watch again to hear the next event)")
     return "\n".join(out)
