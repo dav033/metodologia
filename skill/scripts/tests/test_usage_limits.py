@@ -65,6 +65,13 @@ class ResetParsing(unittest.TestCase):
         self.assertIsNotNone(settle.detect_limit({"rc": 1, "text": result, "seconds": 1, "timed_out": False,
                                                   "stopped": False}))
 
+    def test_provider_capacity_error_is_not_the_agents_failure(self):
+        """Seen for real (maros-lab FINAL on Codex): counted as a failed attempt. It is the account's problem for a
+        while, so it cools that account down with the default cooldown and the router moves on."""
+        text = "work\nERROR: Selected model is at capacity. Please try a different model.\ntokens used\n105,080\n"
+        self.assertEqual(settle.detect_limit({"rc": 1, "text": text, "seconds": 509, "timed_out": False,
+                                              "stopped": False}), 0)
+
     def test_no_announcement_is_zero(self):
         self.assertEqual(settle.reset_epoch("something unrelated", now=5), 0)
         self.assertEqual(settle.reset_epoch("", now=5), 0)

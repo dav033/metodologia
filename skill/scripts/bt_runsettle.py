@@ -14,7 +14,8 @@ from bt_runutil import backoff_override, notify, say
 
 LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|"
                       r"hit your (\w+ ){0,2}limit|(session|weekly|daily|hourly|opus|sonnet) limit|"
-                      r"limit will reset|limit\W{1,4}resets|overloaded_error", re.I)
+                      r"limit will reset|limit\W{1,4}resets|overloaded_error|"
+                      r"(model|server|service) is (at capacity|overloaded)|try a different model", re.I)
 VERIFY_TIMEOUT = 600
 LIMIT_STREAK_MAX = 8  # consecutive usage-limit results on one task before the next one counts as an attempt
 LIMIT_RESULTS = ("usage_limit", "limit_streak")  # results that send the supervisor to wait
