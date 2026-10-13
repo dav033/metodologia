@@ -28,8 +28,8 @@ owner of quantities for the guided assistant. The 3D workshop lives entirely in 
 
 ## Guided 3D editing context (REQ-016 M2 audit)
 - `plan/aprobacion.ts` reads token v1/v2/v3; only the 3D writer with explicit known history and `PLAN_COLOR_ORDER_V3=true` emits v3. The default is reader-only/v2 (D-035/D-046). Legacy unknown history remains unknown after size/base edits. Never enable the writer before a separate reader release; rollback must retain the v3 reader.
-- Last replacement context tracks actual effects per piece; add-idea/reload/undo retain the corresponding signed context. Different effective destinations supersede older effects.
-- **Known blocker P-082:** the record does not preserve original source resolution on requested untouched pieces; an identical replay can change another pink. M2 is rejected pending a compatible design/fix. See `requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/AUDIT-M2.md`.
+- Last replacement context now reads both nested colour-order.v1 and v2 (D-048). V2 keeps actual effects separate from snapshots of requested resolved no-ops; ambiguity is never frozen. Same source phrase/effective per-piece destination/colour identities proves replay for either class. New selected pieces still resolve normally. Pruning may leave only untouched snapshots; add-idea/reload/undo retain the corresponding signed context. Different successful source/destination orders supersede older effects.
+- P-082 is fixed locally in fb872bce; M2 passes with fixes, gate 10/10, registered replay 9/9. The reader-only release and any writer rollback target must accept both nested versions, not merely token v3. No writer enablement/publication occurred. See `requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/AUDIT-M2.md`.
 
 ## Key flows
 - Idea lot: agent digitizes 15 ideas → `lote-NN.ts` + test → verified in clean worktree `Downloads/e3-verif` → push.

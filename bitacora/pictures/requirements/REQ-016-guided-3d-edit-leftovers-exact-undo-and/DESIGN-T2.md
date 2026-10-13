@@ -2,13 +2,19 @@
 req: REQ-016
 task: T2
 decision: D-046
-status: design-ready
+status: implemented-local
 date: 2026-10-13
 delegation: D-20261013-155122-0f2e
 ---
 # T2 design audit — P-058 A1
 
 ## Outcome and scope
+
+### M2 audit implementation addendum — D-048 (2026-10-13)
+
+The original design below is preserved as the pre-implementation audit. T2/T3 are now implemented locally; the M2 audit extends the history to `colour-order.v2` because actual effects alone lose original source resolution on requested untouched pieces (P-082). The reader accepts both nested versions. V2 adds separate `resolucionesSinCambio` snapshots for resolved no-ops, with per-piece effective destinations and colour identities. Genuine ambiguities are not frozen. Matching source/destination/identities protects both actual effects and untouched resolutions; expanded selections still process new pieces. Pruning may leave only untouched snapshots. See D-048 and AUDIT-M2.md for current acceptance evidence.
+
+Writer issuance remains disabled by default. The reader-only release and rollback target must accept **both nested versions**, not merely token payload v3. V1's missing untouched snapshots cannot be inferred. There is no new widget/spec/DB field and no deployment in this task.
 
 Design ready for implementation; T2 is **not implemented or closed** by this audit. Store the last successful colour replacement as server-signed editing context in the existing opaque approval token, with a versioned payload and reader-before-writer rollout. The pure colour resolver receives that context explicitly; `origen.tipo` remains provenance, not evidence that this colour order happened.
 

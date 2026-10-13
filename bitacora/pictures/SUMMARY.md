@@ -38,11 +38,11 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 - Branch `feat/req-015-judge-fix` (24 commits, local, not pushed): count/price parity, chips by rules (D-043), cost cap (D-044), honest colour-swap, rating row. Gate GATE OK, tsc 0, lint 0 errors. Owner decides push/PR. Report: requirements/REQ-015-*/REPORT.md.
 
 ## Active focus
-- REQ-016 M2 audit **REJECTED** (P-082): repeating the same `rosado → rojo reflex` selection changes another pink. T2/T3 plus audit fixes are local in t12 at `df0be2a0`; reader-first v3 issuance is disabled by default (`PLAN_COLOR_ORDER_V3=false`). Existing gate passes all 10 suites, main last-order suite 20/20; the committed standalone replay regression fails. See AUDIT-M2.md. App build issues are separate P-083.
+- REQ-016 M2 audit **PASS WITH FIXES**: P-058/P-082 closed locally in t12 at `fb872bce` (prior audit fixes df0be2a0). Signed nested colour-order.v2 retains originally untouched resolutions; strict v1 remains readable (D-048). Gate 10/10, main suite 20/20, registered replay 9/9, lint/types/workspace builds pass. App build still fails on P-083. Keep PLAN_COLOR_ORDER_V3=false until a separate reader release accepts both nested versions; no publication. See AUDIT-M2.md.
 - REQ-015 implementation and verification complete locally, ready for owner review/commit/publication: chosen-idea chips by rules, shared price, honest color counts, durable quote cap. Restored ambiguous/composite idea prices show “Precio al elegir”; no session contract change. REPORT.md contains evidence; visual rating UI 9/9, contract 27/27, final types/build pass.
 
 ## Top pending (see PENDING.md)
-- P-075 remaining historical test debt; P-077 calibrate the 300/hour quote cap from production counts (not queried in this session). Historic type-error counts were stale generated Next route references; source types and application build now pass locally.
+- P-075 remaining historical test debt; P-077 calibrate the 300/hour quote cap from production counts (not queried in this session). Historic type-error counts were stale generated Next route references; source types pass. REQ-015's root build passed previously; current t12 application build is blocked by P-083.
 
 ## Recent decisions (see DECISIONS.md)
 - D-027 helium sphere volume · D-028/D-030 product judge timing · D-029 class-prefixed ids · D-031 manual VPS deploy ·
