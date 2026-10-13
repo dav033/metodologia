@@ -13,12 +13,12 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T14:58:29",
+  "at": "2026-10-13T15:00:29",
   "pid": 1864427,
   "machine": "precision7760",
   "task": "T1",
   "session": 2,
-  "state": "session starting",
+  "state": "session running 2 min",
   "session_pids": {
    "2": 1870097
   },
