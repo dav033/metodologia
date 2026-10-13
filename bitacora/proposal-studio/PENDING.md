@@ -10,8 +10,10 @@ month summary._
 - P-010 · Reauthenticate Claude Code and verify a proposal-studio MCP tool call · urgency: high · complexity: S · added 2026-10-11 · REQ-007
   - Verified 2026-10-13: Claude Code connected and `list_proposals` call succeeded against production (returned `oraldenti`, draft).
   - `claude mcp list` reports the production endpoint connected, but `claude -p` could not invoke a tool because the Claude OAuth session expired. After `claude auth login`, retry a read-only call; no MCP token change is needed.
-- P-012 · Apply review findings for the client simulator, then editor usability pass (checklist, sticky actions, collapsible sections) · urgency: high · complexity: M · added 2026-10-13 · requirement from owner
-  - Approved UI work is committed as `e99b2ff` and pushed to `main`; no deployment command was run. `vercel ls` showed no deployment newer than the existing production build. Owner release decision remains open. Minor follow-up: add `proposal_stale`/share error codes to MCP known errors; orphaned page captures in storage; document MCP token format.
+- P-016 · Authenticate Neon CLI, validate REQ-010 migration on an isolated branch, then migrate and deploy · urgency: high · complexity: S · added 2026-10-13 · REQ-010
+  - David approved Neon CLI OAuth. The phase-3 code is committed locally as `090e9b4`; the agent Firefox clone reached GitHub sign-in but has no active session. Complete sign-in and Neon consent, validate the additive migration on an isolated Neon branch, then fast-forward push, migrate production, and deploy.
+- P-012 · Release approved Consola phases and complete MCP follow-ups · urgency: high · complexity: M · added 2026-10-13 · requirement from owner
+  - Phases 1–2 are committed as `e99b2ff`; phase 3 is committed locally as `090e9b4` under REQ-010. Production release is pending isolated Neon migration validation and owner sign-in to the agent Firefox clone. Minor follow-up: add `proposal_stale`/share error codes to MCP known errors; inspect orphaned page captures; document MCP token format.
 - P-011 · Import and share the Oraldenti proposal prototype · urgency: med · complexity: S · added 2026-10-11 · production proposal setup
   - David is generating the prototype code. When he provides its GitHub repository and built output path, import it, validate Inicio/Servicios/Contacto comparisons, publish, then create a temporary share link.
 - P-007 · Add a custom domain after David purchases one · urgency: low · complexity: S · added 2026-10-10 · REQ-003

@@ -1,6 +1,6 @@
 # Index — proposal-studio
 
-_Generated 2026-10-13 15:28 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-13 16:01 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/proposal-studio) · [graph](http://127.0.0.1:8765/p/proposal-studio/graph)  
@@ -27,23 +27,24 @@ _Generated 2026-10-13 15:28 by `bitacora.py index`. Do not edit by hand._
 | [REQ-007](requirements/REQ-007-production-mcp-server-for-proposal-studi/SPEC.md) | Production MCP server for Proposal Studio | `done` | [done](requirements/REQ-007-production-mcp-server-for-proposal-studi/PLAN.md) |  |
 | [REQ-008](requirements/REQ-008-minimal-clean-ui-and-smooth-motion/SPEC.md) | Minimal clean UI and smooth motion | `done` | [done](requirements/REQ-008-minimal-clean-ui-and-smooth-motion/PLAN.md) |  |
 | [REQ-009](requirements/REQ-009-material-3-redesign-for-complete-proposa/SPEC.md) | Material 3 redesign for complete proposal workflows | `done` | [done](requirements/REQ-009-material-3-redesign-for-complete-proposa/PLAN.md) |  |
-| [REQ-010](requirements/REQ-010-consola-phase-3-capture-sharing-signals/SPEC.md) | Consola phase 3: capture, sharing signals, and command navigation | `clarifying` | [in-progress](requirements/REQ-010-consola-phase-3-capture-sharing-signals/PLAN.md) |  |
+| [REQ-010](requirements/REQ-010-consola-phase-3-capture-sharing-signals/SPEC.md) | Consola phase 3: capture, sharing signals, and command navigation | `in-progress` | [in-progress](requirements/REQ-010-consola-phase-3-capture-sharing-signals/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
 - P-010 · Reauthenticate Claude Code and verify a proposal-studio MCP tool call · high/S
-- P-012 · Apply review findings for the client simulator, then editor usability pass (checklist, sti · high/M
+- P-016 · Authenticate Neon CLI, validate REQ-010 migration on an isolated branch, then migrate and  · high/S
+- P-012 · Release approved Consola phases and complete MCP follow-ups · high/M
 - P-011 · Import and share the Oraldenti proposal prototype · med/S
 - P-007 · Add a custom domain after David purchases one · low/S
 - P-014 · Consider disabling SSH password auth · low/S
 
 ## Recent decisions
 
+- D-010 — Capture the current site in the authenticated Vercel runtime
 - D-009 — Keep inactive public share links indistinguishable
 - D-008 — Adopt the Consola visual direction for the app UI
 - D-007 — Render the draft preview through the shared proposal component
 - D-006 — Use Starwind UI with a scoped 21st.dev React island
-- D-005 — Enforce sensitive admin request limits in Postgres
 
 ## Timeline
 

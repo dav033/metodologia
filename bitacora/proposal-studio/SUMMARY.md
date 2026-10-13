@@ -7,19 +7,19 @@ Create lightweight, personalized public design proposals for prospects. David pr
 Last confirmed with owner: 2026-10-10.
 
 ## Current state
-Production remains on deployment `dpl_4C3sBbuMtKTNLRKHUHakGU5Xnbuv` at `https://proposal-studio-orpin.vercel.app`. Consola phases 1–2 are committed as `e99b2ff` on `feat/consola-redesign` and fast-forward pushed to `main`. A read-only Vercel listing showed no new deployment after the push; no deployment command was run.
+Production remains on deployment `dpl_4C3sBbuMtKTNLRKHUHakGU5Xnbuv` at `https://proposal-studio-orpin.vercel.app`. Consola phases 1–2 are committed as `e99b2ff` on `feat/consola-redesign` and fast-forward pushed to `main`. Phase 3 is committed locally as `090e9b4` on the same branch; it has not been pushed or released. Neon isolated-branch migration validation is waiting for owner GitHub sign-in in the agent Firefox clone.
 
-Consola phases 1–2 are implemented locally. Phase 1 applies the selected graphite/amber/Geist direction across the approved existing views. Phase 2 adds in-app proposal content editing, published-version and activity history, explicit active/expired/revoked link states, a generic public unavailable-link page, and proposal search/status filters. The private preview copy no longer makes a claim about visit tracking. Phase 3 (auto-capture, link-open tracking, request-new-link, and ⌘K) remains unapproved.
+Consola phases 1–3 are implemented locally. Phase 3 adds bounded automatic website capture with private Blob storage and manual upload fallback; aggregate share opens throttled to one per link per 30 seconds; generic no-contact link requests serialized with link creation; and an authenticated keyboard command palette. The additive Drizzle migration is generated. Local checks and independent reviews pass after fixes. Neon CLI OAuth was started in the agent Firefox clone, but GitHub sign-in is required before isolated branch validation; no production migration/deployment or phase-3 push has happened.
 
-Fresh checks passed: Astro check (160 files, 0 diagnostics), ESLint, targeted Prettier, `npm run vercel-build` including the Vercel runtime import check, and `git diff --check`. Automated tests were not run. Independent reviews found and closed two findings: an expired-link label issue and field-level server-error mapping for the new content editor. Standards review returned SOUND. No deployment command was run.
+Fresh phase-3 checks passed: Astro check (168 files, 0 diagnostics), ESLint, Prettier, `npm run vercel-build` including the Vercel runtime import check, `node --check scripts/safe-proxy.mjs`, and `git diff --check`. Automated tests were not run. Independent reviews found and closed two findings: an expired-link label issue and field-level server-error mapping for the new content editor. Standards review returned SOUND. No deployment command was run.
 
 The Oraldenti proposal remains draft `oraldenti` (`083cb2df-1f95-4efd-8a04-c69bd8f7b7c9`) with three verified private captures, three page-specific findings, and three redesign deliverables. It remains unpublished until David provides the prototype repository and built output path. Do not create a share link before importing and validating the prototype.
 
 The managed app uses Astro SSR on Vercel, Neon, private Vercel Blob, Google owner OAuth, and a read-only GitHub App. Admin routes remain protected; public share links are short-lived and revocable. Proposal revisions and audit events are persisted in Postgres.
 
 ## Active focus
-- The owner decides whether and when to release the local Consola changes (P-012).
-- Phase 3 backend features require a separate approval.
+- Phase-3 release P-016 awaits completing GitHub sign-in in the agent Firefox clone, isolated migration validation, fast-forward push, production migration, and deployment. Local commit: `090e9b4`.
+- P-012 minor MCP error-code/token-documentation/storage follow-ups remain separate.
 - Import and validate the Oraldenti prototype when its repository and built output path are available (P-011).
 - Keep prospect notifications disabled until a sender domain is verified.
 

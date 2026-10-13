@@ -19,6 +19,11 @@ Branch `feat/req-016-edit-leftovers` from `feat/req-015-judge-fix` (local only).
 ## Global constraints
 AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before the last commit; customer copy in Spanish.
 
+### M2 T2 design ruling (2026-10-13) — D-046
+- Design audit: [DESIGN-T2.md](DESIGN-T2.md). Store the last successful colour replacement in versioned, server-signed approval context, carried explicitly through the pure edit use case. An existing destination alone never prompts with known history; a proven replay is an honest no-op without a question; genuine ambiguity still prompts. Preserve exact-card priority and per-piece effective destinations, partial/batched edits, undo and reload.
+- The current verify suite passes but covers quantity/price confirmation, not A1. The audit reproduced a needless question after an actual size edit and proved identical specs can have different last-colour-order histories. Implementation must add/register `test-ultima-orden-color-motor3d.ts` and adjust the independent oracle rather than weakening replay protection.
+- D-035 requires a v3-reader release before enabling v3 writers; current strict token readers would reject those tokens. This is design-ready only: T2 stays open, no code or release was performed. Existing v1/v2 history is explicitly unknown and keeps the conservative fallback until a successful colour replacement or a new plan establishes known context.
+
 ## Tasks
 ### M1 — Exact undo
 - [x] T1 — Reproduce P-042 (enlarge-then-shrink drift, name-based colour return changing the code) with a failing test; make undo restore the stored previous spec instead of applying an inverse edit · files: src/lib/guiada-motor/editar-motor.ts, src/lib/globos3d/motor/ediciones-pieza.ts · repo: t12 · verify: `npx tsx --conditions=react-server scripts/test/test-deshacer-ajuste-3d.ts` · covers: R1, US-1
