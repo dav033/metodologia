@@ -1,6 +1,6 @@
 # Index — proposal-studio
 
-_Generated 2026-10-13 14:00 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-13 15:04 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/proposal-studio) · [graph](http://127.0.0.1:8765/p/proposal-studio/graph)  
@@ -36,11 +36,11 @@ _Generated 2026-10-13 14:00 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-008 — Adopt the Consola visual direction for the app UI
 - D-007 — Render the draft preview through the shared proposal component
 - D-006 — Use Starwind UI with a scoped 21st.dev React island
 - D-005 — Enforce sensitive admin request limits in Postgres
 - D-004 — Keep the Vercel hostname public and authorize administration in the app
-- D-003 — Use Vercel-hosted Astro SSR for the managed studio
 
 ## Timeline
 

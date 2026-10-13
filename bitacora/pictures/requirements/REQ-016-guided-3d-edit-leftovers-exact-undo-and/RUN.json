@@ -13,17 +13,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T15:01:19",
+  "at": "2026-10-13T15:04:23",
   "pid": 1864427,
   "machine": "precision7760",
   "task": "T1",
-  "session": 2,
-  "state": "usage_limit",
-  "session_pids": {},
+  "session": 3,
+  "state": "session running 3 min",
+  "session_pids": {
+   "3": 1882115
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 2,
+ "sessions": 3,
  "tasks": [
   {
    "id": "T1",
@@ -37,7 +39,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 1,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 1,
    "last_error": null,
    "error_hashes": [],
