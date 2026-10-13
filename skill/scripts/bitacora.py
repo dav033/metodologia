@@ -112,6 +112,7 @@ def main() -> None:
     p_prof.add_argument("--dir", help="wrapper: directory for the launcher (default ~/.local/bin)")
     p_work = sub.add_parser("work", help="show or set the project's work flag (gates work-only profiles)")
     p_work.add_argument("value", nargs="?", choices=["true", "false"])
+    sub.add_parser("metrics", help="attempt telemetry summary per agent/profile/model (null = not reported)")
     sub.add_parser("audit", help="prepare a read-only inventory for a workspace architecture audit")
     p_serve = sub.add_parser("serve", help="run the local web server in the foreground")
     p_serve.add_argument("--port", type=int)
@@ -182,6 +183,11 @@ def main() -> None:
             for role, path in ws.repos(ROOT, d.name).items():
                 if path.exists() and path.resolve() != ROOT.resolve().parent:
                     print(f"{d.name}/{role}: {install_hook(path)}")
+        return
+
+    if a.cmd == "metrics":  # machine-level: reads <root>/.state/events
+        import bt_events
+        print(json.dumps(bt_events.summary(bt_events.read_all()), indent=1, ensure_ascii=False))
         return
 
     if a.cmd == "profiles" and a.action in ("list", "doctor", "add", "gate", "wrapper"):  # machine-level

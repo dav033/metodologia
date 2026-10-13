@@ -63,6 +63,12 @@ prompt or the first session, and again on every marathon session. Every other pr
 launcher guarantee, not a sandbox: calling the provider binary directly bypasses it. Over SSH (no display) the
 launcher opens a `tmux` session (`BITACORA_TERMINAL=tmux` forces it) or a transient `systemd-run --user` unit.
 
+**Attempt telemetry**: every marathon session appends one line to `<root>/.state/events/attempts-YYYY-MM.jsonl`
+(profile, agent, model, effort, seconds, result, tokens). A measure the provider did not report is `null`, never 0;
+Codex only reports a grand total. `bitacora.py metrics` summarizes per agent/profile/model with the share of attempts
+that carried usage. Counts are per-attempt and not comparable across task difficulty: do not rank models from them
+without comparing like with like. Local and private; nothing here is a subscription balance.
+
 **From the HQ (planning room)** — the session runs inside the bitácora root (`~/bitacora`), the SessionStart
 context says HQ MODE: don't execute here. Set PLAN.md `status: approved`, then launch a separate executor session:
 

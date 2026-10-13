@@ -11,6 +11,7 @@ import socket
 import time
 
 from bt_core import *  # noqa: F403
+import bt_events
 import bt_profiles
 import bt_runprompt as rp
 import bt_runstate as rs
@@ -173,6 +174,7 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     result = settle_task(project, rdir, tid, n, info, c["workdir"]) if task else \
         settle_final(project, rdir, n, info, started)
     state = rs.load(rdir)
+    bt_events.record_attempt(project, state, tid, n, info, result)
     ended = ", ended after task done" if info.get("early_exit") else ""
     say(state, f"S{n:04d} {tid} -> {result} ({info['seconds']}s{ended})")
     beat(rdir, task=tid, session=n, state=f"{result}")
