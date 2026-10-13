@@ -1,0 +1,159 @@
+{
+ "req": "REQ-016",
+ "project": "pictures",
+ "status": "running",
+ "agent": "claude",
+ "model": "haiku",
+ "ultracode": true,
+ "limits": {
+  "max_attempts": 4,
+  "session_timeout_min": 60,
+  "max_sessions": 300,
+  "workers": 1
+ },
+ "control": null,
+ "heartbeat": {
+  "at": "2026-10-13T14:58:26",
+  "pid": 1864427,
+  "machine": "precision7760",
+  "task": "T1",
+  "session": 1,
+  "state": "session running 2 min",
+  "session_pids": {
+   "1": 1864607
+  },
+  "session_pid": null
+ },
+ "waiting_until": null,
+ "sessions": 1,
+ "tasks": [
+  {
+   "id": "T1",
+   "title": "Reproduce P-042 (enlarge-then-shrink drift, name-based colour return changing the code) with a failing test; make undo restore the stored previous spec instead of applying an inverse edit",
+   "repo": null,
+   "after": [],
+   "verify": "npx tsx --conditions=react-server scripts/test/test-corte-motor3d.ts",
+   "level": null,
+   "kind": "test",
+   "risk": null,
+   "complexity": null,
+   "milestone": "M1",
+   "tier": 1,
+   "status": "in_progress",
+   "attempts": 0,
+   "last_error": null,
+   "error_hashes": [],
+   "evidence": null,
+   "pending_id": null,
+   "notes": [
+    "M1 investigation found exact previous specs already returned by the edit route, but no guided UI undo consumer exists; the specified verification only tests cut auditing. Integration evidence: inverse size max drift 7.2%, 9 changed color-code cases, 8 fusions. Workflow tool unavailable. See ruling in PLAN.md; needs standard-tier design decision on undo entry point and restoration/re-signing/repricing.",
+    "escalated to standard: P-042 inverse drift is reproduced by the motor integration suite, but the active guided UI has no undo consumer: the edit route already returns exact before/after specs and route tests assert them, while snapshots are only consumed by feedback. The prescribed test-corte-motor3d suite is unrelated and passes. Implementing undo now requires a design ruling for the UI entry point and how a previous spec is restored/re-signed/repriced; no Workflow tool is available. Evidence and next steps recorded "
+   ],
+   "escalation": {
+    "to": "standard",
+    "reason": "P-042 inverse drift is reproduced by the motor integration suite, but the active guided UI has no undo consumer: the edit route already returns exact before/after specs and route tests assert them, while snapshots are only consumed by feedback. The prescribed test-corte-motor3d suite is unrelated and passes. Implementing undo now requires a design ruling for the UI entry point and how a previous spec is restored/re-signed/repriced; no Workflow tool is available. Evidence and next steps recorded ",
+    "session": "1",
+    "at": "2026-10-13T14:58:24"
+   }
+  },
+  {
+   "id": "M1-audit",
+   "title": "Independent audit of milestone M1",
+   "repo": null,
+   "after": [
+    "T1"
+   ],
+   "verify": null,
+   "level": null,
+   "kind": "audit",
+   "risk": null,
+   "milestone": "M1",
+   "synthetic": true,
+   "tier": 1,
+   "status": "todo",
+   "attempts": 0,
+   "last_error": null,
+   "error_hashes": [],
+   "evidence": null,
+   "pending_id": null,
+   "notes": []
+  },
+  {
+   "id": "T2",
+   "title": "Store the last colour order; no ask when the destination is already selected; count «puede ser» in no_aplicadas audit (A1)",
+   "repo": null,
+   "after": [
+    "T1"
+   ],
+   "verify": "npx tsx --conditions=react-server scripts/test/test-confirmacion-color-motor3d.ts",
+   "level": null,
+   "kind": "audit",
+   "risk": null,
+   "complexity": null,
+   "milestone": "M2",
+   "tier": 1,
+   "status": "todo",
+   "attempts": 0,
+   "last_error": null,
+   "error_hashes": [],
+   "evidence": null,
+   "pending_id": null,
+   "notes": []
+  },
+  {
+   "id": "T3",
+   "title": "A2 keep `origen` in sumarIdeaAEspec; A3 `!entran.includes(codigo)` for «rosa → rosado»; A4 origen.tipo in consumo",
+   "repo": null,
+   "after": [
+    "T2"
+   ],
+   "verify": "npm run gate",
+   "level": null,
+   "kind": "implement",
+   "risk": null,
+   "complexity": null,
+   "milestone": "M2",
+   "tier": 0,
+   "status": "todo",
+   "attempts": 0,
+   "last_error": null,
+   "error_hashes": [],
+   "evidence": null,
+   "pending_id": null,
+   "notes": []
+  },
+  {
+   "id": "M2-audit",
+   "title": "Independent audit of milestone M2",
+   "repo": null,
+   "after": [
+    "T2",
+    "T3"
+   ],
+   "verify": null,
+   "level": null,
+   "kind": "audit",
+   "risk": null,
+   "milestone": "M2",
+   "synthetic": true,
+   "tier": 1,
+   "status": "todo",
+   "attempts": 0,
+   "last_error": null,
+   "error_hashes": [],
+   "evidence": null,
+   "pending_id": null,
+   "notes": []
+  }
+ ],
+ "log": [],
+ "pool": [
+  "antigravity",
+  "claude-personal",
+  "claude-work",
+  "codex-1",
+  "codex-luis"
+ ],
+ "audit": true,
+ "plan_drift": []
+}
