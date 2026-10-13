@@ -27,6 +27,7 @@ AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before t
 `npm run gate` green; `npx tsc --noEmit`; `npm run lint`; a before/after table of card vs plan vs quote counts and prices for the judge's dino and XV ideas.
 
 ## Rulings
+- D-044 (debate, 2026-10-13): P1-2 abuse bound = durable global cap (option B). Cost if wrong: low-medium (a legitimate burst could be denied with a rule answer; N is env-configurable).
 - D-043 (debate, 2026-10-13): A1 resolved with option B — canned chips never reach the model on 404/422. Judge: haiku max. Cost if wrong: medium (new rule path to maintain).
 - 2026-10-13 owner approved the approach («adelante») and answered: scope D1-D5 + D8; tsc/test debt separate (P-075); delivery = local branch for owner review, no push/PR.
 - Plan self-approved (owner away, autonomy delegated in the loop request).

@@ -7,6 +7,7 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
+- P-077 · Calibrate the costeo_idea_hora cap (D-044) from production COTIZACION_IDEA_* counts per hour (needs the owner's prod:pulso env file) and apply nothing in Neon (migration 035 already provides the table) · urgency: low · complexity: S · added 2026-10-13 · REQ-015 audit P1-2
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversations get edits refused (409 MOTOR_PYTHON), Python routes refuse 3D tokens, and adding an idea/redoing silently re-prices in Python (~×1.4). Design a graceful rollback (keep 3D plans priced by the engine until the conversation ends, or tell the customer) — BLOCKER for the switch · urgency: high · complexity: M · added 2026-10-09 · W7 dossier review
 - P-076 · REQ-015 audit: unblock cost/learn for figure ideas, prevent model fallback for canned chips, clear/bind pending actions across cancel/reset, add wiring tests and gate registration, and remove duplicate user bubbles; coordinate with T8/T7 · urgency: high · complexity: M · added 2026-10-13 · independent audit 03b77699/46fdadae/d4759335; .state/delegations/D-20261013-120038-2602/RESULT.json
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001

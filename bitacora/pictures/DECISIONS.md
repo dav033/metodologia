@@ -250,3 +250,5 @@ D-041 · 2026-10-13 · Development of pictures is done entirely from this laptop
 D-042 · 2026-10-13 · Delegation picks the best model per situation regardless of the hosting session's provider; audits go to a different provider than the builder (owner). Router fixed in bt_agents.py.
 
 D-043 · 2026-10-13 · REQ-015 A1: on 404/422 of /api/plan-idea the canned chips are answered by rules (shared costear_decoracion body + local steps), never by a model turn; chosen by debate (3 haiku-medium debaters, haiku-max judge) over a server tool filter and over accepting the risk.
+
+D-044 · 2026-10-13 · REQ-015 audit P1-2: the rule path accionIdea:costear is bounded by a durable global hourly cap in Neon (topeDurable key costeo_idea_hora, no migration), checked before costearIdeaElegida; denied → rule answer (SSE 200, no model), store down → in-memory cap with the same N, never unlimited. Chosen by debate (A in-memory, B durable cap, C memo/dedupe; judge haiku-max: B). N default is a conservative guess, to be calibrated from COTIZACION_IDEA_* counts.
