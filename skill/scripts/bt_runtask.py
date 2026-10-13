@@ -5,6 +5,7 @@ Also the one place that turns a stuck task into a PENDING.md item, shared with t
 from __future__ import annotations
 
 import re
+import sys
 
 from bt_core import *  # noqa: F403
 import bt_runstate as rs
@@ -62,8 +63,9 @@ def _safe_text(text: str) -> str:
         import bt_learn
         if bt_learn._secret(text or ""):
             return "[withheld: the text looked like it contained a secret; refer to files instead]"
-    except Exception:
-        pass
+    except Exception as exc:  # fail closed: an unavailable detector must not let the text through
+        print(f"[task] secret filter unavailable ({type(exc).__name__}); text withheld", file=sys.stderr)
+        return "[withheld: the secret filter could not run]" if text else text
     return text
 
 

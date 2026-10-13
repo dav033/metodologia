@@ -74,6 +74,7 @@ def reset_epoch(text: str, now: float | None = None) -> int:
 
 _MONTHS = {m: i + 1 for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov",
                                             "dec"))}
+_MONTHS.update({"ene": 1, "abr": 4, "ago": 8, "set": 9, "dic": 12, "fev": 2, "avr": 4, "mai": 5, "out": 10, "dez": 12})
 _TRY_AT = re.compile(r"(?:try again|resets?|available again)\s+(?:at|on)\s+(?:([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})"
                      r"(?:st|nd|rd|th)?,?\s+(?:(\d{4}),?\s+)?(?:at\s+)?)?(\d{1,2})(?::(\d{2}))?\s*([AaPp]\.?[Mm]\.?)?")
 
@@ -110,11 +111,13 @@ def absolute_reset_epoch(text: str, now: float | None = None) -> int:
     return 0
 
 
-def limit_line(text: str) -> str:
-    """The line that announces the limit (for logs and the quota record), not whatever the output ended with."""
-    for line in reversed((text or "").splitlines()):
-        if LIMIT_RE.search(line) and not line.lstrip().startswith(("{", "[")):
-            return " ".join(line.split())[:200]
+def limit_line(text: str, context: int = 0) -> str:
+    """The line that announces the limit (for logs and the quota record), not whatever the output ended with.
+    `context` adds that many following lines (a reset time is sometimes printed right below the message)."""
+    lines = (text or "").splitlines()
+    for i in range(len(lines) - 1, -1, -1):
+        if LIMIT_RE.search(lines[i]) and not lines[i].lstrip().startswith(("{", "[")):
+            return " ".join(" ".join(lines[i:i + 1 + context]).split())[:200 + 200 * context]
     return ""
 
 
@@ -127,9 +130,14 @@ def detect_limit(info: dict) -> int | None:
     m = re.search(r"limit reached\|(\d{9,10})", text) or re.search(r"limit reached\|(\d{9,10})", info["text"][-20000:])
     if m:
         return int(m.group(1))
-    tail = info["text"][-4000:]
-    return (reset_epoch(text) or reset_epoch(tail) or absolute_reset_epoch(limit_line(text))
-            or absolute_reset_epoch(limit_line(tail)))
+    # Only the provider's own limit message says when the limit resets: any other "resets in" of the transcript
+    # (a cache, a test fixture) must not send the run to sleep.
+    for source in (text, info["text"][-4000:]):
+        line = limit_line(source, 2) or (source if len(source) < 400 else "")
+        epoch = reset_epoch(line) or absolute_reset_epoch(line)
+        if epoch:
+            return epoch
+    return 0
 
 
 def _session_fields(info: dict) -> dict:
@@ -286,7 +294,8 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
             task["status"] = "blocked"
         if result not in LIMIT_RESULTS:
             s["wait_step"] = 0
-        rs.record(s, n, task_id, result, summary, info["seconds"], **_session_fields(info))
+        rs.record(s, n, task_id, "stopped" if info["stopped"] else result, summary, info["seconds"],
+                  **_session_fields(info))
     state = rs.update(rdir, fn)
     if result == "done":  # the checkbox is ticked only once verify passed, so --resume can trust it
         rt.tick_plan(rdir, task_id, f"{task_id} done (marathon) — {rt._one_line(t['evidence'] or summary, 200)}")

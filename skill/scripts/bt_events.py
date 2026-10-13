@@ -59,6 +59,11 @@ def detail_for(tasks: list[dict], result: str, results: dict | None = None) -> d
     else:
         why = "; ".join(f"{t['id']}: {' '.join(str(t.get('evidence') or 'verify passed').split())[:160]}"
                         for t in tasks[:3])
+    try:  # error output and evidence are free text from agents and commands: never persist a secret in telemetry
+        from bt_runtask import _safe_text
+        why = _safe_text(why)
+    except Exception:
+        why = "[withheld: the secret filter could not run]"
     return {"complexity": complexity, "complexity_source": source,
             "attempt": max((t.get("attempts") or 0) for t in tasks) + (0 if bad else 1) if tasks else 1,
             "milestone": tasks[0].get("milestone") if tasks else None,

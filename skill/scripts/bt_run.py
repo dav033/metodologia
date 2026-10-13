@@ -312,7 +312,10 @@ def _run_batch(project: str, rdir: Path, c: dict, state: dict, units: list[list[
     for unit in units:
         try:
             route = session_route(project, state, unit[0], unit, busy)  # spread a batch over different accounts
-            busy.add(bt_agents.account_key(route.get("profile"), route.get("agent")))
+            account = bt_agents.account_key(route.get("profile"), route.get("agent"))
+            if account in busy and state.get("pool"):
+                break  # fewer free accounts than units: the rest waits for the next iteration
+            busy.add(account)
             plan.append((unit, route))
         except bt_agents.NoRoute as exc:
             if not plan:

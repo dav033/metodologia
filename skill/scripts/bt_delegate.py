@@ -96,7 +96,7 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
         if tier is not None and not model:
             model, effort = bt_agents.model_for(agent, tier, None, kind)[0], effort or bt_agents.model_for(agent, tier, None, kind)[1]
     elif agent in bt_profiles.LAUNCHABLE:
-        bt_profiles.authorize_ambient(agent, project)  # the inherited account may be a work-only one
+        bt_profiles.authorize_ambient(agent, project, workdir)  # the inherited account may be a work-only one
     if agent not in bt_profiles.LAUNCHABLE:
         raise SystemExit("Pass --profile ID, --agent claude|codex, or neither to let the router choose")
     if agent == "codex" and model and not effort:  # an account's config default may not suit this model
@@ -170,7 +170,8 @@ def _verify(command: str, workdir: Path) -> dict:
 
 
 MAX_REROUTES = 4
-QUOTA_WAIT_CAP_SEC = 12 * 3600
+QUOTA_WAIT_CAP_SEC = 12 * 3600      # one nap; availability is re-checked after each
+MAX_QUOTA_WAIT_SEC = 8 * 24 * 3600  # weekly limits exist: give up only after more than a week
 
 
 def execute(did: str, agent_cmd: str | None = None) -> dict:
@@ -180,10 +181,7 @@ def execute(did: str, agent_cmd: str | None = None) -> dict:
     outcome says when to retry."""
     d = path_of(did)
     order = json.loads((d / "TASK.json").read_text(encoding="utf-8"))
-    try:  # one execution per delegation id: a second `exec` of the same id must not run the task again
-        os.close(os.open(d / "CLAIMED", os.O_CREAT | os.O_EXCL | os.O_WRONLY))
-    except FileExistsError:
-        raise SystemExit(f"Delegation {did} was already started; read it with: delegate status {did}") from None
+    _claim(d, did)
     outcome, tried = {}, []
     for attempt in range(1, MAX_REROUTES + 2):
         order["attempt"] = attempt
@@ -203,23 +201,55 @@ def execute(did: str, agent_cmd: str | None = None) -> dict:
     return outcome
 
 
-def _next_route(order: dict) -> dict | None:
-    """Another account for a delegation that hit a usage limit; waits for the earliest reset when the order allows
-    it. None = give up now (the outcome carries retry_after)."""
-    pool = bt_agents.pool_for(order["project"], bt_agents._config("routing.pool", []) or None)
-    if not order.get("auto"):  # pinned to an account: only that one will do, so only waiting helps
-        pool = [p for p in pool if p == order.get("profile")]
-    tier = order.get("tier") if order.get("tier") is not None else bt_agents.start_tier(None, order.get("kind"))
+def _claim(d: Path, did: str) -> None:
+    """One execution per delegation id. The claim records its pid: a claim whose process died before writing an
+    outcome (a crash, a refused permission) can be taken over instead of blocking the id forever."""
+    claim = d / "CLAIMED"
     for _ in range(2):
-        routes, soonest = bt_agents.candidates(order["project"], pool, tier, order.get("kind") or "implement")
-        if routes:
-            return routes[0]
-        if not (order.get("wait_quota") and soonest):
+        try:
+            fd = os.open(claim, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode())
+            os.close(fd)
+            return
+        except FileExistsError:
+            from bt_runutil import pid_alive
+            try:
+                owner = int(claim.read_text().strip() or 0)
+            except (OSError, ValueError):
+                owner = 0
+            if (d / "OUTCOME.json").exists() or (owner and owner != os.getpid() and pid_alive(owner)):
+                raise SystemExit(f"Delegation {did} was already started; read it with: delegate status {did}") from None
+            claim.unlink(missing_ok=True)  # stale: its process is gone and left no outcome
+    raise SystemExit(f"Delegation {did} could not be claimed")
+
+
+def _wait_for(until: float) -> None:
+    override = os.environ.get("BITACORA_RUN_BACKOFF_SEC")
+    time.sleep(float(override) if override else min(max(until - time.time(), 0) + 30, QUOTA_WAIT_CAP_SEC))
+
+
+def _next_route(order: dict) -> dict | None:
+    """Where a delegation that hit a usage limit runs next. One the router placed goes to another account; one pinned
+    to an account or provider can only wait for that same account. Waiting happens only with --wait-quota, in bounded
+    naps that re-check availability, for at most MAX_QUOTA_WAIT_SEC. None = give up now (the outcome carries
+    retry_after)."""
+    deadline = time.time() + MAX_QUOTA_WAIT_SEC
+    same = {"profile": order.get("profile"), "agent": order["agent"], "model": order.get("model"),
+            "effort": order.get("effort"), "why": "same account after its usage-limit reset"}
+    tier = order.get("tier") if order.get("tier") is not None else bt_agents.start_tier(None, order.get("kind"))
+    while True:
+        if order.get("auto"):
+            pool = bt_agents.pool_for(order["project"], bt_agents._config("routing.pool", []) or None)
+            routes, soonest = bt_agents.candidates(order["project"], pool, tier, order.get("kind") or "implement")
+            if routes:
+                return routes[0]
+        else:
+            soonest = bt_agents.cooling_until(order.get("profile"), order["agent"])
+            if not soonest:
+                return same
+        if not (order.get("wait_quota") and soonest) or time.time() >= deadline:
             return None
-        wait = min(max(soonest - time.time(), 0) + 30, QUOTA_WAIT_CAP_SEC)
-        override = os.environ.get("BITACORA_RUN_BACKOFF_SEC")
-        time.sleep(float(override) if override else wait)
-    return None
+        _wait_for(soonest)
 
 
 def _attempt(d: Path, order: dict, agent_cmd: str | None) -> dict:
@@ -229,7 +259,7 @@ def _attempt(d: Path, order: dict, agent_cmd: str | None) -> dict:
     if order.get("profile"):  # again: nothing runs on a stale permission
         bt_profiles.authorize(order["profile"], order["project"])
     else:  # the order was written under one environment and may be executed under another
-        bt_profiles.authorize_ambient(order["agent"], order["project"])
+        bt_profiles.authorize_ambient(order["agent"], order["project"], order["workdir"])
     prompt = _prompt(order, result_file)
     prompt_file.write_text(prompt, encoding="utf-8")
     state = {"agent": order["agent"], "model": order.get("model"), "req": did, "profile": order.get("profile")}

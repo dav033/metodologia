@@ -169,6 +169,8 @@ def sync_plan(state: dict, rdir: Path) -> dict:
         for key in ("milestone", "kind", "risk", "complexity"):  # a RUN.json from before these fields existed adopts them once
             if key not in t:
                 t[key] = p.get(key)
+        if t["status"] == "todo" and not t.get("attempts"):  # never lowers a tier the task already climbed to
+            t["tier"] = max(int(t.get("tier") or 0), start_tier(t.get("level"), t.get("kind"), t.get("complexity")))
         drift += [f"{t['id']}.{k}" for k in ("repo", "after", "verify", "level") if t.get(k) != p[k]]
     state["plan_drift"] = drift
     _sync_audits(state)
@@ -321,8 +323,11 @@ def builders_of(state: dict, audit: dict) -> set:
         route = member.get("last_route") or {}
         if route.get("agent"):
             out.add(route["agent"])
-        elif member.get("status") == "done" and member.get("attempts") is not None and state.get("agent"):
-            out.add(state["agent"])  # built before routes were recorded: the run's own agent did it
+        elif member.get("status") == "done":  # built before routes were recorded: the log, else the run's agent
+            logged = next((e.get("agent") for e in reversed(state.get("log") or [])
+                           if e.get("task") == tid and e.get("agent")), None)
+            if logged or state.get("agent"):
+                out.add(logged or state["agent"])
     return out
 
 

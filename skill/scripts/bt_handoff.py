@@ -77,6 +77,8 @@ def _negated(text: str, start: int) -> bool:
     if re.search(r"\b(out of scope|excluded?|not included|non-goals?)\b[^.;]*$", sentence, re.I):
         return True
     clause = re.split(r":|\s+-\s+|\s+—\s+", sentence)[-1]
+    if re.search(r"\b(forget|fail|hesitate|skip|omit|neglect|miss)\w*\s+(\w+\s+){0,2}$", clause, re.I):
+        return False  # "do not forget to deploy" is an instruction to deploy
     return bool(_NEGATION.search(clause))
 
 
@@ -91,10 +93,20 @@ def _risky_text(text: str) -> list[str]:
     return found
 
 
+# Inline code handed to an interpreter is a program, not a check: only plainly read-only snippets pass unseen.
+INLINE_CODE = re.compile(r"\b(python[\d.]*|node|deno|bun|ruby|perl|php|bash|sh|zsh|fish|pwsh|powershell)\s+(-\w*[ce]\b|--eval|--command)")
+INLINE_UNSAFE = re.compile(r"open\s*\(|write|unlink|remove|rmtree|mkdir|rename|chmod|Path\s*\(|\bos\b|subprocess|shutil|"
+                           r"socket|urllib|requests|http|fetch\s*\(|exec\s*\(|eval\s*\(|__import__|child_process|"
+                           r"\bfs\b|system\s*\(|spawn|popen|>\s*\S", re.I)
+
+
 def _risky_verify(tasks: list[dict]) -> list[str]:
     out = []
     for t in tasks:
-        m = VERIFY_RISK.search(t.get("verify") or "")
+        verify = t.get("verify") or ""
+        m = VERIFY_RISK.search(verify)
+        if not m and INLINE_CODE.search(verify) and INLINE_UNSAFE.search(verify):
+            m = INLINE_CODE.search(verify)
         if m:
             out.append(f"{t['id']} verify command does more than check (`{m.group(0).strip()}`): it runs unattended "
                        "through the shell")

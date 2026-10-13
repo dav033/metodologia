@@ -32,9 +32,16 @@ def _bundle(project: str, req: str) -> str:
         return ""
 
 
+def _safe(text) -> str:
+    """Stored evidence, errors and notes are re-filtered when quoted: a RUN.json written before the filter existed, or
+    by hand, may hold something that must not travel to another provider."""
+    from bt_runtask import _safe_text
+    return _safe_text(str(text or ""))
+
+
 def _recent_log(state: dict, task_id: str, n: int = 5) -> list[str]:
     rows = [e for e in state.get("log", []) if e.get("task") == task_id][-n:]
-    return [f"- session {e['session']} {e['result']}: {e['summary']}" for e in rows]
+    return [f"- session {e['session']} {e['result']}: {_safe(e['summary'])}" for e in rows]
 
 
 def _cli(project: str) -> str:
@@ -134,7 +141,7 @@ def _audit_prompt(project: str, rdir: Path, state: dict, task: dict, session: in
     for m in members:
         out.append(f"- {m['id']} — {m['title']} · repo: {m['repo'] or '(workspace root)'} · verify: "
                    f"{('`' + m['verify'] + '`') if m['verify'] else '(none)'} · evidence given: "
-                   f"{(m.get('evidence') or '-')[:200]}")
+                   f"{_safe(m.get('evidence') or '-')[:200]}")
     out += ["", "## Audit checklist",
             f"1. Read the spec and the plan, then the diff of branch `{branch}` for these tasks (`git log`, `git diff`).",
             "2. Correctness against the spec's requirements; edge cases and failure modes; nothing out of scope.",
@@ -159,8 +166,8 @@ def _audit_prompt(project: str, rdir: Path, state: dict, task: dict, session: in
     if history or task.get("notes") or task.get("last_error"):
         out += ["", "## Previous audit attempts", *history]
         if task.get("last_error"):
-            out.append(f"- last error: {task['last_error'][:600]}")
-        out += [f"- note: {n}" for n in task.get("notes", [])]
+            out.append(f"- last error: {_safe(task['last_error'])[:600]}")
+        out += [f"- note: {_safe(n)}" for n in task.get("notes", [])]
     return "\n".join(out)
 
 
@@ -178,8 +185,8 @@ def _milestone_prompt(project: str, rdir: Path, state: dict, unit: list[dict], s
                 f"- depends on: {', '.join(t['after']) or 'nothing'}"
                 + (f" · attempt {t['attempts'] + 1} of {state['limits']['max_attempts']}" if t["attempts"] else "")]
         if t.get("last_error"):
-            out.append(f"- last error: {t['last_error'][:400]}")
-        out += [f"- note: {n}" for n in t.get("notes", [])]
+            out.append(f"- last error: {_safe(t['last_error'])[:400]}")
+        out += [f"- note: {_safe(n)}" for n in t.get("notes", [])]
     out += ["", f"Model {tier_.label(*tier_.model_for(state, tier))} (escalation tier {tier}/{tier_.TOP}). An "
             "independent agent audits the milestone after you.", *ultra, "", "## Pointers", *_paths(project, rdir)]
     bundle = _bundle(project, req)
@@ -230,8 +237,8 @@ def session_prompt(project: str, rdir: Path, state: dict, task: dict | None, ses
         out += ["", "## Previous attempts on this task"]
         out += history
         if task.get("last_error"):
-            out.append(f"- last error: {task['last_error'][:600]}")
-        out += [f"- note: {n}" for n in task.get("notes", [])]
+            out.append(f"- last error: {_safe(task['last_error'])[:600]}")
+        out += [f"- note: {_safe(n)}" for n in task.get("notes", [])]
         out.append("Do not repeat an approach that already failed; if the last error repeats, use `task fail --blocked`.")
     out += _team(project)
     return "\n".join(out + ["", *_duties(project, req), ""] + _rules(project, req, task["id"], branch))
@@ -287,7 +294,7 @@ def marathon_block() -> str:
              f"after: {', '.join(task['after']) or '-'}"]
     if task.get("last_error"):
         lines.append(f"- last error: {task['last_error'][:400]}")
-    lines += [f"- note: {n}" for n in task.get("notes", [])]
+    lines += [f"- note: {_safe(n)}" for n in task.get("notes", [])]
     lines.append(f"Rule: work ONLY on this task; as the LAST command (after the day log and commits, nothing left in the "
                  f"background) run `{cli} task done {req} {task['id']} --evidence \"...\"` or `task fail ... --reason "
                  f"\"...\"`; a hard architecture problem or no way forward: `task escalate {req} {task['id']} "

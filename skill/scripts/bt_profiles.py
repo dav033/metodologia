@@ -62,6 +62,8 @@ def add(pid: str, provider: str, env: dict[str, str] | None = None, work_only: b
     for key in (env or {}):
         if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
             raise ProfileError(f"Invalid environment variable name '{key}'")
+        if key in _foreign_selectors(provider):
+            raise ProfileError(f"A {provider} profile cannot set {key}: it selects another provider's account")
     path = STATE / "profiles.json"
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -76,6 +78,10 @@ def add(pid: str, provider: str, env: dict[str, str] | None = None, work_only: b
     tmp.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     tmp.replace(path)
     return path
+
+
+def _foreign_selectors(provider: str) -> set:
+    return {k for other, keys in ACCOUNT_VARS.items() if other != provider for k in keys}
 
 
 def get(pid: str) -> dict:
@@ -136,7 +142,8 @@ def session_env(pid: str | None, provider: str, environ: dict | None = None, pro
         for keys in ACCOUNT_VARS.values():
             for key in keys:
                 env.pop(key, None)
-        env.update(env_of(pid))
+        foreign = _foreign_selectors(provider)  # also for profiles saved before `add` refused them
+        env.update({k: v for k, v in env_of(pid).items() if k not in foreign})
         return env
     if project is not None and not is_work_project(project):
         for other in ACCOUNT_VARS:
@@ -147,12 +154,17 @@ def session_env(pid: str | None, provider: str, environ: dict | None = None, pro
     return env
 
 
-def authorize_ambient(provider: str, project: str) -> None:
-    """No profile was named: the inherited account runs. If that account is a work-only profile, it is gated like one;
-    an account no profile describes is allowed (a plain single-account machine)."""
+def authorize_ambient(provider: str, project: str, cwd: str | Path | None = None) -> None:
+    """No profile was named: the inherited account runs. If that account is a work-only profile, it is gated like one
+    (project and, when given, the working folder); an account no profile describes is allowed (a plain
+    single-account machine)."""
     pid = ambient(provider)
     if pid:
         authorize(pid, project)
+        if cwd is not None:
+            ok, why = gate_cwd(pid, cwd)
+            if not ok:
+                raise ProfileError(why + " Nothing was sent.")
 
 
 def is_work_project(project: str) -> bool:
