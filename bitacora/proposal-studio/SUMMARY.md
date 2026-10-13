@@ -17,6 +17,8 @@ The Oraldenti proposal remains draft `oraldenti` (`083cb2df-1f95-4efd-8a04-c69bd
 
 The managed app uses Astro SSR on Vercel, Neon, private Vercel Blob, Google owner OAuth, and a read-only GitHub App. Admin routes remain protected; public share links are short-lived and revocable. Proposal revisions and audit events are persisted in Postgres.
 
+David asked whether the existing Advin VPS PostgreSQL can serve both development and production. Read-only inspection confirmed host PostgreSQL 16.15 is active, listening only on `127.0.0.1` and Docker bridge `172.20.0.1`; it has two small databases (22 MB total), 25 GB free on root, and 15 GiB RAM. No server settings or data were changed. Production app placement is still undecided: direct Vercel access needs static egress or another secure network path; the alternative is moving Astro SSR to the VPS. Keep Neon and D-003 unchanged until David chooses the topology.
+
 ## Active focus
 - Phase-3 release P-016 awaits completing GitHub sign-in in the agent Firefox clone, isolated migration validation, fast-forward push, production migration, and deployment. Local commit: `090e9b4`.
 - P-012 minor MCP error-code/token-documentation/storage follow-ups remain separate.
