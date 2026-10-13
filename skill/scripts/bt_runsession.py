@@ -4,6 +4,7 @@ the final session) and a grace period passed: `claude -p` can stay alive for man
 the agent has finished."""
 from __future__ import annotations
 
+import socket
 import subprocess
 import signal
 import time
@@ -57,6 +58,58 @@ def kill_tree(proc: subprocess.Popen) -> None:
         except subprocess.TimeoutExpired:
             proc.kill()
     print(f"[run] session process {proc.pid} did not exit after kill; moving on", file=sys.stderr)
+
+
+def _gone(pid: int) -> bool:
+    """No such process, or only a zombie (dead, waiting for its parent to collect it)."""
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return True
+    except OSError:
+        return False
+    try:
+        stat = Path(f"/proc/{pid}/stat").read_text()
+    except OSError:
+        return False
+    return stat.rsplit(")", 1)[-1].split()[:1] == ["Z"]
+
+
+def reap_orphan(project: str, state: dict) -> str | None:
+    """End an agent session left running by a supervisor that was killed (crash, `kill -9`): a resumed run would
+    otherwise start a second session editing the same worktree. Identity is proven from the process environment
+    (BITACORA_RUN/BITACORA_PROJECT), so a recycled pid is never touched; that proof needs /proc (Linux), elsewhere the
+    orphan is only reported. Returns a one-line message, or None when there was nothing to do."""
+    hb = state.get("heartbeat") or {}
+    pid = hb.get("session_pid")
+    if (not isinstance(pid, int) or isinstance(pid, bool) or pid <= 1 or pid == os.getpid()
+            or hb.get("machine") != socket.gethostname()):
+        return None
+    if _gone(pid):
+        return None
+    environ = Path(f"/proc/{pid}/environ")
+    if not environ.exists():
+        return f"session process {pid} from the previous run may still be running; verify and stop it manually"
+    try:
+        env = dict(item.split("=", 1) for item in environ.read_bytes().decode("utf-8", "replace").split("\0")
+                   if "=" in item)
+    except OSError:
+        return None
+    if env.get("BITACORA_RUN") != state.get("req") or env.get("BITACORA_PROJECT") != project:
+        return None
+    for sig, wait in ((signal.SIGTERM, KILL_GRACE_SEC), (signal.SIGKILL, 2)):
+        try:
+            os.killpg(pid, sig)
+        except ProcessLookupError:
+            return f"ended orphaned session {pid} from the previous run"
+        except PermissionError:
+            return f"session {pid} from the previous run could not be stopped (permission denied)"
+        deadline = time.time() + wait
+        while time.time() < deadline:
+            if _gone(pid):
+                return f"ended orphaned session {pid} from the previous run"
+            time.sleep(0.1)
+    return f"orphaned session {pid} from the previous run did not exit"
 
 
 def session_tier(state: dict, task: dict | None) -> int:
@@ -127,6 +180,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
                                     **({"start_new_session": True} if os.name != "nt" else {}))
         except FileNotFoundError as exc:
             raise AgentNotFound(str(exc)) from exc
+        _beat(rdir, session_pid=proc.pid)  # lets a resumed run find this session if the supervisor is killed
         try:
             if stdin_text:
                 try:
@@ -160,6 +214,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
         finally:
             if proc.poll() is None:
                 kill_tree(proc)
+            _beat(rdir, session_pid=None)
     text = log_file.read_bytes().decode("utf-8", errors="replace")
     if len(text) > LOG_KEEP_CHARS:
         try:

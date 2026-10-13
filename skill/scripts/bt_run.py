@@ -16,7 +16,7 @@ import bt_profiles
 import bt_runprompt as rp
 import bt_runstate as rs
 import bt_runtier as tier_
-from bt_runsession import AgentNotFound, run_session, session_tier
+from bt_runsession import AgentNotFound, reap_orphan, run_session, session_tier
 from bt_runsettle import LIMIT_RESULTS, detect_limit, enter_wait, recover_claims, settle_final, settle_task
 from bt_runutil import (autostart, backoff_override, beat, commit_bitacora, keep_awake, notify, pid_alive, say,
                         set_fields, wait_or_control)
@@ -57,6 +57,9 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
             and pid_alive(hb["pid"])):
         print(f"A supervisor is already running this marathon (pid {hb['pid']}).")
         return None
+    orphan = reap_orphan(project, state)
+    if orphan:
+        print(f"[run] {orphan}", flush=True)
 
     def fn(s):
         rs.sync_plan(s, rdir)
