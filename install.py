@@ -5,14 +5,18 @@
   python ~/metodologia/install.py
 
 What it does, with this machine's paths:
-  1. Links  ~/.claude/skills/metodologia → skill/   ~/.agents/skills/metodologia → skill/   ~/bitacora → bitacora/
-  2. Claude Code hooks in ~/.claude/settings.json and Codex hooks in ~/.codex/hooks.json (other hooks are kept)
-  3. Always-on loading: @import of SKILL.md in ~/.claude/CLAUDE.md, pointer in ~/.codex/AGENTS.md
+  1. Links  <claude dir>/skills/metodologia → skill/   ~/.agents/skills/metodologia → skill/; ~/bitacora is created
+     as a plain folder (or $BITACORA_ROOT), never linked into this repo
+  2. Claude Code hooks in <claude dir>/settings.json and Codex hooks in <codex dir>/hooks.json (other hooks are kept)
+  3. Always-on loading: @import of SKILL.md in <claude dir>/CLAUDE.md, pointer in <codex dir>/AGENTS.md
+  <claude dir>/<codex dir> are ~/.claude and ~/.codex plus every existing CLAUDE_CONFIG_DIR / CODEX_HOME of the
+  account profiles (bitacora.py profiles list), so each account gets the same skill, hooks and subagents.
   4. Subagent roles for both (skill/scripts/install_agents.py)
   5. Rebuilds the local workspace index (where each project's repos are cloned on this machine)
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import shutil
@@ -23,7 +27,9 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent
 HOME = Path.home()
 PY = Path(sys.executable).as_posix()
-SKILL_LINK = HOME / ".claude" / "skills" / "metodologia"
+CLAUDE_HOME = HOME / ".claude"
+CODEX_HOME = HOME / ".codex"
+SKILL_LINK = CLAUDE_HOME / "skills" / "metodologia"
 SCRIPTS = SKILL_LINK.as_posix() + "/scripts"
 MARK = "metodologia"  # any hook whose command mentions this is ours and gets replaced
 
@@ -84,8 +90,8 @@ def _cmd(script: str, *args: str) -> str:
     return f'{exe} "{SCRIPTS}/{script}"' + "".join(f" {a}" for a in args)
 
 
-def claude_hooks() -> None:
-    f = HOME / ".claude" / "settings.json"
+def claude_hooks(config: Path = CLAUDE_HOME) -> None:
+    f = config / "settings.json"
     data = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
     ours = {
         "SessionStart": [{"matcher": "startup|resume|clear|compact",
@@ -100,8 +106,8 @@ def claude_hooks() -> None:
     say(f"hooks   {f}")
 
 
-def codex_hooks() -> None:
-    f = HOME / ".codex" / "hooks.json"
+def codex_hooks(config: Path = CODEX_HOME) -> None:
+    f = config / "hooks.json"
     data = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
     ours = {
         "SessionStart": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "start", "--harness",
@@ -124,7 +130,7 @@ CLAUDE_BLOCK = """
 
 La skill `metodologia` se carga completa en cada sesión:
 
-@~/.claude/skills/metodologia/SKILL.md
+@{skill}
 
 Preguntar al inicio, aprobar el plan, y después trabajar autónomo hasta terminar.
 Conversación en español; bitácora en inglés; código en el idioma del repositorio (inglés si es nuevo).
@@ -153,24 +159,73 @@ def ensure_block(f: Path, block: str, already: str) -> None:
 
 # ---------------------------------------------------------------- main
 
-def main() -> None:
+def tilde(path: Path) -> str:
+    """~/x form when under HOME (what the @import in CLAUDE.md expects), absolute otherwise."""
+    try:
+        return "~/" + path.relative_to(HOME).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def bitacora_root() -> Path:
+    return Path(os.environ.get("BITACORA_ROOT") or HOME / "bitacora")
+
+
+def account_dirs() -> tuple[list[Path], list[Path]]:
+    """Config directories to install into: the defaults plus one per account profile (CLAUDE_CONFIG_DIR / CODEX_HOME)."""
+    import bt_profiles
+    claude, codex = [CLAUDE_HOME], [CODEX_HOME]
+    for spec in bt_profiles.load().values():
+        env = {k: Path(os.path.expanduser(v)) for k, v in (spec.get("env") or {}).items()}
+        for key, found in (("CLAUDE_CONFIG_DIR", claude), ("CODEX_HOME", codex)):
+            if key in env and env[key] not in found and env[key].exists():
+                found.append(env[key])
+    return claude, codex
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--rtk-only", action="store_true",
+                        help="Install only the pinned RTK binary; leave hooks/settings/workspaces untouched")
+    parser.add_argument("--with-rtk", action="store_true",
+                        help="Include the pinned RTK binary in the normal methodology setup")
+    args = parser.parse_args(argv)
+    if args.rtk_only or args.with_rtk:
+        sys.path.insert(0, str(REPO / "skill" / "scripts"))
+        import install_rtk
+        say(f"RTK {install_rtk.VERSION}: {install_rtk.install()}")
+        if args.rtk_only:
+            return
     print(f"metodologia install · repo {REPO}")
-    print("1. links")
-    link(SKILL_LINK, REPO / "skill")
-    link(HOME / ".agents" / "skills" / "metodologia", REPO / "skill")
-    link(HOME / "bitacora", REPO / "bitacora")
-    print("2. hooks")
-    claude_hooks()
-    codex_hooks()
-    print("3. always-on")
-    ensure_block(HOME / ".claude" / "CLAUDE.md", CLAUDE_BLOCK, "@~/.claude/skills/metodologia/SKILL.md")
-    ensure_block(HOME / ".codex" / "AGENTS.md", CODEX_BLOCK, "skill `metodologia`")
-    print("4. subagents")
-    subprocess.run([sys.executable, str(REPO / "skill" / "scripts" / "install_agents.py")], check=False)
-    print("5. workspaces on this machine")
     sys.path.insert(0, str(REPO / "skill" / "scripts"))
+    claude_dirs, codex_dirs = account_dirs()
+    root = bitacora_root()
+    print("1. links")
+    for config in claude_dirs:
+        link(config / "skills" / "metodologia", REPO / "skill")
+    link(HOME / ".agents" / "skills" / "metodologia", REPO / "skill")
+    root.mkdir(parents=True, exist_ok=True)  # the live bitácora is a real folder, never a link into this repo
+    say(f"ok      {root}")
+    print("2. hooks")
+    for config in claude_dirs:
+        claude_hooks(config)
+    for config in codex_dirs:
+        codex_hooks(config)
+    print("3. always-on")
+    for config in claude_dirs:
+        skill = f"{tilde(config)}/skills/metodologia/SKILL.md"
+        ensure_block(config / "CLAUDE.md", CLAUDE_BLOCK.format(skill=skill), skill)
+    for config in codex_dirs:
+        ensure_block(config / "AGENTS.md", CODEX_BLOCK, "skill `metodologia`")
+    print("4. subagents")
+    agents = [sys.executable, str(REPO / "skill" / "scripts" / "install_agents.py")]
+    for config in claude_dirs:
+        agents += ["--claude-dir", str(config / "agents")]
+    for config in codex_dirs:
+        agents += ["--codex-dir", str(config / "agents")]
+    subprocess.run(agents, check=False)
+    print("5. workspaces on this machine")
     import bt_workspace as ws
-    root = HOME / "bitacora"
     ws.reindex(root)
     for d in sorted(root.iterdir()):
         if (d / "project.json").exists():
@@ -181,7 +236,7 @@ def main() -> None:
     if not bt_secrets.find_gitleaks() and os.name == "nt":
         subprocess.run(["winget", "install", "--id", "Gitleaks.Gitleaks", "-e", "--accept-source-agreements",
                         "--accept-package-agreements", "--disable-interactivity"], check=False, capture_output=True)
-    say(f"gitleaks: {bt_secrets.find_gitleaks() or 'NOT installed — winget install Gitleaks.Gitleaks'}")
+    say(f"gitleaks: {bt_secrets.find_gitleaks() or 'NOT installed — ' + bt_secrets.gitleaks_install_hint()}")
     for d in sorted(root.iterdir()):
         if (d / "project.json").exists():
             for role, path in ws.repos(root, d.name).items():

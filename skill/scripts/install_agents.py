@@ -44,22 +44,24 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--only", choices=["claude", "codex"])
+    ap.add_argument("--claude-dir", action="append", type=Path, help="agents dir (repeatable); default ~/.claude/agents")
+    ap.add_argument("--codex-dir", action="append", type=Path, help="agents dir (repeatable); default ~/.codex/agents")
     a = ap.parse_args()
     for f in sorted(SRC.glob("*.md")):
         meta, lines, body = parse(f)
         name = meta["name"]
-        if a.only != "codex":
-            CLAUDE_DIR.mkdir(parents=True, exist_ok=True)
-            target = CLAUDE_DIR / f"{name}.md"
+        for claude_dir in (a.claude_dir or [CLAUDE_DIR]) if a.only != "codex" else []:
+            claude_dir.mkdir(parents=True, exist_ok=True)
+            target = claude_dir / f"{name}.md"
             if can_write(target, a.force):
                 front = "\n".join(l for l in lines if not l.startswith("codex_"))
                 target.write_text(f"---\n{front}\n---\n<!-- {MARKER} -->\n\n{body}", encoding="utf-8")
                 print(f"claude: {target}")
             else:
                 print(f"claude: SKIP {target} (not ours; --force to overwrite)", file=sys.stderr)
-        if a.only != "claude":
-            CODEX_DIR.mkdir(parents=True, exist_ok=True)
-            target = CODEX_DIR / f"{name}.toml"
+        for codex_dir in (a.codex_dir or [CODEX_DIR]) if a.only != "claude" else []:
+            codex_dir.mkdir(parents=True, exist_ok=True)
+            target = codex_dir / f"{name}.toml"
             if "'''" in body:
                 raise SystemExit(f"{f.name}: body can't contain ''' (TOML literal delimiter)")
             if can_write(target, a.force):

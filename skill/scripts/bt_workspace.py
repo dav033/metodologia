@@ -26,7 +26,7 @@ SCAN_SKIP = {"appdata", "node_modules", ".git", ".cache", ".npm", "onedrive", "m
 # ---------------------------------------------------------------- small helpers
 
 def _key(path: str | Path) -> str:
-    return str(Path(path).resolve()).replace("\\", "/").lower().rstrip("/")
+    return os.path.normcase(str(Path(path).resolve())).replace("\\", "/").rstrip("/")
 
 
 def _read(f: Path) -> dict:

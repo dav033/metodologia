@@ -50,6 +50,7 @@ def main() -> None:
     p_launch = sub.add_parser("launch", help="HQ: open a new executor session for an approved plan")
     p_launch.add_argument("req", help="REQ-NNN")
     p_launch.add_argument("--agent", choices=["claude", "codex"], default="claude")
+    p_launch.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
     p_launch.add_argument("--mode", choices=["loop", "goal", "marathon"], default="loop",
                           help="loop/goal: one long session (codex always /goal); marathon: supervisor, a fresh session per task")
     p_launch.add_argument("--model", help="marathon: model alias for the sessions (default haiku)")
@@ -59,6 +60,7 @@ def main() -> None:
     p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task (days)")
     p_run.add_argument("req", help="REQ-NNN")
     p_run.add_argument("--agent", choices=["claude", "codex"])
+    p_run.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
     p_run.add_argument("--model", help="tier 0 of the escalation ladder (default haiku)")
     p_run.add_argument("--no-ultracode", action="store_true")
     p_run.add_argument("--max-attempts", type=int, help="per task (default 4: haiku, sonnet, opus, opus)")
@@ -68,7 +70,7 @@ def main() -> None:
     p_run.add_argument("--agent-cmd", help="tests: command template with {prompt_file} {workdir} {task} {req} {project} "
                                            "{model_args}")
     p_run.add_argument("--once", action="store_true", help="run a single session and exit")
-    p_run.add_argument("--no-autostart", action="store_true", help="do not install the Windows Startup entry")
+    p_run.add_argument("--no-autostart", action="store_true", help="do not install the per-user login resume entry")
     p_task = sub.add_parser("task", help="marathon agent report: done / fail / note / escalate on a plan task")
     p_task.add_argument("action", choices=["done", "fail", "note", "escalate"])
     p_task.add_argument("req", help="REQ-NNN")
@@ -99,6 +101,17 @@ def main() -> None:
     p_ws.add_argument("action", choices=["show", "add", "remove", "root", "clone"])
     p_ws.add_argument("role", nargs="?", help="add/remove: role name (frontend, backend…); root: the folder")
     p_ws.add_argument("path", nargs="?", help="add: repo path")
+    p_prof = sub.add_parser("profiles", help="account profiles: list, doctor, or check one against a project")
+    p_prof.add_argument("action", choices=["list", "doctor", "check", "add"])
+    p_prof.add_argument("profile", nargs="?", help="check/add: profile id")
+    p_prof.add_argument("--provider", choices=["claude", "codex", "antigravity"], help="add: provider")
+    p_prof.add_argument("--env", action="append", default=[], metavar="KEY=VALUE",
+                        help="add: environment selecting the account, e.g. CLAUDE_CONFIG_DIR=~/.claude-work")
+    p_prof.add_argument("--work-only", action="store_true", help="add: only runs projects with work=true")
+    p_prof.add_argument("--bin", help="add: executable name if not the provider default")
+    p_work = sub.add_parser("work", help="show or set the project's work flag (gates work-only profiles)")
+    p_work.add_argument("value", nargs="?", choices=["true", "false"])
+    sub.add_parser("audit", help="prepare a read-only inventory for a workspace architecture audit")
     p_serve = sub.add_parser("serve", help="run the local web server in the foreground")
     p_serve.add_argument("--port", type=int)
     p_graph = sub.add_parser("graph", help="open the trace graph of the project in the browser (starts the server)")
@@ -162,11 +175,35 @@ def main() -> None:
     if a.cmd == "secrets":
         from bt_secrets import find_gitleaks, install_hook
         if not find_gitleaks():
-            print("gitleaks not found — install with: winget install Gitleaks.Gitleaks")
+            from bt_platform import gitleaks_install_hint
+            print(f"gitleaks not found — {gitleaks_install_hint()}")
         for d in sorted(p for p in ROOT.iterdir() if (p / "project.json").exists()):
             for role, path in ws.repos(ROOT, d.name).items():
                 if path.exists() and path.resolve() != ROOT.resolve().parent:
                     print(f"{d.name}/{role}: {install_hook(path)}")
+        return
+
+    if a.cmd == "profiles" and a.action in ("list", "doctor", "add"):  # machine-level: no project needed
+        import bt_profiles
+        if a.action == "add":
+            if not (a.profile and a.provider):
+                sys.exit("profiles add needs a profile id and --provider")
+            env = dict(item.split("=", 1) for item in a.env if "=" in item)
+            print(f"{bt_profiles.add(a.profile, a.provider, env, a.work_only, a.bin)}: {a.profile}")
+            return
+        print(json.dumps(bt_profiles.doctor() if a.action == "doctor" else bt_profiles.load(), indent=1,
+                         ensure_ascii=False))
+        return
+
+    if a.cmd == "audit":
+        import bt_audit
+        project = slugify(a.project, 60) if a.project else (
+            slugify(os.environ["BITACORA_PROJECT"], 60) if os.environ.get("BITACORA_PROJECT") else
+            bt_audit.project_for_cwd(ROOT, Path(a.cwd))
+        )
+        if not project:
+            sys.exit("No project could be resolved without changing workspace state; pass --project <name>.")
+        print(json.dumps(bt_audit.inventory(ROOT, project), indent=1, ensure_ascii=False))
         return
 
     cwd = Path(a.cwd)
@@ -212,9 +249,23 @@ def main() -> None:
                                        date=today().isoformat()), encoding="utf-8")
             write_index(pdir)
             print(plan.as_posix())
+    elif a.cmd == "profiles":  # add a profile, or check one against the bound project
+        import bt_profiles
+        if not a.profile:
+            sys.exit("profiles check needs a profile id")
+        bt_profiles.authorize(a.profile, project)
+        print(f"OK: {a.profile} may run {project}")
+    elif a.cmd == "work":
+        import bt_profiles
+        if a.value:
+            print(f"{bt_profiles.set_work(project, a.value == 'true')}: work={a.value}")
+        else:
+            print(f"{project}: work={str(bt_profiles.is_work_project(project)).lower()}")
     elif a.cmd == "launch":
         from bt_launch import launch
         extra = {"model": a.model or "haiku"} if a.mode == "marathon" or a.model else {}
+        if a.profile:
+            extra["profile"] = a.profile
         print(json.dumps(launch(project, a.req, a.agent, a.mode, a.repo, a.force, a.dry_run, **extra), indent=1,
                          ensure_ascii=False))
     elif a.cmd == "run":
@@ -222,7 +273,7 @@ def main() -> None:
         sys.exit(supervise(project, a.req, agent=a.agent, model=a.model, ultracode=False if a.no_ultracode else None,
                            max_attempts=a.max_attempts, session_timeout=a.session_timeout,
                            retry_blocked=a.retry_blocked, agent_cmd=a.agent_cmd, once=a.once,
-                           no_autostart=a.no_autostart))
+                           no_autostart=a.no_autostart, profile=a.profile))
     elif a.cmd == "monitor":
         from bt_monitor import open_monitor
         print(json.dumps(open_monitor(project, a.req, a.model, a.dry_run), indent=1, ensure_ascii=False))

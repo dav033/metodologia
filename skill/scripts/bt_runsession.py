@@ -5,9 +5,11 @@ the agent has finished."""
 from __future__ import annotations
 
 import subprocess
+import signal
 import time
 
 from bt_core import *  # noqa: F403
+import bt_profiles
 import bt_runprompt as rp
 import bt_runstate as rs
 import bt_runtier as tier_
@@ -16,6 +18,7 @@ from bt_runutil import beat
 BEAT_EVERY = 60
 GRACE_SEC = 90  # after the agent's verdict, how long the session may keep running before the supervisor ends it
 LOG_KEEP_CHARS = 1_000_000
+KILL_GRACE_SEC = 3  # POSIX: SIGTERM first, then SIGKILL to the whole process group
 
 
 class AgentNotFound(RuntimeError):
@@ -38,7 +41,15 @@ def kill_tree(proc: subprocess.Popen) -> None:
         except subprocess.TimeoutExpired:
             pass
     else:
-        proc.kill()
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)  # let the agent flush its log and children clean up
+            proc.wait(timeout=KILL_GRACE_SEC)
+        except (ProcessLookupError, subprocess.TimeoutExpired):
+            pass
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)  # descendants can outlive the group leader
+        except ProcessLookupError:
+            pass
     for _ in range(2):
         try:
             proc.wait(timeout=30)
@@ -93,6 +104,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
                 agent_cmd: str | None) -> dict:
     """Run one fresh agent session. Returns {rc, timed_out, stopped, early_exit, text, seconds, model, effort}."""
     tid = task["id"] if task else rp.FINAL_TASK
+    bt_profiles.authorize(state.get("profile"), project)  # also on retry/recovery, before the prompt is built
     model, effort = tier_.model_for(state, session_tier(state, task))
     run_dir = STATE / "runs" / f"{project}-{state['req']}"
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -100,7 +112,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
     prompt = rp.session_prompt(project, rdir, state, task, n, feature_branch(rdir))
     prompt_file, log_file = run_dir / f"prompt-{n:04d}.txt", run_dir / f"session-{n:04d}.log"
     prompt_file.write_text(prompt, encoding="utf-8")
-    env = {**os.environ, "BITACORA_PROJECT": project, "BITACORA_RUN": state["req"], "BITACORA_TASK": tid,
+    env = {**os.environ, **bt_profiles.env_of(state.get("profile")), "BITACORA_PROJECT": project, "BITACORA_RUN": state["req"], "BITACORA_TASK": tid,
            "BITACORA_SESSION": str(n)}
     argv, stdin_text, shell = _argv(project, state, workdir, prompt, prompt_file, tid, agent_cmd, model, effort)
     timeout, grace = state["limits"]["session_timeout_min"] * 60, grace_seconds()
@@ -111,7 +123,8 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
     with log_file.open("wb", buffering=0) as out:  # the agent writes straight into the log: a killed session keeps it
         try:
             proc = subprocess.Popen(argv, cwd=str(workdir), env=env, shell=shell, stdout=out, stderr=subprocess.STDOUT,
-                                    stdin=subprocess.PIPE if stdin_text else subprocess.DEVNULL)
+                                    stdin=subprocess.PIPE if stdin_text else subprocess.DEVNULL,
+                                    **({"start_new_session": True} if os.name != "nt" else {}))
         except FileNotFoundError as exc:
             raise AgentNotFound(str(exc)) from exc
         try:

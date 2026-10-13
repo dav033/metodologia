@@ -29,6 +29,13 @@ import bt_run  # noqa: E402
 import bt_runstate as rs  # noqa: E402
 import bt_runtask as rt  # noqa: E402
 
+# Isolation guard: a module that imported bt_core before this one froze ROOT at the real bitácora, and these tests would
+# then create projects and runs in it. Fail loudly instead of polluting (never import bt_core at module level elsewhere
+# in a file that sorts before test_marathon.py).
+if Path(bt_core.ROOT).resolve() != (TMP / "bitacora").resolve():
+    raise RuntimeError(f"bt_core.ROOT is {bt_core.ROOT}, not the throwaway root {TMP / 'bitacora'}: some test module "
+                       "imported bt_core before test_marathon set BITACORA_ROOT. Refusing to run against the real bitácora.")
+
 STUB = '''
 import json, os, pathlib, subprocess, sys
 cfg_path = pathlib.Path(os.environ["STUB_CFG"])

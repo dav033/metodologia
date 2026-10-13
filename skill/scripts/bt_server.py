@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import mimetypes
 import secrets
+import signal
 import socket
 import subprocess
 import sys
@@ -17,6 +18,7 @@ import bt_pages as pages
 import bt_rounds as rounds
 from bt_core import *  # noqa: F403
 from bt_page_req import req_page
+from bt_platform import detached_options, platform
 from bt_vcs import commit
 
 ASSETS = SKILL_DIR / "assets"
@@ -243,8 +245,14 @@ def _stale(port: int) -> bool:
         return True
     if info.get("port") != port or info.get("version") == code_version() and info.get("root") == str(ROOT):
         return False
+    pid = info.get("pid")
+    if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 1 or pid == os.getpid():
+        return False
     try:
-        subprocess.run(["taskkill", "/PID", str(info["pid"]), "/F"], capture_output=True, timeout=10)
+        if platform() == "windows":
+            subprocess.run(["taskkill", "/PID", str(pid), "/F"], capture_output=True, timeout=10, check=True)
+        else:
+            os.kill(pid, signal.SIGTERM)
     except Exception:
         return False
     for _ in range(20):
@@ -263,7 +271,6 @@ def ensure_server(port: int = DEFAULT_PORT) -> str:
         exe = Path(sys.executable)
         pyw = exe.with_name("pythonw.exe")
         cmd = [str(pyw if pyw.exists() else exe), str(SCRIPT), "serve", "--port", str(port)]
-        flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
-        subprocess.Popen(cmd, creationflags=flags, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+        subprocess.Popen(cmd, **detached_options(), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, close_fds=True, env={**os.environ, "BITACORA_ROOT": str(ROOT)})
     return url(port)

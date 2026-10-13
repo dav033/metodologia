@@ -11,6 +11,7 @@ import socket
 import time
 
 from bt_core import *  # noqa: F403
+import bt_profiles
 import bt_runprompt as rp
 import bt_runstate as rs
 import bt_runtier as tier_
@@ -38,9 +39,15 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
     limits = {k: v for k, v in (("max_attempts", o.get("max_attempts")),
                                 ("session_timeout_min", o.get("session_timeout"))) if v}
     state = rs.load(rdir)
+    profile = o.get("profile") or (state or {}).get("profile")
+    if profile:
+        bt_profiles.authorize(profile, project)
+        o = {**o, "agent": bt_profiles.require_launchable(profile)}
     if state is None:
         state = rs.init_state(project, rdir, o.get("agent") or "claude", o.get("model") or "haiku",
                               o.get("ultracode") is not False, limits)
+        if profile:
+            state["profile"] = profile
         rs.save(rdir, state)
         return state
     hb = state.get("heartbeat") or {}
@@ -59,7 +66,7 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
                 t.update(status="todo", attempts=0, error_hashes=[], pending_id=None, limit_streak=0,
                          tier=tier_.start_tier(t.get("level")))
         s["limits"].update(limits)
-        for key, value in (("agent", o.get("agent")), ("model", o.get("model"))):
+        for key, value in (("agent", o.get("agent")), ("model", o.get("model")), ("profile", profile)):
             if value:
                 s[key] = value
         if o.get("ultracode") is not None:

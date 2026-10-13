@@ -7,14 +7,14 @@ changes with `--rebase --autostash`.
 """
 from __future__ import annotations
 
-import bt_nowindow  # noqa: F401  (no console windows on Windows)
-
 import subprocess
+import sys
 from pathlib import Path
 
+import bt_nowindow  # noqa: F401  (no console windows on Windows)
+from bt_platform import detached_options
+
 GITIGNORE = ".state/\n__pycache__/\n*.tmp\n"
-# background push: own process group, no console window (DETACHED_PROCESS let git helpers pop up windows)
-_DETACHED = 0x08000000 | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
 
 
 def _run(root: Path, *args: str, timeout: int = 20) -> subprocess.CompletedProcess | None:
@@ -76,10 +76,10 @@ def push_async(root: Path) -> None:
     if not has_remote(root):
         return
     try:
-        subprocess.Popen(["git", "push", "-q"], cwd=root, creationflags=_DETACHED, stdin=subprocess.DEVNULL,
+        subprocess.Popen(["git", "push", "-q"], cwd=root, **detached_options(), stdin=subprocess.DEVNULL,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, close_fds=True)
-    except Exception:
-        pass
+    except OSError as exc:
+        print(f"bitácora push could not start: {exc}", file=sys.stderr)
 
 
 def pull(root: Path, timeout: int = 8) -> str:
