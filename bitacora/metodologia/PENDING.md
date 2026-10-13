@@ -6,6 +6,10 @@ Indented lines under an item are its details and move with it. Get IDs with `bit
 
 ## Open
 - P-002 · First real end-to-end test (HQ → rounds → web approval → executor loop → bitácora) · urgency: high · complexity: M · added 2026-10-08 · session
+- P-013 · Bitácora pushes to GitHub silently failing since 2026-10-09 17:09 (228 local commits unpushed; `push_async` drops stderr) · urgency: high · complexity: M · added 2026-10-13 · user: "tenemos un problema" (GitHub review)
+  - Evidence: no bitácora push reached the remote after 07a8113; `git push --dry-run` and a detached dry-run both succeed; no rulesets; gitleaks clean. Cause unknown until one real push shows stderr.
+  - Fix: (1) one foreground push to read the error; (2) `bt_vcs.push_async` writes stderr to `.state/push.log` and SessionStart warns on failed pushes, not only on failed pulls.
+  - Context: remote commit `4cfd74f` drops the embedded bitácora from the repo (the live copy is `~/bitacora`, a plain folder). Decide the layout first; this item may change shape. 112 bitácora files exist only locally.
 - P-003 · Visual review of the local web UI · urgency: med · complexity: S · added 2026-10-08 · session
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · urgency: med · complexity: M · added 2026-10-08 · user: "no por ahora, documéntalo"
   - Ideas: STATUS.json written by the executor, stale-heartbeat flag + Resume button in the web UI, Notification/Stop/StopFailure hooks, `claude --bg` restarts.
@@ -26,6 +30,10 @@ _None_
 _None_
 
 ## Notes
+One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
+Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
+One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
+Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
 Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
 One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
