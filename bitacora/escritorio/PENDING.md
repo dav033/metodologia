@@ -1,8 +1,10 @@
 # escritorio — Pending
 
 _Sorted automatically by `bitacora.py pending` (urgency high → low, then complexity S → L: quick urgent wins first).
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
+One line per item: `P-NNN · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
+Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`.
+Move items between sections as they change; closed items keep 14 days in "Recently closed", then go to the
+month summary._
 
 ## Open
 - P-001 · Confirm Alt+1/Alt+2 tab navigation in Firefox during normal use · urgency: low · complexity: S · added 2026-10-11 · REQ-001
@@ -15,15 +17,3 @@ _None_
 
 ## Recently closed
 _None_
-
-## Notes
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
