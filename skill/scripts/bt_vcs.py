@@ -52,6 +52,12 @@ def has_remote(root: Path) -> bool:
 def commit(root: Path, message: str, push: bool = True) -> bool:
     """Commit changes under `root` only (pathspec), then push in the background. Concurrent sessions may collide
     on the index lock; that's fine — the next commit picks the changes up."""
+    from bt_lock import central_lock
+    with central_lock("git"):  # one add/scan/commit at a time: concurrent sessions would fight over index.lock
+        return _commit_locked(root, message, push)
+
+
+def _commit_locked(root: Path, message: str, push: bool) -> bool:
     ensure_repo(root)
     if not _ok(_run(root, "add", "-A", "--", ".")):
         return False

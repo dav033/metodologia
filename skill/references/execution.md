@@ -74,6 +74,9 @@ follow-ups; the full log stays in `.state/delegations/<id>/session.log`. `claime
 only, so ask for a `--verify` command whenever one exists. `delegate status <id>` and `delegate list` read back.
 Delegate only when the task is independent and checkable; edits to the same worktree must not run in parallel.
 
+**Concurrency**: `run --workers 2` runs tasks of *different* repos at once (marathon.md §Concurrent
+sessions); the default is sequential.
+
 **Attempt telemetry**: every marathon session appends one line to `<root>/.state/events/attempts-YYYY-MM.jsonl`
 (profile, agent, model, effort, seconds, result, tokens). A measure the provider did not report is `null`, never 0;
 Codex only reports a grand total. `bitacora.py metrics` summarizes per agent/profile/model with the share of attempts

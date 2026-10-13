@@ -75,6 +75,33 @@ def _gone(pid: int) -> bool:
     return stat.rsplit(")", 1)[-1].split()[:1] == ["Z"]
 
 
+def _track_pid(rdir: Path, n: int, pid: int | None) -> None:
+    def fn(s):
+        hb = s.get("heartbeat") or {}
+        pids = {k: v for k, v in (hb.get("session_pids") or {}).items() if k != str(n)}
+        if pid:
+            pids[str(n)] = pid
+        rs.heartbeat(s, session_pids=pids, session_pid=None)
+    try:
+        rs.update(rdir, fn)
+    except Exception:  # bookkeeping must never stop a session
+        pass
+
+
+def reap_orphans(project: str, state: dict) -> list[str]:
+    """reap_orphan for every session pid the previous run recorded (several run at once with --workers)."""
+    hb = state.get("heartbeat") or {}
+    pids = list((hb.get("session_pids") or {}).values())
+    if hb.get("session_pid"):  # recorded by a run from before concurrent sessions
+        pids.append(hb["session_pid"])
+    out = []
+    for pid in pids:
+        msg = reap_orphan(project, {**state, "heartbeat": {**hb, "session_pid": pid, "session_pids": None}})
+        if msg:
+            out.append(msg)
+    return out
+
+
 def reap_orphan(project: str, state: dict) -> str | None:
     """End an agent session left running by a supervisor that was killed (crash, `kill -9`): a resumed run would
     otherwise start a second session editing the same worktree. Identity is proven from the process environment
@@ -180,7 +207,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
                                     **({"start_new_session": True} if os.name != "nt" else {}))
         except FileNotFoundError as exc:
             raise AgentNotFound(str(exc)) from exc
-        _beat(rdir, session_pid=proc.pid)  # lets a resumed run find this session if the supervisor is killed
+        _track_pid(rdir, n, proc.pid)  # lets a resumed run find this session if the supervisor is killed
         try:
             if stdin_text:
                 try:
@@ -214,7 +241,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
         finally:
             if proc.poll() is None:
                 kill_tree(proc)
-            _beat(rdir, session_pid=None)
+            _track_pid(rdir, n, None)
     text = log_file.read_bytes().decode("utf-8", errors="replace")
     if len(text) > LOG_KEEP_CHARS:
         try:

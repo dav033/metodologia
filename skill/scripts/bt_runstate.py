@@ -21,7 +21,7 @@ from bt_core import STATE
 from bt_runtier import start_tier
 
 LOG_KEEP = 200
-DEFAULT_LIMITS = {"max_attempts": 4, "session_timeout_min": 60, "max_sessions": 300}  # 4 = haiku, sonnet, opus, opus
+DEFAULT_LIMITS = {"max_attempts": 4, "session_timeout_min": 60, "max_sessions": 300, "workers": 1}  # 4 = haiku, sonnet, opus, opus
 TASK_RE = re.compile(r"^\s*[-*]\s+\[( |x|X)\]\s+(T\d+(?:\.\d+)?[a-z]?)\s*(?:—|–|--|-|:)\s*(.+?)\s*$")
 
 
@@ -185,6 +185,38 @@ def get_task(state: dict, task_id: str) -> dict | None:
 def next_task(state: dict) -> dict | None:
     done = {t["id"] for t in state["tasks"] if t["status"] == "done"}
     return next((t for t in state["tasks"] if t["status"] == "todo" and all(a in done for a in t["after"])), None)
+
+
+MAX_WORKERS = 2  # until the machine's behaviour under several agent sessions has been measured
+
+
+def ready_batch(state: dict, workers: int = 1) -> list[dict]:
+    """Tasks that may run at the same time, in plan order. The first runnable task always runs; further tasks join only
+    when everything is safe: both name a repo role, the roles differ, and no task of that role is already in
+    progress. A task without a repo role (workspace root) may touch anything, so it runs alone. Two sessions are
+    therefore never editing the same repository."""
+    done = {t["id"] for t in state["tasks"] if t["status"] == "done"}
+    busy = {t.get("repo") for t in state["tasks"] if t["status"] == "in_progress"}
+    runnable = [t for t in state["tasks"] if t["status"] == "todo" and all(a in done for a in t["after"])]
+    if busy:  # something is still running: never start a task on that repo, nor an unscoped one
+        runnable = [t for t in runnable if t.get("repo") and t["repo"] not in busy]
+    if not runnable:
+        return []
+    first = runnable[0]
+    cap = max(1, min(int(workers or 1), MAX_WORKERS))
+    batch = [first]
+    if cap == 1 or not first.get("repo"):
+        return batch
+    taken = {first["repo"]} | busy
+    for t in state["tasks"]:
+        if len(batch) >= cap:
+            break
+        if (t is first or t["status"] != "todo" or not t.get("repo") or t["repo"] in taken
+                or not all(a in done for a in t["after"])):
+            continue
+        batch.append(t)
+        taken.add(t["repo"])
+    return batch
 
 
 def mark(state: dict, task_id: str, status: str, **fields) -> dict:

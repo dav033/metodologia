@@ -235,3 +235,17 @@ switches model: from tier 1 up it only raises the reasoning effort.
 - Noisy work (code sweeps, test suites, long logs) goes to subagents (`subagents.md`); the session keeps only
   conclusions.
 - Notes for the next attempt go in `task note`, not in the agent's head: the next attempt is a different session.
+
+## Concurrent sessions (`run --workers 2`)
+
+Opt-in; the default is one session at a time and behaves exactly as before. With `--workers 2` the supervisor runs
+two tasks at once **only when it is provably safe**: both name a `repo:` role, the roles differ, their dependencies
+are done and no task of that repo is in progress. A task without `repo:` (workspace root) may touch anything, so it
+always runs alone; two tasks of one repository never overlap. The cap is 2 until the machine's behaviour under several
+agent sessions is measured. Same-repository parallelism would need per-task worktrees and a serialized merge policy
+and is not implemented.
+
+Shared bitácora files (PLAN.md ticks, PENDING.md items, the bitácora's git index) are written under `bt_lock`
+critical sections, so concurrent sessions queue instead of interleaving. Each running session's pid is tracked, and a
+resume after a supervisor crash ends every orphaned session before starting new ones. Plan tasks that should be
+parallelizable must declare their repo role: `- [ ] T4 — … · repo: backend`.

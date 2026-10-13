@@ -60,6 +60,7 @@ def main() -> None:
     p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task (days)")
     p_run.add_argument("req", help="REQ-NNN")
     p_run.add_argument("--agent", choices=["claude", "codex", "antigravity"])
+    p_run.add_argument("--workers", type=int, help="sessions at once, only across different repos (default 1, max 2)")
     p_run.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
     p_run.add_argument("--model", help="tier 0 of the escalation ladder (default haiku)")
     p_run.add_argument("--no-ultracode", action="store_true")
@@ -332,7 +333,8 @@ def main() -> None:
         sys.exit(supervise(project, a.req, agent=a.agent, model=a.model, ultracode=False if a.no_ultracode else None,
                            max_attempts=a.max_attempts, session_timeout=a.session_timeout,
                            retry_blocked=a.retry_blocked, agent_cmd=a.agent_cmd, once=a.once,
-                           no_autostart=a.no_autostart, profile=a.profile))
+                           no_autostart=a.no_autostart, profile=a.profile,
+                           workers=a.workers))
     elif a.cmd == "monitor":
         from bt_monitor import open_monitor
         print(json.dumps(open_monitor(project, a.req, a.model, a.dry_run), indent=1, ensure_ascii=False))

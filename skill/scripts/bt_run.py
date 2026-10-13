@@ -7,6 +7,7 @@ Agent-facing commands (task done/fail/note/escalate, run-control): bt_runtask.
 """
 from __future__ import annotations
 
+import concurrent.futures
 import socket
 import time
 
@@ -16,7 +17,7 @@ import bt_profiles
 import bt_runprompt as rp
 import bt_runstate as rs
 import bt_runtier as tier_
-from bt_runsession import AgentNotFound, reap_orphan, run_session, session_tier
+from bt_runsession import AgentNotFound, reap_orphans, run_session, session_tier
 from bt_runsettle import LIMIT_RESULTS, detect_limit, enter_wait, recover_claims, settle_final, settle_task
 from bt_runutil import (autostart, backoff_override, beat, commit_bitacora, keep_awake, notify, pid_alive, say,
                         set_fields, wait_or_control)
@@ -38,7 +39,8 @@ def _finish(project: str, rdir: Path, status: str, message: str, remove_autostar
 
 def _open(project: str, rdir: Path, o: dict) -> dict | None:
     limits = {k: v for k, v in (("max_attempts", o.get("max_attempts")),
-                                ("session_timeout_min", o.get("session_timeout"))) if v}
+                                ("session_timeout_min", o.get("session_timeout")),
+                                ("workers", min(int(o["workers"]), rs.MAX_WORKERS) if o.get("workers") else None)) if v}
     state = rs.load(rdir)
     profile = o.get("profile") or (state or {}).get("profile")
     if profile:
@@ -57,8 +59,7 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
             and pid_alive(hb["pid"])):
         print(f"A supervisor is already running this marathon (pid {hb['pid']}).")
         return None
-    orphan = reap_orphan(project, state)
-    if orphan:
+    for orphan in reap_orphans(project, state):
         print(f"[run] {orphan}", flush=True)
 
     def fn(s):
@@ -156,6 +157,10 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
                                        "the final session did not produce REPORT.md")
         _finish(project, rdir, "blocked", "the final review session failed repeatedly", install)
         return 2
+    if task and not once and (state["limits"].get("workers") or 1) > 1:
+        batch = rs.ready_batch(state, state["limits"]["workers"])
+        if len(batch) > 1:
+            return _run_batch(project, rdir, c, state, batch)
     tid = task["id"] if task else rp.FINAL_TASK
     n = state["sessions"] + 1
 
@@ -193,6 +198,56 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
         if rs.load(rdir)["status"] == "running":
             set_fields(rdir, status="paused")
         return 0
+    return None
+
+
+def _run_batch(project: str, rdir: Path, c: dict, state: dict, batch: list[dict]) -> int | None:
+    """Run tasks of different repositories at the same time (one thread per session) and settle each one on its own;
+    every shared-file write underneath goes through bt_lock. Session numbers are reserved up front so logs, ids and
+    telemetry never collide."""
+    batch = batch[:max(1, state["limits"]["max_sessions"] - state["sessions"])]
+    base = state["sessions"]
+    nums = {t["id"]: base + 1 + i for i, t in enumerate(batch)}
+
+    def begin(s):
+        s["sessions"] = base + len(batch)
+        for t in batch:
+            rs.mark(s, t["id"], "in_progress")
+        rs.heartbeat(s, task=",".join(nums), session=s["sessions"], state=f"{len(batch)} sessions starting")
+    state = rs.update(rdir, begin)
+    for t in batch:
+        model = tier_.label(*tier_.model_for(state, session_tier(state, t)))
+        say(state, f"S{nums[t['id']]:04d} {t['id']} [{model}] (parallel x{len(batch)}) {t['title'][:50]}")
+
+    def unit(t: dict):
+        n = nums[t["id"]]
+        info = run_session(project, rdir, rs.load(rdir), t, n, c["workdir"], c["agent_cmd"])
+        return t["id"], n, info, settle_task(project, rdir, t["id"], n, info, c["workdir"])
+
+    outcomes, missing = [], None
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(batch)) as pool:
+        futures = [pool.submit(unit, t) for t in batch]
+        for fut in futures:
+            try:
+                outcomes.append(fut.result())
+            except AgentNotFound as exc:
+                missing = exc
+    if missing is not None:
+        _reset_in_progress(rdir)
+        _finish(project, rdir, "stopped", f"agent executable not found: {missing}", c["install"])
+        return 1
+    state = rs.load(rdir)
+    for tid, n, info, result in outcomes:
+        bt_events.record_attempt(project, state, tid, n, info, result)
+        say(state, f"S{n:04d} {tid} -> {result} ({info['seconds']}s)")
+    beat(rdir, task=",".join(t for t, _, _, _ in outcomes), state="batch settled")
+    commit_bitacora(project, f"marathon {state['req']} " + " ".join(f"S{n:04d} {t} {r}" for t, n, _, r in outcomes))
+    limited = [info for _, _, info, r in outcomes if r in LIMIT_RESULTS]
+    if limited:
+        enter_wait(rdir, project, state["req"], max((detect_limit(i) or 0) for i in limited), c["notified_wait"])
+        c["notified_wait"] = True
+    else:
+        c["notified_wait"] = False
     return None
 
 
