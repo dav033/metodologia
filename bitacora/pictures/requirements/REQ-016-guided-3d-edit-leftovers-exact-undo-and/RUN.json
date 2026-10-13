@@ -1,7 +1,7 @@
 {
  "req": "REQ-016",
  "project": "pictures",
- "status": "running",
+ "status": "stopped",
  "agent": "claude",
  "model": "haiku",
  "ultracode": true,
@@ -11,14 +11,14 @@
   "max_sessions": 300,
   "workers": 1
  },
- "control": "stop",
+ "control": null,
  "heartbeat": {
   "at": "2026-10-13T15:27:01",
   "pid": 1864427,
   "machine": "precision7760",
-  "task": "T1",
+  "task": null,
   "session": 4,
-  "state": "failed",
+  "state": "stopped",
   "session_pids": {},
   "session_pid": null
  },
