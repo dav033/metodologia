@@ -91,3 +91,12 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Alternatives:** Distinguish expired from unknown tokens publicly — rejected because it confirms token validity.
 - **Consequences:** + Public responses do not disclose token state; + the recipient gets a next step; − support may need the owner to check the exact link state.
 - **Source:** [day log](2026-10/W3/2026-10-13.md) · P-015.
+
+## D-010 — Capture the current site in the authenticated Vercel runtime
+- **Date:** 2026-10-13 · **Status:** Accepted (owner approved phase 3)
+- **Context:** Saving a proposal currently requires the owner to run the local Playwright CLI or upload a screenshot. The managed app runs remotely on Vercel, so its server cannot invoke the owner's local browser.
+- **Decision:** Add a Node serverless Chromium runtime using `@sparticuz/chromium` with `playwright-core`; route all page traffic through the existing DNS-pinning safe proxy; enforce public HTTP(S), dimensions, response size, and deadlines; store the PNG through existing private Blob capture code. Preserve manual uploads as fallback.
+- **Alternatives:** Browser-side capture — cannot reliably read/render arbitrary third-party pages under browser origin and CORS rules; an external screenshot provider — adds an unapproved processor/service; keep manual-only — does not meet the approved auto-capture requirement.
+- **Consequences:** + Capture runs from the save flow without extra setup; + no new remote data processor; − increases the serverless bundle and browser-runtime complexity; − some sites will still need manual screenshots because of anti-bot protections.
+- **Rollback:** Revert the capture adapter and editor auto-capture call, remove its two dependencies, and keep the current manual PNG upload flow; no schema/data rollback is needed for capture itself.
+- **Source:** REQ-010, T1; official [Vercel Function limits](https://vercel.com/docs/functions/limitations) and [Sparticuz Chromium usage](https://github.com/Sparticuz/chromium).

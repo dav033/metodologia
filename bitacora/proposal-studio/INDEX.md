@@ -1,6 +1,6 @@
 # Index — proposal-studio
 
-_Generated 2026-10-13 15:16 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-13 15:28 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/proposal-studio) · [graph](http://127.0.0.1:8765/p/proposal-studio/graph)  
@@ -27,6 +27,7 @@ _Generated 2026-10-13 15:16 by `bitacora.py index`. Do not edit by hand._
 | [REQ-007](requirements/REQ-007-production-mcp-server-for-proposal-studi/SPEC.md) | Production MCP server for Proposal Studio | `done` | [done](requirements/REQ-007-production-mcp-server-for-proposal-studi/PLAN.md) |  |
 | [REQ-008](requirements/REQ-008-minimal-clean-ui-and-smooth-motion/SPEC.md) | Minimal clean UI and smooth motion | `done` | [done](requirements/REQ-008-minimal-clean-ui-and-smooth-motion/PLAN.md) |  |
 | [REQ-009](requirements/REQ-009-material-3-redesign-for-complete-proposa/SPEC.md) | Material 3 redesign for complete proposal workflows | `done` | [done](requirements/REQ-009-material-3-redesign-for-complete-proposa/PLAN.md) |  |
+| [REQ-010](requirements/REQ-010-consola-phase-3-capture-sharing-signals/SPEC.md) | Consola phase 3: capture, sharing signals, and command navigation | `clarifying` | [in-progress](requirements/REQ-010-consola-phase-3-capture-sharing-signals/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
