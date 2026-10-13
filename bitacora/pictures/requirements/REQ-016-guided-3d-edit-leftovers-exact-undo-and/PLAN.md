@@ -34,3 +34,4 @@ AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before t
 - 2026-10-13 15:26 plan APPROVED (terminal)
 - 2026-10-13 15:3x M1/T1 session 5 (top tier): verify re-run green (8/8) from t12; session 3's verify_failed came from the old verify command (tsx resolve error, not reproducible). Strengthened the colour case to reproduce the name-based return changing the codes (fusion 040+970 → 040), commit fe3e9bcb; motor3d:test green, antagonist sound.
 - 2026-10-13 15:32 T1 done (marathon) — t12 branch feat/req-016-guided-3d-edit-leftovers-exact-undo-and: 58f10c04 («Deshacer» restores the stored previous plan widget — signed espec, hash, token, quote — never an inverse edit, D-045) + fe3e
+- 2026-10-13 15:42 M1-audit done (marathon) — PASS: test-deshacer-ajuste-3d 8/8, test-ui-plan-motor3d 16/16, motor3d:test 27/27, guiada:test 14 suites pass; D-045 and P-042 verified byte-for-byte; AUDIT-M1.md written
