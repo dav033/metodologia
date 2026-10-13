@@ -7,7 +7,6 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
-- P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversations get edits refused (409 MOTOR_PYTHON), Python routes refuse 3D tokens, and adding an idea/redoing silently re-prices in Python (~×1.4). Design a graceful rollback (keep 3D plans priced by the engine until the conversation ends, or tell the customer) — BLOCKER for the switch · urgency: high · complexity: M · added 2026-10-09 · W7 dossier review
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer --aplicar + upsert vectors, rebuild agente-core dist, visual review of Library filters/photo search, turn TALLER_RAG_ENABLED on only after the tuned eval beats today's search · urgency: high · complexity: ? · added 2026-10-08 · REQ-002
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was: fixing review (rule misses pared→piso/delete, verdict not audited server-side, margin uncalibrated → calibration script); owner-labelled A/B rounds (ROC) pending · urgency: high · complexity: ? · added 2026-10-08
@@ -56,6 +55,7 @@ month summary._
 _None_
 
 ## Recently closed
+- P-045 · GUIADA_MOTOR graceful rollback · closed 2026-10-13 · already implemented in 7aafc12c (flag decides only new plans; corte with prior notice; 24 h limit); entry was stale
 - P-076 · REQ-015 audit defects corrected, including figure chips, no-model fallback, reset/retry binding, duplicate bubbles and gate registration. Audit #3 additionally fixed foreign-plan routing, restored quote parity and mixed-format color counts; spec/standards re-reviews approve and all 10 gate suites pass · complexity: M · closed 2026-10-13 · local working-tree corrections, no new commit/push
 - P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) · closed 2026-10-13 · merged aee7b5a5 (tuning continues in P-067/P-068) (reconciled from git evidence)
 - P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — · closed 2026-10-13 · merged 3bb9b5fc (+ prerender hotfix) (reconciled from git evidence)
