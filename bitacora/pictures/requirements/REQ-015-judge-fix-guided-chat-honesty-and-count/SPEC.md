@@ -84,6 +84,7 @@ MVP = US-1..US-3; then US-4, US-5; US-6 last.
 | Timeline | Missing |
 
 ## Clarifications
+- 2026-10-13: local implementation and verification complete, PLAN.md done and REPORT.md ready. Spec remains in-progress until owner review/integration/publication; no push or merge authorized.
 - 2026-10-13 close-out: normalized US headings for trace tooling and made R1's wording reflect the approximation exception already approved in US-1/T1; no new scope or acceptance change.
 <!-- ### Round N — YYYY-MM-DD
 - Q: … → A: … -->

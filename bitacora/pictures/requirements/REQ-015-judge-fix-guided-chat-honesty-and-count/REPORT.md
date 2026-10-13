@@ -20,11 +20,13 @@ The audit also found a global 3D color-swap count defect across round and Link-O
 | `npx tsc --noEmit` | PASS after stale generated development types were moved to a recoverable backup |
 | Application `npm run build` | PASS; 83/83 routes prerendered |
 | Final `npm run gate` | PASS, exit 0, GATE OK; all 10 suites including the 405-scene golden |
-| Additional contract/rating tests and final snapshot checks | In progress; not yet claimed passing |
+| Chromium rating UI | PASS, 9/9; `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium` (supported test option) |
+| Guided transport contract | PASS, 27 checks |
+| Frozen final snapshot | Changed-file ESLint clean; `tsc` exit 0; app build exit 0, 83/83 pages |
 | Independent audit #3, specification and standards axes | Initial findings fixed; targeted re-reviews approve |
 | Trace lint for REQ-015 and its decisions | No uncovered/unknown/dangling findings; unrelated historical trace warnings remain |
 
-Full check logs: `/tmp/pictures-checks-8fTm18/`. The obsolete `.next/dev/types` files referenced removed LoRA/catalogue snapshot routes; no source typing or check was weakened. Backup: `/tmp/pictures-stale-dev-types-Ac1paX/types`.
+Full check logs: `/tmp/pictures-checks-8fTm18/`. The full gate ran in approximately 563 seconds. The obsolete `.next/dev/types` files referenced removed LoRA/catalogue snapshot routes; no source typing or check was weakened. Backup: `/tmp/pictures-stale-dev-types-Ac1paX/types`. The initial rating test could not launch the absent bundled Chromium; the supported executable override reused the installed system browser, and all nine assertions then passed. No installation was needed.
 
 ## Rulings
 
@@ -43,7 +45,7 @@ Review `src/lib/guiada-motor/tope-costeo-idea.ts` and `costear-idea-elegida.ts` 
 
 ## Pending
 
-- Final snapshot verification and additional contract/rating checks are still running; the full gate passed.
+- Implementation, independent review and all planned checks are complete locally; owner review/commit/publication remains outside this session's authority.
 - P-077: calibrate the default 300/hour quote cap from production counts; no production queries were run.
 - Historical P-075 test debt is separate; the old 180-type-error claim no longer describes this local tree.
 - No live paid dinosaur/XV journey or browser walkthrough was executed; representative quote parity is checked by fixtures, not a newly measured production price.

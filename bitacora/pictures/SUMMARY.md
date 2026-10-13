@@ -35,7 +35,7 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
   0.385, IoU 0.524 → 0.559.
 
 ## Active focus
-- Finish REQ-015 local verification and owner review: chosen-idea chips by rules, shared price, honest color counts, and durable quote cap. Restored ambiguous/composite idea prices show “Precio al elegir”; no session contract change.
+- REQ-015 implementation and verification complete locally, ready for owner review/commit/publication: chosen-idea chips by rules, shared price, honest color counts, durable quote cap. Restored ambiguous/composite idea prices show “Precio al elegir”; no session contract change. REPORT.md contains evidence; visual rating UI 9/9, contract 27/27, final types/build pass.
 
 ## Top pending (see PENDING.md)
 - P-075 remaining historical test debt; P-077 calibrate the 300/hour quote cap from production counts (not queried in this session). Historic type-error counts were stale generated Next route references; source types and application build now pass locally.

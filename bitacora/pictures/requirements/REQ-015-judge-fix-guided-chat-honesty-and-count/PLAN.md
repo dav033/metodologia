@@ -1,6 +1,6 @@
 ---
 req: REQ-015
-status: in-progress
+status: done
 created: 2026-10-13
 ---
 # Plan — REQ-015 — judge-fix: guided chat honesty and count/price parity
@@ -16,8 +16,8 @@ AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before t
 - [x] T2 — Show «Materiales desde $X» on idea and plan cards from cotizarBom/costearDecoracion; parity test card = quote · after: T4 · files: TarjetaEleccion.tsx, TarjetaPlan.tsx, costear-idea.ts · verify: `npm run test-cotizacion-unica` · covers: R2, US-2
 - [x] T3 — Colour-swap banner prints the real per-colour diff and price change (ajuste-plan-guiado.ts:966/986, AjustarPlan.tsx:209, edicion-chat-guiada.ts:122); never «igual» when a count moved · after: T1 · verify: `npx tsx --conditions=react-server scripts/test/test-ajuste-plan-guiado.ts` · covers: R3, US-3
 - [x] T4 — ROOT FIX of D2/D5 (found in T1): chip «Cuánto cuesta»→«usar» goes through /api/chat where the model proposes and Python builds a NEW plan (115) instead of the idea's stored exact plan (101/102); answer canned chips by rules in elegirOpcion (VistaGuiada.tsx ~1480-1505) using planDesdeIdea/stored plan, no model turn · after: T1 · verify: `npx tsx --conditions=react-server scripts/test/test-precio-chat-guiado.ts` · covers: R4, US-4
-- [ ] T5 — Count/size/colour questions on a chosen idea answered by rule (route.ts:150-191, consulta-plan-chat.ts:86) · after: T1 · verify: `npx tsx --conditions=react-server scripts/test/test-asistente-guiado-contrato.ts` · covers: R5, US-5
-- [ ] T6 — Rating row: one collapsed «¿Te sirvió?» after the quote, ≥40 px targets (CalificacionGuiada.tsx, VistaGuiada.tsx:1881-1890) · verify: `npm run ui:test-calificacion-chat` · covers: R6, US-6
+- [x] T5 — Count/size/colour questions on a chosen idea answered by rule (route.ts:150-191, consulta-plan-chat.ts:86) · after: T1 · verify: `npx tsx --conditions=react-server scripts/test/test-asistente-guiado-contrato.ts` · covers: R5, US-5
+- [x] T6 — Rating row: one collapsed «¿Te sirvió?» after the quote, ≥40 px targets (CalificacionGuiada.tsx, VistaGuiada.tsx:1881-1890) · verify: `npm run ui:test-calificacion-chat` · covers: R6, US-6
 - [x] T9 — Debate verdict B (2026-10-13; 3 haiku-medium debaters A server tool filter / B no model on 404-422 / C accept; haiku-max judge picked B): on 404/422 of /api/plan-idea the chip must not send a model turn. Move the body of costear_decoracion (route.ts:368-396) into a shared function called by a pre-model rule branch (next to consultaIdea, route.ts:208) and by elegirUso; «Aprender» renders the local steps widget (PasoAPaso.tsx); keep the audit (route.ts:391-394), version the contract, update test-opcion-idea-guiada.ts:67-69; no model tool `proponer_composicion` reachable from a canned chip · after: T8 · covers: R4
 - [x] T2b — Idea card price (D3 second half), owner chose option A: after «Me gusta» request the idea's exact plan via /api/plan-idea and show «Materiales desde $X» with the same total as the quote; if Python is down the card says «precio al elegir» (never a number that can differ) · after: T3 · files: TarjetaEleccion.tsx, VistaGuiada.tsx, agregar-idea.ts · verify: `npx tsx scripts/test/test-opcion-idea-guiada.ts` · covers: R2
 - [x] T8 — Wiring tests for T4 (VistaGuiada effect): one user bubble per chip click, no model call, fallback when /api/plan-idea fails is explicit, chip not marked chosen if blocked by caps (T4 concerns 1-3) · after: T4 · verify: `npx tsx scripts/test/test-opcion-idea-guiada.ts` · covers: R4
@@ -40,6 +40,7 @@ AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before t
 - Plan self-approved (owner away, autonomy delegated in the loop request).
 
 ## Progress log
+- 2026-10-13 final frozen snapshot: all checks pass. Gate 10/10 exit 0 (~563 s); real Chromium rating UI 9/9 (PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium); guided contract 27/27; full lint exit 0 (49 warnings), final changed-file ESLint clean; tsc exit 0; app build exit 0 (83/83 pages); workspace build exit 0. Logs `/tmp/pictures-checks-8fTm18/`; report ready. Trace clean for this requirement/decisions. P-076 closed, P-075 narrowed, P-077 unchanged. No new commits or publication.
 - 2026-10-13 final gate: `npm run gate` exit 0, GATE OK, all 10 suites pass (contracts, kontext, catalogo, globos3d, motor3d, escena, guiada, topes, cotizacion-unica, prerender); 405-scene golden covered. Final contract/rating and frozen snapshot checks still running.
 - 2026-10-13 close-out: T12 and T13 focused tests/ESLint pass. Independent audit #3 found two spec defects and one standards defect, all corrected; targeted re-reviews approve. T14 regression reproduced 128 blue + 81 mislabeled other blue instead of 209; after family-level matching, test passes with the actual engine and a fake external pricer. Workspace build, full lint (49 warnings, zero errors), source typecheck and app build pass after recovering stale generated types; final gate is running. No commits/push.
 - 2026-10-13: owner decisions: price on idea card = option A (T2b); AGENTS.md/CLAUDE.md restored (commit separate); T3 runs on Opus. T2 done d4759335.
