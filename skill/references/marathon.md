@@ -167,6 +167,12 @@ Codex receives its prompt on stdin (`exec ... -`) instead of as an argument; Cla
 
 ## Remote monitoring (Remote Control)
 
+The simplest way to follow a run from a phone is the conversation that launched it: `/rc` on that session, which
+keeps `bitacora.py watch REQ-NNN` armed in the background and tells each milestone as it closes
+(`requirements.md` §8). The executor sessions are separate headless processes: they never appear inside that
+conversation and ending them does not touch it. The companion session below is the alternative for a run that was
+launched from the web panel or from a terminal nobody is attached to.
+
 Task sessions are headless, and Remote Control only attaches to interactive sessions — so a marathon launched with
 Claude also opens a **monitor**: an interactive Haiku session named "`<project> <REQ> maratón`", started with
 `claude --remote-control`, briefed by `MONITOR.md` (written next to the plan). The user opens it from claude.ai/code or

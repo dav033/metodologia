@@ -92,6 +92,11 @@ def main() -> None:
     p_rc = sub.add_parser("run-control", help="pause / resume / stop a running marathon")
     p_rc.add_argument("req", help="REQ-NNN")
     p_rc.add_argument("action", choices=["pause", "resume", "stop"])
+    p_watch = sub.add_parser("watch", help="wait for the next news of a run (settled session, block, wait, end), "
+                                           "print it and exit; run it in the background and re-arm it")
+    p_watch.add_argument("req", help="REQ-NNN")
+    p_watch.add_argument("--timeout", type=float, default=360, help="minutes to wait for news (default 360)")
+    p_watch.add_argument("--poll", type=float, default=15, help="seconds between checks")
     p_mon = sub.add_parser("monitor", help="open the marathon's Remote Control monitor session (watch it from the phone)")
     p_mon.add_argument("req", help="REQ-NNN")
     p_mon.add_argument("--model", default="haiku")
@@ -459,6 +464,9 @@ def main() -> None:
         print(json.dumps(result, indent=1, ensure_ascii=False))
         sys.exit(0 if result["decision"] in ("launched", "would_launch", "already_running", "done") else
                  3 if result["decision"] == "needs_approval" else 2)
+    elif a.cmd == "watch":
+        import bt_watch
+        print(bt_watch.watch(project, a.req, a.timeout, a.poll))
     elif a.cmd == "monitor":
         from bt_monitor import open_monitor
         print(json.dumps(open_monitor(project, a.req, a.model, a.dry_run), indent=1, ensure_ascii=False))

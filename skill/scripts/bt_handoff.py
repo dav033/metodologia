@@ -205,4 +205,7 @@ def handoff(project: str, req: str, dry_run: bool = False, pool: str | None = No
                     background=display == "background", **extra)
     return {**out, "decision": "launched", "pool": mode_pool, "display": display, "opened": result["opened"],
             "handoff": result["handoff"],
-            "next": f"watch: bitacora.py web · control: bitacora.py --project {project} run-control {rid} pause|resume|stop"}
+            "watch": f"bitacora.py --project {project} watch {rid}",
+            "next": f"keep the user informed: run `bitacora.py --project {project} watch {rid}` in the background, relay "
+                    f"what it prints when it exits and run it again until it says `terminal: true` · panel: "
+                    f"bitacora.py web · control: bitacora.py --project {project} run-control {rid} pause|resume|stop"}

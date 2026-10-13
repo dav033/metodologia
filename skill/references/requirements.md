@@ -182,6 +182,15 @@ It validates the plan (tasks, dependencies, repo roles) and decides:
   names an irreversible, production, git-remote, money, credentials or external-communication action. Show the user
   the plan summary and those reasons; when they approve (chat or web), run `handoff` again.
 
+**Stay the control tower.** This conversation is not replaced by the executors: it is where the user keeps talking,
+often from a phone through Remote Control. Right after a `launched` hand-off, run `bitacora.py --project P watch
+REQ-NNN` **in the background** (Claude Code: a background Bash command; the session is woken when it exits). It returns
+at the next piece of news — a settled milestone or audit, a blocked task, a wait for usage limits, a silent supervisor,
+the end. Tell the user in two or three lines in Spanish what happened, then run it again, until it prints
+`terminal: true`. On `blocked`, read PENDING.md and say what is needed. Never `/clear` this conversation to "make room":
+the executors already start clean, and clearing here only loses the thread the user is following. In a CLI without
+background wake-ups (Codex), run `watch` when the user asks how it is going.
+
 Each milestone then runs in a fresh session that receives only references: the spec, the plan, the bitácora
 pointers, a context bundle, the agents available and the confirmed learnings. Everything that must survive is in
 files: tasks and progress in PLAN.md/RUN.json, permanent decisions in `DECISIONS.md`, what was learned in the
