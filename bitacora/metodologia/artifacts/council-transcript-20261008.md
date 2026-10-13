@@ -33,8 +33,8 @@ everything documented, hates giant files, Spanish conversation, code in the repo
 - Size: 20 Python scripts (~2,800 lines), web assets, templates; `install.py` sets up any machine.
 
 ## Evidence so far
-- Already used live by the user's other sessions without supervision: 5 projects in the bitácora (one created
-  REQ-004 with 13 requirements not yet covered by tasks — the graph flagged it).
+- Already used live by the user's other sessions without supervision: 5 projects in the bitácora (one of them,
+  pictures, has a requirement with 13 items not yet covered by tasks — the graph flagged it).
 - NEVER tested end to end: HQ → web rounds → approve button → executor window with /loop → REPORT → merge.
   Unverified: /loop as initial prompt, launching Windows Terminal from the background server, Codex /goal.
 - Bugs found during the build: several self-inflicted breakages of the live hooks (escaping errors), hooks failing

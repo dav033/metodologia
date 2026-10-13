@@ -13,53 +13,77 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Source:** [day log](YYYY-MM/Wn/YYYY-MM-DD.md) · REQ-xxx (if any)
 -->
 
-## D-001 — Adapt agent orchestration patterns without importing external runtimes
-- **Date:** 2026-10-10 · **Status:** Accepted
-- **Context:** The methodology skill needed stronger concurrent subagent orchestration and long-running autonomous development. Public repositories offer useful patterns but vary in safety defaults and external dependencies.
-- **Decision:** Adapt dependency-aware task waves, explicit ownership, bounded concurrency, worktree isolation, durable checkpoints, and independent verification into methodology references. Attribute source repositories; do not copy files or adopt external runtimes, credential handling, permission bypasses, or global configuration.
-- **Alternatives:** Install a public orchestration framework — rejected because it adds runtime/config/security surface beyond the user's request. Copy an entire skill — rejected in favor of a small, attributed adaptation.
-- **Consequences:** + portable workflow with no new dependency; + preserves current safety gates; − orchestration remains instruction-driven and uses only capabilities available in the active harness.
-- **Source:** [day log](2026-10/W2/2026-10-10.md) · REQ-002
+## D-001 — No guard hook limiting the executor
+- **Date:** 2026-10-08 · **Status:** Accepted
+- **Context:** Research recommended a PreToolUse hook blocking destructive commands (force push, `reset --hard`, `rm -rf` outside the repo, reading `.env`/`~/.ssh`), since the Claude sandbox doesn't run on native Windows.
+- **Decision:** Not adopted. The user wants agents without limitations; safety stays in the skill's prose rules (stop-and-ask list) plus secret scanning.
+- **Alternatives:** guard hook (rejected by the user: "no quiero limitaciones"); devcontainer/WSL sandbox for executors (not pursued).
+- **Consequences:** + full autonomy, no false blocks / − destructive mistakes are only prevented by instructions.
+- **Source:** [day log](2026-10/W2/2026-10-08.md)
 
-## D-002 — Do not integrate Laya into the router now; collect labelled telemetry first
-- **Date:** 2026-10-12 · **Status:** Accepted
-- **Context:** The plan proposed Laya (local typed classifier, ModernBERT-based, CLI/MCP) as the router's task classifier. A researcher, an advocate, a critic (two rounds) and an independent judge evaluated it; notes and verdict: /tmp/claude-1000/laya/ (NOTES, PRO-1/2, CON-1/2, VERDICT).
-- **Decision:** No Laya service, MCP or zero-shot shadow now. Do instead: deterministic rules for risk/scope/verifiable (computable from the repo), a fixed 7-field JSON classification by the orchestrating agent with David's corrections, and an attempt log (`bt_events`). Reopen only if all hold: (A) >=150 blind human labels, an embedding+logistic baseline trained on the same split, and a seed-averaged fine-tuned Laya whose paired-bootstrap IC95 lower bound beats the baseline, plus ECE<=0.10, p95<=500 ms and VRAM<=3 GB measured on the A3000; and (B) >~50 tasks/day or measurable quota spent on agent classification, or (C) a replay showing Laya routing improves outcomes over rules+agent. Also check that the weights load without the `laya` package.
-- **Alternatives:** Laya in shadow mode from day one — rejected: shadow without ground truth teaches nothing and execution labels measure success, not type/ambiguity/complexity. Embedding+LR now — deferred until labels exist.
-- **Consequences:** + no multi-GB dependency or always-on service; + router effort goes to measurement; − no learned classification until data exists; − still unverified: A3000 latency/VRAM, telemetry/torch.load audit of the repo.
-- **Source:** [day log](2026-10/W3/2026-10-12.md) · REQ-006
+## D-002 — One private monorepo for skill + bitácora
+- **Date:** 2026-10-08 · **Status:** Superseded by D-007
+- **Context:** Work happens on several computers; skill and bitácora were local-only.
+- **Decision:** `github.com/dav033/metodologia` (private) holds `skill/` and `bitacora/`; junctions keep the usual paths; `install.py` sets up any machine; bitácora auto-commits (scoped) and pushes, pulls at session start.
+- **Alternatives:** two repos (rejected: nothing will be shared; simpler with one); company org for Sempertex docs (not needed per user).
+- **Consequences:** + one clone, versions aligned / − all project docs in one repo (fine: private, not shared).
+- **Source:** [day log](2026-10/W2/2026-10-08.md)
 
-## D-003 — One router for every provider: capability tiers, account pool, milestone sessions and independent audits
-- **Date:** 2026-10-12 · **Status:** Accepted
-- **Context:** The owner wants a requirement to run to the end without interaction: sized automatically, planned in milestones, each milestone in a clean session, with tests, documentation, implementation and audit handled by the system, switching agent and effort on its own, aware of subscription quotas, and learning about the project and the owner. The marathon was pinned to one agent per run and Codex could not change model.
-- **Decision:** (1) Tiers 0–2 are capability levels shared by Claude (haiku → sonnet xhigh → opus xhigh) and Codex (gpt-6-luna medium → gpt-6.1-sol high → gpt-6.1-sol xhigh); `bt_agents` routes each session to an account of a pool by tier, kind of work, usage-limit cooldowns, measured success and recent load, preferring another provider after a failure and for audits. (2) A plan's `### Mn` group is one fresh session; each task is still verified on its own; every milestone is closed by a synthetic audit task run by an agent that did not build it, whose verification is every verify of the milestone again. (3) `handoff` approves and launches in the background unless it finds a stated risk reason. (4) Learnings are candidates with evidence, promoted by the owner or by three independent sightings, and only confirmed ones are injected. (5) Gemini/Antigravity support is removed: its free quota made it unusable (exhausted for ~7 days by a handful of sessions).
-- **Alternatives:** A learned classifier/router — rejected for now (D-002: no labelled data). An audit that can only report and reopen the milestone — rejected: more states and loops for the same outcome; the auditor fixes contained problems itself and the supervisor re-verifies. Reopen if audits rewrite too much. Per-provider ladders with different depths — rejected: one tier scale makes "climb and switch provider" a single rule. Trusting a milestone session's own "all done" — rejected: per-task verdict and verify are kept.
-- **Consequences:** + no user interaction between plan and report in the safe case; + a usage limit on one subscription no longer stops a run; + telemetry per agent/model/effort/kind feeds both the owner and the router; − more real sessions per plan (one audit per milestone); − the risk gate is lexical and conservative: plans that mention credentials, production or money always ask; − success-rate routing needs 5 judged attempts per (agent, model, kind) before it has any say, compared in 20-point bands so quota balancing wins ties.
-- **Source:** [day log](2026-10/W3/2026-10-12.md) · REQ-006
+## D-003 — Hefesto retired; everything moves to metodologia
+- **Date:** 2026-10-08 · **Status:** Accepted
+- **Decision:** eventos migrated (hefesto/ kept as archive); hefesto skill links removed (code intact in ~/hefesto).
+- **Source:** [eventos day log](../eventos/2026-10/W2/2026-10-08.md)
 
-## D-004 — Complement methodology with interface quality and evidence-driven review
+## D-004 — Graphs: derive from our own IDs, no knowledge-graph database
+- **Date:** 2026-10-08 · **Status:** Accepted
+- **Context:** Research (2025–2026) shows modest/mixed evidence for graph context; KG stacks (Graphiti, GraphRAG, cognee) need infra and LLM edge extraction of links the bitácora already declares.
+- **Decision:** a stdlib trace graph built from IDs (REQ/US/R/T/D/P), commits and files, with lint + web view; optional CodeGraph MCP for code navigation, A/B-tested first.
+- **Source:** research notes, [day log](2026-10/W2/2026-10-08.md)
+
+## D-005 — Antagonist gate before every commit, parent decides
+- **Date:** 2026-10-09 · **Status:** Accepted
+- **Context:** The user wants harsh architectural review before each commit without infinite loops.
+- **Decision:** `antagonist` subagent reviews the staged diff; the parent agent triages each finding — fix if relevant now, otherwise defer to PENDING.md (urgency × complexity) or drop. One review + at most one re-review per commit; the antagonist can't delegate or edit.
+- **Alternatives:** blocking review until clean (rejected: loops, interruptions).
+- **Consequences:** + design issues caught pre-commit, deferred work tracked / − extra tokens and time per commit.
+- **Source:** [day log](2026-10/W2/2026-10-09.md)
+
+## D-006 — Multi-day runs: marathon supervisor, fresh session per task
+- **Date:** 2026-10-09 · **Status:** Accepted
+- **Context:** /goal and /loop alone can't run for days (loops expire after 7 days and aren't restored on resume, --bg doesn't survive reboot, compaction loses detail — Codex goal completes early after compaction).
+- **Decision:** `bitacora.py run` supervisor: state on disk (RUN.json), one fresh headless session per task (Haiku 5.5 + ultracode by default), external verify, caps and stuck detection in the supervisor, usage-limit backoff, autostart after reboot, Windows toast. Loop mode stays for hours-long work.
+- **Alternatives:** one long /goal session (rejected: context rot, no reboot survival).
+- **Consequences:** + days of unattended work with bounded risk / − more moving parts to maintain.
+- **Source:** [day log](2026-10/W2/2026-10-09.md)
+
+## D-007 — The bitácora lives in `~/bitacora`, outside the repo
+- **Date:** 2026-10-13 · **Status:** Accepted · **Supersedes:** D-002 (bitácora location only)
+- **Context:** Remote commit `4cfd74f` (2026-10-12) removes the embedded `bitacora/` from the repo, and `install.py` creates `~/bitacora` as a plain folder "never linked into this repo". Pushing the local legacy bitácora would have brought it back. 112 bitácora files changed locally since `07a8113` existed only on this machine.
+- **Decision:** the live bitácora is `~/bitacora` (`$BITACORA_ROOT` overrides it). The monorepo keeps `skill/`, `evals/`, `install.py` and `README.md`; its history keeps the legacy `bitacora/` commits. The user approved the move, with a backup first.
+- **Alternatives:** keep the bitácora embedded (rejected: contradicts `4cfd74f`); discard the 228 local commits (rejected: the only copy of 112 files; backed up instead); keep the history in a local branch only (rejected by the user, who chose to push it).
+- **Consequences:** + the repo's tip carries no bitácora, and the legacy history is on GitHub / − the live bitácora has no remote or backup yet (P-013), so sync between machines is undefined.
+- **Source:** [day log](2026-10/W3/2026-10-13.md) · P-013
+
+## D-008 — Pictures bitácora goes into the metodologia repo (full copy)
+- **Date:** 2026-10-13 · **Status:** Accepted · **Supersedes:** D-007 (pictures project only)
+- **Context:** The owner asked for the pictures bitácora to be part of the `metodologia` repo, not a separate repo. D-007 had moved the whole bitácora out of the repo.
+- **Decision:** `bitacora/pictures/` in the `metodologia` repo receives a full copy of `~/bitacora/pictures`. Git ignore rules still apply, so the casos photos stay out. The commit is local; nothing is pushed until the owner decides. `~/bitacora/pictures` stays the live copy until one link is chosen.
+- **Alternatives:** keep it in `~/bitacora` (D-007); move the whole bitácora into the repo (not requested); let the bitácora code push after each commit (rejected: `push_async` would publish `main` automatically).
+- **Consequences:** + one versioned copy of pictures in the methodology history / − two copies until the live one is linked; the repo copy is a snapshot at its commit.
+- **Source:** [day log](2026-10/W3/2026-10-13.md) · P-013
+
+## D-009 — Integrate the other clone's bitácora into the repo (owner's choice)
 - **Date:** 2026-10-13 · **Status:** Accepted
-- **Context:** David requested extracting the complementary best practices from Antislop and Thermos into methodology, without duplicating its existing engineering standards or review workflow.
-- **Decision:** Route UI/copy work to an on-demand interface-quality reference covering owner direction, purposeful composition, truthful content and recorded interaction/accessibility coverage. Strengthen the existing spec/standards reviews with traced consumer/setup/feature-gate impact, evidence-based severity and root-cause deduplication. Keep optional structural simplifications as proposals, not new blockers. Pin upstream source revisions; adapt ideas independently rather than copying files or installing plugins.
-- **Alternatives:** Install both upstream frameworks — rejected because recurring mode/approval gates and duplicate review passes conflict with the existing workflow. Copy their full rubrics — rejected because style bans, the 1k-line threshold and speculative refactor blockers would replace existing owner rules.
-- **Consequences:** + focused UI acceptance and review evidence with no runtime dependency; + explicit limits on unverified delivery claims; − instruction-driven behavior still needs real-session evaluation, not just static validation and simulations.
-- **Rollback:** Revert only this integration's router/reference links, interface-quality reference, review-protocol section and eval cases; preserve unrelated workflow and runtime code. No external configuration or data migration is involved.
-- **Source:** [day log](2026-10/W3/2026-10-13.md), session `01a1356b`; Antislop `b1cdf87d49b1653293d58424516fd80394008345`, Thermos `1dcc2bacde73ddd284803b7af28164d0436198fc`.
+- **Context:** Commits `c683665` ("bitacora: moved back into the metodologia monorepo (temporary)") and `1a72518` ("pictures: reconstruction …") from another clone of the repo (10:20 and 10:44 -05:00) reached `origin/main` while the local pictures commit `c1e39c0` was ready. The push was rejected as non-fast-forward. No clone of the repo exists on this machine except this one.
+- **Decision:** integrate them (merge `904a1e7`). The repo now carries the bitácora of 16 top-level entries, including four projects that are not in `~/bitacora`. On the nine add/add conflicts in `bitacora/pictures` the local copy was kept; the other clone's versions stay in history (`c683665`, `1a72518`).
+- **Alternatives:** keep `c1e39c0` local (not chosen by the owner); take the other clone's pictures and drop the local copy (not recommended: 3546 lines of ours would be missing).
+- **Consequences:** + one complete history on GitHub / − contradicts D-007 for the projects not in `~/bitacora`; repo copies and the live copies can diverge; the other clone must be stopped before it pushes again.
+- **Source:** [day log](2026-10/W3/2026-10-13.md) · D-007 · D-008
 
-## D-005 — Budget-specific audit routing
+## D-010 — Keep the other clone's bitácora copies; the other agent does the controlled merge
 - **Date:** 2026-10-13 · **Status:** Accepted
-- **Context:** David rejected xhigh flagship audits as excessive for finite subscription quotas and approved Sonnet medium as the normal auditor, Opus high for escalation/high risk, and Sol medium fallback.
-- **Decision:** Give audit tasks their own model/effort ladder. Prefer an eligible available Claude account even when it built the milestone; independence comes from a clean session. Routine audits use Sonnet medium; tier 2 uses Opus high. Codex fallback uses Sol medium (high at tier 2). Do not inherit the builder's model or effort. Explicit delegation flags remain overrides. High-risk/architecture milestone members promote the audit; preserve escalation on resume. Consolidate existing audits at final close rather than spawning duplicate full reviews. Keep small changes inline and follow-up review scoped to corrections.
-- **Alternatives:** Opus xhigh by default — rejected by the owner for excessive budget. Provider diversity ahead of budget preference — replaced for audits only. Lower every implementation model's effort — outside this request.
-- **Consequences:** + explicit audit budget and quota fallback across pooled/fixed routing; + no audit default at xhigh/max; − model capability remains a starting policy to validate with actual findings/rework/consumption. Native Codex reviewers inherit the parent model under the existing installer contract; exact Sol selection uses routed delegation.
-- **Rollback:** Revert audit-specific routing, risk inheritance, final-review consolidation and reviewer defaults; restore prior generated reviewer definitions through the existing generator. No runtime state migration or credential change.
-- **Source:** [day log](2026-10/W3/2026-10-13.md), session `01a1356b`; owner: “excelent, persistelo”.
-
-## D-006 — Deterministic subscription usage collection and quota-aware routing
-- **Date:** 2026-10-13 · **Status:** Accepted
-- **Context:** David wants hourly 5-hour/weekly subscription readings without agents, including usage outside methodology, and account selection that favors unused capacity (e.g. codex-luis over a heavily used default Codex account).
-- **Decision:** Poll unique registered account configurations sequentially through read-only metadata: Codex app-server rateLimits RPC and Claude OAuth usage endpoint, never a model turn or credential refresh. Store versioned current samples and monthly metadata history outside Git. A user-systemd timer samples hourly on this Arch host. Route from the local cache, using the bottleneck utilization before historical success/local load and after existing provider preferences, audit policy and work gates. Samples older than two hours/error/incomplete are unknown; confirmed exhaustion remains blocking until reset. Track per-model Claude weekly windows where available. Keep account pins explicit. Bound requests and response sizes; respect Retry-After and stop on browser challenges.
-- **Alternatives:** Agent-driven hourly checks — rejected: waste inference quota and introduce nondeterminism. Local token estimates — rejected as authoritative because they miss other tools/devices and do not measure subscription limits. A persistent custom daemon — rejected in favor of systemd's existing scheduler. Automatic OAuth refresh — excluded as an unnecessary credential mutation.
-- **Consequences:** + live subscription balancing with no inference; + observable errors and durable historical percentages; − Claude endpoint is undocumented/unstable and claude-work currently returns 401; − one-hour sampling is not real-time; − automatic timer installation currently targets Linux/systemd, while manual polling/cache routing remain portable.
-- **Rollback:** Disable `metodologia-subscription-usage.timer` through user systemd and revert the quota-cache routing key/collector CLI modules. Preserve cached metadata/history; existing cooldown and local telemetry ranking remain the fallback. No credentials or provider settings change.
-- **Source:** [day log](2026-10/W3/2026-10-13.md), session `01a1356b`; owner explicitly requested implementation after D-005.
+- **Context:** After D-009 the repo copies of eventos, maros, metodologia and signature-extraction, which come from the other clone, may differ from the live copies in `~/bitacora`.
+- **Decision:** keep the repo copies as they are. Nothing is aligned from this session. The controlled merge between both sides is done by the other agent, which the owner put in charge of it. The live copies stay unchanged until it finishes (P-015).
+- **Alternatives:** align the live copies to the repo from here (rejected: it would overwrite them without review); align the repo to the live copies from here (rejected: the same problem on the other side).
+- **Consequences:** + no data is lost while the merge is pending; one owner for the merge / − the divergence stays until the merge is done.
+- **Source:** [day log](2026-10/W3/2026-10-13.md) · D-009 · P-015

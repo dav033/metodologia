@@ -1,6 +1,6 @@
 # Index — eventos
 
-_Generated 2026-10-12 20:49 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-09 09:27 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/eventos) · [graph](http://127.0.0.1:8765/p/eventos/graph)  
@@ -8,8 +8,8 @@ _Generated 2026-10-12 20:49 by `bitacora.py index`. Do not edit by hand._
 
 ## Workspace
 
-- **frontend** → `/home/david/Desktop/eventos/FrontSempertexEventos` (not cloned here)
-- **backend** → `/home/david/Desktop/eventos/ViveSempertexEventos` (not cloned here)
+- **frontend** → `C:/Users/davidt/Desktop/eventos/FrontSempertexEventos`
+- **backend** → `C:/Users/davidt/Desktop/eventos/ViveSempertexEventos`
 
 ## Requirements
 

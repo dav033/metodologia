@@ -2,12 +2,11 @@
  "repos": {
   "frontend": {
    "remote": "https://github.com/dav033/maros-next.git",
-   "hint": "~/dev/maros/maros-next"
+   "hint": "~/maros-next"
   },
   "backend": {
    "remote": "https://github.com/dav033/maros-nest.git",
-   "hint": "~/dev/maros/maros-nest"
+   "hint": "~/maros-nest"
   }
- },
- "root": "~/dev/maros"
+ }
 }

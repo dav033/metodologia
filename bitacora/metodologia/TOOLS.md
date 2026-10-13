@@ -29,13 +29,7 @@ _None registered yet._
 
 ## CLIs & services
 
-### subscription-usage
-- **Type:** hourly user-systemd metadata collector, no model sessions (D-006).
-- **Access:** local user `david`; existing provider account directories selected by registered profiles. No sudo or credential refresh.
-- **What runs:** `metodologia-subscription-usage.timer` starts its oneshot service, executing `python /home/david/dev/metodologia/skill/scripts/bitacora.py usage poll`.
-- **Status / logs:** `python /home/david/dev/metodologia/skill/scripts/bitacora.py usage timer-status` and `usage show`; `journalctl --user -u metodologia-subscription-usage.service --since today`.
-- **Control:** explicitly authorized changes use `systemctl --user stop|start metodologia-subscription-usage.timer`; disable to stop future sampling. Units live under `~/.config/systemd/user/`.
-- **Notes:** latest schema-v1 snapshot and monthly metadata history are under `~/bitacora/.state/`. No secrets/raw responses. `claude-work` returned HTTP 401 on 2026-10-13; its usage is unavailable until the owner resolves its sign-in. Linux/systemd installation only; manual collector/cache routing are portable.
+_None registered yet._
 
 ## Storage & data
 

@@ -1,32 +1,42 @@
 # metodologia — Summary
 
-_Rewritten (not appended) whenever the state changes. Keep it under ~60 lines._
-
 ## Purpose
-Canonical cross-harness workflow skill for David's software work: requirements, engineering execution, project memory, infrastructure and autonomous runs.
-Last confirmed with owner: 2026-10-10.
+The user's own working method, as a skill for Claude Code and Codex: requirements by prioritized rounds → approved
+plan → autonomous executor; engineering standards; subagent roles; per-project bitácora; local web UI; tools and
+infra registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `evals/`, `install.py` and,
+since D-008 and D-009, bitácora copies. The live bitácora is `~/bitacora` (D-007, partly superseded).
 
 ## Current state
-The skill now supports deep product-level workspace audits, evidence-based self-improvement, contextual feature discovery, safe agent orchestration, and durable multi-day execution. It is globally activated for Claude Code and Codex through user-level instructions and links to this working tree. REQ-001 and REQ-002 are implemented in the methodology working tree and awaiting owner review; changes are uncommitted. REQ-003 now integrates Caveman concision, optional RTK evidence recovery and Grill Me interviews; static validation and independent conversational simulations passed. Paid evals remain unverified; RTK runtime was measured under REQ-005. A two-agent A/B pilot measured 30.38% fewer total tokens and 3.03% fewer output tokens, with equivalent manual quality; final prose was slightly longer, and the total saving mainly reflects one fewer tool turn/cache reuse.
-
-REQ-004 adds the exact benchmarked selective-context policy. Across six screening runs, median total tokens fell 5.55% and uncached input 27.99%; the held-out pair used 0.86% more total tokens. Quality criteria held in all eight trials; compact-entrypoint restructuring was rejected. Evidence: artifacts/metodologia-efficiency-2026-10-12/benchmark.md. No guaranteed cost saving is claimed.
-
-REQ-005 integrates RTK into the parent repository with a pinned user-space installer and explicit-only setup options. Three-run output-token measurements range from -0.4% on a focused diff to -99.8% on verbose passing pytest; full recovery of a failing pytest log produced 1.9% more output than native. Installer tests 9/9 and exit/diagnostic preservation passed. Evidence: artifacts/metodologia-rtk-2026-10-12/.
+- Repo `main` equals `origin/main` at `904a1e7`: a merge of the other clone's commits (`c683665`, `1a72518`) with our
+  pictures commit (`c1e39c0`).
+- The repo tip has `bitacora/`: pictures (our copy) and 16 top-level entries from the other clone (D-009). The repo
+  copies of eventos, maros, metodologia and signature-extraction are kept as they are (D-010). They may differ from
+  the live copies until the other agent's controlled merge is done (P-015).
+- The live bitácora `~/bitacora` has nine projects. The four repo-only projects (`agentes-de-trabajo`, `escritorio`,
+  `maros-lab`, `proposal-studio`) were copied in today; they are not committed yet.
+- The live bitácora has one local commit (`b49b8c7`) and no remote (P-013).
+- Skill fixes pushed earlier (`a67371f`): pending normalization and the ID high-water mark. Lint: 0 errors in the five
+  live projects.
+- Skill test suite: 358 tests. 5 fail on Windows and already failed on `origin/main` before this session. Not fixed.
+- Installed on 2026-10-08: hooks, HQ and launcher, web UI on 127.0.0.1:8765, gitleaks, trace graph, review and merge,
+  evals 10/10. The first end-to-end run is not done yet (P-002).
 
 ## Active focus
-- D-005: audit budget persisted and verified (Sonnet medium, Opus high escalation, Sol medium fallback), including generated reviewer defaults.
-- D-006: hourly subscription collector installed/active; metadata-only 5h/weekly readings feed cached headroom into routing. Real route preview favors codex-luis (13% bottleneck) over codex-1 (57%). Claude personal succeeds; claude-work returns HTTP401, explicitly unavailable. 383 tests pass; independent review approved; no inference in the collector. Changes uncommitted.
-- Antislop/Thermos selective integration (2026-10-13, D-004): on-demand interface/content quality and evidence-driven diff reviews, preserving existing permissions and axes. Three behavioral eval cases added; real paid evals not run.
-- Review uncommitted REQ-001 through REQ-005 changes; collect normal-session feedback on selective context loading.
+- The other agent runs the controlled merge (D-010, P-015). Then decide how the live bitácora is synced and backed up
+  (P-013).
 
 ## Top pending (see PENDING.md)
-- See PENDING.md for the current open items.
+- P-002 first end-to-end run · P-013 bitácora sync and backup decision · P-015 verify the controlled merge ·
+  P-014 prune closed items (low)
 
 ## Recent decisions (see DECISIONS.md)
-- D-001: Adapt public orchestration patterns with attribution; keep methodology self-contained and retain existing approval/safety boundaries.
+- D-010 keep the other clone's copies; the other agent merges · D-009 the other clone's bitácora is integrated into
+  the repo · D-008 pictures bitácora copied into the repo · D-007 bitácora lives in `~/bitacora` (partly superseded)
 
 ## Known issues
-- The first full-suite attempt was launched twice concurrently and wrote generated `proj1`–`proj48` fixtures plus `INDEX.md` into the real bitácora. David authorized and the generated fixtures were removed; see today's log.
-- A test also reset `PENDING.md`; its twelve captured items have been restored and recorded in today's log.
+- Codex hooks need one-time approval with `/hooks` on each machine.
+- Push failures stay silent in `bt_vcs.push_async`. Nothing pushes the live bitácora (P-013).
+- The other clone pushed bitácora straight to `origin/main`. Its next push should follow the controlled merge (D-010).
+- The bitácora web server started before the migration runs old code until it restarts.
 
 _Last updated: 2026-10-13_

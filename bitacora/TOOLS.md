@@ -29,12 +29,7 @@ _None registered yet._
 
 ## CLIs & services
 
-### Cloudflare CLI (`cf`)
-- **Type:** Cloudflare API and Workers CLI · **Status:** beta (`1.0.0-beta.14`)
-- **Access:** Global npm install under fnm Node.js 24.21.0; commands: `cf` and `cloudflare`. Requires Node.js 22.18+.
-- **Authentication:** Not logged in yet; start with `cf auth login` and check with `cf auth whoami`.
-- **Status:** `cf --version` · `cf auth whoami`
-- **Notes:** `cf` can manage Cloudflare resources and Workers projects. Existing Wrangler projects keep using Wrangler unless migrated with `cf migrate`. `cf` is beta and its commands/configuration may change.
+_None registered yet._
 
 ## Storage & data
 
