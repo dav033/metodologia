@@ -77,6 +77,24 @@
       "created": "2026-10-13T12:01:18.599649-05:00",
       "updated": "2026-10-13T12:01:18.599649-05:00",
       "promoted_by": null
+    },
+    {
+      "id": "LG-005",
+      "scope": "owner",
+      "kind": "preference",
+      "text": "When the owner says 'trabajo autónomo': settle open decisions with 3 haiku-medium subagents each defending one solution plus a haiku-max judge, and announce to the owner that the directive was understood and the debate agents will be launched; irreversible/external/spend actions still wait for him",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T12:22:59.496857-05:00",
+          "source": "REQ-015",
+          "note": "Owner instruction 2026-10-13 in session 47f58a4d"
+        }
+      ],
+      "created": "2026-10-13T12:22:59.496857-05:00",
+      "updated": "2026-10-13T12:22:59.496857-05:00",
+      "promoted_by": null
     }
   ]
 }
