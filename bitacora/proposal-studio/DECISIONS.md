@@ -83,3 +83,11 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Consequences:** + distinct, fast-feeling tool; − departs from the Catppuccin rule in the owner's global instructions, so it applies to this product only; − less friendly for non-technical viewers on the admin side.
 - **Rollback:** keep the design tokens centralized so A or B can replace them; no data changes.
 - **Source:** [day log](2026-10/W3/2026-10-13.md); canvas https://claude.ai/artifact/B9GwtvtHwFSNioDxCVvZ79.
+
+## D-009 — Keep inactive public share links indistinguishable
+- **Date:** 2026-10-13 · **Status:** Accepted
+- **Context:** The share page needs a useful expired-link state without revealing whether an arbitrary token exists.
+- **Decision:** Show the same public unavailable page for unknown, expired, revoked, archived, or invalid-content links. In the authenticated editor, show exact active, expired, or revoked state.
+- **Alternatives:** Distinguish expired from unknown tokens publicly — rejected because it confirms token validity.
+- **Consequences:** + Public responses do not disclose token state; + the recipient gets a next step; − support may need the owner to check the exact link state.
+- **Source:** [day log](2026-10/W3/2026-10-13.md) · P-015.

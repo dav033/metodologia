@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "L-001",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "A pending item written from a test's assumption (P-042 'undo') can describe a feature that does not exist in the UI: check for the consumer before planning files, and decide the entry point instead of escalating on tier alone.",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T15:24:46.148088-05:00",
+          "source": "REQ-016/T1",
+          "note": "REQ-016 T1: no undo existed in the guided UI; the haiku attempt escalated, the standard attempt designed «Deshacer» (D-045) in one session"
+        }
+      ],
+      "created": "2026-10-13T15:24:46.148088-05:00",
+      "updated": "2026-10-13T15:24:46.148088-05:00",
+      "promoted_by": null
+    }
+  ]
+}

@@ -10,10 +10,14 @@ month summary._
 - P-010 · Reauthenticate Claude Code and verify a proposal-studio MCP tool call · urgency: high · complexity: S · added 2026-10-11 · REQ-007
   - Verified 2026-10-13: Claude Code connected and `list_proposals` call succeeded against production (returned `oraldenti`, draft).
   - `claude mcp list` reports the production endpoint connected, but `claude -p` could not invoke a tool because the Claude OAuth session expired. After `claude auth login`, retry a read-only call; no MCP token change is needed.
+- P-012 · Apply review findings for the client simulator, then editor usability pass (checklist, sticky actions, collapsible sections) · urgency: high · complexity: M · added 2026-10-13 · requirement from owner
+  - Approved UI work is committed as `e99b2ff` and pushed to `main`; no deployment command was run. `vercel ls` showed no deployment newer than the existing production build. Owner release decision remains open. Minor follow-up: add `proposal_stale`/share error codes to MCP known errors; orphaned page captures in storage; document MCP token format.
 - P-011 · Import and share the Oraldenti proposal prototype · urgency: med · complexity: S · added 2026-10-11 · production proposal setup
   - David is generating the prototype code. When he provides its GitHub repository and built output path, import it, validate Inicio/Servicios/Contacto comparisons, publish, then create a temporary share link.
 - P-007 · Add a custom domain after David purchases one · urgency: low · complexity: S · added 2026-10-10 · REQ-003
   - Optional future polish only. Current share URLs use `proposal-studio-orpin.vercel.app`; this does not block the simple proposal flow.
+- P-014 · Consider disabling SSH password auth · urgency: low · complexity: S · added 2026-10-13 · owner request
+  - SSH is reachable through the Advin reverse tunnel and Cloudflare `ssh.yesitrainer.com`; restarting sshd for Tailscale is not needed. Owner decision remains open.
 
 ## Blocked
 _None_
@@ -32,10 +36,9 @@ _None_
 - P-005 · Persist audit events for security-sensitive admin mutations · urgency: med · complexity: M · added 2026-10-10 · REQ-003
   - Proposal create/update/publish/archive, share create/revoke, and GitHub connect/import/disconnect actions write minimal events in the same database transaction as their mutation.
 - P-001 · Approved REQ-003 scope and Vercel architecture · urgency: high · complexity: L · added 2026-10-10 · REQ-003
-- P-012 · Apply review findings for the client simulator, then editor usability pass (checklist, sticky actions, collapsible sections) · urgency: high · complexity: M · added 2026-10-13 · requirement from owner
-- P-013 · Proposal: in-app editor for client-facing content (headline, intro, findings, deliverables, contact); today only via MCP `update_proposal` · urgency: med · complexity: M · added 2026-10-13 · final audit
-- P-014 · Consider disabling SSH password auth (sshd is reachable through the Advin reverse tunnel and Cloudflare `ssh.yesitrainer.com`); restarting sshd for Tailscale is NOT needed · urgency: low · complexity: S · added 2026-10-13 · owner request
-- P-015 · Implement direction C · urgency: med · complexity: L · Consola in phases: (1) visual system + existing views, (2) content editor, versions, activity, expired-link page and state simulation, list search/filters, (3) backend items only if approved: auto-capture, link-open tracking, request-new-link, ⌘K. Fix the simulator copy "no cuenta como visita" (no visit tracking exists) · added 2026-10-13 · owner request
+- P-013 · DONE — In-app editor for client-facing content · urgency: med · complexity: M · added 2026-10-13 · final audit
+- P-015 · DONE — Consola phases 1–2 · urgency: med · complexity: L · added 2026-10-13 · owner request
+  - Implemented locally on `feat/consola-redesign`: visual system, existing views, content editor, version/activity history, expired/revoked link states, list search/filters, and corrected private-preview copy. Phase 3 (auto-capture, link-open tracking, request-new-link, ⌘K) remains unapproved and was not implemented.
 
 ## Notes
 One line per item: `<ID> · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
