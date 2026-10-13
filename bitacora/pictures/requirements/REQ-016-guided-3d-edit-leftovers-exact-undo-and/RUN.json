@@ -176,11 +176,11 @@
    "tier": 2,
    "status": "in_progress",
    "attempts": 1,
-   "last_error": "REJECT: P-082 same-selection replay changes untouched Fashion Rosa 011 after the first rosado-to-rojo-reflex call removed Rosado 009 elsewhere. Preserve original source resolution for requested untouched pieces while allowing expanded selections; define compatible history state, fix and register scripts/test/test-ultima-orden-color-replay-selection.ts (currently exit 1). Contained fixes committed df0be2a0; main suite 20/20, confirmation/context/consumption/frontiers/types and existing gate 10/10 pass; lint 0 errors. Application builds fail separately under P-083. Full findings, actual checks and continuation in AUDIT-M2.md; logs and memory updated, working tree clean, all child agents and jobs finished. No push/deploy/publication.",
+   "last_error": null,
    "error_hashes": [
     "cb88c2753bfa"
    ],
-   "evidence": null,
+   "evidence": "PASS-WITH-FIXES: audited T2 84fa287a and T3 c6dd13d4; prior fixes df0be2a0 plus P-082 fix fb872bce committed on feature branch, clean tree. Registered replay 9/9, main last-order 20/20, returned-history properties seed20261009/40, confirmation/context/frontiers/consumption pass; gate GATE OK 10/10, lint 0 errors/50 existing warnings, scoped lint/types/workspace builds pass, staged antagonist SOUND and secret scanner clean. Application build fails separately on known P-083 external node_modules symlink. D-048, AUDIT-M2, day log, summary, architecture, pending and cerebro updated; P-058/P-082 closed locally. PLAN_COLOR_ORDER_V3 remains false pending separate reader release accepting both nested versions. All jobs/subagents completed, no push/deploy/paid calls.",
    "pending_id": null,
    "notes": [],
    "limit_streak": 0,
@@ -190,6 +190,13 @@
     "model": "gpt-6.1-sol",
     "effort": "medium",
     "result": "failed"
+   },
+   "claimed_done": true,
+   "findings": 6,
+   "severity": {
+    "high": 3,
+    "med": 3,
+    "low": 0
    }
   }
  ],

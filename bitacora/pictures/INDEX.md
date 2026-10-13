@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-13 18:35 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-13 18:52 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -41,21 +41,21 @@ _Generated 2026-10-13 18:35 by `bitacora.py index`. Do not edit by hand._
 
 ## Top pending (urgency, then complexity)
 
-- P-082 · REQ-016 M2 audit blocker: repeating `rosado → rojo reflex` with the same selection changes · high/M
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/?
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer - · high/?
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/?
 - P-041 · ajustar_salon reports grid capacity («40 invitados, caben 96») while only 5 tables of 8 ar · med/S
 - P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
 - P-079 · Stale persisted image: a plain adjust of a plan with a generated image drops the in-memory · med/S
+- P-039 · Finish library ideas 29/30/31 fix (branch fix/biblioteca-feedback 998a7b18, e7f): re-resol · med/M
 
 ## Recent decisions
 
+- D-048 — 2026-10-13 · REQ-016 M2: retain requested untouched colour resolutions in versioned signed history
 - D-047 — 2026-10-13 · REQ-016 T3 (P-058 A2–A4): sumar una idea conserva el origen; «rosa → rosado» con el rosado ya puesto no pregunta; `origen.tipo` se declara como `resolutor`
 - D-046 — 2026-10-13 · REQ-016 T2 design: signed last-colour-order context replaces the origin heuristic for known history
 - D-045 — 2026-10-13 · REQ-016 T1 (P-042): «Deshacer» a guided 3D adjustment restores the stored previous widget (signed plan + quote), in memory only; never an inverse edit
 - D-044 — 2026-10-13 · REQ-015 audit P1-2: the rule path accionIdea:costear is bounded by a durable global hourly cap in Neon (topeDurable key costeo_idea_hora, no migration), checked before costearIdeaElegida; denied → rule answer (SSE 200, no model), store down → in-memory cap with the same N, never unlimited. Chosen by debate (A in-memory, B durable cap, C memo/dedupe; judge haiku-max: B). N default is a conservative guess, to be calibrated from COTIZACION_IDEA_* counts.
-- D-043 — 2026-10-13 · REQ-015 A1: on 404/422 of /api/plan-idea the canned chips are answered by rules (shared costear_decoracion body + local steps), never by a model turn; chosen by debate (3 haiku-medium debaters, haiku-max judge) over a server tool filter and over accepting the risk.
 
 ## Timeline
 

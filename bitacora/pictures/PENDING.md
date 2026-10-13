@@ -56,7 +56,6 @@ month summary._
 - P-032 · Laya fine-tune for routing / customer pro-guardrail — researched (laya.train, head-only CPU or RLCD Kaggle; ~3–5k Gemini-labelled Spanish rows, US$1–3); not worth it vs Gemini today; revisit when the customer chat has volume · urgency: low · complexity: ? · added 2026-10-09
 
 ## Blocked
-
 _None_
 
 ## Recently closed
