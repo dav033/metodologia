@@ -2,19 +2,19 @@
 
 ## Purpose
 The user's own working method, as a skill for Claude Code and Codex: requirements by prioritized rounds → approved
-plan → autonomous executor; engineering standards; subagent roles; per-project bitácora; local web UI; tools and
-infra registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `evals/`, `install.py` and bitácora
-copies (D-008, D-009, D-011). The live bitácora is `~/bitacora` (D-007, partly superseded).
+plan → autonomous executor; engineering standards; subagent roles; per-project bitácora; local web UI; tools and infra
+registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `evals/`, `install.py` and bitácora copies
+(D-008, D-009, D-011), and since D-012 the pictures bitácora itself. The rest of the live bitácora is `~/bitacora`.
 
 ## Current state
-- Repo `main` equals `origin/main` at `9d1b796` (D-011). Below it: `6ed2c4f`, the other computer's pictures work, and
-  `904a1e7`.
-- `main` holds the live copies of eventos, maros, metodologia, signature-extraction, `INDEX.md` and `TOOLS.md`. Files
-  that exist only in `main` stay until the other computer cleans up: maros (7), metodologia (14), pictures (2).
-- The live bitácora `~/bitacora` has nine projects. The four repo-only projects (`agentes-de-trabajo`, `escritorio`,
-  `maros-lab`, `proposal-studio`) are in `main` and identical to the live copies. They are not committed in `~/bitacora`
-  yet.
-- The live bitácora has one local commit (`b49b8c7`) and no remote (P-013).
+- Repo `main` equals `origin/main` at `cb40787`. The tip has `bitacora/`: pictures, the other clone's copies and the
+  live copies of eventos, maros, metodologia, signature-extraction, `INDEX.md` and `TOOLS.md` (D-011).
+- Pictures: `~/bitacora/pictures` is a junction to `metodologia/bitacora/pictures` (D-012). Changes there are
+  uncommitted in `metodologia` until someone commits them. The old live folder is kept as `~/bitacora/pictures.live-old`.
+- `~/bitacora` is a local git repo with no remote: commits `b49b8c7`, `f391319`, `a3bb68c` and `e06f0a2`. It no longer
+  tracks `pictures/` (P-013).
+- The four repo-only projects (`agentes-de-trabajo`, `escritorio`, `maros-lab`, `proposal-studio`) are in `main` and
+  identical to the live copies.
 - Skill fixes pushed earlier (`a67371f`): pending normalization and the ID high-water mark. Lint: 0 errors in the five
   live projects.
 - Skill test suite: 358 tests. 5 fail on Windows and already failed on `origin/main` before this session. Not fixed.
@@ -30,13 +30,14 @@ copies (D-008, D-009, D-011). The live bitácora is `~/bitacora` (D-007, partly 
   P-014 prune closed items (low)
 
 ## Recent decisions (see DECISIONS.md)
-- D-011 the live bitácora is published to `main` over the other clone's copies · D-010 (superseded) · D-009 the other
-  clone's bitácora integrated into the repo · D-008 pictures bitácora copied into the repo · D-007 bitácora lives in
-  `~/bitacora` (partly superseded)
+- D-012 the pictures bitácora is a junction into `metodologia` · D-011 the live bitácora is published to `main` over the
+  other clone's copies · D-010 (superseded) · D-009 the other clone's bitácora integrated into the repo · D-008 pictures
+  bitácora copied into the repo (superseded by D-012) · D-007 bitácora lives in `~/bitacora` (partly superseded)
 
 ## Known issues
 - Codex hooks need one-time approval with `/hooks` on each machine.
 - Push failures stay silent in `bt_vcs.push_async`. Nothing pushes the live bitácora (P-013).
+- Pictures changes must be committed by hand in `metodologia` (D-012).
 - The other computer pushes to `main` while we work. A push can be rejected until we fetch and rebase.
 - The bitácora web server started before the migration runs old code until it restarts.
 
