@@ -97,5 +97,32 @@ class RecordingTests(unittest.TestCase):
         self.assertEqual(by_agent["codex"]["tokens_measured"], 5604)
 
 
+class MetricsPageTests(unittest.TestCase):
+    def render(self, rows):
+        import bt_page_metrics
+        with patch("bt_page_metrics.bt_events.read_all", return_value=rows):
+            return bt_page_metrics.metrics_page()
+
+    def test_unknown_usage_renders_as_a_dash_and_coverage_is_shown(self):
+        rows = [{"ts": "2026-10-12T20:00:00", "project": "p", "task": "T1", "agent": "claude", "profile": "claude-work",
+                 "model": "haiku", "seconds": 10, "result": "done", "usage": {"total_tokens": None}},
+                {"ts": "2026-10-12T20:05:00", "project": "p", "task": "T2", "agent": "codex", "profile": None,
+                 "model": None, "seconds": 5, "result": "failed", "usage": {"total_tokens": 5604}}]
+        html = self.render(rows)
+        self.assertIn("Cobertura", html)
+        self.assertIn("0 %", html)      # claude: no usage reported
+        self.assertIn("100 %", html)    # codex: total reported
+        self.assertIn("5.604", html)
+        self.assertIn("<td>—</td><td>0 %</td>", html)  # claude: tokens shown as a dash, not as 0
+
+    def test_values_from_the_log_are_escaped(self):
+        rows = [{"ts": "t", "project": "<script>alert(1)</script>", "task": "T1", "agent": "claude",
+                 "profile": "x", "model": "m", "seconds": 1, "result": "done", "usage": {}}]
+        self.assertNotIn("<script>alert(1)</script>", self.render(rows))
+
+    def test_empty_state_is_explained(self):
+        self.assertIn("Aún no hay intentos", self.render([]))
+
+
 if __name__ == "__main__":
     unittest.main()

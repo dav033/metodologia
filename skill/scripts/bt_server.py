@@ -84,6 +84,9 @@ class Handler(BaseHTTPRequestHandler):
         parts = [unquote(p) for p in u.path.strip("/").split("/") if p]
         if not parts:
             return self.send(pages.dashboard())
+        if parts == ["metrics"]:
+            from bt_page_metrics import metrics_page
+            return self.send(metrics_page())
         if parts[0] == "static" and len(parts) == 2:
             return self.file(safe_path(ASSETS, parts[1]))
         if parts[0] != "p" or len(parts) < 2 or not (ROOT / parts[1]).is_dir():

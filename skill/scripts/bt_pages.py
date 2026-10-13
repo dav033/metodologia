@@ -101,7 +101,7 @@ def dashboard() -> str:
 <span class="kpi">{len(artifacts(pdir))} artifacts</span>
 <span class="kpi">último log: {e(days[0].stem) if days else "—"}</span></div>
 <ul class="plain">{runs}{rows or '<li class="muted">Sin requerimientos activos</li>'}</ul></div>""")
-    body = "<h1>Proyectos</h1>" + (f'<div class="grid">{"".join(cards)}</div>' if cards
+    body = '<p style="float:right"><a href="/metrics">Métricas de agentes →</a></p><h1>Proyectos</h1>' + (f'<div class="grid">{"".join(cards)}</div>' if cards
                                    else '<p class="muted">Aún no hay proyectos en la bitácora.</p>')
     return layout("Proyectos", body)
 
