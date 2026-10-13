@@ -48,12 +48,21 @@ log, and from there on **run autonomously to the end** (§2) — no further chec
 
 Skip the gate only for Quick-track work (a change that fits in one sentence) or if the user said "hazlo directo".
 
+**The gate is automatic when there is nothing to decide.** `bitacora.py handoff REQ-NNN` (see `requirements.md` §8)
+approves and launches a plan on its own unless it finds a reason for the owner to look first (size, an architecture or
+high-risk task, nothing verifiable, or an irreversible/external/financial/security action in the text). Use it as
+the default way out of planning; the manual review above is what happens when it answers `needs_approval`.
+
 ## 1c. Run the approved plan: marathon, loop or goal
 
 **Marathon is the default for plans that will take days** (many tasks, or anything that won't finish in one
 sitting): an external supervisor runs one fresh headless session per task, with caps, stuck detection, usage-limit
 waits and reboot recovery — see `references/marathon.md`. Keep the **loop** (or Codex goal) for a plan of a few
 hours. Rule of thumb: more than ~8 tasks or "this will run overnight" → marathon.
+
+**Routing across agents** (`run --pool auto`, what `handoff` uses): the supervisor picks account, model and effort
+per session from every account allowed for the project — by tier, kind of work, usage limits and measured results —
+and closes each milestone with an independent audit by another agent. The whole model is in `agents.md`.
 
 **Account profiles** (`bitacora.py profiles list|doctor`, `launch|run --profile ID`): a profile is a provider plus the
 env that selects its account (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`); credentials stay in each provider's own directory.

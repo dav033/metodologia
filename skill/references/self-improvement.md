@@ -55,6 +55,14 @@ or rewrite a rule to make the task pass. Do not offer to change or bypass higher
 cannot edit; explain the limit and offer an allowed alternative. Apply the instruction hierarchy that governs the
 current task when multiple rules conflict.
 
+## Learnings are the memory of improvement
+
+What a session discovers about a project, about the owner's preferences or about this skill is recorded with
+`bitacora.py learn add … --evidence …` (`agents.md` §Learning): scope `skill` for friction or defects in the
+methodology itself. Candidates need the owner's confirmation or three independent sightings before they are injected
+into future sessions, so one session's guess never becomes a rule. A confirmed `skill` learning is the evidence that
+justifies a permanent change here.
+
 ## Record and report
 
 For accepted persistent skill improvements, update relevant tests and documentation along with the implementation.

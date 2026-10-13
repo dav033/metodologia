@@ -22,6 +22,14 @@ definition, not by asking nicely.
 In Codex refer to them by name ("have explorer map…"). If the roles aren't installed, use the harness's built-ins
 (Claude Code: Explore / general-purpose; Codex: explorer / worker) with the same briefs and contracts.
 
+## Agents of another provider
+
+The five roles above are subagents of the CLI you run in. For work that deserves **another model or another
+subscription** — an independent audit, a cheap fast worker for a well-specified module, a stronger model for one hard
+piece, or simply because your account is near its limit — use `bitacora.py delegate` (`agents.md`): it works the same
+from Claude Code and from Codex, picks the account by quota and measured results unless you pin one, and returns a
+compact verified result.
+
 ## When — and when not
 
 Use a subagent when:

@@ -23,6 +23,10 @@ autonomously as possible, and leave a trail anyone (including the next session) 
   actions — and batch those. Out-of-scope ideas become numbered **Proposals** in the final report, not
   interruptions.
 - **Documentation is part of the work, not an afterthought.** A task isn't finished until the bitácora reflects it.
+- **The flow runs itself.** A requirement arrives → you size it (small: build it; broad: interview, spec, plan in
+  milestones; unsure: one scope question) → `handoff` starts a clean session per milestone on the best available
+  agent, each closed by an independent audit → decisions land in `DECISIONS.md` and what you learn about the project
+  and the owner in its learnings (`references/agents.md`).
 
 The script `scripts/bitacora.py` (run with `python`; on Windows `py -3` also works) does everything mechanical:
 paths, dates, week-of-month, IDs, templates, the generated INDEX.md, and the bitácora hooks. Never compute those
@@ -81,6 +85,8 @@ files in the bitácora, versioned with local git — no dependency on any agent 
 | Noisy shell output, RTK, token/context reduction or a concise-report prompt | `references/communication-and-context.md` — load only the relevant section; RTK is optional |
 | New project onboarding, or an explicit architecture audit of an existing workspace | `references/architecture-audit.md` — before re-auditing, read `SUMMARY.md` §Purpose, restate it, ask what changed and confirm it with the owner; update its date only after confirmation |
 | A spec is ready (or the request was Quick track) → plan, get it approved, run it as a loop (Claude Code) or goal (Codex) | `references/execution.md` |
+| A spec and plan are written → leave the conversation: validate, auto-approve when safe, run in the background by milestones | `references/requirements.md` §8 (`bitacora.py handoff REQ-NNN`) |
+| Which agent/model/effort for a piece of work, delegating to another provider or subscription, usage limits, telemetry, what was learned | `references/agents.md` (live copy: `bitacora.py context`) |
 | An approved plan that will run for days; "maratón"; supervised run, pause/resume/stop, stuck or blocked tasks, usage limits | `references/marathon.md` (launch details in `execution.md` §1c) |
 | Large independent workstreams, safe concurrency, agent delegation, or work that must resume across sessions | `references/agent-orchestration.md` (+ `references/subagents.md`; use `references/marathon.md` for multi-day execution) |
 | Designing, writing, refactoring, reviewing or debugging code | `references/engineering.md` (+ the `references/stacks/*.md` it points to) |

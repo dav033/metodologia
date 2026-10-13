@@ -4,6 +4,14 @@ Mi forma de trabajar con IA, empaquetada como skill para **Claude Code** y **Cod
 
 - **Requerimientos por rondas** → spec → plan → **una sola aprobación** → ejecutor autónomo (`/loop` en Claude,
   `/goal` en Codex) en una ventana aparte.
+- **Flujo automático**: el agente dimensiona el requerimiento, lo planifica en hitos y `handoff` lo lanza en
+  segundo plano (aprobándolo solo si no hay motivos de riesgo): **una sesión limpia por hito**, cada hito cerrado por
+  una **auditoría independiente** de otro agente.
+- **Varios agentes y suscripciones**: Claude (Haiku, Sonnet, Opus 5.5) y Codex (GPT-6 Luna, GPT-6.1 Sol) en una sola
+  escalera de capacidad; el enrutador elige cuenta, modelo y esfuerzo por tipo de trabajo, cuotas y resultados
+  medidos, y cualquier agente puede delegar en cualquier otro. Detalle: `skill/references/agents.md`.
+- **Telemetría y aprendizaje**: cada intento queda medido por agente, modelo y esfuerzo; lo aprendido sobre el
+  proyecto y tus preferencias se guarda con evidencia y se inyecta en las sesiones siguientes.
 - **Estándares de ingeniería** (responsabilidad única, features, Atomic Design, alerta de 500 líneas, tests
   pragmáticos, stacks por defecto) y **5 subagentes** (explorer, researcher, implementer, reviewer, runner).
 - **Bitácora** por proyecto (`bitacora/`): logs por día y sesión, DECISIONS, PENDING, SUMMARY, ARCHITECTURE,
@@ -96,6 +104,13 @@ hacer push, ni aprobar los hooks de Codex por ti.
 | Registrar un proyecto de varios repos | `bitacora.py --project <p> workspace add <rol> <ruta>` |
 | Clonar en esta máquina los repos que falten | `bitacora.py --project <p> workspace clone` |
 | Correr un plan aprobado por días (maratón: una sesión limpia por tarea, Haiku 5.5 + ultracode) | Aprobar con **Modo: Maratón** en el panel · `bitacora.py --project <p> launch REQ-001 --mode marathon` · reanudar tras reiniciar: `bitacora.py --project <p> run REQ-001 --resume` |
+| Lanzar un plan sin más conversación (valida, aprueba si es seguro, corre por hitos con el mejor agente) | `bitacora.py --project <p> handoff REQ-001` (`--dry-run` para ver la decisión) |
+| Ver agentes, cuentas y cuotas · qué ruta se usaría | `bitacora.py agents` · `bitacora.py --project <p> agents route --kind audit` |
+| Delegar una tarea a otro agente o suscripción | `bitacora.py --project <p> delegate start "<tarea>" --kind test --verify "<cmd>"` |
+| Comparar agentes, modelos y esfuerzo con datos | Panel → **Métricas de agentes** · `bitacora.py metrics --by kind,agent,model,effort` · `bitacora.py metrics --advice` |
+| Ver o confirmar lo aprendido | `bitacora.py --project <p> learn list` · `learn confirm L-003` · `learn reject L-003` |
+| Dar a un agente todo el contexto en una pantalla | `bitacora.py --project <p> context` |
+| Ajustes de la máquina (aprobación automática, auditorías, pool de cuentas) | `bitacora.py config get` · `config set audit.mode off` |
 | Pausar, reanudar o detener un maratón | Pestaña **Maratón** del requerimiento · `bitacora.py --project <p> run-control REQ-001 pause\|resume\|stop` |
 | Revisar la trazabilidad | `bitacora.py --project <p> trace` |
 | Correr las evaluaciones de la skill | `python ~/metodologia/evals/run.py` (≈ USD 1.5, tope configurable) |

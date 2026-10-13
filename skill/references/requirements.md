@@ -19,6 +19,10 @@ interrupting the user. Not every request needs a full interview. Pick a track; w
 | **Standard** | A feature, a process change, anything with 2+ real decisions | Full flow below. |
 | **Deep** | New product/system, cross-team process, money/security/data at stake, irreversible choices | Full flow + the extra lenses in §6 before closing. |
 
+**Sizing is your call, made on your own and stated in one line** ("Standard: three decisions to settle"). Small and
+clear → build it. Broad or with real decisions → interview, spec, plan in milestones. Unsure which → ask the user
+one question about scope before anything else, then decide. Do not ask the user to pick the track.
+
 The track (how much to specify) and the execution mode (how the work runs: `direct` in this session, `coordinated`
 with a leader plus delegated tasks, or `marathon`) are different axes. Never start a marathon only because the track
 is Deep, and never require an interview or a plan only because the work is delegated. Pick the mode from the plan:
@@ -158,6 +162,30 @@ Then show the user a short summary (5–8 lines: what will be built, what won't,
 straight into planning** — the approval gate is on the plan, not the spec (unless the user asked to review the
 spec too). Log the
 requirement and its key decisions in today's file. Next: `references/execution.md`.
+
+## 8. Automatic hand-off
+
+Once the spec and the plan are written, the work leaves this conversation: the interview filled this context with
+exploration the implementation does not need. Plan in **milestones** — `### M1 — title` headings in PLAN.md, each a
+small or medium, independently verifiable step (roughly 1–5 tasks that one clean session can finish) — and run:
+
+```
+bitacora.py --project P handoff REQ-NNN            # --dry-run first if you want to see the decision
+```
+
+It validates the plan (tasks, dependencies, repo roles) and decides:
+
+- **No risk reasons → it approves the plan itself and starts the execution in the background** (a detached tmux
+  session; notifications as usual). Tell the user in two lines what was started and how to watch or stop it.
+- **Risk reasons → the plan goes to `review`** and the command lists them: more than 8 milestones or 40 pending tasks,
+  a `level: architecture` or `risk: high` task, no machine-runnable verify anywhere, or text in the plan or spec that
+  names an irreversible, production, git-remote, money, credentials or external-communication action. Show the user
+  the plan summary and those reasons; when they approve (chat or web), run `handoff` again.
+
+Each milestone then runs in a fresh session that receives only references: the spec, the plan, the bitácora
+pointers, a context bundle, the agents available and the confirmed learnings. Everything that must survive is in
+files: tasks and progress in PLAN.md/RUN.json, permanent decisions in `DECISIONS.md`, what was learned in the
+project's learnings (`agents.md`). Stay in the conversation only for Quick and Agile work.
 
 When user feedback or exploration reveals a reproducible defect, an agreed-requirement mismatch, or recurring
 friction in this skill, investigate and make the smallest validated persistent improvement in the canonical skill

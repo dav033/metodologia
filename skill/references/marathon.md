@@ -1,7 +1,7 @@
 # Marathon mode
 
 An external **supervisor** (`scripts/bt_run.py`) runs an approved PLAN for hours or days. It launches a **fresh
-headless agent session per task**, keeps all state on disk, enforces the caps itself, detects stuck tasks, waits out
+headless agent session per task** (per milestone when the plan groups tasks under `### Mn` headings), keeps all state on disk, enforces the caps itself, detects stuck tasks, waits out
 usage limits, survives reboots and notifies the user. Context never rots because every session starts clean; the
 agent never has to "remember" anything — PLAN.md, RUN.json and the bitácora are the memory.
 
@@ -14,7 +14,7 @@ actions, permission bypass changes, or skipping the existing plan approval gate.
 
 | | Loop / goal (`execution.md` §1c) | Marathon |
 |---|---|---|
-| Who drives | the agent itself, one long session | an external script, one session per task |
+| Who drives | the agent itself, one long session | an external script, one session per task or milestone |
 | Length | hours | days |
 | Context | accumulates, needs `/clear` | clean for every task |
 | Caps, stuck detection, usage-limit wait, reboot | none (manual) | built in |
@@ -65,7 +65,8 @@ command, after the day log and every commit, and nothing may be left running in 
 - [ ] T4 — <design the sync protocol> · level: architecture · verify: `pytest tests/sync`
 ```
 
-`repo:`, `after:`, `verify:` and `level:` are optional. `level: architecture` marks a hard architecture/design task:
+`repo:`, `after:`, `verify:`, `level:`, `kind:` (implement, test, docs, audit, research; inferred from the title when
+absent) and `risk:` (`high` makes the automatic hand-off ask for approval) are optional. `level: architecture` marks a hard architecture/design task:
 it starts at the top of the escalation ladder (opus, effort xhigh) instead of haiku. `verify:` is run by the supervisor **only if it is inside backticks**
 (from the task's repo dir, 10-minute timeout); free text is just guidance for the agent. Already-ticked `[x]` tasks
 start as done. `repo`, `after`, `verify` and `level` are **frozen when the run starts**: later edits to PLAN.md (even by the
@@ -203,6 +204,11 @@ task that also fails at the top is blocked (with a PENDING item).
 
 ## Escalation ladder
 
+Tiers are capability levels shared by every provider. With an account pool (`run --pool auto`, the default of
+`handoff`) each session's account, model and effort come from the router, and a failed attempt climbs one tier
+**and** prefers another provider: `agents.md` has the full table (Claude: haiku → sonnet xhigh → opus xhigh; Codex:
+gpt-6-luna medium → gpt-6.1-sol high → gpt-6.1-sol xhigh). The table below is a run pinned to one agent.
+
 | Tier | Claude | Codex |
 |---|---|---|
 | 0 | the run's `--model` (default **haiku**), default effort | its model, default effort |
@@ -219,7 +225,7 @@ switches model: from tier 1 up it only raises the reasoning effort.
 - **Same error twice** below the top → escalate; at the top (opus) → `blocked`. With the default max_attempts 4 a
   task gets haiku, sonnet, opus, opus.
 - **`level: architecture`** on the PLAN line → the task starts at tier 2 (opus xhigh).
-- **`task escalate REQ T --to sonnet|opus --reason "..."`** (only for the session's own task) raises the tier, stores
+- **`task escalate REQ T --to standard|top --reason "..."`** (aliases `sonnet`, `opus`) (only for the session's own task) raises the tier, stores
   the reason in the task's notes so the next session reads it, and marks the session `escalated`. A target at or
   below the current tier is refused (the agent uses `task fail` instead), so an opus session cannot burn attempts
   "escalating" in place. Run by hand (no supervisor), it only changes the tier.
@@ -235,6 +241,15 @@ switches model: from tier 1 up it only raises the reasoning effort.
 - Noisy work (code sweeps, test suites, long logs) goes to subagents (`subagents.md`); the session keeps only
   conclusions.
 - Notes for the next attempt go in `task note`, not in the agent's head: the next attempt is a different session.
+
+## Milestone sessions and audits
+
+A plan with `### M1 — title` headings runs one fresh session per **milestone** instead of per task: the session gets
+every pending task of the milestone (`BITACORA_TASK=T1,T2,T3`), gives each its own verdict, and the supervisor settles
+and verifies each task separately. A task not reached because a task it depends on failed is `skipped` without
+counting an attempt; a session that times out gets up to three task timeouts. With a pool, a synthetic task
+`M1-audit` follows each milestone: an independent agent audits and may fix, and its verification is every verify
+command of the milestone again. Details and switches: `agents.md`. Plans without those headings are unchanged.
 
 ## Concurrent sessions (`run --workers 2`)
 
