@@ -246,3 +246,5 @@ Applied 13:5x after the gate inventory (workflow wf_2c1a2e9f-d6d, 58 candidates;
 D-040 · 2026-10-13 · Bitácora temporarily lives inside the private metodologia monorepo (symlinked from ~/bitacora) so it syncs across machines; revisit a dedicated private repo.
 
 D-041 · 2026-10-13 · Development of pictures is done entirely from this laptop from now on (owner); the Windows marathon clone is no longer an executor. Its unpushed work (judge-fix e7x) must be re-done or recovered.
+
+D-042 · 2026-10-13 · Delegation picks the best model per situation regardless of the hosting session's provider; audits go to a different provider than the builder (owner). Router fixed in bt_agents.py.
