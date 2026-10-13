@@ -65,10 +65,12 @@ def infer_kind(title: str | None, explicit: str | None = None) -> str:
     return "implement"
 
 
-def start_tier(level: str | None, kind: str | None = None) -> int:
+def start_tier(level: str | None, kind: str | None = None, complexity: str | None = None) -> int:
+    """Where a task starts on the ladder: architecture-level work at the top; an audit, and work declared large
+    (`complexity: L`), at the standard tier; everything else at the light tier."""
     if (level or "").strip().lower() == "architecture":
         return TOP
-    return KIND_TIER.get(kind or "", 0)
+    return max(KIND_TIER.get(kind or "", 0), 1 if complexity == "L" else 0)
 
 
 def rank_of(model: str | None) -> int:

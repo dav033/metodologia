@@ -298,5 +298,17 @@ class AttemptDetails(IsolatedCase):
         self.assertEqual(len(bt_events.read_all()), 1)
 
 
+class ComplexityStartsHigherTests(unittest.TestCase):
+    def test_declared_large_work_starts_at_the_standard_tier(self):
+        import bt_agents
+        import bt_runstate
+        self.assertEqual(bt_agents.start_tier(None, "implement", "L"), 1)
+        self.assertEqual(bt_agents.start_tier(None, "implement", "M"), 0)
+        self.assertEqual(bt_agents.start_tier("architecture", "implement", "S"), 2)
+        task = bt_runstate._new_task({"id": "T1", "done": False, "milestone": None,
+                                      **bt_runstate.parse_task_line("Big screen · complexity: L")})
+        self.assertEqual((task["complexity"], task["tier"]), ("L", 1))
+
+
 if __name__ == "__main__":
     unittest.main()

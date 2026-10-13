@@ -80,7 +80,7 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
                 t["status"] = "todo"
             elif t["status"] == "blocked" and o.get("retry_blocked"):
                 t.update(status="todo", attempts=0, error_hashes=[], pending_id=None, limit_streak=0,
-                         tier=tier_.start_tier(t.get("level"), t.get("kind")))
+                         tier=tier_.start_tier(t.get("level"), t.get("kind"), t.get("complexity")))
         s["limits"].update(limits)
         if pool is not None:
             s["pool"] = pool

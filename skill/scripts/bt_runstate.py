@@ -112,7 +112,7 @@ def _new_task(p: dict) -> dict:
     return {"id": p["id"], "title": p["title"], "repo": p["repo"], "after": p["after"], "verify": p["verify"],
             "level": p["level"], "kind": p.get("kind") or "implement", "risk": p.get("risk"),
             "complexity": p.get("complexity"),
-            "milestone": p.get("milestone"), "tier": start_tier(p["level"], p.get("kind")),
+            "milestone": p.get("milestone"), "tier": start_tier(p["level"], p.get("kind"), p.get("complexity")),
             "status": "done" if p["done"] else "todo",
             "attempts": 0, "last_error": None, "error_hashes": [], "evidence": None, "pending_id": None, "notes": []}
 

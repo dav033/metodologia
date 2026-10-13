@@ -23,7 +23,8 @@ the ladder live in `scripts/bt_agents.py` (`MODELS`, `LADDER`): edit them there 
 A **route** is account + model + effort. Work is described by a **tier** (0 light, 1 standard, 2 top) and a **kind**
 (`implement`, `test`, `docs`, `audit`, `research`; the PLAN line's `kind:`, otherwise inferred from the title).
 
-1. **Tier.** A task starts at 0; `level: architecture` starts at 2; an audit starts at 1. Every failed attempt
+1. **Tier.** A task starts at 0; `level: architecture` starts at 2; an audit and a task declared `complexity: L`
+   start at 1 (a milestone session runs at the highest tier among its tasks). Every failed attempt
    (`failed`, `verify_failed`, `timeout`) climbs one tier. A usage limit or a stop never moves it.
 2. **Candidates.** One route per account of the pool at that tier (`run --pool auto`, the default of `handoff`: every
    account allowed for the project; `--pool a,b` to restrict; the `routing.pool` setting does it machine-wide).

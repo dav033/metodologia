@@ -21,9 +21,10 @@ EFFORT = "xhigh"
 TARGETS = {"sonnet": 1, "opus": 2, "standard": 1, "top": 2}  # `task escalate --to`
 
 
-def start_tier(level: str | None, kind: str | None = None) -> int:
-    """`level: architecture` on the PLAN task line starts the task at the top of the ladder; an audit starts at 1."""
-    return bt_agents.start_tier(level, kind)
+def start_tier(level: str | None, kind: str | None = None, complexity: str | None = None) -> int:
+    """`level: architecture` on the PLAN task line starts the task at the top of the ladder; an audit and a task
+    declared `complexity: L` start at 1."""
+    return bt_agents.start_tier(level, kind, complexity)
 
 
 def tier_of(task: dict | None) -> int:
