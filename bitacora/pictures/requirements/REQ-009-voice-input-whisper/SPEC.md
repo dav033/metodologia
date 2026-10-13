@@ -1,6 +1,6 @@
 ---
 id: REQ-009
-status: in progress 2026-10-09
+status: done 2026-10-11 (merged fb8477b6; VOZ_* flags unconfirmed)
 track: quick
 ---
 # REQ-009 — Voice input everywhere there is free text (Whisper)

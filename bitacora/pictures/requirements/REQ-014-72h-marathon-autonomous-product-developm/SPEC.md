@@ -1,6 +1,6 @@
 ---
 id: REQ-014
-status: ready
+status: stopped 2026-10-11 06:14 at cycle 26 (planned end 2026-10-12 16:44); not resumed
 created: 2026-10-09
 track: deep
 ---

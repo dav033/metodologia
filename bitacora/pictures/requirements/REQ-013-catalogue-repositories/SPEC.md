@@ -1,6 +1,6 @@
 ---
 id: REQ-013
-status: ready
+status: done 2026-10-11 (phases 1-5 merged, migration 034)
 created: 2026-10-09
 track: standard
 ---

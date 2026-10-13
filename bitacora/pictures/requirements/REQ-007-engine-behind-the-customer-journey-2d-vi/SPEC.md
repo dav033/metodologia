@@ -1,6 +1,6 @@
 ---
 id: REQ-007
-status: draft (awaiting antagonistic architecture review + owner approval)
+status: done 2026-10-11 (phases 0-6 merged, D-039 production default)
 created: 2026-10-08
 track: standard — CRITICAL
 ---

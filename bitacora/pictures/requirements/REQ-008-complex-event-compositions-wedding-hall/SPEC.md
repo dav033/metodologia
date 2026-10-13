@@ -1,6 +1,6 @@
 ---
 id: REQ-008
-status: clarifying (after REQ-007 D1 and the furniture branch merge)
+status: done 2026-10-11 (merged, 4ff9bdd4)
 created: 2026-10-08
 track: standard
 ---

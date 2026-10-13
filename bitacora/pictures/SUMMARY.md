@@ -19,9 +19,9 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
   second glitter wall, plum chrome → Reflex. Left in P-068 (doors, pink roses, low camera).
 - **Spend caps are global (392fff68):** paid-call hourly caps count in Neon `topes_gasto` (migration 035), not per Vercel instance.
 - **Ship gate:** `npm run gate` locally + `escena:test` (405-scene golden, honesty, photo suites) in CI; free prod pulse `npm run prod:pulso`; rollback drill on prod 2026-10-11 all PASS (research/ciclo/SIMULACRO-ROLLBACK-2026-10-11.md).
-- **72 h marathon running** (since 2026-10-09 16:44, session 83576a42; owner away all weekend, D-032/D-033).
-  Live state: `research/ciclo/STATE.md`. Every ship: full local suite gate → push → CI (checks.yml) → VPS deploy
-  (deploy.yml, full SHA) → production smoke `npm run e2e:humo -- --base https://demo-decoracion.vercel.app`.
+- **72 h marathon STOPPED** at cycle 26 (2026-10-11 06:14; planned end 2026-10-12 16:44). Its state is in `research/ciclo/STATE.md`.
+  From 2026-10-13 development runs entirely from this laptop (owner decision, D-041); origin/main is still `65edd83b` and the
+  judge-fix task (card/quote count parity, honest edit banner, card price) never reached origin.
 - **Local AI = Claude Haiku via Claude Code CLI** (no API key; `.env.local` IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli,
   IA_LOCAL_ESFUERZO=medium); production stays on Gemini.
 - **Shipped this marathon:** D-038 single quote; REQ-007 Phase 5 (customer 3D edits) + P-045 graceful rollback; REQ-013

@@ -1,6 +1,6 @@
 ---
 id: REQ-010
-status: in progress 2026-10-09
+status: done 2026-10-11 (merged 3a8f56e2; migration 030 status unconfirmed)
 track: standard
 ---
 # REQ-010 — AI feedback: rate every AI action and keep its full state

@@ -1,6 +1,6 @@
 ---
 id: REQ-012
-status: in-progress
+status: merged to main 2026-10-10 (78638080, 386b0cdc)
 created: 2026-10-09
 track: standard
 ---

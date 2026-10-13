@@ -1,6 +1,6 @@
 ---
 id: REQ-011
-status: in-progress
+status: done 2026-10-11 (merged 03049ca7)
 created: 2026-10-09
 track: standard
 ---

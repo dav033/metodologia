@@ -11,9 +11,7 @@ month summary._
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversations get edits refused (409 MOTOR_PYTHON), Python routes refuse 3D tokens, and adding an idea/redoing silently re-prices in Python (~×1.4). Design a graceful rollback (keep 3D plans priced by the engine until the conversation ends, or tell the customer) — BLOCKER for the switch · urgency: high · complexity: M · added 2026-10-09 · W7 dossier review
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edits) · urgency: high · complexity: ? · added 2026-10-08 · REQ-001
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer --aplicar + upsert vectors, rebuild agente-core dist, visual review of Library filters/photo search, turn TALLER_RAG_ENABLED on only after the tuned eval beats today's search · urgency: high · complexity: ? · added 2026-10-08 · REQ-002
-- P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n) — implementer fixing 4 BLOCKER/9 MAJOR + orphan-field ledger test; then Claude reference → Gemini parity per photo · urgency: high · complexity: ? · added 2026-10-08
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was: fixing review (rule misses pared→piso/delete, verdict not audited server-side, margin uncalibrated → calibration script); owner-labelled A/B rounds (ROC) pending · urgency: high · complexity: ? · added 2026-10-08
-- P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel — was: owner to pick A or B (proposal artifact Nuv9GST6YR9HmGgAMoDdMr); common base first: scene diff by piece id, per-turn undo of only AI-touched pieces, abort, optional streamed steps · urgency: high · complexity: ? · added 2026-10-09
 - P-041 · ajustar_salon reports grid capacity («40 invitados, caben 96») while only 5 tables of 8 are placed — confusing; report the placed capacity · urgency: med · complexity: S · added 2026-10-09 · W2 owner-phrases corpus
 - P-042 · Guided 3D edits undo: inverse size edits drift (enlarge-then-shrink ≠ identity) and name-based colour returns can change the code — undo must restore the stored previous spec, not apply an inverse edit · urgency: med · complexity: S · added 2026-10-09 · W7 integration test
 - P-058 · Colour resolver after P-052 (review 2): (A1) after ANY successful edit, a palette-word order whose destination is already in the selection asks (3.5 % of 43,520 edited combos; oro 9.2 %, rosado 8.7 %) — root cause = no stored last order (with P-057 a); count «puede ser» in no_aplicadas audit; (A2) sumarIdeaAEspec rewrites origen → anti-alternation off; (A3) «rosa → rosado» on a plan already rosado asks (add !entran.includes(codigo)); (A4) consumo.ts declares origen.tipo 'ui' · urgency: med · complexity: S · added 2026-10-10
@@ -33,9 +31,7 @@ month summary._
 - P-017 · Cursive gold foil «Love» (metalizado letras script, dorado) renders black in the viewer · urgency: med · complexity: ? · added 2026-10-08 · REQ-001 E2E
 - P-022 · Owner: blind A/B labelling of ~30 refine rounds (photo vs before/after) to set the acceptance threshold; until then automatic refinement stays OFF (calibration 2026-10-08: embeddings can't separate small changes) · urgency: med · complexity: ? · added 2026-10-08
 - P-023 · Confetti colour as data (`confeti: {colores}` in ColorOrganico/GloboDecoracion, ColorLeido.colorConfeti, SKU per confetti product) replacing the viewer heuristic — at integration · urgency: med · complexity: ? · added 2026-10-08
-- P-026 · Pampas foliage (real plumes) — feat/pampas (e4t) in progress; needed by photos 02, 03, 05 · urgency: med · complexity: ? · added 2026-10-09
 - P-034 · BalloonBuilder ideas (artifact SH28k1k2DhKHHDA2JMhApt): owner to pick; quick-win batch (S) pump seconds/dimensions/helium/recipe cards/size profiles/light presets, then build sheet, palette→Sempertex ΔE, 3-tier quote · urgency: med · complexity: ? · medium/M
-- P-035 · ~~ (closed by D-026) · urgency: med · complexity: ? · Pricing policy for the 3D engine BOM: cheapest pack that covers the merma'd quantity (engine) vs Python's bigger packs (26 ideas: engine 0.67× Python in COP) — owner decision before switching GUIADA_MOTOR · high/S
 - P-046 · Shopping list «Por pieza» lists identical decorations one per row («Ojo con venas 1…14 · urgency: low · complexity: S · 1 globo»): group identical pieces (× 14) · added 2026-10-09 · judge
 - P-057 · Small leftovers: (P-056 review) neutral-title wiring untested; motor3d:test duplicates imagen-ruta and omits test-motor3d-ui/-imagen-cliente/-svg/-visor, use run-suites.mjs; drenarCuerpo comment; AccionRecalcular3d duplicated type. (P-052 a) needless «dime cuál» with a single shop-only shade conflicts with test N2 — needs a rule (e.g. by card family) · urgency: low · complexity: S · added 2026-10-10
 - P-059 · Classic «Cambia esta pieza» 404s (VARIANTE_REFERENCIA_NO_ENCONTRADA) when D-038 buys a pack outside the token allowlist (src/lib/plan/edicion-python.ts:135); classic is redirected in prod · urgency: low · complexity: S · added 2026-10-10 · D-038 review
@@ -58,6 +54,10 @@ month summary._
 _None_
 
 ## Recently closed
+- P-018 · Photo fidelity (lote-02 photo 01, then 02–05): branch feat/foto-fidelidad (e4n)  · closed 2026-10-13 · merged aee7b5a5 (tuning continues in P-067/P-068) (reconciled from git evidence)
+- P-031 · Taller AI-UX redesign — owner picked B (D-021), IN PROGRESS e4x feat/ia-panel —  · closed 2026-10-13 · merged 3bb9b5fc (+ prerender hotfix) (reconciled from git evidence)
+- P-026 · Pampas foliage (real plumes) — feat/pampas (e4t) in progress; needed by photos 0 · closed 2026-10-13 · merged 96ea2038 (reconciled from git evidence)
+- P-035 · (closed by D-026) · closed 2026-10-13 · closed by D-026; single quote 81718d69 (D-038) (reconciled from git evidence)
 - P-066 · closed 2026-10-11 by d33219cd: every guided idea priced by the single pricer (curated ones too, printed balloons by their own packs); prod e2e «paridad de precio» PASS ($51.554 card = Taller).
 - P-067 · closed 2026-10-11 by 9f86d67b: garland colour shares match the reading (gold 59→37 %, photo ~36 %), second glitter wall, plum/mauve chrome → Reflex, 0x08 regex; prompt = main + one validated sentence.
 - P-054 · Scene AI time bounds shipped 4e27a72a (arch «más R-24» 40.6→~10 s; R-5 column instant reject; maxDuration 75 + deadline; 430 structure-balloon cap); leftovers P-065 · urgency: med · complexity: M · closed 2026-10-10
@@ -69,7 +69,7 @@ _None_
 - P-050 · ajustar_tamanos formats: premise not reproduced (declaration and zod share FORMATOS_AJUSTABLES); rejection now names valid sizes (390ac0a2) · urgency: med · complexity: S · closed 2026-10-10
 - P-047 · Colour name→code audit + resolver rewrite (568/568 matrix, repeat changes 184→6) · urgency: med · complexity: ? · closed 2026-10-10
 - P-043 · Ideas 30/31 same stored price — NOT a bug: both are 3 × (6164 + 13037) = 57,603 from their own plan lines · urgency: med · complexity: ? · closed 2026-10-10
-- P-029 · /P-036 · urgency: med · complexity: ? · CI fully green on main (first time) · closed 2026-10-10 · 77b4af27
+- P-029 · CI fully green on main (first time) · closed 2026-10-10 · 77b4af27
 - P-040 · Pump section one row per size, collapsed (judge 6/10 fixed) · urgency: med · complexity: ? · closed 2026-10-09 · 21ba148c
 - P-038 · Kontext resume by request_id · urgency: med · complexity: ? · closed 2026-10-09 · 9f8687a7
 - P-033 · Prerender guard (partial; server components → P-037) · urgency: med · complexity: ? · closed 2026-10-09 · 53502782
