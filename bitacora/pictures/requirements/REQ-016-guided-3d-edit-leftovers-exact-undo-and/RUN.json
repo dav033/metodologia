@@ -13,15 +13,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T17:00:15",
+  "at": "2026-10-13T17:03:19",
   "pid": 1936968,
   "machine": "precision7760",
   "task": "T2",
   "session": 8,
-  "state": "session running 57 min",
-  "session_pids": {
-   "8": 2009990
-  },
+  "state": "timeout",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -103,10 +101,12 @@
    "complexity": null,
    "milestone": "M2",
    "tier": 2,
-   "status": "in_progress",
-   "attempts": 1,
-   "last_error": null,
-   "error_hashes": [],
+   "status": "todo",
+   "attempts": 2,
+   "last_error": "session timeout after 60 min",
+   "error_hashes": [
+    "773ec29e9582"
+   ],
    "evidence": null,
    "pending_id": null,
    "notes": [
@@ -117,9 +117,9 @@
    "last_route": {
     "agent": "antigravity",
     "profile": "antigravity",
-    "model": "gemini-3.8-flash-low",
+    "model": "gemini-3.8-flash-medium",
     "effort": null,
-    "result": "escalated"
+    "result": "timeout"
    }
   },
   {
@@ -251,6 +251,17 @@
    "summary": "escalated to top: Storing the last colour order (P-058 A1) requires versioned token context (approval payload v3) with a two-stage reader-before-writer rollout under D-035 across multiple signed token consumers, plus updating the independent property generator/oracle. Requires high-tier reasoning an",
    "seconds": 1236,
    "model": "gemini-3.8-flash-low",
+   "agent": "antigravity",
+   "profile": "antigravity"
+  },
+  {
+   "at": "2026-10-13T17:03:19",
+   "session": 8,
+   "task": "T2",
+   "result": "timeout",
+   "summary": "I have launched `test-propiedades-motor` in the background to verify the baseline property tests. I will wait for it to complete. I have launched `test-propiedades-motor` to ensure the property tests pass with the new changes. I will wait for it to complete. Esperando a que termine la suite `npm run",
+   "seconds": 3603,
+   "model": "gemini-3.8-flash-medium",
    "agent": "antigravity",
    "profile": "antigravity"
   }
