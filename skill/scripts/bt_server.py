@@ -171,9 +171,13 @@ class Handler(BaseHTTPRequestHandler):
             return "Cambios pedidos. El agente del HQ los verá en PLAN.md."
         from bt_launch import launch
         mode = "marathon" if form.get("mode", "marathon") == "marathon" else "loop"
-        info = launch(project, rid, agent=form.get("agent", "claude"), mode=mode, model="haiku")
+        chosen = form.get("agent", "auto")
+        auto = chosen not in ("claude", "codex")  # the router picks account, model and effort per session
+        info = launch(project, rid, agent="claude" if auto else chosen, mode=mode, model="haiku",
+                      pool="auto" if auto and mode == "marathon" else None)
         kind = "Maratón lanzada" if mode == "marathon" else "Ejecutor lanzado"
-        return f"Plan aprobado. {kind} ({info['agent']}) en {info['workdir']}."
+        who = "agente automático" if auto and mode == "marathon" else info["agent"]
+        return f"Plan aprobado. {kind} ({who}) en {info['workdir']}."
 
     def run_control(self, project: str, rid: str, rdir: Path, form: dict) -> str:
         if form.get("action") == "monitor":

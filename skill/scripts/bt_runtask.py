@@ -51,8 +51,20 @@ def _own_task(task_id: str, rdir: Path) -> None:
         raise SystemExit(f"this session belongs to {run}, not {req}: it cannot change that run's tasks")
     if project and project != owner:
         raise SystemExit(f"this session belongs to project {project}, not {owner}")
-    if current and current != task_id:
+    if current and task_id not in current.split(","):  # a milestone session owns several tasks
         raise SystemExit(f"this session works on {current}, not {task_id}: only {current} can be marked")
+
+
+def _safe_text(text: str) -> str:
+    """Evidence, reasons and notes are stored in RUN.json (versioned) and quoted in later prompts, possibly to another
+    provider: anything that looks like a secret is withheld."""
+    try:
+        import bt_learn
+        if bt_learn._secret(text or ""):
+            return "[withheld: the text looked like it contained a secret; refer to files instead]"
+    except Exception:
+        pass
+    return text
 
 
 def task_done(rdir: Path, task_id: str, evidence: str) -> str:
@@ -61,6 +73,7 @@ def task_done(rdir: Path, task_id: str, evidence: str) -> str:
     a restart. Run by hand it is done and ticked right away."""
     _own_task(task_id, rdir)
     supervised = bool(os.environ.get("BITACORA_RUN"))
+    evidence = _safe_text(evidence)
 
     def fn(state):
         fields = {"evidence": evidence or "(none given)", "last_error": None}
@@ -83,7 +96,7 @@ def task_fail(rdir: Path, task_id: str, reason: str, blocked: bool = False) -> s
         t = rs.get_task(state, task_id)
         if t is None:
             raise SystemExit(f"{task_id} is not in RUN.json")
-        t["last_error"] = reason or "(no reason given)"
+        t["last_error"] = _safe_text(reason) or "(no reason given)"
         t["status"] = "blocked" if blocked else "todo"
         t.pop("claimed_done", None)  # the agent took its `done` back
     rs.update(rdir, fn)
@@ -97,7 +110,7 @@ def task_note(rdir: Path, task_id: str, text: str) -> str:
         t = rs.get_task(state, task_id)
         if t is None:
             raise SystemExit(f"{task_id} is not in RUN.json")
-        t.setdefault("notes", []).append(" ".join(text.split())[:500])
+        t.setdefault("notes", []).append(" ".join(_safe_text(text).split())[:500])
         t["notes"] = t["notes"][-10:]
     rs.update(rdir, fn)
     return f"note saved on {task_id}"

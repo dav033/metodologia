@@ -17,12 +17,17 @@ import socket
 import time
 from pathlib import Path
 
+import bt_agents
 from bt_core import STATE
 from bt_runtier import start_tier
 
 LOG_KEEP = 200
 DEFAULT_LIMITS = {"max_attempts": 4, "session_timeout_min": 60, "max_sessions": 300, "workers": 1}  # 4 = haiku, sonnet, opus, opus
 TASK_RE = re.compile(r"^\s*[-*]\s+\[( |x|X)\]\s+(T\d+(?:\.\d+)?[a-z]?)\s*(?:—|–|--|-|:)\s*(.+?)\s*$")
+MILESTONE_RE = re.compile(r"^#{3,4}\s+(M\d+)\b\s*(?:—|–|--|-|:)?\s*(.*?)\s*$")
+HEADING_RE = re.compile(r"^#{1,4}\s+\S")
+AUDIT_SUFFIX = "-audit"
+MILESTONE_TIMEOUT_FACTOR = 3  # a milestone session gets at most this many task timeouts
 
 
 def now_iso() -> str:
@@ -51,9 +56,12 @@ def parse_task_line(rest: str) -> dict:
     for p in parts[1:]:
         key, _, value = p.partition(":")
         fields[key.strip().lower()] = value.strip()
-    return {"title": parts[0].strip(), "repo": fields.get("repo") or None, "verify": verify,
+    title = parts[0].strip()
+    return {"title": title, "repo": fields.get("repo") or None, "verify": verify,
             "after": [t for t in re.split(r"[,\s]+", fields.get("after", "")) if re.fullmatch(r"T\d+(?:\.\d+)?[a-z]?", t)],
-            "level": (fields.get("level") or "").lower() or None}
+            "level": (fields.get("level") or "").lower() or None,
+            "kind": bt_agents.infer_kind(title, fields.get("kind")),
+            "risk": (fields.get("risk") or "").lower() or None}
 
 
 def parse_plan(plan: Path) -> list[dict]:
@@ -61,18 +69,80 @@ def parse_plan(plan: Path) -> list[dict]:
         text = re.sub(r"<!--.*?-->", "", plan.read_text(encoding="utf-8"), flags=re.S)
     except OSError:
         return []
-    tasks = []
+    tasks, milestone = [], None
     for line in text.splitlines():
+        head = MILESTONE_RE.match(line)
+        if head:  # `### M2 — title`: the tasks below belong to it until the next heading
+            milestone = head.group(1)
+            continue
+        if HEADING_RE.match(line):
+            milestone = None
+            continue
         m = TASK_RE.match(line)
         if m:
-            tasks.append({"id": m.group(2), "done": m.group(1) != " ", **parse_task_line(m.group(3))})
+            tasks.append({"id": m.group(2), "done": m.group(1) != " ", "milestone": milestone,
+                          **parse_task_line(m.group(3))})
     return tasks
+
+
+def milestones(plan: Path) -> list[dict]:
+    """[{id, title, tasks: [ids]}] in plan order; [] for a plan without `### Mn` groups."""
+    try:
+        text = re.sub(r"<!--.*?-->", "", plan.read_text(encoding="utf-8"), flags=re.S)
+    except OSError:
+        return []
+    titles = {m.group(1): m.group(2) for m in map(MILESTONE_RE.match, text.splitlines()) if m}
+    out: dict[str, dict] = {}
+    for t in parse_plan(plan):
+        if t.get("milestone"):
+            out.setdefault(t["milestone"], {"id": t["milestone"], "title": titles.get(t["milestone"], ""),
+                                            "tasks": []})["tasks"].append(t["id"])
+    return list(out.values())
 
 
 def _new_task(p: dict) -> dict:
     return {"id": p["id"], "title": p["title"], "repo": p["repo"], "after": p["after"], "verify": p["verify"],
-            "level": p["level"], "tier": start_tier(p["level"]), "status": "done" if p["done"] else "todo",
+            "level": p["level"], "kind": p.get("kind") or "implement", "risk": p.get("risk"),
+            "milestone": p.get("milestone"), "tier": start_tier(p["level"], p.get("kind")),
+            "status": "done" if p["done"] else "todo",
             "attempts": 0, "last_error": None, "error_hashes": [], "evidence": None, "pending_id": None, "notes": []}
+
+
+def _audit_task(milestone: str, members: list[dict], fresh: bool) -> dict:
+    """The independent audit that closes a milestone: runs after its tasks, re-runs their verifies, may fix. Only a
+    milestone that was already ticked when the run was CREATED is taken as audited; on any later sync (a resume, an
+    old RUN.json gaining audits) the audit is real work to do."""
+    done = fresh and bool(members) and all(m["status"] == "done" and m.get("attempts", 0) == 0 for m in members)
+    return {"id": milestone + AUDIT_SUFFIX, "title": f"Independent audit of milestone {milestone}", "repo": None,
+            "after": [m["id"] for m in members], "verify": None, "level": None, "kind": "audit", "risk": None,
+            "milestone": milestone, "synthetic": True, "tier": start_tier(None, "audit"),
+            "status": "done" if done else "todo", "attempts": 0, "last_error": None, "error_hashes": [],
+            "evidence": "already ticked in the approved plan" if done else None, "pending_id": None, "notes": []}
+
+
+def _sync_audits(state: dict) -> None:
+    """One audit task per milestone, placed right after the milestone's last task (plan order = run order)."""
+    if not state.get("audit"):  # turned off (run --no-audit): audits that never ran are dropped, finished ones stay
+        state["tasks"] = [t for t in state["tasks"] if not (t.get("synthetic") and t["status"] != "done")]
+        return
+    fresh = not state.get("sessions") and not state.get("log")
+    have = {t["id"] for t in state["tasks"]}
+    groups: dict[str, list[dict]] = {}
+    for t in state["tasks"]:
+        if t.get("milestone") and not t.get("synthetic"):
+            groups.setdefault(t["milestone"], []).append(t)
+    for milestone, members in groups.items():
+        aid = milestone + AUDIT_SUFFIX
+        if aid in have:
+            audit = get_task(state, aid)
+            ids = [m["id"] for m in members]
+            if audit["after"] != ids:
+                if audit["status"] == "done" and set(ids) - set(audit["after"]):  # new work joined an audited milestone
+                    audit.update(status="todo", evidence=None, attempts=0)
+                audit["after"] = ids
+            continue
+        at = max(state["tasks"].index(m) for m in members) + 1
+        state["tasks"].insert(at, _audit_task(milestone, members, fresh))
 
 
 def sync_plan(state: dict, rdir: Path) -> dict:
@@ -87,16 +157,21 @@ def sync_plan(state: dict, rdir: Path) -> dict:
             state["tasks"].append(_new_task(p))
             continue
         t["title"] = p["title"]
+        for key in ("milestone", "kind", "risk"):  # a RUN.json from before these fields existed adopts them once
+            if key not in t:
+                t[key] = p.get(key)
         drift += [f"{t['id']}.{k}" for k in ("repo", "after", "verify", "level") if t.get(k) != p[k]]
     state["plan_drift"] = drift
+    _sync_audits(state)
     return state
 
 
 def init_state(project: str, rdir: Path, agent: str, model: str | None, ultracode: bool,
-               limits: dict | None = None) -> dict:
+               limits: dict | None = None, pool: list[str] | None = None, audit: bool = False) -> dict:
     state = {"req": "-".join(rdir.name.split("-")[:2]), "project": project, "status": "running", "agent": agent,
              "model": model, "ultracode": ultracode, "limits": {**DEFAULT_LIMITS, **(limits or {})},
-             "control": None, "heartbeat": None, "waiting_until": None, "sessions": 0, "tasks": [], "log": []}
+             "control": None, "heartbeat": None, "waiting_until": None, "sessions": 0, "tasks": [], "log": [],
+             "pool": list(pool or []), "audit": bool(audit)}
     return sync_plan(state, rdir)
 
 
@@ -187,7 +262,90 @@ def next_task(state: dict) -> dict | None:
     return next((t for t in state["tasks"] if t["status"] == "todo" and all(a in done for a in t["after"])), None)
 
 
+def unit_of(state: dict, first: dict) -> list[dict]:
+    """The tasks one session takes: a task of a milestone brings along the milestone's other pending tasks whose
+    dependencies are done or inside the unit (plan order). A task outside a milestone, and an audit, run alone."""
+    if not first.get("milestone") or first.get("kind") == "audit" or first.get("synthetic"):
+        return [first]
+    done = {t["id"] for t in state["tasks"] if t["status"] == "done"}
+    unit, ids = [first], {first["id"]}
+    grew = True
+    while grew:  # every pending member whose dependencies are done or already in the unit, wherever it sits in the plan
+        grew = False
+        for t in state["tasks"]:
+            if (t["id"] not in ids and t["status"] == "todo" and t.get("milestone") == first["milestone"]
+                    and not t.get("synthetic") and all(a in done or a in ids for a in t["after"])):
+                unit.append(t)
+                ids.add(t["id"])
+                grew = True
+    order = {t["id"]: i for i, t in enumerate(state["tasks"])}
+    return sorted(unit, key=lambda t: order[t["id"]])
+
+
+def next_unit(state: dict) -> list[dict]:
+    first = next_task(state)
+    return unit_of(state, first) if first else []
+
+
+def unit_label(unit: list[dict]) -> str:
+    """What a session is called in logs: the task id, or the milestone when it carries several tasks."""
+    if len(unit) == 1:
+        return unit[0]["id"]
+    return unit[0].get("milestone") or ",".join(t["id"] for t in unit)
+
+
+def unit_tier(unit: list[dict]) -> int:
+    from bt_runtier import tier_of
+    return max(tier_of(t) for t in unit)
+
+
+def unit_kind(unit: list[dict]) -> str:
+    kinds = {t.get("kind") or "implement" for t in unit}
+    return kinds.pop() if len(kinds) == 1 else "implement"
+
+
+def builders_of(state: dict, audit: dict) -> set:
+    """Providers that built the work an audit reviews (so the router can pick another one)."""
+    out = set()
+    for tid in audit.get("after") or []:
+        member = get_task(state, tid) or {}
+        route = member.get("last_route") or {}
+        if route.get("agent"):
+            out.add(route["agent"])
+        elif member.get("status") == "done" and member.get("attempts") is not None and state.get("agent"):
+            out.add(state["agent"])  # built before routes were recorded: the run's own agent did it
+    return out
+
+
 MAX_WORKERS = 2  # until the machine's behaviour under several agent sessions has been measured
+
+
+def ready_units(state: dict, workers: int = 1) -> list[list[dict]]:
+    """Units that may run at the same time: ready_batch's rule applied to whole units. Further units join only when
+    every task of both names a repo role and the role sets do not overlap."""
+    first = next_unit(state)
+    if not first:
+        return []
+    cap = max(1, min(int(workers or 1), MAX_WORKERS))
+    units = [first]
+    if cap == 1 or any(not t.get("repo") for t in first):
+        return units
+    done = {t["id"] for t in state["tasks"] if t["status"] == "done"}
+    taken_repos = {t["repo"] for t in first} | {t.get("repo") for t in state["tasks"] if t["status"] == "in_progress"}
+    taken_ids = {t["id"] for t in first}
+    for t in state["tasks"]:
+        if len(units) >= cap:
+            break
+        if t["id"] in taken_ids or t["status"] != "todo" or not all(a in done for a in t["after"]):
+            continue
+        unit = unit_of(state, t)
+        repos = {u.get("repo") for u in unit}
+        if None in repos or repos & taken_repos or any(u["id"] in taken_ids for u in unit):
+            continue
+        units.append(unit)
+        taken_repos |= repos
+        taken_ids |= {u["id"] for u in unit}
+    return units
 
 
 def ready_batch(state: dict, workers: int = 1) -> list[dict]:

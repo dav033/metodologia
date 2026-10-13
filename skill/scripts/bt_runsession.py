@@ -10,6 +10,7 @@ import signal
 import time
 
 from bt_core import *  # noqa: F403
+import bt_agents
 import bt_profiles
 import bt_runprompt as rp
 import bt_runstate as rs
@@ -146,21 +147,26 @@ def session_tier(state: dict, task: dict | None) -> int:
     return tier_.tier_of(task)
 
 
-def _reported(rdir: Path, task: dict | None, n: int, started: float) -> bool:
+def _reported(rdir: Path, task: dict | None, n: int, started: float, unit: list[dict] | None = None) -> bool:
     """The agent already gave its verdict: task done / fail / blocked / escalate for this session (the supervisor marked
-    the task in_progress when the session began), or, for the final session, a fresh REPORT.md."""
+    the task in_progress when the session began), or, for the final session, a fresh REPORT.md. A milestone session
+    has reported once every one of its tasks has a verdict."""
     if task is None:
         try:
             return (rdir / "REPORT.md").stat().st_mtime >= started - 1
         except OSError:
             return False
     try:
-        t = rs.get_task(rs.load(rdir) or {"tasks": []}, task["id"]) or {}
+        state = rs.load(rdir) or {"tasks": []}
     except Exception:  # a locked RUN.json is retried on the next poll
         return False
-    esc = t.get("escalation") or {}
-    return (t.get("status") in ("done", "blocked", "todo") or bool(t.get("claimed_done"))
-            or str(esc.get("session")) == str(n))
+    for member in unit or [task]:
+        t = rs.get_task(state, member["id"]) or {}
+        esc = t.get("escalation") or {}
+        if not (t.get("status") in ("done", "blocked", "todo") or bool(t.get("claimed_done"))
+                or str(esc.get("session")) == str(n)):
+            return False
+    return True
 
 
 def _beat(rdir: Path, **fields) -> dict:
@@ -180,22 +186,55 @@ def _argv(project: str, state: dict, workdir: Path, prompt: str, prompt_file: Pa
     return argv, stdin_text, False
 
 
+def session_route(project: str, state: dict, task: dict | None, unit: list[dict] | None = None,
+                  busy: set | None = None) -> dict:
+    """Account, model and effort of the next session (bt_agents.route). The final review is an audit of the whole
+    run; a failed attempt prefers another provider than the one that failed; an audit prefers another provider than
+    the builders. Raises bt_agents.NoRoute when every account of the pool is cooling down."""
+    unit = unit or ([task] if task else [])
+    if task is None:  # with a pool the final review is an audit like any other: never below the audit tier
+        tier = session_tier(state, None)
+        if state.get("pool"):
+            tier = max(tier, tier_.start_tier(None, "audit"))
+        return bt_agents.route(project, state, tier, "audit", None, busy)
+    tier, kind = rs.unit_tier(unit), rs.unit_kind(unit)
+    avoid = set()
+    if kind == "audit":
+        avoid = rs.builders_of(state, task)
+    else:
+        for t in unit:
+            last = t.get("last_route") or {}
+            if last.get("result") in ("failed", "verify_failed", "timeout", "escalated") and last.get("agent"):
+                avoid.add(last["agent"])
+    return bt_agents.route(project, state, tier, kind, avoid, busy)
+
+
 def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int, workdir: Path,
-                agent_cmd: str | None) -> dict:
-    """Run one fresh agent session. Returns {rc, timed_out, stopped, early_exit, text, seconds, model, effort}."""
-    tid = task["id"] if task else rp.FINAL_TASK
-    bt_profiles.authorize(state.get("profile"), project)  # also on retry/recovery, before the prompt is built
-    model, effort = tier_.model_for(state, session_tier(state, task))
+                agent_cmd: str | None, unit: list[dict] | None = None, route: dict | None = None) -> dict:
+    """Run one fresh agent session. Returns {rc, timed_out, stopped, early_exit, text, seconds, model, effort, agent,
+    profile, kind, tier}. `unit` = the tasks of a milestone session; `route` = bt_agents route (default: computed)."""
+    unit = unit or ([task] if task else [])
+    tid = ",".join(t["id"] for t in unit) if task else rp.FINAL_TASK
+    label = rs.unit_label(unit) if task else rp.FINAL_TASK
+    route = route or session_route(project, state, task, unit)
+    state = {**state, "agent": route["agent"], "profile": route.get("profile"), "route": route}
+    if state.get("profile"):  # also on retry/recovery, before the prompt is built
+        bt_profiles.authorize(state["profile"], project)
+    else:
+        bt_profiles.authorize_ambient(state["agent"], project)
+    model, effort = route.get("model"), route.get("effort")
     run_dir = STATE / "runs" / f"{project}-{state['req']}"
     run_dir.mkdir(parents=True, exist_ok=True)
     from bt_review import feature_branch
-    prompt = rp.session_prompt(project, rdir, state, task, n, feature_branch(rdir))
+    prompt = rp.session_prompt(project, rdir, state, task, n, feature_branch(rdir), unit)
     prompt_file, log_file = run_dir / f"prompt-{n:04d}.txt", run_dir / f"session-{n:04d}.log"
     prompt_file.write_text(prompt, encoding="utf-8")
-    env = {**os.environ, **bt_profiles.env_of(state.get("profile")), "BITACORA_PROJECT": project, "BITACORA_RUN": state["req"], "BITACORA_TASK": tid,
-           "BITACORA_SESSION": str(n)}
-    argv, stdin_text, shell = _argv(project, state, workdir, prompt, prompt_file, tid, agent_cmd, model, effort)
-    timeout, grace = state["limits"]["session_timeout_min"] * 60, grace_seconds()
+    env = {**bt_profiles.session_env(state.get("profile"), state["agent"], None, project), "BITACORA_PROJECT": project,
+           "BITACORA_RUN": state["req"], "BITACORA_TASK": tid, "BITACORA_SESSION": str(n),
+           "BITACORA_KIND": route.get("kind") or "implement"}
+    argv, stdin_text, shell = _argv(project, state, workdir, prompt, prompt_file, label, agent_cmd, model, effort)
+    timeout = state["limits"]["session_timeout_min"] * 60 * min(max(len(unit), 1), rs.MILESTONE_TIMEOUT_FACTOR)
+    grace = grace_seconds()
     poll = min(5.0, max(0.2, grace / 2))
     start = last_beat = time.time()
     timed_out = stopped = early = False
@@ -225,7 +264,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
                 if now - start > timeout:
                     timed_out = True
                     break
-                if _reported(rdir, task, n, start):
+                if _reported(rdir, task, n, start, unit):
                     reported_at = reported_at or now
                     if now - reported_at >= grace:
                         early = True
@@ -234,7 +273,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
                     reported_at = None
                 if now - last_beat >= BEAT_EVERY:
                     last_beat = now
-                    current = _beat(rdir, task=tid, session=n, state=f"session running {int(now - start) // 60} min")
+                    current = _beat(rdir, task=label, session=n, state=f"session running {int(now - start) // 60} min")
                     if current.get("control") == "stop":
                         stopped = True
                         break
@@ -249,4 +288,6 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
         except OSError:  # a leftover grandchild may still hold the file; the full log is fine too
             pass
     return {"rc": proc.returncode, "timed_out": timed_out, "stopped": stopped, "early_exit": early, "text": text,
-            "seconds": int(time.time() - start), "model": model, "effort": effort}
+            "seconds": int(time.time() - start), "model": model, "effort": effort, "agent": state["agent"],
+            "profile": state.get("profile"), "kind": route.get("kind"), "tier": route.get("tier"),
+            "tasks": [t["id"] for t in unit], "why": route.get("why")}

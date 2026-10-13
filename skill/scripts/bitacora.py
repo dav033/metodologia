@@ -49,17 +49,24 @@ def main() -> None:
     p_bind.add_argument("project")
     p_launch = sub.add_parser("launch", help="HQ: open a new executor session for an approved plan")
     p_launch.add_argument("req", help="REQ-NNN")
-    p_launch.add_argument("--agent", choices=["claude", "codex", "antigravity"], default="claude")
+    p_launch.add_argument("--agent", choices=["claude", "codex"], default="claude")
     p_launch.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
     p_launch.add_argument("--mode", choices=["loop", "goal", "marathon"], default="loop",
-                          help="loop/goal: one long session (codex always /goal); marathon: supervisor, a fresh session per task")
+                          help="loop/goal: one long session (codex always /goal); marathon: supervisor, a fresh session per task or milestone")
     p_launch.add_argument("--model", help="marathon: model alias for the sessions (default haiku)")
     p_launch.add_argument("--repo", help="repo path (remembered for next time)")
+    p_launch.add_argument("--pool", help="marathon: accounts the router may use: auto, or profile ids a,b")
+    p_launch.add_argument("--background", action="store_true", help="no window: detached tmux session / systemd unit")
     p_launch.add_argument("--force", action="store_true", help="launch even if PLAN.md is not 'approved'")
     p_launch.add_argument("--dry-run", action="store_true")
-    p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task (days)")
+    p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task or per milestone (days)")
     p_run.add_argument("req", help="REQ-NNN")
-    p_run.add_argument("--agent", choices=["claude", "codex", "antigravity"])
+    p_run.add_argument("--agent", choices=["claude", "codex"])
+    p_run.add_argument("--pool", help="accounts the router may use: auto (every account allowed for the project), "
+                                      "profile ids a,b, or none (pin to --agent/--profile)")
+    p_run.add_argument("--audit", dest="audit", action="store_true", default=None,
+                       help="independent audit session after each milestone (default with a pool)")
+    p_run.add_argument("--no-audit", dest="audit", action="store_false")
     p_run.add_argument("--workers", type=int, help="sessions at once, only across different repos (default 1, max 2)")
     p_run.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
     p_run.add_argument("--model", help="tier 0 of the escalation ladder (default haiku)")
@@ -78,7 +85,8 @@ def main() -> None:
     p_task.add_argument("task", help="T3")
     p_task.add_argument("--evidence", default="", help="done: what proves it")
     p_task.add_argument("--reason", default="", help="fail / escalate: why")
-    p_task.add_argument("--to", choices=["sonnet", "opus"], help="escalate: opus (architecture) or sonnet (stuck)")
+    p_task.add_argument("--to", choices=["standard", "top", "sonnet", "opus"],
+                        help="escalate: top (architecture; alias opus) or standard (stuck; alias sonnet)")
     p_task.add_argument("--text", default="", help="note: advice for the next attempt")
     p_task.add_argument("--blocked", action="store_true", help="fail: needs a human, do not retry")
     p_rc = sub.add_parser("run-control", help="pause / resume / stop a running marathon")
@@ -105,7 +113,7 @@ def main() -> None:
     p_prof = sub.add_parser("profiles", help="account profiles: list, doctor, or check one against a project")
     p_prof.add_argument("action", choices=["list", "doctor", "check", "add", "gate", "wrapper"])
     p_prof.add_argument("profile", nargs="?", help="check/add: profile id")
-    p_prof.add_argument("--provider", choices=["claude", "codex", "antigravity"], help="add: provider")
+    p_prof.add_argument("--provider", choices=["claude", "codex"], help="add: provider")
     p_prof.add_argument("--env", action="append", default=[], metavar="KEY=VALUE",
                         help="add: environment selecting the account, e.g. CLAUDE_CONFIG_DIR=~/.claude-work")
     p_prof.add_argument("--work-only", action="store_true", help="add: only runs projects with work=true")
@@ -117,7 +125,10 @@ def main() -> None:
     p_del.add_argument("action", choices=["start", "exec", "status", "list"])
     p_del.add_argument("target", nargs="?", help="start: the task text; exec/status: delegation id")
     p_del.add_argument("--profile", help="account profile (sets the agent; work gate applies)")
-    p_del.add_argument("--agent", choices=["claude", "codex", "antigravity"], help="when no --profile")
+    p_del.add_argument("--agent", choices=["claude", "codex"], help="when no --profile (neither: the router chooses)")
+    p_del.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research"],
+                       help="what the work is (routing; default: inferred from the task text)")
+    p_del.add_argument("--tier", type=int, choices=[0, 1, 2], help="capability tier: 0 light, 1 standard, 2 top")
     p_del.add_argument("--workdir", help="folder the agent works in (default: --cwd)")
     p_del.add_argument("--allow", action="append", default=[], help="path the agent may modify (repeatable)")
     p_del.add_argument("--verify", help="command whose exit status decides success (run by the supervisor)")
@@ -126,7 +137,35 @@ def main() -> None:
     p_del.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"])
     p_del.add_argument("--background", action="store_true", help="start: return the id immediately")
     p_del.add_argument("--agent-cmd", help="tests: command template with {prompt_file} {workdir} {result} {id}")
-    sub.add_parser("metrics", help="attempt telemetry summary per agent/profile/model (null = not reported)")
+    p_met = sub.add_parser("metrics", help="attempt telemetry per agent/profile/model/effort (null = not reported)")
+    p_met.add_argument("--by", help="group keys, comma separated: agent,profile,model,effort,kind,tier,project")
+    p_met.add_argument("--advice", action="store_true", help="plain-language observations instead of the table")
+    p_ag = sub.add_parser("agents", help="agent catalog: models, ladder, accounts and usage-limit state; route preview")
+    p_ag.add_argument("action", nargs="?", choices=["list", "route", "brief", "quota-clear"], default="list")
+    p_ag.add_argument("profile", nargs="?", help="quota-clear: profile id")
+    p_ag.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research"], default="implement")
+    p_ag.add_argument("--tier", type=int, choices=[0, 1, 2])
+    p_cfg = sub.add_parser("config", help="machine settings (.state/config.json): get | set KEY VALUE | unset KEY")
+    p_cfg.add_argument("action", choices=["get", "set", "unset"])
+    p_cfg.add_argument("key", nargs="?")
+    p_cfg.add_argument("value", nargs="?")
+    p_learn = sub.add_parser("learn", help="evidence-backed learnings about the project and the owner's preferences")
+    p_learn.add_argument("action", choices=["add", "list", "confirm", "reject", "brief"])
+    p_learn.add_argument("target", nargs="?", help="add: the learning (one sentence); confirm/reject: L-NNN")
+    p_learn.add_argument("--evidence", default="", help="add: what was observed (required)")
+    p_learn.add_argument("--source", default="", help="add: where it was observed, e.g. REQ-006/T3")
+    p_learn.add_argument("--scope", choices=["project", "owner", "skill"], default="project")
+    p_learn.add_argument("--kind", choices=["preference", "convention", "pitfall", "tooling", "decision"],
+                         default="convention")
+    p_learn.add_argument("--status", choices=["candidate", "confirmed", "rejected"], help="list: filter")
+    p_learn.add_argument("--reason", default="", help="reject: why")
+    p_ho = sub.add_parser("handoff", help="validate a plan, approve it when safe and start it in the background")
+    p_ho.add_argument("req", help="REQ-NNN")
+    p_ho.add_argument("--dry-run", action="store_true", help="only say what would happen and why")
+    p_ho.add_argument("--pool", help="accounts the router may use (default: auto)")
+    p_ho.add_argument("--profile", help="preferred account among equals")
+    p_ho.add_argument("--model", help="tier 0 model of the preferred provider")
+    sub.add_parser("context", help="one screen for an agent: who is available, routing, delegation, learnings, docs")
     sub.add_parser("audit", help="prepare a read-only inventory for a workspace architecture audit")
     p_serve = sub.add_parser("serve", help="run the local web server in the foreground")
     p_serve.add_argument("--port", type=int)
@@ -220,7 +259,7 @@ def main() -> None:
         if not a.target:
             sys.exit("delegate start needs the task text")
         order = bt_delegate.create(project, a.target, a.profile, a.agent, Path(a.workdir or a.cwd), a.allow,
-                                   a.verify, a.timeout, a.model, a.effort)
+                                   a.verify, a.timeout, a.model, a.effort, a.kind, a.tier)
         if a.background:
             print(json.dumps({"id": order["id"], "status": "started", "pid": bt_delegate.start_background(order["id"])}))
         else:
@@ -229,7 +268,67 @@ def main() -> None:
 
     if a.cmd == "metrics":  # machine-level: reads <root>/.state/events
         import bt_events
-        print(json.dumps(bt_events.summary(bt_events.read_all()), indent=1, ensure_ascii=False))
+        rows = bt_events.read_all()
+        if a.advice:
+            print("\n".join(bt_events.advice(rows)))
+            return
+        by = [k.strip() for k in (a.by or "").split(",") if k.strip()] or None
+        print(json.dumps(bt_events.summary(rows, by), indent=1, ensure_ascii=False))
+        return
+
+    if a.cmd == "config":  # machine-level
+        import bt_config
+        print(bt_config.cli(a.action, a.key, a.value))
+        return
+
+    if a.cmd in ("agents", "context", "learn"):  # the project is optional: owner-level answers work anywhere
+        project = slugify(a.project, 60) if a.project else (
+            slugify(os.environ["BITACORA_PROJECT"], 60) if os.environ.get("BITACORA_PROJECT") else None)
+        if not project:
+            import bt_audit
+            project = bt_audit.project_for_cwd(ROOT, Path(a.cwd))
+        if a.cmd == "context":
+            import bt_context
+            print(bt_context.text(project))
+            return
+        if a.cmd == "agents":
+            import bt_agents
+            if a.action == "brief":
+                print(bt_agents.brief(project))
+            elif a.action == "quota-clear":
+                print("cleared" if bt_agents.quota_clear(a.profile or "") else "nothing to clear")
+            elif a.action == "route":
+                if not project:
+                    sys.exit("agents route needs a project (--project <name>)")
+                import bt_delegate
+                print(json.dumps(bt_delegate.auto_route(project, a.kind, a.tier), indent=1, ensure_ascii=False))
+            else:
+                print(json.dumps(bt_agents.catalog(project), indent=1, ensure_ascii=False))
+            return
+        import bt_config
+        import bt_learn
+        if a.action in ("confirm", "reject") and bt_learn.scope_of_id(a.target or "") is None and a.scope == "project":
+            a.scope = "owner"  # an LG- id is global: no --scope needed
+        scope_project = project if a.scope == "project" else None
+        if a.action in ("add", "confirm", "reject") and a.scope == "project" and not project:
+            sys.exit("No project resolved; pass --project <name> or --scope owner.")
+        if a.action == "add":
+            item = bt_learn.add(scope_project, a.target or "", a.evidence, a.source, a.scope, a.kind,
+                                bt_config.get("learn.promote_after", 3))
+            state = "ignored (the owner rejected it before)" if item.get("ignored") else item["status"]
+            print(f"{item['id']} {state} ({item['sightings']} sighting(s)){'' if item['created'] else ' — merged into an existing learning'}")
+        elif a.action in ("confirm", "reject"):
+            item = (bt_learn.confirm(scope_project, a.target or "", a.scope) if a.action == "confirm" else
+                    bt_learn.reject(scope_project, a.target or "", a.scope, a.reason))
+            print(f"{item['id']} {item['status']}: {item['text']}")
+        elif a.action == "brief":
+            print(bt_learn.brief(project, bt_config.get("learn.inject_max", 12)) or "(nothing learned yet)")
+        else:
+            for item in bt_learn.listing(project, None, a.status):
+                print(f"{item['id']} [{item['scope']} · {item['kind']} · {item['status']} · {item['sightings']}x] {item['text']}")
+        if a.action in ("add", "confirm", "reject"):
+            from bt_vcs import commit
+            commit(ROOT, f"{project or 'owner'}: learning {a.action}")
         return
 
     if a.cmd == "profiles" and a.action in ("list", "doctor", "add", "gate", "wrapper"):  # machine-level
@@ -326,6 +425,10 @@ def main() -> None:
         extra = {"model": a.model or "haiku"} if a.mode == "marathon" or a.model else {}
         if a.profile:
             extra["profile"] = a.profile
+        if a.pool:
+            extra["pool"] = a.pool
+        if a.background:
+            extra["background"] = True
         print(json.dumps(launch(project, a.req, a.agent, a.mode, a.repo, a.force, a.dry_run, **extra), indent=1,
                          ensure_ascii=False))
     elif a.cmd == "run":
@@ -334,7 +437,13 @@ def main() -> None:
                            max_attempts=a.max_attempts, session_timeout=a.session_timeout,
                            retry_blocked=a.retry_blocked, agent_cmd=a.agent_cmd, once=a.once,
                            no_autostart=a.no_autostart, profile=a.profile,
-                           workers=a.workers))
+                           workers=a.workers, pool=a.pool, audit=a.audit))
+    elif a.cmd == "handoff":
+        import bt_handoff
+        result = bt_handoff.handoff(project, a.req, a.dry_run, a.pool, a.model, a.profile)
+        print(json.dumps(result, indent=1, ensure_ascii=False))
+        sys.exit(0 if result["decision"] in ("launched", "would_launch", "already_running", "done") else
+                 3 if result["decision"] == "needs_approval" else 2)
     elif a.cmd == "monitor":
         from bt_monitor import open_monitor
         print(json.dumps(open_monitor(project, a.req, a.model, a.dry_run), indent=1, ensure_ascii=False))

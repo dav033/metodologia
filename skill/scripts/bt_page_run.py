@@ -100,6 +100,11 @@ def apply_control(rdir: Path, action: str) -> str:
 
 def _tier_cell(run: dict, t: dict) -> str:
     tier = tier_.tier_of(t)
+    if run.get("pool"):  # the router decides per session: show who ran it last, or that it is still open
+        last = t.get("last_route") or {}
+        who = (f'{last.get("profile") or last.get("agent")} · {tier_.label(last.get("model"), last.get("effort"))}'
+               if last else "según cuota y resultados")
+        return f'{e(who)} <span class="muted">(nivel {tier})</span>'
     return f'{e(tier_.label(*tier_.model_for(run, tier)))} <span class="muted">(nivel {tier})</span>'
 
 
@@ -111,10 +116,12 @@ def _task_rows(run: dict) -> str:
         pid = t.get("pending_id")
         rows.append(
             f'<tr{" class=current" if t.get("id") == cur and run.get("status") == "running" else ""}>'
-            f'<td>{e(str(t.get("id", "")))}</td><td>{e(str(t.get("title", "")))}</td><td>{e(str(t.get("repo") or "—"))}</td>'
+            f'<td>{e(str(t.get("id", "")))}</td><td>{e(str(t.get("milestone") or "—"))}</td>'
+            f'<td>{e(str(t.get("title", "")))} <span class="muted">{e(str(t.get("kind") or ""))}</span></td>'
+            f'<td>{e(str(t.get("repo") or "—"))}</td>'
             f'<td>{badge(str(t.get("status", "todo")))}</td><td>{_tier_cell(run, t)}</td><td>{t.get("attempts", 0)}</td>'
             f'<td class="muted">{e(err)}</td><td>{e(pid) if pid else ""}</td></tr>')
-    return ('<table><tr><th>ID</th><th>Tarea</th><th>Repo</th><th>Estado</th><th>Modelo</th><th>Intentos</th>'
+    return ('<table><tr><th>ID</th><th>Hito</th><th>Tarea</th><th>Repo</th><th>Estado</th><th>Modelo</th><th>Intentos</th>'
             f'<th>Último error</th><th>Pendiente</th></tr>{"".join(rows)}</table>')
 
 
@@ -122,10 +129,12 @@ def _log_rows(run: dict) -> str:
     rows = []
     for x in reversed((run.get("log") or [])[-30:]):
         model = tier_.label(x["model"], x.get("effort")) if x.get("model") else "—"
+        if x.get("profile") or x.get("agent"):
+            model = f'{x.get("profile") or x.get("agent")} · {model}'
         rows.append(f'<tr><td>{e(str(x.get("at", ""))[:19].replace("T", " "))}</td><td>#{e(str(x.get("session", "")))}</td>'
                     f'<td>{e(str(x.get("task", "")))}</td><td>{e(model)}</td><td>{badge(str(x.get("result", "")))}</td>'
                     f'<td>{e(str(x.get("seconds", "")))}s</td><td>{e(str(x.get("summary", "")))}</td></tr>')
-    return ('<table><tr><th>Hora</th><th>Sesión</th><th>Tarea</th><th>Modelo</th><th>Resultado</th><th>Duración</th>'
+    return ('<table><tr><th>Hora</th><th>Sesión</th><th>Tarea</th><th>Agente · modelo</th><th>Resultado</th><th>Duración</th>'
             f'<th>Resumen</th></tr>{"".join(rows)}</table>') if rows else '<p class="muted">Sin sesiones todavía.</p>'
 
 
@@ -139,7 +148,7 @@ def run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
     status = str(run.get("status", "?"))
     kpis = [f'<span class="kpi">estado {badge(status)}</span>',
             f'<span class="kpi">progreso {done}/{total}</span>',
-            f'<span class="kpi">agente {e(str(run.get("agent", "")))} · {e(str(run.get("model", "")))}'
+            f'<span class="kpi">{"agentes " + e(", ".join(run["pool"])) if run.get("pool") else "agente " + e(str(run.get("agent", ""))) + " · " + e(str(run.get("model", "")))}'
             f'{" · ultracode" if run.get("ultracode") else ""}</span>',
             f'<span class="kpi">sesión #{e(str(hb.get("session", "—")))} · tarea {e(str(hb.get("task") or "—"))}</span>',
             f'<span class="kpi">latido {fmt_age(age)}</span>']

@@ -105,6 +105,16 @@ def build_context(project: str | None, session_id: str, cwd: Path, source: str) 
     if unsized:
         out.append(f"({unsized} pending item(s) have no complexity estimate yet: when you touch this project, "
                    f"estimate them S/M/L in PENDING.md — the file re-sorts itself.)")
+    try:  # what earlier sessions learned about this project and its owner (confirmed only) + where the rest lives
+        import bt_config
+        import bt_learn
+        learned = bt_learn.brief(project, bt_config.get("learn.inject_max", 12))
+        if learned:
+            out += ["", learned]
+    except (SystemExit, Exception):
+        pass
+    out.append(f"Agents, routing, delegation and learning commands in one screen: python \"{SCRIPT.as_posix()}\" "
+               f"--project {project} context")
     blocked = _section((pdir / "PENDING.md").read_text(encoding="utf-8"), "Blocked", 6)
     if blocked and "_None_" not in blocked:
         out += ["", "### Pending — Blocked", blocked]

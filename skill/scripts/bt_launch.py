@@ -17,7 +17,6 @@ from bt_core import _first_heading, _front
 AGENTS = {
     "claude": ["claude", "--dangerously-skip-permissions"],
     "codex": ["codex", "--yolo"],
-    "antigravity": ["agy", "--dangerously-skip-permissions", "-i"],  # -i: initial prompt, session stays interactive
 }
 
 
@@ -81,7 +80,8 @@ def write_handoff(project: str, rdir: Path, workdir: Path, repos: dict[str, Path
                   "per iteration (a whole phase or more). End the loop yourself when done or blocked."]
     if mode == "marathon":
         steps += ["", "## Run mode", "A marathon supervisor runs this plan: each session is fresh and handles exactly "
-                  "ONE task (given in its prompt). Do only that task, then report with `bitacora.py task done` or "
+                  "what its prompt names: ONE task, or every pending task of ONE milestone (`### Mn` group), or the "
+                  "audit of a milestone. Do only that, give each task its verdict with `bitacora.py task done` or "
                   "`task fail`. Do not run the final review or write REPORT.md unless the prompt says so."]
     out = rdir / "HANDOFF.md"
     out.write_text("# Handoff — executor\n\n" + "\n".join(steps) + "\n", encoding="utf-8")
@@ -90,7 +90,7 @@ def write_handoff(project: str, rdir: Path, workdir: Path, repos: dict[str, Path
 
 def initial_prompt(agent: str, mode: str, rid: str, handoff: Path) -> str:
     h = handoff.as_posix()
-    if agent in ("codex", "antigravity") or mode == "goal":
+    if agent == "codex" or mode == "goal":
         return (f"/goal Complete {rid} by following {h} without stopping until every task in the plan is ticked, "
                 f"the plan's Verification passes with evidence, and the bitácora and final report are done "
                 f"- or a stop-and-ask item blocks progress.")
@@ -108,10 +108,12 @@ def launch_env(project: str, profile: str | None = None) -> dict[str, str]:
 
 
 def marathon_script(project: str, rid: str, agent: str, model: str, repo_path: Path, launch_dir: Path,
-                    profile: str | None = None) -> Path:
+                    profile: str | None = None, pool: str | None = None) -> Path:
     argv = [sys.executable, str(SCRIPT), "--project", project, "run", rid, "--agent", agent]
     if profile:
         argv += ["--profile", profile]
+    if pool:
+        argv += ["--pool", pool]
     if agent == "claude" or model != "haiku":
         argv += ["--model", model]
     return host.write_script(launch_dir / f"{project}-{rid}-marathon", repo_path, argv,
@@ -119,7 +121,10 @@ def marathon_script(project: str, rid: str, agent: str, model: str, repo_path: P
 
 
 def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", repo: str | None = None,
-           force: bool = False, dry_run: bool = False, model: str = "haiku", profile: str | None = None) -> dict:
+           force: bool = False, dry_run: bool = False, model: str = "haiku", profile: str | None = None,
+           pool: str | None = None, background: bool = False) -> dict:
+    """`pool`: accounts the marathon's router may use ("auto" or ids). `background`: no window, a detached tmux
+    session / systemd unit even on a desktop (the automatic hand-off uses it)."""
     if profile:
         bt_profiles.authorize(profile, project)  # before any prompt or handoff with project content exists
         agent = bt_profiles.require_launchable(profile)
@@ -153,8 +158,8 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
     marathon = mode == "marathon"
     if marathon:
         prompt = ""  # no /loop prompt: the supervisor builds one prompt per task
-        ps1 = marathon_script(project, rid, agent, model, repo_path, launch_dir, profile)
-        title, what = f"{project} {rid} marathon", f"marathon supervisor ({agent}, {model})"
+        ps1 = marathon_script(project, rid, agent, model, repo_path, launch_dir, profile, pool)
+        title, what = f"{project} {rid} marathon", f"marathon supervisor ({'pool ' + pool if pool else agent}, {model})"
     else:
         prompt = initial_prompt(agent, mode, rid, handoff)
         (launch_dir / f"{project}-{rid}.prompt.txt").write_text(prompt, encoding="utf-8")
@@ -164,8 +169,10 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
     cmd = "(dry run: not opened)"
     monitor = None
     if not dry_run:
+        if background:
+            os.environ["BITACORA_TERMINAL"] = "tmux"
         cmd = open_window(repo_path, ps1, title)
-        if marathon and agent == "claude":  # companion session reachable from the phone through Remote Control
+        if marathon and agent == "claude" and not background:  # companion session reachable through Remote Control
             from bt_monitor import open_monitor
             try:
                 monitor = open_monitor(project, rid, profile=profile)["session"]
