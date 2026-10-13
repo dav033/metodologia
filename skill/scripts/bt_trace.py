@@ -15,7 +15,7 @@ import subprocess
 from bt_core import *  # noqa: F403
 from bt_core import _front
 
-ID_RE = re.compile(r"\b(REQ-\d{3,}|D-\d{3,}|P-\d{3,})\b")
+ID_RE = re.compile(r"\b(REQ-\d{3,}|D-\d{3,5}(?![\d-])|P-\d{3,})\b")  # D-20261012-… is a delegation id, not a decision
 LOCAL_RE = re.compile(r"\b(US-\d+|R\d+|T\d+)\b")
 
 
@@ -69,7 +69,8 @@ def _requirements(g: Graph, pdir: Path) -> None:
             nid = f"{rid}/{m.group(1)}"
             g.node(nid, "US", f"{m.group(1)} {m.group(2).strip()}", req=rid)
             g.edge(rid, nid, "defines")
-        for m in re.finditer(r"^\s*-\s+(R\d+)\.\s+(.+)$", text, re.M):
+        # "- R1. text", "- R1: text", "- **R1 — Title.** text": agents write all three
+        for m in re.finditer(r"^\s*[-*]\s+\**(R\d+)\b\**\s*(?:\.|:|—|–|-)\s*(.+)$", text, re.M):
             nid = f"{rid}/{m.group(1)}"
             g.node(nid, "R", f"{m.group(1)} {m.group(2).strip()[:80]}", req=rid)
             g.edge(rid, nid, "defines")
