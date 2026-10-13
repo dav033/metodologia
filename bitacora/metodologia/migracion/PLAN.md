@@ -1,0 +1,118 @@
+---
+req: REQ-007
+status: review
+created: 2026-10-13
+---
+# Migration plan — platform first, controlled capability expansion
+
+## Approach
+Extract an independently installed local engineering platform while preserving the current interfaces and data. Characterize first, move code second, introduce new behavior third. Keep one durable state root and one canonical implementation. Skills become thin optional adapters; the platform can execute tested workflows without loading them.
+
+This is a proposal ready for review, not approval to execute. Registered repo role remains `skill` while it points to `/home/david/dev/metodologia`; renaming it would break existing plans. All tasks are unchecked. Full gate definitions and rollback drills are in [ACCEPTANCE](/home/david/bitacora/metodologia/migracion/ACCEPTANCE.md); code evidence is in [FINDINGS](/home/david/bitacora/metodologia/migracion/FINDINGS.md).
+
+## Milestone overview
+| Milestone | Result | Dependency | Exit gate |
+|---|---|---|---|
+| M0 | Restorable inventory and ownership of current work | None | Every source/state/consumer accounted for; restore rehearsal |
+| M1 | Explicit compatibility contract and trustworthy baseline | M0 | Routing failures resolved by evidence; new behavioral fixtures |
+| M2 | Independent Python package and compatibility shims | M1 | Wheel runs without checkout/skill; resources and contracts pass |
+| M3 | Provider adapters and routing parity | M2 | Fake-CLI matrix, env isolation and bounded fairness |
+| M4 | Transactional provisioning of existing accounts | M3 | Idempotent install, rollback and per-account capability reports |
+| M5 | Durable isolated same-repo execution | M4 | Three workers, serialized verified integration, crash recovery |
+| M6 | Platform-owned methodology and thin adapters | M2; before M8 | All eight primitives traced; policy/eval parity |
+| M7 | Pinned diagram capability and audit integration | M6 | Five types, failure safety, offline HTML and real visual checks |
+| M8 | Existing-provider platform cutover | M5 + M7 | Restore/cutover rehearsal and full owner workflow |
+| M9 | Optional sixth subscription family | M8 + account activation | Z.ai contracts, auth, quota and independent audit evidence |
+
+## Global constraints and ownership
+No reset/force removal, lost local edits, automatic push, main merge, credential export or hidden failure. First reconcile the dirty tree with its owners; do not freeze it by stopping unrelated sessions. Capture base SHA plus hashes and refresh before each phase. Use an isolated migration worktree only after the uncommitted source baseline is preserved; a fresh worktree from HEAD alone omits it.
+
+One coordinator owns shared contracts and integration. Package owner handles M2; runtime owner M3/M5; installer owner M4; policy owner M6; artifact owner M7. Until isolated worktrees and disjoint ownership exist, edits are sequential. Read-only reviewers may run concurrently. M6 can proceed alongside M3–M5 only with separate worktrees and explicit shared-resource ownership. Every milestone gets an independent spec/standards review; review is read-only and the coordinator implements remedies. User requested Claude Haiku `max` for planning assistance; no automatic change to future execution model policy is implied.
+
+## Verification first
+Existing baseline: `PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s skill/scripts/tests -q` (observed 578 tests, 2 failures).
+Future migrated suite: `PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v`.
+**Commands below under `tests/migration/` are tests to implement in the corresponding tasks, not commands available or passed today.** Each is stdlib unittest, isolated in temporary roots, with fake provider CLIs; live tests are separately opt-in. Keep legacy discovery until test migration is proven.
+
+### M0 — Inventory and reversible baseline
+- [ ] T1 — Capture source/resource/consumer manifests, dirty/untracked changes, private-state backup and restore drill · repo: skill · kind: test · risk: high · verify: `python -m unittest discover -s tests/migration -p 'test_inventory_restore.py' -v` · covers: R1, R4
+- [ ] T2 — Record owner-approved baseline and architecture ADR; classify all original proposal items and current decisions · repo: skill · kind: docs · after: T1 · covers: R1, R13
+
+Scope: all files in INVENTORY, live-root topology, symlinks/junctions, machine-specific paths, legacy consumers, active supervisors/relay/web process versions. Baseline includes untracked modules and tests, and a hash-consistent source snapshot. Restore to a new temporary root, never over live data. Do not back up open files as a supposedly consistent transaction: pause only authorized writers or use snapshot+journal reconciliation.
+Acceptance: every manifest row has source, destination, owner, contract test and rollback; restored user-file hashes match; .state included; no secret enters the dossier or git. Conflicting concurrent code remains owned and explicitly reconciled.
+
+### M1 — Compatibility contract and baseline repair
+- [ ] T3 — Resolve existing audit-routing test failures against current owner policy with behavioral regressions · repo: skill · after: T2 · verify: `python -m unittest discover -s skill/scripts/tests -v` · covers: R5, R8
+- [ ] T4 — Add CLI/state/hooks/web characterization fixtures and compatibility matrix, including historical RUN data · repo: skill · kind: test · after: T3 · verify: `python -m unittest discover -s tests/migration -p 'test_legacy_contracts.py' -v` · covers: R3, R4, R5
+
+Seams: CLI process boundary, persisted JSON/Markdown, hook stdin/stdout and HTTP responses. Compare semantic outputs with only timestamps/PIDs/temp roots normalized; preserve missing versus null versus zero. Existing tests must not be weakened. Add tests for shell mutation false positives and negatives; preserve advisory size policy.
+Acceptance: an observed green baseline or an explicitly isolated owner-accepted unrelated limitation, with no migration-related unresolved failure. Current two routing failures must be explained and resolved before moving those modules.
+
+### M2 — Standalone package with compatibility bridge
+- [ ] T5 — Create pyproject, CLI entrypoints and packaged resource resolver; migrate runtime to one canonical implementation · repo: skill · level: architecture · after: T4 · verify: `python -m unittest discover -s tests/migration -p 'test_package_install.py' -v` · covers: R2, R3
+- [ ] T6 — Add thin legacy script/import bridges and relocate tests without losing collection or isolation · repo: skill · after: T5 · verify: `python -m unittest discover -s tests/migration -p 'test_entrypoint_parity.py' -v` · covers: R2, R3, R5
+
+Seams: process entrypoint and import/resource loader. Add __main__, main return/exit behavior, wheel package-data and source-independent subprocess startup. Build from sdist and install wheel in a fresh venv; run from an unrelated directory with checkout unavailable. Verify templates, agents, policy, assets, subprocesses and help for all commands. Preserve globalusage/relay/file-guard entrypoints, not just bt. Remove legacy code ownership but retain delegating shims. Do not rename every internal module simultaneously.
+Acceptance: no runtime import depends on skill/scripts or cwd; every legacy command maps to the same implementation; complete suite collected; installed web/context/hook functions find resources.
+
+### M3 — Drivers, quota and routing contracts
+- [ ] T7 — Extract Claude, Codex and Antigravity adapters behind a versioned invocation/result contract · repo: skill · level: architecture · after: T6 · verify: `python -m unittest discover -s tests/migration -p 'test_driver_contracts.py' -v` · covers: R5, R6
+- [ ] T8 — Preserve account gates, quota/quality/relay contracts and add bounded cold-start scheduling · repo: skill · after: T7 · verify: `python -m unittest discover -s tests/migration -p 'test_routing_parity.py' -v` · covers: R4, R5, R8
+
+Seams: provider subprocess, environment boundary and pure route selection. Account keys use non-secret selectors or opaque identity; never serialize auth tokens from profile env. Test ambient detection with unrelated model/env overrides and assert sentinel secrets cannot appear in quota/events/logs. Driver owns argv/stdin, timeout/cancel, stream normalization, supported model/effort, quota/error semantics; supervisor owns task lifecycle and verification. Avoid a generic plugin framework. Route exploration rule must state a tested upper bound for equally eligible new accounts; it cannot override current audit role, work-only restrictions or exhausted quota. Use actual event timestamp for historical credit weighting.
+Acceptance: partial/malformed streams and nonzero exits never produce verified success; unknown usage remains null; prompt paths and env cannot select another account; existing AgY protocol preserved until installed-version probe proves an alternative.
+
+### M4 — Installer and existing account provisioning
+- [ ] T9 — Implement installer dry-run, preimage manifest, staged apply and conflict-aware rollback · repo: skill · after: T8 · verify: `python -m unittest discover -s tests/migration -p 'test_install_transaction.py' -v` · covers: R3, R7
+- [ ] T10 — Implement per-profile diagnostics and five-identity matrix with work-project and personal-project fixtures · repo: skill · after: T9 · verify: `python -m unittest discover -s tests/migration -p 'test_profile_matrix.py' -v` · covers: R6, R7, R8
+
+Seams: temporary provider config directories, installer filesystem and hook invocation. Install twice with identical second result; preserve unrelated entries; missing directories provisioned without invented auth. Windows hooks use a tested launcher with interpreter/entrypoint resolution, not a bare bt assumed on GUI PATH. Keep ownership marker compatible with legacy removal. Rollback only files whose postimage still matches, otherwise report conflict.
+Acceptance: all five real identities report explicit eligibility, not fake installed:true; all allowed pairwise delegations pass deterministic adapters and later opt-in authenticated smoke. Personal projects reject claude-work. Test Linux, Windows PowerShell and macOS separately; unavailable OS is pending, not passing.
+
+### M5 — Durable worktree execution and integration
+- [ ] T11 — Version RUN ownership metadata and implement fail-closed integration lock with liveness/recovery · repo: skill · level: architecture · risk: high · after: T10 · verify: `python -m unittest discover -s tests/migration -p 'test_integration_lock.py' -v` · covers: R4, R9
+- [ ] T12 — Add unique per-worker worktrees, scope checks, serialized journaled integration and combined-result verification · repo: skill · after: T11 · verify: `python -m unittest discover -s tests/migration -p 'test_worktree_recovery.py' -v` · covers: R5, R9
+- [ ] T13 — Measure and validate three-worker scheduling and resource conflicts; retain serial fallback · repo: skill · kind: test · after: T12 · verify: `python -m unittest discover -s tests/migration -p 'test_parallel_capacity.py' -v` · covers: R8, R9
+
+Seams: git in disposable repositories, process ownership, transaction journal and supervisor restart. Freeze approved files/ownership in RUN and detect plan drift; map each task to its immutable worktree and assigned branch for prompt generation, verification and review. Verify MUST NOT silently fall back to the registered main checkout. Normalize file prefixes with path-segment semantics, reject escapes and account for case/symlink rules. Missing scopes serialize. Shared lockfiles/generated outputs/ports/database fixtures create conflicts even with disjoint source. Scope declarations are scheduling hints until actual diff is validated; unrelated edits reject integration.
+Sequence: persist allocation/base SHA → create unique ref/worktree → execute → independent verify → capture immutable candidate SHA → acquire strict lease → integrate in dedicated integration worktree → full combined verify → record accepted SHA/task state → cleanup eligibility. Never mark done before integration evidence is durable. Idempotent recovery recognizes already-integrated SHAs; conflicts/failed verify preserve refs and dirty work. No -B, no force removal, no merge into main. Worker integration, if authorized by the approved execution plan, targets only a dedicated feature integration branch; final merge/publish remains owner-controlled. Cleanup/deletion and real merges require the owner's explicit execution authorization.
+Acceptance: three disjoint tasks on one repo complete safely; a crash at each stage cannot drop or double-apply work; lock timeout blocks integration; two hosts cannot claim a transferable PID; merge conflict and clean-merge semantic regression preserve recoverable state. Four workers in phase 2 requires measurements, not just a subscription count.
+
+### M6 — Methodology as platform policy, thin skills
+- [ ] T14 — Map every existing instruction/role to a canonical policy module and build optional lightweight adapters · repo: skill · after: T6 · verify: `python -m unittest discover -s tests/migration -p 'test_policy_parity.py' -v` · covers: R3, R5, R10
+- [ ] T15 — Adapt domain glossary, design vocabulary, TDD/debugging, architecture proposals, retro/writing and wait-what with traceable evals · repo: skill · after: T14 · verify: `python -m unittest discover -s tests/migration -p 'test_methodology_flows.py' -v` · covers: R10
+
+Eight primitive mapping: codebase-design → design policy; improve-codebase-architecture → explicit improve-architecture flow; domain-modeling → glossary use case; tdd → agreed test-seam guidance; diagnosing-bugs → reproduction evidence gate; retro → explicit feedback/learn flow; writing-for-agents → concise policy authoring; wait-what → immediate clarification/correction. Archify is a ninth integration, not one of these eight. No dependency on copying exactly eight skill directories.
+Preserve Grill Me, interface-quality, review evidence, engineering rules, routing and relay guidance. Canonical GLOSSARY.md records canonical term, definition and Avoid aliases as terms are settled, with consequential choices linked to DECISIONS. Register it in central-doc handling, views/indexes and templates. Retro preserves `learn add --scope skill|project` compatibility, ranks observed friction and records evidence instead of automatically rewriting policy. Wait-what restates the disputed claim in at most five plain Spanish sentences and waits for clarification. Structured seam metadata requires parser/version support if executable; otherwise document it as task detail rather than pretending RUN consumes it. Record the failing reproduction command in the task/day log before a repair. Allow bounded evidence-gathering when a fast deterministic reproducer is impossible; return explicit NEEDS_CONTEXT/blocked evidence rather than asserting a verified fix, and keep uncertainty visible. Refactor only when needed, no blanket vocabulary ban or 500-line hard gate. Record source revision/license and adapted versus original rules.
+Acceptance: no instruction disappears unnoticed; core flow works without installed skills; adapters select only relevant context; record before/after context bytes/tokens and behavior, not an invented reduction target. Deterministic evals plus separately recorded real-agent evals.
+
+### M7 — Diagrams and visual audit integration
+- [ ] T16 — Pin/license Archify runtime closure and build safe diagram use case and CLI adapter · repo: skill · after: T15 · verify: `python -m unittest discover -s tests/migration -p 'test_diagram_contracts.py' -v` · covers: R11
+- [ ] T17 — Integrate audit maps, core flows and improve-architecture before/after artifact registration and web presentation · repo: skill · after: T16 · verify: `python -m unittest discover -s tests/migration -p 'test_diagram_flows.py' -v` · covers: R10, R11
+
+Seams: IR validation, bounded Node subprocess, artifact store and web response. Use actual pinned CLI contract; disable updates locally for the renderer and prove no network, rather than injecting renderer variables into all agents. Preserve license/notices. Test HTML escaping and malicious IR/URLs/paths; generated HTML served from dashboard origin needs safe isolation or validated serving policy, not just layout validation. Source IR is retained alongside output and renderer revision for regeneration.
+Acceptance: architecture/workflow/sequence/dataflow/lifecycle fixtures render with pinned validation; invalid diagrams do not replace valid artifacts; deadline/output size enforced; missing Node is actionable; standalone dark/light HTML and links inspected in a browser. Audit runs produce architecture-map and core-flows; proposal report preserves candidate badges, reasons and selected before/after evidence.
+
+### M8 — Five-identity cutover and release evidence
+- [ ] T18 — Rehearse upgrade, old/new reader compatibility and rollback against representative restored state · repo: skill · risk: high · after: T13, T17 · verify: `python -m unittest discover -s tests/migration -p 'test_cutover_restore.py' -v` · covers: R1, R3, R4, R13
+- [ ] T19 — Run full owner-flow, OS/package matrix, provider smoke and publish local release/capability report · repo: skill · kind: test · after: T18 · verify: `python -m unittest discover -s tests -v` · covers: R2, R3, R5, R7, R10, R11, R13
+
+Cutover is a scheduled, owner-authorized transition: identify live processes by handle/start time, stop admission, let in-flight work settle/checkpoint, snapshot current state, install new version side by side, switch managed hooks/launchers, start one supervisor/server, validate and resume. The platform being migrated must not replace its executing supervisor mid-task. Preserve old runtime and shims throughout observation. Use backward-writable/additive state during coexistence; an incompatible schema is blocked until all old direct-script launchers/processes are drained or disabled and the previous runtime has a tested compatibility guard. Never assume an unchanged old binary enforces a new schema marker. On rollback, quiesce the new writer and preserve post-cutover work; restore runtime/config references or reverse explicitly versioned additive state. Never restore an old whole snapshot over newer acknowledged work.
+Acceptance: approved small project flows through interview → web approval → execution → verification → independent audit → artifacts/report → trace/bitácora; failure/resume and relay exercised. Inventory has no unexplained omission. Evidence includes commands, exit status, platform/runtime, logs and human visual checks. Real account provisioning/credentials remain a final activation gate.
+
+### M9 — Optional Z.ai family (phase 2)
+- [ ] T20 — Verify supported tooling/models and implement isolated compatible driver/auth contract with private config references · repo: skill · level: architecture · after: T19 · verify: `python -m unittest discover -s tests/migration -p 'test_zai_isolation.py' -v` · covers: R6, R12
+- [ ] T21 — Add configurable event-time credit policy, structured error classification and normalized telemetry · repo: skill · after: T20 · verify: `python -m unittest discover -s tests/migration -p 'test_zai_quota.py' -v` · covers: R8, R12
+- [ ] T22 — Complete opt-in authenticated sixth-profile smoke, family-independent auditing and five-provider rollback report · repo: skill · kind: test · after: T21 · verify: `python -m unittest discover -s tests/migration -p 'test_zai_activation.py' -v` · covers: R7, R12, R13
+
+No key is committed or copied to reports. Use the provider-supported secret mechanism and validate effective endpoint/model/auth precedence. Scrub host Anthropic env in both directions; never inherit an unverified routing override. Test structured 1113 wrong-endpoint/auth versus confirmed quota exhaustion and both 5h/weekly windows. Avoid a fabricated precise reset when the provider gives none. Dollar cost remains null when incompatible with subscription credits; token fields only populated if reported. Peak multiplier defaults to published 1× and off-peak 0.5×, versioned/date-stamped; weekday tests use Asia/Singapore. A scheduling penalty, if desired, is a distinct parameter.
+Acceptance: actual available models pass smoke, remain family zai despite claude executable, cross-family audits are enforced and no Claude account is contaminated. Missing subscription/model keeps phase 2 unavailable with a clear status while the five-identity platform remains complete. Disable Z.ai and preserve all attempt history to roll back.
+
+## Rulings and delivery
+- Proposed architecture is in ADR-PROPOSED.md, not an accepted decision replacing existing ADRs.
+- Do not run handoff/approve/launch from this planning request.
+- Each future milestone emits its own evidence and rollback result; passing unit tests alone cannot approve live cutover.
+- Do not remove legacy shims in M8/M9. Future retirement requires a complete consumer inventory, measured absence of use and explicit owner instruction.
+
+## Progress log
+- 2026-10-13: planning against current dirty checkout; source inventory, original blueprint, code findings and baseline evidence persisted under migracion. No implementation tasks completed.

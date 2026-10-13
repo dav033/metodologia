@@ -1,0 +1,93 @@
+{
+  "task_count": 22,
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Inventory and reversible baseline",
+      "tasks": [
+        "T1",
+        "T2"
+      ]
+    },
+    {
+      "id": "M1",
+      "title": "Compatibility contract and baseline repair",
+      "tasks": [
+        "T3",
+        "T4"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Standalone package with compatibility bridge",
+      "tasks": [
+        "T5",
+        "T6"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Drivers, quota and routing contracts",
+      "tasks": [
+        "T7",
+        "T8"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Installer and existing account provisioning",
+      "tasks": [
+        "T9",
+        "T10"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Durable worktree execution and integration",
+      "tasks": [
+        "T11",
+        "T12",
+        "T13"
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "Methodology as platform policy, thin skills",
+      "tasks": [
+        "T14",
+        "T15"
+      ]
+    },
+    {
+      "id": "M7",
+      "title": "Diagrams and visual audit integration",
+      "tasks": [
+        "T16",
+        "T17"
+      ]
+    },
+    {
+      "id": "M8",
+      "title": "Five-identity cutover and release evidence",
+      "tasks": [
+        "T18",
+        "T19"
+      ]
+    },
+    {
+      "id": "M9",
+      "title": "Optional Z.ai family (phase 2)",
+      "tasks": [
+        "T20",
+        "T21",
+        "T22"
+      ]
+    }
+  ],
+  "missing_dependencies": [],
+  "nonprior_dependencies": [],
+  "uncovered_requirements": [],
+  "all_tasks_unchecked": true,
+  "spec_copy_equal": true,
+  "plan_copy_equal": true
+}

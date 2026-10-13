@@ -1,0 +1,18 @@
+metodologia: 17 D, 20 P, 55 R, 10 REQ, 46 T, 11 US, 286 edges
+[warn] uncovered: REQ-006/US-1 is not covered by any task of the plan
+[warn] uncovered: REQ-006/US-2 is not covered by any task of the plan
+[warn] uncovered: REQ-006/US-3 is not covered by any task of the plan
+[warn] uncovered: REQ-006/US-4 is not covered by any task of the plan
+[warn] superseded-in-use: D-010 is superseded but still cited in SUMMARY.md
+[error] dangling: REQ-015 is mentioned in relay/RELAY-20261013-164400.md but never defined
+[error] dangling: D-040 is mentioned in relay/RELAY-20261013-164400.md but never defined
+[error] dangling: D-041 is mentioned in relay/RELAY-20261013-164400.md but never defined
+[error] dangling: D-042 is mentioned in relay/RELAY-20261013-164400.md but never defined
+[error] dangling: D-043 is mentioned in relay/RELAY-20261013-164400.md but never defined
+[error] dangling: REQ-016 is mentioned in relay/RELAY-20261013-164400.md but never defined
+[error] dangling: P-077 is mentioned in relay/RELAY-20261013-164400.md but never defined
+[error] dangling: P-075 is mentioned in relay/RELAY-20261013-164400.md but never defined
+[error] dangling: REQ-012 is mentioned in artifacts/metodologia-efficiency-2026-10-12/packages/Z/skill/references/documentation.md, artifacts/metodologia-efficiency-2026-10-12/packages/Z/skill/references/execution.md, artifacts/metodologia-efficiency-2026-10-12/packages/Y/skill/references/documentation.md but never defined
+[error] dangling: D-017 is mentioned in artifacts/metodologia-efficiency-2026-10-12/packages/Z/skill/references/documentation.md, artifacts/metodologia-efficiency-2026-10-12/packages/Y/skill/references/documentation.md, artifacts/metodologia-efficiency-2026-10-12/packages/X/skill/references/documentation.md but never defined
+[error] dangling: P-042 is mentioned in artifacts/metodologia-efficiency-2026-10-12/packages/Z/skill/references/documentation.md, artifacts/metodologia-efficiency-2026-10-12/packages/Y/skill/references/documentation.md, artifacts/metodologia-efficiency-2026-10-12/packages/X/skill/references/documentation.md but never defined
+[error] dangling: P-031 is mentioned in artifacts/metodologia-efficiency-2026-10-12/packages/Z/skill/references/documentation.md, artifacts/metodologia-efficiency-2026-10-12/packages/Y/skill/references/documentation.md, artifacts/metodologia-efficiency-2026-10-12/packages/X/skill/references/documentation.md but never defined

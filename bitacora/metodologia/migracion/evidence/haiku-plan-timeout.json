@@ -1,0 +1,8 @@
+{
+  "exit_code": 124,
+  "deadline_seconds": 240,
+  "model": "haiku",
+  "effort": "max",
+  "status": "incomplete",
+  "result": "Read-only tools ran, no final verdict emitted before timeout."
+}

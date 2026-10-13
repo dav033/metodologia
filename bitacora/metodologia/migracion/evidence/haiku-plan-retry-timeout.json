@@ -1,0 +1,9 @@
+{
+  "model": "haiku",
+  "effort": "max",
+  "deadline_seconds": 180,
+  "status": "incomplete",
+  "input": "SPEC, PLAN and ACCEPTANCE supplied inline; tools disabled",
+  "result": "subprocess.TimeoutExpired; process terminated; no final verdict",
+  "retry_policy": "Stopped after two unsuccessful final-plan review attempts; no further retry."
+}

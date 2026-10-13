@@ -1,0 +1,58 @@
+ M README.md
+ M bitacora/metodologia/2026-10/W3/2026-10-13.md
+ M bitacora/metodologia/INDEX.md
+ M bitacora/pictures/requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/RUN.json
+ M evals/README.md
+ M skill/SKILL.md
+ M skill/agents/reviewer.md
+ M skill/references/agents.md
+ M skill/references/engineering.md
+ M skill/references/execution.md
+ M skill/references/marathon.md
+ M skill/references/subagents.md
+ M skill/scripts/bitacora.py
+ M skill/scripts/bt_agents.py
+ M skill/scripts/bt_config.py
+ M skill/scripts/bt_context.py
+ M skill/scripts/bt_delegate.py
+ M skill/scripts/bt_events.py
+ M skill/scripts/bt_launch.py
+ M skill/scripts/bt_page_metrics.py
+ M skill/scripts/bt_profiles.py
+ M skill/scripts/bt_run.py
+ M skill/scripts/bt_runprompt.py
+ M skill/scripts/bt_runsettle.py
+ M skill/scripts/bt_runstate.py
+ M skill/scripts/bt_runtask.py
+ M skill/scripts/bt_runtier.py
+ M skill/scripts/ops_flow_check.py
+ M skill/scripts/tests/test_agents.py
+ M skill/scripts/tests/test_profiles.py
+?? bitacora/metodologia/migracion/
+?? bitacora/metodologia/requirements/REQ-007-engineering-workspace-migration-without/
+?? evals/cases/q-interface-owner-direction.json
+?? evals/cases/r-interface-evidence-limits.json
+?? evals/cases/s-review-evidence-triage.json
+?? skill/references/interface-quality.md
+?? skill/references/relay.md
+?? skill/scripts/bt_agy.py
+?? skill/scripts/bt_cli_accounts.py
+?? skill/scripts/bt_quality.py
+?? skill/scripts/bt_quota_live.py
+?? skill/scripts/bt_relay.py
+?? skill/scripts/bt_relay_cli.py
+?? skill/scripts/bt_relay_client.py
+?? skill/scripts/bt_relay_handoff.py
+?? skill/scripts/bt_relay_launch.py
+?? skill/scripts/bt_relay_proc.py
+?? skill/scripts/bt_subscription_schedule.py
+?? skill/scripts/bt_subscription_sources.py
+?? skill/scripts/bt_subscriptions.py
+?? skill/scripts/globalusage.py
+?? skill/scripts/relay_run.py
+?? skill/scripts/tests/test_agy.py
+?? skill/scripts/tests/test_audit_routing.py
+?? skill/scripts/tests/test_quality_metrics.py
+?? skill/scripts/tests/test_relay.py
+?? skill/scripts/tests/test_relay_run.py
+?? skill/scripts/tests/test_subscription_usage.py

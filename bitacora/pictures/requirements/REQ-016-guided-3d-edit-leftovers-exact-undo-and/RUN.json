@@ -13,17 +13,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T17:03:19",
+  "at": "2026-10-13T17:40:24",
   "pid": 1936968,
   "machine": "precision7760",
   "task": "T2",
-  "session": 8,
-  "state": "timeout",
-  "session_pids": {},
+  "session": 9,
+  "state": "session running 37 min",
+  "session_pids": {
+   "9": 2116556
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 8,
+ "sessions": 9,
  "tasks": [
   {
    "id": "T1",
@@ -101,7 +103,7 @@
    "complexity": null,
    "milestone": "M2",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 2,
    "last_error": "session timeout after 60 min",
    "error_hashes": [

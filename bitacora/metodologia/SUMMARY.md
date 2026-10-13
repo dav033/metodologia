@@ -22,6 +22,7 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
   evals 10/10. The first end-to-end run is not done yet (P-002).
 
 ## Active focus
+- REQ-007: proposed platform migration documented in [migracion/README.md](migracion/README.md), with M0–M9, preservation inventory and acceptance/rollback gates. Planning only; implementation not started.
 - The other computer's agent cleans up the bitácora in `main` (D-011, P-015). Then decide how the live bitácora is
   synced and backed up (P-013).
 

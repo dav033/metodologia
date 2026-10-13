@@ -1,0 +1,4 @@
+{
+  "changed_since_capture": [],
+  "meaning": "Other sessions may mutate this active worktree. This session edits only planning/bitacora files."
+}

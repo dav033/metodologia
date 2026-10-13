@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-13",
+  "baseline": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s skill/scripts/tests -q",
+    "cwd": "/home/david/dev/metodologia",
+    "python": "3.14.7",
+    "exit_code": 1,
+    "tests": 578,
+    "failures": 2,
+    "duration_seconds": 58.648
+  },
+  "trace": {
+    "command": "python skill/scripts/bitacora.py --project metodologia trace",
+    "exit_code": 0,
+    "note": "Global warnings/errors exist; no REQ-007 finding in output. A zero command exit is not a clean graph."
+  },
+  "not_executed": [
+    "migration implementation",
+    "wheel build/install",
+    "live cutover",
+    "Windows/macOS certification",
+    "real five-account matrix",
+    "Z.ai activation",
+    "diagram rendering"
+  ],
+  "haiku_requested": {
+    "model": "haiku",
+    "effort": "max",
+    "reviews": [
+      "code",
+      "plan"
+    ],
+    "tools": [
+      "Read",
+      "Glob",
+      "Grep"
+    ],
+    "configuration": "safe-mode and strict-mcp-config; no repository writes or hooks"
+  },
+  "haiku_results": {
+    "code_review": "completed, exit 0, actual model claude-haiku-5-5",
+    "final_plan_review": "incomplete: 240s timeout and 180s bounded retry timeout"
+  }
+}

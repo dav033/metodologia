@@ -19,3 +19,6 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 
 ## Carried over to next week
 -
+
+## Migration planning — session 01a13754
+- REQ-007: code-grounded platform migration proposal in [[../../migracion/README|migracion]], 10 milestones and 22 tasks, with no-loss inventory and rollback gates. Legacy baseline: 578 tests, 2 routing failures. Implementation remains unapproved.
