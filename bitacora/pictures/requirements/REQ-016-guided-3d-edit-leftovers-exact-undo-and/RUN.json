@@ -17,13 +17,15 @@
   "pid": 1864427,
   "machine": "precision7760",
   "task": "T1",
-  "session": 1,
-  "state": "escalated",
-  "session_pids": {},
+  "session": 2,
+  "state": "session starting",
+  "session_pids": {
+   "2": 1870097
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 1,
+ "sessions": 2,
  "tasks": [
   {
    "id": "T1",
@@ -37,7 +39,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 1,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 1,
    "last_error": null,
    "error_hashes": [],
