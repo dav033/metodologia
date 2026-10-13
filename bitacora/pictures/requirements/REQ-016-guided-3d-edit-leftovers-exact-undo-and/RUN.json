@@ -11,19 +11,21 @@
   "max_sessions": 300,
   "workers": 1
  },
- "control": null,
+ "control": "pause",
  "heartbeat": {
-  "at": "2026-10-13T15:24:56",
+  "at": "2026-10-13T15:26:01",
   "pid": 1864427,
   "machine": "precision7760",
   "task": "T1",
-  "session": 3,
-  "state": "verify_failed",
-  "session_pids": {},
+  "session": 4,
+  "state": "session running 1 min",
+  "session_pids": {
+   "4": 1931947
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 3,
+ "sessions": 4,
  "tasks": [
   {
    "id": "T1",
@@ -37,7 +39,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 2,
    "last_error": "verify failed: npx tsx --conditions=react-server scripts/test/test-corte-motor3d.ts -> :10932)\n    at resolveDirectorySync (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:12238)\n    at resolveTsPathsSync (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:13445)\n    at resolve (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:15991) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///home/david/dev/pictures-wt/scripts/test/test-corte-motor3d.ts'\n}\n\nNode.js v24.21.0\n",
    "error_hashes": [
