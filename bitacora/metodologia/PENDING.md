@@ -12,6 +12,8 @@ month summary._
   - Context: since remote commit `4cfd74f` the bitácora lives outside the repo (D-007). Its legacy history reached GitHub with `a67371f`. The silent push failure no longer applies, because nothing pushes the live copy.
   - Options: (1) a private remote for `~/bitacora` with `push_async` plus a push-failure log (`.state/push.log`, warning at SessionStart), the approved fix; (2) local git plus a scheduled backup; (3) no sync, single machine. The session-end commit creates a local git repo in `~/bitacora` (`ensure_repo`).
 - P-003 · Visual review of the local web UI · urgency: med · complexity: S · added 2026-10-08 · session
+- P-016 · Fix Antigravity provider defects found by `test_agy.py` · urgency: med · complexity: S · added 2026-10-13 · delegated test audit
+  - `bt_agy.capacity()` can return a reset from stale cache; `bt_runsettle.parse_output()` loses top-level Antigravity result fields; audit routing still selects Gemini at 90% usage.
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · urgency: med · complexity: M · added 2026-10-08 · user: "no por ahora, documéntalo"
   - Ideas: STATUS.json written by the executor, stale-heartbeat flag + Resume button in the web UI, Notification/Stop/StopFailure hooks, `claude --bg` restarts.
 - P-015 · Verify the other computer's cleanup of the bitácora in `main` after D-011 (`9d1b796`): its copies merged with the live ones, and nothing lost · urgency: med · complexity: M · added 2026-10-13 · user decision

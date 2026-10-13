@@ -40,5 +40,6 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
 - Pictures changes must be committed by hand in `metodologia` (D-012).
 - The other computer pushes to `main` while we work. A push can be rejected until we fetch and rebase.
 - The bitácora web server started before the migration runs old code until it restarts.
+- The new Antigravity tests expose three unresolved cases: stale quota reset, stream result parsing, and audit routing at 90% Gemini usage (P-016).
 
 _Last updated: 2026-10-13_
