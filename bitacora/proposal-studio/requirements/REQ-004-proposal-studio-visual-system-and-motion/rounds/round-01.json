@@ -1,0 +1,64 @@
+{
+ "title": "Alcance visual y librerías de Proposal Studio",
+ "intro": "Exploré el stack y las opciones actuales. Astro renderiza hoy todo de forma nativa; integrar componentes originales de 21st.dev requiere React islands. Starwind UI sí ofrece componentes editables nativos para Astro, y Motion anima HTML/SVG directamente.",
+ "coverage": "Goal: partial; Users: clear; Scope: partial; Out of scope: partial; Flows: partial; Edge cases: partial; Acceptance: missing; Constraints: partial; Priorities: partial; Timeline: deferred",
+ "questions": [
+  {
+   "text": "¿Cómo quieres combinar 21st.dev con la librería de componentes aparte?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Starwind nativo + adaptar selectivamente ejemplos de 21st.dev a Astro, sin sumar React."
+    },
+    {
+     "key": "b",
+     "label": "Starwind para la base + integrar componentes puntuales de 21st.dev como React islands."
+    },
+    {
+     "key": "c",
+     "label": "React/21st.dev como base visual, aunque implique añadir React al proyecto."
+    }
+   ],
+   "recommended": "b",
+   "why": "Conserva Astro para el producto existente, incorpora de verdad componentes de 21st.dev donde aporten y reserva React para esas islas; Starwind cubre controles nativos y accesibles.",
+   "id": "q1",
+   "type": "choice"
+  },
+  {
+   "text": "¿En qué pantallas aplico el rediseño y las animaciones?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Propuestas públicas primero y panel admin con el mismo sistema visual."
+    },
+    {
+     "key": "b",
+     "label": "Solo la experiencia pública de propuesta/comparación."
+    },
+    {
+     "key": "c",
+     "label": "Todo el producto, incluidas login, configuración e integraciones."
+    }
+   ],
+   "recommended": "a",
+   "why": "La propuesta es lo que ve el prospecto y el admin necesita coherencia, sin abrir una reescritura visual completa de pantallas secundarias.",
+   "id": "q2",
+   "type": "choice"
+  }
+ ],
+ "round": 1,
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "b",
+     "note": "Approved through blanket autonomous authorization; Starwind UI was selected after comparing official installation paths."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "Approved through blanket autonomous authorization."
+  }
+ },
+ "created_at": "2026-10-11T13:03:08",
+ "answered_at": "2026-10-11T13:05:20",
+ "answered_via": "terminal"
+}

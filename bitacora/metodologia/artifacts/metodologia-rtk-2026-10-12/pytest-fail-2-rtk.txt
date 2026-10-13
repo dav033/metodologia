@@ -1,0 +1,18 @@
+Pytest: 300 passed, 3 failed in 0.19s
+
+Failures:
+1. [FAIL] test_touching_intervals
+     test_fail.py:2: in test_touching_intervals
+     assert True is False, "E_OVERLAP: touching endpoints must not overlap"
+     E   AssertionError: E_OVERLAP: touching endpoints must not overlap
+
+2. [FAIL] test_cross_tenant_admin
+     test_fail.py:5: in test_cross_tenant_admin
+     raise PermissionError("E_TENANT_DENIED: tenant_b must be inaccessible")
+     E   PermissionError: E_TENANT_DENIED: tenant_b must be inaccessible
+
+3. [FAIL] test_expired_token
+     test_fail.py:8: in test_expired_token
+     raise ValueError("E_TOKEN_EXPIRED: session is not valid")
+     E   ValueError: E_TOKEN_EXPIRED: session is not valid
+[full output: rtk recall 29bb8a1f1928]

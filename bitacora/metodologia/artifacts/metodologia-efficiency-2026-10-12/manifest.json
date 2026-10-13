@@ -1,0 +1,20 @@
+{
+  "X": {
+    "variant": "control",
+    "skill": "/home/david/.cache/metodologia-bench/REQ-004/packages/X/skill/SKILL.md",
+    "root_bytes": 8946,
+    "root_lines": 112
+  },
+  "Y": {
+    "variant": "focused",
+    "skill": "/home/david/.cache/metodologia-bench/REQ-004/packages/Y/skill/SKILL.md",
+    "root_bytes": 10281,
+    "root_lines": 128
+  },
+  "Z": {
+    "variant": "compact",
+    "skill": "/home/david/.cache/metodologia-bench/REQ-004/packages/Z/skill/SKILL.md",
+    "root_bytes": 7944,
+    "root_lines": 93
+  }
+}

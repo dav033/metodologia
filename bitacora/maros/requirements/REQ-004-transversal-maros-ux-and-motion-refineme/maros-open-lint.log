@@ -1,0 +1,320 @@
+
+> lint
+> eslint .
+
+
+/home/david/dev/maros/maros-next/src/app/api/translate/batch/route.ts
+   19:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/app/api/translate/route.ts
+   19:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/common/hooks/crud/useCrudModal.ts
+  36:3  warning  'currentItem' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/common/hooks/crud/useCrudPage.ts
+  144:37  warning  'id' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/common/hooks/crud/useCrudState.ts
+  7:38  warning  'TEntity' is defined but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/common/hooks/form/useFormController.ts
+  16:49  warning  'TResult' is defined but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  29:64  warning  Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/common/hooks/form/useFormHandlers.ts
+  5:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/common/hooks/table/useEntityTableLogic.ts
+  38:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/common/hooks/table/useTableWithSearch.ts
+  42:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/components/shared/LocationField.tsx
+   26:24  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   33:46  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   45:3   warning  'label' is assigned a value but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+   63:34  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   65:25  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   66:28  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   67:30  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  125:44  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  131:17  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  138:47  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  162:18  warning  'err' is defined but never used                                                   unused-imports/no-unused-vars
+  168:64  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  173:51  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  178:14  warning  'e' is defined but never used                                                     unused-imports/no-unused-vars
+  201:44  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  223:16  warning  'e' is defined but never used                                                     unused-imports/no-unused-vars
+  249:61  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/company/domain/mappers/toCompanyDraft.ts
+  1:29  warning  'CompanyType' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/company/infra/http/CompanyHttpRepository.ts
+  11:3  warning  'mapCompaniesFromApi' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/company/infra/http/mappers.ts
+  108:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  150:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  153:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/company/presentation/data/loadCompanyDetailsData.ts
+  11:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/company/presentation/hooks/controllers/useCompanyModalController.ts
+  10:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/company/presentation/hooks/controllers/useUpdateCompanyController.ts
+  55:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/company/presentation/hooks/modals/useCompanyEditModal.ts
+  54:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/company/presentation/hooks/services/useCompanyQuickContactLogic.ts
+  26:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/company/presentation/hooks/services/useManageServices.ts
+  137:14  warning  'error' is defined but never used  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/company/presentation/molecules/EmptyCompaniesState.tsx
+  7:39  warning  'onCreateClick' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/contact/domain/mappers/toContactPatch.ts
+  49:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/contact/domain/models.ts
+   21:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  145:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/contact/domain/services/contactReadMapper.ts
+  50:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/contact/domain/services/contactUniquenessPolicy.ts
+  3:10  warning  'areContactsPotentialDuplicates' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/contact/domain/services/contactValidation.ts
+  7:15  warning  'ContactField' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/contact/presentation/hooks/controllers/useContactCompanyModalController.ts
+   9:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/contact/presentation/hooks/table/useContactsTableLogic.ts
+  18:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/contact/presentation/organisms/CompanyDetailsModal.tsx
+  6:3  warning  'DialogFooter' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/contact/presentation/organisms/ContactModal.tsx
+  42:9  warning  'footerMode' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/contact/presentation/organisms/ContactViewModal.tsx
+  9:3  warning  'DialogFooter' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/contact/presentation/pages/ContactsPageView.tsx
+  10:15  warning  'Contact' is defined but never used                                                               unused-imports/no-unused-imports
+  11:13  warning  'UserPlus' is defined but never used                                                              unused-imports/no-unused-imports
+  49:15  warning  'filteredContacts' is assigned a value but never used. Allowed unused vars must match /^_/u       unused-imports/no-unused-vars
+  56:11  warning  'tableFilteredContacts' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/contact/presentation/pages/sections/ContactInfoSection.tsx
+  23:10  warning  'Button' is defined but never used        unused-imports/no-unused-imports
+  24:10  warning  'Plus' is defined but never used          unused-imports/no-unused-imports
+  41:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/customers/application/hooks/useCustomerCrudSection.ts
+  95:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/customers/infra/http/CustomersHttpRepository.ts
+  1:15  warning  'Contact' is defined but never used  unused-imports/no-unused-imports
+  2:15  warning  'Company' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/customers/infra/http/mappers.ts
+  2:15  warning  'Company' is defined but never used       unused-imports/no-unused-imports
+  8:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/customers/presentation/components/CustomerCompaniesSection.tsx
+  74:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/customers/presentation/search/customerContactsSearchConfig.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/domain/models.ts
+  224:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/domain/services/applyLeadPatch.ts
+  233:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/domain/services/buildLeadDraft.ts
+  67:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  96:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/domain/services/diffToPatch.ts
+  71:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  74:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/infra/http/LeadHttpRepository.ts
+   91:39  warning  'leadNumber' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  110:39  warning  'leadNumber' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  143:41  warning  Unexpected any. Specify a different type                                               @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/hooks/controllers/useUpdateLeadController.ts
+  73:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/hooks/modals/useLeadCreateModal.ts
+  30:23  warning  'lead' is defined but never used. Allowed unused args must match /^_/u                          unused-imports/no-unused-vars
+  43:5   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/hooks/modals/useLeadEditModal.ts
+  23:3  warning  'leadType' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/hooks/modals/useLeadModalController.ts
+  12:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/hooks/table/useLeadsInReviewTableColumns.tsx
+  14:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/hooks/table/useLeadsTableColumns.tsx
+  14:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/molecules/LeadForm.tsx
+   7:30  warning  'User' is defined but never used                                                     unused-imports/no-unused-imports
+  58:3   warning  'contacts' is defined but never used. Allowed unused args must match /^_/u           unused-imports/no-unused-vars
+  59:3   warning  'showContactSelect' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/organisms/LeadModal.tsx
+   47:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   47:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/pages/LeadDetailsPage.tsx
+  335:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  340:94  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  379:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/pages/LeadsInReviewPageView.tsx
+    7:15  warning  'Lead' is defined but never used                                                             unused-imports/no-unused-imports
+   17:3   warning  'Briefcase' is defined but never used                                                        unused-imports/no-unused-imports
+   20:3   warning  'FileText' is defined but never used                                                         unused-imports/no-unused-imports
+   32:3   warning  'DialogFooter' is defined but never used                                                     unused-imports/no-unused-imports
+   66:31  warning  'createModalTitle' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+   69:5   warning  'leads' is assigned a value but never used. Allowed unused vars must match /^_/u             unused-imports/no-unused-vars
+  206:54  warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/pages/LeadsPageByType.tsx
+  7:10  warning  'LeadTypeSwitcher' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/leads/presentation/pages/sections/LeadContactSection.tsx
+  42:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:71  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/notes/presentation/molecules/SharePeoplePanel.tsx
+  4:10  warning  'Check' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/project/domain/services/projectReadMapper.ts
+  164:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  261:77  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/project/infra/http/ProjectHttpRepository.ts
+  12:8   warning  'UpdateProjectPayload' is defined but never used  unused-imports/no-unused-imports
+  58:41  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  62:21  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/project/presentation/hooks/controllers/useCreateProjectController.ts
+  36:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/project/presentation/hooks/controllers/useUpdateProjectController.ts
+  40:16  warning  'form' is defined but never used. Allowed unused args must match /^_/u                          unused-imports/no-unused-vars
+  49:62  warning  Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+  82:5   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+/home/david/dev/maros/maros-next/src/features/project/presentation/hooks/modals/useProjectCreateModal.ts
+  24:23  warning  'project' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/project/presentation/hooks/modals/useProjectEditModal.ts
+  27:23  warning  'project' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/project/presentation/organisms/ProjectModal.tsx
+  24:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/project/presentation/pages/ProjectDetailsPage.tsx
+  103:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  635:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/reports/actions/translationActions.ts
+   18:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   56:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/features/reports/presentation/hooks/useFormFields.ts
+  1:10  warning  'useMemo' is defined but never used  unused-imports/no-unused-imports
+  3:15  warning  'Contact' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/reports/presentation/hooks/useImageUpload.ts
+  2:10  warning  'toast' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros/maros-next/src/features/reports/presentation/hooks/useProjectForm.ts
+   19:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:14  warning  'error' is defined but never used         unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/reports/presentation/hooks/useReportTranslation.ts
+  282:16  warning  'error' is defined but never used  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/reports/presentation/hooks/useRestorationFinal.ts
+   6:10  warning  'getRestorationFinal' is defined but never used                                 unused-imports/no-unused-imports
+  11:9   warning  'ctx' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/reports/presentation/hooks/useRestorationVisit.ts
+   6:10  warning  'getRestorationVisit' is defined but never used                                 unused-imports/no-unused-imports
+  11:9   warning  'ctx' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/reports/presentation/pages/RestorationVisitPage.tsx
+  10:15  warning  'RestorationVisitReport' is defined but never used                                         unused-imports/no-unused-imports
+  39:5   warning  'projectLoading' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  46:11  warning  'translations' is assigned a value but never used. Allowed unused vars must match /^_/u    unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/features/reports/presentation/utils/reportFormHelpers.ts
+  47:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros/maros-next/src/shared/infra/rest/resourceRepository.ts
+  67:16  warning  'params' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros/maros-next/src/shared/lib/businessDate.test.ts
+  1:21  warning  'beforeEach' is defined but never used  unused-imports/no-unused-imports
+
+✖ 164 problems (0 errors, 164 warnings)
+  0 errors and 30 warnings potentially fixable with the `--fix` option.
+

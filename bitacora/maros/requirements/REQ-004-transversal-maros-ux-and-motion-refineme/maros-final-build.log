@@ -1,0 +1,98 @@
+
+> build
+> next build --webpack
+
+▲ Next.js 16.1.3 (webpack)
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+(node:107848) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///tmp/maros-current-build-pm4uw7y0/tailwind.config.ts?id=1791856831136 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /tmp/maros-current-build-pm4uw7y0/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✓ Compiled successfully in 22.9s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/41) ...
+  Generating static pages using 15 workers (10/41) 
+  Generating static pages using 15 workers (20/41) 
+  Generating static pages using 15 workers (30/41) 
+✓ Generating static pages using 15 workers (41/41) in 562.1ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /about
+├ ƒ /api/auth/google
+├ ƒ /api/auth/google/callback
+├ ƒ /api/auth/logout
+├ ƒ /api/translate
+├ ƒ /api/translate/batch
+├ ƒ /calendar
+├ ƒ /company
+├ ƒ /company/[id]
+├ ƒ /contact/[id]
+├ ƒ /contacts
+├ ƒ /customers
+├ ƒ /dashboard
+├ ƒ /finance/invoices
+├ ƒ /finance/invoices/[id]
+├ ƒ /finance/invoices/scan
+├ ƒ /finance/invoices/transaction
+├ ƒ /finance/receivables
+├ ƒ /lead/[id]
+├ ƒ /leads
+├ ƒ /leads/[leadType]
+├ ƒ /leads/lost
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ƒ /meet
+├ ƒ /notes
+├ ƒ /notes/[pageId]
+├ ƒ /notes/favorites
+├ ƒ /notes/shared
+├ ƒ /notes/trash
+├ ƒ /p/[token]
+├ ƒ /p/[token]/expired
+├ ƒ /p/[token]/img/[key]
+├ ƒ /p/[token]/unlock
+├ ƒ /privacy-policy
+├ ƒ /project/[id]
+├ ƒ /project/[id]/report
+├ ƒ /projects
+├ ƒ /projects/[leadType]
+├ ƒ /projects/completed
+├ ƒ /projects/import-from-quickbooks
+├ ƒ /projects/lost
+├ ƒ /reports/clients
+├ ƒ /reports/quickbooks/backlog
+├ ƒ /reports/quickbooks/estimated
+├ ƒ /reports/quickbooks/invoiced
+├ ƒ /reports/quickbooks/outstanding
+├ ƒ /reports/quickbooks/paid
+├ ƒ /reports/quickbooks/revenue
+├ ƒ /reports/restoration-final
+├ ƒ /reports/restoration-visit
+├ ƒ /reports/stale-leads
+├ ƒ /review/leads
+├ ƒ /settings/notifications
+├ ƒ /settings/public-links
+├ ƒ /settings/quickbooks
+├ ƒ /settings/roles
+├ ƒ /settings/users
+├ ƒ /tasks
+├ ƒ /tasks/[id]
+├ ƒ /tasks/archive
+├ ƒ /tasks/list
+├ ƒ /tasks/mine
+├ ƒ /tasks/workspaces
+└ ƒ /tasks/workspaces/[id]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

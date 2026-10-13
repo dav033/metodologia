@@ -1,0 +1,35 @@
+{
+ "title": "Botón físico durante el apagado manual",
+ "intro": "El botón físico de esta laptop actualmente dispara el apagado del equipo (`logind: HandlePowerKey=poweroff`). ¿Debo interceptarlo solo mientras la pantalla esté apagada manualmente?",
+ "coverage": "Confirmar el comportamiento temporal del botón físico de encendido.",
+ "questions": [
+  {
+   "text": "Durante el apagado manual, ¿una pulsación corta del botón debe despertar la pantalla en vez de apagar el equipo, manteniendo su acción actual cuando la pantalla esté encendida?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Sí, que despierte solo durante el apagado manual"
+    },
+    {
+     "key": "b",
+     "label": "No, conservar el apagado del equipo"
+    }
+   ],
+   "recommended": "a",
+   "why": "Coincide con tu petición original de permitir el botón de encendido como forma de despertar; la acción se limitaría al estado manual.",
+   "id": "q1",
+   "type": "choice"
+  }
+ ],
+ "round": 1,
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "b",
+   "note": "Conservar la acción efectiva actual de logind: apagar el equipo, incluso durante el apagado manual de pantalla."
+  }
+ },
+ "created_at": "2026-10-13T06:34:40",
+ "answered_at": "2026-10-13T06:35:32",
+ "answered_via": "terminal"
+}

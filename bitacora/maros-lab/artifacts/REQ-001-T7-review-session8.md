@@ -1,0 +1,8 @@
+# REQ-001 T7 — session 8 review evidence
+
+- Independent spec reviewer approves: both responsive journeys use real pages/hooks/QueryClient and restore all nine controls/chips/results plus unrelated query state; direct/error/deletion returns are compatible; reduced-motion props and title nodes/IDs have explicit contracts; ARCHITECTURE view notes are current. No findings or jobs.
+- Antagonist/standards reviewer approves with no blockers. One minor test proposal was accepted: assert exactly four responsive title nodes in both filtered and restored collections before looping over identities. Only two test assertions changed; no production change. The sole focused re-review approves and the exact final T7 chain passes.
+- Triage: 1 minor test coverage improvement fixed, 0 deferred, 0 dropped. No extra scope, dependency, backend/API, env file, server or external action.
+- Red evidence: `REQ-001-T7-verify-session8-red.log` reproduces both detail hrefs dropping all query criteria. Green evidence: `REQ-001-T7-verify-session8-commit.log` after the final assertions; 115 tests/14 files plus typecheck and global lint. Lint's 164 warnings are in 74 unchanged files; invoice-scans adds no lint warning.
+- Scope: only T7 after T6 commit `55ffc40`. The supervisor's independent milestone audit owns requirement closure and the final report. No REPORT.md was written by session 8.
+- T7 commit: `b16a07f`; required feature branch, clean worktree and no remaining jobs before verdict. Build/full-project tests/live browser checks were not run under the restricted lab verification. Additional trace metadata diagnostics are recorded in the day log and do not count as a passing trace validation.

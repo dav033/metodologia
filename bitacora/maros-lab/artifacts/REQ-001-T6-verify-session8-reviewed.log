@@ -1,0 +1,782 @@
+
+> typecheck
+> tsc --noEmit
+
+
+ RUN  v2.1.9 /home/david/dev/maros-lab/maros-next
+
+ ✓ src/features/invoice-scans/domain/filters.test.ts (8 tests) 13ms
+ ✓ src/features/invoice-scans/infra/invoiceScansApi.test.ts (3 tests) 15ms
+ ✓ src/features/invoice-scans/domain/partition.test.ts (2 tests) 13ms
+ ✓ src/features/invoice-scans/domain/filterParams.test.ts (8 tests) 17ms
+ ✓ src/features/invoice-scans/domain/invoiceScanForm.test.ts (2 tests) 16ms
+ ✓ src/features/invoice-scans/presentation/components/CreateCounterpartyDialog.test.tsx (3 tests) 404ms
+   ✓ CreateCounterpartyDialog > hands the created counterparty back to the field 319ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScanDetailPage.test.tsx (2 tests) 219ms
+ ✓ src/features/invoice-scans/presentation/components/InvoiceDetailsForm.test.tsx (2 tests) 772ms
+   ✓ InvoiceDetailsForm > shows the save bar only after an edit and sends the whole patch 592ms
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > asks for confirmation naming the records and the two places
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+A component suspended inside an `act` scope, but the `act` call was not awaited. When testing React components that depend on asynchronous data, you must await the result:
+
+await act(() => ...)
+
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > leaves the counterparty selected with its id and type once created
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > creates a customer when the money comes in
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx (11 tests) 1564ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.test.tsx (19 tests) 3011ms
+   ✓ InvoiceScansPage > splits scans into 'to enter' and 'entered' and lets the reviewer tick one 694ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.motion.test.tsx (4 tests) 3861ms
+   ✓ InvoiceScansPage motion contract > gives desktop rows and mobile cards layout, entrance and exit transitions from shared tokens 1003ms
+   ✓ InvoiceScansPage motion contract > moves an option to its chip and returns the same shared identity when removed 1261ms
+   ✓ InvoiceScansPage motion contract > selects and removes a filter with the keyboard and returns focus to its control 766ms
+   ✓ InvoiceScansPage motion contract > replaces the projection node when changing an active criterion to another option 829ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters-navigation.test.tsx (4 tests) 5938ms
+   ✓ InvoiceScansPage filter URL navigation > writes all criteria through controls and restores them after remounting the URL 2618ms
+   ✓ InvoiceScansPage filter URL navigation > ignores malformed URL criteria and removes them on the next valid edit 734ms
+   ✓ InvoiceScansPage filter URL navigation > restores controls, chips and results on browser Back and Forward popstate events 1278ms
+   ✓ InvoiceScansPage filter URL navigation > retains consecutive edits while Next has not propagated the URL to its hooks 1307ms
+ ❯ src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters.test.tsx (38 tests | 1 failed) 29432ms
+   ✓ InvoiceScansPage filters > keeps the last desktop and mobile records mounted for exit when both sections become empty 882ms
+   × InvoiceScansPage filters > announces a failed cached refetch without claiming the filtered sections are valid empty results 66ms
+     → Unable to find an element with the text: Results unavailable. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex w-full flex-1 flex-col gap-3"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"min-w-0 rounded-2xl border border-line bg-elev-1 p-4 shadow-sm"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex min-w-0 flex-wrap items-start justify-between gap-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 items-start gap-3 sm:items-center"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary-container text-primary-on-container"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-file-text h-4 w-4"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M14 2v5a1 1 0 0 0 1 1h5"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M10 9H8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 13H8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 17H8"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"min-w-0"[39m
+            [36m>[39m
+              [36m<h1[39m
+                [33mclass[39m=[32m"min-w-0 break-words font-display text-2xl font-semibold tracking-tight text-balance [overflow-wrap:anywhere]"[39m
+              [36m>[39m
+                [0mDocument scans[0m
+              [36m</h1>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]"[39m
+              [36m>[39m
+                [0mScanned documents and manual transactions waiting to be entered in QuickBooks.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-8 px-3 text-xs rounded-lg"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mNew transaction[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Document filters"[39m
+        [33mclass[39m=[32m"space-y-3 rounded-xl border border-line bg-elev-1 p-3 shadow-sm sm:p-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap items-end gap-3"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1 basis-60 space-y-1.5"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs"[39m
+              [33mfor[39m=[32m"invoice-filter-search"[39m
+            [36m>[39m
+              [0mSearch documents[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+              [33mid[39m=[32m"invoice-filter-search"[39m
+              [33minputmode[39m=[32m"search"[39m
+              [33mtype[39m=[32m"search"[39m
+              [33mvalue[39m=[32m"unmatched"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<p[39m
+            [33maria-atomic[39m=[32m"true"[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"py-2 font-mono text-xs text-muted-foreground tabular-nums"[39m
+          [36m>[39m
+            [0m0 of 10[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [...
+   ✓ InvoiceScansPage filters > filters both sections from the URL and clears only filter parameters 333ms
+   ✓ InvoiceScansPage filters > keeps spaces while typing and offers a clear action in both filtered empty sections 626ms
+   ✓ InvoiceScansPage filters > searches document title in both sections 1320ms
+   ✓ InvoiceScansPage filters > searches file name in both sections 971ms
+   ✓ InvoiceScansPage filters > searches counterparty ignoring case and accents in both sections 719ms
+   ✓ InvoiceScansPage filters > searches invoice number in both sections 849ms
+   ✓ InvoiceScansPage filters > searches project number in both sections 958ms
+   ✓ InvoiceScansPage filters > searches comments in both sections 837ms
+   ✓ InvoiceScansPage filters > searches manual transaction title in both sections 817ms
+   ✓ InvoiceScansPage filters > filters 'Record type'='invoice' through its labeled control 743ms
+   ✓ InvoiceScansPage filters > filters 'Record type'='transaction' through its labeled control 844ms
+   ✓ InvoiceScansPage filters > filters 'Money direction'='in' through its labeled control 784ms
+   ✓ InvoiceScansPage filters > filters 'Money direction'='out' through its labeled control 799ms
+   ✓ InvoiceScansPage filters > filters 'Status'='uploaded' through its labeled control 802ms
+   ✓ InvoiceScansPage filters > filters 'Status'='processing' through its labeled control 821ms
+   ✓ InvoiceScansPage filters > filters 'Status'='needs_review' through its labeled control 777ms
+   ✓ InvoiceScansPage filters > filters 'Status'='failed' through its labeled control 786ms
+   ✓ InvoiceScansPage filters > filters 'Category'='customer_service' through its labeled control 811ms
+   ✓ InvoiceScansPage filters > filters 'Category'='materials_expense' through its labeled control 809ms
+   ✓ InvoiceScansPage filters > filters 'Category'='subcontractor_expense' through its labeled control 750ms
+   ✓ InvoiceScansPage filters > filters 'Category'='other' through its labeled control 815ms
+   ✓ InvoiceScansPage filters > filters 'Category'='unknown' through its labeled control 916ms
+   ✓ InvoiceScansPage filters > uses issue dates before creation dates and falls back when the issue date is missing 1791ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range 100.5 to 100.5 1308ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range 0 to 0 1061ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range -25 to -25 1207ms
+   ✓ InvoiceScansPage filters > AND-combines criteria and removes one chip while retaining the others 1369ms
+   ✓ InvoiceScansPage filters > clears every criterion from the filter bar while preserving other URL state 805ms
+   ✓ InvoiceScansPage filters > clears a filtered empty state in /to enter/i 617ms
+   ✓ InvoiceScansPage filters > clears a filtered empty state in /entered in quickbooks/i 555ms
+   ✓ InvoiceScansPage filters > labels every control, follows keyboard focus order and activates chips and clear with the keyboard 861ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters.test.tsx > InvoiceScansPage filters > announces a failed cached refetch without claiming the filtered sections are valid empty results
+TestingLibraryElementError: Unable to find an element with the text: Results unavailable. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex w-full flex-1 flex-col gap-3"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"min-w-0 rounded-2xl border border-line bg-elev-1 p-4 shadow-sm"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex min-w-0 flex-wrap items-start justify-between gap-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 items-start gap-3 sm:items-center"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary-container text-primary-on-container"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-file-text h-4 w-4"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M14 2v5a1 1 0 0 0 1 1h5"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M10 9H8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 13H8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 17H8"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"min-w-0"[39m
+            [36m>[39m
+              [36m<h1[39m
+                [33mclass[39m=[32m"min-w-0 break-words font-display text-2xl font-semibold tracking-tight text-balance [overflow-wrap:anywhere]"[39m
+              [36m>[39m
+                [0mDocument scans[0m
+              [36m</h1>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]"[39m
+              [36m>[39m
+                [0mScanned documents and manual transactions waiting to be entered in QuickBooks.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-8 px-3 text-xs rounded-lg"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mNew transaction[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Document filters"[39m
+        [33mclass[39m=[32m"space-y-3 rounded-xl border border-line bg-elev-1 p-3 shadow-sm sm:p-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap items-end gap-3"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1 basis-60 space-y-1.5"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs"[39m
+              [33mfor[39m=[32m"invoice-filter-search"[39m
+            [36m>[39m
+              [0mSearch documents[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"flex w-full rounded-md border border-input bg-input px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-9"[39m
+              [33mid[39m=[32m"invoice-filter-search"[39m
+              [33minputmode[39m=[32m"search"[39m
+              [33mtype[39m=[32m"search"[39m
+              [33mvalue[39m=[32m"unmatched"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<p[39m
+            [33maria-atomic[39m=[32m"true"[39m
+            [33maria-live[39m=[32m"polite"[39m
+            [33mclass[39m=[32m"py-2 font-mono text-xs text-muted-foreground tabular-nums"[39m
+          [36m>[39m
+            [0m0 of 10[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-line-strong bg-input shadow-sm hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [...
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters.test.tsx:55:19
+     53|     rejectNextListRequest();
+     54|     await act(async () => { await page.client.invalidateQueries({ quer…
+     55|     expect(screen.getByText("Results unavailable")).toBeInTheDocument(…
+       |                   ^
+     56|     expect(screen.queryByText("No documents match these filters")).not…
+     57|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 12 passed (13)
+      Tests  1 failed | 105 passed (106)
+   Start at  00:32:20
+   Duration  32.52s (transform 1.48s, setup 1.01s, collect 9.46s, tests 45.28s, environment 13.87s, prepare 1.52s)
+

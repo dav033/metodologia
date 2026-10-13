@@ -1,0 +1,114 @@
+{
+ "title": "Proactive explanations and self-improvement boundaries",
+ "intro": "You want the skill to explain itself proactively and make permanent improvements to its code, preferences and configuration. This round defines when to explain, when to act, and how far changes may reach.",
+ "coverage": "Goal established; behavior cadence and change boundaries open",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "When should the skill explain how it works?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Briefly at the beginning of a new project/workflow and whenever a skill capability or limitation becomes relevant; avoid repeating boilerplate every turn"
+    },
+    {
+     "key": "b",
+     "label": "Give a full explanation at the start of every session"
+    },
+    {
+     "key": "c",
+     "label": "Explain only when I ask"
+    }
+   ],
+   "recommended": "a",
+   "why": "It keeps the skill understandable without burying each task in a repeated manual."
+  },
+  {
+   "id": "q2",
+   "text": "When the agent finds a recurring friction point, defect or clear quality gap in the skill, how proactive should it be?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Inspect the cause, make a durable skill-owned fix, add/update meaningful tests, validate and report it without waiting for a separate request"
+    },
+    {
+     "key": "b",
+     "label": "Record or suggest the improvement, but wait for approval before editing the skill"
+    },
+    {
+     "key": "c",
+     "label": "Only change the skill when the task explicitly asks to edit it"
+    }
+   ],
+   "recommended": "a",
+   "why": "This directly makes improvement continuous while keeping changes reviewable and tested."
+  },
+  {
+   "id": "q3",
+   "text": "Which preferences and configuration should proactive self-improvement cover by default?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Skill-owned code, instructions, tests, defaults and install templates; preserve custom settings, and handle machine-wide Codex/Claude configuration only when the request clearly authorizes it"
+    },
+    {
+     "key": "b",
+     "label": "All Codex/Claude global preferences and machine configuration whenever a skill improvement suggests a change"
+    },
+    {
+     "key": "c",
+     "label": "Versioned skill files only; never adjust preferences or configuration"
+    }
+   ],
+   "recommended": "a",
+   "why": "It includes the skill's own preferences/config while avoiding accidental changes to unrelated global behavior."
+  },
+  {
+   "id": "q4",
+   "text": "What should remain a user-confirmed decision even with proactive improvement enabled?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Skill-repo fixes that are reversible and validated may be applied proactively; ask before changing global permissions/security, credentials, external services, destructive data or unrelated system settings"
+    },
+    {
+     "key": "b",
+     "label": "Apply all skill and system changes automatically"
+    },
+    {
+     "key": "c",
+     "label": "Ask before every persistent change, including tested edits in the skill repository"
+    }
+   ],
+   "recommended": "a",
+   "why": "It preserves autonomy for the skill's own tested improvements while keeping high-impact or out-of-scope changes deliberate."
+  }
+ ],
+ "round": 1,
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "Mention the specific capability when the user's goal suggests it could help, not as a generic skill pitch."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "Proactively diagnose, implement permanent skill-owned improvements, test and report."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Cover skill-owned code, docs, tests, defaults, preferences/configuration; preserve settings and only touch global Codex/Claude configuration when the request clearly authorizes it."
+  },
+  "q4": {
+   "choice": "a",
+   "note": "Apply reversible validated skill-repo changes directly; ask before global security/permissions, credentials, external services, destructive data or unrelated system settings. If a skill/rule blocks the user's goal, identify it and ask whether to change the behavior/rule."
+  }
+ },
+ "created_at": "2026-10-10T12:28:35",
+ "answered_at": "2026-10-10T12:34:29",
+ "answered_via": "terminal"
+}

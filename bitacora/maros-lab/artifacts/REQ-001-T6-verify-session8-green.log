@@ -1,0 +1,497 @@
+
+> typecheck
+> tsc --noEmit
+
+
+ RUN  v2.1.9 /home/david/dev/maros-lab/maros-next
+
+ ✓ src/features/invoice-scans/domain/partition.test.ts (2 tests) 5ms
+ ✓ src/features/invoice-scans/domain/filters.test.ts (8 tests) 13ms
+ ✓ src/features/invoice-scans/domain/filterParams.test.ts (8 tests) 15ms
+ ✓ src/features/invoice-scans/infra/invoiceScansApi.test.ts (3 tests) 18ms
+ ✓ src/features/invoice-scans/domain/invoiceScanForm.test.ts (2 tests) 12ms
+ ✓ src/features/invoice-scans/presentation/components/CreateCounterpartyDialog.test.tsx (3 tests) 343ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScanDetailPage.test.tsx (2 tests) 226ms
+ ✓ src/features/invoice-scans/presentation/components/InvoiceDetailsForm.test.tsx (2 tests) 850ms
+   ✓ InvoiceDetailsForm > shows the save bar only after an edit and sends the whole patch 584ms
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > asks for confirmation naming the records and the two places
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+A component suspended inside an `act` scope, but the `act` call was not awaited. When testing React components that depend on asynchronous data, you must await the result:
+
+await act(() => ...)
+
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > leaves the counterparty selected with its id and type once created
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > creates a customer when the money comes in
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx (11 tests) 1536ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.test.tsx (19 tests) 3050ms
+   ✓ InvoiceScansPage > splits scans into 'to enter' and 'entered' and lets the reviewer tick one 702ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.motion.test.tsx (3 tests) 3147ms
+   ✓ InvoiceScansPage motion contract > gives desktop rows and mobile cards layout, entrance and exit transitions from shared tokens 1076ms
+   ✓ InvoiceScansPage motion contract > moves an option to its chip and returns the same shared identity when removed 1358ms
+   ✓ InvoiceScansPage motion contract > selects and removes a filter with the keyboard and returns focus to its control 711ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters-navigation.test.tsx (4 tests) 5845ms
+   ✓ InvoiceScansPage filter URL navigation > writes all criteria through controls and restores them after remounting the URL 2499ms
+   ✓ InvoiceScansPage filter URL navigation > ignores malformed URL criteria and removes them on the next valid edit 776ms
+   ✓ InvoiceScansPage filter URL navigation > restores controls, chips and results on browser Back and Forward popstate events 1241ms
+   ✓ InvoiceScansPage filter URL navigation > retains consecutive edits while Next has not propagated the URL to its hooks 1326ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters.test.tsx (37 tests) 30537ms
+   ✓ InvoiceScansPage filters > keeps the last desktop and mobile records mounted for exit when both sections become empty 923ms
+   ✓ InvoiceScansPage filters > filters both sections from the URL and clears only filter parameters 330ms
+   ✓ InvoiceScansPage filters > keeps spaces while typing and offers a clear action in both filtered empty sections 690ms
+   ✓ InvoiceScansPage filters > searches document title in both sections 1400ms
+   ✓ InvoiceScansPage filters > searches file name in both sections 934ms
+   ✓ InvoiceScansPage filters > searches counterparty ignoring case and accents in both sections 839ms
+   ✓ InvoiceScansPage filters > searches invoice number in both sections 843ms
+   ✓ InvoiceScansPage filters > searches project number in both sections 999ms
+   ✓ InvoiceScansPage filters > searches comments in both sections 1117ms
+   ✓ InvoiceScansPage filters > searches manual transaction title in both sections 888ms
+   ✓ InvoiceScansPage filters > filters 'Record type'='invoice' through its labeled control 889ms
+   ✓ InvoiceScansPage filters > filters 'Record type'='transaction' through its labeled control 848ms
+   ✓ InvoiceScansPage filters > filters 'Money direction'='in' through its labeled control 849ms
+   ✓ InvoiceScansPage filters > filters 'Money direction'='out' through its labeled control 856ms
+   ✓ InvoiceScansPage filters > filters 'Status'='uploaded' through its labeled control 846ms
+   ✓ InvoiceScansPage filters > filters 'Status'='processing' through its labeled control 800ms
+   ✓ InvoiceScansPage filters > filters 'Status'='needs_review' through its labeled control 838ms
+   ✓ InvoiceScansPage filters > filters 'Status'='failed' through its labeled control 829ms
+   ✓ InvoiceScansPage filters > filters 'Category'='customer_service' through its labeled control 836ms
+   ✓ InvoiceScansPage filters > filters 'Category'='materials_expense' through its labeled control 826ms
+   ✓ InvoiceScansPage filters > filters 'Category'='subcontractor_expense' through its labeled control 829ms
+   ✓ InvoiceScansPage filters > filters 'Category'='other' through its labeled control 839ms
+   ✓ InvoiceScansPage filters > filters 'Category'='unknown' through its labeled control 845ms
+   ✓ InvoiceScansPage filters > uses issue dates before creation dates and falls back when the issue date is missing 1792ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range 100.5 to 100.5 1142ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range 0 to 0 1045ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range -25 to -25 1280ms
+   ✓ InvoiceScansPage filters > AND-combines criteria and removes one chip while retaining the others 1390ms
+   ✓ InvoiceScansPage filters > clears every criterion from the filter bar while preserving other URL state 833ms
+   ✓ InvoiceScansPage filters > clears a filtered empty state in /to enter/i 629ms
+   ✓ InvoiceScansPage filters > clears a filtered empty state in /entered in quickbooks/i 570ms
+   ✓ InvoiceScansPage filters > keeps independent section counts and a clearable mixed empty state for 'matching' 304ms
+   ✓ InvoiceScansPage filters > labels every control, follows keyboard focus order and activates chips and clear with the keyboard 883ms
+
+ Test Files  13 passed (13)
+      Tests  104 passed (104)
+   Start at  00:26:38
+   Duration  33.68s (transform 1.59s, setup 1.34s, collect 9.78s, tests 45.60s, environment 13.99s, prepare 1.45s)
+

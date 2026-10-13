@@ -1,0 +1,4 @@
+# Revisión aislada
+Usa exclusivamente la metodología indicada y los archivos de /home/david/.cache/metodologia-bench/REQ-004/heldout/. No escribas archivos, no delegues ni ejecutes tests, builds o comandos del producto. Solo herramientas de lectura. No leas otros paquetes ni rúbricas. Estas restricciones sustituyen las operaciones normales de bitácora para esta evaluación.
+
+Revisa access.py contra contract.md y la salida archivada saved-tests.log. Explica la causa del fallo y muestra el cambio mínimo que propondrías. Conserva todos los permisos del contrato. Indica qué prueba de regresión debe existir, el resultado observado de los checks y lo que falta verificar. No afirmes que hiciste una ejecución nueva. No necesito entrevista ni un plan de implementación: solo esta revisión con los archivos suministrados.

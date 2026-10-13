@@ -1,0 +1,838 @@
+COMMAND: env -i PATH="$PATH" HOME="$HOME" NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9/api NEXT_PUBLIC_N8N_WEBHOOK_URL=http://127.0.0.1:9/webhook NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=disabled AUTH_SECRET=lab-only DEV_AUTH_SECRET=lab-only-dev npx vitest run src/features/invoice-scans && env -i PATH="$PATH" HOME="$HOME" NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9/api NEXT_PUBLIC_N8N_WEBHOOK_URL=http://127.0.0.1:9/webhook NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=disabled AUTH_SECRET=lab-only DEV_AUTH_SECRET=lab-only-dev npm run typecheck && env -i PATH="$PATH" HOME="$HOME" NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9/api NEXT_PUBLIC_N8N_WEBHOOK_URL=http://127.0.0.1:9/webhook NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=disabled AUTH_SECRET=lab-only DEV_AUTH_SECRET=lab-only-dev npm run lint
+
+ RUN  v2.1.9 /home/david/dev/maros-lab/maros-next
+
+ ✓ src/features/invoice-scans/infra/invoiceScansApi.test.ts (3 tests) 14ms
+ ✓ src/features/invoice-scans/domain/partition.test.ts (2 tests) 5ms
+ ✓ src/features/invoice-scans/domain/filters.test.ts (8 tests) 11ms
+ ✓ src/features/invoice-scans/domain/filterParams.test.ts (8 tests) 15ms
+ ✓ src/features/invoice-scans/domain/invoiceScanForm.test.ts (2 tests) 28ms
+ ✓ src/features/invoice-scans/presentation/components/CreateCounterpartyDialog.test.tsx (3 tests) 351ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScanDetailPage.test.tsx (6 tests) 430ms
+ ✓ src/features/invoice-scans/presentation/components/InvoiceDetailsForm.test.tsx (2 tests) 861ms
+   ✓ InvoiceDetailsForm > shows the save bar only after an edit and sends the whole patch 663ms
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > asks for confirmation naming the records and the two places
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+A component suspended inside an `act` scope, but the `act` call was not awaited. When testing React components that depend on asynchronous data, you must await the result:
+
+await act(() => ...)
+
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > leaves the counterparty selected with its id and type once created
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx > CounterpartySelect > creating the counterparty > creates a customer when the money comes in
+An update to CounterpartySelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to FocusScope inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to Presence inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DismissableLayer inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/features/invoice-scans/presentation/components/CounterpartySelect.test.tsx (11 tests) 1789ms
+   ✓ CounterpartySelect > reports the id and the type of a name picked from QuickBooks 397ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.detail-round-trip.test.tsx (2 tests) 1739ms
+   ✓ InvoiceScansPage detail round trip > carries all filters through the desktop detail link and explicit return 1129ms
+   ✓ InvoiceScansPage detail round trip > carries all filters through the mobile detail link and explicit return 608ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.test.tsx (19 tests) 3354ms
+   ✓ InvoiceScansPage > splits scans into 'to enter' and 'entered' and lets the reviewer tick one 849ms
+   ✓ InvoiceScansPage > sends the QuickBooks id of a counterparty picked from the list 328ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.presence.test.tsx (8 tests) 6160ms
+   ✓ InvoiceScansPage record presence > keeps every checkbox label associated with its own responsive and exiting instance 917ms
+   ✓ InvoiceScansPage record presence > restores both responsive titles after reversing a section move (initial entered: false) 1458ms
+   ✓ InvoiceScansPage record presence > restores both responsive titles after reversing a section move (initial entered: true) 1019ms
+   ✓ InvoiceScansPage record presence > makes records interactive again when the filter is cleared while they are leaving 926ms
+   ✓ InvoiceScansPage record presence > removes the leaving rows and cards when the same record enters the other section 442ms
+   ✓ InvoiceScansPage record presence > keeps only the matching records interactive while a changed filter animates 1064ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters-navigation.test.tsx (4 tests) 6623ms
+   ✓ InvoiceScansPage filter URL navigation > writes all criteria through controls and restores them after remounting the URL 2912ms
+   ✓ InvoiceScansPage filter URL navigation > ignores malformed URL criteria and removes them on the next valid edit 790ms
+   ✓ InvoiceScansPage filter URL navigation > restores controls, chips and results on browser Back and Forward popstate events 1457ms
+   ✓ InvoiceScansPage filter URL navigation > retains consecutive edits while Next has not propagated the URL to its hooks 1463ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.motion.test.tsx (7 tests) 6771ms
+   ✓ InvoiceScansPage motion contract > gives desktop rows and mobile cards layout, entrance and exit transitions from shared tokens 1275ms
+   ✓ InvoiceScansPage motion contract > moves an option to its chip and returns the same shared identity when removed 1463ms
+   ✓ InvoiceScansPage motion contract > selects and removes a filter with the keyboard and returns focus to its control 749ms
+   ✓ InvoiceScansPage motion contract > replaces the projection node when changing an active criterion to another option 835ms
+   ✓ InvoiceScansPage motion contract > omits animation props on rows, cards, every chip and option with reduced motion 529ms
+   ✓ InvoiceScansPage motion contract > remounts animation surfaces when the reduced-motion preference is enabled while viewing filters 725ms
+   ✓ InvoiceScansPage motion contract > keeps desktop and mobile title layout IDs unchanged when filters remove and restore other records 1194ms
+ ✓ src/features/invoice-scans/presentation/pages/InvoiceScansPage.filters.test.tsx (40 tests) 31033ms
+   ✓ InvoiceScansPage filters > keeps the last desktop and mobile records mounted for exit when both sections become empty 997ms
+   ✓ InvoiceScansPage filters > filters both sections from the URL and clears only filter parameters 378ms
+   ✓ InvoiceScansPage filters > keeps spaces while typing and offers a clear action in both filtered empty sections 673ms
+   ✓ InvoiceScansPage filters > names the active chips as a group that is absent without filters 439ms
+   ✓ InvoiceScansPage filters > searches document title in both sections 1221ms
+   ✓ InvoiceScansPage filters > searches file name in both sections 979ms
+   ✓ InvoiceScansPage filters > searches counterparty ignoring case and accents in both sections 954ms
+   ✓ InvoiceScansPage filters > searches invoice number in both sections 848ms
+   ✓ InvoiceScansPage filters > searches project number in both sections 737ms
+   ✓ InvoiceScansPage filters > searches comments in both sections 756ms
+   ✓ InvoiceScansPage filters > searches manual transaction title in both sections 876ms
+   ✓ InvoiceScansPage filters > filters 'Record type'='invoice' through its labeled control 896ms
+   ✓ InvoiceScansPage filters > filters 'Record type'='transaction' through its labeled control 812ms
+   ✓ InvoiceScansPage filters > filters 'Money direction'='in' through its labeled control 836ms
+   ✓ InvoiceScansPage filters > filters 'Money direction'='out' through its labeled control 838ms
+   ✓ InvoiceScansPage filters > filters 'Status'='uploaded' through its labeled control 844ms
+   ✓ InvoiceScansPage filters > filters 'Status'='processing' through its labeled control 795ms
+   ✓ InvoiceScansPage filters > filters 'Status'='needs_review' through its labeled control 839ms
+   ✓ InvoiceScansPage filters > filters 'Status'='failed' through its labeled control 826ms
+   ✓ InvoiceScansPage filters > filters 'Category'='customer_service' through its labeled control 844ms
+   ✓ InvoiceScansPage filters > filters 'Category'='materials_expense' through its labeled control 808ms
+   ✓ InvoiceScansPage filters > filters 'Category'='subcontractor_expense' through its labeled control 816ms
+   ✓ InvoiceScansPage filters > filters 'Category'='other' through its labeled control 834ms
+   ✓ InvoiceScansPage filters > filters 'Category'='unknown' through its labeled control 864ms
+   ✓ InvoiceScansPage filters > uses issue dates before creation dates and falls back when the issue date is missing 1973ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range 100.5 to 100.5 1206ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range 0 to 0 1099ms
+   ✓ InvoiceScansPage filters > filters inclusive amount range -25 to -25 1330ms
+   ✓ InvoiceScansPage filters > AND-combines criteria and removes one chip while retaining the others 1392ms
+   ✓ InvoiceScansPage filters > clears every criterion from the filter bar while preserving other URL state 881ms
+   ✓ InvoiceScansPage filters > clears a filtered empty state in /to enter/i 635ms
+   ✓ InvoiceScansPage filters > clears a filtered empty state in /entered in quickbooks/i 583ms
+   ✓ InvoiceScansPage filters > keeps independent section counts and a clearable mixed empty state for 'matching' 308ms
+   ✓ InvoiceScansPage filters > labels every control, follows keyboard focus order and activates chips and clear with the keyboard 896ms
+
+ Test Files  15 passed (15)
+      Tests  125 passed (125)
+   Start at  02:02:38
+   Duration  34.43s (transform 2.32s, setup 1.21s, collect 14.60s, tests 59.18s, environment 17.89s, prepare 1.71s)
+
+
+> typecheck
+> tsc --noEmit
+
+
+> lint
+> eslint .
+
+
+/home/david/dev/maros-lab/maros-next/src/app/api/translate/batch/route.ts
+   19:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/app/api/translate/route.ts
+   19:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/common/hooks/crud/useCrudModal.ts
+  36:3  warning  'currentItem' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/common/hooks/crud/useCrudPage.ts
+  144:37  warning  'id' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/common/hooks/crud/useCrudState.ts
+  7:38  warning  'TEntity' is defined but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/common/hooks/form/useFormController.ts
+  16:49  warning  'TResult' is defined but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  29:64  warning  Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/common/hooks/form/useFormHandlers.ts
+  5:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/common/hooks/table/useEntityTableLogic.ts
+  38:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/common/hooks/table/useTableWithSearch.ts
+  42:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/components/shared/LocationField.tsx
+   26:24  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   33:46  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   45:3   warning  'label' is assigned a value but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+   63:34  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   65:25  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   66:28  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   67:30  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  125:44  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  131:17  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  138:47  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  162:18  warning  'err' is defined but never used                                                   unused-imports/no-unused-vars
+  168:64  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  173:51  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  178:14  warning  'e' is defined but never used                                                     unused-imports/no-unused-vars
+  201:44  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  223:16  warning  'e' is defined but never used                                                     unused-imports/no-unused-vars
+  249:61  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/company/domain/mappers/toCompanyDraft.ts
+  1:29  warning  'CompanyType' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/company/infra/http/CompanyHttpRepository.ts
+  11:3  warning  'mapCompaniesFromApi' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/company/infra/http/mappers.ts
+  108:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  150:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  153:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/company/presentation/data/loadCompanyDetailsData.ts
+  11:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/company/presentation/hooks/controllers/useCompanyModalController.ts
+  10:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/company/presentation/hooks/controllers/useUpdateCompanyController.ts
+  55:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/company/presentation/hooks/modals/useCompanyEditModal.ts
+  54:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/company/presentation/hooks/services/useCompanyQuickContactLogic.ts
+  26:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/company/presentation/hooks/services/useManageServices.ts
+  137:14  warning  'error' is defined but never used  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/company/presentation/molecules/EmptyCompaniesState.tsx
+  7:39  warning  'onCreateClick' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/domain/mappers/toContactPatch.ts
+  49:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/domain/models.ts
+   21:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  145:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/domain/services/contactReadMapper.ts
+  50:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/domain/services/contactUniquenessPolicy.ts
+  3:10  warning  'areContactsPotentialDuplicates' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/domain/services/contactValidation.ts
+  7:15  warning  'ContactField' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/presentation/hooks/controllers/useContactCompanyModalController.ts
+   9:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/presentation/hooks/table/useContactsTableLogic.ts
+  18:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/presentation/organisms/CompanyDetailsModal.tsx
+  6:3  warning  'DialogFooter' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/presentation/organisms/ContactModal.tsx
+  42:9  warning  'footerMode' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/presentation/organisms/ContactViewModal.tsx
+  9:3  warning  'DialogFooter' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/presentation/pages/ContactsPageView.tsx
+  10:15  warning  'Contact' is defined but never used                                                               unused-imports/no-unused-imports
+  11:13  warning  'UserPlus' is defined but never used                                                              unused-imports/no-unused-imports
+  49:15  warning  'filteredContacts' is assigned a value but never used. Allowed unused vars must match /^_/u       unused-imports/no-unused-vars
+  56:11  warning  'tableFilteredContacts' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/contact/presentation/pages/sections/ContactInfoSection.tsx
+  23:10  warning  'Button' is defined but never used        unused-imports/no-unused-imports
+  24:10  warning  'Plus' is defined but never used          unused-imports/no-unused-imports
+  41:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/customers/application/hooks/useCustomerCrudSection.ts
+  95:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/customers/infra/http/CustomersHttpRepository.ts
+  1:15  warning  'Contact' is defined but never used  unused-imports/no-unused-imports
+  2:15  warning  'Company' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/customers/infra/http/mappers.ts
+  2:15  warning  'Company' is defined but never used       unused-imports/no-unused-imports
+  8:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/customers/presentation/components/CustomerCompaniesSection.tsx
+  74:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/customers/presentation/search/customerContactsSearchConfig.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/domain/models.ts
+  224:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/domain/services/applyLeadPatch.ts
+  233:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/domain/services/buildLeadDraft.ts
+  67:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  96:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/domain/services/diffToPatch.ts
+  71:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  74:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/infra/http/LeadHttpRepository.ts
+   91:39  warning  'leadNumber' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  110:39  warning  'leadNumber' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  143:41  warning  Unexpected any. Specify a different type                                               @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/hooks/controllers/useUpdateLeadController.ts
+  73:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/hooks/modals/useLeadCreateModal.ts
+  30:23  warning  'lead' is defined but never used. Allowed unused args must match /^_/u                          unused-imports/no-unused-vars
+  43:5   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/hooks/modals/useLeadEditModal.ts
+  23:3  warning  'leadType' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/hooks/modals/useLeadModalController.ts
+  12:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/hooks/table/useLeadsInReviewTableColumns.tsx
+  14:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/hooks/table/useLeadsTableColumns.tsx
+  14:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/molecules/LeadForm.tsx
+   7:30  warning  'User' is defined but never used                                                     unused-imports/no-unused-imports
+  58:3   warning  'contacts' is defined but never used. Allowed unused args must match /^_/u           unused-imports/no-unused-vars
+  59:3   warning  'showContactSelect' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/organisms/LeadModal.tsx
+   47:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   47:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/pages/LeadDetailsPage.tsx
+  335:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  340:94  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  379:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/pages/LeadsInReviewPageView.tsx
+    7:15  warning  'Lead' is defined but never used                                                             unused-imports/no-unused-imports
+   17:3   warning  'Briefcase' is defined but never used                                                        unused-imports/no-unused-imports
+   20:3   warning  'FileText' is defined but never used                                                         unused-imports/no-unused-imports
+   32:3   warning  'DialogFooter' is defined but never used                                                     unused-imports/no-unused-imports
+   66:31  warning  'createModalTitle' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+   69:5   warning  'leads' is assigned a value but never used. Allowed unused vars must match /^_/u             unused-imports/no-unused-vars
+  206:54  warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/pages/LeadsPageByType.tsx
+  7:10  warning  'LeadTypeSwitcher' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/leads/presentation/pages/sections/LeadContactSection.tsx
+  42:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:71  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/notes/presentation/molecules/SharePeoplePanel.tsx
+  4:10  warning  'Check' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/project/domain/services/projectReadMapper.ts
+  164:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  261:77  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/project/infra/http/ProjectHttpRepository.ts
+  12:8   warning  'UpdateProjectPayload' is defined but never used  unused-imports/no-unused-imports
+  58:41  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  62:21  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/project/presentation/hooks/controllers/useCreateProjectController.ts
+  36:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/project/presentation/hooks/controllers/useUpdateProjectController.ts
+  40:16  warning  'form' is defined but never used. Allowed unused args must match /^_/u                          unused-imports/no-unused-vars
+  49:62  warning  Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+  82:5   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+/home/david/dev/maros-lab/maros-next/src/features/project/presentation/hooks/modals/useProjectCreateModal.ts
+  24:23  warning  'project' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/project/presentation/hooks/modals/useProjectEditModal.ts
+  27:23  warning  'project' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/project/presentation/organisms/ProjectModal.tsx
+  24:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/project/presentation/pages/ProjectDetailsPage.tsx
+  103:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  635:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/reports/actions/translationActions.ts
+   18:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   56:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/features/reports/presentation/hooks/useFormFields.ts
+  1:10  warning  'useMemo' is defined but never used  unused-imports/no-unused-imports
+  3:15  warning  'Contact' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/reports/presentation/hooks/useImageUpload.ts
+  2:10  warning  'toast' is defined but never used  unused-imports/no-unused-imports
+
+/home/david/dev/maros-lab/maros-next/src/features/reports/presentation/hooks/useProjectForm.ts
+   19:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:14  warning  'error' is defined but never used         unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/reports/presentation/hooks/useReportTranslation.ts
+  282:16  warning  'error' is defined but never used  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/reports/presentation/hooks/useRestorationFinal.ts
+   6:10  warning  'getRestorationFinal' is defined but never used                                 unused-imports/no-unused-imports
+  11:9   warning  'ctx' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/reports/presentation/hooks/useRestorationVisit.ts
+   6:10  warning  'getRestorationVisit' is defined but never used                                 unused-imports/no-unused-imports
+  11:9   warning  'ctx' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/reports/presentation/pages/RestorationVisitPage.tsx
+  10:15  warning  'RestorationVisitReport' is defined but never used                                         unused-imports/no-unused-imports
+  39:5   warning  'projectLoading' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  46:11  warning  'translations' is assigned a value but never used. Allowed unused vars must match /^_/u    unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/features/reports/presentation/utils/reportFormHelpers.ts
+  47:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/david/dev/maros-lab/maros-next/src/shared/infra/rest/resourceRepository.ts
+  67:16  warning  'params' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+
+/home/david/dev/maros-lab/maros-next/src/shared/lib/businessDate.test.ts
+  1:21  warning  'beforeEach' is defined but never used  unused-imports/no-unused-imports
+
+✖ 164 problems (0 errors, 164 warnings)
+  0 errors and 30 warnings potentially fixable with the `--fix` option.
+
+
+EXIT_CODE: 0
+DURATION_SECONDS: 48.599

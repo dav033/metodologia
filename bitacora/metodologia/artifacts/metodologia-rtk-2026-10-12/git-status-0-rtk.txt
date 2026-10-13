@@ -1,0 +1,45 @@
+* main...origin/main
+ M README.md
+ M evals/README.md
+ M install.py
+ M skill/SKILL.md
+ M skill/references/documentation.md
+ M skill/references/execution.md
+ M skill/references/marathon.md
+ M skill/references/requirements.md
+ M skill/references/subagents.md
+ M skill/references/tools.md
+ M skill/scripts/bitacora.py
+ M skill/scripts/bt_launch.py
+ M skill/scripts/bt_monitor.py
+ M skill/scripts/bt_notify.py
+ M skill/scripts/bt_runsession.py
+ M skill/scripts/bt_secrets.py
+ M skill/scripts/bt_server.py
+ M skill/scripts/bt_vcs.py
+ M skill/scripts/bt_views.py
+ M skill/scripts/bt_workspace.py
+ M skill/templates/ARCHITECTURE.md
+ M skill/templates/SUMMARY.md
+?? .github/
+?? evals/benchmark_rtk.py
+?? evals/cases/k-agent-orchestration.json
+?? evals/cases/l-long-autonomous-development.json
+?? evals/cases/m-user-rule-conflict.json
+?? evals/cases/n-concise-technical-report.json
+?? evals/cases/o-rtk-output-recovery.json
+?? evals/cases/p-grill-decision-frontier.json
+?? skill/references/agent-orchestration.md
+?? skill/references/architecture-audit.md
+?? skill/references/communication-and-context.md
+?? skill/references/self-improvement.md
+?? skill/references/third-party-notices.md
+?? skill/scripts/bt_audit.py
+?? skill/scripts/bt_autostart.py
+?? skill/scripts/bt_platform.py
+?? skill/scripts/install_rtk.py
+?? skill/scripts/tests/test_audit.py
+?? skill/scripts/tests/test_install_rtk.py
+?? skill/scripts/tests/test_onboarding.py
+?? skill/scripts/tests/test_platform.py
+[rtk] /!\ No hook installed — run `rtk init -g` for automatic token savings

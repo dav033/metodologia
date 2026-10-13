@@ -1,0 +1,4 @@
+{"stage":"direct-close","url":"http://localhost:3101/tasks?q=Drag","dialogs":0}
+{"stage":"quick-close","url":"http://localhost:3101/tasks?q=Drag","editorMountedDuringExit":false,"dialogs":0}
+{"stage":"switch-task","url":"http://localhost:3101/tasks?q=Drag&task=2001","title":"Drag fixture 1"}
+{"stage":"history-back","url":"http://localhost:3101/tasks?q=Drag","dialogs":0}

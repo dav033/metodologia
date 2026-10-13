@@ -1,0 +1,54 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   README.md
+	modified:   evals/README.md
+	modified:   install.py
+	modified:   skill/SKILL.md
+	modified:   skill/references/documentation.md
+	modified:   skill/references/execution.md
+	modified:   skill/references/marathon.md
+	modified:   skill/references/requirements.md
+	modified:   skill/references/subagents.md
+	modified:   skill/references/tools.md
+	modified:   skill/scripts/bitacora.py
+	modified:   skill/scripts/bt_launch.py
+	modified:   skill/scripts/bt_monitor.py
+	modified:   skill/scripts/bt_notify.py
+	modified:   skill/scripts/bt_runsession.py
+	modified:   skill/scripts/bt_secrets.py
+	modified:   skill/scripts/bt_server.py
+	modified:   skill/scripts/bt_vcs.py
+	modified:   skill/scripts/bt_views.py
+	modified:   skill/scripts/bt_workspace.py
+	modified:   skill/templates/ARCHITECTURE.md
+	modified:   skill/templates/SUMMARY.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.github/
+	evals/benchmark_rtk.py
+	evals/cases/k-agent-orchestration.json
+	evals/cases/l-long-autonomous-development.json
+	evals/cases/m-user-rule-conflict.json
+	evals/cases/n-concise-technical-report.json
+	evals/cases/o-rtk-output-recovery.json
+	evals/cases/p-grill-decision-frontier.json
+	skill/references/agent-orchestration.md
+	skill/references/architecture-audit.md
+	skill/references/communication-and-context.md
+	skill/references/self-improvement.md
+	skill/references/third-party-notices.md
+	skill/scripts/bt_audit.py
+	skill/scripts/bt_autostart.py
+	skill/scripts/bt_platform.py
+	skill/scripts/install_rtk.py
+	skill/scripts/tests/test_audit.py
+	skill/scripts/tests/test_install_rtk.py
+	skill/scripts/tests/test_onboarding.py
+	skill/scripts/tests/test_platform.py
+
+no changes added to commit (use "git add" and/or "git commit -a")
