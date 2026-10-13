@@ -37,7 +37,7 @@ def _rank(model: str | None) -> int:
 def model_for(state: dict, tier: int) -> tuple[str | None, str | None]:
     """(model, effort) of a session at this tier; effort None means the CLI default."""
     configured = state.get("model")
-    if state.get("agent") == "codex":
+    if state.get("agent") in ("codex", "antigravity"):
         return configured, EFFORT if tier >= 1 else None
     if tier <= 0:
         return configured or LADDER[0], None
@@ -51,6 +51,9 @@ def label(model: str | None, effort: str | None) -> str:
 
 def model_args(agent: str | None, model: str | None, effort: str | None) -> list[str]:
     """The model/effort part of the agent command line."""
+    if agent == "antigravity":  # `agy models` ids; the ladder's claude names mean "use the CLI default"
+        args = ["--model", model] if model and model not in LADDER else []
+        return args + (["--effort", effort] if effort else [])
     if agent == "codex":
         args = ["-m", model] if model and model != "haiku" else []
         return args + (["-c", f'model_reasoning_effort="{effort}"'] if effort else [])

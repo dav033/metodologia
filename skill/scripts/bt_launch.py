@@ -17,6 +17,7 @@ from bt_core import _first_heading, _front
 AGENTS = {
     "claude": ["claude", "--dangerously-skip-permissions"],
     "codex": ["codex", "--yolo"],
+    "antigravity": ["agy", "--dangerously-skip-permissions", "-i"],  # -i: initial prompt, session stays interactive
 }
 
 
@@ -89,7 +90,7 @@ def write_handoff(project: str, rdir: Path, workdir: Path, repos: dict[str, Path
 
 def initial_prompt(agent: str, mode: str, rid: str, handoff: Path) -> str:
     h = handoff.as_posix()
-    if agent == "codex" or mode == "goal":
+    if agent in ("codex", "antigravity") or mode == "goal":
         return (f"/goal Complete {rid} by following {h} without stopping until every task in the plan is ticked, "
                 f"the plan's Verification passes with evidence, and the bitácora and final report are done "
                 f"- or a stop-and-ask item blocks progress.")

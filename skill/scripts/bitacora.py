@@ -49,7 +49,7 @@ def main() -> None:
     p_bind.add_argument("project")
     p_launch = sub.add_parser("launch", help="HQ: open a new executor session for an approved plan")
     p_launch.add_argument("req", help="REQ-NNN")
-    p_launch.add_argument("--agent", choices=["claude", "codex"], default="claude")
+    p_launch.add_argument("--agent", choices=["claude", "codex", "antigravity"], default="claude")
     p_launch.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
     p_launch.add_argument("--mode", choices=["loop", "goal", "marathon"], default="loop",
                           help="loop/goal: one long session (codex always /goal); marathon: supervisor, a fresh session per task")
@@ -59,7 +59,7 @@ def main() -> None:
     p_launch.add_argument("--dry-run", action="store_true")
     p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task (days)")
     p_run.add_argument("req", help="REQ-NNN")
-    p_run.add_argument("--agent", choices=["claude", "codex"])
+    p_run.add_argument("--agent", choices=["claude", "codex", "antigravity"])
     p_run.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
     p_run.add_argument("--model", help="tier 0 of the escalation ladder (default haiku)")
     p_run.add_argument("--no-ultracode", action="store_true")

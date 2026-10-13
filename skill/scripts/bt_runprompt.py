@@ -116,6 +116,11 @@ def agent_argv(state: dict, workdir: Path, prompt: str, model: str | None = None
         exe = shutil.which("codex") or "codex"
         return [exe, "exec", "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check",
                 "-C", str(workdir), *args, "-"], prompt
+    if state.get("agent") == "antigravity":
+        exe = shutil.which("agy") or "agy"
+        # `-p` swallows the next token as its prompt, so the prompt is attached to the flag and goes last.
+        return [exe, *args, "--dangerously-skip-permissions", "--output-format", "stream-json",
+                f"--print={prompt}"], None
     exe = shutil.which("claude") or "claude"
     return [exe, "-p", *args, "--dangerously-skip-permissions", "--output-format", "stream-json", "--verbose",
             prompt], None

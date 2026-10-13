@@ -78,10 +78,44 @@ class ProfileGateTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             bt_profiles.add("x", "gemini")
 
-    def test_antigravity_is_registered_but_not_launchable_yet(self):
-        with self.assertRaises(SystemExit):
-            bt_profiles.require_launchable("antigravity")
+    def test_launchable_providers_and_unknown_ones(self):
         self.assertEqual(bt_profiles.require_launchable("codex-luis"), "codex")
+        self.assertEqual(bt_profiles.require_launchable("antigravity"), "antigravity")
+        with patch.object(bt_profiles, "LAUNCHABLE", ("claude",)), self.assertRaises(SystemExit):
+            bt_profiles.require_launchable("antigravity")
+
+
+class AntigravityDriverTests(unittest.TestCase):
+    def test_session_command_uses_headless_stream_json_and_keeps_the_prompt_last(self):
+        import bt_runprompt
+        state = {"agent": "antigravity", "model": "haiku"}
+        argv, stdin = bt_runprompt.agent_argv(state, Path("/tmp"), "do the thing", "haiku", None)
+        self.assertIn("--dangerously-skip-permissions", argv)
+        self.assertIn("stream-json", argv)
+        self.assertNotIn("--model", argv)  # the ladder's claude names mean CLI default
+        self.assertNotIn("-p", argv)  # -p would swallow the next flag as its prompt
+        self.assertEqual(argv[-1], "--print=do the thing")
+        self.assertIsNone(stdin)
+        argv, _ = bt_runprompt.agent_argv(state, Path("/tmp"), "x", "gemini-3.8-flash-high", "xhigh")
+        self.assertEqual(argv[argv.index("--model") + 1], "gemini-3.8-flash-high")
+        self.assertEqual(argv[argv.index("--effort") + 1], "xhigh")
+
+    def test_ladder_only_raises_effort(self):
+        import bt_runtier
+        state = {"agent": "antigravity", "model": "gemini-3.8-flash-high"}
+        self.assertEqual(bt_runtier.model_for(state, 0), ("gemini-3.8-flash-high", None))
+        self.assertEqual(bt_runtier.model_for(state, 2), ("gemini-3.8-flash-high", "xhigh"))
+
+    def test_result_event_is_parsed_as_verdict(self):
+        import bt_runsettle
+        ok = json.dumps({"event": "result", "result": {"status": "SUCCESS", "response": "done\n"}})
+        bad = json.dumps({"event": "result", "result": {"status": "ERROR", "error": "quota exhausted"}})
+        noise = json.dumps({"event": "step_update", "step_update": {"state": "DONE"}})
+        self.assertEqual(bt_runsettle.parse_output(noise + "\n" + ok)["text"], "done\n")
+        self.assertFalse(bt_runsettle.parse_output(noise + "\n" + ok)["is_error"])
+        out = bt_runsettle.parse_output(noise + "\n" + bad)
+        self.assertTrue(out["is_error"])
+        self.assertIn("quota", out["text"])
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ from pathlib import Path
 from bt_core import ROOT, STATE
 
 HOME = Path.home()
-LAUNCHABLE = ("claude", "codex")  # providers the launcher/supervisor can drive today
+LAUNCHABLE = ("claude", "codex", "antigravity")  # providers the launcher/supervisor can drive
 
 # Generic, machine-independent: each provider's default account. Named accounts (a second Claude config dir, a team
 # Codex login, which one is work-only) are machine facts: `bitacora.py profiles add`, stored in .state/profiles.json.

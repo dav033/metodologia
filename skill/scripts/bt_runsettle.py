@@ -31,6 +31,13 @@ def _from_result(obj: dict) -> dict:
             "is_error": bool(obj.get("is_error")) or str(obj.get("subtype") or "").startswith("error")}
 
 
+def _from_agy_result(obj: dict) -> dict:
+    """Antigravity stream-json: {"event": "result", "result": {"status": "SUCCESS", "response": ...}}."""
+    res = obj.get("result") if isinstance(obj.get("result"), dict) else {}
+    ok = str(res.get("status") or "").upper() == "SUCCESS"
+    return {"text": str(res.get("response") or res.get("error") or ""), "cost": None, "is_error": not ok}
+
+
 def parse_output(raw: str) -> dict:
     """{text, is_error, cost} of a session. Claude stream-json: the last `result` event (when it never came, only the
     non-JSON lines count, so tool output inside the transcript is not mistaken for the agent's verdict); a single JSON
@@ -45,6 +52,8 @@ def parse_output(raw: str) -> dict:
             obj = _json(line)
             if isinstance(obj, dict) and obj.get("type") == "result":
                 return _from_result(obj)
+            if isinstance(obj, dict) and obj.get("event") == "result":
+                return _from_agy_result(obj)
             events = True
         elif len(plain) < 200:
             plain.append(line)
