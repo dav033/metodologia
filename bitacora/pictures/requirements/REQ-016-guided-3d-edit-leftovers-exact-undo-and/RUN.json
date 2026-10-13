@@ -13,15 +13,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T17:40:24",
+  "at": "2026-10-13T17:56:18",
   "pid": 1936968,
   "machine": "precision7760",
   "task": "T2",
   "session": 9,
-  "state": "session running 37 min",
-  "session_pids": {
-   "9": 2116556
-  },
+  "state": "done",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -103,17 +101,18 @@
    "complexity": null,
    "milestone": "M2",
    "tier": 2,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 2,
-   "last_error": "session timeout after 60 min",
+   "last_error": null,
    "error_hashes": [
     "773ec29e9582"
    ],
-   "evidence": null,
+   "evidence": "Commit 84fa287a on feat/req-016-guided-3d-edit-leftovers-exact-undo-and in t12. test-confirmacion-color-motor3d ok, test-ultima-orden-color-motor3d 14/14 pass, test-motor-guiada-fronteras ok, full npm run gate passed (GATE OK), antagonist passed SOUND.",
    "pending_id": null,
    "notes": [
     "Audited and formalized T2 / P-058 A1 in DESIGN-T2.md and D-046. Storing the last colour order requires versioned token context (approval payload v3) with a two-stage reader-before-writer rollout under D-035. Complexity is M with high architectural impact on token consumers; escalating to top tier for implementation.",
-    "escalated to top: Storing the last colour order (P-058 A1) requires versioned token context (approval payload v3) with a two-stage reader-before-writer rollout under D-035 across multiple signed token consumers, plus updating the independent property generator/oracle. Requires high-tier reasoning and design-implementation coordination (D-046)."
+    "escalated to top: Storing the last colour order (P-058 A1) requires versioned token context (approval payload v3) with a two-stage reader-before-writer rollout under D-035 across multiple signed token consumers, plus updating the independent property generator/oracle. Requires high-tier reasoning and design-implementation coordination (D-046).",
+    "T2 implemented and verified in commit 84fa287a on feat/req-016-guided-3d-edit-leftovers-exact-undo-and. Added 14 acceptance test cases in scripts/test/test-ultima-orden-color-motor3d.ts. Isolated ContextoOrdenColor schemas in src/lib/plan/orden-color.ts to respect test-motor-guiada-fronteras.ts. Antagonist review passed SOUND. Gate OK."
    ],
    "limit_streak": 0,
    "last_route": {
@@ -121,8 +120,10 @@
     "profile": "antigravity",
     "model": "gemini-3.8-flash-medium",
     "effort": null,
-    "result": "timeout"
-   }
+    "result": "done"
+   },
+   "findings": null,
+   "severity": null
   },
   {
    "id": "T3",
@@ -263,6 +264,17 @@
    "result": "timeout",
    "summary": "I have launched `test-propiedades-motor` in the background to verify the baseline property tests. I will wait for it to complete. I have launched `test-propiedades-motor` to ensure the property tests pass with the new changes. I will wait for it to complete. Esperando a que termine la suite `npm run",
    "seconds": 3603,
+   "model": "gemini-3.8-flash-medium",
+   "agent": "antigravity",
+   "profile": "antigravity"
+  },
+  {
+   "at": "2026-10-13T17:56:18",
+   "session": 9,
+   "task": "T2",
+   "result": "done",
+   "summary": "Commit 84fa287a on feat/req-016-guided-3d-edit-leftovers-exact-undo-and in t12. test-confirmacion-color-motor3d ok, test-ultima-orden-color-motor3d 14/14 pass, test-motor-guiada-fronteras ok, full npm run gate passed (GATE OK), antagonist passed SOUND.",
+   "seconds": 3172,
    "model": "gemini-3.8-flash-medium",
    "agent": "antigravity",
    "profile": "antigravity"
