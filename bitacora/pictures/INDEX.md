@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-13 12:10 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-13 12:14 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -8,7 +8,8 @@ _Generated 2026-10-13 12:10 by `bitacora.py index`. Do not edit by hand._
 
 ## Workspace
 
-- **demo-decoracion** → `/home/david/dev/pictures/C:/Users/davidt/Downloads/pictures-workspace/demo-decoracion` (not cloned here)
+- **demo-decoracion** → `/home/david/dev/pictures-wt/t7/C:/Users/davidt/Downloads/pictures-workspace/demo-decoracion` (not cloned here)
+- **t7** → `/home/david/dev/pictures-wt/t7`
 
 ## Needs attention
 
