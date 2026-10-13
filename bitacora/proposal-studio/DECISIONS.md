@@ -65,3 +65,12 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Consequences:** + Consistent public/admin styling with a small interactive island; + reduced motion and no-JS keep content usable; − Tailwind v4 build tooling is added for Starwind component source while the existing CSS remains in place.
 - **Rollback:** Remove the Starwind source components and Tailwind integration, restore the previous proposal/admin markup and CSS, then remove the Spotlight island and Motion reveal script with their dependencies. No database or public API migration is involved.
 - **Source:** [day log](2026-10/W2/2026-10-11.md) · REQ-004.
+
+## D-007 — Render the draft preview through the shared proposal component
+- **Date:** 2026-10-13 · **Status:** Accepted
+- **Context:** The owner could not see what a recipient sees without publishing and creating a share link.
+- **Decision:** Extract the proposal body into `ProposalView.astro`, used by `/s/[token]` and an admin-only draft preview with device simulation.
+- **Alternatives:** Separate copy of the markup for the editor — rejected, it would diverge; side panel only — less faithful.
+- **Consequences:** + Preview equals the real page; − the frame shows the draft while the client sees the published revision (stated in the UI).
+- **Rollback:** Revert ProposalView extraction and delete the preview routes; no data migration.
+- **Source:** [day log](2026-10/W3/2026-10-13.md).

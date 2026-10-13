@@ -31,6 +31,7 @@ _None_
 - P-005 · Persist audit events for security-sensitive admin mutations · urgency: med · complexity: M · added 2026-10-10 · REQ-003
   - Proposal create/update/publish/archive, share create/revoke, and GitHub connect/import/disconnect actions write minimal events in the same database transaction as their mutation.
 - P-001 · Approved REQ-003 scope and Vercel architecture · urgency: high · complexity: L · added 2026-10-10 · REQ-003
+- P-012 · Apply review findings for the client simulator, then editor usability pass (checklist, sticky actions, collapsible sections) · urgency: high · complexity: M · added 2026-10-13 · requirement from owner
 
 ## Notes
 One line per item: `<ID> · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
