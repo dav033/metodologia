@@ -13,15 +13,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T15:24:23",
+  "at": "2026-10-13T15:24:56",
   "pid": 1864427,
   "machine": "precision7760",
   "task": "T1",
   "session": 3,
-  "state": "session running 23 min",
-  "session_pids": {
-   "3": 1882115
-  },
+  "state": "verify_failed",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -38,26 +36,27 @@
    "risk": null,
    "complexity": null,
    "milestone": "M1",
-   "tier": 1,
-   "status": "in_progress",
-   "attempts": 1,
-   "last_error": null,
-   "error_hashes": [],
+   "tier": 2,
+   "status": "todo",
+   "attempts": 2,
+   "last_error": "verify failed: npx tsx --conditions=react-server scripts/test/test-corte-motor3d.ts -> :10932)\n    at resolveDirectorySync (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:12238)\n    at resolveTsPathsSync (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:13445)\n    at resolve (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:15991) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///home/david/dev/pictures-wt/scripts/test/test-corte-motor3d.ts'\n}\n\nNode.js v24.21.0\n",
+   "error_hashes": [
+    "747c828cf436"
+   ],
    "evidence": "Commit 58f10c04 on feat/req-016-guided-3d-edit-leftovers-exact-undo-and (t12, not pushed). «Deshacer» restores the stored previous plan widget (signed espec, hash, token, quote) from an in-memory stack instead of applying an inverse edit (D-045). scripts/test/test-deshacer-ajuste-3d.ts (8 cases on the real edit route; red before the module existed; asserts inverse size edit drifts, restore is byte-identical, same token and still editable, chain of 3, honest refusals, expired token, bounded stack) + UI case in test-ui-plan-motor3d.ts. motor3d:test and guiada:test green (22 commands, exit 0); eslint clean; tsc only reports pre-existing LayoutProps in layout.tsx. Two antagonist passes, no blockers; minors fixed or filed as P-078/P-079/P-080. The prescribed test-corte-motor3d.ts passes but is unrelated to undo.",
    "pending_id": null,
    "notes": [
     "M1 investigation found exact previous specs already returned by the edit route, but no guided UI undo consumer exists; the specified verification only tests cut auditing. Integration evidence: inverse size max drift 7.2%, 9 changed color-code cases, 8 fusions. Workflow tool unavailable. See ruling in PLAN.md; needs standard-tier design decision on undo entry point and restoration/re-signing/repricing.",
     "escalated to standard: P-042 inverse drift is reproduced by the motor integration suite, but the active guided UI has no undo consumer: the edit route already returns exact before/after specs and route tests assert them, while snapshots are only consumed by feedback. The prescribed test-corte-motor3d suite is unrelated and passes. Implementing undo now requires a design ruling for the UI entry point and how a previous spec is restored/re-signed/repriced; no Workflow tool is available. Evidence and next steps recorded "
    ],
-   "limit_streak": 1,
+   "limit_streak": 0,
    "last_route": {
     "agent": "claude",
-    "profile": "claude-personal",
+    "profile": "claude-work",
     "model": "sonnet",
     "effort": "xhigh",
-    "result": "usage_limit"
-   },
-   "claimed_done": true
+    "result": "verify_failed"
+   }
   },
   {
    "id": "M1-audit",
@@ -174,6 +173,19 @@
    "cost_usd": 0.9138909999999999,
    "agent": "claude",
    "profile": "claude-personal"
+  },
+  {
+   "at": "2026-10-13T15:24:56",
+   "session": 3,
+   "task": "T1",
+   "result": "verify_failed",
+   "summary": "verify failed: npx tsx --conditions=react-server scripts/test/test-corte-motor3d.ts -> :10932) at resolveDirectorySync (file:///home/david/.local/share/fnm/node-versions/v24.21.0/installation/lib/node_modules/tsx/dist/register-SoqaU4rg.mjs:2:12238) at resolveTsPathsSync (file:///home/david/.local/sh",
+   "seconds": 1411,
+   "model": "sonnet",
+   "effort": "xhigh",
+   "cost_usd": 5.4775984,
+   "agent": "claude",
+   "profile": "claude-work"
   }
  ],
  "pool": [
