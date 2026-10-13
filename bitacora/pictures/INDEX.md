@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-13 14:15 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-13 14:41 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -11,6 +11,7 @@ _Generated 2026-10-13 14:15 by `bitacora.py index`. Do not edit by hand._
 - **demo-decoracion** → `/home/david/dev/pictures-wt/t7/C:/Users/davidt/Downloads/pictures-workspace/demo-decoracion` (not cloned here)
 - **t7** → `/home/david/dev/pictures-wt/t7` (not cloned here)
 - **audit** → `/home/david/dev/pictures-wt/audit` (not cloned here)
+- **t12** → `/home/david/dev/pictures-wt/t12`
 
 ## Needs attention
 
@@ -34,25 +35,25 @@ _Generated 2026-10-13 14:15 by `bitacora.py index`. Do not edit by hand._
 | [REQ-012](requirements/REQ-012-furniture-freedom-tables-and-chairs-deco/SPEC.md) | Furniture freedom: tables and chairs decoupled | `merged to main 2026-10-10 (78638080, 386b0cdc)` | — |  |
 | [REQ-013](requirements/REQ-013-catalogue-repositories/SPEC.md) | Catalogue repositories (ADR) | `done 2026-10-11 (phases 1-5 merged, migration 034)` | [planned](requirements/REQ-013-catalogue-repositories/PLAN.md) |  |
 | [REQ-014](requirements/REQ-014-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `stopped 2026-10-11 06:14 at cycle 26 (planned end 2026-10-12 16:44); not resumed` | [review](requirements/REQ-014-72h-marathon-autonomous-product-developm/PLAN.md) |  |
-| [REQ-015](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/SPEC.md) | judge-fix: guided chat honesty and count/price parity (D1-D5, D8) | `in-progress` | [in-progress](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/PLAN.md) |  |
+| [REQ-015](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/SPEC.md) | judge-fix: guided chat honesty and count/price parity (D1-D5, D8) | `in-progress` | [in-progress](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/PLAN.md) | report ✓ |
 
 ## Top pending (urgency, then complexity)
 
 - P-045 · GUIADA_MOTOR rollback is not graceful: after flipping back to python, open 3D conversation · high/M
-- P-076 · REQ-015 audit: unblock cost/learn for figure ideas, prevent model fallback for canned chip · high/M
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/?
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer - · high/?
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/?
 - P-041 · ajustar_salon reports grid capacity («40 invitados, caben 96») while only 5 tables of 8 ar · med/S
 - P-042 · Guided 3D edits undo: inverse size edits drift (enlarge-then-shrink ≠ identity) and name-b · med/S
+- P-058 · Colour resolver after P-052 (review 2): (A1) after ANY successful edit, a palette-word ord · med/S
 
 ## Recent decisions
 
-- D-039 — Beta: production is the same for everyone, everything on everywhere (owner) · 2026-10-10
-- D-038 — One quote everywhere — pick the best model (owner) · 2026-10-10
-- D-037 — Owner: not real production — VPS deploy approved, go hard (owner) · 2026-10-10
-- D-036 — Review stop-rule and model start for M tasks (marathon, taken alone) · 2026-10-10
-- D-035 — Persisted guided-plan fields: the reader ships one deploy before the writer (marathon, taken alone) · 2026-10-10
+- D-044 — 2026-10-13 · REQ-015 audit P1-2: the rule path accionIdea:costear is bounded by a durable global hourly cap in Neon (topeDurable key costeo_idea_hora, no migration), checked before costearIdeaElegida; denied → rule answer (SSE 200, no model), store down → in-memory cap with the same N, never unlimited. Chosen by debate (A in-memory, B durable cap, C memo/dedupe; judge haiku-max: B). N default is a conservative guess, to be calibrated from COTIZACION_IDEA_* counts.
+- D-043 — 2026-10-13 · REQ-015 A1: on 404/422 of /api/plan-idea the canned chips are answered by rules (shared costear_decoracion body + local steps), never by a model turn; chosen by debate (3 haiku-medium debaters, haiku-max judge) over a server tool filter and over accepting the risk.
+- D-042 — 2026-10-13 · Delegation picks the best model per situation regardless of the hosting session's provider; audits go to a different provider than the builder (owner). Router fixed in bt_agents.py.
+- D-041 — 2026-10-13 · Development of pictures is done entirely from this laptop from now on (owner); the Windows marathon clone is no longer an executor. Its unpushed work (judge-fix e7x) must be re-done or recovered.
+- D-040 — 2026-10-13 · Bitácora temporarily lives inside the private metodologia monorepo (symlinked from ~/bitacora) so it syncs across machines; revisit a dedicated private repo.
 
 ## Timeline
 

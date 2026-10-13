@@ -7,7 +7,8 @@ Sempertex balloon-decoration demo (`demo-decoracion`: Next 16 on Vercel + Python
 engine: the **Taller 3D** (`/3d`, pro tool with a scene AI agent) and the **guided customer chat** (`/asistente`,
 quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
-## Current state (main = `65edd83b`, VPS = 65edd83b, 2026-10-11 06:14; prod smoke 13/0/3)
+## Current state (last deployment record: `65edd83b`, 2026-10-11 06:14; local work: 2026-10-13)
+- REQ-015 local branch `feat/req-015-judge-fix` at `4b7b5cab`, 21 commits ahead of tracked origin/main; T12 cap and audit #3 corrections integrated as uncommitted working-tree changes. No push/deploy in this session. Both independent review axes approve the corrected findings; all 10 gate suites pass (P-076 closed).
 - **One quote everywhere (D-038) live:** same plan = same price on every surface; per-balloon spares with a cost cap;
   Python = engine (42-BOM shared fixture in CI). Every guided idea (engine and curated) is priced by the single pricer;
   prod e2e «paridad de precio» checks assistant = Taller on every release.
@@ -34,16 +35,13 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
   0.385, IoU 0.524 → 0.559.
 
 ## Active focus
-- Curated ideas through the single pricer + «Ideas del asistente» in the Taller (e7x); P-067 photo gaps; PM top-8
-  (NC-4 rollback drill, NP-4 copy, NC-1 plan creation without Python). Owner report:
-  https://claude.ai/artifact/TD2Co1cSeN6i4GExCjvJhU (48 h update ≈ Sunday 16:44).
+- Finish REQ-015 local verification and owner review: chosen-idea chips by rules, shared price, honest color counts, and durable quote cap. Restored ambiguous/composite idea prices show “Precio al elegir”; no session contract change.
 
 ## Top pending (see PENDING.md)
-- P-066 curated-idea price parity; P-067 photo case gaps; P-057…P-065 review leftovers; owner on Monday: D-027…D-039
-  review, R-36→R-24 wording, feedback-panel decision.
+- P-075 remaining historical test debt; P-077 calibrate the 300/hour quote cap from production counts (not queried in this session). Historic type-error counts were stale generated Next route references; source types and application build now pass locally.
 
 ## Recent decisions (see DECISIONS.md)
 - D-027 helium sphere volume · D-028/D-030 product judge timing · D-029 class-prefixed ids · D-031 manual VPS deploy ·
   D-032 owner-away defaults · D-033 dev servers allowed · D-034 no VPS deploy this weekend · D-035 reader-first persisted fields · D-036 review stop-rule · D-037 VPS approved · D-038 one quote · D-039 everything on.
 
-_Last updated: 2026-10-10_
+_Last updated: 2026-10-13_

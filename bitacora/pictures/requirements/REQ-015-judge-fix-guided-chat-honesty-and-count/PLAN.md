@@ -21,18 +21,27 @@ AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before t
 - [x] T9 — Debate verdict B (2026-10-13; 3 haiku-medium debaters A server tool filter / B no model on 404-422 / C accept; haiku-max judge picked B): on 404/422 of /api/plan-idea the chip must not send a model turn. Move the body of costear_decoracion (route.ts:368-396) into a shared function called by a pre-model rule branch (next to consultaIdea, route.ts:208) and by elegirUso; «Aprender» renders the local steps widget (PasoAPaso.tsx); keep the audit (route.ts:391-394), version the contract, update test-opcion-idea-guiada.ts:67-69; no model tool `proponer_composicion` reachable from a canned chip · after: T8 · covers: R4
 - [x] T2b — Idea card price (D3 second half), owner chose option A: after «Me gusta» request the idea's exact plan via /api/plan-idea and show «Materiales desde $X» with the same total as the quote; if Python is down the card says «precio al elegir» (never a number that can differ) · after: T3 · files: TarjetaEleccion.tsx, VistaGuiada.tsx, agregar-idea.ts · verify: `npx tsx scripts/test/test-opcion-idea-guiada.ts` · covers: R2
 - [x] T8 — Wiring tests for T4 (VistaGuiada effect): one user bubble per chip click, no model call, fallback when /api/plan-idea fails is explicit, chip not marked chosen if blocked by caps (T4 concerns 1-3) · after: T4 · verify: `npx tsx scripts/test/test-opcion-idea-guiada.ts` · covers: R4
-- [ ] T7 — Register the unscripted guided tests (edicion-plan-chat, crud-plan-chat, precio-chat, ajuste-plan, usabilidad-97) in package.json/gate so they run · verify: `npm run gate` · covers: all
+- [x] T7 — Register the unscripted guided tests (edicion-plan-chat, crud-plan-chat, precio-chat, ajuste-plan, usabilidad-97) in package.json/gate so they run · verify: `npm run gate` · covers: R1, R2, R3, R4, R5, R6
+- [x] T12 — Bound rule/tool idea costing with the shared durable hourly cap; preserve D-044 bounded memory fallback and refund only the original window · verify: `npx tsx --conditions=react-server scripts/test/test-tope-costeo-idea.ts` · covers: R4
+- [x] T13 — Resolve selected idea B independently of open plan A, preserve rule fallback/use/retry, and reuse restored single-idea quotes without repricing under another flag · verify: `npx tsx scripts/test/test-opcion-idea-guiada.ts` and `npx tsx scripts/test/test-precio-idea-elegida-guiada.ts` · covers: R2, R4
+- [x] T14 — Count all replacement-family products in a global 3D chat color swap (round + Link-O-Loon) · verify: `npx tsx --conditions=react-server scripts/test/test-confirmacion-color-motor3d.ts` · covers: R3
 
 ## Verification
 `npm run gate` green; `npx tsc --noEmit`; `npm run lint`; a before/after table of card vs plan vs quote counts and prices for the judge's dino and XV ideas.
 
 ## Rulings
+- 2026-10-13: explicit “procede” resumes local close-out; no new commits, push, merge, paid calls or deployment. Existing 21 commits remain untouched; integrated corrections stay in the working tree for owner review.
+- 2026-10-13: D-044's original decision explicitly allows bounded per-instance memory fallback on database outage. The previous session summary's “fail closed” wording was inaccurate; no policy change made.
+- 2026-10-13: reload quote provenance ambiguous (combined ideas or prior plan) → “Precio al elegir”; no new persisted keys under strict rollback-compatible session schemas (D-035).
+- 2026-10-13: stale generated .next/dev/types references moved to a recoverable temporary backup after confirming no pictures dev server; source types and checks unchanged.
 - D-044 (debate, 2026-10-13): P1-2 abuse bound = durable global cap (option B). Cost if wrong: low-medium (a legitimate burst could be denied with a rule answer; N is env-configurable).
 - D-043 (debate, 2026-10-13): A1 resolved with option B — canned chips never reach the model on 404/422. Judge: haiku max. Cost if wrong: medium (new rule path to maintain).
 - 2026-10-13 owner approved the approach («adelante») and answered: scope D1-D5 + D8; tsc/test debt separate (P-075); delivery = local branch for owner review, no push/PR.
 - Plan self-approved (owner away, autonomy delegated in the loop request).
 
 ## Progress log
+- 2026-10-13 final gate: `npm run gate` exit 0, GATE OK, all 10 suites pass (contracts, kontext, catalogo, globos3d, motor3d, escena, guiada, topes, cotizacion-unica, prerender); 405-scene golden covered. Final contract/rating and frozen snapshot checks still running.
+- 2026-10-13 close-out: T12 and T13 focused tests/ESLint pass. Independent audit #3 found two spec defects and one standards defect, all corrected; targeted re-reviews approve. T14 regression reproduced 128 blue + 81 mislabeled other blue instead of 209; after family-level matching, test passes with the actual engine and a fake external pricer. Workspace build, full lint (49 warnings, zero errors), source typecheck and app build pass after recovering stale generated types; final gate is running. No commits/push.
 - 2026-10-13: owner decisions: price on idea card = option A (T2b); AGENTS.md/CLAUDE.md restored (commit separate); T3 runs on Opus. T2 done d4759335.
 - 2026-10-13: spec ready, plan written, code map from explorer.
 - 2026-10-13: T1 done (card labelled «aprox.» + recalculation note; exact count not computable in TS, Python owns it; stored plans give 101/102 while chat path re-resolves to 115).

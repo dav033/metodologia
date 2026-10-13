@@ -8,6 +8,7 @@ month summary._
 
 ## Open
 - P-010 · Reauthenticate Claude Code and verify a proposal-studio MCP tool call · urgency: high · complexity: S · added 2026-10-11 · REQ-007
+  - Verified 2026-10-13: Claude Code connected and `list_proposals` call succeeded against production (returned `oraldenti`, draft).
   - `claude mcp list` reports the production endpoint connected, but `claude -p` could not invoke a tool because the Claude OAuth session expired. After `claude auth login`, retry a read-only call; no MCP token change is needed.
 - P-011 · Import and share the Oraldenti proposal prototype · urgency: med · complexity: S · added 2026-10-11 · production proposal setup
   - David is generating the prototype code. When he provides its GitHub repository and built output path, import it, validate Inicio/Servicios/Contacto comparisons, publish, then create a temporary share link.
@@ -34,6 +35,7 @@ _None_
 - P-012 · Apply review findings for the client simulator, then editor usability pass (checklist, sticky actions, collapsible sections) · urgency: high · complexity: M · added 2026-10-13 · requirement from owner
 - P-013 · Proposal: in-app editor for client-facing content (headline, intro, findings, deliverables, contact); today only via MCP `update_proposal` · urgency: med · complexity: M · added 2026-10-13 · final audit
 - P-014 · Consider disabling SSH password auth (sshd is reachable through the Advin reverse tunnel and Cloudflare `ssh.yesitrainer.com`); restarting sshd for Tailscale is NOT needed · urgency: low · complexity: S · added 2026-10-13 · owner request
+- P-015 · Implement direction C · Consola in phases: (1) visual system + existing views, (2) content editor, versions, activity, expired-link page and state simulation, list search/filters, (3) backend items only if approved: auto-capture, link-open tracking, request-new-link, ⌘K. Fix the simulator copy "no cuenta como visita" (no visit tracking exists) · urgency: med · complexity: L · added 2026-10-13 · owner request
 
 ## Notes
 One line per item: `<ID> · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.

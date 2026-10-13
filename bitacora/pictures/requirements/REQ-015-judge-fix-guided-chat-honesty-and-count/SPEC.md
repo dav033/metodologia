@@ -19,12 +19,18 @@ lost balloons, canned chips cost a paid model turn, and a direct question is ign
 -
 
 ## Scope (in)
-- US-1 (P1) count parity D2: card «Tu elección» shows the engine's count (or labels it approximate).
-- US-2 (P1) price on idea and plan card D3 via the single pricer (cotizarBom, D-038).
-- US-3 (P1) honest colour-swap banner D4: print the real per-colour diff, or keep other colours fixed.
-- US-4 (P2) deterministic chips/quote request D5: no model turn for «Cuánto cuesta», use choice.
-- US-5 (P2) answer count/size/colour questions by rule D1.
-- US-6 (P3) one collapsed rating row, ≥40 px targets D8.
+### US-1 (P1) — Count parity D2
+Card «Tu elección» shows the engine's count (or labels it approximate).
+### US-2 (P1) — Price on idea and plan cards D3
+Use the single pricer (cotizarBom, D-038).
+### US-3 (P1) — Honest colour-swap banner D4
+Print the real per-colour diff, or keep other colours fixed.
+### US-4 (P2) — Deterministic chips and quote requests D5
+No model turn for «Cuánto cuesta» or use choice.
+### US-5 (P2) — Direct count, size and colour questions D1
+Answer questions by rule.
+### US-6 (P3) — Rating row D8
+One collapsed rating row with targets ≥40 px.
 <!--
 ### US-1 (P1, Must) — <title>
 As a <actor>, I want <capability> so that <benefit>.
@@ -36,7 +42,7 @@ As a <actor>, I want <capability> so that <benefit>.
 - D6 theme coverage (NC-2), D7 compare two ideas (CUS-21), paid runs, push/deploy/migrations.
 
 ## Requirements
-- R1. When an idea is chosen, the card shall show the same balloon total as the plan the engine builds for it.
+- R1. When an idea is chosen, the card shall show the engine's balloon total or clearly label its source count approximate and state that the final plan recalculates it (the already accepted US-1/T1 exception).
 - R2. When the plan or idea card renders, it shall show «Materiales desde $X» from cotizarBom, equal to the quote after «Cuánto cuesta».
 - R3. When a colour swap changes other colours' counts, the banner shall list the real before/after counts and price change; it shall never say «igual» if any count moved.
 - R4. When the customer taps a canned chip, the system shall answer by rules without a model call.
@@ -78,5 +84,6 @@ MVP = US-1..US-3; then US-4, US-5; US-6 last.
 | Timeline | Missing |
 
 ## Clarifications
+- 2026-10-13 close-out: normalized US headings for trace tooling and made R1's wording reflect the approximation exception already approved in US-1/T1; no new scope or acceptance change.
 <!-- ### Round N — YYYY-MM-DD
 - Q: … → A: … -->

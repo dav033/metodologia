@@ -11,6 +11,10 @@
   "audit": {
    "remote": "",
    "hint": "~/dev/pictures-wt/audit"
+  },
+  "t12": {
+   "remote": "",
+   "hint": "~/dev/pictures-wt/t12"
   }
  },
  "work": true

@@ -74,3 +74,12 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Consequences:** + Preview equals the real page; − the frame shows the draft while the client sees the published revision (stated in the UI).
 - **Rollback:** Revert ProposalView extraction and delete the preview routes; no data migration.
 - **Source:** [day log](2026-10/W3/2026-10-13.md).
+
+## D-008 — Adopt the Consola visual direction for the app UI
+- **Date:** 2026-10-13 · **Status:** Accepted (owner choice)
+- **Context:** The owner found the current design poor and was shown three directions (A Mocha ordenado, B Estudio claro, C Consola) on the same editor screen.
+- **Decision:** Use C · Consola: graphite background, amber accent `#ffb224`, Geist and Geist Mono, dense tool-like layouts with a top tab bar.
+- **Alternatives:** A keeps the desktop's Catppuccin identity at lower cost; B is lighter and more product-like but breaks the owner's aesthetic.
+- **Consequences:** + distinct, fast-feeling tool; − departs from the Catppuccin rule in the owner's global instructions, so it applies to this product only; − less friendly for non-technical viewers on the admin side.
+- **Rollback:** keep the design tokens centralized so A or B can replace them; no data changes.
+- **Source:** [day log](2026-10/W3/2026-10-13.md); canvas https://claude.ai/artifact/B9GwtvtHwFSNioDxCVvZ79.
