@@ -245,6 +245,13 @@ def next_id(pdir: Path, kind: str) -> str:
         nums = [int(m.group(1)) for x in (pdir / "requirements").glob("REQ-*")
                 if (m := re.match(r"REQ-(\d+)", x.name))]
         return f"REQ-{max(nums, default=0) + 1:03d}"
+    if kind == "P":
+        # highest number ever written in the project's own log, not only the open list: closed items may be pruned
+        # from PENDING.md, and reusing a number would merge two items in the trace graph
+        logs = [pdir / "PENDING.md", *pdir.glob("20*/**/*.md"), *(pdir / "requirements").glob("**/*.md")]
+        nums = [int(n) for f in logs if f.is_file()
+                for n in re.findall(r"\bP-(\d{3,})\b", f.read_text(encoding="utf-8", errors="ignore"))]
+        return f"P-{max(nums, default=0) + 1:03d}"
     fname, pat = ID_PATTERNS[kind]
     f = pdir / fname
     text = re.sub(r"<!--.*?-->", "", f.read_text(encoding="utf-8"), flags=re.S) if f.exists() else ""
