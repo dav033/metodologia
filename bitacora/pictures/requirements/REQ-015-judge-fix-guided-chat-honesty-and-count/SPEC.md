@@ -1,6 +1,6 @@
 ---
 id: REQ-015
-status: in-progress
+status: done (local branch awaiting owner review)
 created: 2026-10-13
 track: standard
 ---

@@ -54,3 +54,12 @@ Review `src/lib/guiada-motor/tope-costeo-idea.ts` and `costear-idea-elegida.ts` 
 ## Walkthrough
 
 `elegirOpcion` routes price/learning chips to the chosen idea's exact plan or the current matching plan. When no saved exact plan is available, `estadoDelTurnoDeIdea` preserves the selected ID and explicit rule intent while removing unrelated plan/scope fields. The server validates the unchanged contract and calls `responderAccionIdea`; costing uses the shared application function and hourly cap before calling the pricer or writing its audit row. Quote responses update the idea card and invalidate a superseded cached result. Reload uses the persisted identifiable quote and avoids a fresh engine choice. For 3D family swaps, the confirmation counts all store products belonging to the new color in the affected pieces.
+
+
+## Final state (2026-10-13 15:15, coordinator session 47f58a4d)
+
+Branch `feat/req-015-judge-fix`: 24 commits over origin/main 65edd83b (53 files, +2358/-160), local only. Added after the Codex close-out: Opus audit #3 (approve with fixes, no P1), T15 (chip on idea B no longer replaces open plan A; cap refund on interrupted quotes; invalid env value logged) and 26db7b8b (cap refunded only when the SERVER deadline expires, not on client abort).
+
+Checks on the final tree: `npm run gate` GATE OK (10 suites, ~563 s); `npx tsc --noEmit` 0 errors; `npm run lint` 0 errors / 49 warnings; `npm run build --workspaces --if-present` exit 0. Not run on the final tree: `npm run build` of the app (green on the Codex snapshot, 83/83 pages), prod:pulso (needs owner env), live Python/Neon, a mounted-browser journey.
+
+Open proposals: caps on /api/plan-idea and /api/guiada/motor/plan; mounted React test for idea B with plan A, interruption and reload; other edit texts still say «lo demás queda igual» (quitar_color, protagonismo, mover); abort-vs-refund race (A1); calibrate COSTEO_IDEA_TOPE_HORA (P-077).
