@@ -23,3 +23,15 @@ Raw rows: results.jsonl (easy, n=1), results3.jsonl + results3b.jsonl (hard, fla
   ceiling was NOT found: even the hard tasks were all solved at low effort.
 - Policy: Google FAQ says wrapping `agy -p` in third-party agents/applications or automating account rotation is not
   supported under consumer plans. Benchmark calls were direct scripted use at the owner's request.
+
+## Web research on getting the most out of Gemini 3.8 Flash (2026-10-13)
+Official (Google): default thinking_level is medium, "recommended for complex code and agentic use cases"; low for
+latency-critical work; high for deep reasoning/math; minimal unsupported. 3.8 Flash "trades higher token consumption
+for better accuracy"; lowering effort reduces tokens. Context 1,048,576 in / 65,536 out. temperature/top_p/top_k are
+ignored (control determinism with thinking_level + response schema). Intro price $0.75 / $3.75 per 1M tokens until
+2026-12-31 then $1.50 / $7.50. Cyber variant is restricted (Fairwind program). Third-party/forum (unverified): parallel
+agents share one quota; the model may re-read files and burn quota; quota refresh windows reported changing.
+Measured here (73 runs): per run avg input 115-140k, output+thinking 6k (low) vs 36k (medium) vs 44k (high);
+API-equivalent ~$0.11 / $0.23 / $0.27 per task at intro prices.
+Useful flags found in agy 1.3.4: `--print-timeout` (cap runaway turns), `--json-schema` (enforce structured output),
+`--mode plan|accept-edits`, `--agent`.

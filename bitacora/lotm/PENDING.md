@@ -7,7 +7,10 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
-_None_
+- P-001 · Approve GitHub CLI `workflow` scope and push the frontend/backend repos · urgency: high · complexity: M · added 2026-10-13 · REQ-001
+  Backend and frontend local commits are ready; GitHub rejected both pushes because the CLI OAuth token lacks `workflow`. Then verify Vercel Git deployment and the backend Actions deploy.
+- P-002 · Sign in to NS1 in the agent Firefox session and cut over the LOTM DNS record · urgency: high · complexity: M · added 2026-10-13 · REQ-001
+  Vercel recommends a CNAME for `lotm` to `88811a8d305d8f0a.vercel-dns-017.com.`. Keep the current A record and Caddy alias until the domain verifies and same-host routes pass.
 
 ## Blocked
 _None_
