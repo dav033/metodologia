@@ -85,8 +85,10 @@ def build_context(project: str | None, session_id: str, cwd: Path, source: str) 
     out.append(f"Tools & infra (TOOLS.md): {', '.join(tools) or 'none registered'}"
                f"{' · shared: ' + ', '.join(shared) if shared else ''} — read references/tools.md before using them.")
     if created:
-        out.append("NEW PROJECT: bootstrap SUMMARY.md and ARCHITECTURE.md from the repo/context before or "
-                   "alongside the first task (see references/documentation.md §Bootstrap).")
+        out.append("NEW PROJECT: before scanning, interview the owner about the application's purpose, users, "
+                   "main flows, constraints, and success criteria. Then run the deep workspace onboarding/audit "
+                   "across all registered repos as one product; record the confirmed purpose and its last-confirmed "
+                   "date in SUMMARY.md, then bootstrap ARCHITECTURE.md (see references/architecture-audit.md).")
     if source == "compact":
         out.append("Context was just compacted: re-read today's log before continuing, and log anything "
                    "important from before the compaction that isn't there yet.")
@@ -103,6 +105,16 @@ def build_context(project: str | None, session_id: str, cwd: Path, source: str) 
     if unsized:
         out.append(f"({unsized} pending item(s) have no complexity estimate yet: when you touch this project, "
                    f"estimate them S/M/L in PENDING.md — the file re-sorts itself.)")
+    try:  # what earlier sessions learned about this project and its owner (confirmed only) + where the rest lives
+        import bt_config
+        import bt_learn
+        learned = bt_learn.brief(project, bt_config.get("learn.inject_max", 12))
+        if learned:
+            out += ["", learned]
+    except (SystemExit, Exception):
+        pass
+    out.append(f"Agents, routing, delegation and learning commands in one screen: python \"{SCRIPT.as_posix()}\" "
+               f"--project {project} context")
     blocked = _section((pdir / "PENDING.md").read_text(encoding="utf-8"), "Blocked", 6)
     if blocked and "_None_" not in blocked:
         out += ["", "### Pending — Blocked", blocked]

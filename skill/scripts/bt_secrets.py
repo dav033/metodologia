@@ -6,13 +6,13 @@ If gitleaks isn't installed, scanning is skipped (install: `winget install Gitle
 """
 from __future__ import annotations
 
-import bt_nowindow  # noqa: F401  (no console windows on Windows)
-
 import glob
 import os
 import shutil
 import subprocess
 from pathlib import Path
+
+import bt_nowindow  # noqa: F401  (no console windows on Windows)
 
 HOOK_MARK = "metodologia: gitleaks secret scan"
 HOOK = f"""#!/bin/sh
@@ -56,8 +56,8 @@ def scan_staged(repo: Path) -> tuple[bool, str]:
     try:
         res = subprocess.run([exe, "git", "--pre-commit", "--staged", "--redact", "--no-banner", "--no-color", "-v"], cwd=repo,
                              capture_output=True, text=True, timeout=60, encoding="utf-8", errors="replace")
-    except Exception:
-        return True, ""
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return False, f"gitleaks could not complete: {type(exc).__name__}"
     if res.returncode == 0:
         return True, ""
     return False, (res.stdout + res.stderr).strip()[-4000:]

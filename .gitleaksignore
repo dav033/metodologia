@@ -1,0 +1,4 @@
+# Reviewed false positives: fake secret fixtures that test the redaction and refusal logic.
+skill/scripts/tests/test_learn.py:generic-api-key:45
+skill/scripts/tests/test_audit_fixes.py:generic-api-key:252
+skill/scripts/tests/test_audit_fixes_round2.py:generic-api-key:322

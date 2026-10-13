@@ -5,10 +5,10 @@ Writes HANDOFF.md next to the plan, then opens a new terminal window in the proj
 """
 from __future__ import annotations
 
-import shutil
-import subprocess
 import sys
 
+import bt_platform as host
+import bt_profiles
 from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _front
 
@@ -80,7 +80,8 @@ def write_handoff(project: str, rdir: Path, workdir: Path, repos: dict[str, Path
                   "per iteration (a whole phase or more). End the loop yourself when done or blocked."]
     if mode == "marathon":
         steps += ["", "## Run mode", "A marathon supervisor runs this plan: each session is fresh and handles exactly "
-                  "ONE task (given in its prompt). Do only that task, then report with `bitacora.py task done` or "
+                  "what its prompt names: ONE task, or every pending task of ONE milestone (`### Mn` group), or the "
+                  "audit of a milestone. Do only that, give each task its verdict with `bitacora.py task done` or "
                   "`task fail`. Do not run the final review or write REPORT.md unless the prompt says so."]
     out = rdir / "HANDOFF.md"
     out.write_text("# Handoff — executor\n\n" + "\n".join(steps) + "\n", encoding="utf-8")
@@ -98,33 +99,35 @@ def initial_prompt(agent: str, mode: str, rid: str, handoff: Path) -> str:
 
 
 def open_window(repo: Path, script: Path, title: str) -> str:
-    pwsh = shutil.which("pwsh") or shutil.which("powershell")
-    if not pwsh:
-        raise SystemExit(f"No PowerShell found. Run manually:\n  cd {repo}\n  {script}")
-    if shutil.which("wt"):
-        cmd = ["wt", "-w", "new", "--title", title, "-d", str(repo), pwsh, "-NoExit", "-File", str(script)]
-    else:
-        cmd = ["cmd", "/c", "start", title, pwsh, "-NoExit", "-File", str(script)]
-    subprocess.Popen(cmd, cwd=str(repo), creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0))
-    return " ".join(cmd)
+    return host.open_terminal(repo, script, title)
 
 
-def marathon_script(project: str, rid: str, agent: str, model: str, repo_path: Path, launch_dir: Path) -> Path:
-    """.ps1 that runs the marathon supervisor (it launches a fresh headless session per task)."""
-    model_arg = f" --model {model}" if agent == "claude" or model != "haiku" else ""
-    ps1 = launch_dir / f"{project}-{rid}-marathon.ps1"
-    ps1.write_text(
-        f"$Host.UI.RawUI.WindowTitle = '{project} {rid} marathon'\n"
-        f"$env:BITACORA_PROJECT = '{project}'\n"
-        f"$env:BITACORA_ROOT = '{ROOT}'\n"
-        f"Set-Location -LiteralPath '{repo_path}'\n"
-        f"& '{sys.executable}' '{SCRIPT}' --project {project} run {rid} --agent {agent}{model_arg}\n",
-        encoding="utf-8")
-    return ps1
+def launch_env(project: str, profile: str | None = None) -> dict[str, str]:
+    return {"BITACORA_PROJECT": project, "BITACORA_ROOT": str(ROOT), "PATH": os.environ.get("PATH", ""),
+            **bt_profiles.env_of(profile)}
+
+
+def marathon_script(project: str, rid: str, agent: str, model: str, repo_path: Path, launch_dir: Path,
+                    profile: str | None = None, pool: str | None = None) -> Path:
+    argv = [sys.executable, str(SCRIPT), "--project", project, "run", rid, "--agent", agent]
+    if profile:
+        argv += ["--profile", profile]
+    if pool:
+        argv += ["--pool", pool]
+    if agent == "claude" or model != "haiku":
+        argv += ["--model", model]
+    return host.write_script(launch_dir / f"{project}-{rid}-marathon", repo_path, argv,
+                             launch_env(project, profile))
 
 
 def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", repo: str | None = None,
-           force: bool = False, dry_run: bool = False, model: str = "haiku") -> dict:
+           force: bool = False, dry_run: bool = False, model: str = "haiku", profile: str | None = None,
+           pool: str | None = None, background: bool = False) -> dict:
+    """`pool`: accounts the marathon's router may use ("auto" or ids). `background`: no window, a detached tmux
+    session / systemd unit even on a desktop (the automatic hand-off uses it)."""
+    if profile:
+        bt_profiles.authorize(profile, project)  # before any prompt or handoff with project content exists
+        agent = bt_profiles.require_launchable(profile)
     pdir = ROOT / project
     rdir = find_req(pdir, req)
     plan = rdir / "PLAN.md"
@@ -155,28 +158,24 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
     marathon = mode == "marathon"
     if marathon:
         prompt = ""  # no /loop prompt: the supervisor builds one prompt per task
-        ps1 = marathon_script(project, rid, agent, model, repo_path, launch_dir)
-        title, what = f"{project} {rid} marathon", f"marathon supervisor ({agent}, {model})"
+        ps1 = marathon_script(project, rid, agent, model, repo_path, launch_dir, profile, pool)
+        title, what = f"{project} {rid} marathon", f"marathon supervisor ({'pool ' + pool if pool else agent}, {model})"
     else:
         prompt = initial_prompt(agent, mode, rid, handoff)
         (launch_dir / f"{project}-{rid}.prompt.txt").write_text(prompt, encoding="utf-8")
-        exe = " ".join(AGENTS[agent])
-        ps1 = launch_dir / f"{project}-{rid}.ps1"
-        ps1.write_text(
-            f"$Host.UI.RawUI.WindowTitle = '{project} {rid} ({agent})'\n"
-            f"$env:BITACORA_PROJECT = '{project}'\n"
-            f"Set-Location -LiteralPath '{repo_path}'\n"
-            f"$prompt = Get-Content -Raw -LiteralPath '{launch_dir / f'{project}-{rid}.prompt.txt'}'\n"
-            f"{exe} $prompt\n", encoding="utf-8")
+        ps1 = host.write_script(launch_dir / f"{project}-{rid}", repo_path, AGENTS[agent], launch_env(project, profile),
+                                launch_dir / f"{project}-{rid}.prompt.txt")
         title, what = f"{project} {rid}", f"executor ({agent}, {mode})"
     cmd = "(dry run: not opened)"
     monitor = None
     if not dry_run:
+        if background:
+            os.environ["BITACORA_TERMINAL"] = "tmux"
         cmd = open_window(repo_path, ps1, title)
-        if marathon and agent == "claude":  # companion session reachable from the phone through Remote Control
+        if marathon and agent == "claude" and not background:  # companion session reachable through Remote Control
             from bt_monitor import open_monitor
             try:
-                monitor = open_monitor(project, rid)["session"]
+                monitor = open_monitor(project, rid, profile=profile)["session"]
             except Exception as exc:  # the marathon must start even if the monitor can't
                 monitor = f"monitor not opened: {exc}"
         with plan.open("a", encoding="utf-8") as fh:
@@ -186,7 +185,7 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
         set_front(plan, "status", "launched")
         from bt_vcs import commit
         commit(ROOT, f"{project}: launch {rid} ({agent}{', marathon' if marathon else ''})")
-    return {"project": project, "req": rid, "agent": agent, "mode": mode, "model": model, "workdir": workdir.as_posix(),
+    return {"project": project, "req": rid, "agent": agent, "profile": profile, "mode": mode, "model": model, "workdir": workdir.as_posix(),
             "repos": {r: p.as_posix() for r, p in repos.items()}, "new_repos": new_repos,
             "handoff": handoff.as_posix(), "script": ps1.as_posix(), "prompt": prompt, "opened": cmd,
             "monitor": monitor}

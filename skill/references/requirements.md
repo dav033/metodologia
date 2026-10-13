@@ -3,6 +3,10 @@
 Goal: turn a vague request into a spec precise enough that you can plan and build it without coming back to the
 user. The user's time is the scarce resource — every question must earn its place.
 
+If the user's goal directly matches a methodology capability that could change the approach or outcome, briefly
+explain that capability in context before continuing. Avoid generic feature pitches and repeated explanations; see
+[`self-improvement.md`](self-improvement.md).
+
 ## 1. Size the request
 
 The interview is where questions belong: front-load them here so planning and execution can run without
@@ -11,8 +15,18 @@ interrupting the user. Not every request needs a full interview. Pick a track; w
 | Track | When | What you do |
 |---|---|---|
 | **Quick** | One obvious change, no real decisions (rename, small bug with clear repro, copy change) | No interview. State your understanding in one line, log it in today's file, go build. |
+| **Agile** | A mid-size technical change with a clear goal and few decisions (a contained feature, a bug with several causes, a refactor of one module) | No interview rounds and no PLAN.md. Write the objective and 2–5 acceptance criteria (one of them a command that can verify it) in today's log, ask only what blocks, then build directly or delegate single tasks (`delegate`, see `execution.md` §Agile). |
 | **Standard** | A feature, a process change, anything with 2+ real decisions | Full flow below. |
 | **Deep** | New product/system, cross-team process, money/security/data at stake, irreversible choices | Full flow + the extra lenses in §6 before closing. |
+
+**Sizing is your call, made on your own and stated in one line** ("Standard: three decisions to settle"). Small and
+clear → build it. Broad or with real decisions → interview, spec, plan in milestones. Unsure which → ask the user
+one question about scope before anything else, then decide. Do not ask the user to pick the track.
+
+The track (how much to specify) and the execution mode (how the work runs: `direct` in this session, `coordinated`
+with a leader plus delegated tasks, or `marathon`) are different axes. Never start a marathon only because the track
+is Deep, and never require an interview or a plan only because the work is delegated. Pick the mode from the plan:
+a few hours or fewer tasks → direct/coordinated; days of independent work → marathon.
 
 ## 2. Explore before asking
 
@@ -77,6 +91,24 @@ Round format:
 Before round 1, play back in 2–4 lines what you understood and what you found while exploring, separating **what the
 user said** from **what you're assuming**. That surfaces wrong assumptions cheaply.
 
+### Grill Me depth check
+
+When the user says "grill me", "grill-me", "interrógame" or asks to stress-test a design, use this same interview
+with extra attention to the weakest unresolved decisions. After each answer, recompute the frontier: an answer
+can invalidate a branch or expose a new dependency. Resolve facts from the code/tools before putting a decision
+to the user; independent questions need not wait for unrelated exploration.
+
+Challenge a consequential assumption with its concrete failure case or trade-off, then offer a recommended
+answer. Do not invent objections to settled decisions. Track each branch as decided, deferred or an explicit
+assumption; "exhaustive" does not mean an endless interview. The existing Quick track, five-question bound and
+user stop conditions (§5) still apply. Before planning, play back the resulting understanding; plan approval
+confirms it without adding another approval gate. A request to stress-test an existing approved plan does not
+authorize implementation of proposed changes.
+
+This adapts Matt Pocock's Grill Me/grilling prompts; source excerpts, revisions and license notices are in
+[communication-and-context.md](communication-and-context.md). Do not call an unavailable `grilling` skill:
+the interview lives here and works across harnesses.
+
 ### Rounds as files + web form (always, once a spec exists)
 
 Every round is also posted as a file so the user can answer from the local web UI (works the same for Claude
@@ -130,3 +162,42 @@ Then show the user a short summary (5–8 lines: what will be built, what won't,
 straight into planning** — the approval gate is on the plan, not the spec (unless the user asked to review the
 spec too). Log the
 requirement and its key decisions in today's file. Next: `references/execution.md`.
+
+## 8. Automatic hand-off
+
+Once the spec and the plan are written, the work leaves this conversation: the interview filled this context with
+exploration the implementation does not need. Plan in **milestones** — `### M1 — title` headings in PLAN.md, each a
+small or medium, independently verifiable step (roughly 1–5 tasks that one clean session can finish) — and run:
+
+```
+bitacora.py --project P handoff REQ-NNN            # --dry-run first if you want to see the decision
+```
+
+It validates the plan (tasks, dependencies, repo roles) and decides:
+
+- **No risk reasons → it approves the plan itself and starts the execution in the background** (a detached tmux
+  session; notifications as usual). Tell the user in two lines what was started and how to watch or stop it.
+- **Risk reasons → the plan goes to `review`** and the command lists them: more than 8 milestones or 40 pending tasks,
+  a `level: architecture` or `risk: high` task, no machine-runnable verify anywhere, or text in the plan or spec that
+  names an irreversible, production, git-remote, money, credentials or external-communication action. Show the user
+  the plan summary and those reasons; when they approve (chat or web), run `handoff` again.
+
+**Stay the control tower.** This conversation is not replaced by the executors: it is where the user keeps talking,
+often from a phone through Remote Control. Right after a `launched` hand-off, run `bitacora.py --project P watch
+REQ-NNN` **in the background** (Claude Code: a background Bash command; the session is woken when it exits). It returns
+at the next piece of news — a settled milestone or audit, a blocked task, a wait for usage limits, a silent supervisor,
+the end. Tell the user in two or three lines in Spanish what happened, then run it again, until it prints
+`terminal: true`. On `blocked`, read PENDING.md and say what is needed. Never `/clear` this conversation to "make room":
+the executors already start clean, and clearing here only loses the thread the user is following. In a CLI without
+background wake-ups (Codex), run `watch` when the user asks how it is going.
+
+Each milestone then runs in a fresh session that receives only references: the spec, the plan, the bitácora
+pointers, a context bundle, the agents available and the confirmed learnings. Everything that must survive is in
+files: tasks and progress in PLAN.md/RUN.json, permanent decisions in `DECISIONS.md`, what was learned in the
+project's learnings (`agents.md`). Stay in the conversation only for Quick and Agile work.
+
+When user feedback or exploration reveals a reproducible defect, an agreed-requirement mismatch, or recurring
+friction in this skill, investigate and make the smallest validated persistent improvement in the canonical skill
+source as part of the approved scope. Record speculative ideas as proposals. If a user-controlled rule blocks the
+requested behavior, pause that behavior and ask whether the user wants a one-time exception or a permanent change;
+follow [`self-improvement.md`](self-improvement.md) for source boundaries and higher-priority rules.

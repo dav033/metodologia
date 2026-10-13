@@ -1,14 +1,13 @@
-"""Marathon notifications and reboot-survival: Windows toast (+ optional ntfy.sh) and a Startup-folder autostart.
+"""Marathon notifications and reboot-survival: native notifications (+ optional ntfy.sh) and per-user login entries.
 
 notify() never raises: a failed toast must never stop a marathon. If <root>/.state/notify.json contains
 {"ntfy_topic": "..."} the same message is also POSTed to https://ntfy.sh/<topic>.
 
-install_autostart() drops a .cmd in the user's Startup folder that reopens the supervisor
+install_autostart() writes a Windows Startup .cmd, Linux XDG .desktop or macOS LaunchAgent
+that resumes the supervisor
 (`bitacora.py --project P run REQ --resume`) in a terminal window after a reboot; remove_autostart() deletes it.
 """
 from __future__ import annotations
-
-import bt_nowindow  # noqa: F401  (no console windows for helper processes)
 
 import base64
 import json
@@ -20,6 +19,10 @@ import sys
 import urllib.request
 from pathlib import Path
 from xml.sax.saxutils import escape
+
+import bt_autostart
+import bt_nowindow  # noqa: F401  (no console windows for helper processes)
+import bt_platform as host
 
 APP_ID = "Bitácora"
 NTFY_TIMEOUT = 5
@@ -46,6 +49,8 @@ def _state_dir() -> Path:
 
 
 def _toast(title: str, message: str) -> None:
+    if host.platform() != "windows":
+        return host.local_notification(title, message)
     xml = (
         '<toast><visual><binding template="ToastText02">'
         f'<text id="1">{escape(title)}</text><text id="2">{escape(message)}</text>'
@@ -77,8 +82,9 @@ def notify(title: str, message: str) -> None:
     for send in (_toast, _ntfy):
         try:
             send(title, message)
-        except Exception:
-            pass
+        except Exception as exc:
+            if send is _toast or (_state_dir() / "notify.json").exists():
+                print(f"bitácora notification failed ({send.__name__}): {exc}", file=sys.stderr)
 
 
 # ---------------------------------------------------------------- autostart
@@ -93,11 +99,16 @@ def _safe(name: str) -> str:
 
 
 def autostart_path(project: str, req: str) -> Path:
+    if host.platform() != "windows":
+        return bt_autostart.entry_path(project, req)
     return _startup_dir() / f"metodologia-run-{_safe(project)}-{_safe(req)}.cmd"
 
 
 def install_autostart(project: str, req: str) -> Path:
     from bt_core import ROOT, SCRIPT
+
+    if host.platform() != "windows":
+        return bt_autostart.install(project, req, ROOT, SCRIPT)
 
     run = f'""{sys.executable}" "{SCRIPT}" --project {project} run {req} --resume"'  # outer quotes: cmd /k strips one pair
     title = f"{project} {req} marathon"
@@ -112,6 +123,12 @@ def install_autostart(project: str, req: str) -> Path:
 
 
 def remove_autostart(project: str, req: str) -> None:
+    if host.platform() != "windows":
+        try:
+            return bt_autostart.remove(project, req)
+        except Exception as exc:  # a failed cleanup must not stop a marathon
+            print(f"bitácora autostart removal failed: {exc}", file=sys.stderr)
+            return
     try:
         autostart_path(project, req).unlink(missing_ok=True)
     except OSError:

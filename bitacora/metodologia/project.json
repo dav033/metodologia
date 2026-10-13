@@ -1,8 +1,0 @@
-{
- "repos": {
-  "skill": {
-   "remote": "https://github.com/dav033/metodologia.git",
-   "hint": "~/metodologia"
-  }
- }
-}

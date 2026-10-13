@@ -4,6 +4,14 @@ Mi forma de trabajar con IA, empaquetada como skill para **Claude Code** y **Cod
 
 - **Requerimientos por rondas** → spec → plan → **una sola aprobación** → ejecutor autónomo (`/loop` en Claude,
   `/goal` en Codex) en una ventana aparte.
+- **Flujo automático**: el agente dimensiona el requerimiento, lo planifica en hitos y `handoff` lo lanza en
+  segundo plano (aprobándolo solo si no hay motivos de riesgo): **una sesión limpia por hito**, cada hito cerrado por
+  una **auditoría independiente** de otro agente.
+- **Varios agentes y suscripciones**: Claude (Haiku, Sonnet, Opus 5.5) y Codex (GPT-6 Luna, GPT-6.1 Sol) en una sola
+  escalera de capacidad; el enrutador elige cuenta, modelo y esfuerzo por tipo de trabajo, cuotas y resultados
+  medidos, y cualquier agente puede delegar en cualquier otro. Detalle: `skill/references/agents.md`.
+- **Telemetría y aprendizaje**: cada intento queda medido por agente, modelo y esfuerzo; lo aprendido sobre el
+  proyecto y tus preferencias se guarda con evidencia y se inyecta en las sesiones siguientes.
 - **Estándares de ingeniería** (responsabilidad única, features, Atomic Design, alerta de 500 líneas, tests
   pragmáticos, stacks por defecto) y **5 subagentes** (explorer, researcher, implementer, reviewer, runner).
 - **Bitácora** por proyecto (`bitacora/`): logs por día y sesión, DECISIONS, PENDING, SUMMARY, ARCHITECTURE,
@@ -25,6 +33,18 @@ metodologia/
 
 ### Requisitos
 
+Compatible con Windows, Linux y macOS (Python 3.12+). En Linux, el lanzador busca
+kitty, GNOME Terminal, Konsole, xterm o x-terminal-emulator. En macOS usa Terminal
+mediante `osascript`; el sistema puede pedir permiso para automatizar Terminal.
+Sin terminal gráfica se puede ejecutar el supervisor directamente con `bitacora.py run`.
+
+La reanudación después de iniciar sesión utiliza systemd de usuario en Linux
+(sin sudo), XDG Autostart si no hay systemd, LaunchAgents en macOS y Startup en Windows.
+Los compositores que no procesen XDG Autostart necesitan un gestor de sesión compatible
+o ejecutar `run --resume` manualmente. `--no-autostart` desactiva el registro.
+Las notificaciones usan notify-send en Linux, osascript en macOS y WinRT en Windows.
+No hay cambios de configuración ni servicios hasta ejecutar el instalador o iniciar un maratón.
+
 | | Para qué | ¿Obligatorio? |
 |---|---|---|
 | **Git** | clonar y sincronizar | sí |
@@ -33,6 +53,13 @@ metodologia/
 | **Claude Code** y/o **Codex** | los agentes | al menos uno |
 | **winget** (viene con Windows 11) | instalar gitleaks (escaneo de secretos) | opcional |
 | **npm** | instalar CodeGraph (grafo de código para el explorer) | opcional |
+| **RTK** | comprimir salida de comandos para la skill madre | opcional; `python install.py --rtk-only` en Linux x86_64 |
+
+Para gitleaks: `brew install gitleaks` en macOS; el gestor de paquetes de la
+distribución en Linux (`pacman -S gitleaks` en Arch, requiere permisos de administrador).
+El instalador sólo intenta instalarlo automáticamente en Windows. Si está instalado
+pero no puede completar el escaneo, el commit queda bloqueado; si no está instalado,
+se conserva el comportamiento anterior de escaneo opcional.
 
 ### Pasos
 
@@ -77,6 +104,13 @@ hacer push, ni aprobar los hooks de Codex por ti.
 | Registrar un proyecto de varios repos | `bitacora.py --project <p> workspace add <rol> <ruta>` |
 | Clonar en esta máquina los repos que falten | `bitacora.py --project <p> workspace clone` |
 | Correr un plan aprobado por días (maratón: una sesión limpia por tarea, Haiku 5.5 + ultracode) | Aprobar con **Modo: Maratón** en el panel · `bitacora.py --project <p> launch REQ-001 --mode marathon` · reanudar tras reiniciar: `bitacora.py --project <p> run REQ-001 --resume` |
+| Lanzar un plan sin más conversación (valida, aprueba si es seguro, corre por hitos con el mejor agente) | `bitacora.py --project <p> handoff REQ-001` (`--dry-run` para ver la decisión) |
+| Ver agentes, cuentas y cuotas · qué ruta se usaría | `bitacora.py agents` · `bitacora.py --project <p> agents route --kind audit` |
+| Delegar una tarea a otro agente o suscripción | `bitacora.py --project <p> delegate start "<tarea>" --kind test --verify "<cmd>"` |
+| Comparar agentes, modelos y esfuerzo con datos | Panel → **Métricas de agentes** · `bitacora.py metrics --by kind,agent,model,effort` · `bitacora.py metrics --advice` |
+| Ver o confirmar lo aprendido | `bitacora.py --project <p> learn list` · `learn confirm L-003` · `learn reject L-003` |
+| Dar a un agente todo el contexto en una pantalla | `bitacora.py --project <p> context` |
+| Ajustes de la máquina (aprobación automática, auditorías, pool de cuentas) | `bitacora.py config get` · `config set audit.mode off` |
 | Pausar, reanudar o detener un maratón | Pestaña **Maratón** del requerimiento · `bitacora.py --project <p> run-control REQ-001 pause\|resume\|stop` |
 | Revisar la trazabilidad | `bitacora.py --project <p> trace` |
 | Correr las evaluaciones de la skill | `python ~/metodologia/evals/run.py` (≈ USD 1.5, tope configurable) |
@@ -96,3 +130,51 @@ Los cambios a la skill misma son commits normales en este repo.
 | Aviso de **posible secreto** en la bitácora | Reemplaza el valor por una referencia (ruta de la llave, nombre de variable, alias SSH) y corre `bitacora.py commit "fix: remove secret"` |
 | Un commit de tus repos bloqueado por gitleaks | Quita el secreto del código; si es falso positivo, agrégalo a `.gitleaksignore` |
 | El panel no abre | `bitacora.py web` lo levanta (puerto 8765); se reinicia solo si su código cambió |
+
+## RTK dentro de la skill madre
+
+Caveman y Grill Me aportan instrucciones adaptadas dentro de `metodologia`; no se instalan como otras skills.
+RTK es el ejecutable opcional para reducir la salida de comandos, con instalación y pautas propias de este repo:
+
+```bash
+python install.py --rtk-only
+```
+
+Instala RTK **0.51.0** en `~/.local/bin/rtk`, con SHA-256 fijados para el archivo y el binario, sin sudo,
+hooks ni cambios de configuración. Esta versión del instalador soporta Linux x86_64; otras plataformas
+necesitan un paquete oficial. Conserva cualquier binario distinto que ya exista y avisa del conflicto.
+La ruta debe estar en PATH (`fish_add_path ~/.local/bin` en fish, si hace falta).
+Para incluir RTK al configurar deliberadamente todo el marco: `python install.py --with-rtk`.
+
+La medición local con tres repeticiones por comando observó un 27,5 % menos tokens de salida para `git status`,
+64,7 % para `git log -n 20`, 0,4 % para un diff pequeño y 96,4–99,8 % para pytest verboso.
+Con pytest ya silencioso (`-q`), la reducción fue 33,8 %. Se conservaron códigos y los tres diagnósticos.
+Recuperar la salida completa de un fallo elevó el total 1,8 % frente a pytest nativo. Son tokens de **salida de
+comandos**, contados con `o200k_base`; no son ahorro total de sesión ni de facturación. RTK añadió 3–7 ms a las
+consultas Git de esta muestra; mide también el tiempo si importa.
+
+Benchmark reproducible, sin modelos de pago ni ejecutar suites de tus proyectos:
+
+```bash
+uv run --no-project --with pytest --with tiktoken python evals/benchmark_rtk.py --output /tmp/metodologia-rtk-bench-1
+```
+
+Guarda los resultados y la salida original, compara Git en este repo y ejecuta un fixture aislado de pytest.
+Valida el SHA-256 del binario RTK v0.51.0, el código de recuperación, los diagnósticos recuperados y que pytest
+no vuelva a ejecutarse. Usa un directorio nuevo y vacío por corrida; rechaza sobrescribir evidencia.
+La skill elige filtros explícitos y recupera evidencia existente; la instalación no activa interceptación automática.
+
+## Comprobaciones de portabilidad
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s skill/scripts/tests -v
+```
+
+Las pruebas aíslan los archivos y sustituyen los agentes por stubs; no consumen modelos.
+La matriz de CI incluye Linux y macOS. Las pruebas de macOS comprueban comandos y plist;
+la automatización gráfica y los permisos de Terminal necesitan una prueba manual en Mac.
+El instalador y el flujo de sincronización mantienen sus políticas de commits/push
+automáticos: revisarlas antes de activar la skill si tus reglas locales los prohíben.
+
+Referencias: [LaunchAgents de Apple](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html),
+[formato de entradas XDG](https://specifications.freedesktop.org/desktop-entry/latest-single/).

@@ -16,7 +16,9 @@ import time
 import unittest
 from pathlib import Path
 
-TMP = Path(tempfile.mkdtemp(prefix="marathon-test-"))
+# test_00_isolation.py (first in discovery) may already have chosen the throwaway root; reuse it.
+TMP = Path(os.environ.get("BITACORA_TEST_ROOT") or tempfile.mkdtemp(prefix="marathon-test-"))
+os.environ["BITACORA_TEST_ROOT"] = str(TMP)
 os.environ["BITACORA_ROOT"] = str(TMP / "bitacora")
 os.environ["BITACORA_PORT"] = "8797"
 os.environ["BITACORA_RUN_BACKOFF_SEC"] = "1"
@@ -28,6 +30,13 @@ import bt_notify  # noqa: E402
 import bt_run  # noqa: E402
 import bt_runstate as rs  # noqa: E402
 import bt_runtask as rt  # noqa: E402
+
+# Isolation guard: a module that imported bt_core before this one froze ROOT at the real bitácora, and these tests would
+# then create projects and runs in it. Fail loudly instead of polluting (never import bt_core at module level elsewhere
+# in a file that sorts before test_marathon.py).
+if Path(bt_core.ROOT).resolve() != (TMP / "bitacora").resolve():
+    raise RuntimeError(f"bt_core.ROOT is {bt_core.ROOT}, not the throwaway root {TMP / 'bitacora'}: some test module "
+                       "imported bt_core before test_marathon set BITACORA_ROOT. Refusing to run against the real bitácora.")
 
 STUB = '''
 import json, os, pathlib, subprocess, sys

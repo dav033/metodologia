@@ -1,0 +1,31 @@
+{
+  "name": "k-agent-orchestration",
+  "description": "Complex independent work benefits from safe agent orchestration",
+  "checks": "agent-orchestration.md and subagents.md",
+  "fixture": "empty",
+  "max_turns": 8,
+  "budget_usd": 0.25,
+  "turns": [
+    "Quiero construir una funcionalidad grande de reservas con cambios en frontend y backend. Explícame qué flujo de trabajo de esta skill puede ayudarme a organizarlo sin que varios agentes se pisen, y empecemos por lo necesario."
+  ],
+  "graders": [
+    {
+      "name": "mentions-contextual-orchestration",
+      "type": "regex",
+      "pattern": "orquestaci[oó]n|subagentes|agentes en paralelo",
+      "flags": "i"
+    },
+    {
+      "name": "mentions-isolation-or-ownership",
+      "type": "regex",
+      "pattern": "worktree|propiedad de archivos|archivos distintos|tareas independientes",
+      "flags": "i"
+    },
+    {
+      "name": "reads-orchestration-guidance",
+      "type": "tool_used",
+      "tool": "Read|Skill",
+      "input_match": "agent-orchestration|subagents\\.md"
+    }
+  ]
+}

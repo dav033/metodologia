@@ -1,5 +1,0 @@
-# Owner photos show people: they stay on disk, never in git.
-*.jpg
-*.jpeg
-*.png
-*.webp

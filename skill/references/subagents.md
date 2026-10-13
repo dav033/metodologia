@@ -22,6 +22,14 @@ definition, not by asking nicely.
 In Codex refer to them by name ("have explorer map…"). If the roles aren't installed, use the harness's built-ins
 (Claude Code: Explore / general-purpose; Codex: explorer / worker) with the same briefs and contracts.
 
+## Agents of another provider
+
+The five roles above are subagents of the CLI you run in. For work that deserves **another model or another
+subscription** — an independent audit, a cheap fast worker for a well-specified module, a stronger model for one hard
+piece, or simply because your account is near its limit — use `bitacora.py delegate` (`agents.md`): it works the same
+from Claude Code and from Codex, picks the account by quota and measured results unless you pin one, and returns a
+compact verified result.
+
 ## When — and when not
 
 Use a subagent when:
@@ -37,12 +45,17 @@ Don't when:
 - the work is iterative or cross-cutting and needs the conversation's context — keep it in the main session;
 - you'd spawn one per trivial step. Each agent costs roughly 4× the tokens of doing it inline, plus latency.
 
+See [`agent-orchestration.md`](agent-orchestration.md) for task graphs, bounded concurrency, worktree ownership,
+wave reconciliation, and long-running resume rules. In short: delegate only separable work, use three workers by
+default (up to five only with a recorded reason), and let the coordinator own integration and proof of completion.
+
 ## Hard rules
 
 1. **Writes are single-threaded.** Read-only roles (explorer, researcher, reviewer, runner) may run in parallel;
    implementers run one at a time. The only exception: independent tasks touching disjoint files, each implementer
    in its own git worktree (`isolation: worktree` / a worktree you create), merged by you afterwards.
-2. **Max 3–5 in parallel.** The bottleneck is your ability to check results, not spawn speed.
+2. **Bound concurrency.** Three workers is the default; raise it only when independence, machine capacity, review
+   bandwidth, and usage budget justify it. Never exceed five without a concrete reason in the plan.
 3. **Complete brief, pointers not pastes.** The subagent sees nothing of your conversation (template below).
 4. **Verify, don't trust.** A subagent's report is a set of claims. Check implementer work against the diff and
    by running the verification yourself (or via `runner`); spot-check explorer `path:line` references before
@@ -56,6 +69,13 @@ Don't when:
    model, or split the task.
 7. **Only the main session talks to the user and writes the bitácora** (day log, DECISIONS, PENDING). Subagents
    report; you record.
+8. **Dispatch by dependency and ownership.** Workers receive a complete brief because fresh contexts do not inherit
+   the conversation. Parallel writers must own disjoint files/modules and use separate worktrees when available;
+   shared contracts/files have one owner. Wait for every worker in a wave, inspect its diff/report, and run the
+   planned verification before releasing dependent work.
+9. **No unsupported capability assumptions.** Check the current harness for subagent support. If it is unavailable,
+   proceed sequentially and report the limitation; do not edit global configuration or install runtimes to enable it
+   without specific authorization.
 
 ## Delegation brief (template)
 

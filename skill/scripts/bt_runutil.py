@@ -1,9 +1,12 @@
 """Marathon supervisor helpers: console status line, notifications, autostart, bitácora commit, heartbeat, waits."""
 from __future__ import annotations
 
+import shutil
+import subprocess
 import time
 
 from bt_core import *  # noqa: F403
+import bt_platform as host
 import bt_runstate as rs
 
 POLL = 30
@@ -51,17 +54,34 @@ def pid_alive(pid: int) -> bool:
     try:
         os.kill(int(pid), 0)
         return True
+    except PermissionError:
+        return True  # exists, owned by another user
     except OSError:
         return False
 
 
+_inhibitor: "subprocess.Popen | None" = None
+
+
 def keep_awake() -> None:
+    """Stop the machine from sleeping while the supervisor runs (best effort, never raises)."""
+    global _inhibitor
     if os.name == "nt":
         try:
             import ctypes
             ctypes.windll.kernel32.SetThreadExecutionState(0x80000001)  # ES_CONTINUOUS | ES_SYSTEM_REQUIRED
         except Exception:
             pass
+    elif _inhibitor is None:
+        argv = host.sleep_inhibitor_argv(sys.platform, os.getpid())
+        if argv:
+            try:
+                _inhibitor = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                              stderr=subprocess.DEVNULL, start_new_session=True)
+            except OSError:
+                pass
+
+
 
 
 def beat(rdir: Path, **fields) -> dict:

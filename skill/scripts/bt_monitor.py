@@ -8,9 +8,8 @@ independent from the supervisor: closing it never stops the marathon, and it cos
 """
 from __future__ import annotations
 
-import shutil
-import subprocess
-
+import bt_platform as host
+import bt_profiles
 from bt_core import *  # noqa: F403
 
 MONITOR_BRIEF = """# Marathon monitor — {project} {rid}
@@ -62,37 +61,29 @@ def session_name(project: str, rid: str) -> str:
     return f"{project} {rid} maratón"
 
 
-def monitor_script(project: str, rdir: Path, model: str = "haiku") -> Path:
-    """.ps1 that opens the interactive Remote Control monitor session."""
+def monitor_script(project: str, rdir: Path, model: str = "haiku", profile: str | None = None) -> Path:
+    """Launcher script that opens the interactive Remote Control monitor session."""
     rid = req_id(rdir)
     brief = write_brief(project, rdir)
     launch_dir = STATE / "launch"
     launch_dir.mkdir(parents=True, exist_ok=True)
     prompt = (f"Lee {brief.as_posix()} y sigue esas instrucciones: eres el monitor remoto del maratón {rid} de "
               f"{project}. Confirma en una línea que estás listo y espera preguntas.")
-    ps1 = launch_dir / f"{project}-{rid}-monitor.ps1"
-    ps1.write_text(
-        f"$Host.UI.RawUI.WindowTitle = '{session_name(project, rid)} (monitor)'\n"
-        f"$env:BITACORA_PROJECT = '{project}'\n"
-        f"Set-Location -LiteralPath '{(ROOT / project).as_posix()}'\n"
-        f"claude --remote-control '{session_name(project, rid)}' --model {model} --dangerously-skip-permissions "
-        f"'{prompt.replace(chr(39), chr(39) * 2)}'\n",
-        encoding="utf-8")
-    return ps1
+    argv = ["claude", "--remote-control", session_name(project, rid), "--model", model,
+            "--dangerously-skip-permissions", prompt]
+    return host.write_script(launch_dir / f"{project}-{rid}-monitor", ROOT / project, argv,
+                             {"BITACORA_PROJECT": project, "BITACORA_ROOT": str(ROOT),
+                              "PATH": os.environ.get("PATH", ""), **bt_profiles.env_of(profile)})
 
 
-def open_monitor(project: str, req: str, model: str = "haiku", dry_run: bool = False) -> dict:
+def open_monitor(project: str, req: str, model: str = "haiku", dry_run: bool = False,
+                 profile: str | None = None) -> dict:
+    bt_profiles.authorize(profile, project)
     rdir = find_req(ROOT / project, req)
-    ps1 = monitor_script(project, rdir, model)
+    ps1 = monitor_script(project, rdir, model, profile)
     title = session_name(project, req_id(rdir))
     cmd = "(dry run: not opened)"
     if not dry_run:
-        pwsh = shutil.which("pwsh") or shutil.which("powershell")
-        if shutil.which("wt"):
-            args = ["wt", "-w", "new", "--title", title, pwsh, "-NoExit", "-File", str(ps1)]
-        else:
-            args = ["cmd", "/c", "start", title, pwsh, "-NoExit", "-File", str(ps1)]
-        subprocess.Popen(args, creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0))
-        cmd = " ".join(args)
+        cmd = host.open_terminal(ROOT / project, ps1, title)
     return {"session": title, "script": ps1.as_posix(), "brief": (rdir / "MONITOR.md").as_posix(), "opened": cmd,
             "connect": "claude.ai/code o la app de Claude → sesiones → '" + title + "'"}

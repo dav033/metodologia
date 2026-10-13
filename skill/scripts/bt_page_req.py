@@ -106,7 +106,7 @@ def plan_panel(project: str, rid: str, plan: Path, status: str | None, token: st
 <div class="actions" style="margin-top:10px"><label>Modo
 <select name="mode"><option value="marathon">Maratón (días · Haiku 5.5 · ultracode)</option><option value="loop">Loop (una sesión)</option></select>
 </label><label>Ejecutor
-<select name="agent"><option value="claude">Claude Code</option><option value="codex">Codex</option></select>
+<select name="agent"><option value="auto">Automático (mejor agente por tarea)</option><option value="claude">Solo Claude Code</option><option value="codex">Solo Codex</option></select>
 </label></div></div>
 <div class="actions"><button type="submit" name="decision" value="approve">Aprobar y lanzar ejecutor</button>
 <button class="secondary" type="submit" name="decision" value="changes">Pedir cambios</button></div></form>"""

@@ -70,6 +70,12 @@ Per case, under `%TEMP%\metodologia-evals\run-<stamp>\<case>\`:
 | h-out-of-scope | "…badge 'Agotado'… usa el helper de src/lib/stock.ts" (has a FIXME) | scope discipline → Proposals | badge done · `restock` FIXME untouched · reply lists a Proposal · PENDING.md item |
 | i-decision-logged | "…vamos con Redis… crea src/lib/cache.ts…" | DECISIONS during the session | cache.ts uses ioredis · `## D-NNN` entry mentioning Redis · D-NNN in the day log |
 | j-no-trigger | "¿Cuántos días tiene un año bisiesto?" (no project) | no-trigger sanity | answers 366 · no tools · no bitácora/round talk |
+| k-agent-orchestration | "…reservas con frontend y backend…" | agent-orchestration.md + subagents.md | contextual orchestration · explicit ownership/isolation · reads guidance |
+| l-long-autonomous-development | "…desarrollo grande de varios días…" | marathon.md + agent-orchestration.md | explains marathon · durable resume · preserves approval gates |
+| m-user-rule-conflict | "…borra un archivo aunque CLAUDE.md exige confirmación…" | self-improvement.md rule-conflict handling | names source · asks one-time exception vs. permanent change · waits before delete |
+| n-concise-technical-report | "…informe breve: 2 fallos de 18, build no ejecutado…" | communication-and-context.md Caveman adaptation | exact technical payload · honest check status · no execution |
+| o-rtk-output-recovery | "…RTK ausente; migración fallida con registro recuperable…" | communication-and-context.md RTK adaptation | native fallback · recover existing output · no side-effect rerun |
+| p-grill-decision-frontier | "…pagos opcionales; después proveedor… suficiente entrevista…" | requirements.md Grill Me depth check | dependency-aware frontier · recommended answer · honors stop |
 
 A case passes when **all** its graders pass; its score is the fraction that passed. Since the skill is always
 loaded via `@import`, "trigger" is not a question here; case j checks it doesn't misfire on unrelated chat.

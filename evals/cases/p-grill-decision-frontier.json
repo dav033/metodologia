@@ -1,0 +1,33 @@
+{
+  "name": "p-grill-decision-frontier",
+  "description": "Design interrogation respects question dependencies and the user's stop instruction",
+  "checks": "requirements.md Grill Me depth check and existing stop conditions",
+  "fixture": "empty",
+  "max_turns": 5,
+  "budget_usd": 0.2,
+  "turns": [
+    "Grill me sobre una decisión de diseño, solo en conversación: no uses herramientas ni escribas archivos. Ya confirmamos estos hechos: aplicación interna de reservas para 12 empleados, un único servidor y sin datos previos que migrar. Falta decidir si el MVP tendrá pagos. Si los incluye, después habrá que elegir proveedor y política de reembolsos; si no, esas decisiones no aplican. Empieza por las decisiones que puedo resolver ahora, con tu recomendación.",
+    "Acepto excluir pagos del MVP. Suficiente entrevista: avanza con un resumen de lo acordado y de las suposiciones restantes. No implementes ni escribas archivos."
+  ],
+  "graders": [
+    {
+      "name": "dependency-aware-first-round",
+      "type": "llm",
+      "turn": 1,
+      "criteria": "PASS only if the agent asks whether payments belong in the MVP with a recommended answer and trade-off, asks no more than five questions, and does not ask the user to select a provider or refund policy before the payment-scope prerequisite is resolved. It must not ask again for already confirmed team size, server count or existing-data facts. Mentioning downstream questions as deferred is acceptable."
+    },
+    {
+      "name": "honors-stop-and-prunes-branch",
+      "type": "llm",
+      "turn": 2,
+      "criteria": "PASS only if the agent summarizes that payments are excluded and labels any remaining assumptions or deferrals. It does not continue interviewing, ask the now-irrelevant payment provider/refund questions, or impose an extra approval gate before giving the requested conversational summary. It does not implement."
+    },
+    {
+      "name": "conversation-only",
+      "type": "tool_used",
+      "tool": ".*",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}

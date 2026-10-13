@@ -1,27 +1,33 @@
 # Marathon mode
 
 An external **supervisor** (`scripts/bt_run.py`) runs an approved PLAN for hours or days. It launches a **fresh
-headless agent session per task**, keeps all state on disk, enforces the caps itself, detects stuck tasks, waits out
+headless agent session per task** (per milestone when the plan groups tasks under `### Mn` headings), keeps all state on disk, enforces the caps itself, detects stuck tasks, waits out
 usage limits, survives reboots and notifies the user. Context never rots because every session starts clean; the
 agent never has to "remember" anything — PLAN.md, RUN.json and the bitácora are the memory.
+
+For a user asking for overnight or multi-day autonomous development, explain this mode and its resume/pause controls
+before choosing it. Use [`agent-orchestration.md`](agent-orchestration.md) to decide task dependencies, worker
+ownership, and verification. Marathon is a bounded execution mechanism: it does not authorize external or destructive
+actions, permission bypass changes, or skipping the existing plan approval gate.
 
 ## Marathon vs loop
 
 | | Loop / goal (`execution.md` §1c) | Marathon |
 |---|---|---|
-| Who drives | the agent itself, one long session | an external script, one session per task |
+| Who drives | the agent itself, one long session | an external script, one session per task or milestone |
 | Length | hours | days |
 | Context | accumulates, needs `/clear` | clean for every task |
 | Caps, stuck detection, usage-limit wait, reboot | none (manual) | built in |
 | State | PLAN.md only | PLAN.md + `RUN.json` |
 
 Default to marathon for plans with many tasks or that will outlast one sitting; keep the loop for a short plan you
-expect to finish in a few hours.
+expect to finish in a few hours. The decision also depends on whether each task can be expressed as a small,
+independently verifiable unit; break down oversized tasks before launching.
 
 ## How it works
 
-1. Plan approved (with **Modo: Maratón** on the web form, or via CLI). `launch --mode marathon` opens a Windows
-   Terminal window titled `<project> <REQ> marathon` running the supervisor. The window stays visible: it prints one
+1. Plan approved (with **Modo: Maratón** on the web form, or via CLI). `launch --mode marathon` opens a native
+   terminal window running the supervisor (Linux, macOS or Windows). The window stays visible: it prints one
    status line per session.
 2. The supervisor creates/reads `RUN.json` (next to the spec, git-synced): task list parsed from PLAN.md, statuses,
    attempts, heartbeat, log of the last 200 sessions.
@@ -31,6 +37,11 @@ expect to finish in a few hours.
 4. When every task is done: a final session does the fresh-eyes review and writes `REPORT.md` (`execution.md` §4),
    then status `done`, PLAN `status: done`, notification, autostart removed.
 5. If the only tasks left are blocked: status `blocked`, notification, exit.
+
+The coordinator's plan remains the source of truth for scope and dependencies. The current supervisor dispatches one
+task session at a time in dependency order. Parallelism within a task is appropriate only when the harness supports
+it and ownership is disjoint. Each task session must return its status and evidence, while the supervisor's
+verification decides whether `done` is accepted.
 
 **Live session logs.** The agent writes straight into `.state/runs/<project>-<REQ>/session-0007.log` (machine-local)
 while it runs, so `tail -f` shows it live and a killed or timed-out session still leaves its transcript. Claude runs
@@ -54,7 +65,9 @@ command, after the day log and every commit, and nothing may be left running in 
 - [ ] T4 — <design the sync protocol> · level: architecture · verify: `pytest tests/sync`
 ```
 
-`repo:`, `after:`, `verify:` and `level:` are optional. `level: architecture` marks a hard architecture/design task:
+`repo:`, `after:`, `verify:`, `level:`, `kind:` (implement, test, docs, audit, research; inferred from the title when
+absent), `complexity:` (S, M, L: recorded in telemetry so agents can be compared on comparable work) and `risk:`
+(`high` makes the automatic hand-off ask for approval) are optional. `level: architecture` marks a hard architecture/design task:
 it starts at the top of the escalation ladder (opus, effort xhigh) instead of haiku. `verify:` is run by the supervisor **only if it is inside backticks**
 (from the task's repo dir, 10-minute timeout); free text is just guidance for the agent. Already-ticked `[x]` tasks
 start as done. `repo`, `after`, `verify` and `level` are **frozen when the run starts**: later edits to PLAN.md (even by the
@@ -118,6 +131,10 @@ this task.*
   passes. If the supervisor dies in between, the next start (`--resume`, autostart) re-runs the `verify` of every
   claimed-but-unverified task **before** picking new work (a failed verify is a normal failed attempt). A RUN.json
   from before this change, with a bare `done`, is trusted as it was.
+- **Checkpoint is a resume hint, not fresh evidence.** On resume, load the approved plan and RUN.json, inspect the
+  worktree and logs, and re-run each claimed task's verification before scheduling new work. Re-check any external
+  fact, approval or environment assumption that may have changed since the checkpoint; never infer that a checkpoint
+  authorizes an external side effect.
 - **Supervisor errors** (RUN.json locked by git/antivirus, a missing file…) are logged, notified once, retried with a
   growing pause and only given up on after 10 in a row. A missing agent executable stops the run and notifies.
 
@@ -144,11 +161,17 @@ bitacora.py --project P launch REQ-001 --mode marathon --model haiku
 `--agent-cmd "<template>"` (placeholders `{prompt_file} {workdir} {task} {req} {project} {model_args}`, the last one
 being the tier's `--model … --effort …`) replaces the agent command;
 it exists for tests only. `--once` runs a single session. `--retry-blocked` puts blocked tasks back to `todo` with
-fresh attempts (use it after fixing the cause listed in PENDING.md). `--no-autostart` skips the Startup entry.
+fresh attempts (use it after fixing the cause listed in PENDING.md). `--no-autostart` skips the per-user login entry.
 `--resume` is accepted for readability but implicit: the supervisor always continues from RUN.json if it exists.
 Codex receives its prompt on stdin (`exec ... -`) instead of as an argument; Claude takes it as the last argument.
 
 ## Remote monitoring (Remote Control)
+
+The simplest way to follow a run from a phone is the conversation that launched it: `/rc` on that session, which
+keeps `bitacora.py watch REQ-NNN` armed in the background and tells each milestone as it closes
+(`requirements.md` §8). The executor sessions are separate headless processes: they never appear inside that
+conversation and ending them does not touch it. The companion session below is the alternative for a run that was
+launched from the web panel or from a terminal nobody is attached to.
 
 Task sessions are headless, and Remote Control only attaches to interactive sessions — so a marathon launched with
 Claude also opens a **monitor**: an interactive Haiku session named "`<project> <REQ> maratón`", started with
@@ -162,18 +185,21 @@ until asked.
 
 ## Reboots and the stale heartbeat
 
-On start the supervisor installs an autostart `.cmd` in the user's Startup folder
-(`metodologia-run-<project>-<REQ>.cmd`) that reopens the terminal with `run <REQ> --resume`; it removes it when the run
-ends as `done` or `stopped`; it also sets `BITACORA_ROOT`. A restart continues from RUN.json, sends any
+On start the supervisor installs a per-user login entry that runs `run <REQ> --resume`:
+Windows Startup `.cmd`, Linux systemd user service (XDG `.desktop` when systemd is absent), or
+macOS `~/Library/LaunchAgents/*.plist`. POSIX entries resume headlessly; inspect RUN.json, logs or the web UI.
+Entries take effect at the next login and are removed when the run ends as `done` or `stopped`.
+The generated scripts preserve `BITACORA_ROOT` and the launch PATH. A Linux session without a user
+systemd manager must support XDG Autostart or resume manually; errors are reported, not hidden. A restart continues from RUN.json, sends any
 `in_progress` task back to `todo` (its session died with the machine), and **keeps an explicit pause and a pending
 usage-limit wait** (only `run-control resume` lifts a pause). The heartbeat (`at`, `pid`, `machine`, `task`, `session`, `state`) is written
 before and after every session: if it is stale the supervisor is dead — reopen it with `run REQ --resume`.
 
 ## Notifications
 
-Windows toast ("Bitácora") on: blocked task, usage-limit wait, run done, run blocked, run stopped / cap reached.
+Native notifications (Windows toast, Linux notify-send, macOS osascript) on: blocked task, usage-limit wait, run done, run blocked, run stopped / cap reached.
 Optional phone push through ntfy: create `.state/notify.json` with `{"ntfy_topic": "<secret-topic-name>"}` and
-subscribe to that topic in the ntfy app. Notification failures never stop the run.
+subscribe to that topic in the ntfy app. Notification failures are reported to stderr and never stop the run.
 
 ## Why Haiku 5.5 + ultracode
 
@@ -184,6 +210,11 @@ its mistakes. A task that Haiku cannot finish climbs the escalation ladder inste
 task that also fails at the top is blocked (with a PENDING item).
 
 ## Escalation ladder
+
+Tiers are capability levels shared by every provider. With an account pool (`run --pool auto`, the default of
+`handoff`) each session's account, model and effort come from the router, and a failed attempt climbs one tier
+**and** prefers another provider: `agents.md` has the full table (Claude: haiku → sonnet xhigh → opus xhigh; Codex:
+gpt-6-luna medium → gpt-6.1-sol high → gpt-6.1-sol xhigh). The table below is a run pinned to one agent.
 
 | Tier | Claude | Codex |
 |---|---|---|
@@ -201,7 +232,7 @@ switches model: from tier 1 up it only raises the reasoning effort.
 - **Same error twice** below the top → escalate; at the top (opus) → `blocked`. With the default max_attempts 4 a
   task gets haiku, sonnet, opus, opus.
 - **`level: architecture`** on the PLAN line → the task starts at tier 2 (opus xhigh).
-- **`task escalate REQ T --to sonnet|opus --reason "..."`** (only for the session's own task) raises the tier, stores
+- **`task escalate REQ T --to standard|top --reason "..."`** (aliases `sonnet`, `opus`) (only for the session's own task) raises the tier, stores
   the reason in the task's notes so the next session reads it, and marks the session `escalated`. A target at or
   below the current tier is refused (the agent uses `task fail` instead), so an opus session cannot burn attempts
   "escalating" in place. Run by hand (no supervisor), it only changes the tier.
@@ -217,3 +248,26 @@ switches model: from tier 1 up it only raises the reasoning effort.
 - Noisy work (code sweeps, test suites, long logs) goes to subagents (`subagents.md`); the session keeps only
   conclusions.
 - Notes for the next attempt go in `task note`, not in the agent's head: the next attempt is a different session.
+
+## Milestone sessions and audits
+
+A plan with `### M1 — title` headings runs one fresh session per **milestone** instead of per task: the session gets
+every pending task of the milestone (`BITACORA_TASK=T1,T2,T3`), gives each its own verdict, and the supervisor settles
+and verifies each task separately. A task not reached because a task it depends on failed is `skipped` without
+counting an attempt; a session that times out gets up to three task timeouts. With a pool, a synthetic task
+`M1-audit` follows each milestone: an independent agent audits and may fix, and its verification is every verify
+command of the milestone again. Details and switches: `agents.md`. Plans without those headings are unchanged.
+
+## Concurrent sessions (`run --workers 2`)
+
+Opt-in; the default is one session at a time and behaves exactly as before. With `--workers 2` the supervisor runs
+two tasks at once **only when it is provably safe**: both name a `repo:` role, the roles differ, their dependencies
+are done and no task of that repo is in progress. A task without `repo:` (workspace root) may touch anything, so it
+always runs alone; two tasks of one repository never overlap. The cap is 2 until the machine's behaviour under several
+agent sessions is measured. Same-repository parallelism would need per-task worktrees and a serialized merge policy
+and is not implemented.
+
+Shared bitácora files (PLAN.md ticks, PENDING.md items, the bitácora's git index) are written under `bt_lock`
+critical sections, so concurrent sessions queue instead of interleaving. Each running session's pid is tracked, and a
+resume after a supervisor crash ends every orphaned session before starting new ones. Plan tasks that should be
+parallelizable must declare their repo role: `- [ ] T4 — … · repo: backend`.

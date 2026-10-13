@@ -119,15 +119,21 @@ projects, describe the process: actors, steps, systems, documents, handoffs.
 
 ## Bootstrap (new project)
 
-When the SessionStart context says NEW PROJECT, the central files are empty templates. Fill SUMMARY.md and
-ARCHITECTURE.md from what exists (README, code structure, configs, docs; or the user's description for a business
-project). Keep it factual and short; mark unknowns as such. Log "bootstrapped bitácora" in today's session section.
+When the SessionStart context says NEW PROJECT, first interview the owner about purpose, users, important flows,
+constraints, and success. Then follow `references/architecture-audit.md` across the confirmed product workspace
+before treating `ARCHITECTURE.md` as bootstrapped. Persist the confirmed purpose and `Last confirmed with owner`
+date in SUMMARY.md. The architecture document is a cross-repository product view; a README and folder summary alone
+are not a completed bootstrap. Keep unknowns explicit and mark the audit partial when a confirmed repo, material
+answer, or independent reviewer is missing. Log the bootstrap and audit coverage in today's session section.
 
 ## Projects are workspaces
 
 A project is a **workspace**: a name plus one or more repos with roles, e.g. `maros` → `frontend: maros-next`,
 `backend: maros-nest`. One bitácora, one set of requirements and one TOOLS.md per workspace, never per repo.
 `bitacora.py --project <p> workspace add <role> <path>` registers a repo; `workspace show` lists them.
+Architecture audits apply to the whole confirmed workspace. Use `bitacora.py --project <p> audit` to prepare the
+read-only inventory, then follow `references/architecture-audit.md`; candidates require owner confirmation before
+they become part of the audit boundary.
 
 How a session finds its project, in order: the launcher's `BITACORA_PROJECT` → an explicit `bind` → the HQ folder
 → a `.bitacora` marker file → being inside a registered workspace repo → the git repo name (a repo nobody

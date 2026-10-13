@@ -48,12 +48,49 @@ log, and from there on **run autonomously to the end** (§2) — no further chec
 
 Skip the gate only for Quick-track work (a change that fits in one sentence) or if the user said "hazlo directo".
 
+**The gate is automatic when there is nothing to decide.** `bitacora.py handoff REQ-NNN` (see `requirements.md` §8)
+approves and launches a plan on its own unless it finds a reason for the owner to look first (size, an architecture or
+high-risk task, nothing verifiable, or an irreversible/external/financial/security action in the text). Use it as
+the default way out of planning; the manual review above is what happens when it answers `needs_approval`.
+
 ## 1c. Run the approved plan: marathon, loop or goal
 
 **Marathon is the default for plans that will take days** (many tasks, or anything that won't finish in one
 sitting): an external supervisor runs one fresh headless session per task, with caps, stuck detection, usage-limit
 waits and reboot recovery — see `references/marathon.md`. Keep the **loop** (or Codex goal) for a plan of a few
 hours. Rule of thumb: more than ~8 tasks or "this will run overnight" → marathon.
+
+**Routing across agents** (`run --pool auto`, what `handoff` uses): the supervisor picks account, model and effort
+per session from every account allowed for the project — by tier, kind of work, usage limits and measured results —
+and closes each milestone with an independent audit by another agent. The whole model is in `agents.md`.
+
+**Account profiles** (`bitacora.py profiles list|doctor`, `launch|run --profile ID`): a profile is a provider plus the
+env that selects its account (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`); credentials stay in each provider's own directory.
+Only `work_only` profiles (`claude-work`) are gated: they run solely for projects with `"work": true` in
+`project.json` (`bitacora.py --project P work true|false`; missing = false). The gate runs before the handoff, the
+prompt or the first session, and again on every marathon session. Every other profile may run any project. It is a
+launcher guarantee, not a sandbox: calling the provider binary directly bypasses it. Over SSH (no display) the
+launcher opens a `tmux` session (`BITACORA_TERMINAL=tmux` forces it) or a transient `systemd-run --user` unit.
+
+### Agile: delegate one task, read a compact result
+
+`bitacora.py [--project P] delegate start "<task>" --profile ID|--agent A [--workdir DIR] [--allow PATH]...
+[--verify "<command>"] [--timeout MIN] [--model M] [--effort E] [--background]` runs ONE task in a headless session.
+The work gate runs first (profile and folder); then the agent reports in `RESULT.json` and the supervisor, not the
+agent, runs `--verify`. You receive only `status` (`verified` · `verify_failed` · `claimed` · `partial` · `blocked` ·
+`failed` · `timeout` · `usage_limit`), a ≤400-character summary, changed files, files outside `--allow` and the
+follow-ups; the full log stays in `.state/delegations/<id>/session.log`. `claimed` means done by the agent's word
+only, so ask for a `--verify` command whenever one exists. `delegate status <id>` and `delegate list` read back.
+Delegate only when the task is independent and checkable; edits to the same worktree must not run in parallel.
+
+**Concurrency**: `run --workers 2` runs tasks of *different* repos at once (marathon.md §Concurrent
+sessions); the default is sequential.
+
+**Attempt telemetry**: every marathon session appends one line to `<root>/.state/events/attempts-YYYY-MM.jsonl`
+(profile, agent, model, effort, seconds, result, tokens). A measure the provider did not report is `null`, never 0;
+Codex only reports a grand total. `bitacora.py metrics` summarizes per agent/profile/model with the share of attempts
+that carried usage. Counts are per-attempt and not comparable across task difficulty: do not rank models from them
+without comparing like with like. Local and private; nothing here is a subscription balance.
 
 **From the HQ (planning room)** — the session runs inside the bitácora root (`~/bitacora`), the SessionStart
 context says HQ MODE: don't execute here. Set PLAN.md `status: approved`, then launch a separate executor session:
@@ -67,7 +104,7 @@ you. Marathon runs with Haiku 5.5 + ultracode by default and escalates a failing
 xhigh; `marathon.md` §Escalation ladder); control it from the req's **Maratón** tab or
 `bitacora.py --project <p> run-control REQ-NNN pause|resume|stop`.
 
-`launch` writes `HANDOFF.md` next to the plan (everything the executor needs), and opens a new Windows Terminal window in
+`launch` writes `HANDOFF.md` next to the plan (everything the executor needs), and opens a native terminal window (Linux terminal, macOS Terminal, or Windows Terminal) in
 the project's repo running Claude Code with `--dangerously-skip-permissions` and a self-paced `/loop` (or Codex with `--yolo`
 and `/goal`; or, in marathon mode, the supervisor, which starts each session with the same permission flags). Executor
 sessions always start with these flags — that's the user's rule; never launch one without them. The repo path is remembered per project
@@ -120,6 +157,11 @@ bitácora explicitly (the Stop hook won't remind you).
   (one line, no waiting).
 - **Default: don't ask.** Library choice, naming, file layout, how to split a module, which test to write, how to
   handle an edge case the spec didn't cover: decide, record a ruling, move on.
+- **Rule conflict is an exception to that default.** If a user-controlled rule blocks the requested behavior, name
+  the exact source and impact and ask whether the user wants a one-time exception or a permanent rule change before
+  doing the blocked part. Pause only that part and continue independent work. Do not offer to change a higher-priority
+  instruction this skill cannot edit; explain the constraint and an allowed alternative. See
+  [`self-improvement.md`](self-improvement.md).
 - **Rulings, not stalls.** Record each judgment call under **Rulings** in PLAN.md: `what — why — cost if wrong`.
   The user reviews rulings afterwards instead of being interrupted.
 - **Stop and ask only for:** destroying data or work that can't be recovered (dropping tables, deleting files
@@ -188,3 +230,11 @@ end of your report propose making it permanent, in the cheapest reliable form:
 - project knowledge → ARCHITECTURE.md or DECISIONS.md.
 
 Rules that no longer change behavior should be proposed for deletion too — a lean skill gets followed.
+
+For a confirmed defect or requirement mismatch, reproducible check failure, explicit correction, or recurring
+friction in the methodology itself, inspect the cause and make a narrow, validated improvement in the canonical
+`~/dev/metodologia` source. Update the relevant tests and instructions, preserve unrelated changes, and report actual
+verification. This standing authorization covers reversible skill-owned changes only: generated installed copies
+and machine-wide Codex/Claude settings are outside it unless the specific update is authorized. Ask before external,
+destructive, security-sensitive or unrelated system changes. A speculative idea is a proposal, not a change request.
+See [`self-improvement.md`](self-improvement.md) for the evidence thresholds and rule-conflict procedure.

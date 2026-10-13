@@ -12,8 +12,10 @@ import bt_runtask as rt
 import bt_runtier as tier_
 from bt_runutil import backoff_override, notify, say
 
-LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|hit your limit|"
-                      r"limit will reset|overloaded_error", re.I)
+LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|"
+                      r"hit your (\w+ ){0,2}limit|(session|weekly|daily|hourly|opus|sonnet) limit|"
+                      r"limit will reset|limit\W{1,4}resets|overloaded_error|"
+                      r"(model|server|service) is (at capacity|overloaded)|try a different model", re.I)
 VERIFY_TIMEOUT = 600
 LIMIT_STREAK_MAX = 8  # consecutive usage-limit results on one task before the next one counts as an attempt
 LIMIT_RESULTS = ("usage_limit", "limit_streak")  # results that send the supervisor to wait
@@ -28,7 +30,9 @@ def _json(text: str):
 
 def _from_result(obj: dict) -> dict:
     return {"text": str(obj.get("result") or obj.get("error") or ""), "cost": obj.get("total_cost_usd"),
-            "is_error": bool(obj.get("is_error")) or str(obj.get("subtype") or "").startswith("error")}
+            "is_error": bool(obj.get("is_error")) or str(obj.get("subtype") or "").startswith("error"),
+            # the CLI's own structured verdict, when it gives one, beats reading the message
+            "limit": obj.get("api_error") == "usage_limit_reached" or obj.get("api_error_status") == 429}
 
 
 def parse_output(raw: str) -> dict:
@@ -58,25 +62,111 @@ def _result_text(info: dict) -> tuple[str, bool]:
     return out["text"], out["is_error"]
 
 
+_RESETS_IN = re.compile(r"resets?\s+in\s+(?:(\d+)\s*d(?:ays?)?\s*)?(?:(\d+)\s*h(?:ours?)?\s*)?(?:(\d+)\s*m(?:in(?:ute)?s?)?\s*)?"
+                        r"(?:(\d+)\s*s(?:ec(?:ond)?s?)?)?", re.I)
+
+
+def reset_epoch(text: str, now: float | None = None) -> int:
+    """Epoch of a relative reset announcement ('Resets in 166h43m25s'); 0 when the text carries none."""
+    for m in _RESETS_IN.finditer(text or ""):
+        days, hours, minutes, seconds = (int(g or 0) for g in m.groups())
+        total = days * 86400 + hours * 3600 + minutes * 60 + seconds
+        if total > 0:
+            return int((time.time() if now is None else now) + total)
+    return 0
+
+
+_MONTHS = {m: i + 1 for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov",
+                                            "dec"))}
+_MONTHS.update({"ene": 1, "abr": 4, "ago": 8, "set": 9, "dic": 12, "fev": 2, "avr": 4, "mai": 5, "out": 10, "dez": 12})
+_TRY_AT = re.compile(r"(?:(?:try again|available again)\s+(?:at|on)|resets?(?:\s+(?:at|on))?)\s+(?:([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})"
+                     r"(?:st|nd|rd|th)?,?\s+(?:(\d{4}),?\s+)?(?:at\s+)?)?(\d{1,2})(?::(\d{2}))?\s*([AaPp]\.?[Mm]\.?)?")
+
+
+def absolute_reset_epoch(text: str, now: float | None = None) -> int:
+    """Epoch of an absolute reset announcement in local time ('try again at Oct 13th, 2026 1:08 AM', 'resets at
+    3pm'); 0 when the text carries none. A time without a date means its next occurrence."""
+    current = dt.datetime.fromtimestamp(time.time() if now is None else now)
+    for m in _TRY_AT.finditer(text or ""):
+        month, day, year, hour, minute, ampm = m.groups()
+        if not (month or ampm or minute):  # a bare number after "at" is not a time
+            continue
+        hour, minute = int(hour), int(minute or 0)
+        mark = (ampm or "").replace(".", "").lower()
+        if mark == "pm" and hour < 12:
+            hour += 12
+        if mark == "am" and hour == 12:
+            hour = 0
+        try:
+            if month:
+                if month[:3].lower() not in _MONTHS:
+                    continue
+                when = dt.datetime(int(year or current.year), _MONTHS[month[:3].lower()], int(day), hour, minute)
+                if not year and when < current - dt.timedelta(days=1):
+                    when = when.replace(year=when.year + 1)
+            else:
+                when = current.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                if when <= current:
+                    when += dt.timedelta(days=1)
+        except ValueError:
+            continue
+        if when > current:
+            return int(when.timestamp())
+    return 0
+
+
+def limit_line(text: str, context: int = 0) -> str:
+    """The line that announces the limit (for logs and the quota record), not whatever the output ended with.
+    `context` adds that many following lines (a reset time is sometimes printed right below the message)."""
+    lines = (text or "").splitlines()
+    for i in range(len(lines) - 1, -1, -1):
+        if LIMIT_RE.search(lines[i]) and not lines[i].lstrip().startswith(("{", "[")):
+            return " ".join(" ".join(lines[i:i + 1 + context]).split())[:200 + 200 * context]
+    return ""
+
+
 def detect_limit(info: dict) -> int | None:
     """A usage/rate-limit message in the output of a FAILED session (non-zero exit or is_error): a successful run whose
     text merely mentions '429' or 'quota' is never a limit. Returns the reset epoch (0 = unknown) or None."""
     text, is_error = _result_text(info)
-    if not (info["rc"] or is_error) or not LIMIT_RE.search(text[-4000:]):
+    if not (info["rc"] or is_error) or not (LIMIT_RE.search(text[-4000:]) or (info.get("parsed") or {}).get("limit")):
         return None
     m = re.search(r"limit reached\|(\d{9,10})", text) or re.search(r"limit reached\|(\d{9,10})", info["text"][-20000:])
-    return int(m.group(1)) if m else 0
+    if m:
+        return int(m.group(1))
+    # Only the provider's own limit message says when the limit resets: any other "resets in" of the transcript
+    # (a cache, a test fixture) must not send the run to sleep.
+    for source in (text, info["text"][-4000:]):
+        line = limit_line(source, 2) or (source if len(source) < 400 else "")
+        epoch = reset_epoch(line) or absolute_reset_epoch(line)
+        if epoch:
+            return epoch
+    return 0
 
 
 def _session_fields(info: dict) -> dict:
     """What the session ran with, for its log entry."""
     _result_text(info)
     return {"model": info.get("model"), "effort": info.get("effort"), "cost_usd": info["parsed"].get("cost"),
+            "agent": info.get("agent"), "profile": info.get("profile"),
             "early_exit": True if info.get("early_exit") else None}
 
 
-def verify_task(project: str, t: dict, workdir: Path) -> tuple[bool, str]:
-    """Run the task's verify command in its repo. An unknown repo role fails (it must not fall back to another dir)."""
+def verify_task(project: str, t: dict, workdir: Path, state: dict | None = None) -> tuple[bool, str]:
+    """Run the task's verify command in its repo. An unknown repo role fails (it must not fall back to another dir).
+    An audit has no command of its own: every verify of the milestone it closes must pass again (the auditor may
+    have changed code)."""
+    if t.get("synthetic") and t.get("kind") == "audit" and state is not None:
+        seen = set()
+        for tid in t.get("after") or []:
+            member = rs.get_task(state, tid)
+            if not member or not member.get("verify") or (member["verify"], member.get("repo")) in seen:
+                continue
+            seen.add((member["verify"], member.get("repo")))
+            ok, out = verify_task(project, member, workdir)
+            if not ok:
+                return False, f"{tid}: {member['verify']} -> {out}"
+        return True, ""
     if not t["verify"]:
         return True, ""
     cwd = workdir
@@ -104,8 +194,11 @@ def enter_wait(rdir: Path, project: str, req: str, epoch: int, notified: bool) -
         step = s.get("wait_step", 0)
         minutes = min(30 * 2 ** step, 240)
         override = backoff_override()
-        until = dt.datetime.fromtimestamp(epoch) if epoch and 0 < epoch - time.time() < 8 * 3600 \
-            else dt.datetime.now() + dt.timedelta(minutes=minutes)
+        remaining = epoch - time.time() if epoch else 0
+        if remaining > 0:  # a known reset: wait for it, but wake at least every 12 h (a wrong parse can't lock a run)
+            until = dt.datetime.now() + dt.timedelta(seconds=min(remaining + 60, 12 * 3600))
+        else:
+            until = dt.datetime.now() + dt.timedelta(minutes=minutes)
         if override is not None:
             until = dt.datetime.now() + dt.timedelta(seconds=override)
         s.update(status="waiting", waiting_until=until.isoformat(timespec="seconds"), wait_step=step + 1)
@@ -139,7 +232,8 @@ def _escalation(t: dict, n: int) -> dict | None:
     return esc if esc and str(esc.get("session")) == str(n) else None
 
 
-def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, workdir: Path) -> str:
+def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, workdir: Path,
+                skip_reason: str | None = None) -> str:
     """Classify the finished session, update the task (attempts, model tier), record the log. Returns the result."""
     state = rs.load(rdir)
     t = rs.get_task(state, task_id)
@@ -148,9 +242,9 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
     if info["stopped"]:
         result, summary = "failed", "stopped by the user"
     elif t.get("claimed_done") or t["status"] == "done":  # a bare "done" is a RUN.json from before claims existed
-        ok, out = verify_task(project, t, workdir)
+        ok, out = verify_task(project, t, workdir, state)
         result = "done" if ok else "verify_failed"
-        err = None if ok else f"verify failed: {t['verify']} -> {out}"
+        err = None if ok else f"verify failed: {t['verify'] or 'milestone verifies'} -> {out}"
         summary = (t["evidence"] or summary) if ok else err
     elif t["status"] == "blocked":
         result, summary = "blocked", t["last_error"] or "blocked by the agent"
@@ -158,6 +252,8 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
         result, summary = "escalated", f"escalated to {escalation['to']}: {escalation['reason']}"
     elif t["status"] == "todo" and t["last_error"]:  # the agent called task fail (the session began as in_progress)
         result, err = "failed", t["last_error"]
+    elif skip_reason:  # a milestone session never reached it because a task it depends on did not finish
+        result, summary = "skipped", skip_reason
     elif info["timed_out"]:  # before the limit check: a killed session's half-written output proves nothing
         result, err = "timeout", f"session timeout after {state['limits']['session_timeout_min']} min"
     elif detect_limit(info) is not None:
@@ -177,10 +273,14 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
         if not info["stopped"]:  # a claim cut short by a stop is verified on the next start (recover_claims)
             task.pop("claimed_done", None)
         task["limit_streak"] = task.get("limit_streak", 0) + 1 if result == "usage_limit" else 0
+        if info.get("agent") and result != "skipped":  # who ran it last: the router alternates providers on failure
+            task["last_route"] = {"agent": info.get("agent"), "profile": info.get("profile"),
+                                  "model": info.get("model"), "effort": info.get("effort"),
+                                  "result": "stopped" if info["stopped"] else result}  # a stop is nobody's failure
         reason = None
         if result == "done":
             task["status"] = "done"
-        elif result == "usage_limit" or info["stopped"]:
+        elif result in ("usage_limit", "skipped") or info["stopped"]:
             task["status"] = "todo"
         elif result == "limit_streak":  # not an attempt nor a failure: no error_hash, no tier climb, never blocks
             task.update(status="todo", limit_streaks=task.get("limit_streaks", 0) + 1)
@@ -198,7 +298,8 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
             task["status"] = "blocked"
         if result not in LIMIT_RESULTS:
             s["wait_step"] = 0
-        rs.record(s, n, task_id, result, summary, info["seconds"], **_session_fields(info))
+        rs.record(s, n, task_id, "stopped" if info["stopped"] else result, summary, info["seconds"],
+                  **_session_fields(info))
     state = rs.update(rdir, fn)
     if result == "done":  # the checkbox is ticked only once verify passed, so --resume can trust it
         rt.tick_plan(rdir, task_id, f"{task_id} done (marathon) — {rt._one_line(t['evidence'] or summary, 200)}")

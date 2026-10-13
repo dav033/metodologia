@@ -175,7 +175,7 @@ class StreamJson(unittest.TestCase):
                   {"type": "result", "subtype": "success", "is_error": False, "result": "all good",
                    "total_cost_usd": 0.42}]
         text = "\n".join(json.dumps(x) for x in events)
-        self.assertEqual(parse_output(text), {"text": "all good", "is_error": False, "cost": 0.42})
+        self.assertEqual(parse_output(text), {"text": "all good", "is_error": False, "cost": 0.42, "limit": False})
         self.assertIsNone(detect_limit({"text": text, "rc": 1}))
         limit = text.rsplit("\n", 1)[0] + "\n" + json.dumps(
             {"type": "result", "is_error": True, "result": "Claude AI usage limit reached|1900000000"})
