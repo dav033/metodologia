@@ -13,17 +13,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T18:21:29",
+  "at": "2026-10-13T18:31:35",
   "pid": 1936968,
   "machine": "precision7760",
-  "task": "T3",
-  "session": 10,
-  "state": "done",
-  "session_pids": {},
+  "task": "M2-audit",
+  "session": 11,
+  "state": "session running 10 min",
+  "session_pids": {
+   "11": 2248176
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 10,
+ "sessions": 11,
  "tasks": [
   {
    "id": "T1",
@@ -172,7 +174,7 @@
    "milestone": "M2",
    "synthetic": true,
    "tier": 1,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],

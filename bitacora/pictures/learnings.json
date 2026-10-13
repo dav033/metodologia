@@ -18,6 +18,24 @@
       "created": "2026-10-13T15:24:46.148088-05:00",
       "updated": "2026-10-13T15:24:46.148088-05:00",
       "promoted_by": null
+    },
+    {
+      "id": "L-002",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "Global colour-card priority can change after a partial replacement, so last-order replay must preserve resolution for originally selected untouched pieces as well as changed pieces.",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-13T18:32:27.705325-05:00",
+          "source": "REQ-016/M2-audit",
+          "note": "REQ-016 M2 audit regression test-ultima-orden-color-replay-selection.ts fails: identical rosado to rojo reflex order first replaces 009, then untouched 011; independent antagonist confirms P-082."
+        }
+      ],
+      "created": "2026-10-13T18:32:27.705325-05:00",
+      "updated": "2026-10-13T18:32:27.705325-05:00",
+      "promoted_by": null
     }
   ]
 }
