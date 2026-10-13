@@ -7,7 +7,7 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
-- P-015 · Verify the controlled merge of the repo copies of eventos, maros, metodologia and signature-extraction with their live copies in `~/bitacora`, once the other agent finishes it (D-010) · urgency: med · complexity: M · added 2026-10-13 · user decision
+- P-015 · Verify the other computer's cleanup of the bitácora in `main` after D-011 (`9d1b796`): its copies merged with the live ones, and nothing lost · urgency: med · complexity: M · added 2026-10-13 · user decision
 - P-002 · First real end-to-end test (HQ → rounds → web approval → executor loop → bitácora) · urgency: high · complexity: M · added 2026-10-08 · session
 - P-013 · Live bitácora (~/bitacora) has no remote and no backup (local git repo since `b49b8c7`): decide how it is synced and backed up · urgency: high · complexity: M · added 2026-10-13 · user: "tenemos un problema" (GitHub review)
   - Context: since remote commit `4cfd74f` the bitácora lives outside the repo (D-007). Its legacy history reached GitHub with `a67371f`. The silent push failure no longer applies, because nothing pushes the live copy.

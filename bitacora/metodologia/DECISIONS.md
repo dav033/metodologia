@@ -81,9 +81,17 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Source:** [day log](2026-10/W3/2026-10-13.md) · D-007 · D-008
 
 ## D-010 — Keep the other clone's bitácora copies; the other agent does the controlled merge
-- **Date:** 2026-10-13 · **Status:** Accepted
+- **Date:** 2026-10-13 · **Status:** Superseded by D-011
 - **Context:** After D-009 the repo copies of eventos, maros, metodologia and signature-extraction, which come from the other clone, may differ from the live copies in `~/bitacora`.
 - **Decision:** keep the repo copies as they are. Nothing is aligned from this session. The controlled merge between both sides is done by the other agent, which the owner put in charge of it. The live copies stay unchanged until it finishes (P-015).
 - **Alternatives:** align the live copies to the repo from here (rejected: it would overwrite them without review); align the repo to the live copies from here (rejected: the same problem on the other side).
 - **Consequences:** + no data is lost while the merge is pending; one owner for the merge / − the divergence stays until the merge is done.
 - **Source:** [day log](2026-10/W3/2026-10-13.md) · D-009 · P-015
+
+## D-011 — Publish the live bitácora to main over the other clone's copies
+- **Date:** 2026-10-13 · **Status:** Accepted · **Supersedes:** D-010
+- **Context:** The owner decided to send everything to `main`. The other clone's agent runs on another computer and cleans up there. Commit `9d1b796` overwrites the other clone's versions of eventos, maros, metodologia and signature-extraction, plus the root `INDEX.md` and `TOOLS.md`, with the live copies. The other computer pushed `6ed2c4f` (pictures) meanwhile; the commit was rebased on it without conflicts.
+- **Decision:** the live copies are the content of `main` for these paths. Files that exist only in `main` are not deleted (maros 7, metodologia 14). The other computer's agent does the cleanup and the merge there.
+- **Alternatives:** keep the two sides apart and wait (rejected by the owner); publish to a separate branch (rejected by the owner).
+- **Consequences:** + `main` matches the live bitácora for these paths and the history keeps both sides / − `main` holds files that exist only in the other clone until its cleanup; the other computer must fetch and rebase before its next push.
+- **Source:** [day log](2026-10/W3/2026-10-13.md) · D-010 · P-015
