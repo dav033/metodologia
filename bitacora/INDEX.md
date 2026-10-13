@@ -1,6 +1,6 @@
 # Bitácora — index
 
-_Generated 2026-10-13 17:26. Do not edit by hand. Web: http://127.0.0.1:8765_
+_Generated 2026-10-13 18:12. Do not edit by hand. Web: http://127.0.0.1:8765_
 
 | Project | Repos | Open REQs | Open pending | Last activity | Links |
 |---|---|---|---|---|---|
@@ -11,7 +11,7 @@ _Generated 2026-10-13 17:26. Do not edit by hand. Web: http://127.0.0.1:8765_
 | [maros](maros/INDEX.md) | frontend, backend | 2 | 0 (0 high) | 2026-10-13 | [summary](maros/SUMMARY.md) · [web](http://127.0.0.1:8765/p/maros) |
 | [maros-lab](maros-lab/INDEX.md) | frontend | 1 | 9 (0 high) | 2026-10-13 | [summary](maros-lab/SUMMARY.md) · [web](http://127.0.0.1:8765/p/maros-lab) |
 | [metodologia](metodologia/INDEX.md) | skill | 7 | 16 (2 high) | 2026-10-13 | [summary](metodologia/SUMMARY.md) · [web](http://127.0.0.1:8765/p/metodologia) |
-| [pictures](pictures/INDEX.md) | demo-decoracion, t7, audit, t12 | 16 | 43 (3 high) | 2026-10-13 | [summary](pictures/SUMMARY.md) · [web](http://127.0.0.1:8765/p/pictures) |
+| [pictures](pictures/INDEX.md) | demo-decoracion, t7, audit, t12 | 16 | 44 (3 high) | 2026-10-13 | [summary](pictures/SUMMARY.md) · [web](http://127.0.0.1:8765/p/pictures) |
 | [proposal-studio](proposal-studio/INDEX.md) | app | 4 | 6 (3 high) | 2026-10-13 | [summary](proposal-studio/SUMMARY.md) · [web](http://127.0.0.1:8765/p/proposal-studio) |
 | [signature-extraction](signature-extraction/INDEX.md) | — | 0 | 0 (0 high) | 2026-10-09 | [summary](signature-extraction/SUMMARY.md) · [web](http://127.0.0.1:8765/p/signature-extraction) |
 

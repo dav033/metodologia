@@ -13,17 +13,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T17:56:18",
+  "at": "2026-10-13T18:11:22",
   "pid": 1936968,
   "machine": "precision7760",
-  "task": "T2",
-  "session": 9,
-  "state": "done",
-  "session_pids": {},
+  "task": "T3",
+  "session": 10,
+  "state": "session running 15 min",
+  "session_pids": {
+   "10": 2202135
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 9,
+ "sessions": 10,
  "tasks": [
   {
    "id": "T1",
@@ -139,13 +141,16 @@
    "complexity": null,
    "milestone": "M2",
    "tier": 0,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "commit c6dd13d4 on feat/req-016-guided-3d-edit-leftovers-exact-undo-and; npm run gate GATE_EXIT=0; tsc --noEmit clean; Caso 15-16 (test-ultima-orden-color-motor3d) fail without the fix; antagonist A1 (multicolor) fixed with Caso 16; M1-M3 in P-081",
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "claimed_done": true,
+   "findings": null,
+   "severity": null
   },
   {
    "id": "M2-audit",
