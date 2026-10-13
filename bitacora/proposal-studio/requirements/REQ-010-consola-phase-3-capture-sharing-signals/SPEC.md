@@ -2,7 +2,7 @@
 id: REQ-010
 status: planned
 created: 2026-10-13
-track: standard
+track: deep
 ---
 # REQ-010 — Consola phase 3: capture, sharing signals, and command navigation
 
