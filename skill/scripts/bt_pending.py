@@ -1,7 +1,7 @@
 """PENDING.md as a sorted backlog: every open item carries urgency and complexity, and the file keeps itself ordered.
 
 Canonical item line (detail lines indented under it move with it):
-  - P-012 · <task> · urgency: high · complexity: S · added 2026-10-09 · <source>
+  - P-NNN · <task> · urgency: high · complexity: S · added 2026-10-09 · <source>
 Sections: ## Open (sorted: urgency high → med → low, then complexity S → M → L → ?, then ID), ## Blocked,
 ## Recently closed. Older formats are understood and rewritten: "Now/Next/Problems" sections, bare "high/med/low"
 or "medium/alta/baja" tokens, unbulleted lines, items marked DONE/FIXED/MERGED/CLOSED (moved to Recently closed).
@@ -22,12 +22,19 @@ SECTION_URGENCY = {"now": "high", "problems": "high", "bugs": "high", "next": "m
 # done markers: upper-case anywhere in the title ("Furniture — MERGED into …", "DONE 2026-10-09 …"), so a lower-case
 # "merged" inside a description doesn't close an item
 DONE_RE = re.compile(r"(?:^\s*✓)|\b(DONE|FIXED|MERGED|CLOSED|CERRADO|HECHO|RESUELTO)\b")
+# guidance this module writes itself (HEADER, and the Notes footer older versions copied into every file). Full
+# sentences only: a user note that merely starts with the same words is kept.
+GUIDE = re.compile(r"^(One line per item: `P-(NNN|\d{3}) · |"
+                   r"Indented lines under an item are its details and move with it\.|"
+                   r"Move items between sections as they change; closed items keep 14 days|month summary\._$)")
 
 HEADER = """# {project} — Pending
 
 _Sorted automatically by `bitacora.py pending` (urgency high → low, then complexity S → L: quick urgent wins first).
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
+One line per item: `P-NNN · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
+Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`.
+Move items between sections as they change; closed items keep 14 days in "Recently closed", then go to the
+month summary._
 """
 
 
@@ -57,16 +64,24 @@ def parse_item(first: str, section: str) -> dict:
         else:
             others.append(s)
     sec = section.lower()
+    explicit = {"urgency": urgency is not None, "complexity": complexity is not None}
     if urgency is None:
         urgency = next((u for k, u in SECTION_URGENCY.items() if k in sec), "med")
     if "problem" in sec or "bug" in sec:
         title = title if title.lower().startswith("[bug]") else f"[bug] {title}"
     return {"id": pid, "title": title, "urgency": urgency, "complexity": complexity or "?", "others": others,
-            "done": bool(DONE_RE.search(title)) or "closed" in sec}
+            "done": bool(DONE_RE.search(title)) or "closed" in sec, "explicit": explicit}
 
 
-def render_item(it: dict) -> str:
-    parts = [it["id"], it["title"], f"urgency: {it['urgency']}", f"complexity: {it['complexity']}", *it["others"]]
+def render_item(it: dict, bare: bool = False) -> str:
+    # open items always carry urgency and complexity (they sort by them); bare (closed) items keep only what they had
+    explicit = it.get("explicit", {"urgency": True, "complexity": True})
+    fields = []
+    if not bare or explicit["urgency"]:
+        fields.append(f"urgency: {it['urgency']}")
+    if not bare or explicit["complexity"]:
+        fields.append(f"complexity: {it['complexity']}")
+    parts = [it["id"], it["title"], *fields, *it["others"]]
     return "- " + " · ".join(p for p in parts if p)
 
 
@@ -88,7 +103,7 @@ def parse(text: str) -> tuple[dict[str, list[dict]], list[str]]:
             sections.setdefault(section, []).append(current)
         elif current is not None:
             current["details"].append(line if line.startswith((" ", "\t")) else "  " + line.strip())
-        elif line.strip() not in ("_None_", "-"):
+        elif line.strip() not in ("_None_", "-") and not GUIDE.match(line.strip()):
             loose.append(line)
     return sections, loose
 
@@ -110,16 +125,16 @@ def normalize(text: str, project: str) -> str:
             else:
                 open_items.append(it)
 
-    def block(items: list[dict], sort: bool = True) -> str:
+    def block(items: list[dict], sort: bool = True, bare: bool = False) -> str:
         if not items:
             return "_None_\n"
         items = sorted(items, key=sort_key) if sort else items
-        return "".join(render_item(it) + "\n" + "".join(d + "\n" for d in it["details"]) for it in items)
+        return "".join(render_item(it, bare) + "\n" + "".join(d + "\n" for d in it["details"]) for it in items)
 
     out = HEADER.format(project=project)
     out += "\n## Open\n" + block(open_items)
     out += "\n## Blocked\n" + block(blocked)
-    out += "\n## Recently closed\n" + block(closed, sort=False)
+    out += "\n## Recently closed\n" + block(closed, sort=False, bare=True)
     if loose:
         out += "\n## Notes\n" + "\n".join(loose) + "\n"
     return out
