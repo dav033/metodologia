@@ -13,12 +13,12 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T18:32:35",
+  "at": "2026-10-13T18:34:35",
   "pid": 1936968,
   "machine": "precision7760",
   "task": "M2-audit",
   "session": 11,
-  "state": "session running 11 min",
+  "state": "session running 13 min",
   "session_pids": {
    "11": 2248176
   },
@@ -174,9 +174,9 @@
    "milestone": "M2",
    "synthetic": true,
    "tier": 1,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 0,
-   "last_error": null,
+   "last_error": "REJECT: P-082 same-selection replay changes untouched Fashion Rosa 011 after the first rosado-to-rojo-reflex call removed Rosado 009 elsewhere. Preserve original source resolution for requested untouched pieces while allowing expanded selections; define compatible history state, fix and register scripts/test/test-ultima-orden-color-replay-selection.ts (currently exit 1). Contained fixes committed df0be2a0; main suite 20/20, confirmation/context/consumption/frontiers/types and existing gate 10/10 pass; lint 0 errors. Application builds fail separately under P-083. Full findings, actual checks and continuation in AUDIT-M2.md; logs and memory updated, working tree clean, all child agents and jobs finished. No push/deploy/publication.",
    "error_hashes": [],
    "evidence": null,
    "pending_id": null,

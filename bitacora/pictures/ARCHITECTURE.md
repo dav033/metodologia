@@ -26,6 +26,11 @@ owner of quantities for the guided assistant. The 3D workshop lives entirely in 
 - Scraped data outside the repo: `pictures-workspace/ideas-fiesta-sempertex/` (ideas JSON, photos, `clasif/`).
 - fal.ai (FLUX.2 for photos; FLUX.1 i2i/ControlNet only in `scripts/exp/render-fiel.ts`), Gemini (text only).
 
+## Guided 3D editing context (REQ-016 M2 audit)
+- `plan/aprobacion.ts` reads token v1/v2/v3; only the 3D writer with explicit known history and `PLAN_COLOR_ORDER_V3=true` emits v3. The default is reader-only/v2 (D-035/D-046). Legacy unknown history remains unknown after size/base edits. Never enable the writer before a separate reader release; rollback must retain the v3 reader.
+- Last replacement context tracks actual effects per piece; add-idea/reload/undo retain the corresponding signed context. Different effective destinations supersede older effects.
+- **Known blocker P-082:** the record does not preserve original source resolution on requested untouched pieces; an identical replay can change another pink. M2 is rejected pending a compatible design/fix. See `requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/AUDIT-M2.md`.
+
 ## Key flows
 - Idea lot: agent digitizes 15 ideas → `lote-NN.ts` + test → verified in clean worktree `Downloads/e3-verif` → push.
 - Edit: pick piece → inspector / context menu → solo editor → Listo applies as one undo step.

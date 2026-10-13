@@ -9,7 +9,7 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 - Development resumed on the laptop and REQ-015 judge fixes reached a locally verified feature branch; all 10 gate suites pass.
 
 ## Done
-- REQ-016 T2 design audit reproduced false colour clarification after size edits and proved the spec cannot identify prior colour orders. D-046 formalizes signed last-order context and reader-first compatibility; implementation remains open, baseline colour suite 21/21 passes.
+- REQ-016 M2 independently audited and rejected for P-082 (same-selection replay changes another pink). Local audit corrections `df0be2a0` enforce reader-first issuance, preserve unknown legacy history and bound the last order; main suite 20/20, existing gate 10/10. A committed standalone regression remains red; app build issues are separate P-083.
 - Reconciled local clone and marathon records. Existing branch has 21 commits over tracked origin/main; T12 and audit #3 corrections are integrated as uncommitted changes.
 - Fixed selected-idea chips with an unrelated open plan, restored quote parity, and mixed round/Link-O-Loon color counts. Both independent review axes approve the corrections; P-076 closed.
 - Confirmed stale generated development route types caused the historical typecheck errors. Recoverable backup retained; source types and app build pass without weakening checks.

@@ -38,7 +38,7 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 - Branch `feat/req-015-judge-fix` (24 commits, local, not pushed): count/price parity, chips by rules (D-043), cost cap (D-044), honest colour-swap, rating row. Gate GATE OK, tsc 0, lint 0 errors. Owner decides push/PR. Report: requirements/REQ-015-*/REPORT.md.
 
 ## Active focus
-- REQ-016 T2 design ready (D-046; DESIGN-T2.md): signed last-colour-order context, honest replay no-op, per-piece resolution and v3 reader-before-writer rollout. Defect reproduced; implementation stays pending, baseline colour tests 21/21 pass.
+- REQ-016 M2 audit **REJECTED** (P-082): repeating the same `rosado → rojo reflex` selection changes another pink. T2/T3 plus audit fixes are local in t12 at `df0be2a0`; reader-first v3 issuance is disabled by default (`PLAN_COLOR_ORDER_V3=false`). Existing gate passes all 10 suites, main last-order suite 20/20; the committed standalone replay regression fails. See AUDIT-M2.md. App build issues are separate P-083.
 - REQ-015 implementation and verification complete locally, ready for owner review/commit/publication: chosen-idea chips by rules, shared price, honest color counts, durable quote cap. Restored ambiguous/composite idea prices show “Precio al elegir”; no session contract change. REPORT.md contains evidence; visual rating UI 9/9, contract 27/27, final types/build pass.
 
 ## Top pending (see PENDING.md)
