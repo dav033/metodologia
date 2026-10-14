@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-14 15:31 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 15:37 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -32,6 +32,7 @@ _Generated 2026-10-14 15:31 by `bitacora.py index`. Do not edit by hand._
 | [REQ-006](requirements/REQ-006-automatic-requirement-to-milestones-flow/SPEC.md) | Automatic requirement-to-milestones flow with learning | `ready` | [review](requirements/REQ-006-automatic-requirement-to-milestones-flow/PLAN.md) |  |
 | [REQ-007](requirements/REQ-007-engineering-workspace-migration-without/SPEC.md) | Engineering workspace migration without capability or data loss | `planned` | [approved](requirements/REQ-007-engineering-workspace-migration-without/PLAN.md) |  |
 | [REQ-008](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/SPEC.md) | Fresh milestone orchestration and bounded context execution | `in-progress` | [paused](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/PLAN.md) | report ✓ |
+| [REQ-009](requirements/REQ-009-planner-plan-json-classification-contrac/SPEC.md) | Planner PLAN.json classification contract | `clarifying` | [in-progress](requirements/REQ-009-planner-plan-json-classification-contrac/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 

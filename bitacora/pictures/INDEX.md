@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-14 14:20 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 15:48 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -47,10 +47,10 @@ _Generated 2026-10-14 14:20 by `bitacora.py index`. Do not edit by hand._
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
 - P-015 · REQ-002 remaining rollout verification: current read-only Neon audit proves 028 tables and · high/M
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
+- P-091 · BLOCKS MERGE of the garland no-R-9 fill (VERSION_MOTOR 1.2.4, branch feat/req-014-motor-ba · high/M
 - P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
 - P-086 · `tamano_pieza` shrink (-1) enlarges a piece whose start size is below the constructor mini · med/S
-- P-002 · FLUX photo color fidelity: residual ΔE ~15 after hex prompt (c25490f1); next: photoreal ca · med/M
-- P-007 · Split Taller3D.tsx (1022 lines) by responsibility: top bar, rail panels, viewer overlay, i · med/M
+- P-092 · PERFIL_ARO signal lost: aro bands (bandas-aro.ts) were lowered to what the engine produces · med/S
 
 ## Recent decisions
 
