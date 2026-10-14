@@ -1,6 +1,6 @@
 ---
 req: REQ-005
-status: approved
+status: launched
 created: 2026-10-14
 ---
 # Plan — REQ-005 Friendlier roles and permissions and full-power admin MCP
@@ -55,3 +55,4 @@ MCP capability report lists no administrative route without a tool; each accepta
 ## Progress log
 - 2026-10-14: spec and plan written by the HQ session (790c0548) under the owner's "assume and go" instruction.
 - 2026-10-14 11:21 plan APPROVED (terminal)
+- 2026-10-14 11:21 launched marathon supervisor (pool auto, haiku) from HQ in `/home/david/dev/maros`
