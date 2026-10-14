@@ -14,17 +14,17 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T12:52:57",
+  "at": "2026-10-14T12:56:09",
   "pid": 2274846,
   "machine": "precision7760",
-  "task": "M1",
-  "session": 6,
+  "task": "M1-audit",
+  "session": 7,
   "state": "batch settled",
   "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 6,
+ "sessions": 7,
  "tasks": [
   {
    "id": "T1",
@@ -158,13 +158,27 @@
    "milestone": "M1",
    "synthetic": true,
    "tier": 1,
-   "status": "todo",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "pass: verified R1-R4 against 3a4ce7b..f574f58; npx jest auth (48) + users/common (215) + users (126) passed; tsc and eslint clean; unapplied sql db/add-role-audit-events.sql clean",
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "findings": 0,
+   "severity": {
+    "high": 0,
+    "med": 0,
+    "low": 0
+   },
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "antigravity",
+    "profile": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "T4",
@@ -872,6 +886,23 @@
    },
    "isolation": "worktree",
    "branch": "wt/M1-f37f0106"
+  },
+  {
+   "at": "2026-10-14T12:56:09",
+   "session": 7,
+   "task": "M1-audit",
+   "result": "done",
+   "summary": "pass: verified R1-R4 against 3a4ce7b..f574f58; npx jest auth (48) + users/common (215) + users (126) passed; tsc and eslint clean; unapplied sql db/add-role-audit-events.sql clean",
+   "seconds": 184,
+   "model": "gemini-3.8-flash-low",
+   "agent": "antigravity",
+   "profile": "antigravity",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree"
   }
  ],
  "pool": [
