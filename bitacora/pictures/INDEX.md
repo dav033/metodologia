@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-14 06:51 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 09:48 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -44,13 +44,13 @@ _Generated 2026-10-14 06:51 by `bitacora.py index`. Do not edit by hand._
 
 ## Top pending (urgency, then complexity)
 
-- P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/?
-- P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer - · high/?
-- P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/?
+- P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
+- P-015 · REQ-002 remaining rollout verification: current read-only Neon audit proves 028 tables and · high/M
+- P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
 - P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
-- P-079 · Stale persisted image: a plain adjust of a plan with a generated image drops the in-memory · med/S
-- P-039 · Finish library ideas 29/30/31 fix (branch fix/biblioteca-feedback 998a7b18, e7f): re-resol · med/M
-- P-048 · Scenario matrix gaps: 18 % of representable pieces fall to noRepresentables («colour doesn · med/M
+- P-002 · FLUX photo color fidelity: residual ΔE ~15 after hex prompt (c25490f1); next: photoreal ca · med/M
+- P-007 · Split Taller3D.tsx (1022 lines) by responsibility: top bar, rail panels, viewer overlay, i · med/M
+- P-014 · 14 factory library items have no ficha/render (extractor dedups them against derived piece · med/M
 
 ## Recent decisions
 

@@ -9,6 +9,7 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 - Development resumed on the laptop and REQ-015 judge fixes reached a locally verified feature branch; all 10 gate suites pass.
 
 ## Done
+- Owner-requested local Python setup is working: /readyz ready, authenticated quotation 39,111 COP. npm commands load `.env.local` explicitly; backend keeps operational state in memory and reads the existing catalogue. P-075 now exposes a material-name assertion failure instead of missing configuration.
 - 2026-10-14: repaired P-075 colour regression's ignored Shopify snapshot dependency with controlled catalogue titles and registered it in guiada:test. Standalone regression and guided suite pass; final lint/types checks recorded in the day log. Reconciled stale P-041 after salon regression suite passed 27/27. Quotation UI integration reproduced exit 1 with missing Python configuration (503).
 - REQ-016 M2 independently audited and rejected for P-082 (same-selection replay changes another pink). Local audit corrections `df0be2a0` enforce reader-first issuance, preserve unknown legacy history and bound the last order; main suite 20/20, existing gate 10/10. A committed standalone regression remains red; app build issues are separate P-083.
 - Reconciled local clone and marathon records. Existing branch has 21 commits over tracked origin/main; T12 and audit #3 corrections are integrated as uncommitted changes.

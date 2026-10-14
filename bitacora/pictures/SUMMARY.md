@@ -43,7 +43,7 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 - 2026-10-14 follow-up: deterministic colour coverage passes in guiada:test (15 scripts); final lint 0 errors/49 warnings, workspace builds and app types pass. Application build/full gate not rerun for this test-only change.
 
 ## Top pending (see PENDING.md)
-- P-075: colour regression repaired locally; quotation UI integration still needs configured Python (reproduced 503 PYTHON_BACKEND_NOT_CONFIGURED). P-041 closed after verifying existing capacity regressions (salon 27/27). P-077 requires production counts; t12 app build remains P-083.
+- P-075: both deterministic and real-Python UI suites pass, including repaired product-name parity; app build/types/lint pass, full gate running. Python loopback :8000 ready, real quote 39,111 COP. P-041 closed (salon 27/27). P-083 reproduced and being corrected in isolated t12; P-077 still requires production count evidence.
 
 ## Recent decisions (see DECISIONS.md)
 - D-027 helium sphere volume · D-028/D-030 product judge timing · D-029 class-prefixed ids · D-031 manual VPS deploy ·
