@@ -14,6 +14,10 @@ separarlo del repositorio de por ejemplo mobiliario y nuevas cosas que queremos 
 Grounded in `origin/main` = `b4433bc9` (worktree `C:/Users/davidt/Downloads/e6f`). All paths below are relative to
 `demo-decoracion/`.
 
+> Review 2026-10-14: the marathon brief named the RAG column migration `033`; that number is taken
+> (`033_proveedor_anthropic.sql`), so the migration is `scripts/migrations/034_catalogo_repositorios.sql` throughout this
+> SPEC. Phases 1-5 are in code; Phases 6-7 are not (see PLAN.md, "Implementation status in code").
+
 ---
 
 ## 1. Context

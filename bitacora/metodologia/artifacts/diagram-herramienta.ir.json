@@ -1,0 +1,467 @@
+{
+ "schema_version": 1,
+ "diagram_type": "architecture",
+ "meta": {
+  "locale": "es",
+  "title": "metodologia · arquitectura de la herramienta",
+  "output": "diagram-herramienta.html",
+  "quality_profile": "standard"
+ },
+ "components": [
+  {
+   "id": "user",
+   "type": "external",
+   "label": "David",
+   "sublabel": "dueño del flujo",
+   "pos": [
+    40,
+    300
+   ],
+   "size": [
+    140,
+    62
+   ],
+   "tag": "1 aprobación"
+  },
+  {
+   "id": "hq",
+   "type": "backend",
+   "label": "Sesión HQ",
+   "sublabel": "Claude Code · Codex",
+   "pos": [
+    40,
+    110
+   ],
+   "size": [
+    140,
+    62
+   ]
+  },
+  {
+   "id": "cli",
+   "type": "backend",
+   "label": "CLI bitacora / bt",
+   "sublabel": "~40 subcomandos",
+   "pos": [
+    250,
+    110
+   ],
+   "size": [
+    140,
+    62
+   ]
+  },
+  {
+   "id": "web",
+   "type": "backend",
+   "label": "Panel web local",
+   "sublabel": "127.0.0.1:8765",
+   "pos": [
+    250,
+    300
+   ],
+   "size": [
+    140,
+    62
+   ],
+   "tag": "token + mismo origen"
+  },
+  {
+   "id": "hooks",
+   "type": "security",
+   "label": "Hooks de sesión",
+   "sublabel": "Start · Stop · End",
+   "pos": [
+    250,
+    490
+   ],
+   "size": [
+    140,
+    62
+   ]
+  },
+  {
+   "id": "interview",
+   "type": "backend",
+   "label": "Requerimientos",
+   "sublabel": "rondas → SPEC → PLAN",
+   "pos": [
+    460,
+    110
+   ],
+   "size": [
+    140,
+    62
+   ]
+  },
+  {
+   "id": "supervisor",
+   "type": "backend",
+   "label": "Supervisor / maratón",
+   "sublabel": "una sesión limpia por hito",
+   "pos": [
+    460,
+    300
+   ],
+   "size": [
+    160,
+    62
+   ]
+  },
+  {
+   "id": "router",
+   "type": "backend",
+   "label": "Enrutador",
+   "sublabel": "cuenta · modelo · esfuerzo",
+   "pos": [
+    460,
+    490
+   ],
+   "size": [
+    160,
+    62
+   ]
+  },
+  {
+   "id": "auditor",
+   "type": "security",
+   "label": "Auditor independiente",
+   "sublabel": "otro proveedor, un escalón arriba",
+   "pos": [
+    690,
+    110
+   ],
+   "size": [
+    170,
+    62
+   ]
+  },
+  {
+   "id": "drivers",
+   "type": "backend",
+   "label": "Drivers de proveedor",
+   "sublabel": "contrato v1 (informativo)",
+   "pos": [
+    690,
+    300
+   ],
+   "size": [
+    170,
+    62
+   ]
+  },
+  {
+   "id": "isolation",
+   "type": "cloud",
+   "label": "Worktrees aislados",
+   "sublabel": "opt-in · nunca fusiona a main",
+   "pos": [
+    690,
+    490
+   ],
+   "size": [
+    170,
+    62
+   ]
+  },
+  {
+   "id": "claude",
+   "type": "external",
+   "label": "Claude",
+   "sublabel": "Haiku · Sonnet · Opus",
+   "pos": [
+    930,
+    200
+   ],
+   "size": [
+    140,
+    62
+   ]
+  },
+  {
+   "id": "codex",
+   "type": "external",
+   "label": "Codex",
+   "sublabel": "GPT-6 Luna · Sol",
+   "pos": [
+    930,
+    330
+   ],
+   "size": [
+    140,
+    62
+   ]
+  },
+  {
+   "id": "agy",
+   "type": "external",
+   "label": "Antigravity",
+   "sublabel": "Gemini 3.8 Flash",
+   "pos": [
+    930,
+    460
+   ],
+   "size": [
+    140,
+    62
+   ]
+  },
+  {
+   "id": "bitacora",
+   "type": "database",
+   "label": "Bitácora",
+   "sublabel": "logs · DECISIONS · PENDING",
+   "pos": [
+    250,
+    650
+   ],
+   "size": [
+    150,
+    62
+   ]
+  },
+  {
+   "id": "telemetry",
+   "type": "database",
+   "label": "Telemetría y aprendizaje",
+   "sublabel": "intentos · learnings",
+   "pos": [
+    460,
+    650
+   ],
+   "size": [
+    170,
+    62
+   ]
+  },
+  {
+   "id": "state",
+   "type": "database",
+   "label": "Estado local .state",
+   "sublabel": "RUN.json · cuotas · perfiles",
+   "pos": [
+    690,
+    650
+   ],
+   "size": [
+    170,
+    62
+   ]
+  },
+  {
+   "id": "repos",
+   "type": "cloud",
+   "label": "Repos del proyecto",
+   "sublabel": "commits locales, sin push",
+   "pos": [
+    930,
+    650
+   ],
+   "size": [
+    150,
+    62
+   ]
+  }
+ ],
+ "connections": [
+  {
+   "id": "user-hq",
+   "from": "user",
+   "to": "hq",
+   "label": "intención",
+   "variant": "emphasis",
+   "fromSide": "top",
+   "toSide": "bottom"
+  },
+  {
+   "id": "hq-cli",
+   "from": "hq",
+   "to": "cli",
+   "label": "comandos"
+  },
+  {
+   "id": "user-web",
+   "from": "user",
+   "to": "web",
+   "label": "aprueba · responde",
+   "variant": "emphasis"
+  },
+  {
+   "id": "cli-interview",
+   "from": "cli",
+   "to": "interview",
+   "label": "plan"
+  },
+  {
+   "id": "web-interview",
+   "from": "web",
+   "to": "interview",
+   "label": "rondas como formulario",
+   "variant": "dashed",
+   "fromSide": "right",
+   "toSide": "bottom",
+   "labelDy": -8
+  },
+  {
+   "id": "interview-supervisor",
+   "from": "interview",
+   "to": "supervisor",
+   "label": "plan aprobado",
+   "variant": "emphasis"
+  },
+  {
+   "id": "supervisor-router",
+   "from": "supervisor",
+   "to": "router",
+   "label": "¿quién?",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "labelAt": [
+    540,
+    426
+   ]
+  },
+  {
+   "id": "supervisor-drivers",
+   "from": "supervisor",
+   "to": "drivers",
+   "label": "1 sesión por hito",
+   "variant": "emphasis",
+   "labelAt": [
+    655,
+    290
+   ]
+  },
+  {
+   "id": "supervisor-auditor",
+   "from": "supervisor",
+   "to": "auditor",
+   "label": "audita cada hito",
+   "variant": "security",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "labelDy": -20
+  },
+  {
+   "id": "supervisor-isolation",
+   "from": "supervisor",
+   "to": "isolation",
+   "label": "opt-in",
+   "variant": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "labelAt": [
+    830,
+    426
+   ]
+  },
+  {
+   "id": "router-drivers",
+   "from": "router",
+   "to": "drivers",
+   "label": "modelo · cuenta",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "labelAt": [
+    790,
+    480
+   ]
+  },
+  {
+   "id": "drivers-claude",
+   "from": "drivers",
+   "to": "claude"
+  },
+  {
+   "id": "drivers-codex",
+   "from": "drivers",
+   "to": "codex"
+  },
+  {
+   "id": "drivers-agy",
+   "from": "drivers",
+   "to": "agy"
+  },
+  {
+   "id": "hooks-bitacora",
+   "from": "hooks",
+   "to": "bitacora",
+   "label": "estado · documentar",
+   "variant": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "labelAt": [
+    320,
+    600
+   ]
+  },
+  {
+   "id": "router-state",
+   "from": "router",
+   "to": "state",
+   "label": "cuotas reales",
+   "variant": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "supervisor-telemetry",
+   "from": "supervisor",
+   "to": "telemetry",
+   "label": "intentos medidos",
+   "variant": "dashed",
+   "fromSide": "left",
+   "toSide": "top",
+   "via": [
+    [
+     420,
+     331
+    ],
+    [
+     420,
+     600
+    ],
+    [
+     545,
+     600
+    ]
+   ]
+  },
+  {
+   "id": "isolation-repos",
+   "from": "isolation",
+   "to": "repos",
+   "label": "commits",
+   "variant": "dashed"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "emerald",
+   "title": "Todo local",
+   "items": [
+    "CLI, panel, supervisor y bitácora en tu máquina",
+    "Sin servicio remoto; las skills son opcionales",
+    "Nunca hace push ni fusiona a main solo"
+   ]
+  },
+  {
+   "dot": "cyan",
+   "title": "Una aprobación, luego autónomo",
+   "items": [
+    "Rondas → SPEC → PLAN → aprobación única",
+    "Una sesión limpia por hito, con reanudación",
+    "Cada hito lo audita otro proveedor"
+   ]
+  },
+  {
+   "dot": "rose",
+   "title": "Límites actuales",
+   "items": [
+    "Verificado solo en Linux (Windows/macOS sin probar)",
+    "El contrato de driver informa, el verify decide",
+    "Aislamiento por worktree apagado por defecto"
+   ]
+  }
+ ]
+}

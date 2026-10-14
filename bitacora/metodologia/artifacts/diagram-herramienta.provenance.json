@@ -1,0 +1,15 @@
+{
+ "kind": "diagram",
+ "type": "architecture",
+ "name": "herramienta",
+ "title": "metodologia \u00b7 arquitectura de la herramienta",
+ "ir_sha256": "de2b3609f4b0e8e22047134152140041ae7a5f99479c44127aff78bc1b2bcec8",
+ "html_sha256": "fd71b6975d613ae149ec6f0a536ef07f4228ee7761e05776181de71d1e4d9132",
+ "renderer": {
+  "name": "archify",
+  "version": "3.1.0",
+  "commit": "c21c31ffb879668900c5487ea24993bf45d89b15",
+  "tree_sha256": "80a3d5b793902bf31ff4d236501c1eacf151e0cbd6231bd8799edb2c033adbc0"
+ },
+ "generated_at": "2026-10-14T10:55:44-0500"
+}

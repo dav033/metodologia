@@ -1,6 +1,6 @@
 ---
 req: REQ-013
-status: planned
+status: in-progress (phases 1-5 built, 6-7 pending)
 created: 2026-10-09
 ---
 # Plan — REQ-013 Catalogue repositories
@@ -34,6 +34,32 @@ Base: `origin/main` = `b4433bc9` (`C:/Users/davidt/Downloads/e6f`). One implemen
   (spec / standards) before merge.
 
 Verify commands run from the worktree root of `demo-decoracion`.
+
+---
+
+## Implementation status in code (reviewed 2026-10-14 against `6e1388af`, branch `feat/req-015-judge-fix`)
+Review of SPEC and this plan against `src/lib/catalogo/**`, `src/lib/taller/**`, `scripts/migrations/` and `scripts/test/`.
+Checked = the file exists and the verify command was run and exited 0 on 2026-10-14; "exists" = file present, verify not run; "not run" = environment gap.
+
+**Migration number.** The marathon brief (REQ-014 T17/T24) called the column migration `033`; that number is taken
+(`033_proveedor_anthropic.sql`), so the real file is `scripts/migrations/034_catalogo_repositorios.sql` (additive
+`repositorio TEXT NOT NULL DEFAULT 'sempertex'`, CHECK, index, rollback in the header). Any reference to "migration 033"
+for this feature means 034; `scripts/test/test-migracion-033.ts` (REQ-014 T24) and `test-migracion-repositorio.ts` guard it.
+Note: REQ-014 reuses the ids T17/T23/T24/T41 for its own tasks; the T-numbers below are REQ-013 phase tasks.
+
+| Phase | Tasks | State in code | Evidence |
+|---|---|---|---|
+| 1 views | T1-T7 | Implemented. Differences from the text: lock files are per repository (`src/lib/catalogo/repositorios/<id>/lock.json` + `huella.ts`, test `test-catalogo-lock.ts`), not one `repositorios.lock.json`; extra files exist (`manifiestos.ts`, `repositorio.ts`, `repositorios/fondos.ts`, `repositorios-publicos.ts`). The REQ-014 tasks T23 (registry/types/manifests/flags, `test-repositorios-registro.ts`) and T41 (data through loaders, `test-repositorios-datos.ts`) landed in `6e1388af`. | Checked: `test-catalogo-dorado`, `test-catalogo-identidad`, `test-catalogo-ids`, `test-catalogo-repositorios`, `test-catalogo-compatibilidad`, `test-estudio-fronteras` |
+| 2 RAG partition | T8-T13 | Implemented (`d4b4020d`); 034 applied to Neon per the run-book log below. | Checked: `test-taller-indice`, `test-taller-buscar`. Not run: `test-migracion-034` (needs PGlite via `PGLITE_DIR`, not installed here) |
+| 3 index fondos | T14-T18 | Fichas, extractor, oro fixture and the paid embedding run exist (`318c5aaa`; applied 2026-10-10, see log). `src/lib/catalogo/buscar-memoria-fondos.ts` (T17 memory fallback) does NOT exist: no dedicated keyword fallback for the two repositories was found. | Checked: `test-fichas-fondos`. Exists: `fixtures/oro-busqueda-catalogo.json` |
+| 4 visibility + AI | T19-T22 | Implemented (`8955d367`): `visibilidad.ts`, `ajustes/ajustes-runtime.ts`, `herramientas-ia.ts`, `CATALOGO_FILTRO_IA`. | Checked: `test-catalogo-visibilidad`, `test-catalogo-superficies`. Exists: `test-guiada-motor-bandera`, `test-esquema-gemini` (not run) |
+| 5 Taller UI | T23-T26 | Implemented (`3a390153`): `/api/catalogo/repositorios`, `SelectorRepositorio.tsx`, `useRepositoriosCatalogo.ts`, `lista-por-repositorio.ts`. T26 (browser pass) is a manual step. | Checked: `test-catalogo-api`. Not run: `test-anadir-repositorios-ui`, `test-lista-repositorios-ui` (Playwright browser missing on this machine) |
+| 6 pricing per repository | T27-T29 | NOT implemented: no `src/lib/catalogo/precio.ts`, no rental-list loader, no `test-precio-repositorios.ts` (manifests only declare the source). | - |
+| 7 qualified ids + terceros | T30-T32 | NOT implemented: no `scripts/catalogo/validar-terceros.ts`, `test-terceros.ts` or `fixtures/terceros-ejemplo/`. | - |
+
+Remaining work for this REQ: T17 memory fallback (Phase 3), Phase 6, Phase 7, plus the manual T26 browser pass. Checkboxes
+below are left as written by the planner except where this table says otherwise; do not treat an unchecked box of Phases
+1-5 as unbuilt without reading the table.
 
 ---
 
