@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-13 23:21 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-13 23:29 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -10,6 +10,7 @@ _Generated 2026-10-13 23:21 by `bitacora.py index`. Do not edit by hand._
 
 - **skill** → `/home/david/dev/metodologia`
 - **ops-matrix-cujggjqq** → `/tmp/ops-matrix-cujggjqq`
+- **ops-matrix-gwx4a4rl** → `/tmp/ops-matrix-gwx4a4rl`
 
 ## Needs attention
 
