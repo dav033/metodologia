@@ -14,15 +14,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T13:28:58",
+  "at": "2026-10-14T13:52:55",
   "pid": 2274846,
   "machine": "precision7760",
   "task": "T6",
   "session": 10,
-  "state": "session running 15 min",
-  "session_pids": {
-   "10": 2341245
-  },
+  "state": "batch settled",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -305,13 +303,25 @@
    "complexity": null,
    "milestone": "M3",
    "tier": 1,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "commit a580d3e on wt/T6-0724f01c; npx jest src/modules/mcp --silent exit 0 (13 suites, 197 tests pass); tsc --noEmit clean; eslint clean",
    "pending_id": null,
-   "notes": []
+   "notes": [
+    "Implemented 9 administrative MCP tools in src/modules/mcp/tools/users-roles-admin.ts with full unit tests in users-roles-admin.spec.ts. All tests pass (13 suites in mcp, 27 across mcp and users), tsc clean, eslint clean. Commit a580d3e."
+   ],
+   "findings": null,
+   "severity": null,
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "antigravity",
+    "profile": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "T7",
@@ -1014,6 +1024,24 @@
    "warning": "audit_modified_tree: review M2-audit changed its disposable tree; preserved on branch wt/M2-audit-audit-changes-1",
    "summary": "audit_modified_tree: review M2-audit changed its disposable tree; preserved on branch wt/M2-audit-audit-changes-1",
    "seconds": 0
+  },
+  {
+   "at": "2026-10-14T13:52:41",
+   "session": 10,
+   "task": "T6",
+   "result": "integration_pending",
+   "summary": "commit a580d3e on wt/T6-0724f01c; npx jest src/modules/mcp --silent exit 0 (13 suites, 197 tests pass); tsc --noEmit clean; eslint clean",
+   "seconds": 2319,
+   "model": "gemini-3.8-flash-low",
+   "agent": "antigravity",
+   "profile": "antigravity",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/T6-0724f01c"
   }
  ],
  "pool": [
@@ -1177,7 +1205,7 @@
    "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
    "repo": "/home/david/dev/maros/maros-nest",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "allocated",
+   "state": "accepted",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
@@ -1185,9 +1213,69 @@
    "task_ids": [
     "T6"
    ],
-   "allowed_paths": [],
+   "allowed_paths": [
+    "db/add-access-requests.sql",
+    "db/add-role-audit-events.sql",
+    "src/common/auth/effective-permissions.spec.ts",
+    "src/common/auth/effective-permissions.ts",
+    "src/common/auth/permission-catalog.spec.ts",
+    "src/common/auth/permission-catalog.ts",
+    "src/common/auth/permissions.ts",
+    "src/common/auth/role-templates.spec.ts",
+    "src/common/auth/role-templates.ts",
+    "src/common/exceptions/domain/access-request.exceptions.ts",
+    "src/common/exceptions/domain/user.exceptions.spec.ts",
+    "src/common/exceptions/domain/user.exceptions.ts",
+    "src/common/exceptions/index.ts",
+    "src/entities/access-request.entity.ts",
+    "src/entities/notification.entity.ts",
+    "src/entities/role-audit-event.entity.ts",
+    "src/modules/mcp/mcp.service.ts",
+    "src/modules/mcp/tools/shared.ts",
+    "src/modules/mcp/tools/users-roles-admin.spec.ts",
+    "src/modules/mcp/tools/users-roles-admin.ts",
+    "src/modules/mcp/tools/users.spec.ts",
+    "src/modules/mcp/tools/users.ts",
+    "src/modules/users/user-management/access-requests.controller.spec.ts",
+    "src/modules/users/user-management/access-requests.controller.ts",
+    "src/modules/users/user-management/dto/bulk-role.dto.ts",
+    "src/modules/users/user-management/dto/create-access-request.dto.ts",
+    "src/modules/users/user-management/dto/duplicate-role.dto.ts",
+    "src/modules/users/user-management/dto/list-access-requests.dto.ts",
+    "src/modules/users/user-management/dto/resolve-access-request.dto.ts",
+    "src/modules/users/user-management/dto/role-impact.dto.ts",
+    "src/modules/users/user-management/mappers/access-request.mapper.ts",
+    "src/modules/users/user-management/mappers/user.mapper.ts",
+    "src/modules/users/user-management/repositories/access-requests.repository.spec.ts",
+    "src/modules/users/user-management/repositories/access-requests.repository.ts",
+    "src/modules/users/user-management/repositories/role-audit.repository.spec.ts",
+    "src/modules/users/user-management/repositories/role-audit.repository.ts",
+    "src/modules/users/user-management/repositories/users.repository.spec.ts",
+    "src/modules/users/user-management/repositories/users.repository.ts",
+    "src/modules/users/user-management/services/access-requests.service.spec.ts",
+    "src/modules/users/user-management/services/access-requests.service.ts",
+    "src/modules/users/user-management/services/role-bulk-assignment.service.spec.ts",
+    "src/modules/users/user-management/services/role-bulk-assignment.service.ts",
+    "src/modules/users/user-management/services/role-guard-rails.service.spec.ts",
+    "src/modules/users/user-management/services/role-guard-rails.service.ts",
+    "src/modules/users/user-management/services/role-impact.service.spec.ts",
+    "src/modules/users/user-management/services/role-impact.service.ts",
+    "src/modules/users/user-management/services/roles.service.spec.ts",
+    "src/modules/users/user-management/services/roles.service.ts",
+    "src/modules/users/user-management/services/user-access.service.spec.ts",
+    "src/modules/users/user-management/services/user-access.service.ts",
+    "src/modules/users/user-management/user-access.controller.spec.ts",
+    "src/modules/users/user-management/user-access.controller.ts",
+    "src/modules/users/user-management/users.controller.spec.ts",
+    "src/modules/users/user-management/users.controller.ts",
+    "src/modules/users/user-management/users.service.spec.ts",
+    "src/modules/users/user-management/users.service.ts",
+    "src/modules/users/users.module.ts"
+   ],
    "resources": [],
-   "repo_role": "backend"
+   "repo_role": "backend",
+   "candidate_sha": "a580d3ec2cdd8c1b6f94823cd832c1165b74de45",
+   "cleaned": true
   }
  },
  "wait_step": 0

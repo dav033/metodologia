@@ -15,6 +15,8 @@ month summary._
 - P-003 · Visual review of the local web UI · urgency: med · complexity: S · added 2026-10-08 · session
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · urgency: med · complexity: M · added 2026-10-08 · user: "no por ahora, documéntalo"
   - Ideas: STATUS.json written by the executor, stale-heartbeat flag + Resume button in the web UI, Notification/Stop/StopFailure hooks, `claude --bg` restarts.
+  - Real Maros REQ-005 E2E remains in progress on 2026-10-14 (7/19 at relay continuation). Follow `e2e-maros/FINDINGS.md`: F-24 repeated reads without implementation progress; F-25 audit fixes and test counts detached from accepted integration; F-26 substring task-kind routing fixed locally with 124 passing targeted tests. Observe automatic recovery and finish the autonomy verdict before calling the run successful. Branch cleanup is a proposal only.
+  - Relay follow-up F-23: fixed false "scheduled" success when no terminal client is controllable and added a one-second helper startup check; see `skill/scripts/bt_relay_handoff.py` and `skill/references/relay.md`. Syntax and diff checks only; behavior not exercised here.
 - P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · urgency: low · complexity: S · added 2026-10-08 · research
 - P-006 · Marathon: pass the claude prompt via stdin instead of argv (cmd-shim 8191-char / newline risk) · urgency: low · complexity: S · added 2026-10-09 · marathon review
 - P-007 · Marathon: `run --accept-plan` to adopt deliberate edits to frozen repo/after/verify fields · urgency: low · complexity: S · added 2026-10-09 · marathon review
