@@ -1,6 +1,6 @@
 ---
 req: REQ-007
-status: review
+status: approved
 created: 2026-10-13
 ---
 # Migration plan — platform first, controlled capability expansion
@@ -35,22 +35,22 @@ Future migrated suite: `PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s
 **Commands below under `tests/migration/` are tests to implement in the corresponding tasks, not commands available or passed today.** Each is stdlib unittest, isolated in temporary roots, with fake provider CLIs; live tests are separately opt-in. Keep legacy discovery until test migration is proven.
 
 ### M0 — Inventory and reversible baseline
-- [ ] T1 — Capture source/resource/consumer manifests, dirty/untracked changes, private-state backup and restore drill · repo: skill · kind: test · risk: high · verify: `python -m unittest discover -s tests/migration -p 'test_inventory_restore.py' -v` · covers: R1, R4
-- [ ] T2 — Record owner-approved baseline and architecture ADR; classify all original proposal items and current decisions · repo: skill · kind: docs · after: T1 · covers: R1, R13
+- [x] T1 — Capture source/resource/consumer manifests, dirty/untracked changes, private-state backup and restore drill · repo: skill · kind: test · risk: high · verify: `python -m unittest discover -s tests/migration -p 'test_inventory_restore.py' -v` · covers: R1, R4
+- [x] T2 — (ratified by the owner, D-015) Record owner-approved baseline and architecture ADR; classify all original proposal items and current decisions · repo: skill · kind: docs · after: T1 · covers: R1, R13
 
 Scope: all files in INVENTORY, live-root topology, symlinks/junctions, machine-specific paths, legacy consumers, active supervisors/relay/web process versions. Baseline includes untracked modules and tests, and a hash-consistent source snapshot. Restore to a new temporary root, never over live data. Do not back up open files as a supposedly consistent transaction: pause only authorized writers or use snapshot+journal reconciliation.
 Acceptance: every manifest row has source, destination, owner, contract test and rollback; restored user-file hashes match; .state included; no secret enters the dossier or git. Conflicting concurrent code remains owned and explicitly reconciled.
 
 ### M1 — Compatibility contract and baseline repair
-- [ ] T3 — Resolve existing audit-routing test failures against current owner policy with behavioral regressions · repo: skill · after: T2 · verify: `python -m unittest discover -s skill/scripts/tests -v` · covers: R5, R8
-- [ ] T4 — Add CLI/state/hooks/web characterization fixtures and compatibility matrix, including historical RUN data · repo: skill · kind: test · after: T3 · verify: `python -m unittest discover -s tests/migration -p 'test_legacy_contracts.py' -v` · covers: R3, R4, R5
+- [x] T3 — Resolve existing audit-routing test failures against current owner policy with behavioral regressions · repo: skill · after: T2 · verify: `python -m unittest discover -s skill/scripts/tests -v` · covers: R5, R8
+- [x] T4 — Add CLI/state/hooks/web characterization fixtures and compatibility matrix, including historical RUN data · repo: skill · kind: test · after: T3 · verify: `python -m unittest discover -s tests/migration -p 'test_legacy_contracts.py' -v` · covers: R3, R4, R5
 
 Seams: CLI process boundary, persisted JSON/Markdown, hook stdin/stdout and HTTP responses. Compare semantic outputs with only timestamps/PIDs/temp roots normalized; preserve missing versus null versus zero. Existing tests must not be weakened. Add tests for shell mutation false positives and negatives; preserve advisory size policy.
 Acceptance: an observed green baseline or an explicitly isolated owner-accepted unrelated limitation, with no migration-related unresolved failure. Current two routing failures must be explained and resolved before moving those modules.
 
 ### M2 — Standalone package with compatibility bridge
-- [ ] T5 — Create pyproject, CLI entrypoints and packaged resource resolver; migrate runtime to one canonical implementation · repo: skill · level: architecture · after: T4 · verify: `python -m unittest discover -s tests/migration -p 'test_package_install.py' -v` · covers: R2, R3
-- [ ] T6 — Add thin legacy script/import bridges and relocate tests without losing collection or isolation · repo: skill · after: T5 · verify: `python -m unittest discover -s tests/migration -p 'test_entrypoint_parity.py' -v` · covers: R2, R3, R5
+- [x] T5 — Create pyproject, CLI entrypoints and packaged resource resolver; migrate runtime to one canonical implementation · repo: skill · level: architecture · after: T4 · verify: `python -m unittest discover -s tests/migration -p 'test_package_install.py' -v` · covers: R2, R3
+- [x] T6 — Add thin legacy script/import bridges and relocate tests without losing collection or isolation · repo: skill · after: T5 · verify: `python -m unittest discover -s tests/migration -p 'test_entrypoint_parity.py' -v` · covers: R2, R3, R5
 
 Seams: process entrypoint and import/resource loader. Add __main__, main return/exit behavior, wheel package-data and source-independent subprocess startup. Build from sdist and install wheel in a fresh venv; run from an unrelated directory with checkout unavailable. Verify templates, agents, policy, assets, subprocesses and help for all commands. Preserve globalusage/relay/file-guard entrypoints, not just bt. Remove legacy code ownership but retain delegating shims. Do not rename every internal module simultaneously.
 Acceptance: no runtime import depends on skill/scripts or cwd; every legacy command maps to the same implementation; complete suite collected; installed web/context/hook functions find resources.
@@ -116,3 +116,14 @@ Acceptance: actual available models pass smoke, remain family zai despite claude
 
 ## Progress log
 - 2026-10-13: planning against current dirty checkout; source inventory, original blueprint, code findings and baseline evidence persisted under migracion. No implementation tasks completed.
+- 2026-10-13 21:15 (session 862a2e59, claude-personal Sonnet 5.5 high): T1 done: M0 capture + restore rehearsal passed, see evidence/M0-PRESERVATION.md. Limits: observed consistency only; repeat before cutover.
+- 2026-10-13 21:35 (session 862a2e59): T3 done: legacy suite 579 tests OK (578 baseline + 1 regression test); ruling D-013; code in uncommitted `bt_agents.py`.
+- 2026-10-13 21:55 (session 862a2e59): T4 done: 24 characterization tests + evidence/COMPATIBILITY-MATRIX.md; findings F-M1-01 (config drops unknown data), F-M1-02. Partial coverage limits are listed in the matrix.
+- 2026-10-13 22:05 (session 862a2e59): T5 done in a first, compatible step: `pyproject.toml` (flat modules + `bitacora_resources`), `bt_core.resource_root()` (override, checkout, package), console scripts `bitacora`/`bt` -> `bitacora:main`; 9 install tests (wheel built in a temp copy, installed by extraction, checkout hidden). Not yet: src/bitacora layout (deliberately deferred, PLAN says do not reorganize all modules at once), pip-based install and Python 3.12/3.13 runs, Windows/macOS.
+- 2026-10-13 22:20 (session 862a2e59): T6 done as bridges + parity: legacy script paths ARE the canonical files (one implementation); console scripts bitacora, bt, globalusage, relay-run, file-guard, install-agents, install-rtk, bitacora-inventory via `bt_entrypoints.py` wrappers; 8 parity tests; `tests/test_legacy_collection.py` collects the 579 legacy tests in place so `discover -s tests` runs 627. Legacy test files were NOT relocated (identity comparison deferred). M1/M2 independent review pending.
+- 2026-10-13 22:40 (session 862a2e59): independent spec review (CHANGES_NEEDED) reopened T5 and T6 as first-step-only. Remaining for T5: sdist + real pip install on another Python, `sys.executable` in generated commands, canonical src layout decision. Remaining for T6: install-agents/install-rtk parity, codex/antigravity hook fixtures, collected-test identity comparison. T3/T4 stay done with limits listed in COMPATIBILITY-MATRIX; T2 still gates M1 formally.
+- 2026-10-13 23:05 (session 862a2e59): debate panel + judge ruled D-014: ADR direction provisional, T2 stays open for owner ratification; next block: close T5/T6 gaps, additive namespace aliases, then T7 contract spec + fake-CLI tests (no rewiring).
+- 2026-10-13 23:55 (session 862a2e59): re-review of M0-M2 APPROVED (low items fixed). T5 done: sdist rebuild + `uv pip install` on 3.12/3.13/3.14 with generated launchers, `sys.executable` in generated commands (bt_core.PYTHON), shared `bt_resources` resolver, alias namespace `bitacora_platform` (same module objects). T6 done: install-agents/codex/antigravity hook parity, per-module collected-test baseline (`tests/migration/legacy-test-counts.json`). Remaining honest limits: no src/ move (D-014), no Windows/macOS, install-rtk parity is module+checksum guard (network download).
+- 2026-10-13 23:58 (session 862a2e59): T7 delivered additively: `bt_driver.py` contract v1 (Invocation/Outcome, three drivers wrapping the existing builders/parsers, process-group timeout) + 11 fake-CLI contract tests. NOT done and gated by D-014: rewiring the supervisor to it, opt-in real-provider samples. T8: routing characterization (8 CLI tests) done; bounded cold-start scheduling change NOT started (behavior change). M4 onward not started.
+- 2026-10-14 00:10 (session 862a2e59): T7 reverted to unchecked after review: additive contract + 15 fake-CLI tests landed (AgY malformed result event, KeyboardInterrupt -> cancelled, repr hiding fixed), but supervisor wiring and real-sample runs are missing; Codex `completed` is best-effort (documented). T8: characterization only.
+- 2026-10-14 (session 862a2e59): owner ratified the ADR direction (local platform, thin optional skills): D-015 closes T2 and lifts the D-014 blocks. Gates that remain: commits/push, live installs/config, account activation, M8 cutover, M9.

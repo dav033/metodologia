@@ -44,3 +44,15 @@ The log also includes a thread RuntimeError("network") in the relay error-path t
 
 ## Trace check
 The existing trace command exits 0 but reports global warnings/errors (including REQ-006 uncovered stories and relay references to absent IDs). No REQ-007 issue appears in this run. Full output is preserved; this is not a clean global trace certification. Historic DECISIONS also contains duplicate D-004 headings; do not reuse or silently renumber them during migration.
+
+## M1 characterization findings (2026-10-13, session 862a2e59)
+- F-M1-01: `config set` drops unknown sections, invalid values and defaults (R4 gap for machine settings).
+- F-M1-02: shell-mutation heuristic misses `cp`/`mv`/`rm`/interpreter writes and flags quoted `>` text.
+- F-M1-03: audit routing had two incompatible orders in the dirty tree; resolved by D-013.
+Details: [COMPATIBILITY-MATRIX](evidence/COMPATIBILITY-MATRIX.md).
+
+## M3 driver-contract findings (2026-10-13, session 862a2e59)
+- F-M3-01: `bt_runsettle._TRY_AT` is case-sensitive: "Try again at Oct 13th, 2099 1:08 AM." yields no reset epoch (0) while
+  "try again at ..." does. Providers observed so far print lowercase. Pinned by fixture choice, not changed (behavior change
+  needs its own evidence).
+- F-M3-02: `subprocess.TimeoutExpired.stdout` is bytes even with `text=True`; any runner must decode it (done in `bt_driver.py`).

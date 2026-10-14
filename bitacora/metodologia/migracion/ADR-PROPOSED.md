@@ -1,6 +1,6 @@
 ---
 type: architecture-decision
-status: proposed
+status: accepted
 requirement: REQ-007
 ---
 # Make the platform the owner, keep harness skills as adapters
@@ -26,4 +26,4 @@ Wheel/resource packaging and schema compatibility become explicit contracts. Bui
 Retain previous runtime and managed config preimages; quiesce new writers before switching. Preserve newly written state and acknowledged task history; schemas must be backward-readable or have a tested non-lossy reverse transform before activation. Keep worker refs/worktrees on any uncertain integration. Never force-reset branches or restore a stale full snapshot over later work.
 
 ## Approval state
-Proposed only. On implementation approval, allocate an ADR ID using the existing bitácora tool and append to DECISIONS with a link here; do not reuse the duplicated historic D-004 or edit its meaning.
+Accepted by the owner on 2026-10-14 (D-015): local platform with thin optional skills. On implementation approval, allocate an ADR ID using the existing bitácora tool and append to DECISIONS with a link here; do not reuse the duplicated historic D-004 or edit its meaning.

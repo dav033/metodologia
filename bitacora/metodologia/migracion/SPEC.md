@@ -41,7 +41,7 @@ Keep stdlib-only Python runtime if feasible; build tooling and optional Node ren
 Cover invalid/truncated state, failed atomic replacement, full disk, stale/live locks, symlink/junction roots, non-ASCII/space paths, no shell PATH, partial stream events, quota windows, missing binaries/auth, signal interruption, merge conflicts and interrupted install/rollback. Do not infer dead processes from lock age alone.
 
 ## Assumptions and open choices
-A1 (recommended, asked in chat): local CLI + web + durable supervisor is the product; lightweight skill adapters remain optional. If David wants no adapters at all or a remote service, revise R3/R10 before implementation.
+A1 (confirmed by the owner 2026-10-14, D-015): local CLI + web + durable supervisor is the product; lightweight skill adapters remain optional. If David wants no adapters at all or a remote service, revise R3/R10 before implementation.
 A2: retain project/repo name metodologia and CLI names bt/bitacora; no rename of profile IDs or live data root.
 A3: no deadline was supplied; order by risk and dependencies. Calibrate task durations after M0 instead of inventing delivery dates.
 A4: retain current audited Gemini preference; reconcile conflicting test expectations in M1 with current owner decisions. Do not silently enforce the attachment's proposed model ladder.

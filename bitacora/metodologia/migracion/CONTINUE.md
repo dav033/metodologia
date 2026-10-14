@@ -55,3 +55,23 @@ source/state restore are still pending. No implementation completion claimed.
 
 M0 implementer will leave a report in /tmp/req007-m0-implementer.txt. Read it
 as claims and independently inspect/test before capturing any real state.
+
+## Status update — session 862a2e59 (claude-personal, Sonnet 5.5, high), 2026-10-13 22:25
+
+Done locally, nothing committed or pushed: T1, T3, T4, T5, T6 (see PLAN progress log and
+evidence/M0-PRESERVATION.md, evidence/COMPATIBILITY-MATRIX.md, DECISIONS D-013).
+
+- Verify: `cd /home/david/dev/metodologia && PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -q`
+  (627 tests; 579 legacy collected in place + 48 migration).
+- Backup root `~/.local/share/metodologia-migration/baseline-m0-01/` is private (0700); repeat the capture
+  before any cutover (observed consistency only).
+- Open: T2 (ADR still "proposed"), independent review of M0-M2, then M3/T7 driver contract. M9 stays gated.
+- Concurrent dirty work of other sessions was preserved; my hunks in shared files are listed in the day log.
+
+## Status update 2 — session 862a2e59, 2026-10-14 00:15
+T5 and T6 done (re-review APPROVED); T7 partial (additive `bt_driver.py` + 15 fake-CLI tests); T8 characterization only.
+D-014 (debate + judge) keeps the ADR provisional: ratify T2 before any structural move, supervisor wiring, T8 scheduling
+or M4+. Verify with `discover -s tests` (666 tests). The artifact summarizing the whole run is linked from the day log.
+
+## 2026-10-14 — ADR ratified (D-015)
+T2 closed. Next unblocked block: incremental src/ move behind sys.modules aliases, T7 supervisor wiring behind a flag, T8 bounded cold-start scheduling with tests, then M4 (dry-run first, no live config).

@@ -11,6 +11,8 @@ month summary._
 - P-013 · Live bitácora (~/bitacora) has no remote and no backup (local git repo since `b49b8c7`): decide how it is synced and backed up · urgency: high · complexity: M · added 2026-10-13 · user: "tenemos un problema" (GitHub review)
   - Context: since remote commit `4cfd74f` the bitácora lives outside the repo (D-007). Its legacy history reached GitHub with `a67371f`. The silent push failure no longer applies, because nothing pushes the live copy.
   - Options: (1) a private remote for `~/bitacora` with `push_async` plus a push-failure log (`.state/push.log`, warning at SessionStart), the approved fix; (2) local git plus a scheduled backup; (3) no sync, single machine. The session-end commit creates a local git repo in `~/bitacora` (`ensure_repo`).
+- P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; remaining: wire driver (T7), T8 scheduling, src/ move (sdist + pip install, sys.executable in generated commands, parity gaps), F-M1-01 config drops unknown data, then M3 · urgency: high · complexity: L · added 2026-10-13 · independent spec review
+  - Context: see migracion/CONTINUE.md and the PLAN progress log. No commit/push authorized.
 - P-003 · Visual review of the local web UI · urgency: med · complexity: S · added 2026-10-08 · session
 - P-016 · Fix Antigravity provider defects found by `test_agy.py` · urgency: med · complexity: S · added 2026-10-13 · delegated test audit
   - `bt_agy.capacity()` can return a reset from stale cache; `bt_runsettle.parse_output()` loses top-level Antigravity result fields; audit routing still selects Gemini at 90% usage.

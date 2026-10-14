@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-13 21:12 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-13 23:20 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -9,6 +9,7 @@ _Generated 2026-10-13 21:12 by `bitacora.py index`. Do not edit by hand._
 ## Workspace
 
 - **skill** → `/home/david/dev/metodologia`
+- **ops-matrix-cujggjqq** → `/tmp/ops-matrix-cujggjqq`
 
 ## Needs attention
 
@@ -33,19 +34,19 @@ _Generated 2026-10-13 21:12 by `bitacora.py index`. Do not edit by hand._
 
 - P-002 · First real end-to-end test (HQ → rounds → web approval → executor loop → bitácora) · high/M
 - P-013 · Live bitácora (~/bitacora) has no remote and no backup (local git repo since `b49b8c7`): d · high/M
+- P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; remaining: wire driver (T7), T8 schedul · high/L
 - P-003 · Visual review of the local web UI · med/S
 - P-016 · Fix Antigravity provider defects found by `test_agy.py` · med/S
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · med/M
 - P-015 · Verify the other computer's cleanup of the bitácora in `main` after D-011 (`9d1b796`): its · med/M
-- P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · low/S
 
 ## Recent decisions
 
+- D-015 — ADR of REQ-007 ratified by the owner: local platform, thin optional skills
+- D-014 — ADR-PROPOSED direction provisionally adopted for REQ-007; owner ratification pending
+- D-013 — Audit routing order after the preferred auditor (REQ-007 T3)
 - D-004 — Gemini 3.8 Flash (Antigravity) is the default auditor; it builds only as a reserve
 - D-012 — The pictures bitácora is a junction into the metodologia repo
-- D-011 — Publish the live bitácora to main over the other clone's copies
-- D-010 — Keep the other clone's bitácora copies; the other agent does the controlled merge
-- D-009 — Integrate the other clone's bitácora into the repo (owner's choice)
 
 ## Artifacts
 
