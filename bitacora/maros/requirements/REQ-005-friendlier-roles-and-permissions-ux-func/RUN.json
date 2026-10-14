@@ -14,15 +14,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T13:08:12",
+  "at": "2026-10-14T13:09:16",
   "pid": 2274846,
   "machine": "precision7760",
   "task": "M2",
   "session": 8,
-  "state": "session running 12 min",
-  "session_pids": {
-   "8": 2306067
-  },
+  "state": "batch settled",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -198,7 +196,7 @@
    "complexity": null,
    "milestone": "M2",
    "tier": 0,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
@@ -207,9 +205,16 @@
    "notes": [
     "Follow-ups left open on purpose (M2 review): (1) R4 check and bulk/PATCH UPDATE are not one transaction or row lock; fix with P-011. (2) GET /access-requests has a 200-row cap and no cursor; add cursor pagination (engineering.md §3). (3) ids above int4 range reach Postgres and return 500 in PATCH /access-requests/:id and POST /users/bulk-role; cap or 404. (4) Neither db/add-access-requests.sql nor db/add-role-audit-events.sql was executed; both need checking against Postgres before deploy (P-010"
    ],
-   "claimed_done": true,
    "findings": null,
-   "severity": null
+   "severity": null,
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "haiku",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "T5",
@@ -227,16 +232,23 @@
    "complexity": null,
    "milestone": "M2",
    "tier": 0,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
    "evidence": "commit 8ed59b8 on wt/M2-f2e51f10: 'npx jest src/modules/users src/modules/notifications --silent' exit 0: 14 suites, 176 tests; tsc --noEmit clean; eslint clean on new files. Antagonist: first review (no blockers; fixed external-free checks, duplicate pending, whitespace reason, timestamptz), re-review CONCERNS on the race only, documented as best-effort. Follow-ups in the T4 task note.",
    "pending_id": null,
    "notes": [],
-   "claimed_done": true,
    "findings": null,
-   "severity": null
+   "severity": null,
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "haiku",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "M2-audit",
@@ -913,6 +925,44 @@
     "terminal": true
    },
    "isolation": "worktree"
+  },
+  {
+   "at": "2026-10-14T13:09:01",
+   "session": 8,
+   "task": "T4",
+   "result": "integration_pending",
+   "summary": "commit 06756bb on wt/M2-f2e51f10 (on top of f574f58). 'npx jest src/modules/users --silent' exit 0 on the staged index exported to a clean dir: 11 suites, 153 tests pass; tsc --noEmit clean; eslint clean on touched files (one pre-existing warning in user-invitations.service.spec.ts). Antagonist: thr",
+   "seconds": 765,
+   "model": "haiku",
+   "cost_usd": 1.7525178599999993,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M2-f2e51f10"
+  },
+  {
+   "at": "2026-10-14T13:09:05",
+   "session": 8,
+   "task": "T5",
+   "result": "integration_pending",
+   "summary": "commit 8ed59b8 on wt/M2-f2e51f10: 'npx jest src/modules/users src/modules/notifications --silent' exit 0: 14 suites, 176 tests; tsc --noEmit clean; eslint clean on new files. Antagonist: first review (no blockers; fixed external-free checks, duplicate pending, whitespace reason, timestamptz), re-rev",
+   "seconds": 765,
+   "model": "haiku",
+   "cost_usd": 1.7525178599999993,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M2-f2e51f10"
   }
  ],
  "pool": [
@@ -1001,7 +1051,7 @@
    "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
    "repo": "/home/david/dev/maros/maros-nest",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "allocated",
+   "state": "accepted",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
@@ -1010,9 +1060,64 @@
     "T4",
     "T5"
    ],
-   "allowed_paths": [],
+   "allowed_paths": [
+    "db/add-access-requests.sql",
+    "db/add-role-audit-events.sql",
+    "src/common/auth/effective-permissions.spec.ts",
+    "src/common/auth/effective-permissions.ts",
+    "src/common/auth/permission-catalog.spec.ts",
+    "src/common/auth/permission-catalog.ts",
+    "src/common/auth/permissions.ts",
+    "src/common/auth/role-templates.spec.ts",
+    "src/common/auth/role-templates.ts",
+    "src/common/exceptions/domain/access-request.exceptions.ts",
+    "src/common/exceptions/domain/user.exceptions.spec.ts",
+    "src/common/exceptions/domain/user.exceptions.ts",
+    "src/common/exceptions/index.ts",
+    "src/entities/access-request.entity.ts",
+    "src/entities/notification.entity.ts",
+    "src/entities/role-audit-event.entity.ts",
+    "src/modules/mcp/tools/users.spec.ts",
+    "src/modules/mcp/tools/users.ts",
+    "src/modules/users/user-management/access-requests.controller.spec.ts",
+    "src/modules/users/user-management/access-requests.controller.ts",
+    "src/modules/users/user-management/dto/bulk-role.dto.ts",
+    "src/modules/users/user-management/dto/create-access-request.dto.ts",
+    "src/modules/users/user-management/dto/duplicate-role.dto.ts",
+    "src/modules/users/user-management/dto/list-access-requests.dto.ts",
+    "src/modules/users/user-management/dto/resolve-access-request.dto.ts",
+    "src/modules/users/user-management/dto/role-impact.dto.ts",
+    "src/modules/users/user-management/mappers/access-request.mapper.ts",
+    "src/modules/users/user-management/mappers/user.mapper.ts",
+    "src/modules/users/user-management/repositories/access-requests.repository.ts",
+    "src/modules/users/user-management/repositories/role-audit.repository.spec.ts",
+    "src/modules/users/user-management/repositories/role-audit.repository.ts",
+    "src/modules/users/user-management/repositories/users.repository.spec.ts",
+    "src/modules/users/user-management/repositories/users.repository.ts",
+    "src/modules/users/user-management/services/access-requests.service.spec.ts",
+    "src/modules/users/user-management/services/access-requests.service.ts",
+    "src/modules/users/user-management/services/role-bulk-assignment.service.spec.ts",
+    "src/modules/users/user-management/services/role-bulk-assignment.service.ts",
+    "src/modules/users/user-management/services/role-guard-rails.service.spec.ts",
+    "src/modules/users/user-management/services/role-guard-rails.service.ts",
+    "src/modules/users/user-management/services/role-impact.service.spec.ts",
+    "src/modules/users/user-management/services/role-impact.service.ts",
+    "src/modules/users/user-management/services/roles.service.spec.ts",
+    "src/modules/users/user-management/services/roles.service.ts",
+    "src/modules/users/user-management/services/user-access.service.spec.ts",
+    "src/modules/users/user-management/services/user-access.service.ts",
+    "src/modules/users/user-management/user-access.controller.spec.ts",
+    "src/modules/users/user-management/user-access.controller.ts",
+    "src/modules/users/user-management/users.controller.spec.ts",
+    "src/modules/users/user-management/users.controller.ts",
+    "src/modules/users/user-management/users.service.spec.ts",
+    "src/modules/users/user-management/users.service.ts",
+    "src/modules/users/users.module.ts"
+   ],
    "resources": [],
-   "repo_role": "backend"
+   "repo_role": "backend",
+   "candidate_sha": "8ed59b80041b0edc3fe042034f2e690144f2b8d9",
+   "cleaned": true
   }
  },
  "wait_step": 0
