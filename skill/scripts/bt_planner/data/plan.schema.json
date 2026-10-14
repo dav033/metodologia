@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "bitacora/plan.schema.json",
   "title": "Planner contract PLAN.json",
-  "description": "Structured work plan published by the planner for a deterministic scheduler. Classification fields are mandatory and never defaulted. Cross-field rules (unique ids, existing references, acyclic after, milestone order, full_system exception) are enforced by the validator of this package (contract.validate) and are not expressible here.",
+  "description": "Structured work plan published by the planner for a deterministic scheduler. Classification fields are mandatory and never defaulted; from schema 1.1.0 every classification is also argued in classification_evidence. Cross-field rules (unique ids, existing references, acyclic after, milestone order, full_system exception, evidence strength, unordered tasks that share a path, PLAN.md agreement) are enforced by the validator of this package (contract.validate / sync.check) and are not expressible here.",
   "type": "object",
   "required": ["schema_version", "plan_id", "revision", "spec_ref", "milestones", "tasks"],
   "properties": {
@@ -13,10 +13,32 @@
     "milestones": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/milestone"}},
     "tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/task"}}
   },
+  "allOf": [{"if": {"properties": {"schema_version": {"pattern": "^1\\.([1-9][0-9]*)\\."}}},
+             "then": {"properties": {"tasks": {"items": {"required": ["classification_evidence"]}}}}}],
   "$defs": {
     "text": {"type": "string", "pattern": "\\S"},
     "texts": {"type": "array", "items": {"$ref": "#/$defs/text"}},
     "level": {"enum": ["low", "medium", "high"]},
+    "dimension_evidence": {
+      "type": "object",
+      "required": ["justification", "evidence"],
+      "properties": {
+        "justification": {"$ref": "#/$defs/text", "description": "why this value and not the neighbouring one; at least 4 words, never a placeholder"},
+        "evidence": {"type": "array", "minItems": 1,
+                     "items": {"type": "string", "pattern": "^(file|command|precedent|spec|task|assumption):\\S"},
+                     "description": "kind:value references; assumption: is allowed but never counts as support"}
+      }
+    },
+    "classification_evidence": {
+      "type": "object",
+      "required": ["complexity", "scope", "duration", "risk", "coupling", "confidence"],
+      "properties": {
+        "complexity": {"$ref": "#/$defs/dimension_evidence"}, "scope": {"$ref": "#/$defs/dimension_evidence"},
+        "duration": {"$ref": "#/$defs/dimension_evidence"}, "risk": {"$ref": "#/$defs/dimension_evidence"},
+        "coupling": {"$ref": "#/$defs/dimension_evidence"}, "confidence": {"$ref": "#/$defs/dimension_evidence"}
+      },
+      "additionalProperties": false
+    },
     "milestone": {
       "type": "object",
       "required": ["id", "title", "acceptance_criteria"],
@@ -56,6 +78,7 @@
         "coupling": {"$ref": "#/$defs/level"},
         "confidence": {"$ref": "#/$defs/level"},
         "estimate_rationale": {"$ref": "#/$defs/text"},
+        "classification_evidence": {"$ref": "#/$defs/classification_evidence"},
         "expected_paths": {"$ref": "#/$defs/texts"},
         "shared_resources": {"$ref": "#/$defs/texts"},
         "acceptance_criteria": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}},

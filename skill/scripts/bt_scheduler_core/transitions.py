@@ -1,0 +1,147 @@
+"""Guarded state changes: every task/attempt transition, hold release and outbox write goes through here."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
+from .config import Config
+from .errors import SchedulerError
+from .model import OUTBOX_KEEP, OUTBOX_LIMIT, AttemptRec, OutboxItem, RunState
+from .plan import Plan
+from .repository import Transaction
+from .states import ATTEMPT_LIVE, ATTEMPT_TRANSITIONS, TASK_TRANSITIONS
+from .states import AttemptState as A
+from .states import TaskState as T
+
+
+@dataclass
+class Ctx:
+    """Everything a state change needs: the plan, limits, the open transaction and 'now'."""
+    plan: Plan
+    config: Config
+    tx: Transaction
+    now: float
+
+    @property
+    def state(self) -> RunState:
+        assert self.tx.state is not None
+        return self.tx.state
+
+    def audit(self, kind: str, /, task_id: str = "", attempt_id: str = "", **detail: Any) -> None:
+        self.tx.audit(kind, at=self.now, task_id=task_id, attempt_id=attempt_id, **detail)
+
+
+def set_task(ctx: Ctx, task_id: str, new: T, **detail: Any) -> None:
+    rec = ctx.state.tasks[task_id]
+    old = T(rec.state)
+    if new not in TASK_TRANSITIONS[old]:
+        raise SchedulerError("ILLEGAL_TRANSITION", f"task {task_id}: {old.value} -> {new.value}")
+    rec.state = new.value
+    ctx.audit("task_transition", task_id, **{"from": old.value, "to": new.value}, **detail)
+
+
+def set_attempt(ctx: Ctx, attempt_id: str, new: A, **detail: Any) -> AttemptRec:
+    att = ctx.state.attempts[attempt_id]
+    old = A(att.state)
+    if new not in ATTEMPT_TRANSITIONS[old]:
+        raise SchedulerError("ILLEGAL_TRANSITION", f"attempt {attempt_id}: {old.value} -> {new.value}")
+    att.state, att.updated_at = new.value, ctx.now
+    ctx.audit("attempt_transition", att.task_id, attempt_id, **{"from": old.value, "to": new.value}, **detail)
+    return att
+
+
+_ORDER = (A.RESERVED, A.DISPATCHED, A.RUNNING, A.VERIFYING)
+
+
+def advance(ctx: Ctx, attempt_id: str, target: A, **detail: Any) -> None:
+    """Move a live attempt forward to `target`, recording the implicit steps an executor skipped (a lost 'started'
+    event must not wedge the attempt)."""
+    att = ctx.state.attempts[attempt_id]
+    current = A(att.state)
+    if current == A.UNCERTAIN or current == target:
+        if current != target:
+            set_attempt(ctx, attempt_id, target, **detail)
+        return
+    for step in _ORDER[_ORDER.index(current) + 1:_ORDER.index(target) + 1]:
+        set_attempt(ctx, attempt_id, step, **detail)
+
+
+def release(ctx: Ctx, attempt_id: str) -> None:
+    if ctx.state.holds.pop(attempt_id, None) is not None:
+        ctx.audit("reservation_released", ctx.state.attempts[attempt_id].task_id, attempt_id)
+
+
+def add_outbox(ctx: Ctx, kind: str, attempt_id: str, payload: dict[str, Any]) -> OutboxItem:
+    state = ctx.state
+    item = OutboxItem(id=f"out-{state.next('outbox'):05d}", kind=kind, attempt_id=attempt_id,
+                      key=f"{state.plan_id}:r{state.revision}:{attempt_id}:{kind}", payload=payload)
+    state.outbox.append(item)
+    ctx.audit("dispatch_intent", state.attempts[attempt_id].task_id, attempt_id, kind=kind, outbox=item.id)
+    return item
+
+
+def void_outbox(ctx: Ctx, attempt_id: str, *kinds: str) -> None:
+    for item in ctx.state.outbox:
+        if item.attempt_id == attempt_id and item.status == "pending" and (not kinds or item.kind in kinds):
+            item.status = "void"
+            ctx.audit("dispatch_voided", ctx.state.attempts[attempt_id].task_id, attempt_id, kind=item.kind)
+
+
+def prune_outbox(ctx: Ctx) -> int:
+    """Bound the outbox: past OUTBOX_LIMIT items, drop settled orders of closed attempts, except the newest OUTBOX_KEEP.
+    Pending orders and anything of a live attempt are never dropped."""
+    outbox = ctx.state.outbox
+    if len(outbox) <= OUTBOX_LIMIT:
+        return 0
+    cutoff = len(outbox) - OUTBOX_KEEP
+    kept = [item for index, item in enumerate(outbox)
+            if index >= cutoff or item.status == "pending" or A(ctx.state.attempts[item.attempt_id].state) in ATTEMPT_LIVE]
+    dropped = len(outbox) - len(kept)
+    if dropped:
+        outbox[:] = kept
+        ctx.audit("outbox_pruned", dropped=dropped)
+    return dropped
+
+
+def mark_delivered(ctx: Ctx, attempt_id: str, kind: str) -> None:
+    for item in ctx.state.outbox:
+        if item.attempt_id == attempt_id and item.kind == kind and item.status == "pending":
+            item.status = "delivered"
+
+
+def promote_ready(ctx: Ctx) -> int:
+    """PENDING -> READY for tasks whose every prerequisite is COMPLETED (which only a verdict can cause)."""
+    moved = 0
+    for spec in ctx.plan.tasks:
+        rec = ctx.state.tasks[spec.id]
+        if rec.state == T.PENDING.value and all(ctx.state.tasks[d].state == T.COMPLETED.value for d in spec.after):
+            set_task(ctx, spec.id, T.READY, reason="prerequisites_completed")
+            moved += 1
+    return moved
+
+
+def live_attempt(state: RunState, task_id: str) -> AttemptRec | None:
+    for attempt_id in reversed(state.tasks[task_id].attempts):
+        att = state.attempts[attempt_id]
+        if A(att.state) in ATTEMPT_LIVE:
+            return att
+    return None
+
+
+def end_attempt(ctx: Ctx, attempt_id: str, new: A, cause: str, detail: str = "") -> None:
+    """Close an attempt as failed/rejected/cancelled: free its resources and move the task on.
+
+    The task goes to RECOVERING (a decision is due) or, when a cancellation was authorised, to CANCELLED."""
+    att = ctx.state.attempts[attempt_id]
+    set_attempt(ctx, attempt_id, new, cause=cause)
+    att.failure = detail or cause
+    release(ctx, attempt_id)
+    void_outbox(ctx, attempt_id)
+    rec = ctx.state.tasks[att.task_id]
+    if T(rec.state) != T.ACTIVE:
+        return
+    if ctx.state.cancel_requested:
+        set_task(ctx, att.task_id, T.CANCELLED, reason="cancelled")
+    else:
+        rec.reason = cause
+        set_task(ctx, att.task_id, T.RECOVERING, cause=cause)

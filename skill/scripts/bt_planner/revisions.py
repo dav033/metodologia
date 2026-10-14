@@ -106,10 +106,12 @@ def _write_manifest(folder: Path, data: dict) -> None:
     os.replace(name, folder / MANIFEST)
 
 
-def freeze(directory: Path, plan: dict) -> dict:
+def freeze(directory: Path, plan: dict, source: str = "approval") -> dict:
     """Freeze a validated plan as its revision. Idempotent for identical content; a different content under an already
     frozen revision number is refused (create revision N+1 instead); gaps are refused. Serialised by a lock; a file
-    left by an interrupted freeze is adopted when its content is identical and refused otherwise."""
+    left by an interrupted freeze is adopted when its content is identical and refused otherwise. `source` is recorded in
+    the manifest (not hashed): `approval` (the approval act froze it) or `launch-forced` (the owner's explicit
+    --force of a plan that was never approved)."""
     report = pc.validate(plan)
     if not report.ok:
         raise pc.PlanContractError("PLAN_INVALID", report.errors)
@@ -145,7 +147,7 @@ def freeze(directory: Path, plan: dict) -> dict:
                         f"PLAN.r{number}.json exists from an interrupted freeze with different content; "
                         "inspect and remove it"]) from None
             entry = {"revision": number, "sha256": sha256(text),
-                     "frozen_at": dt.datetime.now().isoformat(timespec="seconds")}
+                     "frozen_at": dt.datetime.now().isoformat(timespec="seconds"), "source": source}
             data = _manifest(directory)
             data["revisions"].append(entry)
             _write_manifest(folder, data)

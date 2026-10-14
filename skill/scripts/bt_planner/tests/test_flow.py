@@ -84,7 +84,7 @@ class PlannerCycle(unittest.TestCase):
     def test_public_api_is_complete_and_importable(self):
         for name in planner.__all__:
             self.assertTrue(hasattr(planner, name), name)
-        self.assertEqual(planner.SCHEMA_VERSION, "1.0.0")
+        self.assertEqual(planner.SCHEMA_VERSION, "1.1.0")
         self.assertIn("plan_id", planner.example_text())
 
 

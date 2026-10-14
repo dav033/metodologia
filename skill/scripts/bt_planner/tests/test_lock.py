@@ -73,7 +73,7 @@ class AcrossProcesses(unittest.TestCase):
             plan_dir.mkdir()
             (plan_dir / "SPEC.md").write_text("# s\n", encoding="utf-8")
             (plan_dir / "PLAN.md").write_text("---\nstatus: approved\n---\n### M1 — A\n- [ ] T1 — One · repo: app · "
-                                              "verify: `true`\n", encoding="utf-8")
+                                              "verify: `python3 -m unittest -q`\n", encoding="utf-8")
             (plan_dir / "PLAN.json").write_text(pc.dumps(classify(sync.skeleton(plan_dir))), encoding="utf-8")
             code = ("import sys; sys.path.insert(0, sys.argv[1]); import bt_planner as p; from pathlib import Path; "
                     "print(p.approve_freeze(Path(sys.argv[2]))['revision'])")

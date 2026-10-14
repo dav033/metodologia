@@ -26,7 +26,7 @@ status: {status}
 - [ ] T2 — Second · repo: app · after: T1
 
 ### M2 — Ship
-- [ ] T3 — Third · repo: app · after: T2 · verify: `echo ok`
+- [ ] T3 — Third · repo: app · after: T2 · verify: `python3 -m unittest discover -q`
 """
 
 

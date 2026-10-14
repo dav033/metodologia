@@ -1,0 +1,242 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "TRAIN-1",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Server-side session expiry",
+      "acceptance_criteria": [
+        "A session older than eight hours is rejected on every path that reads it, with tests proving it"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Add auth session tests",
+      "objective": "Create tests that pin current session behaviour and fail for an expired session",
+      "repository": "trainingapp",
+      "after": [],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "No auth tests exist yet; auth.ts is 100 lines with one Map, so the tests are short but must build sessions by hand",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:apps/api/src/http/auth.ts",
+            "file:apps/api/package.json"
+          ],
+          "justification": "Plain unit tests against exported pure-ish functions of auth.ts, no new design"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/api/test/repository.test.ts"
+          ],
+          "justification": "One new test file and nothing else changes in the repository"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/api/test/repository.test.ts",
+            "file:apps/api/src/http/auth.ts"
+          ],
+          "justification": "Existing repository.test.ts shows the harness; sessions need hand-built cookies and time control"
+        },
+        "risk": {
+          "evidence": [
+            "file:apps/api/test/repository.test.ts"
+          ],
+          "justification": "Tests only; a wrong test cannot affect production behaviour"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2"
+          ],
+          "justification": "Only reads exported auth functions; T2 will make the new case pass"
+        },
+        "confidence": {
+          "evidence": [
+            "file:apps/api/src/http/auth.ts",
+            "file:apps/api/test/repository.test.ts"
+          ],
+          "justification": "auth.ts and the test harness were read completely and are both short"
+        }
+      },
+      "expected_paths": [
+        "apps/api/test/auth.test.ts"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "A valid signed session is accepted",
+        "A tampered signature is rejected",
+        "A session created more than eight hours ago is rejected"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/api",
+          "purpose": "node --test over apps/api/test/*.test.ts (script exists in apps/api/package.json)"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Expire sessions after eight hours",
+      "objective": "Reject and purge sessions older than the cookie lifetime in validSignedSession",
+      "repository": "trainingapp",
+      "after": [
+        "T1"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 25,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Two-line comparison in one function, sensitive because every authenticated route and the WebSocket upgrade use it",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:apps/api/src/http/auth.ts"
+          ],
+          "justification": "One comparison against createdAt in a function that already looks the session up"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/api/src/http/auth.ts"
+          ],
+          "justification": "A single function changes; the cookie Max-Age already defines the intended lifetime"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/api/package.json"
+          ],
+          "justification": "Tiny edit plus running the tests T1 added and the type check of one workspace"
+        },
+        "risk": {
+          "evidence": [
+            "file:apps/api/src/http/auth.ts",
+            "file:apps/api/src/ws/server.ts"
+          ],
+          "justification": "Authentication code: a wrong comparison locks every user out or keeps accepting expired sessions"
+        },
+        "coupling": {
+          "evidence": [
+            "file:apps/api/src/ws/server.ts",
+            "file:apps/web/lib/api/client.ts"
+          ],
+          "justification": "The WebSocket server calls sessionFromRequest from the same module and the web client relies on the 401 to recreate its session"
+        },
+        "confidence": {
+          "evidence": [
+            "file:apps/api/src/http/auth.ts",
+            "file:apps/api/src/ws/server.ts"
+          ],
+          "justification": "Every caller of sessionFromRequest was read and the cookie lifetime is a literal in the same file"
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/http/auth.ts"
+      ],
+      "shared_resources": [
+        "session-cookie-contract"
+      ],
+      "acceptance_criteria": [
+        "Sessions older than 28800 seconds are not accepted by requireAuth, requireMutation or the upgrade handler",
+        "The expired entry is deleted from the sessions map",
+        "Fresh sessions and the MCP bearer token behave as before"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/api",
+          "purpose": "T1 tests now pass",
+          "created_by": "T1"
+        },
+        {
+          "type": "command",
+          "value": "npm run typecheck -w @training/api",
+          "purpose": "tsc --noEmit still clean"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Document the session lifetime",
+      "objective": "State in the API contract document that sessions expire eight hours after creation",
+      "repository": "trainingapp",
+      "after": [
+        "T2"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 15,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Prose in an existing document that already describes sessions and CSRF",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T2"
+          ],
+          "justification": "Documentation of behaviour that T2 has already fixed"
+        },
+        "scope": {
+          "evidence": [
+            "file:docs/api-contract.md"
+          ],
+          "justification": "One sentence or short section in one existing document"
+        },
+        "duration": {
+          "evidence": [
+            "file:docs/api-contract.md"
+          ],
+          "justification": "The document is short and the change is one paragraph"
+        },
+        "risk": {
+          "evidence": [
+            "file:docs/api-contract.md"
+          ],
+          "justification": "A documentation slip is cosmetic and reviewed in the diff"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2"
+          ],
+          "justification": "It only describes the contract T2 implements and is ordered after it"
+        },
+        "confidence": {
+          "evidence": [
+            "file:docs/api-contract.md",
+            "task:T2"
+          ],
+          "justification": "The document exists and the behaviour it must describe is fixed by T2"
+        }
+      },
+      "expected_paths": [
+        "docs/api-contract.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "docs/api-contract.md states the eight hour server-side session lifetime"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "read docs/api-contract.md section on sessions",
+          "purpose": "check the statement exists",
+          "expected": "the document says sessions expire eight hours after creation"
+        }
+      ]
+    }
+  ]
+}

@@ -214,7 +214,7 @@ class Robustness(unittest.TestCase):
         weird = [None, [], {}, [[]], [{}], [None], 1.5, "", " ", True, ["a", ["b"]], {"a": 1}, 10 ** 400,
                  float("nan"), -1, 0]
         base = plan()
-        paths = [("tasks", 0, key) for key in pc.TASK_KEYS] + [("tasks", 1, "after"), ("milestones", 0, "id"),
+        paths = [("tasks", 0, key) for key in pc.REQUIRED_TASK_KEYS] + [("tasks", 1, "after"), ("milestones", 0, "id"),
                                                                  ("milestones", 0, "acceptance_criteria")]
         paths += [(key,) for key in pc.TOP_REQUIRED]
         for path in paths:
@@ -336,7 +336,7 @@ class PublishedSchema(unittest.TestCase):
 
     def test_required_lists_match(self):
         self.assertEqual(tuple(self.schema["required"]), pc.TOP_REQUIRED)
-        self.assertEqual(tuple(self.schema["$defs"]["task"]["required"]), pc.TASK_KEYS)
+        self.assertEqual(tuple(self.schema["$defs"]["task"]["required"]), pc.REQUIRED_TASK_KEYS)
         self.assertEqual(tuple(self.schema["$defs"]["milestone"]["required"]), pc.MILESTONE_KEYS)
         self.assertEqual(tuple(self.schema["$defs"]["verification"]["required"]), ("type", "value", "purpose"))
 

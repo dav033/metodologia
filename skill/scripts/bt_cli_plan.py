@@ -10,8 +10,9 @@ from bt_core import find_req
 
 def add_parser(sub: argparse._SubParsersAction) -> None:
     parser = sub.add_parser("plan-json", help="planner module: derive a PLAN.json skeleton, validate, freeze an approved "
-                                              "revision, or report compatibility of a legacy plan (bt_planner)")
-    parser.add_argument("action", choices=["init", "check", "freeze", "show", "compat"])
+                                              "revision, check the launch gate, report plan quality, or report "
+                                              "compatibility of a legacy plan (bt_planner)")
+    parser.add_argument("action", choices=["init", "check", "freeze", "bind", "report", "show", "compat"])
     parser.add_argument("req", help="REQ-NNN")
     parser.add_argument("--force", action="store_true", help="init: overwrite an existing PLAN.json")
     parser.add_argument("--json", action="store_true", help="check: machine-readable output")

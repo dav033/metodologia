@@ -211,8 +211,10 @@ small or medium, independently verifiable step (roughly 1–5 tasks that one cle
 bitacora.py --project P handoff REQ-NNN            # --dry-run first if you want to see the decision
 ```
 
-If the requirement has a `PLAN.json` (classified tasks, `references/plan-contract.md`), `handoff` also refuses an invalid one and
-`launch` freezes the approved revision; run `plan-json check REQ-NNN` before.
+If the requirement has a `PLAN.json` (classified tasks, `references/plan-contract.md`), `handoff` also refuses an invalid one
+or one that contradicts PLAN.md; approval freezes that revision and every launch path (standard, web, foreground, new
+run, resume) refuses anything that is not exactly the approved revision (a launch never freezes it itself). Run `plan-json check REQ-NNN` and read
+`plan-json report REQ-NNN` before.
 
 It validates the plan (tasks, dependencies, repo roles) and decides:
 

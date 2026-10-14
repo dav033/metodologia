@@ -1,0 +1,245 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "METH-4",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Terminal",
+      "acceptance_criteria": [
+        "bitacora.py plan-json report prints the quality summary through the adapter"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Web review",
+      "acceptance_criteria": [
+        "The plan review page shows the summary and legacy plans render unchanged"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Expose the report action through the adapter and the plan-json command",
+      "objective": "Make `bitacora.py plan-json report REQ-NNN` run the module's report action via bt_plan_adapter",
+      "repository": "metodologia",
+      "after": [],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 25,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "The module already implements report; the adapter and argument parser each need one line and a test",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_cli_plan.py",
+            "file:skill/scripts/bt_plan_adapter.py"
+          ],
+          "justification": "Plumbing of an existing module action through two small files"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_cli_plan.py"
+          ],
+          "justification": "Two files with one argument choice and one pass-through"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_cli_plan.py",
+            "precedent:REQ-009/T4"
+          ],
+          "justification": "Same shape as the earlier compat action wiring in the same files"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_cli_plan.py"
+          ],
+          "justification": "Read-only report; a mistake changes output text only"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2"
+          ],
+          "justification": "The web page task uses the same adapter surface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_cli_plan.py"
+          ],
+          "justification": "Both files are under 60 lines and were read"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_plan_adapter.py",
+        "skill/scripts/bt_cli_plan.py"
+      ],
+      "shared_resources": [
+        "plan-adapter-api"
+      ],
+      "acceptance_criteria": [
+        "plan-json accepts the report action",
+        "The report for a plan with PLAN.json prints JSON with critical_path and distribution"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 -m unittest tests.test_plan_integration",
+          "purpose": "integration tests, run from skill/scripts"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M2",
+      "title": "Render the summary block on the plan review page",
+      "objective": "Show critical path minutes, widest level and low-confidence tasks on the web plan review page",
+      "repository": "metodologia",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "full_feature",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "A new block in a page renderer with HTML escaping and a legacy fallback, plus tests",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py"
+          ],
+          "justification": "Rendering in an existing page with escaping and a fallback path; page layout is not fully known"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py"
+          ],
+          "justification": "One renderer function plus tests: a self-contained user-visible feature"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py",
+            "file:skill/scripts/tests/test_plan_integration.py"
+          ],
+          "justification": "Comparable to adding a block to this page; needs a fixture plan and byte comparison for legacy"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py"
+          ],
+          "justification": "Web UI for the owner; wrong output misleads review but nothing executes from it"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1"
+          ],
+          "justification": "Shares the adapter surface with T1 and no other pending task edits the page"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py",
+            "assumption:plan_panel() is the only place the plan tab is rendered (read its signature, not its body)"
+          ],
+          "justification": "The page was read only partly; the exact insertion point is not fixed"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_page_req.py",
+        "skill/scripts/tests/test_plan_integration.py"
+      ],
+      "shared_resources": [
+        "plan-adapter-api"
+      ],
+      "acceptance_criteria": [
+        "The plan review page includes the summary when PLAN.json is valid",
+        "A plan without PLAN.json renders the same bytes as before",
+        "Values from PLAN.json are HTML-escaped"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 -m unittest tests.test_plan_integration",
+          "purpose": "integration tests including the new page cases",
+          "created_by": "T2"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Document the new views in the plan contract reference",
+      "objective": "Describe the report command and the review page block in the plan contract reference",
+      "repository": "metodologia",
+      "after": [
+        "T2"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 15,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "A short paragraph in an existing reference file",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T2"
+          ],
+          "justification": "Documentation of behaviour already built"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/references/plan-contract.md"
+          ],
+          "justification": "One reference file gains a paragraph"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/references/plan-contract.md"
+          ],
+          "justification": "A paragraph in a file that already lists the plan-json actions"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/references/plan-contract.md"
+          ],
+          "justification": "Documentation only, reviewed in the diff"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2"
+          ],
+          "justification": "Describes T2 and is ordered after it"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/references/plan-contract.md"
+          ],
+          "justification": "The file exists and its structure is known"
+        }
+      },
+      "expected_paths": [
+        "skill/references/plan-contract.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "plan-contract.md names the report action and the review page summary"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "read skill/references/plan-contract.md",
+          "purpose": "check the paragraph",
+          "expected": "report and the review page summary are described"
+        }
+      ]
+    }
+  ]
+}

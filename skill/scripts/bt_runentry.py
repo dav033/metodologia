@@ -19,6 +19,8 @@ def supervise(project: str, req: str, **options) -> int:
     from bt_requirements_gate import require_ready
 
     rdir = engine.find_req(engine.ROOT / project, req)
+    from bt_scheduler_adapter import refuse_legacy_run
+    refuse_legacy_run(rdir)            # one authority per requirement: a scheduler-owned run is not ours to take over
     require_ready(rdir)
     existing = engine.rs.load(rdir)
     runtime = None

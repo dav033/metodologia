@@ -1,0 +1,411 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "TRAIN-3",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Decide and specify",
+      "acceptance_criteria": [
+        "The external consumer question is answered and the new schema is specified and tested"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Implement",
+      "acceptance_criteria": [
+        "API, web client and documentation agree on the new list response"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Find out who consumes the list endpoint outside this repository",
+      "objective": "Decide, with evidence, whether anything outside this repository reads GET /v1/projects and what it needs",
+      "repository": "trainingapp",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "low",
+      "estimate_rationale": "The MCP repository is not in this workspace and the drift script only proves it holds a copy of the import schema",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:scripts/check-contract-drift.mjs"
+          ],
+          "justification": "The outcome depends on a repository this workspace does not contain, so the reasoning is about what cannot be seen"
+        },
+        "scope": {
+          "evidence": [
+            "file:docs/api-contract.md"
+          ],
+          "justification": "A decision note only, no code changes"
+        },
+        "duration": {
+          "evidence": [
+            "assumption:the owner can provide the trainingApp-mcp checkout the same day"
+          ],
+          "justification": "Reading a script and one question to the owner; the answer time is not under the plan's control"
+        },
+        "risk": {
+          "evidence": [
+            "file:scripts/check-contract-drift.mjs"
+          ],
+          "justification": "Read-only, but a wrong answer makes T3 break an unseen consumer"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T3"
+          ],
+          "justification": "Its decision shapes T2 and T3 and touches no files they edit"
+        },
+        "confidence": {
+          "evidence": [
+            "file:scripts/check-contract-drift.mjs",
+            "assumption:the MCP client lists projects through this endpoint"
+          ],
+          "justification": "No evidence of the consumer besides a path in a drift script, so the estimate is preliminary"
+        }
+      },
+      "expected_paths": [
+        "scripts/check-contract-drift.mjs"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "A written decision states whether a backward-compatible view is required",
+        "The decision lists what was checked and what could not be checked"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "read scripts/check-contract-drift.mjs and ask the owner for the trainingApp-mcp repository",
+          "purpose": "gather evidence",
+          "expected": "a decision note exists that names each consumer and whether it reads the list endpoint"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Define the list response schema in contracts",
+      "objective": "Add a zod schema for list items and the paginated response with tests, as the single definition both sides import",
+      "repository": "trainingapp",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Schemas follow the style of project.ts; the open point is whether a legacy view must be representable",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:packages/contracts/src/project.ts",
+            "file:packages/contracts/test/project.test.ts"
+          ],
+          "justification": "Schema design with strict objects like the existing ones plus a decision about a legacy shape"
+        },
+        "scope": {
+          "evidence": [
+            "file:packages/contracts/src/index.ts"
+          ],
+          "justification": "Two files in one package"
+        },
+        "duration": {
+          "evidence": [
+            "file:packages/contracts/test/project.test.ts"
+          ],
+          "justification": "Schemas are about twenty lines; tests follow project.test.ts"
+        },
+        "risk": {
+          "evidence": [
+            "file:packages/contracts/src/project.ts"
+          ],
+          "justification": "Both API and web will import this definition, so a mistake propagates"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3",
+            "task:T4"
+          ],
+          "justification": "API, web and docs all depend on this schema and T3/T4 are ordered after it"
+        },
+        "confidence": {
+          "evidence": [
+            "file:packages/contracts/src/project.ts",
+            "task:T1"
+          ],
+          "justification": "The schema style is clear but T1 may change what must be representable"
+        }
+      },
+      "expected_paths": [
+        "packages/contracts/src/project.ts",
+        "packages/contracts/test/project.test.ts"
+      ],
+      "shared_resources": [
+        "projects-list-response"
+      ],
+      "acceptance_criteria": [
+        "ProjectListItemSchema and ProjectListResponseSchema are exported from the contracts package",
+        "Tests accept a valid page and reject extra or missing fields"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/contracts",
+          "purpose": "contract tests pass"
+        },
+        {
+          "type": "command",
+          "value": "npm run typecheck -w @training/contracts",
+          "purpose": "compiles"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Paginate and slim the list endpoint",
+      "objective": "Return list items with a cursor from GET /v1/projects and cover it with API tests",
+      "repository": "trainingapp",
+      "after": [
+        "T2"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Public response shape change in app.ts and repository.ts, with unknown external consumers; needs ordering rules and tests from scratch",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts",
+            "task:T1"
+          ],
+          "justification": "Cursor semantics over updated_at ordering with ties, plus a compatibility decision from T1"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/api/src/app.ts"
+          ],
+          "justification": "Route, repository method and new tests across the API, visible to every client"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts",
+            "file:apps/api/test/repository.test.ts"
+          ],
+          "justification": "Larger than a plain endpoint: ordering ties, tests and the compatibility branch"
+        },
+        "risk": {
+          "evidence": [
+            "file:apps/api/src/app.ts",
+            "task:T1"
+          ],
+          "justification": "A public response shape consumed outside this repository: breaking it fails clients we cannot test"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T4",
+            "task:T5"
+          ],
+          "justification": "Web client and docs consume exactly this response, and the contracts schema defines it"
+        },
+        "confidence": {
+          "evidence": [
+            "file:apps/api/src/app.ts",
+            "assumption:updated_at alone is enough as a cursor"
+          ],
+          "justification": "The code is read, but the external consumer behaviour and tie ordering are not verified"
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/app.ts",
+        "apps/api/src/repositories/project-repository.ts",
+        "apps/api/test/list.test.ts"
+      ],
+      "shared_resources": [
+        "projects-list-response",
+        "api-v1-compatibility"
+      ],
+      "acceptance_criteria": [
+        "GET /v1/projects returns projects as list items and a nextCursor",
+        "A second request with nextCursor returns the following page without duplicates",
+        "Behaviour for external consumers follows the T1 decision"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/api",
+          "purpose": "new list tests and the existing suite pass",
+          "created_by": "T3"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Consume nextCursor in the web client and its two screens",
+      "objective": "Make listProjects, the project list and the tabs bar read list items and follow nextCursor",
+      "repository": "trainingapp",
+      "after": [
+        "T3"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Three files; both screens call listProjects and render all projects at once today",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:apps/web/components/project-list.tsx",
+            "file:apps/web/components/project-tabs-bar.tsx"
+          ],
+          "justification": "Paging in two client components that currently fetch once"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/web/lib/api/client.ts"
+          ],
+          "justification": "Three files in the web workspace"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/web/components/project-list.tsx"
+          ],
+          "justification": "Two components with their own refresh logic and a manual check"
+        },
+        "risk": {
+          "evidence": [
+            "file:apps/web/components/project-tabs-bar.tsx"
+          ],
+          "justification": "A paging bug hides projects from the user without an error"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "It consumes the response T3 produces and shares listProjects between two components"
+        },
+        "confidence": {
+          "evidence": [
+            "file:apps/web/lib/api/client.ts",
+            "file:apps/web/package.json"
+          ],
+          "justification": "Call sites were found with grep, but the web workspace has no automated UI tests"
+        }
+      },
+      "expected_paths": [
+        "apps/web/lib/api/client.ts",
+        "apps/web/components/project-list.tsx",
+        "apps/web/components/project-tabs-bar.tsx"
+      ],
+      "shared_resources": [
+        "projects-list-response"
+      ],
+      "acceptance_criteria": [
+        "listProjects returns items and the next cursor",
+        "Both screens still show every project, loading further pages when needed"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run typecheck -w @training/web",
+          "purpose": "web compiles against the new response"
+        },
+        {
+          "type": "manual",
+          "value": "open /projects in the web app with more than one page of projects",
+          "purpose": "see the list and the tabs bar",
+          "expected": "all projects appear and none is duplicated"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Document the new list contract",
+      "objective": "Describe the paginated list response in the API contract document",
+      "repository": "trainingapp",
+      "after": [
+        "T3"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 20,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "One existing document gains a short section",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "Documentation of behaviour fixed in T3"
+        },
+        "scope": {
+          "evidence": [
+            "file:docs/api-contract.md"
+          ],
+          "justification": "A single section in one document"
+        },
+        "duration": {
+          "evidence": [
+            "file:docs/api-contract.md"
+          ],
+          "justification": "Short section matching the existing document style"
+        },
+        "risk": {
+          "evidence": [
+            "file:docs/api-contract.md"
+          ],
+          "justification": "Documentation only, reviewed in the diff"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "Reads the final behaviour of T3 and is ordered after it"
+        },
+        "confidence": {
+          "evidence": [
+            "file:docs/api-contract.md"
+          ],
+          "justification": "The document exists and its format is known"
+        }
+      },
+      "expected_paths": [
+        "docs/api-contract.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "docs/api-contract.md describes projects, nextCursor and the compatibility decision from T1"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "read docs/api-contract.md",
+          "purpose": "check the section",
+          "expected": "the document describes the paginated response and the compatibility note"
+        }
+      ]
+    }
+  ]
+}

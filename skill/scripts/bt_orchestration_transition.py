@@ -11,6 +11,7 @@ from pathlib import Path
 
 import bt_core as core
 import bt_orchestration_terminal as terminal
+import bt_plan_adapter as plan_adapter
 import bt_profiles
 import bt_relay as relay
 import bt_relay_client as client
@@ -69,6 +70,9 @@ def launch(project: str, req: str, *, dry_run: bool = False, profile: str | None
     workdir = core.ws.workdir(core.ROOT, project)
     if not workdir or not workdir.is_dir():
         raise terminal.TerminalError('FOREGROUND_WORKSPACE_REQUIRED')
+    problem = plan_adapter.launch_problem(rdir, freeze=not dry_run)  # same gate as every other launch path
+    if problem:
+        raise terminal.TerminalError('FOREGROUND_PLAN_REFUSED: ' + problem)
     argv = successor_argv(project, req, profile=profile, pool=pool, model=model)
     command = ('cd ' + shlex.quote(str(workdir)) + ' && env BITACORA_ROOT=' + shlex.quote(str(core.ROOT))
                + ' ' + shlex.join(argv))
@@ -116,6 +120,9 @@ def main() -> int:
         rdir = core.find_req(core.ROOT / data['project'], data['req'])
         if gate.require_ready(rdir)['status'] != 'ready' or core._front(rdir / 'PLAN.md', 'status') != 'approved':
             raise terminal.TerminalError('FOREGROUND_APPROVAL_REQUIRED: authority changed before transition')
+        problem = plan_adapter.launch_problem(rdir, freeze=False)  # the plan must still be the approved revision
+        if problem:
+            raise terminal.TerminalError('FOREGROUND_PLAN_REFUSED: ' + problem)
         prefix = successor_argv(data['project'], data['req'])
         if data['spec']['argv'][:len(prefix)] != prefix:
             raise terminal.TerminalError('INVALID_TRANSITION_REQUEST: successor checkout')

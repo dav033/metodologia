@@ -11,7 +11,11 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-SCHEMA_VERSION = "1.0.0"
+from . import evidence as ev
+from . import quality
+
+SCHEMA_VERSION = "1.1.0"  # 1.1.0 = classification evidence is mandatory (evidence.py); 1.0.0 still loads
+EVIDENCE_SINCE = (1, 1, 0)
 SUPPORTED_MAJOR = 1
 MAX_BYTES = 2_000_000
 
@@ -30,8 +34,9 @@ MAX_MINUTES = 100_000  # hard cap: anything above is not an estimate
 TOP_REQUIRED = ("schema_version", "plan_id", "revision", "spec_ref", "milestones", "tasks")
 MILESTONE_KEYS = ("id", "title", "acceptance_criteria")
 TASK_KEYS = ("id", "milestone_id", "title", "objective", "repository", "after", "complexity", "scope",
-             "estimated_minutes", "risk", "coupling", "confidence", "estimate_rationale", "expected_paths",
-             "shared_resources", "acceptance_criteria", "verification")
+             "estimated_minutes", "risk", "coupling", "confidence", "estimate_rationale", "classification_evidence",
+             "expected_paths", "shared_resources", "acceptance_criteria", "verification")
+REQUIRED_TASK_KEYS = tuple(k for k in TASK_KEYS if k != "classification_evidence")  # evidence: required from 1.1.0
 VERIFICATION_KEYS = ("type", "value", "purpose", "expected", "created_by")
 # The plan classifies; scheduling and execution state belong to other systems (AC-11, AC-15).
 FORBIDDEN_TASK_KEYS = frozenset({"model", "models", "agent", "agents", "account", "accounts", "profile", "provider",
@@ -75,7 +80,7 @@ def _hashable_str(value: object) -> bool:
 
 def unsafe_path(value: str) -> bool:
     path = value.replace("\\", "/")
-    return path.startswith("/") or re.match(r"^[A-Za-z]:", path) is not None or ".." in path.split("/")
+    return "\0" in path or path.startswith("/") or re.match(r"^[A-Za-z]:", path) is not None or ".." in path.split("/")
 
 
 def _enum(report: Report, where: str, task: dict, key: str, allowed: tuple[str, ...]) -> None:
@@ -85,6 +90,20 @@ def _enum(report: Report, where: str, task: dict, key: str, allowed: tuple[str, 
         report.errors.append(f"{where}.{key}: {task[key]!r} is not one of {', '.join(allowed)}")
 
 
+# Whole-word tokens that make a key a scheduling decision wherever they appear in it (`model_hint`, `numWorkers`,
+# `max_parallel`, `assignee`): the planner describes work, it never assigns it.
+SCHEDULING_TOKENS = frozenset({"model", "models", "agent", "agents", "account", "accounts", "profile", "provider",
+                               "worker", "workers", "assignee", "assigned", "assign", "executor", "executors", "llm",
+                               "concurrency", "concurrent", "parallel", "parallelism"})
+
+
+def forbidden_key(key: str) -> bool:
+    if key.lower() in FORBIDDEN_TASK_KEYS:
+        return True
+    tokens = {w.lower() for w in re.findall(r"[A-Z]?[a-z]+|[A-Z]+(?![a-z])", key)}
+    return bool(tokens & SCHEDULING_TOKENS)
+
+
 def _scan_forbidden(report: Report, where: str, node: object, depth: int = 0) -> None:
     """Scheduling/execution keys are rejected at any nesting level (a plan never assigns models, accounts or workers)."""
     if depth > MAX_DEPTH:
@@ -92,7 +111,7 @@ def _scan_forbidden(report: Report, where: str, node: object, depth: int = 0) ->
         return
     if isinstance(node, dict):
         for key, value in node.items():
-            if isinstance(key, str) and key.lower() in FORBIDDEN_TASK_KEYS:
+            if isinstance(key, str) and forbidden_key(key):
                 report.errors.append(f"{where}.{key}: not allowed in a plan (scheduling/execution state is not "
                                      "planned here)")
             _scan_forbidden(report, f"{where}.{key}", value, depth + 1)
@@ -152,7 +171,17 @@ def _check_verification(report: Report, where: str, task: dict, ids: set[str]) -
             report.errors.append(f"{spot}.created_by: {created!r} is not a task of this plan")
 
 
-def _check_task(report: Report, task: object, index: int, milestones: dict[str, int], ids: set[str]) -> str | None:
+def schema_tuple(plan: dict) -> tuple[int, int, int]:
+    version = plan.get("schema_version")
+    if isinstance(version, str) and VERSION_RE.fullmatch(version):
+        major, minor, patch = (int(x) for x in version.split("."))
+        return major, minor, patch
+    return (0, 0, 0)
+
+
+def _check_task(report: Report, task: object, index: int, milestones: dict[str, int], ids: set[str],
+                strict: bool = False, file_exists: ev.FileExists | None = None,
+                ref_exists: ev.RefExists | None = None) -> str | None:
     where = f"tasks[{index}]"
     if not isinstance(task, dict):
         report.errors.append(f"{where}: must be an object")
@@ -201,9 +230,23 @@ def _check_task(report: Report, task: object, index: int, milestones: dict[str, 
         if not (isinstance(exc, dict) and _text(exc.get("reason"))):
             report.errors.append(f"{where}.scope: full_system must be decomposed, or carry "
                                  "scope_exception {reason} for review")
+        else:
+            report.warnings.append(f"{where}.scope: full_system accepted only through scope_exception "
+                                   f"({exc['reason'].strip()[:80]!r}); the owner must review it at approval")
     elif "scope_exception" in task:
         report.errors.append(f"{where}.scope_exception: only valid with scope=full_system")
     _check_verification(report, where, task, ids)
+    found = ev.check_task(where, task, strict=strict, task_ids=ids, own_id=tid, file_exists=file_exists,
+                          ref_exists=ref_exists)
+    report.errors += found[0]
+    report.warnings += found[1]
+    found = ev.check_text_quality(where, task, strict=strict)
+    report.errors += found[0]
+    report.warnings += found[1]
+    if task.get("risk") == "high" and isinstance(task.get("verification"), list) and not any(
+            isinstance(v, dict) and v.get("type") == "command" for v in task["verification"]):
+        report.warnings.append(f"{where}.verification: risk is high but nothing is machine-checked; add a command "
+                               "(or a task that creates one, with created_by)")
     return tid
 
 
@@ -244,8 +287,10 @@ def _check_graph(report: Report, tasks: list[dict], milestones: dict[str, int]) 
         report.errors.append(f"tasks: dependency cycle among {', '.join(cyclic)}")
 
 
-def validate(plan: object) -> Report:
-    """Deterministic validation of a parsed PLAN.json; every error names the task/field that causes it."""
+def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists: ev.RefExists | None = None) -> Report:
+    """Deterministic validation of a parsed PLAN.json; every error names the task/field that causes it.
+    `file_exists(repository, path)` lets a caller that knows the repositories verify `file:` evidence and
+    `ref_exists(kind, value, repository)` does the same for `command:` and `precedent:` references."""
     report = Report()
     if not isinstance(plan, dict):
         report.errors.append("plan: top level must be an object")
@@ -279,11 +324,26 @@ def validate(plan: object) -> Report:
         return report
     ids = [t.get("id") for t in tasks if isinstance(t, dict) and _hashable_str(t.get("id"))]
     for dup in sorted({i for i in ids if ids.count(i) > 1}):
-        report.errors.append(f"{dup}: duplicate task id")
+        where_dup = ", ".join(f"tasks[{n}]" for n, x in enumerate(tasks) if isinstance(x, dict) and x.get("id") == dup)
+        report.errors.append(f"{dup}: duplicate task id ({where_dup})")
     id_set = set(ids)
+    strict = schema_tuple(plan) >= EVIDENCE_SINCE
     for index, task in enumerate(tasks):
-        _check_task(report, task, index, milestones, id_set)
+        _check_task(report, task, index, milestones, id_set, strict, file_exists, ref_exists)
     _check_graph(report, [t for t in tasks if isinstance(t, dict)], milestones)
+    if not report.errors or all("cycle" not in e for e in report.errors):
+        (report.errors if strict else report.warnings).extend(quality.conflicts(plan))
+        report.warnings.extend(quality.redundant_edges(plan))
+    reused: dict[str, set[str]] = {}
+    for task in tasks:
+        entries = task.get("classification_evidence") if isinstance(task, dict) else None
+        for entry in entries.values() if isinstance(entries, dict) else ():
+            if isinstance(entry, dict) and isinstance(entry.get("justification"), str):
+                reused.setdefault(ev.normalise(entry["justification"]), set()).add(str(task.get("id")))
+    for text, owners in reused.items():
+        if len(owners) >= 3 and text:
+            report.warnings.append(f"classification_evidence: the same justification is reused by {len(owners)} tasks "
+                                   f"({', '.join(sorted(owners)[:5])}); classifications must be argued per task")
     used = {t.get("milestone_id") for t in tasks if isinstance(t, dict) and _hashable_str(t.get("milestone_id"))}
     for mid in milestones:
         if mid not in used:
@@ -291,28 +351,56 @@ def validate(plan: object) -> Report:
     return report
 
 
-def _ordered(obj: dict, keys: tuple[str, ...]) -> dict:
-    head = {key: obj[key] for key in keys if key in obj}
-    return {**head, **{key: obj[key] for key in sorted(obj) if key not in head}}
+LEGACY_TASK_KEYS = tuple(k for k in TASK_KEYS if k != "classification_evidence")
+
+
+def _deep_sorted(value: object) -> object:
+    """Nested objects get sorted keys, so any two spellings of one plan hash alike (schema 1.1.0 and later)."""
+    if isinstance(value, dict):
+        return {key: _deep_sorted(value[key]) for key in sorted(value, key=str)}
+    if isinstance(value, list):
+        return [_deep_sorted(item) for item in value]
+    return value
+
+
+def _ordered(obj: object, keys: tuple[str, ...], deep: bool = True) -> object:
+    """Named keys first in the given order, the rest sorted. `deep` also sorts nested values; schema 1.0.0 documents
+    keep the exact serialisation they were frozen with (nested keys untouched), so their hashes never move."""
+    if not isinstance(obj, dict):
+        return obj  # malformed input is the validator's business; serialising must never raise on it
+    fix = _deep_sorted if deep else (lambda value: value)
+    head = {key: fix(obj[key]) for key in keys if key in obj}
+    return {**head, **{key: fix(obj[key]) for key in sorted(obj, key=str) if key not in head}}
 
 
 def canonicalize(plan: dict) -> dict:
-    out = _ordered(plan, TOP_REQUIRED[:4])
-    out["milestones"] = [_ordered(m, MILESTONE_KEYS) for m in plan.get("milestones", [])]
+    modern = schema_tuple(plan) >= EVIDENCE_SINCE
+    task_keys = TASK_KEYS if modern else LEGACY_TASK_KEYS
+    top = _ordered(plan, TOP_REQUIRED[:4], modern)
+    milestones = plan.get("milestones", [])
+    top["milestones"] = [_ordered(m, MILESTONE_KEYS, modern) for m in milestones] if isinstance(milestones, list) \
+        else milestones
     tasks = []
-    for task in plan.get("tasks", []):
-        task = _ordered(task, TASK_KEYS)
-        task["verification"] = [_ordered(v, VERIFICATION_KEYS) for v in task.get("verification", [])]
+    for task in plan.get("tasks", []) if isinstance(plan.get("tasks", []), list) else []:
+        task = _ordered(task, task_keys, modern)
+        if isinstance(task, dict):
+            if isinstance(task.get("verification"), list):
+                task["verification"] = [_ordered(v, VERIFICATION_KEYS, modern) for v in task["verification"]]
+            elif "verification" not in task:
+                task["verification"] = []  # as the original serialiser always wrote it (skeletons, invalid drafts)
+            if modern and isinstance(task.get("classification_evidence"), dict):
+                task["classification_evidence"] = _ordered(task["classification_evidence"], ev.DIMENSIONS)
         tasks.append(task)
-    out["tasks"] = tasks
-    return {**out, **{key: plan[key] for key in sorted(plan) if key not in out}}
+    top["tasks"] = tasks if isinstance(plan.get("tasks", []), list) else plan.get("tasks")
+    rest = {key: (_deep_sorted(plan[key]) if modern else plan[key]) for key in sorted(plan, key=str) if key not in top}
+    return {**top, **rest}
 
 
 def dumps(plan: dict) -> str:
     """Deterministic text: fixed key order, task order as planned, UTF-8, trailing newline."""
     try:
         return json.dumps(canonicalize(plan), indent=2, ensure_ascii=False, allow_nan=False) + "\n"
-    except (ValueError, TypeError, RecursionError) as exc:
+    except (ValueError, TypeError, RecursionError, LookupError, AttributeError) as exc:
         raise PlanContractError("PLAN_NOT_SERIALISABLE", [f"{type(exc).__name__}: plan cannot be written as JSON"]) from exc
 
 

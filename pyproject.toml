@@ -21,7 +21,7 @@ bitacora-inventory = "migration_inventory:main"
 
 [tool.setuptools]
 package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
-packages = ["bitacora_resources", "bitacora_platform", "bt_planner"]
+packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "bt_scheduler_core"]
 py-modules = [
   "bitacora",
   "bt_agents",
@@ -53,6 +53,7 @@ py-modules = [
   "bt_continuation",
   "bt_requirements_gate",
   "bt_plan_adapter",
+  "bt_scheduler_adapter",
   "bt_cli_plan",
   "bt_cli_requirements_gate",
   "bt_core",
@@ -129,6 +130,7 @@ py-modules = [
 # test_package_install.py keeps py-modules complete against skill/scripts.
 [tool.setuptools.package-data]
 bt_planner = ["data/*.json", "README.md"]
+bt_scheduler_core = ["README.md"]
 bitacora_resources = [
   "SKILL.md", "templates/*", "templates/**/*", "assets/*", "agents/*", "githooks/*",
   "references/*.md", "references/stacks/*", "vendor/archify/**/*",

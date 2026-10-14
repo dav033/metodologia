@@ -115,6 +115,11 @@ def plan_review(rdir: Path) -> Path:
 
 def plan_decide(rdir: Path, approve: bool, comments: str, via: str) -> str:
     plan = rdir / "PLAN.md"
+    if approve:  # an invalid or PLAN.md-contradicting PLAN.json (opt-in contract) is never approved
+        import bt_plan_adapter
+        problem = bt_plan_adapter.publishable_problem(rdir)
+        if problem:
+            raise SystemExit(problem)
     stamp = f"{dt.datetime.now():%Y-%m-%d %H:%M}"
     with plan.open("a", encoding="utf-8") as fh:
         if comments.strip():
@@ -122,6 +127,9 @@ def plan_decide(rdir: Path, approve: bool, comments: str, via: str) -> str:
         fh.write(f"- {stamp} plan {'APPROVED' if approve else 'CHANGES REQUESTED'} ({via})\n")
     status = "approved" if approve else "changes-requested"
     set_front(plan, "status", status)
+    if approve:  # freeze exactly what was just approved: later launches are compared against this revision
+        import bt_plan_adapter
+        bt_plan_adapter.freeze_approved(rdir)
     return status
 
 

@@ -1,8 +1,9 @@
 ---
 id: PLAN-PLANNER-001
 title: "Evolución del Planificador — clasificación y contrato estructurado"
-status: proposed
+status: phase-1-closed
 created: 2026-10-14
+closed: 2026-10-14
 track: architecture
 scope: planner-only
 schema_version: "1.0.0"
@@ -14,7 +15,7 @@ schema_version: "1.0.0"
 >
 > **Decisión arquitectónica acordada:** el Planificador inspecciona el proyecto, genera el plan, lo valida, lo entrega y **termina**. No permanece activo durante la ejecución. El Scheduler y sus módulos son otro sistema.
 >
-> **Estado:** propuesta de implementación para revisión. Este documento no afirma que los cambios ya estén implementados.
+> **Estado:** Fase 1 **cerrada el 2026-10-14** (REQ-009 contrato, REQ-010 módulo aislado, REQ-012 cierre). La sección §16 resume qué se implementó y con qué evidencia; el resto del documento conserva el diseño original.
 
 ## 1. Contexto y punto de partida
 
@@ -285,26 +286,26 @@ Aplicar el proceso de aprobación ya establecido en la metodología; publicar la
 
 ### M1 — Diagnóstico y diseño de contrato
 
-- [ ] **T1.** Localizar en el código actual dónde se producen `SPEC.md`, `PLAN.md`, `HANDOFF.md` y dónde `bitacora.py` extrae tareas/dependencias. Documentar el flujo real sin suposiciones. **Verificar:** mapa de productores/consumidores y un ejemplo real completo.
-- [ ] **T2.** Definir JSON Schema `1.0.0` o su equivalente tipado para planes, hitos y tareas, incluidas enumeraciones y validaciones. **Después de:** T1. **Verificar:** esquema publicado y casos válidos/inválidos.
-- [ ] **T3.** Documentar rúbrica de clasificación con ejemplos límite (fix sensible, refactor grande mecánico, cambio de contrato, sistema completo). **Después de:** T1. **Verificar:** ejemplos clasificados con justificación y coherencia interna.
+- [x] **T1.** Localizar en el código actual dónde se producen `SPEC.md`, `PLAN.md`, `HANDOFF.md` y dónde `bitacora.py` extrae tareas/dependencias. Documentar el flujo real sin suposiciones. **Verificar:** mapa de productores/consumidores y un ejemplo real completo.
+- [x] **T2.** Definir JSON Schema `1.0.0` o su equivalente tipado para planes, hitos y tareas, incluidas enumeraciones y validaciones. **Después de:** T1. **Verificar:** esquema publicado y casos válidos/inválidos.
+- [x] **T3.** Documentar rúbrica de clasificación con ejemplos límite (fix sensible, refactor grande mecánico, cambio de contrato, sistema completo). **Después de:** T1. **Verificar:** ejemplos clasificados con justificación y coherencia interna.
 
 ### M2 — Salida estructurada y sincronización
 
-- [ ] **T4.** Incorporar la generación de `PLAN.json` al flujo existente del Planificador, sin sustituir los Markdown. **Después de:** T2, T3. **Verificar:** un requisito de prueba genera JSON parseable y campos completos.
-- [ ] **T5.** Introducir verificación de consistencia `PLAN.md` ↔ `PLAN.json` por IDs, hitos y dependencias (sin interpretar libremente toda la prosa). **Después de:** T4. **Verificar:** inconsistencias deliberadas producen fallos claros.
-- [ ] **T6.** Asegurar revisiones inmutables de planes aprobados y referencia desde la ejecución, sin alterar `RUN.json` existente en marcha. **Después de:** T4. **Verificar:** cambios al plan generan revisión nueva o error; historial preservado.
+- [x] **T4.** Incorporar la generación de `PLAN.json` al flujo existente del Planificador, sin sustituir los Markdown. **Después de:** T2, T3. **Verificar:** un requisito de prueba genera JSON parseable y campos completos.
+- [x] **T5.** Introducir verificación de consistencia `PLAN.md` ↔ `PLAN.json` por IDs, hitos y dependencias (sin interpretar libremente toda la prosa). **Después de:** T4. **Verificar:** inconsistencias deliberadas producen fallos claros.
+- [x] **T6.** Asegurar revisiones inmutables de planes aprobados y referencia desde la ejecución, sin alterar `RUN.json` existente en marcha. **Después de:** T4. **Verificar:** cambios al plan generan revisión nueva o error; historial preservado.
 
 ### M3 — Validación y retrocompatibilidad
 
-- [ ] **T7.** Implementar validador: duplicados, referencias inexistentes, ciclos de dependencias, hitos huérfanos, omisión de metadata y criterios vacíos. **Después de:** T2, T4. **Verificar:** pruebas negativas automatizadas.
-- [ ] **T8.** Probar el contrato con planes históricos representativos: `REQ-013`, `REQ-015` y `REQ-016`, **sin reescribir sus estados reales**. **Después de:** T5, T7. **Verificar:** informe de compatibilidad y valores que requieren enriquecimiento explícito.
-- [ ] **T9.** Probar el ciclo completo: objetivo ficticio → SPEC/PLAN/JSON → validación → aprobación → cierre del Planificador; sin lanzar ejecutores. **Después de:** T6, T8. **Verificar:** salida reproducible e integridad comprobada.
+- [x] **T7.** Implementar validador: duplicados, referencias inexistentes, ciclos de dependencias, hitos huérfanos, omisión de metadata y criterios vacíos. **Después de:** T2, T4. **Verificar:** pruebas negativas automatizadas.
+- [x] **T8.** Probar el contrato con planes históricos representativos: `REQ-013`, `REQ-015` y `REQ-016`, **sin reescribir sus estados reales**. **Después de:** T5, T7. **Verificar:** informe de compatibilidad y valores que requieren enriquecimiento explícito.
+- [x] **T9.** Probar el ciclo completo: objetivo ficticio → SPEC/PLAN/JSON → validación → aprobación → cierre del Planificador; sin lanzar ejecutores. **Después de:** T6, T8. **Verificar:** salida reproducible e integridad comprobada.
 
 ### M4 — Documentación y adopción
 
-- [ ] **T10.** Documentar el nuevo contrato, rúbrica y proceso de revisión en la metodología, conservando convenciones actuales y rutas reales descubiertas en M1. **Después de:** T9. **Verificar:** otra sesión nueva puede interpretar el plan sin contexto conversacional previo.
-- [ ] **T11.** Preparar compatibilidad para que el futuro Scheduler consuma `PLAN.json`, con ejemplo de entrada y errores esperables; **no implementar su motor en este requisito**. **Después de:** T9. **Verificar:** prueba de lectura/parseo sin invocar agentes.
+- [x] **T10.** Documentar el nuevo contrato, rúbrica y proceso de revisión en la metodología, conservando convenciones actuales y rutas reales descubiertas en M1. **Después de:** T9. **Verificar:** otra sesión nueva puede interpretar el plan sin contexto conversacional previo.
+- [x] **T11.** Preparar compatibilidad para que el futuro Scheduler consuma `PLAN.json`, con ejemplo de entrada y errores esperables; **no implementar su motor en este requisito**. **Después de:** T9. **Verificar:** prueba de lectura/parseo sin invocar agentes.
 
 **Dependencias de fases:** M1 → M2 → M3 → M4; dentro de cada fase rigen los `after` descritos. La paralelización es asunto del Scheduler, no una orden de este plan.
 
@@ -420,14 +421,14 @@ La implementación debe añadir pruebas automatizadas equivalentes a las siguien
 
 ## 14. Definición de terminado (DoD)
 
-- [ ] Todas las tareas T1–T11 cerradas con evidencia.
-- [ ] AC-01 a AC-15 verificados y trazables a pruebas o inspecciones documentadas.
-- [ ] `PLAN.json` generado y validado para un caso nuevo completo.
-- [ ] `SPEC.md` / `PLAN.md` / `HANDOFF.md` preservados según las reglas existentes.
-- [ ] Compatibilidad con REQ-013, REQ-015 y REQ-016 evaluada sin alterar sus ejecuciones.
-- [ ] Ningún estado operativo de `RUN.json` sobrescrito por el Planificador.
-- [ ] Documentación y gates aplicables actualizados; fallos restantes reportados honestamente.
-- [ ] Planificador finaliza tras producir el artefacto aprobado.
+- [x] Todas las tareas T1–T11 cerradas con evidencia.
+- [x] AC-01 a AC-15 verificados y trazables a pruebas o inspecciones documentadas.
+- [x] `PLAN.json` generado y validado para un caso nuevo completo.
+- [x] `SPEC.md` / `PLAN.md` / `HANDOFF.md` preservados según las reglas existentes.
+- [x] Compatibilidad con REQ-013, REQ-015 y REQ-016 evaluada sin alterar sus ejecuciones.
+- [x] Ningún estado operativo de `RUN.json` sobrescrito por el Planificador.
+- [x] Documentación y gates aplicables actualizados; fallos restantes reportados honestamente.
+- [x] Planificador finaliza tras producir el artefacto aprobado.
 
 ## 15. Decisiones abiertas que conviene resolver durante M1
 
@@ -442,3 +443,32 @@ Estas cuestiones **no impiden redactar el plan**, pero deben resolverse contra e
 ---
 
 **Principio rector:** el Planificador **describe y clasifica el trabajo**. No decide quién lo ejecutará, no lo supervisa y no intenta recuperarlo. Produce un contrato autocontenido, verificable y versionado; después desaparece.
+
+## 16. Cierre de la Fase 1 (2026-10-14)
+
+**Resultado.** El Planificador produce `PLAN.json` 1.1.0 validado, sincronizado con `PLAN.md`, congelado en la
+aprobación y verificado por una única compuerta en todas las rutas de lanzamiento. Módulo: `skill/scripts/bt_planner/`
+(README = contrato); metodología: `skill/references/plan-contract.md`; decisiones D-019, D-020, D-021.
+
+| Tareas | Evidencia |
+|---|---|
+| T1–T3 (mapa, esquema, rúbrica) | REQ-009 `artifacts/plan-contract-map.md`; `bt_planner/data/plan.schema.json`; rúbrica con casos límite en el README del módulo |
+| T4–T6 (JSON, sincronía, revisiones) | `sync.py`, `revisions.py`; REQ-012 amplía la sincronía a títulos, repos, verificaciones e ids duplicados y congela en la aprobación |
+| T7–T9 (validador, históricos, ciclo completo) | `contract.py` + `evidence.py` + `quality.py`; compat de REQ-013/015/016 de solo lectura; 6 pruebas reales de planificación (`REQ-012/planning-trials/`) |
+| T10–T11 (documentación, interfaz para el Scheduler) | README del módulo, `plan-contract.md`, `plan.example.json` 1.1.0; el lector del núcleo del Scheduler carga la revisión congelada (solo lectura) |
+
+**Criterios AC-01…AC-15:** trazados a pruebas en `REQ-012/AC-TRACE.md`.
+
+**Cambios del cierre respecto al diseño original**
+1. Esquema 1.1.0: `classification_evidence` obligatorio (justificación + referencias tipificadas por dimensión); 1.0.0
+   sigue cargándose (REQ-009/010 congelados) pero las revisiones nuevas deben usar 1.1.0.
+2. La sincronía MD↔JSON compara también títulos, `repo`, `verify` y `risk` legado y rechaza ids/encabezados duplicados.
+3. La aprobación congela exactamente los bytes aprobados; un lanzamiento nunca congela: edición no aprobada = `PLAN_DRIFT`,
+   plan nunca congelado = `PLAN_NOT_FROZEN` (solo `--force` explícito del dueño, registrado `launch-forced`).
+4. Tareas sin orden entre sí que comparten ruta o recurso no pueden declarar `coupling: low`.
+
+**Limitaciones demostradas (no resueltas, registradas como pendientes)**
+- La evidencia se verifica por estructura y existencia (ficheros, specs, tareas, requisitos, decisiones, commits y
+  ejecutables citados), no por verdad semántica: ningún validador determinista puede confirmar que una justificación
+  fluida sea cierta (P-023). Los criterios AC-03/AC-07/AC-09 piden justificación con evidencia verificable, no oráculo de verdad.
+- Las estimaciones no están calibradas con tiempos reales: eso pertenece al Scheduler (P-020).

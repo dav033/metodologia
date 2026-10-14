@@ -39,11 +39,21 @@ def classified(rdir: Path) -> dict:
         milestone["title"] = milestone["title"] or milestone["id"]
         milestone["acceptance_criteria"] = [f"{milestone['id']} delivered"]
     for task in plan["tasks"]:
-        task.update({"objective": f"Do {task['title']}", "repository": task.get("repository", "app"),
+        why = {"complexity": "the change follows a pattern already present in the module so little reasoning is needed",
+               "scope": "one small localized change confined to a single component of the repository",
+               "duration": "comparable to similar edits in this module including running its local tests",
+               "risk": "a mistake is local reversible and caught by the task verification command",
+               "coupling": "no other task edits the same files or depends on a shared contract",
+               "confidence": "the affected code was read and a precedent for this exact change exists"}
+        task.update({"objective": f"Deliver the behaviour described by {task['title']} and keep tests passing",
+                     "repository": task.get("repository", "app"),
                      "complexity": "low", "scope": "small_change", "estimated_minutes": 30, "risk": "medium",
                      "coupling": "low", "confidence": "medium", "estimate_rationale": "Known pattern",
-                     "expected_paths": task.get("expected_paths", ["src/**"]), "shared_resources": [],
-                     "acceptance_criteria": [f"{task['title']} works"]})
+                     "classification_evidence": {d: {"justification": f"{task['id']}: {sentence}",
+                                                     "evidence": ["spec:SPEC.md#spec", "command:python3 -m unittest -> the tests of the module ran"]}
+                                                 for d, sentence in why.items()},
+                     "expected_paths": task.get("expected_paths", [f"src/{task['id'].lower()}/**"]),
+                     "shared_resources": [], "acceptance_criteria": [f"{task['title']} works as described"]})
         if not task.get("verification"):
             task["verification"] = [{"type": "manual", "value": "read the diff", "purpose": "review",
                                      "expected": "matches the objective"}]
@@ -79,8 +89,9 @@ class Boundary(unittest.TestCase):
         offenders = []
         for path in sorted(REPO.rglob("*.py")):
             rel = path.relative_to(REPO)
-            if ".git" in rel.parts or "bt_planner" in rel.parts or "node_modules" in rel.parts or path.name in self.ALLOWED_USERS:
-                continue
+            if (".git" in rel.parts or "bt_planner" in rel.parts or "node_modules" in rel.parts
+                    or ".state" in rel.parts or ".venv" in rel.parts or path.name in self.ALLOWED_USERS):
+                continue  # `.state` holds throwaway review snapshots (full copies of the tree, venv included)
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8"))
             except (SyntaxError, UnicodeError):
@@ -182,13 +193,18 @@ class Launch(Isolated):
             pass
         with patch.object(bt_launch, "find_req", return_value=self.rdir), \
                 patch("bt_requirements_gate.require_ready", return_value={"status": "ready"}), \
-                patch.object(bt_launch.ws, "clone_missing", side_effect=Stop):
+                patch.object(bt_launch.ws, "clone_missing"), patch.object(bt_launch, "write_handoff", side_effect=Stop):
             with self.assertRaises(Stop):
                 bt_launch.launch("sample", "REQ-001", mode="marathon")
 
-    def test_launch_freezes_the_approved_revision_once(self):
+    def test_launch_binds_the_revision_frozen_at_approval_and_never_creates_it(self):
         self.good_plan()
-        self.set_status("approved")
+        self.set_status("approved")  # approved by hand: no approval record
+        with self.assertRaises(SystemExit) as ctx:
+            self.launch_until_after_freeze()
+        self.assertIn("PLAN_NOT_FROZEN", str(ctx.exception))
+        self.assertEqual(planner.list_revisions(self.rdir), [])
+        planner.approve_freeze(self.rdir, adapter.plan_id(self.rdir), adapter.APPROVED_STATES)
         self.launch_until_after_freeze()
         self.launch_until_after_freeze()  # idempotent on retry
         self.assertEqual([r["revision"] for r in planner.list_revisions(self.rdir)], [1])
@@ -208,15 +224,17 @@ class Launch(Isolated):
         self.launch_until_after_freeze()
         self.assertFalse((self.rdir / "plan-revisions").exists())
 
-    def test_dry_run_never_freezes(self):
+    def test_dry_run_never_writes(self):
         self.good_plan()
         self.set_status("approved")
+        planner.approve_freeze(self.rdir, adapter.plan_id(self.rdir), adapter.APPROVED_STATES)
+        before = sorted(p.name for p in (self.rdir / "plan-revisions").iterdir())
         with patch.object(bt_launch, "find_req", return_value=self.rdir), \
                 patch("bt_requirements_gate.require_ready", return_value={"status": "ready"}), \
-                patch.object(bt_launch, "write_handoff", side_effect=RuntimeError("stop")):
-            with self.assertRaises(RuntimeError):
-                bt_launch.launch("sample", "REQ-001", mode="marathon", dry_run=True)
-        self.assertFalse((self.rdir / "plan-revisions").exists())
+                patch.object(bt_launch, "write_handoff", side_effect=RuntimeError("stop")), \
+                self.assertRaises(RuntimeError):
+            bt_launch.launch("sample", "REQ-001", mode="marathon", dry_run=True)
+        self.assertEqual(sorted(p.name for p in (self.rdir / "plan-revisions").iterdir()), before)
 
 
 class RunState(Isolated):
@@ -269,6 +287,8 @@ class Cli(Isolated):
         self.assertEqual(self.invoke("freeze"), 0)
         self.assertEqual(self.invoke("show"), 0)
         self.assertEqual(self.invoke("compat"), 0)
+        self.assertEqual(self.invoke("bind"), 0)  # the launch gate, read-only
+        self.assertEqual(self.invoke("report"), 0)
         self.assertEqual(adapter.plan_id(self.rdir), "REQ-001")
 
     def test_parser_registers_the_command(self):
@@ -276,6 +296,274 @@ class Cli(Isolated):
         parser = argparse.ArgumentParser()
         bt_cli_plan.add_parser(parser.add_subparsers(dest="cmd"))
         self.assertEqual(parser.parse_args(["plan-json", "check", "REQ-009"]).action, "check")
+
+
+class LaunchPaths(Isolated):
+    """Every way of starting work passes the same gate: valid, consistent with PLAN.md, exactly the approved revision."""
+
+    def approved(self) -> dict:
+        """What `plan approve` does: the plan is approved and exactly that PLAN.json is frozen."""
+        plan = self.good_plan()
+        self.set_status("approved")
+        planner.approve_freeze(self.rdir, adapter.plan_id(self.rdir), adapter.APPROVED_STATES)
+        return plan
+
+    def revise(self, plan: dict, minutes: int) -> None:
+        plan["revision"] += 1
+        plan["tasks"][0]["estimated_minutes"] = minutes
+        (self.rdir / "PLAN.json").write_text(planner.dumps(plan), encoding="utf-8")
+
+    def revisions(self) -> list[int]:
+        return [r["revision"] for r in planner.list_revisions(self.rdir)]
+
+    def standard_launch(self, **kw):
+        class Stop(Exception):
+            pass
+        with patch.object(bt_launch, "find_req", return_value=self.rdir), \
+                patch("bt_requirements_gate.require_ready", return_value={"status": "ready"}), \
+                patch.object(bt_launch.ws, "clone_missing"), \
+                patch.object(bt_launch, "write_handoff", side_effect=Stop):
+            try:
+                bt_launch.launch("sample", "REQ-001", mode="marathon", **kw)
+            except Stop:
+                return "passed the gate"
+        return "completed"
+
+    def foreground_launch(self, **kw):
+        import bt_orchestration_transition as transition
+        with patch.object(transition.core, "find_req", return_value=self.rdir), \
+                patch.object(transition.gate, "require_ready", return_value={"status": "ready"}), \
+                patch.object(transition.state_, "load", return_value=None), \
+                patch.object(transition.core.ws, "workdir", return_value=self.rdir), \
+                patch.object(transition.client, "locate", return_value={"wrapper": None, "why": "no parent"}):
+            return transition.launch("sample", "REQ-001", **kw)
+
+    def open_run(self):
+        import bt_run
+        with patch.object(bt_run.rs, "load", return_value=None), patch.object(bt_run.rs, "save"), \
+                patch.object(bt_run, "_pool", return_value=None):
+            return bt_run._open("sample", self.rdir, {"agent": "claude", "model": "haiku"})
+
+    # -- standard / web / handoff launch (bt_launch.launch) ---------------------------------------------------------
+    def test_standard_launch_refuses_content_nobody_approved(self):
+        plan = self.approved()
+        self.assertEqual(self.standard_launch(), "passed the gate")
+        self.assertEqual(self.revisions(), [1])
+        self.revise(plan, 55)  # an edit after approval, with a bumped revision number
+        with self.assertRaises(SystemExit) as ctx:
+            self.standard_launch()
+        self.assertIn("PLAN_DRIFT", str(ctx.exception))
+        self.assertEqual(self.revisions(), [1])  # the launch did not freeze it on the way in
+
+    def test_launch_after_a_new_approval_runs_the_new_revision(self):
+        plan = self.approved()
+        self.standard_launch()
+        self.revise(plan, 55)
+        rounds_module = __import__("bt_rounds")
+        self.set_status("review")
+        rounds_module.plan_decide(self.rdir, True, "", "test")
+        self.assertEqual(self.revisions(), [1, 2])
+        self.assertEqual(self.standard_launch(), "passed the gate")
+
+    def test_force_still_validates_and_freezes_what_it_launches(self):
+        self.good_plan()
+        self.set_status("review")
+        self.assertEqual(self.standard_launch(force=True), "passed the gate")
+        self.assertEqual(self.revisions(), [1])
+        broken = self.rdir.parent / "REQ-002-broken"
+        broken.mkdir()
+        (broken / "SPEC.md").write_text("# s\n", encoding="utf-8")
+        (broken / "PLAN.md").write_text(PLAN_MD.format(status="review"), encoding="utf-8")
+        planner.write_skeleton(broken)
+        with self.assertRaises(SystemExit) as ctx:
+            adapter.freeze_on_launch(broken, forced=True)
+        self.assertIn("PLAN_INVALID", str(ctx.exception))
+        self.assertFalse((broken / "plan-revisions").exists())
+
+    def test_dry_run_validates_without_writing(self):
+        self.approved()
+        self.assertEqual(self.standard_launch(dry_run=True), "passed the gate")
+        self.assertEqual(self.revisions(), [1])  # only the approval froze anything
+        data = json.loads((self.rdir / "PLAN.json").read_text())
+        data["tasks"][0]["risk"] = "critical"
+        (self.rdir / "PLAN.json").write_text(json.dumps(data), encoding="utf-8")
+        with self.assertRaises(SystemExit) as ctx:
+            self.standard_launch(dry_run=True)
+        self.assertIn("PLAN_INVALID", str(ctx.exception))
+
+    def test_contradiction_between_plan_md_and_plan_json_blocks_launch(self):
+        plan = self.approved()
+        plan["tasks"][1]["after"] = []
+        (self.rdir / "PLAN.json").write_text(planner.dumps(plan), encoding="utf-8")
+        with self.assertRaises(SystemExit) as ctx:
+            self.standard_launch()
+        self.assertIn("T2.after", str(ctx.exception))
+
+    # -- foreground transition ---------------------------------------------------------------------------------
+    def test_foreground_launch_freezes_the_same_revision(self):
+        self.approved()
+        self.assertEqual(self.foreground_launch()["decision"], "manual")
+        self.assertEqual(self.revisions(), [1])
+
+    def test_foreground_dry_run_writes_nothing_and_refuses_drift(self):
+        plan = self.approved()
+        self.foreground_launch()
+        self.revise(plan, 99)
+        import bt_orchestration_terminal as terminal
+        for kw in ({}, {"dry_run": True}):
+            with self.assertRaisesRegex(terminal.TerminalError, "FOREGROUND_PLAN_REFUSED: PLAN_DRIFT"):
+                self.foreground_launch(**kw)
+        self.assertEqual(self.revisions(), [1])
+
+    def test_foreground_refuses_an_invalid_plan_json(self):
+        planner.write_skeleton(self.rdir)
+        self.set_status("approved")
+        import bt_orchestration_terminal as terminal
+        with self.assertRaisesRegex(terminal.TerminalError, "FOREGROUND_PLAN_REFUSED: PLAN_INVALID"):
+            self.foreground_launch()
+        self.assertFalse((self.rdir / "plan-revisions").exists())
+
+    def test_successor_helper_rechecks_the_revision_before_replacing_the_session(self):
+        import bt_orchestration_transition as transition
+        self.assertIn("launch_problem(rdir, freeze=False)", Path(transition.__file__).read_text(encoding="utf-8"))
+
+    # -- the run itself ------------------------------------------------------------------------------------------
+    def test_a_new_run_binds_the_frozen_revision_and_refuses_drift(self):
+        plan = self.approved()
+        state = self.open_run()
+        self.assertEqual(state["plan_ref"]["revision"], 1)
+        self.revise(plan, 70)
+        with self.assertRaises(SystemExit) as ctx:
+            self.open_run()
+        self.assertIn("PLAN_DRIFT", str(ctx.exception))
+
+    def test_a_new_run_of_an_unapproved_contract_plan_is_refused(self):
+        self.good_plan()
+        self.set_status("draft")
+        with self.assertRaises(SystemExit) as ctx:
+            self.open_run()
+        self.assertIn("PLAN_NOT_APPROVED", str(ctx.exception))
+
+    def test_legacy_plans_start_runs_exactly_as_before(self):
+        self.set_status("draft")
+        state = self.open_run()
+        self.assertNotIn("plan_ref", state)
+        self.assertFalse((self.rdir / "plan-revisions").exists())
+
+    def resume(self, existing: dict):
+        import bt_run
+        with patch.object(bt_run.rs, "load", return_value=existing), \
+                patch.object(bt_run.rs, "update", side_effect=lambda rdir, fn: existing), \
+                patch.object(bt_run, "_pool", return_value=None), patch.object(bt_run, "reap_orphans", return_value=[]):
+            return bt_run._open("sample", self.rdir, {"agent": "claude"})
+
+    def test_a_resumed_run_is_never_rewritten_and_never_runs_unapproved_content(self):
+        plan = self.approved()
+        self.open_run()  # freezes r1
+        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
+                    "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "x"}}
+        before = json.dumps(existing, sort_keys=True)
+        self.assertIs(self.resume(existing), existing)  # still the approved revision: resumes
+        self.assertEqual(json.dumps(existing, sort_keys=True), before)
+        self.revise(plan, 80)  # an unreviewed new revision appears on disk
+        with self.assertRaises(SystemExit) as ctx:
+            self.resume(existing)
+        self.assertIn("PLAN_DRIFT", str(ctx.exception))
+        self.assertEqual(json.dumps(existing, sort_keys=True), before)
+
+    def test_resume_refuses_when_plan_json_was_deleted_after_a_freeze(self):
+        self.approved()
+        self.open_run()
+        (self.rdir / "PLAN.json").unlink()
+        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
+                    "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "x"}}
+        with self.assertRaises(SystemExit) as ctx:
+            self.resume(existing)
+        self.assertIn("PLAN_MISSING", str(ctx.exception))
+
+    def test_resume_does_not_need_the_checkouts_that_launch_needed(self):
+        plan = self.good_plan()
+        plan["tasks"][0]["classification_evidence"]["scope"]["evidence"] = ["file:src/auth/session.py"]
+        (self.rdir / "PLAN.json").write_text(planner.dumps(plan), encoding="utf-8")
+        self.set_status("approved")
+        planner.approve_freeze(self.rdir, adapter.plan_id(self.rdir), adapter.APPROVED_STATES)  # verified elsewhere
+        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
+                    "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "x"}}
+        self.assertIsNone(adapter.resume_problem(self.rdir, existing))
+        self.assertIsNotNone(adapter.launch_problem(self.rdir, freeze=False))  # a NEW run still demands the evidence
+
+    def test_foreground_freezes_nothing_when_the_workspace_is_unusable(self):
+        import bt_orchestration_terminal as terminal
+        import bt_orchestration_transition as transition
+        self.approved()
+        with patch.object(transition.core, "find_req", return_value=self.rdir), \
+                patch.object(transition.gate, "require_ready", return_value={"status": "ready"}), \
+                patch.object(transition.state_, "load", return_value=None), \
+                patch.object(transition.core.ws, "workdir", return_value=None):
+            with self.assertRaisesRegex(terminal.TerminalError, "FOREGROUND_WORKSPACE_REQUIRED"):
+                transition.launch("sample", "REQ-001")
+        self.assertEqual(self.revisions(), [1])  # nothing beyond the approval record
+
+    def test_resuming_a_run_of_a_legacy_plan_is_untouched(self):
+        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": []}
+        self.assertIs(self.resume(existing), existing)
+
+    # -- approval ----------------------------------------------------------------------------------------------------
+    def test_approval_refuses_an_invalid_plan_json_and_leaves_the_status(self):
+        import bt_rounds
+        planner.write_skeleton(self.rdir)
+        self.set_status("review")
+        with self.assertRaises(SystemExit) as ctx:
+            bt_rounds.plan_decide(self.rdir, True, "", "terminal")
+        self.assertIn("PLAN_INVALID", str(ctx.exception))
+        self.assertEqual(planner.plan_status(self.rdir), "review")
+        self.assertEqual(bt_rounds.plan_decide(self.rdir, False, "needs work", "terminal"), "changes-requested")
+
+    def test_approval_freezes_exactly_the_approved_bytes(self):
+        import bt_rounds
+        plan = self.good_plan()
+        self.set_status("review")
+        self.assertEqual(bt_rounds.plan_decide(self.rdir, True, "", "terminal"), "approved")
+        frozen = planner.load_revision(self.rdir, 1)
+        self.assertEqual(planner.dumps(frozen), planner.dumps(plan))
+
+    def test_approving_a_legacy_plan_is_unchanged(self):
+        import bt_rounds
+        self.set_status("review")
+        self.assertEqual(bt_rounds.plan_decide(self.rdir, True, "", "terminal"), "approved")
+        self.assertFalse((self.rdir / "plan-revisions").exists())
+
+    # -- nothing can start a run around the gate ------------------------------------------------------------------
+    def test_every_entry_that_creates_a_run_or_launches_goes_through_the_gate(self):
+        callers = {path.name for path in SCRIPTS.glob("*.py")
+                   if "init_state(" in path.read_text(encoding="utf-8") and path.name != "bt_runstate.py"}
+        self.assertEqual(callers, {"bt_run.py"}, "a new module creates run state: route it through the launch gate")
+        gated = {"bt_run.py": "launch_problem(", "bt_launch.py": "freeze_on_launch(",
+                 "bt_orchestration_transition.py": "launch_problem("}
+        for name, call in gated.items():
+            self.assertIn(call, (SCRIPTS / name).read_text(encoding="utf-8"), name)
+        self.assertIn("freeze_approved(", (SCRIPTS / "bt_rounds.py").read_text(encoding="utf-8"))
+
+
+class RefVerifier(Isolated):
+    def test_it_knows_requirements_tasks_decisions_commands_and_commits(self):
+        import bt_core
+        project = self.rdir.parent.parent
+        (project / "DECISIONS.md").write_text("## D-007 — x\n", encoding="utf-8")
+        (project / "PENDING.md").write_text("- P-012 · y\n", encoding="utf-8")
+        with patch.object(bt_core, "ROOT", self.root):  # never the owner's real bitácora
+            verify = adapter.ref_verifier(self.rdir)
+        self.assertTrue(verify("precedent", "REQ-001", ""))
+        self.assertTrue(verify("precedent", "REQ-001/T1", ""))
+        self.assertFalse(verify("precedent", "REQ-001/T9", ""))
+        self.assertFalse(verify("precedent", "REQ-777", ""))
+        self.assertTrue(verify("precedent", "D-007", ""))
+        self.assertFalse(verify("precedent", "D-008", ""))
+        self.assertTrue(verify("precedent", "P-012", ""))
+        self.assertIsNone(verify("precedent", "https://example.test/x", ""))
+        self.assertTrue(verify("command", "python3 -m unittest", ""))
+        self.assertTrue(verify("command", "FOO=1 python3 -c 'pass'", ""))
+        self.assertFalse(verify("command", "no-such-binary-xyz --help", ""))
 
 
 class ParserParity(unittest.TestCase):

@@ -151,9 +151,6 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
     if status != "approved" and not force:
         raise SystemExit(f"PLAN.md status is '{status}', not 'approved'. Get the user's approval and set "
                          f"`status: approved` first (or pass --force if the user explicitly said to launch).")
-    if not dry_run:  # an approved plan with a PLAN.json contract is frozen as an immutable revision before it runs
-        import bt_plan_adapter
-        bt_plan_adapter.freeze_on_launch(rdir)
     if repo and not dry_run:  # a new or extra repo for this workspace (remembered)
         Path(repo).mkdir(parents=True, exist_ok=True)
         register_repo(project, Path(repo))
@@ -165,6 +162,8 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
     if not repos:
         raise SystemExit(f"No repos registered for '{project}'. Pass --repo <path> or run "
                          f"`bitacora.py --project {project} workspace add <role> <path>`.")
+    import bt_plan_adapter  # a PLAN.json contract is validated and bound to its approved revision before anything runs;
+    bt_plan_adapter.freeze_on_launch(rdir, dry_run=dry_run, forced=force)  # after the repos exist, so file evidence is checkable
     new_repos = [role for role, p in repos.items() if not p.exists() or not any(p.iterdir())]
     workdir = ws.workdir(ROOT, project) or next(iter(repos.values()))
     repo_path = workdir
