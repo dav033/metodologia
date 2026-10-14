@@ -45,6 +45,11 @@ def text(project: str | None) -> str:
         out += ["", continuation]
     out += ["", "### What the measurements say", *[f"- {line}" for line in bt_events.advice(bt_events.read_all(), defects=bt_events.read_defects())],
             f"- Full table: `{cli} metrics --by agent,model,effort,kind`", "", "### Where things are"]
+    out += ["", "### Foreground milestone entry (REQ-008)",
+            f"- Approved planning transition: `{cli} handoff REQ-NNN --foreground --planning-session <id>`.",
+            f"- Manual checkout entry: `{cli} run REQ-NNN --foreground --no-autostart`.",
+            ("- Requires a verified relay parent for automatic replacement and a bounded reasoning/action runtime. "
+             "T3 provides the lifecycle; T4 activation is pending. Unsupported capacity never falls back to native tools.")]
     if project:
         pdir = ROOT / project
         for label, f in (("Summary", "SUMMARY.md"), ("Architecture", "ARCHITECTURE.md"), ("Decisions", "DECISIONS.md"),

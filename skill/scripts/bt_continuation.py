@@ -135,7 +135,7 @@ def _render(root: Path, data: dict) -> str:
         lines.append(f"Plan: `{plan.as_posix()}`")
     for run in sorted(pdir.glob("requirements/REQ-*/RUN.json")):
         lines.append(f"Run authority: `{run.as_posix()}` (read live status and task; never infer success from session exit).")
-    lines.append("For 'continue with the work', resume the recorded Next under the existing scope/permissions; do not repeat onboarding or approvals already documented. Resolve contradictions against live files first.")
+    lines.append("For 'continue with the work', revalidate live scope, requirements, limits and acceptance before resuming Next. Retain unchanged decisions and approvals; clarify only missing or contradictory material choices. Supervised children report drift to the orchestrator without repeating the owner interview.")
     return "\n".join(lines)
 
 

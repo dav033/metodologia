@@ -69,7 +69,9 @@ class WheelContentsTests(PackageCase):
         for required in ("bitacora_resources/SKILL.md", "bitacora_resources/templates/SPEC.md",
                          "bitacora_resources/templates/arch/nextjs/eslint-boundaries.config.mjs",
                          "bitacora_resources/assets/style.css", "bitacora_resources/agents/reviewer.md",
-                         "bitacora_resources/references/agents.md", "bitacora_resources/githooks/pre-commit"):
+                         "bitacora_resources/references/agents.md", "bitacora_resources/githooks/pre-commit",
+                         "bt_planner/__init__.py", "bt_planner/contract.py", "bt_planner/data/plan.schema.json",
+                         "bt_planner/data/plan.example.json", "bt_planner/README.md"):
             self.assertIn(required, names)
         self.assertFalse([n for n in names if "/tests/" in n or n.startswith("tests/") or "ops_" in n])
 
@@ -100,6 +102,18 @@ class InstalledRuntimeTests(PackageCase):
         self.assertIn("# Agent context", self.installed("-m", "bitacora", "--project", "demo", "context").stdout)
         help_text = self.installed("-m", "bitacora", "--help").stdout
         self.assertRegex(help_text, r"\{where,init,id,")
+
+    def test_planner_module_runs_standalone_from_the_installed_wheel(self) -> None:
+        done = self.installed("-m", "bt_planner", "example")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertIn('"plan_id"', done.stdout)
+        probe = ("import bt_planner, sys; print(bt_planner.__file__, 'bt_core' in sys.modules, "
+                 "'bitacora' in sys.modules)")
+        out = self.installed("-c", probe)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        path, core, bita = out.stdout.split()
+        self.assertTrue(Path(path).is_relative_to(self.site))
+        self.assertEqual((core, bita), ("False", "False"))  # importing the module pulls in nothing else
 
     def test_context_names_policy_files_inside_the_installed_package(self) -> None:
         self.installed("-m", "bitacora", "--project", "demo", "init")

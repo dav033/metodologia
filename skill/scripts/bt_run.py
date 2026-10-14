@@ -23,11 +23,8 @@ import bt_runtier as tier_
 from bt_runsession import AgentNotFound, reap_orphans, run_session, session_route, session_tier
 from bt_runsettle import LIMIT_RESULTS, detect_limit, enter_wait, limit_line, recover_claims, settle_final, settle_task
 import bt_run_isolated as isolated
-from bt_runutil import (autostart, backoff_override, beat, commit_bitacora, keep_awake, notify, pid_alive, say,
+from bt_runutil import (autostart, beat, commit_bitacora, notify, pid_alive, say,
                         set_fields, wait_or_control)
-
-MAX_ERRORS = 10  # consecutive failed supervisor iterations before giving up
-
 
 # ---------------------------------------------------------------- supervisor
 
@@ -38,15 +35,14 @@ def _finish(project: str, rdir: Path, status: str, message: str, remove_autostar
     notify(f"{project} {state['req']}: marathon {status}", message)
     if remove_autostart:
         autostart("remove", project, state["req"])
-    commit_bitacora(project, f"marathon {state['req']} {status}")
+    if state.get("orchestration_mode") != "foreground-v1":
+        commit_bitacora(project, f"marathon {state['req']} {status}")
 
 
 def _open(project: str, rdir: Path, o: dict) -> dict | None:
-    import bt_config
+    from bt_runentry import isolation_of
     state = rs.load(rdir)
-    isolation = (o.get("isolation") if o.get("isolation") is not None else
-                 (state.get("limits", {}).get("isolation", "off") if state else
-                  bt_config.get("run.isolation", "off")))
+    isolation = isolation_of(state, o)
     if (state and o.get("isolation") == "off" and state.get("limits", {}).get("isolation") == "worktree" and
             (any(label != "__integration__" and not label.startswith("__integration__:") and item.get("state") != "accepted"
                  for label, item in (state.get("worktrees") or {}).items()) or
@@ -172,11 +168,17 @@ def _settle_unit(project: str, rdir: Path, unit: list[dict], n: int, info: dict,
     not finish is skipped (no attempt counted). Returns {task id: result}."""
     results: dict[str, str] = {}
     for t in unit:
+        if info.get('orchestration') and (rs.load(rdir) or {}).get('control') == 'stop':
+            info['stopped'] = True
         current = rs.get_task(rs.load(rdir), t["id"])
         untouched = current["status"] == "in_progress" and not current.get("claimed_done") and not current.get("escalation")
         broken = [a for a in t["after"] if a in results and results[a] != "done"]
         skip = f"not reached: depends on {', '.join(broken)}, which did not finish" if untouched and broken else None
-        results[t["id"]] = settle_task(project, rdir, t["id"], n, info, workdir, skip,
+        task_info = {**info, **info.get('delegations', {}).get(t['id'], {})}
+        task_info['stopped'] = info['stopped'] or task_info.get('stopped', False)
+        task_info['timed_out'] = info['timed_out'] or task_info.get('timed_out', False)
+        task_info['rc'] = info['rc'] or task_info['rc']
+        results[t["id"]] = settle_task(project, rdir, t["id"], task_info.get('session', n), task_info, workdir, skip,
                                         workdir_override, defer_done)
     return results
 
@@ -227,6 +229,13 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
         say(state, "paused (run-control resume to continue)")
         wait_or_control(rdir, None, "paused", ignore="pause")
         return None
+    from bt_requirements_gate import check
+    gate = check(rdir)
+    if gate["status"] == "needs_revalidation":
+        set_fields(rdir, status="needs_revalidation", requirements_reasons=gate["reasons"])
+        if not once:
+            wait_or_control(rdir, 5, "requirements revalidation required")
+        return 0 if once else None
     if state["sessions"] >= state["limits"]["max_sessions"]:
         _finish(project, rdir, "stopped", f"session cap reached ({state['limits']['max_sessions']})", install)
         return 0
@@ -239,7 +248,8 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     if state["status"] != "running" or state.get("waiting_until"):
         set_fields(rdir, status="running", waiting_until=None)
     if any(t.get("claimed_done") and t["status"] in ("todo", "in_progress") for t in state["tasks"]):
-        recover_claims(project, rdir, c["workdir"])  # a claimed `done` is never trusted until verify passed
+        if not c.get('foreground_runtime'):
+            recover_claims(project, rdir, c["workdir"])  # foreground claims require durable finish receipts too
         state = rs.load(rdir)
     if state.get("limits", {}).get("isolation") == "worktree":
         isolated.recover_recorded(project, rdir)
@@ -271,7 +281,8 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     unit = rs.unit_of(state, task) if task else []
     tid = rs.unit_label(unit) if task else rp.FINAL_TASK
     try:
-        route = session_route(project, state, task, unit)
+        runtime = c.get("foreground_runtime")
+        route = (runtime.session_route if runtime else session_route)(project, state, task, unit)
     except bt_agents.NoRoute as exc:  # every account of the pool is cooling down
         enter_wait(rdir, project, state["req"], int(exc.until), c["notified_wait"])
         c["notified_wait"] = True
@@ -297,7 +308,8 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     if review_allocation:
         session_workdir = Path(review_allocation["worktree"])
     try:
-        info = run_session(project, rdir, state, task, n, session_workdir, c["agent_cmd"], unit, route)
+        info = (runtime.run_session if runtime else run_session)(
+            project, rdir, state, task, n, session_workdir, c["agent_cmd"], unit, route)
     except AgentNotFound as exc:
         _reset_in_progress(rdir)
         _finish(project, rdir, "stopped", f"agent executable not found: {exc}", install)
@@ -311,6 +323,8 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     if review_allocation:
         isolated.finish_audit(rdir, "FINAL")
     state = rs.load(rdir)
+    if runtime and state.get('control') == 'stop':
+        info['stopped'] = True
     shown = "stopped" if info.get("stopped") else result
     settled = [rs.get_task(state, t["id"]) for t in unit]
     bt_events.record_attempt(project, state, tid, n, info, shown,
@@ -323,7 +337,12 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     detail = " [" + " ".join(f"{k}:{v}" for k, v in results.items()) + "]" if len(results) > 1 else ""
     say(state, f"S{n:04d} {tid} -> {result}{detail} ({info['seconds']}s{ended})")
     beat(rdir, task=tid, session=n, state=f"{result}")
-    commit_bitacora(project, f"marathon {state['req']} S{n:04d} {tid} {result}")
+    if not c.get("foreground_runtime"):
+        commit_bitacora(project, f"marathon {state['req']} S{n:04d} {tid} {result}")
+    if c.get('foreground_runtime') and info.get('stopped'):
+        _finish(project, rdir, 'stopped', 'foreground session interrupted by the user', install)
+        set_fields(rdir, control='stop')
+        return 0
     if result in LIMIT_RESULTS or any(r in LIMIT_RESULTS for r in results.values()):
         _limited(project, rdir, c, state, [info])
         if once:  # the wait itself is handled at the top of the next iteration; no wait = nothing is running now
@@ -343,6 +362,8 @@ def _run_batch(project: str, rdir: Path, c: dict, state: dict, units: list[list[
     """Run units of different repositories at the same time (one thread per session) and settle each one on its own;
     every shared-file write underneath goes through bt_lock. Session numbers are reserved up front so logs, ids and
     telemetry never collide."""
+    if c.get("foreground_runtime") or state.get("orchestration_mode") == "foreground-v1":
+        raise SystemExit("FOREGROUND_SERIAL_REQUIRED: native batch dispatch is forbidden")
     isolation = state.get("limits", {}).get("isolation") == "worktree"
     units = units[:max(1, state["limits"]["max_sessions"] - state["sessions"])]
     try:
@@ -472,44 +493,6 @@ def _run_batch(project: str, rdir: Path, c: dict, state: dict, units: list[list[
 
 
 def supervise(project: str, req: str, **o) -> int:
-    """Run the marathon until done/blocked/stopped. Options: agent, model, ultracode, max_attempts, session_timeout,
-    retry_blocked, agent_cmd, once, no_autostart, pool (accounts the router may use), audit (milestone audits). Returns a process exit code. A crash inside one iteration (a locked
-    RUN.json, a git hiccup) is reported once, retried with a growing pause, and only given up on after MAX_ERRORS."""
-    rdir = find_req(ROOT / project, req)
-    existing = rs.load(rdir)
-    if existing and existing["status"] == "done":
-        print(f"{existing['req']} already finished (RUN.json status done).")
-        return 0
-    state = _open(project, rdir, o)
-    if state is None:
-        return 1
-    once, agent_cmd = bool(o.get("once")), o.get("agent_cmd")
-    install = not once and not agent_cmd and not o.get("no_autostart")
-    if install:
-        autostart("install", project, state["req"])
-    keep_awake()
-    workdir = ws.workdir(ROOT, project) or (Path.cwd() if agent_cmd else None)
-    if workdir is None:
-        raise SystemExit(f"No repos registered for '{project}': bitacora.py --project {project} workspace add <role> <path>")
-    who = f"pool {', '.join(state['pool'])}" if state.get("pool") else f"{state['agent']}/{state['model']}"
-    say(state, f"{project} {state['req']} marathon started ({who}, "
-                f"ultracode={state['ultracode']}, workdir {workdir})")
-    ctx = {"install": install, "once": once, "agent_cmd": agent_cmd, "workdir": workdir, "notified_wait": False}
-    errors = 0
-    while True:
-        try:
-            code = _step(project, rdir, ctx)
-            errors = 0
-        except Exception as exc:  # SystemExit (deliberate exits) passes through
-            errors += 1
-            print(f"[run] iteration failed ({errors}/{MAX_ERRORS}): {exc!r}", file=sys.stderr, flush=True)
-            _reset_in_progress(rdir)
-            if errors == 1 or errors >= MAX_ERRORS:
-                notify(f"{project} {state['req']}: marathon " + ("gave up" if errors >= MAX_ERRORS else "error"),
-                       repr(exc)[:200])
-            if errors >= MAX_ERRORS:
-                return 3
-            time.sleep(1 if backoff_override() is not None else min(30 * errors, 300))
-            continue
-        if code is not None:
-            return code
+    """Run the existing scheduler with a legacy worker or verified foreground runtime."""
+    from bt_runentry import supervise as enter
+    return enter(project, req, **o)

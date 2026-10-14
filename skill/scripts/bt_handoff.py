@@ -134,6 +134,8 @@ def assess(project: str, rdir: Path) -> dict:
     loop = _cycle(tasks)
     if loop:
         problems.append("circular dependency: " + " -> ".join(loop))
+    import bt_plan_adapter  # opt-in planner contract: an invalid PLAN.json is never handed over
+    problems += bt_plan_adapter.handoff_problems(rdir)
     roles = ws.repos(ROOT, project)
     for t in tasks:
         if t["repo"] and t["repo"] not in roles:
@@ -168,10 +170,20 @@ def assess(project: str, rdir: Path) -> dict:
 
 
 def handoff(project: str, req: str, dry_run: bool = False, pool: str | None = None, model: str | None = None,
-            profile: str | None = None) -> dict:
+            profile: str | None = None, foreground: bool = False, planning_session: str | None = None) -> dict:
     """Approve-and-launch when the plan is safe to start unattended, otherwise leave it in review with the reasons.
     Returns {decision: launched | needs_approval | invalid | already_running, ...}."""
     rdir = find_req(ROOT / project, req)
+    if foreground:
+        from bt_orchestration_terminal import TerminalError
+        from bt_orchestration_transition import launch as foreground_launch
+        try:
+            return foreground_launch(project, req, dry_run=dry_run, profile=profile, pool=pool,
+                                     model=model, session=planning_session)
+        except TerminalError as exc:
+            raise SystemExit(str(exc)) from exc
+    from bt_requirements_gate import require_ready
+    require_ready(rdir)
     rid = req_id(rdir)
     plan = rdir / "PLAN.md"
     report = assess(project, rdir)

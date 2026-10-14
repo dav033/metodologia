@@ -14,6 +14,7 @@ announced reset. Rules for agents: references/agents.md.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 import time
@@ -78,7 +79,7 @@ def infer_kind(title: str | None, explicit: str | None = None) -> str:
         return explicit.strip().lower()
     text = (title or "").lower()
     for kind, words in _KIND_WORDS:
-        if any(w in text for w in words):
+        if any(re.search(r"\b" + re.escape(w), text) for w in words):
             return kind
     return "implement"
 

@@ -30,6 +30,10 @@ class Refused(Exception):
     """The relaunch must not happen; the message is for the log and the owner."""
 
 
+class WrapperBusy(Refused):
+    """Another helper owns this wrapper; never bypass its reservation via a multiplexer."""
+
+
 def notify(title: str, message: str) -> None:
     try:
         import bt_notify
@@ -245,33 +249,40 @@ def manual(command: str, why: str, handoff: Path) -> None:
 
 
 def run_wrapper(handoff: Path, to: str, cwd: str, session: str, pid: int, start: int, wrapper: tuple[int, int],
-                exit_current: bool, sleep=time.sleep) -> str:
+                exit_current: bool, sleep=time.sleep, successor: dict | None = None) -> str:
     """Primary path: write the successor for the parent relay_run.py FIRST, wait for the turn to end, then end the client
     (which the wrapper owns); the wrapper starts the successor in the same terminal. Nothing is typed anywhere.
     Raises Refused before the client is touched; a leftover next file is removed on any failure."""
     import bt_relay_client
-    spec = successor_spec(to, cwd, handoff, strict=True)
+    from bt_relay_reservation import ReservationError, reserve
+    spec = successor_spec(to, cwd, handoff, strict=True) if successor is None else successor
     if not bt_relay_client.verify_wrapper(pid, start, wrapper[0], wrapper[1]):
         raise Refused("the client is not proven to be the child of the relay wrapper")
     path = relay.relay_dir() / f"next-{wrapper[0]}.json"
+    launched = relay.relay_dir() / "launched"
+    if (launched / handoff.stem).exists() or (relay.valid_session(session) and (launched / f"session-{session}").exists()):
+        return "skipped"
     claimed = False
     try:
-        wait_turn_end(handoff, session, sleep=sleep)
-        if not bt_relay_client.verify_wrapper(pid, start, wrapper[0], wrapper[1]):
-            raise Refused("the wrapper proof no longer holds")
-        if cancelled(handoff.stem):
-            raise Refused("cancelled")
-        if not claim(handoff.stem, session):  # only the claimant ever writes or removes the next file
-            return "skipped"
-        claimed = True
-        # written only after the turn ended and the once-only claim: a voluntary exit earlier relays nothing
-        relay.write_private(path, json.dumps({**spec, "stem": handoff.stem, "created": time.time(), "client": pid}))
-        stop_agent(pid, start, exit_current, sleep=sleep)
-        relay.log(f"relay handed to wrapper {wrapper[0]}: {to} ({handoff.stem})")
-        relay.record_event("launched", profile_to=to, mux="wrapper", handoff=str(handoff))
-        return "wrapper"
+        with reserve(path) as reservation:
+            wait_turn_end(handoff, session, sleep=sleep)
+            if not bt_relay_client.verify_wrapper(pid, start, wrapper[0], wrapper[1]):
+                raise Refused("the wrapper proof no longer holds")
+            if cancelled(handoff.stem):
+                raise Refused("cancelled")
+            if not claim(handoff.stem, session):
+                return "skipped"
+            claimed = True
+            reservation.publish(json.dumps({**spec, "stem": handoff.stem, "created": time.time(), "client": pid}))
+            stop_agent(pid, start, exit_current, sleep=sleep)
+            relay.log(f"relay handed to wrapper {wrapper[0]}: {to} ({handoff.stem})")
+            relay.record_event("launched", profile_to=to, mux="wrapper", handoff=str(handoff))
+            return "wrapper"
+    except ReservationError as exc:
+        if claimed:
+            release(handoff.stem, session)
+        raise WrapperBusy(str(exc)) from exc
     except BaseException:
-        path.unlink(missing_ok=True)
         if claimed:
             release(handoff.stem, session)
         raise
@@ -301,6 +312,9 @@ def run(handoff: Path, to: str, cwd: str, session: str, mux: str | None, target:
     if wrapper and pid is not None and start is not None:
         try:
             return run_wrapper(handoff, to, cwd, session, pid, start, wrapper, exit_current, sleep)
+        except WrapperBusy as exc:
+            relay.log(f"wrapper transition already reserved: {exc}")
+            return "skipped"
         except Refused as exc:
             if str(exc) == "cancelled":
                 relay.record_event("cancelled", handoff=str(handoff))

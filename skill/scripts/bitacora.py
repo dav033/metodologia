@@ -33,6 +33,8 @@ import bt_cli_docs
 import bt_cli_delegate
 import bt_cli_learn
 import bt_cli_review
+import bt_cli_requirements_gate
+import bt_cli_plan
 
 # ---------------------------------------------------------------- CLI
 
@@ -65,6 +67,8 @@ def main() -> None:
     p_launch.add_argument("--background", action="store_true", help="no window: detached tmux session / systemd unit")
     p_launch.add_argument("--force", action="store_true", help="launch even if PLAN.md is not 'approved'")
     p_launch.add_argument("--dry-run", action="store_true")
+    p_launch.add_argument("--foreground", action="store_true", help="replace a verified planning child in the same terminal (bounded runtime required)")
+    p_launch.add_argument("--planning-session", help="provider session id for verified end-of-turn handoff")
     p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task or per milestone (days)")
     p_run.add_argument("req", help="REQ-NNN")
     p_run.add_argument("--agent", choices=["claude", "codex", "antigravity"])
@@ -86,6 +90,7 @@ def main() -> None:
                                            "{model_args}")
     p_run.add_argument("--once", action="store_true", help="run a single session and exit")
     p_run.add_argument("--no-autostart", action="store_true", help="do not install the per-user login resume entry")
+    p_run.add_argument("--foreground", action="store_true", help="same-terminal bounded milestone coordinator (runtime capability preflight)")
     p_task = sub.add_parser("task", help="marathon agent report: done / fail / note / escalate on a plan task")
     p_task.add_argument("action", choices=["done", "fail", "note", "escalate"])
     p_task.add_argument("req", help="REQ-NNN")
@@ -136,6 +141,8 @@ def main() -> None:
     p_prof.add_argument("--dir", help="wrapper: directory for the launcher (default ~/.local/bin)")
     p_work = sub.add_parser("work", help="show or set the project's work flag (gates work-only profiles)")
     p_work.add_argument("value", nargs="?", choices=["true", "false"])
+    bt_cli_requirements_gate.add_parser(sub)
+    bt_cli_plan.add_parser(sub)
     bt_cli_delegate.register(sub)
     bt_cli_review.register(sub)
     bt_cli_accounts.register(sub)
@@ -148,6 +155,8 @@ def main() -> None:
     p_ho.add_argument("--pool", help="accounts the router may use (default: auto)")
     p_ho.add_argument("--profile", help="preferred account among equals")
     p_ho.add_argument("--model", help="tier 0 model of the preferred provider")
+    p_ho.add_argument("--foreground", action="store_true", help="approved same-terminal transition via the relay parent")
+    p_ho.add_argument("--planning-session", help="provider session id for verified end-of-turn handoff")
     sub.add_parser("context", help="one screen for an agent: who is available, routing, delegation, learnings, docs")
     sub.add_parser("audit", help="prepare a read-only inventory for a workspace architecture audit")
     p_serve = sub.add_parser("serve", help="run the local web server in the foreground")
@@ -382,6 +391,10 @@ def main() -> None:
             print(f"{bt_profiles.set_work(project, a.value == 'true')}: work={a.value}")
         else:
             print(f"{project}: work={str(bt_profiles.is_work_project(project)).lower()}")
+    elif a.cmd == "requirements-gate":
+        sys.exit(bt_cli_requirements_gate.dispatch(a, ROOT, project))
+    elif a.cmd == "plan-json":
+        sys.exit(bt_cli_plan.dispatch(a, ROOT, project))
     elif a.cmd == "launch":
         from bt_launch import launch
         extra = {"model": a.model or "haiku"} if a.mode == "marathon" or a.model else {}
@@ -391,6 +404,8 @@ def main() -> None:
             extra["pool"] = a.pool
         if a.background:
             extra["background"] = True
+        if a.foreground:
+            extra.update(foreground=True, planning_session=a.planning_session)
         print(json.dumps(launch(project, a.req, a.agent, a.mode, a.repo, a.force, a.dry_run, **extra), indent=1,
                          ensure_ascii=False))
     elif a.cmd == "run":
@@ -399,12 +414,14 @@ def main() -> None:
                            max_attempts=a.max_attempts, session_timeout=a.session_timeout,
                            retry_blocked=a.retry_blocked, agent_cmd=a.agent_cmd, once=a.once,
                            no_autostart=a.no_autostart, profile=a.profile,
-                           workers=a.workers, pool=a.pool, audit=a.audit, isolation=a.isolation))
+                           workers=a.workers, pool=a.pool, audit=a.audit, isolation=a.isolation,
+                           foreground=a.foreground))
     elif a.cmd == "handoff":
         import bt_handoff
-        result = bt_handoff.handoff(project, a.req, a.dry_run, a.pool, a.model, a.profile)
+        extra = {"foreground": True, "planning_session": a.planning_session} if a.foreground else {}
+        result = bt_handoff.handoff(project, a.req, a.dry_run, a.pool, a.model, a.profile, **extra)
         print(json.dumps(result, indent=1, ensure_ascii=False))
-        sys.exit(0 if result["decision"] in ("launched", "would_launch", "already_running", "done") else
+        sys.exit(0 if result["decision"] in ("launched", "would_launch", "already_running", "done", "prepared", "would_prepare") else
                  3 if result["decision"] == "needs_approval" else 2)
     elif a.cmd == "watch":
         import bt_watch

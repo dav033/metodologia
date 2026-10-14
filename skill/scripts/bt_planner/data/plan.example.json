@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "REQ-EXAMPLE",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Base",
+      "acceptance_criteria": [
+        "API meets contract"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Next",
+      "acceptance_criteria": [
+        "Done"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Fix session validation",
+      "objective": "Reject expired sessions without touching valid ones",
+      "repository": "backend",
+      "after": [],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 25,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Localised change, sensitive because it touches auth",
+      "expected_paths": [
+        "src/auth/**",
+        "tests/auth/**"
+      ],
+      "shared_resources": [
+        "auth-session-contract"
+      ],
+      "acceptance_criteria": [
+        "Expired sessions are rejected",
+        "Valid sessions keep working"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "pytest tests/auth -q",
+          "purpose": "reject/accept sessions"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M2",
+      "title": "Document the session contract",
+      "objective": "Document session expiry behaviour for API consumers",
+      "repository": "backend",
+      "after": [
+        "T1"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 20,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Prose only; behaviour already fixed in T1",
+      "expected_paths": [
+        "docs/auth.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The doc states expired sessions are rejected"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "read docs/auth.md",
+          "purpose": "check the contract is described",
+          "expected": "expiry behaviour is stated"
+        }
+      ]
+    }
+  ]
+}

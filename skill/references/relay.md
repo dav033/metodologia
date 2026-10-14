@@ -15,7 +15,9 @@ supervisor already handles limits there.
 2. `relay handoff [--to PROFILE]` writes `~/bitacora/<project>/relay/RELAY-<ts>.md` (else `.state/relay/`): summary, cwd,
    branch, bounded `git status --short` and last commits, origin profile/session, a note that nothing was re-verified.
    The successor comes from the router (`bt_agents.candidates`): other account than the current one, `work_only` and
-   cooling honoured, claude/codex only. It then spawns the detached helper `relay launch`.
+   cooling honoured, claude/codex only. If there is no verified wrapper or controllable multiplexer client, it prints
+   and notifies the exact manual command immediately; it never claims a relay was scheduled. Otherwise it spawns the
+   detached helper `relay launch` and confirms the helper survives its first second before reporting success.
 3. `relay launch` validates the successor command, the multiplexer binary (kitty: `kitty @ ls`) and the pane BEFORE
    touching anything, then waits (max 10 min) for the Stop-hook marker `turn-ended-<session>`, which must be newer than
    the handoff file (handoff deletes any stale one). No marker (Stop hook not installed) means MANUAL: nothing is

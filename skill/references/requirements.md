@@ -3,6 +3,44 @@
 Goal: turn a vague request into a spec precise enough that you can plan and build it without coming back to the
 user. The user's time is the scarce resource — every question must earn its place.
 
+## Entry and continuation revalidation (REQ-008)
+
+At initial entry and `continue`, reread authoritative scope, requirements, limits, acceptance,
+decisions and evidence. Retain settled decisions and approval when unchanged; ask only about
+missing or contradictory material choices. A continuation checkpoint is not approval evidence.
+Supervised child tasks inherit the approved contract: report drift to their orchestrator rather
+than restarting the owner interview. Do not broaden permissions when recording a review.
+
+During M1/M2 bootstrap, legacy plans keep their existing launch behavior. Opt in with PLAN
+frontmatter `execution_contract: requirements-v1`, or record a snapshot (which also activates
+enforcement). New-mode launch/run/handoff, including `--force` and resume, require the gate.
+M2 owns default activation after terminal verification; do not claim the legacy path enforces it.
+
+Run `bitacora.py --project <project> requirements-gate record REQ-NNN --review <review.json>`
+after reviewing the live evidence; `requirements-gate check REQ-NNN` returns status/reasons and
+exit 2 when revalidation is required. The JSON review requires nonempty strings `goal`, `scope`,
+`requirements`, `limits`, `acceptance`, `approval` (each <=8000 characters), `evidence` (1–32
+relative file paths resolved from the requirement directory, inside its project) and `unresolved` (0–32 decision or
+contradiction descriptions, empty only when resolved). List entries are <=1000 characters;
+source files and total persisted snapshot are bounded at 65536 bytes. Never include secrets or
+full conversations; approval is a concise evidence reference, not a fabricated owner decision.
+
+`REQUIREMENTS.json` schema 1 persists these facts, `reviewed_at` and SHA-256 fingerprints;
+SPEC/PLAN are always included; canonical project `../../DECISIONS.md` is included when present.
+Additional authoritative files can be included as project-local evidence paths. PLAN/SPEC
+status, task checkboxes and PLAN's `## Progress
+log` prose are operational; scope/task headings and task lines remain fingerprinted. Keep new
+requirements outside Progress log. Missing/invalid evidence, unsupported versions, drift or
+unresolved items fail closed. Removing the marker does not bypass an existing snapshot.
+An unrelated DECISIONS addition triggers a conservative reread: refresh the snapshot while
+retaining its approval reference if approved requirements are unchanged; do not ask again.
+
+Public Python API: `bt_requirements_gate.record(rdir, review)` returns the stored snapshot;
+`check(rdir)` returns `{status, reasons, snapshot}` with status `ready`, `needs_revalidation` or
+explicit `legacy`; `require_ready(rdir)` raises `REQUIREMENTS_REVALIDATION_REQUIRED` on a blocked
+gate; `entry_context(root, project)` renders safe entry diagnostics. T2 consumes the validated
+snapshot returned by `check`, and must reject non-ready new-mode state before context creation.
+
 If the user's goal directly matches a methodology capability that could change the approach or outcome, briefly
 explain that capability in context before continuing. Avoid generic feature pitches and repeated explanations; see
 [`self-improvement.md`](self-improvement.md).
@@ -172,6 +210,9 @@ small or medium, independently verifiable step (roughly 1–5 tasks that one cle
 ```
 bitacora.py --project P handoff REQ-NNN            # --dry-run first if you want to see the decision
 ```
+
+If the requirement has a `PLAN.json` (classified tasks, `references/plan-contract.md`), `handoff` also refuses an invalid one and
+`launch` freezes the approved revision; run `plan-json check REQ-NNN` before.
 
 It validates the plan (tasks, dependencies, repo roles) and decides:
 

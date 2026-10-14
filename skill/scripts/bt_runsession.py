@@ -211,9 +211,22 @@ def session_route(project: str, state: dict, task: dict | None, unit: list[dict]
 
 
 def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int, workdir: Path,
-                agent_cmd: str | None, unit: list[dict] | None = None, route: dict | None = None) -> dict:
+                agent_cmd: str | None, unit: list[dict] | None = None, route: dict | None = None,
+                *, prompt_override: str | None = None, execution_policy: str | None = None) -> dict:
     """Run one fresh agent session. Returns {rc, timed_out, stopped, early_exit, text, seconds, model, effort, agent,
     profile, kind, tier}. `unit` = the tasks of a milestone session; `route` = bt_agents route (default: computed)."""
+    from bt_requirements_gate import check, require_ready
+    validation = check(rdir)
+    if validation["status"] == "needs_revalidation":
+        def suspend(current):
+            current.update(status="needs_revalidation", requirements_reasons=validation["reasons"])
+            for assigned in unit or ([task] if task else []):
+                live = rs.get_task(current, assigned["id"])
+                if live and live["status"] == "in_progress":
+                    live["status"] = "todo"
+        rs.update(rdir, suspend)
+        raise SystemExit("REQUIREMENTS_REVALIDATION_REQUIRED: " + "; ".join(validation["reasons"]))
+    require_ready(rdir)  # Revalidate after routing/waits, immediately before each dispatch.
     unit = unit or ([task] if task else [])
     tid = ",".join(t["id"] for t in unit) if task else rp.FINAL_TASK
     label = rs.unit_label(unit) if task else rp.FINAL_TASK
@@ -228,12 +241,16 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
     run_dir.mkdir(parents=True, exist_ok=True)
     from bt_review import feature_branch
     branch = (task or {}).get("_worktree_branch") or feature_branch(rdir)
-    prompt = rp.session_prompt(project, rdir, state, task, n, branch, unit)
+    prompt = prompt_override if prompt_override is not None else rp.session_prompt(project, rdir, state, task, n, branch, unit)
     prompt_file, log_file = run_dir / f"prompt-{n:04d}.txt", run_dir / f"session-{n:04d}.log"
     prompt_file.write_text(prompt, encoding="utf-8")
     env = {**bt_profiles.session_env(state.get("profile"), state["agent"], None, project), "BITACORA_PROJECT": project,
            "BITACORA_RUN": state["req"], "BITACORA_TASK": tid, "BITACORA_SESSION": str(n),
            "BITACORA_KIND": route.get("kind") or "implement"}
+    if execution_policy is not None or state.get('orchestration_mode') == 'foreground-v1':
+        if execution_policy not in (None, 'restricted-v1'):
+            raise ValueError('INVALID_EXECUTION_POLICY')
+        env['BITACORA_EXECUTION_POLICY'] = 'restricted-v1'
     argv, stdin_text, shell = _argv(project, state, workdir, prompt, prompt_file, label, agent_cmd, model, effort)
     timeout = state["limits"]["session_timeout_min"] * 60 * min(max(len(unit), 1), rs.MILESTONE_TIMEOUT_FACTOR)
     grace = grace_seconds()

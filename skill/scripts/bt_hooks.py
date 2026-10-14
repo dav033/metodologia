@@ -74,7 +74,7 @@ def hook_start(harness: str = "claude") -> None:
     cwd = Path(data.get("cwd") or os.getcwd())
     source = data.get("source", "startup")
     from bt_vcs import pull
-    sync_warning = pull(ROOT) if source in ("startup", "clear") else ""  # other machines' changes first
+    sync_warning = pull(ROOT) if source in ("startup", "clear") and not _restricted_execution() else ""
     project = resolve_project(cwd, sid)
     top = _git(cwd, "rev-parse", "--show-toplevel")
     if project and top and not in_hq(cwd) and not ws.project_for_path(ROOT, top):
@@ -90,7 +90,8 @@ def hook_start(harness: str = "claude") -> None:
     if in_hq(cwd):
         from bt_server import ensure_server
         ctx += f"\nWeb UI (dashboard, rounds, plan approval): {ensure_server()}"
-    if harness == "codex":  # Codex has no CLAUDE.md import: inject the skill itself so it's always active
+    from bt_orchestration_context import supervised_hook
+    if harness == "codex" and supervised_hook(ROOT) is None:  # Legacy clients need full skill injection.
         ctx = skill_body() + "\n\n" + ctx
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": ctx}}))
 
@@ -174,7 +175,7 @@ def hook_end() -> None:
     save_checkpoint(ROOT, project, sid)
     pdir = ROOT / project
     day = day_paths(pdir, today())["day"]
-    if day.exists() and sid:
+    if day.exists() and sid and not _restricted_execution():
         text = day.read_text(encoding="utf-8")
         tag = f"`{sid[:8]}`"
         # drop a session block that was never filled in (still identical to the template)
@@ -193,6 +194,11 @@ def hook_end() -> None:
     write_index(pdir)
     write_global_index()
     from bt_vcs import commit
-    commit(ROOT, f"{project}: session {sid[:8]} end")
+    if not _restricted_execution():
+        commit(ROOT, f"{project}: session {sid[:8]} end")
+
+
+def _restricted_execution() -> bool:
+    return bool(os.environ.get('BITACORA_EXECUTION_POLICY'))
 
 

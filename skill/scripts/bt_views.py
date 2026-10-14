@@ -41,8 +41,14 @@ def last_next_steps(pdir: Path) -> str:
 
 
 def build_context(project: str | None, session_id: str, cwd: Path, source: str) -> str:
+    from bt_orchestration_context import supervised_hook
+    bounded = supervised_hook(ROOT)
+    if bounded is not None:
+        return bounded
     from bt_continuation import continuation_context
     continuation = continuation_context(ROOT, project)
+    from bt_requirements_gate import entry_context
+    continuation = "\n\n".join(part for part in (continuation, entry_context(ROOT, project)) if part)
     import bt_learn
     global_learnings = bt_learn.context_brief(None) if not project else ""
     if global_learnings:

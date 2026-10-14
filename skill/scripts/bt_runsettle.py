@@ -166,7 +166,7 @@ def _session_fields(info: dict) -> dict:
 
 
 def verify_task(project: str, t: dict, workdir: Path, state: dict | None = None,
-                workdir_override: Path | None = None) -> tuple[bool, str]:
+                workdir_override: Path | None = None, run_check=None) -> tuple[bool, str]:
     """Run the task's verify command in its repo. An unknown repo role fails (it must not fall back to another dir).
     An audit has no command of its own: every verify of the milestone it closes must pass again (the auditor may
     have changed code)."""
@@ -177,7 +177,7 @@ def verify_task(project: str, t: dict, workdir: Path, state: dict | None = None,
             if not member or not member.get("verify") or (member["verify"], member.get("repo")) in seen:
                 continue
             seen.add((member["verify"], member.get("repo")))
-            ok, out = verify_task(project, member, workdir, workdir_override=workdir_override)
+            ok, out = verify_task(project, member, workdir, workdir_override=workdir_override, run_check=run_check)
             if not ok:
                 return False, f"{tid}: {member['verify']} -> {out}"
         return True, ""
@@ -191,7 +191,7 @@ def verify_task(project: str, t: dict, workdir: Path, state: dict | None = None,
         cwd = repos[t["repo"]]
     if workdir_override is not None:
         cwd = workdir_override
-    return run_verify(t["verify"], cwd)
+    return (run_check or run_verify)(t["verify"], cwd)
 
 
 def run_verify(cmd: str, cwd: Path) -> tuple[bool, str]:
@@ -268,11 +268,24 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
     escalation = _escalation(t, n)
     if info["stopped"]:
         result, summary = "failed", "stopped by the user"
+    elif info.get('orchestration') and task_id not in info.get('orchestration_completed', []):
+        if detect_limit(info) is not None:
+            result = 'usage_limit'
+        else:
+            result, err = 'failed', 'orchestration ended before delegated verification/documentation/finish'
     elif t.get("claimed_done") or t["status"] == "done":  # a bare "done" is a RUN.json from before claims existed
-        ok, out = verify_task(project, t, workdir, state, workdir_override)
+        run_check = None
+        if info.get('orchestration'):
+            from bt_orchestration_verify import run_check as bounded_check
+            evidence = rdir / f'VERIFY-ORCHESTRATION-{n}-{task_id}.log'
+            run_check = lambda command, cwd: bounded_check(command, cwd, evidence, project, rdir, state)
+        ok, out = verify_task(project, t, workdir, state, workdir_override, run_check=run_check)
         result = "done" if ok else "verify_failed"
         err = None if ok else f"verify failed: {t['verify'] or 'milestone verifies'} -> {out}"
         summary = (t["evidence"] or summary) if ok else err
+        if info.get('orchestration') and (rs.load(rdir) or {}).get('control') == 'stop':
+            info['stopped'] = True
+            result, summary, err = 'failed', 'stopped by the user during verification', None
     elif t["status"] == "blocked":
         result, summary = "blocked", t["last_error"] or "blocked by the agent"
     elif escalation:
@@ -293,6 +306,12 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
                                 f"{summary[:200]}"
     if info.get("recovered"):
         summary = f"re-verified after a supervisor restart: {summary}"
+    if result == 'verify_failed' and info.get('orchestration'):
+        from bt_orchestration_actions import ActionEngine
+        from bt_orchestration_context import Budget, BudgetPolicy
+        milestone = t['id'] if t.get('synthetic') else t.get('milestone') or t['id']
+        engine = ActionEngine(rdir, state, [t], milestone, Budget(BudgetPolicy(**state.get('context_policy', {}))))
+        engine.invalidate_finish(task_id, n, f'Independent settlement verification failed; see VERIFY-ORCHESTRATION-{n}-{task_id}.log')
     stuck = {}
 
     def fn(s):
@@ -368,7 +387,17 @@ def recover_claims(project: str, rdir: Path, workdir: Path) -> None:
 
 def settle_final(project: str, rdir: Path, n: int, info: dict, started: float) -> str:
     report = rdir / "REPORT.md"
-    if report.exists() and report.stat().st_mtime >= started - 1:
+    complete = not info.get('orchestration') or 'FINAL' in info.get('orchestration_completed', [])
+    valid_report = report.exists() and report.stat().st_mtime >= started - 1
+    if info.get('orchestration'):
+        from bt_orchestration_actions import ActionEngine
+        from bt_orchestration_context import Budget, BudgetPolicy
+        state = rs.load(rdir)
+        engine = ActionEngine(rdir, state, [], 'FINAL', Budget(BudgetPolicy(**state.get('context_policy', {}))))
+        valid_report = engine.final_report_is_valid()
+        if 'FINAL' in engine.completed() and not valid_report:
+            engine.invalidate_finish('FINAL', n, 'Validated FINAL report changed before settlement')
+    if complete and valid_report:
         result = "done"
     elif detect_limit(info) is not None:
         result = "usage_limit"

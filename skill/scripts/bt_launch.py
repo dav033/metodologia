@@ -123,14 +123,27 @@ def marathon_script(project: str, rid: str, agent: str, model: str, repo_path: P
 
 def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", repo: str | None = None,
            force: bool = False, dry_run: bool = False, model: str = "haiku", profile: str | None = None,
-           pool: str | None = None, background: bool = False) -> dict:
+           pool: str | None = None, background: bool = False, foreground: bool = False,
+           planning_session: str | None = None) -> dict:
     """`pool`: accounts the marathon's router may use ("auto" or ids). `background`: no window, a detached tmux
     session / systemd unit even on a desktop (the automatic hand-off uses it)."""
+    if foreground:
+        if background or repo or force:
+            raise SystemExit("Foreground launch cannot override approval, create a repo or detach the supervisor")
+        from bt_orchestration_terminal import TerminalError
+        from bt_orchestration_transition import launch as foreground_launch
+        try:
+            return foreground_launch(project, req, dry_run=dry_run, profile=profile, pool=pool,
+                                     model=model, session=planning_session)
+        except TerminalError as exc:
+            raise SystemExit(str(exc)) from exc
     if profile:
         bt_profiles.authorize(profile, project)  # before any prompt or handoff with project content exists
         agent = bt_profiles.require_launchable(profile)
     pdir = ROOT / project
     rdir = find_req(pdir, req)
+    from bt_requirements_gate import require_ready
+    require_ready(rdir)
     plan = rdir / "PLAN.md"
     if not plan.exists():
         raise SystemExit(f"No PLAN.md for {req}. Plan first: bitacora.py req plan {req}")
@@ -138,6 +151,9 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
     if status != "approved" and not force:
         raise SystemExit(f"PLAN.md status is '{status}', not 'approved'. Get the user's approval and set "
                          f"`status: approved` first (or pass --force if the user explicitly said to launch).")
+    if not dry_run:  # an approved plan with a PLAN.json contract is frozen as an immutable revision before it runs
+        import bt_plan_adapter
+        bt_plan_adapter.freeze_on_launch(rdir)
     if repo and not dry_run:  # a new or extra repo for this workspace (remembered)
         Path(repo).mkdir(parents=True, exist_ok=True)
         register_repo(project, Path(repo))

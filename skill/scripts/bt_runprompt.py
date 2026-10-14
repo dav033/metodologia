@@ -198,6 +198,16 @@ def _milestone_prompt(project: str, rdir: Path, state: dict, unit: list[dict], s
 
 def session_prompt(project: str, rdir: Path, state: dict, task: dict | None, session: int, branch: str,
                    unit: list[dict] | None = None) -> str:
+    from bt_requirements_gate import require_ready
+    gate = require_ready(rdir)
+    if gate["status"] == "ready":
+        from bt_orchestration_context import BudgetPolicy, build_package, encode, load_checkpoint
+        policy = BudgetPolicy(**state.get("context_policy", {}))
+        members = unit or ([task] if task else [])
+        milestone = (task["id"] if task and task.get("synthetic") else
+                     (task or {}).get("milestone") or (task or {}).get("id") or FINAL_TASK)
+        checkpoint = load_checkpoint(rdir, state, milestone, policy)
+        return encode(build_package(rdir, state, members, milestone, policy, checkpoint))
     req = state["req"]
     if task is not None and task.get("synthetic") and task.get("kind") == "audit":
         return _audit_prompt(project, rdir, state, task, session, branch)

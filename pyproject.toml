@@ -21,7 +21,7 @@ bitacora-inventory = "migration_inventory:main"
 
 [tool.setuptools]
 package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
-packages = ["bitacora_resources", "bitacora_platform"]
+packages = ["bitacora_resources", "bitacora_platform", "bt_planner"]
 py-modules = [
   "bitacora",
   "bt_agents",
@@ -38,7 +38,23 @@ py-modules = [
   "bt_config",
   "bt_code_review",
   "bt_context",
+  "bt_orchestration_context",
+  "bt_orchestration_actions",
+  "bt_orchestration_completion",
+  "bt_orchestration_contract",
+  "bt_orchestration_effects",
+  "bt_orchestration_identity",
+  "bt_orchestration_provider",
+  "bt_orchestration_runtime",
+  "bt_orchestration_storage",
+  "bt_orchestration_verify",
+  "bt_orchestration_terminal",
+  "bt_orchestration_transition",
   "bt_continuation",
+  "bt_requirements_gate",
+  "bt_plan_adapter",
+  "bt_cli_plan",
+  "bt_cli_requirements_gate",
   "bt_core",
   "bt_delegate",
   "bt_delegate_modes",
@@ -75,10 +91,13 @@ py-modules = [
   "bt_relay_handoff",
   "bt_relay_launch",
   "bt_relay_proc",
+  "bt_relay_reservation",
   "bt_resources",
   "bt_review",
   "bt_rounds",
   "bt_run",
+  "bt_runentry",
+  "bt_runloop",
   "bt_run_isolated",
   "bt_runprompt",
   "bt_runsession",
@@ -109,6 +128,7 @@ py-modules = [
 # Templates, assets, policy references and agent definitions travel inside the wheel (REQ-007 R2).
 # test_package_install.py keeps py-modules complete against skill/scripts.
 [tool.setuptools.package-data]
+bt_planner = ["data/*.json", "README.md"]
 bitacora_resources = [
   "SKILL.md", "templates/*", "templates/**/*", "assets/*", "agents/*", "githooks/*",
   "references/*.md", "references/stacks/*", "vendor/archify/**/*",

@@ -109,6 +109,11 @@ def _spawn(argv: list[str]) -> None:
     with open(os.open(relay.relay_dir() / "relay.log", os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "a") as out:
         process = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=out, stderr=out,
                                    start_new_session=True, close_fds=True)
+    time.sleep(1.0)
+    status = process.poll()
+    if status is not None:
+        relay.log(f"launch helper exited during startup (status {status})")
+        raise RuntimeError(f"launch helper exited during startup (status {status})")
     threading.Thread(target=process.wait, daemon=True).start()
 
 
@@ -183,8 +188,22 @@ def handoff(summary: str, session: str | None, to: str | None, cwd: str, environ
             relay.relay_dir() / "launched" / previous["stem"]).exists():  # a newer handoff supersedes the pending one
         relay.write_private(relay.relay_dir() / "cancelled" / previous["stem"], "")
         relay.log(f"superseded {previous['stem']} by {path.stem}")
+        pending_path = relay.relay_dir() / "pending.json"
+        relay.update_json(pending_path, lambda data: data.clear() if data.get("stem") == previous["stem"] else None)
+    command = launch.successor_command(route["profile"], cwd, path)
+    if not agent or not (wrapper or mux):
+        launch.manual(command, located["why"], path)
+        return (f"Handoff escrito en {path}, pero no puedo controlar el cliente actual; no se programó el relevo. "
+                f"Comando manual: {command}")
     relay.save_json(relay.relay_dir() / "pending.json", {"handoff": str(path), "stem": path.stem, "at": time.time()})
-    spawn(argv)
+    try:
+        spawn(argv)
+    except (OSError, subprocess.SubprocessError, RuntimeError, ValueError) as exc:
+        pending_path = relay.relay_dir() / "pending.json"
+        relay.update_json(pending_path, lambda data: data.clear() if data.get("stem") == path.stem else None)
+        launch.manual(command, f"No pude confirmar el arranque del lanzador ({type(exc).__name__})", path)
+        return (f"Handoff escrito en {path}, pero el lanzador no arrancó; no se programó el relevo. "
+                f"Comando manual: {command}")
     where = " (wrapper)" if wrapper and agent else f" ({mux['kind']})" if mux and agent else f" ({located['why']}: te avisaré con el comando)"
     return (f"Relevo programado a {route['profile']}{where}; handoff: {path}. "
             "Termina tu turno ahora: no hagas más cambios ni llamadas a herramientas.")

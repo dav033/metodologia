@@ -16,9 +16,11 @@ import ntpath
 import re
 import socket
 import time
+import uuid
 from pathlib import Path
 
 import bt_agents
+import bt_plan_adapter
 from bt_core import STATE
 from bt_runtier import start_tier
 
@@ -225,9 +227,9 @@ def init_state(project: str, rdir: Path, agent: str, model: str | None, ultracod
                limits: dict | None = None, pool: list[str] | None = None, audit: bool = False) -> dict:
     state = {"req": "-".join(rdir.name.split("-")[:2]), "project": project, "status": "running", "agent": agent,
              "model": model, "ultracode": ultracode, "limits": {**DEFAULT_LIMITS, **(limits or {})},
-             "control": None, "heartbeat": None, "waiting_until": None, "sessions": 0, "tasks": [], "log": [],
+             "context_run_id": uuid.uuid4().hex, "control": None, "heartbeat": None, "waiting_until": None, "sessions": 0, "tasks": [], "log": [],
              "pool": list(pool or []), "audit": bool(audit)}
-    return sync_plan(state, rdir)
+    return {**sync_plan(state, rdir), **bt_plan_adapter.run_state_fields(rdir)}  # plan_ref only when frozen
 
 
 # ---------------------------------------------------------------- persistence
