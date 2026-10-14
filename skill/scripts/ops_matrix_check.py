@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -36,7 +37,9 @@ def delegate(project: str, task: str, workdir: Path, profile: str, model: str, e
         cmd += ["--effort", effort]
     if verify:
         cmd += ["--verify", verify]
-    res = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_min * 60 + 120)
+    # These are smoke measurements, not work: tag them so rankings can leave them out (`metrics --origin real`).
+    res = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_min * 60 + 120,
+                         env={**os.environ, "BITACORA_ORIGIN": "synthetic"})
     try:
         return json.loads(res.stdout)
     except ValueError:

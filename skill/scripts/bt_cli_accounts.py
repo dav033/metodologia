@@ -10,6 +10,8 @@ def register(sub):
     p_met.add_argument("--by", help="group keys, comma separated: agent,profile,model,effort,kind,tier,project")
     p_met.add_argument("--advice", action="store_true", help="plain-language observations instead of the table")
     p_met.add_argument("--attempts", type=int, metavar="N", help="the last N attempts, each as a key/value table")
+    p_met.add_argument("--origin", choices=["all", "real", "synthetic"], default="all",
+                       help="only measurements of real work, or only smoke/matrix checks (untagged rows count as real)")
     p_met.add_argument("--why", action="store_true", help="how attempts ended per agent/model/effort/kind/complexity, "
                        "with the reasons they failed or worked")
     p_ag = sub.add_parser("agents", help="agent catalog: models, ladder, accounts and usage-limit state; route preview")
@@ -41,6 +43,8 @@ def dispatch_machine(a) -> bool:
         return False
     import bt_events
     rows = bt_events.read_all()
+    if a.origin != "all":
+        rows = [r for r in rows if (r.get("origin") or "real") == a.origin]
     if a.advice:
         print("\n".join(bt_events.advice(rows, defects=bt_events.read_defects())))
     elif a.attempts:

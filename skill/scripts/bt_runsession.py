@@ -5,6 +5,7 @@ the agent has finished."""
 from __future__ import annotations
 
 import socket
+import re
 import subprocess
 import signal
 import time
@@ -237,6 +238,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
     timeout = state["limits"]["session_timeout_min"] * 60 * min(max(len(unit), 1), rs.MILESTONE_TIMEOUT_FACTOR)
     grace = grace_seconds()
     poll = min(5.0, max(0.2, grace / 2))
+    head_before = _git_head(workdir)
     start = last_beat = time.time()
     timed_out = stopped = early = False
     reported_at = None
@@ -292,7 +294,49 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
             "seconds": int(time.time() - start), "model": model, "effort": effort, "agent": state["agent"],
             "profile": state.get("profile"), "kind": route.get("kind"), "tier": route.get("tier"),
             "tasks": [t["id"] for t in unit], "why": route.get("why"),
+            "change_size": _change_size(workdir, head_before),
             "contract": _contract_shadow(state["agent"], text, proc.returncode, timed_out, stopped)}
+
+
+def _git_head(workdir) -> str | None:
+    """HEAD of the session's working directory, or None (not a repository, git missing, slow disk): telemetry only."""
+    try:
+        done = subprocess.run(["git", "-C", str(workdir), "rev-parse", "HEAD"], capture_output=True, text=True,
+                              timeout=5, check=False)
+        return done.stdout.strip() or None if done.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+_SHORTSTAT = re.compile(r"(\d+) files? changed(?:, (\d+) insertions?\(\+\))?(?:, (\d+) deletions?\(-\))?")
+_TEST_FILE = re.compile(r"(?:\.(?:spec|test)\.[A-Za-z]+$|(?:^|/)tests?/|(?:^|/)test_[^/]+$|_test\.[A-Za-z]+$)")
+
+
+def _change_size(workdir, before: str | None) -> dict | None:
+    """How much the session changed: files, lines, commits and test files, from its commits plus uncommitted work.
+    Gives the attempt log a size to compare models on similar work. Best effort; any error leaves it None."""
+    if not before:
+        return None
+    def git(*args: str) -> str:
+        done = subprocess.run(["git", "-C", str(workdir), *args], capture_output=True, text=True, timeout=10,
+                              check=False)
+        return done.stdout if done.returncode == 0 else ""
+    try:
+        after = _git_head(workdir) or before
+        names = set(git("diff", "--name-only", before, after).splitlines()) | set(git("diff", "--name-only", "HEAD")
+                                                                                    .splitlines())
+        names |= set(git("ls-files", "--others", "--exclude-standard").splitlines())
+        added = removed = 0
+        for stat in (git("diff", "--shortstat", before, after), git("diff", "--shortstat", "HEAD")):
+            found = _SHORTSTAT.search(stat)
+            if found:
+                added += int(found.group(2) or 0)
+                removed += int(found.group(3) or 0)
+        commits = int(git("rev-list", "--count", f"{before}..{after}").strip() or 0) if after != before else 0
+        return {"files": len(names), "insertions": added, "deletions": removed, "commits": commits,
+                "test_files": sum(1 for n in names if _TEST_FILE.search(n))}
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
 
 
 def _contract_shadow(agent: str, text: str, rc: int | None, timed_out: bool, stopped: bool) -> dict | None:

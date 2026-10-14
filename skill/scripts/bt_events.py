@@ -125,6 +125,11 @@ def extract_usage(agent: str | None, raw: str) -> dict:
     else:  # claude stream-json
         event = _last_event(raw, lambda o: o.get("type") == "result")
         usage = (event or {}).get("usage")
+        if not isinstance(usage, dict):  # a session cut by a limit or a kill has no result event: sum what was reported
+            partial = _claude_partial_usage(raw)
+            if partial:
+                out.update(source="claude-stream-json-partial", quality="partial", **partial)
+                return out
         if isinstance(usage, dict):
             details = usage.get("output_tokens_details") if isinstance(usage.get("output_tokens_details"), dict) else {}
             out.update(source="claude-stream-json", quality="reported", input_tokens=_int(usage.get("input_tokens")),
@@ -135,6 +140,77 @@ def extract_usage(agent: str | None, raw: str) -> dict:
             cost = event.get("total_cost_usd")
             out["cost_usd_reported"] = cost if isinstance(cost, (int, float)) else None
     return out
+
+
+def _claude_partial_usage(raw: str) -> dict | None:
+    """Tokens of the assistant messages seen so far (once per message id) in a Claude stream that ended without its
+    final result event. A lower bound, labelled `partial`: the most expensive sessions are the ones that get cut."""
+    seen: dict[str, dict] = {}
+    for line in (raw or "").splitlines():
+        if not line.startswith("{"):
+            continue
+        try:
+            obj = json.loads(line)
+        except ValueError:
+            continue
+        message = obj.get("message") if isinstance(obj, dict) and obj.get("type") == "assistant" else None
+        usage = message.get("usage") if isinstance(message, dict) else None
+        if isinstance(usage, dict):
+            seen[str(message.get("id") or len(seen))] = usage  # later chunks of one message carry the final counts
+    if not seen:
+        return None
+    total = {"input_tokens": 0, "output_tokens": 0, "cache_read_tokens": 0, "cache_write_tokens": 0}
+    keys = {"input_tokens": "input_tokens", "output_tokens": "output_tokens",
+            "cache_read_tokens": "cache_read_input_tokens", "cache_write_tokens": "cache_creation_input_tokens"}
+    for usage in seen.values():
+        for dst, src in keys.items():
+            total[dst] += _int(usage.get(src)) or 0
+    return {**total, "total_tokens": sum(total.values())}
+
+
+_CREDITS_RE = re.compile(r"out of credits|add credits|credits? (?:are |is )?(?:exhausted|depleted)|insufficient credits|"
+                         r"insufficient (?:quota|funds)", re.IGNORECASE)
+_AUTH_RE = re.compile(r"not (?:logged|signed) in|please (?:sign|log) ?in|authentication (?:failed|required)|"
+                      r"401 unauthorized|invalid api key|token (?:has )?expired", re.IGNORECASE)
+_ERROR_LINE_RE = re.compile(r"\bERROR\b|error:|limit|credits|unauthori[sz]ed|failed", re.IGNORECASE)
+
+
+def loss_of(result: str, raw: str) -> str | None:
+    """Telemetry class for an attempt the PROVIDER cost us (quota, credits, sign-in), as opposed to one the model got
+    wrong. It never changes how the supervisor settles the session: it only lets the metrics separate the two."""
+    if result in ("usage_limit", "limit_streak"):
+        return "usage_limit"
+    if result in ("done", "verified", "claimed", "skipped", "stopped"):
+        return None
+    tail = (raw or "")[-6000:]
+    if _CREDITS_RE.search(tail):
+        return "out_of_credits"
+    if _AUTH_RE.search(tail):
+        return "auth"
+    return None
+
+
+def error_excerpt(raw: str) -> str | None:
+    """The last error-looking line of the output (bounded, secrets filtered), so a failed attempt says why in the
+    provider's words and not with a fragment of the prompt echo."""
+    for line in reversed((raw or "")[-6000:].splitlines()):
+        line = line.strip()
+        if line and not line.startswith("{") and _ERROR_LINE_RE.search(line):
+            line = " ".join(line.split())[:240]
+            try:
+                from bt_runtask import _safe_text
+                return _safe_text(line)
+            except Exception:  # noqa: BLE001 - a telemetry row is never lost to the filter failing
+                return "[withheld: the secret filter could not run]"
+    return None
+
+
+def origin_of(env: dict | None = None) -> str:
+    """`real` (default) or `synthetic` (BITACORA_ORIGIN=synthetic: smoke tests, matrix checks, evals), so rankings can
+    leave out measurements that were never real work."""
+    import os
+    value = ((env if env is not None else os.environ).get("BITACORA_ORIGIN") or "").strip().lower()
+    return "synthetic" if value == "synthetic" else "real"
 
 
 def _path(when: dt.datetime) -> Path:
@@ -173,6 +249,10 @@ def record_attempt(project: str, state: dict, task_id: str, session: int, info: 
             "early_exit": bool(info.get("early_exit")), "recovered": bool(info.get("recovered")), "result": result,
             "usage": extract_usage(agent, info.get("text") or ""),
             "route_why": info.get("why"),
+            "loss": loss_of(result, info.get("text") or ""),
+            "error_excerpt": None if result in ("done", "verified") else error_excerpt(info.get("text") or ""),
+            "change_size": info.get("change_size") if isinstance(info.get("change_size"), dict) else None,
+            "origin": origin_of(),
             **{k: (detail or {}).get(k) for k in ("complexity", "complexity_source", "attempt", "milestone", "task_results", "titles",
                                                    "outcome", "why")},
         }
@@ -249,17 +329,29 @@ def summary(rows: list[dict], by: tuple | list | None = None, defects: list[dict
     the attempts that reported them. Quality fields (findings, rework) come from bt_quality; `defects` are the audit
     verdict rows (read_defects): without them the findings fields are null."""
     by = tuple(k for k in (by or DEFAULT_BY) if k in GROUP_KEYS) or DEFAULT_BY
+    reported_audits = {d.get("audit_event_id") for d in (defects or [])
+                       if isinstance(d.get("findings"), int) and not isinstance(d.get("findings"), bool)}
     groups: dict[tuple, dict] = {}
     for r in rows:
         key = tuple(r.get(k) if k != "kind" else (r.get(k) or "implement") for k in by)
         g = groups.setdefault(key, {**dict(zip(by, key)), "attempts": 0, "done": 0, "failed": 0, "other": 0,
                                     "seconds": 0, "seconds_measured": 0, "measured": 0,
                                     "tokens_measured": 0, "cost_usd_reported": 0.0,
-                                    "cost_measured": 0})
+                                    "cost_measured": 0, "provider_loss": 0, "failed_by_loss": 0,
+                                    "audits_done": 0, "audits_unreported": 0})
         g["attempts"] += 1
         res = r.get("result")
-        g["done" if res in ("done", "verified") else
-          "failed" if res in ("failed", "verify_failed", "timeout", "partial") else "other"] += 1
+        bucket = ("done" if res in ("done", "verified") else
+                  "failed" if res in ("failed", "verify_failed", "timeout", "partial") else "other")
+        g[bucket] += 1
+        if r.get("loss"):  # quota, credits or sign-in: the provider's loss, kept visible next to the model's results
+            g["provider_loss"] += 1
+            g["failed_by_loss"] += bucket == "failed"
+        # Only supervised runs (REQ-NNN) can report findings: a one-off delegated audit has no verdict row by design.
+        if (r.get("kind") or "implement") == "audit" and bucket == "done" and re.match(r"REQ-\d+", str(r.get("req"))):
+            g["audits_done"] += 1
+            if defects is not None and r.get("event_id") not in reported_audits:
+                g["audits_unreported"] += 1
         if r.get("seconds") is not None:
             g["seconds"] += r["seconds"]
             g["seconds_measured"] += 1
@@ -278,6 +370,10 @@ def summary(rows: list[dict], by: tuple | list | None = None, defects: list[dict
     for g in groups.values():
         judged = g["done"] + g["failed"]
         g["success_rate"] = round(g["done"] / judged, 2) if judged else None
+        judged_model = judged - g["failed_by_loss"]  # same rate without the failures the provider caused
+        g["success_rate_excl_loss"] = round(g["done"] / judged_model, 2) if judged_model > 0 else None
+        if defects is None:
+            g["audits_unreported"] = None
         g["avg_seconds"] = round(g["seconds"] / g["seconds_measured"]) if g["seconds_measured"] else None
         g["seconds_coverage"] = round(g["seconds_measured"] / g["attempts"], 2) if g["attempts"] else None
         if not g["seconds_measured"]:
@@ -353,6 +449,9 @@ def key_values(row: dict) -> list[tuple[str, str]]:
          if u.get("cache_read_tokens") is not None else None),
         ("cost reported (USD)", u.get("cost_usd_reported")),
         ("usage source", f"{u.get('source')} ({u.get('quality')})" if u.get("source") else "not reported by the CLI"),
+        ("provider loss", row.get("loss")), ("error (provider words)", row.get("error_excerpt")),
+        ("change size", ", ".join(f"{k}={v}" for k, v in (row.get("change_size") or {}).items()) or None),
+        ("origin", row.get("origin") or "real (not tagged)"),
     ]
     return [(k, show(v)) for k, v in pairs]
 

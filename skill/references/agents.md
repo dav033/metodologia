@@ -187,6 +187,11 @@ report is `null`, never 0). Each row also says **what** the work was and **why**
 | `outcome` | `verified`, `verify_failed`, `timeout`, `no_verdict` (the session ended without reporting), `agent_reported_failure`, `usage_limit`, `blocked_needs_human`, `escalated_by_agent`, `skipped_dependency`, `partial`, `stopped_by_user`, `claimed_unverified` |
 | `why` | for a failure: each task's error (the verify output, the agent's reason); for a success: the evidence given |
 | `usage` | tokens in/out, cache read/write, reasoning, total, cost reported; `quality` says what the CLI actually reported |
+| `usage.quality` = `partial` | a Claude session cut by a limit or a kill has no final result event: tokens are the sum of the assistant messages seen (a lower bound, source `claude-stream-json-partial`) |
+| `loss` | `usage_limit`, `out_of_credits` or `auth` when the PROVIDER cost the attempt (quota, credits, sign-in), else null. Telemetry only: it never changes how a session is settled |
+| `error_excerpt` | the last error line the provider printed (bounded, secrets filtered), so a failed attempt says why in its own words |
+| `change_size` | files, insertions, deletions, commits and test files the session changed, to compare models on similar work |
+| `origin` | `real`, or `synthetic` for smoke and matrix checks (`BITACORA_ORIGIN=synthetic`); `metrics --origin real` leaves those out |
 
 `model` remains the requested route for compatibility; new rows also carry `requested_model`,
 `reported_model` (currently null without provider identity evidence), and `identity_source: requested`.
@@ -206,6 +211,10 @@ shows token/cost coverage rather than turning unknown measurements into zero.
   and the evidence when they worked.
 - Web: `/metrics` — the same tables (by agent, by kind, by kind and complexity, why it failed / why it worked, each
   recent attempt key by key), account/quota state and the ladder.
+- `provider_loss`, `failed_by_loss` and `success_rate_excl_loss` show how much of the failure rate was the provider's
+  (credits, sign-in) and not the model's; `success_rate` itself is unchanged because the router reads it.
+- `audits_done` and `audits_unreported` count supervised audits and how many never reported `--findings`: with
+  `audits_unreported == audits_done` the quality columns have no data, and that is a process gap, not a clean record.
 - `success_rate` only counts attempts that had a verdict (a usage limit is not the agent's failure);
   `tokens_per_done` appears only when every attempt of the group was measured.
 - The router reads the same rows: a route with a clearly better record for a kind of work is preferred.
