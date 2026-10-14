@@ -67,14 +67,15 @@ entries pass. Final scoped ruff passed with exit 0; closure must repeat diff che
 Broad legacy-file lint remains preexisting debt; full combined regression
 belongs to the parent after M2. No separate typecheck configuration was found.
 
-T4 must implement `configured_runtime()` with verified Claude structured reasoning and
-deterministic admitted actions. Until then public foreground execution reports
-FOREGROUND_RUNTIME_NOT_ACTIVATED before opening/reserving a run; automatic replacement
-cannot target an unavailable runtime. No public test-provider flag, native fallback or
-production wait-only adapter was introduced. T3 is lifecycle evidence, not completion of M2.
+T4 now supplies `configured_runtime()` with pinned Claude structured reasoning and
+deterministic admitted actions. Public foreground execution remains explicit opt-in and
+preflights capability, authority and controlling TTY before opening/reserving a run.
+An unavailable runtime still fails before effects; automatic replacement cannot target it.
+No public test-provider flag, native fallback or production wait-only adapter was introduced.
+The owner paused execution before final M2 acceptance/default activation; see REPORT.md.
 
-T4 owns inventory/version/session-ID validation, structured actions, bounded receipts,
+T4 implements inventory/version/session-ID validation, structured actions, bounded receipts,
 delegation/documentation/checkpoint/rotation and actual CLI proof through controlled PATH
-fixtures. Persist foreground-child identity separately from worker session_pids, whose
+fixtures. Foreground-child identity is persisted separately from worker session_pids, whose
 orphan recovery assumes PGID=PID. Codex reasoning remains ineligible until proven;
 Codex workers remain separate. Default activation is pending T4.

@@ -1,5 +1,46 @@
 # REQ-008 — Coordinator handoff to codex-luis
 
+## Current status — paused by the owner
+
+The owner explicitly requested stopping all work, leaving a minimally usable state and
+documenting it. PLAN status is `paused`; the goal is paused, NOT complete. Do not resume
+automatically or repeat the approved requirements interview. Earlier handoff sections below
+are historical and do not supersede this stop.
+
+All agents and tests belonging to this task have finished; no writer or test handle remains
+active. Unrelated Maros/Pictures work was preserved and was not controlled by this task.
+No commits, push, merge, global installation/configuration or current-client replacement
+were performed by this coordinator or its implementer.
+
+T4 runtime and review corrections are implemented. Final evidence: affected regressions
+139/139, 47.998s, exit 0 (`/tmp/req008-t4-review-closure-regressions.log`); wheel/install
+10/10, 2.947s, exit 0 (`/tmp/req008-t4-review-closure-package.log`); scoped ruff and source
+diff check exit 0 (`/tmp/req008-t4-review-closure-ruff.log`). The final two review findings
+were reproduced red then corrected: interruption during verification now stops the whole
+foreground flow without new children/attempts, and shared journal/proof validation lives
+in a provider-independent leaf. See REPORT.md for evidence and exact boundaries.
+
+The ordinary unmarked workflow retains its existing entry behavior. Foreground orchestration
+remains an explicit `--foreground` opt-in requiring a ready requirements snapshot, approved
+plan, controlling TTY and the verified Claude boundary. No new default was activated and
+no existing run was relaunched. REQ-008 itself cannot normally launch while PLAN is paused.
+This is a tested partial implementation, not a completed autonomous-council release.
+
+### Next after an explicit owner resume
+1. Inspect current git status/diff, REPORT and final correction code/evidence. Revalidate
+   unchanged scope and restore PLAN operational approval without repeating the owner gate.
+   T4 remains unchecked because coordinator acceptance/default activation is pending.
+2. Finish M2 default activation while preserving unmarked legacy plans and no automatic
+   VCS in the new path. Reconcile CLI/web approval and manual-entry behavior; fix the traced
+   live-PID/stale-heartbeat duplicate-run guard before enabling defaults. No global install.
+3. Fresh scoped T5/T6 implementation: persisted three proposals, peer debate/ruling and
+   durable taxonomy/budgets. Then T7 full controlled-provider flow and T8 independent closing
+   audit/full regression/report. Do not substitute the 139-test focused suite for T8.
+
+P-018 tracks the pause. D-018 records validated completion supersession. Luna reasoning
+remains ineligible; existing Codex worker routing is separate. Preserve all artifacts and
+budget counters. No permission question is currently pending.
+
 ## Latest continuation checkpoint — session 01a13bdc (quota relay)
 
 The plan remains approved. T3 final bounded standards re-review APPROVED without findings.

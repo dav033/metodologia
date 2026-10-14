@@ -14,17 +14,17 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T14:49:15",
+  "at": "2026-10-14T15:01:20",
   "pid": 2274846,
   "machine": "precision7760",
-  "task": "M3-audit",
-  "session": 14,
-  "state": "batch settled",
+  "task": "T9",
+  "session": 15,
+  "state": "session running 12 min",
   "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 14,
+ "sessions": 15,
  "tasks": [
   {
    "id": "T1",
@@ -457,13 +457,25 @@
    "complexity": null,
    "milestone": "M4",
    "tier": 1,
-   "status": "todo",
+   "status": "integration_pending",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "commit 678b4fa on wt/T9-e2b72801; 'npx vitest run src/features/users' exit 0 (4 suites, 27 tests pass); tsc --noEmit exit 0; eslint clean",
    "pending_id": null,
-   "notes": []
+   "notes": [
+    "commit 678b4fa on wt/T9-e2b72801. Data layer in features/users complete with models, ports, HTTP repositories, mappers, usecases, and hooks. 'npx vitest run src/features/users' passed (4 suites, 27 tests). tsc and eslint clean."
+   ],
+   "findings": null,
+   "severity": null,
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "antigravity",
+    "profile": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "T10",
@@ -1221,6 +1233,24 @@
     "terminal": true
    },
    "isolation": "worktree"
+  },
+  {
+   "at": "2026-10-14T15:01:23",
+   "session": 15,
+   "task": "T9",
+   "result": "integration_pending",
+   "summary": "commit 678b4fa on wt/T9-e2b72801; 'npx vitest run src/features/users' exit 0 (4 suites, 27 tests pass); tsc --noEmit exit 0; eslint clean",
+   "seconds": 724,
+   "model": "gemini-3.8-flash-low",
+   "agent": "antigravity",
+   "profile": "antigravity",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/T9-e2b72801"
   }
  ],
  "pool": [
@@ -1560,6 +1590,70 @@
    "repo_role": "backend",
    "candidate_sha": "383f1e4a5136b03efcf413ad93dcbd9ab65c3e71",
    "cleaned": true
+  },
+  "T9": {
+   "task_id": "T9",
+   "branch": "wt/T9-e2b72801",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T9-e2b72801",
+   "base_sha": "b8efd6aa01f53257d25a4cdd198e94f97a2f6052",
+   "repo": "/home/david/dev/maros/maros-next",
+   "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
+   "state": "candidate",
+   "allowed_roots": [
+    "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
+   ],
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T9-e2b72801.json",
+   "task_ids": [
+    "T9"
+   ],
+   "allowed_paths": [
+    "src/di/factories/usersFactory.ts",
+    "src/features/users/application/context.ts",
+    "src/features/users/application/index.ts",
+    "src/features/users/application/keys/usersKeys.ts",
+    "src/features/users/application/usecases/mutations/bulkAssignRole.ts",
+    "src/features/users/application/usecases/mutations/createAccessRequest.ts",
+    "src/features/users/application/usecases/mutations/duplicateRole.ts",
+    "src/features/users/application/usecases/mutations/previewRoleImpact.ts",
+    "src/features/users/application/usecases/mutations/resolveAccessRequest.ts",
+    "src/features/users/application/usecases/queries/explainUserAccess.ts",
+    "src/features/users/application/usecases/queries/listAccessRequests.ts",
+    "src/features/users/application/usecases/queries/listRoleAudit.ts",
+    "src/features/users/application/usecases/usecases.test.ts",
+    "src/features/users/domain/models.ts",
+    "src/features/users/domain/ports.ts",
+    "src/features/users/index.ts",
+    "src/features/users/infra/http/AccessRequestsHttpRepository.ts",
+    "src/features/users/infra/http/RolesHttpRepository.ts",
+    "src/features/users/infra/http/UsersHttpRepository.ts",
+    "src/features/users/infra/http/UsersRepositories.test.ts",
+    "src/features/users/infra/http/endpoints.ts",
+    "src/features/users/infra/http/mappers.test.ts",
+    "src/features/users/infra/http/mappers.ts",
+    "src/features/users/infra/index.ts",
+    "src/features/users/presentation/hooks/data/useAccessRequests.ts",
+    "src/features/users/presentation/hooks/data/useRoleAudit.ts",
+    "src/features/users/presentation/hooks/data/useUserAccessExplanation.ts",
+    "src/features/users/presentation/hooks/mutations/useUsersPermissionsMutations.ts"
+   ],
+   "resources": [],
+   "repo_role": "frontend",
+   "candidate_sha": "678b4fabaf9400fe9207668be75fcf2166014cf9"
+  },
+  "__integration__:frontend": {
+   "task_id": "REQ-005-integration",
+   "branch": "wt/REQ-005-integration-768f8753",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/REQ-005-integration-768f8753",
+   "base_sha": "b8efd6aa01f53257d25a4cdd198e94f97a2f6052",
+   "repo": "/home/david/dev/maros/maros-next",
+   "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
+   "state": "allocated",
+   "allowed_roots": [
+    "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
+   ],
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/REQ-005-integration-768f8753.json",
+   "integration": true,
+   "repo_role": "frontend"
   }
  },
  "wait_step": 0

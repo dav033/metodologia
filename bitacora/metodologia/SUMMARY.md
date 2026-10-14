@@ -27,7 +27,7 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
   evals 10/10. The first end-to-end run passed on 2026-10-14 (P-002 closed).
 
 ## Active focus
-- REQ-008 approved and executing: M1 complete; T3 foreground lifecycle passed 21/21 and final standards review. T4 structured runtime/rotation is in progress; recovery council and whole-flow audits remain T5–T8. See `requirements/REQ-008-fresh-milestone-orchestration-and-bounde/PLAN.md` and `ACCEPTANCE-MATRIX.md`. No commits, push, global installation or current-client replacement authorized.
+- REQ-008 PAUSED by the owner at T4: M1/T3 complete; T4 runtime/recovery fixes pass 139 affected regressions and 10 package/install tests, plus scoped ruff. Defaults remain unchanged; T4 acceptance/default activation and T5–T8 remain. See `requirements/REQ-008-fresh-milestone-orchestration-and-bounde/REPORT.md` and HANDOFF.md; P-018 tracks explicit resume. No active task writer/test handle, commits, push, global install or current-client replacement by this session.
 - REQ-007: proposed platform migration documented in [migracion/README.md](migracion/README.md), with M0–M9, preservation inventory and acceptance/rollback gates. Planning only; implementation not started.
 - The other computer's agent cleans up the bitácora in `main` (D-011, P-015). Then decide how the live bitácora is
   synced and backed up (P-013).

@@ -1,6 +1,6 @@
 ---
 id: REQ-008
-status: planned
+status: in-progress
 created: 2026-10-14
 track: deep
 ---
