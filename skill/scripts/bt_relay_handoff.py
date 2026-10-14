@@ -112,6 +112,23 @@ def _spawn(argv: list[str]) -> None:
     threading.Thread(target=process.wait, daemon=True).start()
 
 
+
+def launch_argv(path, profile: str, cwd: str, session: str, wrapper: dict | None, agent, mux: dict | None,
+                exit_current: bool) -> list[str]:
+    """Command line of the detached `relay launch` helper. `--cwd` is a TOP-LEVEL option of bitacora.py, so it goes
+    before the subcommand: after it argparse rejects it and the helper dies with exit 2 without relaunching anything
+    (it failed this way on every handoff until 2026-10-14)."""
+    argv = [sys.executable, str(SCRIPT), "--cwd", cwd, "relay", "launch", "--handoff", str(path), "--to", profile,
+            "--session", session]
+    if wrapper and agent:
+        argv += ["--wrapper-pid", str(wrapper["pid"]), "--wrapper-start", str(wrapper["start"])]
+    if mux and agent:
+        argv += ["--mux", mux["kind"], "--target", mux["target"], "--mux-env", json.dumps(mux["env"])]
+    if agent:
+        argv += ["--pid", str(agent[0]), "--start", str(agent[1])]
+    argv += ["--exit-current", "1" if exit_current else "0"]
+    return argv
+
 def handoff(summary: str, session: str | None, to: str | None, cwd: str, environ: dict | None = None,
             spawn=_spawn, force: bool = False) -> str:
     """Write the handoff, pick the successor and schedule the relaunch; returns the one line for the agent.
@@ -156,15 +173,8 @@ def handoff(summary: str, session: str | None, to: str | None, cwd: str, environ
     located = bt_relay_client.locate(environ, session, bt_profiles.provider_of(current) if current else "claude")
     mux, agent, wrapper = located["mux"], (located["pid"], located["start"]) if located["pid"] else None, located.get("wrapper")
     relay.log(f"client: {located['why']}")
-    argv = [sys.executable, str(SCRIPT), "relay", "launch", "--handoff", str(path), "--to", route["profile"],
-            "--cwd", cwd, "--session", session]
-    if wrapper and agent:
-        argv += ["--wrapper-pid", str(wrapper["pid"]), "--wrapper-start", str(wrapper["start"])]
-    if mux and agent:
-        argv += ["--mux", mux["kind"], "--target", mux["target"], "--mux-env", json.dumps(mux["env"])]
-    if agent:
-        argv += ["--pid", str(agent[0]), "--start", str(agent[1])]
-    argv += ["--exit-current", "1" if relay.settings()["exit_current"] else "0"]
+    argv = launch_argv(path, route["profile"], cwd, session, wrapper, agent, mux,
+                       relay.settings()["exit_current"])
     if not auto:
         command = launch.successor_command(route["profile"], cwd, path)
         return f"Handoff escrito en {path} (relevo desactivado: no se lanza nada). Comando manual: {command}"
