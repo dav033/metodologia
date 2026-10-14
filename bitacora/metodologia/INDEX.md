@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-14 13:29 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 14:19 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -45,11 +45,11 @@ _Generated 2026-10-14 13:29 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-017 — Enforceable bounded milestone orchestration with structured decisions
 - D-016 — Versioned durable requirements revalidation before execution
 - D-015 — ADR of REQ-007 ratified by the owner: local platform, thin optional skills
 - D-014 — ADR-PROPOSED direction provisionally adopted for REQ-007; owner ratification pending
 - D-013 — Audit routing order after the preferred auditor (REQ-007 T3)
-- D-004 — Gemini 3.8 Flash (Antigravity) is the default auditor; it builds only as a reserve
 
 ## Artifacts
 
