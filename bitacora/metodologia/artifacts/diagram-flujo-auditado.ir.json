@@ -1,0 +1,29 @@
+{
+ "schema_version":2,"diagram_type":"workflow",
+ "meta":{"locale":"es","title":"Metodología · flujo completo auditado","output":"diagram-flujo-auditado.html","animation":"trace","visual_preset":"signal-flow","quality_profile":"standard"},
+ "lanes":[{"id":"owner","label":"David"},{"id":"coord","label":"Coordinación"},{"id":"build","label":"Ejecución"},{"id":"evidence","label":"Verificación"},{"id":"memory","label":"Memoria"}],
+ "phases":[{"id":"scope","label":"Definir","fromCol":0,"toCol":2},{"id":"execute","label":"Ejecutar","fromCol":3,"toCol":4},{"id":"resume","label":"Continuar","fromCol":5,"toCol":5}],
+ "mainPath":["intent","explore","plan","work","verify","checkpoint","continue"],
+ "nodes":[
+  {"id":"intent","lane":"owner","col":0,"type":"external","label":"Intención","sublabel":"objetivo y alcance"},
+  {"id":"explore","lane":"coord","col":1,"type":"backend","label":"Explorar","sublabel":"repo y memoria"},
+  {"id":"plan","lane":"owner","col":2,"type":"database","label":"SPEC y PLAN","sublabel":"aprobación aplicable"},
+  {"id":"work","lane":"build","col":3,"type":"backend","label":"Ejecutar","sublabel":"ruta, cuenta, modelo"},
+  {"id":"verify","lane":"evidence","col":4,"type":"security","label":"Verificar","sublabel":"tests y revisión"},
+  {"id":"checkpoint","lane":"memory","col":5,"type":"database","label":"Registrar","sublabel":"Goal, Done y Next"},
+  {"id":"continue","lane":"coord","col":5,"type":"external","label":"Continuar","sublabel":"otro agente o contexto"}
+ ],
+ "edges":[
+  {"from":"intent","to":"explore","variant":"emphasis"},
+  {"from":"explore","to":"plan"},
+  {"from":"plan","to":"work"},
+  {"from":"work","to":"verify","variant":"emphasis"},
+  {"from":"verify","to":"checkpoint","label":"evidencia"},
+  {"from":"checkpoint","to":"continue","variant":"emphasis","route":"outside-right","fromSide":"right","toSide":"right"}
+ ],
+ "cards":[
+  {"dot":"emerald","title":"Ejecutar con evidencia","items":["El router elige cuenta, modelo y esfuerzo según cuota y resultados","Un fallo vuelve a ejecución con causa y regresión; reintentos acotados","La revisión independiente contrasta requisitos y estándares"]},
+  {"dot":"rose","title":"Automejora y telemetría","items":["Cada intento produce mediciones con cobertura y veredicto","El aprendizaje distingue proyecto, owner y skill","La vista de datos detalla validación, confirmación e inyección"]},
+  {"dot":"cyan","title":"Cerrar y continuar","items":["Se conservan objetivo, alcance, evidencia, pendientes y siguiente paso","Stop y SessionEnd guardan referencias; sin hook se recuperan logs","El nuevo agente reconcilia PLAN, RUN y git antes de continuar"]}
+ ]
+}

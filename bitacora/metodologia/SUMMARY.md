@@ -7,6 +7,11 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
 (D-008, D-009, D-011), and since D-012 the pictures bitácora itself. The rest of the live bitácora is `~/bitacora`.
 
 ## Current state
+- 2026-10-14 strict audit repaired project/global learning, telemetry integrity and cross-agent continuation.
+  Native review panel: `artifacts/revision-flujo.html`; detailed evidence and limitations: `artifacts/audit-2026-10-14.md`.
+  Final suite: 823 tests pass without thread/resource warnings; three native diagrams pass visual checks.
+  No commit/push authorized; preserve existing uncommitted migration work. Legacy lint and live-provider limits
+  remain explicit in the audit report; existing migration work remains separate.
 - Repo `main` equals `origin/main` at `cb40787`. The tip has `bitacora/`: pictures, the other clone's copies and the
   live copies of eventos, maros, metodologia, signature-extraction, `INDEX.md` and `TOOLS.md` (D-011).
 - Pictures: `~/bitacora/pictures` is a junction to `metodologia/bitacora/pictures` (D-012). Changes there are

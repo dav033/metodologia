@@ -1,0 +1,28 @@
+{
+ "schema_version":1,"diagram_type":"sequence",
+ "meta":{"locale":"es","output":"diagram-continuation.html","title":"Continúa con el trabajo · cambio de sesión y agente","viewBox":[1080,690],"column_fit":"spread","animation":"trace","quality_profile":"standard"},
+ "participants":[
+  {"id":"old","type":"backend","label":"Agente anterior","sublabel":"cualquier modelo"},
+  {"id":"log","type":"database","label":"Bitácora","sublabel":"fuente canónica"},
+  {"id":"hook","type":"security","label":"Stop / End","sublabel":"checkpoint privado"},
+  {"id":"new","type":"backend","label":"Nuevo agente","sublabel":"otro ID o carpeta"},
+  {"id":"state","type":"database","label":"Estado real","sublabel":"repo, PLAN y RUN"}
+ ],
+ "segments":[{"from":150,"to":260,"label":"Cierre"},{"from":280,"to":420,"label":"Recuperación"},{"from":440,"to":575,"label":"Continuación verificada"}],
+ "messages":[
+  {"id":"record","from":"old","to":"log","y":165,"label":"Goal, Done, Pending y Next","variant":"emphasis"},
+  {"id":"close","from":"old","to":"hook","y":210,"label":"fin de turno o sesión","variant":"default"},
+  {"id":"pointer","from":"hook","to":"log","y":250,"label":"guardar referencia y huella","variant":"dashed"},
+  {"id":"start","from":"new","to":"hook","y":295,"label":"SessionStart o context","variant":"emphasis"},
+  {"id":"recover","from":"hook","to":"log","y":335,"label":"leer checkpoint o logs","variant":"default"},
+  {"id":"return","from":"log","to":"new","y":385,"label":"objetivo, siguiente paso y límites","variant":"return"},
+  {"id":"inspect","from":"new","to":"state","y":450,"label":"reconciliar con archivos vivos","variant":"security"},
+  {"id":"status","from":"state","to":"new","y":500,"label":"terminado, pendiente o bloqueado","variant":"return"},
+  {"id":"next","from":"new","to":"log","y":550,"label":"continuar y registrar evidencia","variant":"emphasis"}
+ ],
+ "cards":[
+  {"dot":"emerald","title":"No depende del proveedor","items":["El estado vive fuera de la conversación","El siguiente agente vuelve a leer las fuentes","Un cierre tardío no sustituye trabajo más reciente"]},
+  {"dot":"rose","title":"Recuperación incompleta visible","items":["Sin Goal o Next se avisa de la pérdida de contexto","Un log dañado no impide leer los demás","Varios proyectos requieren identificar el correcto"]},
+  {"dot":"cyan","title":"La prueba sigue siendo necesaria","items":["Un checkpoint conserva lo reportado","RUN y git determinan el estado operativo actual","Una sesión cerrada no demuestra tarea completada"]}
+ ]
+}

@@ -1,0 +1,15 @@
+{
+ "kind": "diagram",
+ "type": "dataflow",
+ "name": "automejora-telemetria",
+ "title": "Automejora por proyecto y telemetr\u00eda",
+ "ir_sha256": "c761c1582acb49304c3abc19a4414ab3099c826a6d706307545a4c5fd735a04d",
+ "html_sha256": "512de0a2d9d212c556a921d8db5a002e25701ba2e1374c150969785739bdcd95",
+ "renderer": {
+  "name": "archify",
+  "version": "3.1.0",
+  "commit": "c21c31ffb879668900c5487ea24993bf45d89b15",
+  "tree_sha256": "80a3d5b793902bf31ff4d236501c1eacf151e0cbd6231bd8799edb2c033adbc0"
+ },
+ "generated_at": "2026-10-14T07:30:21-0500"
+}

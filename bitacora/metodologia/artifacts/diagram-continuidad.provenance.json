@@ -1,0 +1,15 @@
+{
+ "kind": "diagram",
+ "type": "sequence",
+ "name": "continuidad",
+ "title": "Continuidad entre agentes y sesiones",
+ "ir_sha256": "3e08aec4a830678b94a6005ca19b67f77c1c2ae903dd2d564f9cd88e9d082e23",
+ "html_sha256": "f05b1641dda41f11184f2403aad53f8da4b46af3f4976d64fd1ffaf070b698a7",
+ "renderer": {
+  "name": "archify",
+  "version": "3.1.0",
+  "commit": "c21c31ffb879668900c5487ea24993bf45d89b15",
+  "tree_sha256": "80a3d5b793902bf31ff4d236501c1eacf151e0cbd6231bd8799edb2c033adbc0"
+ },
+ "generated_at": "2026-10-14T07:30:22-0500"
+}

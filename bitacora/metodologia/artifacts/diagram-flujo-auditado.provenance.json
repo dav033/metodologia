@@ -1,0 +1,15 @@
+{
+ "kind": "diagram",
+ "type": "workflow",
+ "name": "flujo-auditado",
+ "title": "Metodolog\u00eda: flujo completo auditado",
+ "ir_sha256": "4962056e33bb353f4a6a2c02be3364a121fc90156f635ccc6281f5de7f575730",
+ "html_sha256": "7392f56a64982b8961470c58548c8030d2932ef3acd312d7587f818d21d907d2",
+ "renderer": {
+  "name": "archify",
+  "version": "3.1.0",
+  "commit": "c21c31ffb879668900c5487ea24993bf45d89b15",
+  "tree_sha256": "80a3d5b793902bf31ff4d236501c1eacf151e0cbd6231bd8799edb2c033adbc0"
+ },
+ "generated_at": "2026-10-14T07:30:20-0500"
+}

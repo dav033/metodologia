@@ -75,3 +75,6 @@ or M4+. Verify with `discover -s tests` (666 tests). The artifact summarizing th
 
 ## 2026-10-14 — ADR ratified (D-015)
 T2 closed. Next unblocked block: incremental src/ move behind sys.modules aliases, T7 supervisor wiring behind a flag, T8 bounded cold-start scheduling with tests, then M4 (dry-run first, no live config).
+
+## 2026-10-14 — session 790c0548 (claude-personal)
+T7 and F-M1-01 closed (see PLAN progress log). Suite 829 OK. Open: live `m6-*` evals, Windows/macOS (owner: not yet), src/ move (deferred), commit separation (owner). Still no commit/push.

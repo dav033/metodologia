@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-14 06:57 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 07:35 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -53,6 +53,13 @@ _Generated 2026-10-14 06:57 by `bitacora.py index`. Do not edit by hand._
 ## Artifacts
 
 - [council-report-20261008](http://127.0.0.1:8765/p/metodologia/view/council-report-20261008.html)
+- [diagram-automejora-telemetria](http://127.0.0.1:8765/p/metodologia/view/diagram-automejora-telemetria.html)
+- [diagram-automejora-telemetria.visual-check](http://127.0.0.1:8765/p/metodologia/view/diagram-automejora-telemetria.visual-check.html)
+- [diagram-continuidad](http://127.0.0.1:8765/p/metodologia/view/diagram-continuidad.html)
+- [diagram-continuidad.visual-check](http://127.0.0.1:8765/p/metodologia/view/diagram-continuidad.visual-check.html)
+- [diagram-flujo-auditado](http://127.0.0.1:8765/p/metodologia/view/diagram-flujo-auditado.html)
+- [diagram-flujo-auditado.visual-check](http://127.0.0.1:8765/p/metodologia/view/diagram-flujo-auditado.visual-check.html)
+- [revision-flujo](http://127.0.0.1:8765/p/metodologia/view/revision-flujo.html)
 
 ## Timeline
 

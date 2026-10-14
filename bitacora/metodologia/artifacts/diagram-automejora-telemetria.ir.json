@@ -1,0 +1,32 @@
+{
+ "schema_version":1,"diagram_type":"dataflow",
+ "meta":{"locale":"es","output":"diagram-feedback.html","title":"Automejora y telemetría · evidencia hasta la siguiente decisión","animation":"trace","visual_preset":"signal-flow","quality_profile":"standard"},
+ "stages":[{"label":"Observación"},{"label":"Validación"},{"label":"Memoria"},{"label":"Consumo"},{"label":"Siguiente trabajo"}],
+ "nodes":[
+  {"id":"feedback","type":"external","label":"Corrección","sublabel":"David o defecto real","stage":0,"row":0},
+  {"id":"attempt","type":"backend","label":"Intento","sublabel":"modelo solicitado","stage":0,"row":2},
+  {"id":"learningcheck","type":"security","label":"Validar regla","sublabel":"evidencia y secretos","stage":1,"row":0},
+  {"id":"usagecheck","type":"security","label":"Validar fila","sublabel":"tokens, sesión, tiempo","stage":1,"row":2},
+  {"id":"learning","type":"database","label":"Aprendizajes","sublabel":"proyecto / owner / skill","stage":2,"row":0},
+  {"id":"events","type":"messagebus","label":"Eventos JSONL","sublabel":"valor medido o null","stage":2,"row":2},
+  {"id":"context","type":"frontend","label":"Contexto","sublabel":"solo confirmados","stage":3,"row":0},
+  {"id":"metrics","type":"database","label":"Métricas","sublabel":"cobertura y veredicto","stage":3,"row":2},
+  {"id":"agent","type":"backend","label":"Agente","sublabel":"reglas del proyecto","stage":4,"row":0},
+  {"id":"router","type":"cloud","label":"Router","sublabel":"cuota y éxito medido","stage":4,"row":2}
+ ],
+ "flows":[
+  {"from":"feedback","to":"learningcheck","label":"observación","variant":"emphasis","route":"straight"},
+  {"from":"learningcheck","to":"learning","label":"candidato","route":"straight"},
+  {"from":"learning","to":"context","label":"confirmado","route":"straight","variant":"emphasis"},
+  {"from":"context","to":"agent","label":"inyectar","route":"straight"},
+  {"from":"attempt","to":"usagecheck","label":"salida proveedor","variant":"emphasis","route":"straight"},
+  {"from":"usagecheck","to":"events","label":"fila válida","route":"straight"},
+  {"from":"events","to":"metrics","label":"agregar","route":"straight"},
+  {"from":"metrics","to":"router","label":"decidir","route":"straight","variant":"emphasis"}
+ ],
+ "cards":[
+  {"dot":"rose","title":"La corrección no refuerza su negación","items":["Reglas opuestas mantienen identidades separadas","La misma fuente no aumenta confirmaciones","Un defecto reproducido puede repararse de inmediato"]},
+  {"dot":"emerald","title":"Aprender en el proyecto correcto","items":["La memoria del proyecto no aparece en otros proyectos","Se intercalan los tres ámbitos para evitar exclusión","El contexto genérico también recibe reglas globales"]},
+  {"dot":"cyan","title":"Medición honesta","items":["El modelo solicitado no acredita el modelo efectivo","Cache y tokens no se cuentan dos veces","Bloqueado o sin verificar no reduce la tasa de éxito"]}
+ ]
+}

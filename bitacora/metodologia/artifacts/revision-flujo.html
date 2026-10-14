@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Metodología · revisión del flujo</title>
+<style>
+ :root{color-scheme:dark;background:#1e1e2e;color:#cdd6f4;font-family:"JetBrains Mono",system-ui,sans-serif}
+ body{margin:0}header{padding:24px 28px 18px;border-bottom:1px solid #45475a}
+ h1{margin:0 0 10px;font-size:24px;color:#cba6f7}p{font-size:14px;line-height:1.6;margin:8px 0}
+ .evidence{color:#a6e3a1}.limits{color:#bac2de}nav{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0 0}
+ a{color:#b4befe}nav a{padding:10px 14px;border:1px solid #585b70;border-radius:8px;text-decoration:none}
+ nav a:hover,nav a:focus{border-color:#cba6f7;background:#313244;outline-offset:4px}
+ main{padding:28px;max-width:1000px}li{margin:18px 0;line-height:1.7}
+ .report{float:right;font-size:13px}
+ @media(max-width:650px){header{padding:18px}h1{font-size:20px}.report{float:none}main{padding:18px}}
+</style>
+<header>
+ <a class="report" href="audit-2026-10-14.md">Informe y límites de verificación</a>
+ <h1>Metodología · revisión del flujo</h1>
+ <p class="evidence">823 pruebas pasan · revisión independiente de requisitos y estándares · diagramas generados con la herramienta nativa.</p>
+ <p class="limits">La continuación recupera el objetivo y el siguiente paso registrados. Verifica el estado real antes de actuar; un registro no acredita trabajo terminado.</p>
+ <nav aria-label="Vistas del flujo">
+  <a href="diagram-flujo-auditado.html">1. Flujo completo</a>
+  <a href="diagram-automejora-telemetria.html">2. Automejora y telemetría</a>
+  <a href="diagram-continuidad.html">3. Continuidad entre agentes</a>
+ </nav>
+</header>
+<main>
+ <p>Abre cada vista con los botones. Puedes ampliar, cambiar tema, explorar las relaciones y exportar desde el visor nativo. Vuelve con el botón Atrás del navegador.</p>
+ <ol>
+  <li><strong>Flujo completo:</strong> intención → exploración → especificación y plan → ejecución → verificación → registro → continuación.</li>
+  <li><strong>Automejora y telemetría:</strong> observaciones con evidencia → validación → memoria del proyecto o global → contexto y decisiones del router.</li>
+  <li><strong>Continuidad:</strong> cierre de sesión → fuentes canónicas → otro agente → comprobación del estado real → siguiente paso.</li>
+ </ol>
+ <p>Las tres vistas pasan los controles automatizados de contenido, legibilidad y temas claro/oscuro. Conservan su fuente y procedencia junto al HTML.</p>
+</main>
+</html>
