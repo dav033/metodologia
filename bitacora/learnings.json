@@ -95,6 +95,24 @@
       "created": "2026-10-13T12:22:59.496857-05:00",
       "updated": "2026-10-13T12:22:59.496857-05:00",
       "promoted_by": null
+    },
+    {
+      "id": "LG-006",
+      "scope": "skill",
+      "kind": "tooling",
+      "text": "Marathon worktrees need node_modules (symlink to the main checkout); without it the integration verify 'npx jest' stops at the npx install prompt and the task fails for an environment reason",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-14T12:51:54.965068-05:00",
+          "source": "REQ-005/T1",
+          "note": "REQ-005 M1 failed three integration attempts with 'Need to install the following packages: jest@30.5.2'; passed once the integration worktree had the node_modules symlink"
+        }
+      ],
+      "created": "2026-10-14T12:51:54.965068-05:00",
+      "updated": "2026-10-14T12:51:54.965068-05:00",
+      "promoted_by": null
     }
   ]
 }

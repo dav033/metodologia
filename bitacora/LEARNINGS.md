@@ -16,6 +16,9 @@
 - **LG-005 · preference** When the owner says 'trabajo autónomo': settle open decisions with 3 haiku-medium subagents each defending one solution plus a haiku-max judge, and announce to the owner that the directive was understood and the debate agents will be launched; irreversible/external/spend actions still wait for him
   - 2026-10-13T12:22:59.496857-05:00 · REQ-015: Owner instruction 2026-10-13 in session 47f58a4d
 
+- **LG-006 · tooling** Marathon worktrees need node_modules (symlink to the main checkout); without it the integration verify 'npx jest' stops at the npx install prompt and the task fails for an environment reason
+  - 2026-10-14T12:51:54.965068-05:00 · REQ-005/T1: REQ-005 M1 failed three integration attempts with 'Need to install the following packages: jest@30.5.2'; passed once the integration worktree had the node_modules symlink
+
 ## Rejected
 
 - **LG-003 · tooling** bitacora.py trace only reads requirement lines written '- R1. text'; a SPEC that writes '- **R1 — Title.** text' makes every covers: R<n> an unknown-ref error.
