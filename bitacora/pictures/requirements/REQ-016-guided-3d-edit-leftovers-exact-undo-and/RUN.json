@@ -13,15 +13,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-13T18:51:34",
+  "at": "2026-10-13T19:01:38",
   "pid": 1936968,
   "machine": "precision7760",
   "task": "M2-audit",
   "session": 12,
-  "state": "session running 16 min",
-  "session_pids": {
-   "12": 2273535
-  },
+  "state": "done",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -174,7 +172,7 @@
    "milestone": "M2",
    "synthetic": true,
    "tier": 2,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 1,
    "last_error": null,
    "error_hashes": [
@@ -188,10 +186,9 @@
     "agent": "codex",
     "profile": "codex-luis",
     "model": "gpt-6.1-sol",
-    "effort": "medium",
-    "result": "failed"
+    "effort": "high",
+    "result": "done"
    },
-   "claimed_done": true,
    "findings": 6,
    "severity": {
     "high": 3,
@@ -329,6 +326,18 @@
    "seconds": 838,
    "model": "gpt-6.1-sol",
    "effort": "medium",
+   "agent": "codex",
+   "profile": "codex-luis"
+  },
+  {
+   "at": "2026-10-13T19:01:38",
+   "session": 12,
+   "task": "M2-audit",
+   "result": "done",
+   "summary": "PASS-WITH-FIXES: audited T2 84fa287a and T3 c6dd13d4; prior fixes df0be2a0 plus P-082 fix fb872bce committed on feature branch, clean tree. Registered replay 9/9, main last-order 20/20, returned-history properties seed20261009/40, confirmation/context/frontiers/consumption pass; gate GATE OK 10/10, ",
+   "seconds": 999,
+   "model": "gpt-6.1-sol",
+   "effort": "high",
    "agent": "codex",
    "profile": "codex-luis"
   }
