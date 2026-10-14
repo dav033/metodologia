@@ -14,12 +14,12 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T12:26:26",
+  "at": "2026-10-14T12:39:02",
   "pid": 2114493,
   "machine": "precision7760",
   "task": "M1",
   "session": 4,
-  "state": "session running 51 min",
+  "state": "batch settled",
   "session_pids": {},
   "session_pid": null
  },
@@ -40,12 +40,13 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "integration_pending",
-   "attempts": 2,
-   "last_error": null,
+   "status": "todo",
+   "attempts": 3,
+   "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
     "5e775b2a7409",
-    "217735cb4729"
+    "217735cb4729",
+    "f829b8c1fd55"
    ],
    "evidence": "commit 4de4bcf on wt/M1-a939c065; npx jest src/common/auth --silent: 4 suites, 42 tests pass; tsc and eslint clean",
    "pending_id": null,
@@ -77,11 +78,12 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "integration_pending",
-   "attempts": 1,
-   "last_error": null,
+   "status": "todo",
+   "attempts": 2,
+   "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
-    "5e775b2a7409"
+    "5e775b2a7409",
+    "f829b8c1fd55"
    ],
    "evidence": "commit bfd0340 on wt/M1-a939c065; npx jest src/modules/users src/common --silent: 16 suites, 196 tests pass; antagonist approved",
    "pending_id": null,
@@ -113,11 +115,12 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "integration_pending",
-   "attempts": 1,
-   "last_error": null,
+   "status": "todo",
+   "attempts": 2,
+   "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
-    "5e775b2a7409"
+    "5e775b2a7409",
+    "f829b8c1fd55"
    ],
    "evidence": "commit 8b46730 on wt/M1-a939c065; npx jest src/modules/users --silent: 8 suites, 118 tests pass; antagonist approved",
    "pending_id": null,
@@ -764,7 +767,7 @@
    "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
    "repo": "/home/david/dev/maros/maros-nest",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "candidate",
+   "state": "blocked",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
@@ -809,7 +812,8 @@
    ],
    "resources": [],
    "repo_role": "backend",
-   "candidate_sha": "8b46730ccfa166e4bad2372015631e6c5bcb62a1"
+   "candidate_sha": "8b46730ccfa166e4bad2372015631e6c5bcb62a1",
+   "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)"
   },
   "__integration__:backend": {
    "task_id": "REQ-005-integration",
