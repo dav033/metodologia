@@ -1,6 +1,6 @@
 # Index — maros
 
-_Generated 2026-10-14 11:19 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 11:33 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/maros) · [graph](http://127.0.0.1:8765/p/maros/graph)  
@@ -19,7 +19,7 @@ _Generated 2026-10-14 11:19 by `bitacora.py index`. Do not edit by hand._
 | [REQ-002](requirements/REQ-002-expose-project-linked-leads-in-the-crm/SPEC.md) | Expose project-linked leads in the CRM | `done` | [done](requirements/REQ-002-expose-project-linked-leads-in-the-crm/PLAN.md) |  |
 | [REQ-003](requirements/REQ-003-adopt-bencho-interactions-across-maros-c/SPEC.md) | Adopt Bencho interactions across Maros CRM | `done` | [done](requirements/REQ-003-adopt-bencho-interactions-across-maros-c/PLAN.md) |  |
 | [REQ-004](requirements/REQ-004-transversal-maros-ux-and-motion-refineme/SPEC.md) | Transversal Maros UX and motion refinement | `in-progress` | [in-progress](requirements/REQ-004-transversal-maros-ux-and-motion-refineme/PLAN.md) |  |
-| [REQ-005](requirements/REQ-005-friendlier-roles-and-permissions-ux-func/SPEC.md) | Friendlier roles and permissions (UX + functionality) and full-power admin MCP | `clarifying` | — |  |
+| [REQ-005](requirements/REQ-005-friendlier-roles-and-permissions-ux-func/SPEC.md) | Friendlier roles and permissions (UX + functionality) and full-power admin MCP | `approved` | [launched](requirements/REQ-005-friendlier-roles-and-permissions-ux-func/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
