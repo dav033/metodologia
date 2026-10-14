@@ -14,15 +14,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T14:40:37",
+  "at": "2026-10-14T14:41:37",
   "pid": 2274846,
   "machine": "precision7760",
   "task": "M3",
   "session": 13,
-  "state": "session running 20 min",
-  "session_pids": {
-   "13": 2512163
-  },
+  "state": "batch settled",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -341,7 +339,7 @@
    "complexity": null,
    "milestone": "M3",
    "tier": 2,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 1,
    "last_error": null,
    "error_hashes": [
@@ -356,14 +354,13 @@
    "limit_streak": 0,
    "last_route": {
     "agent": "codex",
-    "profile": "codex-1",
+    "profile": "codex-luis",
     "model": "gpt-6.1-sol",
     "effort": "xhigh",
     "result": "done"
    },
    "findings": null,
-   "severity": null,
-   "claimed_done": true
+   "severity": null
   },
   {
    "id": "T8",
@@ -381,7 +378,7 @@
    "complexity": null,
    "milestone": "M3",
    "tier": 2,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 1,
    "last_error": null,
    "error_hashes": [
@@ -393,15 +390,14 @@
     "Monitor continuation: preserved candidate 2db6796 is clean; independent offline Jest on that SHA passed 32 suites/437 tests (exit 0), /tmp/maros-m3-preserved-check.log. Recover existing changes rather than redo. Acceptance still needs R10 audit durability (P-011), destructive previews through the same guards, and M3 independent audit. S12 integration rejection was scope_unchecked: scope declarations are missing, not a failing test.",
     "383f1e4: dry_run on writes, real shared R4 previews, mcp_write actor/outcome. get_task_workspace_options is a write (lazy General provisioning); actor propagated. Template create preview checks occupied names. D-001/P-011 fallback remains. Gates: 253 MCP / 447 MCP+users tests; types/build/touched lint green; global lint 2 baseline errors. Antagonist 2 fixed, re-review SOUND. Task-workspaces has no own suites; real service tested via MCP. No SQL applied; next independent M3 audit."
    ],
-   "limit_streak": 1,
+   "limit_streak": 0,
    "last_route": {
     "agent": "codex",
-    "profile": "codex-1",
+    "profile": "codex-luis",
     "model": "gpt-6.1-sol",
     "effort": "xhigh",
-    "result": "usage_limit"
+    "result": "done"
    },
-   "claimed_done": true,
    "findings": null,
    "severity": null
   },
@@ -1156,6 +1152,44 @@
    },
    "isolation": "worktree",
    "branch": "wt/M3-c2e32ae9"
+  },
+  {
+   "at": "2026-10-14T14:41:05",
+   "session": 13,
+   "task": "T7",
+   "result": "integration_pending",
+   "summary": "Reviewed commit 588f35b recovered by fast-forward on wt/M3-b82d588f; fresh npx jest src/modules/mcp --silent exit 0: 16 suites/242 tests; tsc and build pass. Independent T7 spec review APPROVE. Full lint has exactly 2 known baseline errors, 19 warnings. Prior rejection was scope_unchecked, live supe",
+   "seconds": 1221,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-luis",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M3-b82d588f"
+  },
+  {
+   "at": "2026-10-14T14:41:11",
+   "session": 13,
+   "task": "T8",
+   "result": "integration_pending",
+   "summary": "Commit 383f1e4 on wt/M3-b82d588f, ancestor T7 588f35b. Additive dry_run, real shared-service R4 previews, system actor in role and mcp_write audit events; provisioning and template-name regressions first red then green. Exact gates: MCP 18 suites/253 tests and MCP+users 33 suites/447 tests pass. tsc",
+   "seconds": 1221,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-luis",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M3-b82d588f"
   }
  ],
  "pool": [
@@ -1398,7 +1432,7 @@
    "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
    "repo": "/home/david/dev/maros/maros-nest",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "allocated",
+   "state": "accepted",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
@@ -1407,9 +1441,94 @@
     "T7",
     "T8"
    ],
-   "allowed_paths": [],
+   "allowed_paths": [
+    "db/add-access-requests.sql",
+    "db/add-role-audit-events.sql",
+    "src/common/auth/effective-permissions.spec.ts",
+    "src/common/auth/effective-permissions.ts",
+    "src/common/auth/permission-catalog.spec.ts",
+    "src/common/auth/permission-catalog.ts",
+    "src/common/auth/permissions.ts",
+    "src/common/auth/role-templates.spec.ts",
+    "src/common/auth/role-templates.ts",
+    "src/common/exceptions/domain/access-request.exceptions.ts",
+    "src/common/exceptions/domain/user.exceptions.spec.ts",
+    "src/common/exceptions/domain/user.exceptions.ts",
+    "src/common/exceptions/index.ts",
+    "src/entities/access-request.entity.ts",
+    "src/entities/notification.entity.ts",
+    "src/entities/role-audit-event.entity.ts",
+    "src/modules/mcp/mcp.module.ts",
+    "src/modules/mcp/mcp.service.ts",
+    "src/modules/mcp/tools/admin-parity.spec.ts",
+    "src/modules/mcp/tools/capabilities.spec.ts",
+    "src/modules/mcp/tools/capabilities.ts",
+    "src/modules/mcp/tools/capability-map.ts",
+    "src/modules/mcp/tools/crm-admin-analytics.ts",
+    "src/modules/mcp/tools/crm-admin-catalogs.ts",
+    "src/modules/mcp/tools/crm-admin-leads.ts",
+    "src/modules/mcp/tools/crm-admin-parity.spec.ts",
+    "src/modules/mcp/tools/crm-admin-projects.ts",
+    "src/modules/mcp/tools/mcp-write-policy.ts",
+    "src/modules/mcp/tools/note-sharing.ts",
+    "src/modules/mcp/tools/notes-advanced.ts",
+    "src/modules/mcp/tools/platform-admin.ts",
+    "src/modules/mcp/tools/shared.ts",
+    "src/modules/mcp/tools/task-workspaces.ts",
+    "src/modules/mcp/tools/tool-registration.ts",
+    "src/modules/mcp/tools/users-preferences.ts",
+    "src/modules/mcp/tools/users-roles-admin.spec.ts",
+    "src/modules/mcp/tools/users-roles-admin.ts",
+    "src/modules/mcp/tools/users.spec.ts",
+    "src/modules/mcp/tools/users.ts",
+    "src/modules/mcp/tools/workspace-write-policy.spec.ts",
+    "src/modules/mcp/tools/write-policy.spec.ts",
+    "src/modules/notes/notes.module.ts",
+    "src/modules/projects/projects.module.ts",
+    "src/modules/quickbooks/quickbooks.module.ts",
+    "src/modules/task-workspaces/services/task-workspace-assignment.service.ts",
+    "src/modules/users/user-management/access-requests.controller.spec.ts",
+    "src/modules/users/user-management/access-requests.controller.ts",
+    "src/modules/users/user-management/dto/bulk-role.dto.ts",
+    "src/modules/users/user-management/dto/create-access-request.dto.ts",
+    "src/modules/users/user-management/dto/duplicate-role.dto.ts",
+    "src/modules/users/user-management/dto/list-access-requests.dto.ts",
+    "src/modules/users/user-management/dto/resolve-access-request.dto.ts",
+    "src/modules/users/user-management/dto/role-impact.dto.ts",
+    "src/modules/users/user-management/mappers/access-request.mapper.ts",
+    "src/modules/users/user-management/mappers/user.mapper.ts",
+    "src/modules/users/user-management/repositories/access-requests.repository.spec.ts",
+    "src/modules/users/user-management/repositories/access-requests.repository.ts",
+    "src/modules/users/user-management/repositories/role-audit.repository.spec.ts",
+    "src/modules/users/user-management/repositories/role-audit.repository.ts",
+    "src/modules/users/user-management/repositories/users.repository.spec.ts",
+    "src/modules/users/user-management/repositories/users.repository.ts",
+    "src/modules/users/user-management/services/access-requests.service.spec.ts",
+    "src/modules/users/user-management/services/access-requests.service.ts",
+    "src/modules/users/user-management/services/mcp-preview.spec.ts",
+    "src/modules/users/user-management/services/role-bulk-assignment.service.spec.ts",
+    "src/modules/users/user-management/services/role-bulk-assignment.service.ts",
+    "src/modules/users/user-management/services/role-guard-rails.service.spec.ts",
+    "src/modules/users/user-management/services/role-guard-rails.service.ts",
+    "src/modules/users/user-management/services/role-impact.service.spec.ts",
+    "src/modules/users/user-management/services/role-impact.service.ts",
+    "src/modules/users/user-management/services/roles.service.spec.ts",
+    "src/modules/users/user-management/services/roles.service.ts",
+    "src/modules/users/user-management/services/user-access.service.spec.ts",
+    "src/modules/users/user-management/services/user-access.service.ts",
+    "src/modules/users/user-management/services/user-invitations.service.ts",
+    "src/modules/users/user-management/user-access.controller.spec.ts",
+    "src/modules/users/user-management/user-access.controller.ts",
+    "src/modules/users/user-management/users.controller.spec.ts",
+    "src/modules/users/user-management/users.controller.ts",
+    "src/modules/users/user-management/users.service.spec.ts",
+    "src/modules/users/user-management/users.service.ts",
+    "src/modules/users/users.module.ts"
+   ],
    "resources": [],
-   "repo_role": "backend"
+   "repo_role": "backend",
+   "candidate_sha": "383f1e4a5136b03efcf413ad93dcbd9ab65c3e71",
+   "cleaned": true
   }
  },
  "wait_step": 0
