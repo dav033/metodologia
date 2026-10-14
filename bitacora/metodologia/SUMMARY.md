@@ -24,7 +24,7 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
   live projects.
 - Skill test suite: 358 tests. 5 fail on Windows and already failed on `origin/main` before this session. Not fixed.
 - Installed on 2026-10-08: hooks, HQ and launcher, web UI on 127.0.0.1:8765, gitleaks, trace graph, review and merge,
-  evals 10/10. The first end-to-end run is not done yet (P-002).
+  evals 10/10. The first end-to-end run passed on 2026-10-14 (P-002 closed).
 
 ## Active focus
 - REQ-007: proposed platform migration documented in [migracion/README.md](migracion/README.md), with M0–M9, preservation inventory and acceptance/rollback gates. Planning only; implementation not started.
@@ -32,7 +32,7 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
   synced and backed up (P-013).
 
 ## Top pending (see PENDING.md)
-- P-002 first end-to-end run · P-013 bitácora sync and backup decision · P-015 verify the other computer's cleanup ·
+- P-013 bitácora sync and backup decision · P-015 verify the other computer's cleanup ·
   P-014 prune closed items (low)
 
 ## Recent decisions (see DECISIONS.md)
@@ -46,6 +46,5 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
 - Pictures changes must be committed by hand in `metodologia` (D-012).
 - The other computer pushes to `main` while we work. A push can be rejected until we fetch and rebase.
 - The bitácora web server started before the migration runs old code until it restarts.
-- The new Antigravity tests expose three unresolved cases: stale quota reset, stream result parsing, and audit routing at 90% Gemini usage (P-016).
 
 _Last updated: 2026-10-13_
