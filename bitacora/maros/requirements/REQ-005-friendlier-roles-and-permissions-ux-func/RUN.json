@@ -14,15 +14,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T14:20:15",
+  "at": "2026-10-14T14:20:33",
   "pid": 2274846,
   "machine": "precision7760",
   "task": "M3",
   "session": 12,
-  "state": "session running 23 min",
-  "session_pids": {
-   "12": 2451130
-  },
+  "state": "batch settled",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -341,7 +339,7 @@
    "complexity": null,
    "milestone": "M3",
    "tier": 2,
-   "status": "in_progress",
+   "status": "integration_pending",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
@@ -350,15 +348,14 @@
    "notes": [
     "588f35b: 253-route map uses live discovery and real registration. SSE is explicitly transport-excluded. list_permissions preserves code array and adds permissionMetadata/templates. Financials uses trusted MCP no-user context, attribution user has no permissions. 16 suites/242 tests green; full lint baseline 2 unrelated errors. T8 and M3 independent audit remain."
    ],
-   "limit_streak": 1,
+   "limit_streak": 0,
    "last_route": {
-    "agent": "claude",
-    "profile": "claude-personal",
-    "model": "opus",
+    "agent": "codex",
+    "profile": "codex-1",
+    "model": "gpt-6.1-sol",
     "effort": "xhigh",
-    "result": "usage_limit"
+    "result": "done"
    },
-   "claimed_done": true,
    "findings": null,
    "severity": null
   },
@@ -378,14 +375,21 @@
    "complexity": null,
    "milestone": "M3",
    "tier": 1,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
    "evidence": null,
    "pending_id": null,
    "notes": [],
-   "limit_streak": 0
+   "limit_streak": 1,
+   "last_route": {
+    "agent": "codex",
+    "profile": "codex-1",
+    "model": "gpt-6.1-sol",
+    "effort": "xhigh",
+    "result": "usage_limit"
+   }
   },
   {
    "id": "M3-audit",
@@ -1095,6 +1099,44 @@
     "v": 1,
     "status": "limit",
     "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M3-c2e32ae9"
+  },
+  {
+   "at": "2026-10-14T14:20:33",
+   "session": 12,
+   "task": "T7",
+   "result": "integration_pending",
+   "summary": "Commit 588f35b on wt/M3-c2e32ae9. 253 routes classified; 44 missing tools plus mcp_capability_report added; live registration/source parity and financial/SSE regressions tested. npx jest src/modules/mcp --silent: 16 suites, 242 tests pass; tsc, targeted lint, build pass; full lint baseline has 2 unr",
+   "seconds": 1392,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-1",
+   "contract": {
+    "v": 1,
+    "status": "limit",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M3-c2e32ae9"
+  },
+  {
+   "at": "2026-10-14T14:20:33",
+   "session": 12,
+   "task": "T8",
+   "result": "usage_limit",
+   "summary": "ryRun = false): Promise<void> { const role = await this.findById(id); this.guardRails.assertDeletable(role); @@ -232,6 +235,7 @@ if (userCount > 0) { throw new RoleInUseException(role.name, userCount); } + if (dryRun) return; const previousPermissions = effecti",
+   "seconds": 1392,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-1",
+   "contract": {
+    "v": 1,
+    "status": "limit",
+    "terminal": false
    },
    "isolation": "worktree",
    "branch": "wt/M3-c2e32ae9"
