@@ -49,10 +49,36 @@ When a visual page would help — a dashboard, a diagram, a comparison, a report
 worth sharing — write it as a **self-contained HTML file** in `<project>/artifacts/<slug>.html` (inline CSS/JS; light
 and dark friendly; small libraries from a CDN only if really needed). It's versioned with the bitácora and served at
 `http://127.0.0.1:8765/p/<project>/view/<slug>.html`. Give the user that URL and log it in today's section.
+Architecture, workflow, sequence, dataflow and lifecycle diagrams are not hand-written: use
+`bitacora.py --project <p> diagram publish <name> <type> <ir.json>`. It validates the IR, renders a standalone page
+with the pinned renderer, and stores `diagram-<name>.html`, its `.ir.json` and a `.provenance.json` in `artifacts/`;
+a failed render never replaces the previous page. `diagram compare <name> <base.json> <head.json>` makes the
+before/after page that an architecture-improvement proposal cites.
+`diagram check <name>` retains browser receipts/screenshots under a content-hash directory beside the HTML;
+republishing can be checked again without replacing evidence owned by the prior version. Inspect the captures
+as well as the automated verdict; the receipt leaves human visual review pending.
 Don't use any vendor-hosted artifact system for this skill's pages: they must work with any agent and stay in the
 project's folder. Update an artifact by rewriting the same file (git keeps the history).
 
 ## The day log is the source
+
+### Continuing in another agent or context
+
+Before closing a project session, write its Goal, Done, Decisions, Not done, Pending and Next in the day log.
+State the next runnable action and its verification, existing authorization limits and anything still unverified.
+This is the durable handoff; private transcripts are not required for recovery.
+
+Stop and SessionEnd save a schema-v1 pointer under `.state/continuation/<project>.json` (source session/path/hash,
+save time and incomplete-session metadata). It stores references, not transcript text. SessionStart and
+`bitacora.py context` read the live log and point to SUMMARY/PENDING/DECISIONS/PLAN/RUN. They also recover from
+canonical logs when hooks or private checkpoints are missing, or newer recorded work supersedes an older pointer.
+Named project symlinks are supported. A damaged historical log is skipped with a visible warning.
+
+For "continue with the work", use the unambiguous project candidate, bind, then verify the live state before
+executing its Next. Several plausible projects require one scope clarification; no project is silently rebound.
+An empty handoff explicitly says recovery is incomplete: reconcile the project and record missing context instead
+of inventing completed work. Closing an older parallel session must not replace newer recorded work. A checkpoint
+does not prove success and does not expand permissions.
 
 Each session has its own section in the day file, headed `## Session HH:MM · session `abcd1234``, created by the
 SessionStart hook. Only edit **your** section — other sessions (maybe in parallel) own theirs.

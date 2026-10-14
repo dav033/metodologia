@@ -1,0 +1,41 @@
+{
+  "name": "m6-new-refs-not-loaded-small-change",
+  "description": "A direct small change does not load the optional design, testing, debugging or glossary references",
+  "checks": "SKILL.md router stays small: new references load only on their triggers",
+  "fixture": "empty",
+  "max_turns": 10,
+  "budget_usd": 0.3,
+  "turns": [
+    "Hazlo directo, sin preguntas: crea el archivo notas.txt en la carpeta actual con la línea 'hola' y nada más."
+  ],
+  "graders": [
+    {
+      "name": "file-created",
+      "type": "file_regex",
+      "path": "{repo}/notas.txt",
+      "pattern": "hola"
+    },
+    {
+      "name": "no-optional-reference-loaded",
+      "type": "tool_used",
+      "tool": "Read|Skill|Grep|Glob",
+      "input_match": "design-vocabulary|improve-architecture|domain-glossary|glossary-conventions|test-seams|diagnosing-bugs|retro-feedback|writing-for-agents|wait-what",
+      "min": 0,
+      "max": 0
+    },
+    {
+      "name": "no-interview",
+      "type": "tool_used",
+      "tool": "AskUserQuestion",
+      "min": 0,
+      "max": 0
+    },
+    {
+      "name": "no-round",
+      "type": "regex",
+      "target": "text",
+      "pattern": "Ronda \\d",
+      "match": "not_contains"
+    }
+  ]
+}

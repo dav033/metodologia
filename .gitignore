@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 *.tmp
 evals/results/
+# build output of `uv tool install --editable`
+*.egg-info/

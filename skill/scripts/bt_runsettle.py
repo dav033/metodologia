@@ -14,7 +14,7 @@ from bt_runutil import backoff_override, notify, say
 
 LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|"
                       r"hit your (\w+ ){0,2}limit|(session|weekly|daily|hourly|opus|sonnet) limit|"
-                      r"limit will reset|limit\W{1,4}resets|overloaded_error|"
+                      r"limit will reset|limit\W{1,4}resets|overloaded_error|resource_exhausted|"
                       r"(model|server|service) is (at capacity|overloaded)|try a different model", re.I)
 VERIFY_TIMEOUT = 600
 LIMIT_STREAK_MAX = 8  # consecutive usage-limit results on one task before the next one counts as an attempt
@@ -41,6 +41,11 @@ def parse_output(raw: str) -> dict:
     object (--output-format json) is unwrapped; anything else is plain text."""
     raw = (raw or "").strip()
     whole = _json(raw) if raw.startswith("{") else None
+    if isinstance(whole, dict) and whole.get("event") == "result":  # Antigravity: a transcript cut to its last line
+        import bt_agy
+        parsed = bt_agy.parse_result(raw)
+        if parsed:
+            return parsed
     if isinstance(whole, dict):
         return _from_result(whole)
     plain, events = [], False
@@ -49,6 +54,11 @@ def parse_output(raw: str) -> dict:
             obj = _json(line)
             if isinstance(obj, dict) and obj.get("type") == "result":
                 return _from_result(obj)
+            if isinstance(obj, dict) and obj.get("event") == "result":  # Antigravity stream-json
+                import bt_agy
+                parsed = bt_agy.parse_result(line)
+                if parsed:
+                    return parsed
             events = True
         elif len(plain) < 200:
             plain.append(line)
@@ -147,12 +157,16 @@ def detect_limit(info: dict) -> int | None:
 def _session_fields(info: dict) -> dict:
     """What the session ran with, for its log entry."""
     _result_text(info)
-    return {"model": info.get("model"), "effort": info.get("effort"), "cost_usd": info["parsed"].get("cost"),
-            "agent": info.get("agent"), "profile": info.get("profile"),
-            "early_exit": True if info.get("early_exit") else None}
+    fields = {"model": info.get("model"), "effort": info.get("effort"), "cost_usd": info["parsed"].get("cost"),
+              "agent": info.get("agent"), "profile": info.get("profile"),
+              "early_exit": True if info.get("early_exit") else None, "contract": info.get("contract")}
+    if info.get("isolation"):
+        fields.update(isolation=info["isolation"], branch=info.get("branch"))
+    return fields
 
 
-def verify_task(project: str, t: dict, workdir: Path, state: dict | None = None) -> tuple[bool, str]:
+def verify_task(project: str, t: dict, workdir: Path, state: dict | None = None,
+                workdir_override: Path | None = None) -> tuple[bool, str]:
     """Run the task's verify command in its repo. An unknown repo role fails (it must not fall back to another dir).
     An audit has no command of its own: every verify of the milestone it closes must pass again (the auditor may
     have changed code)."""
@@ -163,7 +177,7 @@ def verify_task(project: str, t: dict, workdir: Path, state: dict | None = None)
             if not member or not member.get("verify") or (member["verify"], member.get("repo")) in seen:
                 continue
             seen.add((member["verify"], member.get("repo")))
-            ok, out = verify_task(project, member, workdir)
+            ok, out = verify_task(project, member, workdir, workdir_override=workdir_override)
             if not ok:
                 return False, f"{tid}: {member['verify']} -> {out}"
         return True, ""
@@ -175,6 +189,8 @@ def verify_task(project: str, t: dict, workdir: Path, state: dict | None = None)
         if t["repo"] not in repos:
             return False, f"unknown repo role '{t['repo']}' (registered: {', '.join(repos) or 'none'})"
         cwd = repos[t["repo"]]
+    if workdir_override is not None:
+        cwd = workdir_override
     return run_verify(t["verify"], cwd)
 
 
@@ -232,8 +248,19 @@ def _escalation(t: dict, n: int) -> dict | None:
     return esc if esc and str(esc.get("session")) == str(n) else None
 
 
+def _contract_note(info: dict) -> str:
+    """What the provider driver contract called this session, only when it was not a clean turn: a diagnosis for the
+    attempt log. It never changes a decision (the claim, verify and limit checks above own those)."""
+    contract = info.get("contract") or {}
+    status = contract.get("status")
+    if not status or status == "completed":
+        return ""
+    return f", provider contract: {status}" + ("" if contract.get("terminal") else ", no end-of-turn event")
+
+
 def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, workdir: Path,
-                skip_reason: str | None = None) -> str:
+                skip_reason: str | None = None, workdir_override: Path | None = None,
+                defer_done: bool = False) -> str:
     """Classify the finished session, update the task (attempts, model tier), record the log. Returns the result."""
     state = rs.load(rdir)
     t = rs.get_task(state, task_id)
@@ -242,7 +269,7 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
     if info["stopped"]:
         result, summary = "failed", "stopped by the user"
     elif t.get("claimed_done") or t["status"] == "done":  # a bare "done" is a RUN.json from before claims existed
-        ok, out = verify_task(project, t, workdir, state)
+        ok, out = verify_task(project, t, workdir, state, workdir_override)
         result = "done" if ok else "verify_failed"
         err = None if ok else f"verify failed: {t['verify'] or 'milestone verifies'} -> {out}"
         summary = (t["evidence"] or summary) if ok else err
@@ -262,7 +289,8 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
             result = "limit_streak"
             summary = f"usage-limit message {LIMIT_STREAK_MAX} sessions in a row: {summary[:160]}"
     else:
-        result, err = "failed", f"session ended without task done/fail (rc={info['rc']}): {summary[:200]}"
+        result, err = "failed", f"session ended without task done/fail (rc={info['rc']}){_contract_note(info)}: " \
+                                f"{summary[:200]}"
     if info.get("recovered"):
         summary = f"re-verified after a supervisor restart: {summary}"
     stuck = {}
@@ -279,7 +307,7 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
                                   "result": "stopped" if info["stopped"] else result}  # a stop is nobody's failure
         reason = None
         if result == "done":
-            task["status"] = "done"
+            task["status"] = "integration_pending" if defer_done else "done"
         elif result in ("usage_limit", "skipped") or info["stopped"]:
             task["status"] = "todo"
         elif result == "limit_streak":  # not an attempt nor a failure: no error_hash, no tier climb, never blocks
@@ -298,10 +326,11 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
             task["status"] = "blocked"
         if result not in LIMIT_RESULTS:
             s["wait_step"] = 0
-        rs.record(s, n, task_id, "stopped" if info["stopped"] else result, summary, info["seconds"],
+        logged = "integration_pending" if defer_done and result == "done" else result
+        rs.record(s, n, task_id, "stopped" if info["stopped"] else logged, summary, info["seconds"],
                   **_session_fields(info))
     state = rs.update(rdir, fn)
-    if result == "done":  # the checkbox is ticked only once verify passed, so --resume can trust it
+    if result == "done" and not defer_done:  # the checkbox is ticked only once verify passed, so --resume can trust it
         rt.tick_plan(rdir, task_id, f"{task_id} done (marathon) — {rt._one_line(t['evidence'] or summary, 200)}")
     if result == "limit_streak":  # a real limit or a misread failure: only a human can tell, so say it every time
         count = rs.get_task(state, task_id)["limit_streaks"]
@@ -321,10 +350,19 @@ def recover_claims(project: str, rdir: Path, workdir: Path) -> None:
     for task in list(rs.load(rdir)["tasks"]):
         if task.get("claimed_done") and task["status"] in ("todo", "in_progress"):
             state = rs.load(rdir)
+            isolated = state.get("limits", {}).get("isolation") == "worktree"
+            allocation = next((item for item in (state.get("worktrees") or {}).values()
+                               if task["id"] in item.get("task_ids", [])), None) if isolated else None
+            if isolated and allocation is None:
+                raise RuntimeError(f"Missing isolated worktree allocation for claimed task {task['id']}.")
+            task_workdir = Path(allocation["worktree"]) if allocation else workdir
             info = {"rc": 0, "text": "", "stopped": False, "timed_out": False, "seconds": 0, "model": None,
-                    "effort": None, "recovered": True}
+                    "effort": None, "recovered": True,
+                    "isolation": "worktree" if allocation else None,
+                    "branch": allocation.get("branch") if allocation else None}
             say(state, f"{task['id']} claimed done before a restart; re-running its verify")
-            result = settle_task(project, rdir, task["id"], state["sessions"], info, workdir)
+            result = settle_task(project, rdir, task["id"], state["sessions"], info, task_workdir,
+                                 workdir_override=task_workdir if allocation else None, defer_done=bool(allocation))
             say(rs.load(rdir), f"{task['id']} re-verified -> {result}")
 
 

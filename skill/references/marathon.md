@@ -211,6 +211,10 @@ task that also fails at the top is blocked (with a PENDING item).
 
 ## Escalation ladder
 
+The ladder below governs implementation. Audits have a separate budget (`agents.md`): Sonnet 5.5 medium normally,
+Opus 5.5 high for high-risk/architecture milestones or escalation, Sol medium fallback (high on escalation).
+This also applies when pinned to a provider; audits never inherit the builder's model or default xhigh/max.
+
 Tiers are capability levels shared by every provider. With an account pool (`run --pool auto`, the default of
 `handoff`) each session's account, model and effort come from the router, and a failed attempt climbs one tier
 **and** prefers another provider: `agents.md` has the full table (Claude: haiku → sonnet xhigh → opus xhigh; Codex:
@@ -256,9 +260,16 @@ every pending task of the milestone (`BITACORA_TASK=T1,T2,T3`), gives each its o
 and verifies each task separately. A task not reached because a task it depends on failed is `skipped` without
 counting an attempt; a session that times out gets up to three task timeouts. With a pool, a synthetic task
 `M1-audit` follows each milestone: an independent agent audits and may fix, and its verification is every verify
-command of the milestone again. Details and switches: `agents.md`. Plans without those headings are unchanged.
+command of the milestone again. The auditor closes with `task done ... --findings N --severity high=N,med=N,low=N`
+(0 when clean; omitted = unknown, never 0): that count feeds the quality metrics in `agents.md`. Details and switches: `agents.md`. Plans without those headings are unchanged.
 
 ## Concurrent sessions (`run --workers 2`)
+
+Same-repository parallel sessions are opt-in: `run REQ-NNN --isolation worktree --workers 3`. Each eligible unit
+gets its own branch/worktree; same-repo units run together only when every task declares disjoint `files:` scopes
+and no `resources:` tag is shared. Units without `files:` stay serial. Candidates merge one at a time into a durable
+`wt/REQ-NNN-integration-*` branch and pass their combined verify commands before the RUN task is marked done.
+The default `run.isolation` config is `off`; `run --isolation off` selects the legacy scheduler explicitly.
 
 Opt-in; the default is one session at a time and behaves exactly as before. With `--workers 2` the supervisor runs
 two tasks at once **only when it is provably safe**: both name a `repo:` role, the roles differ, their dependencies

@@ -69,16 +69,19 @@ def _safe_text(text: str) -> str:
     return text
 
 
-def task_done(rdir: Path, task_id: str, evidence: str) -> str:
+def task_done(rdir: Path, task_id: str, evidence: str, findings: int | None = None,
+              severity: str | None = None) -> str:
     """Mark the task done in RUN.json. Under a supervisor (env BITACORA_RUN) this is only a claim (`claimed_done`): the
     task becomes `done` and the PLAN.md tick happens once the supervisor's own verify passes (bt_runsettle), also after
     a restart. Run by hand it is done and ticked right away."""
     _own_task(task_id, rdir)
     supervised = bool(os.environ.get("BITACORA_RUN"))
     evidence = _safe_text(evidence)
+    import bt_quality
+    found, sev = bt_quality.parse_findings(findings, severity)  # an audit that does not report it is unknown (null)
 
     def fn(state):
-        fields = {"evidence": evidence or "(none given)", "last_error": None}
+        fields = {"evidence": evidence or "(none given)", "last_error": None, "findings": found, "severity": sev}
         if supervised:
             if (rs.get_task(state, task_id) or {}).get("status") in ("done", "blocked"):
                 return  # a late or duplicate `done` must not reopen a verified or blocked task

@@ -14,6 +14,14 @@ Mi forma de trabajar con IA, empaquetada como skill para **Claude Code** y **Cod
   proyecto y tus preferencias se guarda con evidencia y se inyecta en las sesiones siguientes.
 - **Estándares de ingeniería** (responsabilidad única, features, Atomic Design, alerta de 500 líneas, tests
   pragmáticos, stacks por defecto) y **5 subagentes** (explorer, researcher, implementer, reviewer, runner).
+- **Calidad de interfaces y revisiones con evidencia**: dirección visual explícita, contenido real y cobertura
+  de interacción; revisión del impacto en consumidores y simplificaciones concretas. Adaptaciones selectivas de
+  Antislop y Thermos, integradas en el flujo existente, sin dependencias ni nuevas puertas de aprobación.
+  Detalle: `skill/references/interface-quality.md` y `skill/references/subagents.md`.
+- **Uso real por suscripción, sin agentes**: `bitacora.py usage poll` consulta ventanas de 5 horas y semana;
+  `usage show` muestra muestras y errores. En Linux, `usage install-timer` activa la consulta horaria con systemd
+  de usuario. El router favorece cuentas con más margen, conserva las restricciones del proyecto y usa datos
+  locales al decidir. Credenciales caducadas o datos antiguos nunca se presentan como uso cero.
 - **Bitácora** por proyecto (`bitacora/`): logs por día y sesión, DECISIONS, PENDING, SUMMARY, ARCHITECTURE,
   TOOLS; sincronizada entre computadoras.
 - **Panel web local**: proyectos, documentos, rondas como formulario, aprobación del plan, revisión y fusión, y el

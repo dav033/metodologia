@@ -15,7 +15,7 @@ definition, not by asking nicely.
 | `explorer` | Where is X, what calls Y, how is Z done here, find similar examples | No | haiku |
 | `researcher` | External docs, library comparisons, API/version checks, web research | Notes file only | sonnet |
 | `implementer` | One plan task in a fresh context | Yes | sonnet (pass `opus` for hard tasks) |
-| `reviewer` | Fresh-eyes review on one axis: `spec` or `standards` | No | opus |
+| `reviewer` | Fresh-eyes review on one axis: `spec` or `standards` | No | sonnet (medium; audit budget in `agents.md`) |
 | `runner` | Test suites, builds, lint/typecheck, logs, server status — returns only failures | No | haiku |
 | `antagonist` | **Before every commit:** attacks the staged change (architecture, correctness, security, tests) | No | opus |
 
@@ -29,6 +29,12 @@ subscription** — an independent audit, a cheap fast worker for a well-specifie
 piece, or simply because your account is near its limit — use `bitacora.py delegate` (`agents.md`): it works the same
 from Claude Code and from Codex, picks the account by quota and measured results unless you pin one, and returns a
 compact verified result.
+
+## Normal sessions
+
+Use `delegate start` for one task, with `--retries 1..3` for tier climbs or `--worktree` for branch isolation; use
+`bitacora review` for an independent read-only audit and `delegate resume ID` after an interrupted process. Read the
+compact result, never the session log.
 
 ## When — and when not
 
@@ -63,6 +69,8 @@ default (up to five only with a recorded reason), and let the coordinator own in
 5. **Reviewers get a clean context:** spec/plan paths + diff range + axis. Never your reasoning or the
    implementer's report as truth. Two axes in parallel: `spec` and `standards`. Fix real findings; anything that
    isn't correctness/requirements/security goes to PENDING.md, not into the code.
+   Use `agents.md`'s audit budget. A milestone audit session covers both lenses itself; do not add two more full
+   review sessions on top of it. Separate axes are for coordinated review without an existing milestone audit.
 6. **Status drives the next step:** `DONE` → verify and continue; `DONE_WITH_CONCERNS` → read concerns, decide;
    `NEEDS_CONTEXT` → answer from the spec/plan/codebase and re-dispatch with a better brief (ask the user only if
    it's genuinely theirs to decide); `BLOCKED` → don't retry the same brief unchanged: change the approach, the
@@ -89,6 +97,41 @@ VERIFY: <command/test that proves done>
 STOP IF: ambiguity that changes the design, missing context → return NEEDS_CONTEXT
 OUTPUT: your role's output contract; full notes to <path> if any
 ```
+
+## Evidence for diff reviews
+
+Use this protocol within the existing `spec`/`standards` passes; do not launch a second pair just to emulate
+another framework. Keep small changes inline. Reviewers receive the same scope/base and access to the relevant
+files, acceptance criteria and contracts, without the implementer's conclusions. Inspect enough surrounding code
+and consumers to establish impact, but report only problems introduced or worsened by the change.
+
+Within `standards`, examine both behavior/security and maintainability:
+
+- Trace changed contracts through callers, configuration and error paths. Check developer setup (renamed env
+  vars, required scripts, ports), authorization and feature gates across UI, API and background work when affected.
+  Confirm a suspected downstream safeguard in the actual consumer instead of reporting an unresolved "if".
+- Look for a concrete simplification that removes states, branches or indirection while preserving behavior.
+  Explain which complexity disappears and why the replacement is simpler. Existing layering, typing and size
+  rules still govern: `unknown` at an unvalidated boundary is correct, and shorter code is not inherently better.
+  An optional redesign or missed elegance alone is not a blocker; propose it without expanding the task.
+- Distinguish an intentional, agreed behavior change from an accidental regression. Report unexpected wider
+  consequences even when the local behavior was intentional. If code or a repository is unavailable, state the
+  investigation limit instead of claiming certainty or an unconditional approval.
+
+Each finding identifies severity, path:line, trigger, traced evidence and user/developer impact, plus a bounded
+remedy. Severity follows demonstrated impact, not the review's aggressive tone or how many reviewers agree.
+After the independent inspection, consult available PR discussion for substantive findings when relevant; verify
+and attribute any incorporated external finding. Reading discussion does not authorize posting comments.
+
+The coordinator deduplicates by root cause, checks disagreements against evidence and gives one concise verdict
+with remaining uncertainty. Agreement is corroboration, not proof or an automatic severity increase. Fix proven,
+in-scope violations; record optional simplifications and unrelated debt as proposals. Preserve existing review
+limits and approval gates; no new mandatory review loop or installed agent is required.
+
+Adapted as independently written workflow guidance from [cursor/plugins Thermos](https://github.com/cursor/plugins/tree/1dcc2bacde73ddd284803b7af28164d0436198fc/thermos)
+(reviewed 2026-10-13, revision `1dcc2bacde73ddd284803b7af28164d0436198fc`): traced branch impact, fresh inspection
+before external findings and consolidated evidence. No upstream files, runtime, 1k-line threshold or speculative
+refactor blockers are adopted.
 
 ## The antagonist gate (before every commit)
 

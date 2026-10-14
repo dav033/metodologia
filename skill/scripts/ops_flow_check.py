@@ -5,9 +5,10 @@ requirement -> plan in two milestones -> `handoff` approves by itself and starts
 other provider -> final review -> done. Also proves that a confirmed learning reaches every session and shapes the
 result, and that telemetry records agent, model, effort and kind.
 
-Throwaway bitácora root and repo; nothing of the real bitácora is touched. Run by hand: python ops_flow_check.py
+Throwaway bitácora root and repo; nothing of the real bitácora is touched. Run by hand: python ops_flow_check.py --live
 Needs: claude and codex logged in (default accounts), tmux.
 """
+import argparse
 import json
 import os
 import shutil
@@ -16,6 +17,11 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--live", action="store_true", help="explicitly start real provider sessions and spend quota")
+if not parser.parse_args().live:
+    parser.error("real provider sessions require --live; use --help to inspect the checker")
 
 SC = str(Path(__file__).resolve().parent)
 tmp = Path(tempfile.mkdtemp(prefix="flow-"))
@@ -73,6 +79,13 @@ try:
     r2 = cli("learn", "confirm", lid)
     step("owner preference stored and confirmed", r.returncode == 0 and "confirmed" in r2.stdout, r2.stdout.strip()[:90])
 
+    # Antigravity is a machine-local account: when this machine has it signed in, register it in the throwaway root so
+    # the run exercises the default-auditor path (D-004). Without it the check still runs on Claude and Codex.
+    agy_token = Path.home() / ".gemini" / "antigravity-cli" / "antigravity-oauth-token"
+    with_agy = agy_token.exists() and shutil.which("agy") is not None
+    if with_agy:
+        pr = cli("profiles", "add", "antigravity", "--provider", "antigravity")
+        step("antigravity profile registered for the run", pr.returncode == 0, pr.stdout.strip()[-60:])
     r = cli("--project", P, "handoff", "REQ-001", "--dry-run")
     dry = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
     step("dry run: plan is valid and needs no approval", dry.get("decision") == "would_launch",
@@ -132,6 +145,12 @@ try:
         quota = json.loads((root / ".state" / "quota.json").read_text()) if (root / ".state" / "quota.json").exists() else {}
         step("a usage limit put the account on cooldown and the run continued on another one without waiting",
              bool(quota) and not st.get("waiting_until"), str({k: time.strftime('%m-%d %H:%M', time.localtime(v['until'])) for k, v in quota.items()}))
+    if with_agy:
+        done_audits = [a for a in audits if a["result"] == "done"]
+        step("every audit ran on Antigravity (Gemini 3.8 Flash low) as the default auditor",
+             bool(done_audits) and all(a["agent"] == "antigravity" and a["model"] == "gemini-3.8-flash-low"
+                                       for a in done_audits),
+             str([(a["task"], a["agent"], a["model"], a["effort"], a["seconds"]) for a in audits]))
     step("audits ran one tier above the builders", all((a.get("tier") or 0) >= 1 for a in audits),
          str([(a["task"], a.get("tier"), a.get("model"), a.get("effort")) for a in audits]))
     step("telemetry rows carry agent, profile, model, effort, kind and measured usage",

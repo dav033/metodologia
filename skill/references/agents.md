@@ -12,6 +12,9 @@ can print the live version of this page for a project with `bitacora.py --projec
 | `opus` — Opus 5.5 | Claude Code | 2 (`--effort xhigh`) | architecture, hard debugging, audits of risky changes |
 | `gpt-6-luna` — GPT-6 Luna | Codex | 0 (`medium`; docs `low`) | fast subagent work: well-specified modules, tests, docs, exploration |
 | `gpt-6.1-sol` — GPT-6.1 Sol | Codex | 1 (`high`), 2 (`xhigh`) | implementation that needs judgment, independent audits, architecture |
+| `gemini-3.8-flash-low` — Gemini 3.8 Flash low | Antigravity CLI (`agy`, Google AI Pro) | 0–1 | **default auditor** (D-004); reserve builder when Claude and Codex are exhausted; not for interactive or urgent work |
+| `gemini-3.8-flash-medium` | Antigravity CLI | 2 (only on escalation) | long-horizon agentic work; not measured, 2.5× slower than low |
+| `gemini-3.8-flash-high` | Antigravity CLI | never automatic | avoid: timed out (900 s) twice on a task that low solved |
 
 Accounts are **profiles** (`bitacora.py profiles list|doctor`): a provider plus the variable that selects its account
 (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`). Only `work_only` profiles are gated (projects with `"work": true`). The table and
@@ -29,8 +32,14 @@ A **route** is account + model + effort. Work is described by a **tier** (0 ligh
 2. **Candidates.** One route per account of the pool at that tier (`run --pool auto`, the default of `handoff`: every
    account allowed for the project; `--pool a,b` to restrict; the `routing.pool` setting does it machine-wide).
 3. **Drop** accounts cooling down after a usage limit and work-only accounts on a non-work project.
-4. **Order:** another provider than the one that just failed this task (or, for an audit, than the one that built
-   the milestone); then the best measured success rate for that kind (only with 5+ judged attempts); then the account
+4. **Order:** for implementation, another provider than the one that just failed this task. For audits: another
+   provider than the builder's first (D-004 independence), then the configured auditor (`audit.provider`) while it
+   has room, then the best
+   measured audit success rate (5+ judged attempts), then the audit budget order (Claude Sonnet and Flash before
+   Codex Sol; subscription headroom does not push an audit to Codex), then fresh real subscription headroom. For
+   implementation, headroom comes before the measured success rate, and a provider/model with fewer than five
+   judged attempts of that kind is tried first (bounded cold start: five attempts, then its own rate decides; it
+   never overrides avoidance after a failure, cooldowns, work-only gates or the audit order). Last tie-breakers: the account
    least used in the last 5 hours (weighted by model cost); then pool order.
 
 The provider a session runs on never limits whom it may call: a Claude session delegates to Codex and a Codex
@@ -39,7 +48,79 @@ that agent and follows the historical ladder (`marathon.md`).
 
 `bitacora.py --project P agents route --kind audit --tier 1` previews the choice with its reason.
 
+## Antigravity (Gemini 3.8 Flash): the default auditor (D-004)
+
+Antigravity is a **machine-local account**, like `claude-work`: `bitacora.py profiles add antigravity --provider
+antigravity` (needs `agy` installed and signed in; `agy` over SSH prints a URL and asks for the pasted code). It is not
+a built-in profile, so a machine without it routes exactly as before. The pool only includes it while its OAuth token
+exists.
+
+- **Audits go to Flash low first** (`audit.provider`, default `antigravity`; `claude`, `codex` or `none` change or
+  disable the preference). The audit still prefers a provider other than the builder's. The Sonnet-medium / Opus-high /
+  Sol budget below is the fallback and the escalation.
+- **Flash builds only as a reserve**: for implement/test/docs/research it ranks behind Claude and Codex, so it is chosen
+  when they are exhausted or avoided after a failure.
+- **Never medium/high automatically**: the ladder is low, low, medium (tier 2). A failure moves work to another
+  provider instead of raising Flash's effort (measured: higher effort costs 2.5–3.5× the time without better answers).
+- **Quota**: `agy --print=/usage` reports the Gemini pool (five-hour and weekly) and the shared Claude+GPT pool of
+  Antigravity, with no model turn. The router refreshes it at most every 15 minutes; above 85 % used Flash stops being
+  the preferred auditor, at 100 % the account is excluded until its reset. Stale or missing data is unknown headroom.
+- **Safety rails for the provider's terms**: Google's FAQ says wrapping `agy -p` in applications or rotating accounts
+  is not supported under consumer plans. This setup uses **one account, no rotation**, one headless session per audit,
+  with `--print-timeout` set to the session timeout. The owner accepted that risk on 2026-10-13.
+- Measured behaviour (73 runs, `pending-artifacts/agy-benchmark-2026-10-13/`): 1.00 on 8 hard tasks at low, no false
+  positives in the security review with decoys; 3–6× slower than the other providers; ~0.2 % of the weekly Gemini quota
+  per run.
+
+## Audit budget policy
+
+| Situation | Model and effort |
+|---|---|
+| Normal milestone audit or final review | Sonnet 5.5 `medium` |
+| High-risk/architecture milestone or a concrete failure needing escalation | Opus 5.5 `high` |
+| Provider | The router's best measured route, different from the builder's provider (Sol `medium`/`high` when it is Codex) |
+
+Audit routing uses its own ladder; it never inherits the builder's model or xhigh/max effort. A run pinned to a
+provider keeps that provider but uses its audit defaults. Explicit model/effort flags on a delegation remain
+overrides. High-risk (`risk: high`) or architecture members raise their milestone audit to tier 2; ordinary audits
+start at tier 1. On resume, preserve a prior escalation. Quota exhaustion changes accounts, not capability tiers.
+
+Keep small changes as inline self-review. For substantive milestones, perform one fresh audit session with the
+existing spec/standards lenses, rather than adding full audits per task. Independence means a separate clean
+session with requirements, diff and relevant consumers; another provider is optional, not a reason to override the
+budget. Review corrections and affected paths on follow-up instead of repeating unaffected investigation.
+The final review consolidates milestone evidence and remaining cross-milestone risks, rather than restarting every
+completed audit. No xhigh/max by default; escalate for recorded risk or demonstrated difficulty, not file count.
+
 ## Quotas
+
+`bitacora.py usage poll` samples subscription counters without model calls; `usage show` reads the cache. On Linux,
+`usage install-timer` explicitly installs/enables an hourly user-systemd timer, and `usage timer-status` shows its
+state. The timer survives logouts/reboots according to the user's systemd session; it runs when the machine/user
+manager is available, with a catch-up after missed hours. No inference session or agent is used for sampling.
+The hourly due guard allows the timer's 120-second accuracy/jitter margin, so a slightly earlier tick does not skip
+an entire hour. Provider Retry-After deadlines remain authoritative.
+
+Codex uses `app-server` initialization and `account/rateLimits/read` only, never thread/turn creation. Claude uses
+its existing local OAuth credentials for `GET https://api.anthropic.com/api/oauth/usage`; that endpoint is not a
+stable public API and can fail. Do not refresh credentials, change accounts or attempt a browser challenge workaround
+from the collector. Auth/network/schema errors remain explicit per-account statuses; challenges stop automatic
+requests for that account until manually resolved and the collector error state is explicitly cleared.
+
+Latest schema-v1 samples live in `.state/subscription-usage.json`; monthly metadata history lives in
+`.state/events/subscription-usage-YYYY-MM.jsonl`. Store percentages, reset timestamps, profile and safe error codes,
+never tokens, raw API responses or account identities. Profiles selecting the same configured account share a sample.
+
+The router uses the largest consumed percentage of the active 5-hour and weekly windows, including Sonnet/Opus
+weekly quotas when supplied. Lower usage gets priority within otherwise eligible routes, before historical success
+and local load; provider/audit preferences and work-only gates still apply. Data older than two hours, a failed
+latest read, missing windows or an elapsed reset means unknown headroom, not zero usage. Known exhaustion continues
+to exclude an account until its reported reset even if a subsequent read fails. Routing never performs network
+calls. Explicit account pins remain pins; automatic selection and quota rerouting use the cache.
+
+Primary protocol references: [Codex rate limits](https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt)
+and [Claude usage endpoint report](https://github.com/anthropics/claude-code/issues/31021). These are subscription
+utilization percentages, not literal remaining-token counts or API-dollar estimates.
 
 Each subscription has its own limits, so the unit of quota is the account. When a session ends with a usage-limit
 message the account is recorded in `.state/quota.json` until the reset it announced (unknown reset: 30 min, doubling
@@ -53,11 +134,24 @@ with `retry_after`. `bitacora.py agents quota-clear <profile>` forgets a cooldow
 
 ## Delegating from any session
 
+**No host preference (owner rule, 2026-10-13).** Choose the best model for the situation, never the provider that
+hosts the current session. The host's own subagent tool (e.g. Claude Code's `Agent`) only reaches its own provider,
+so use `delegate` (router) for anything that should be able to land on another provider, and for every audit pick a
+provider different from the builder's. The only reasons to exclude a route are quota cooldown, an account not allowed
+for the project, or a measured worse success rate for that kind.
+
 ```
 bitacora.py --project P delegate start "<one bounded task>" --kind test --verify "<cmd>"       # router chooses
 bitacora.py --project P delegate start "<task>" --profile codex-luis --model gpt-6-luna --effort high --allow src/x
-bitacora.py --project P delegate start "<task>" --kind audit            # goes to another provider than yours
+bitacora.py --project P delegate start "<task>" --kind audit            # Sonnet medium; Sol medium fallback
 ```
+
+## Normal sessions
+
+From an interactive session, use `delegate start` for one bounded task; add `--retries 1..3` to climb one tier after
+failures or `--worktree` to isolate it on a branch. Use `bitacora review [--base REF] [--focus TEXT] [--provider ...]`
+for an independent read-only audit, and `delegate resume ID` after an interrupted process. Read the compact JSON
+result and its attempt/route fields; never read the session log as the result.
 
 `--tier 0|1|2` asks for a capability level, `--allow` bounds what may change, `--background` returns an id for
 `delegate status`. The caller receives a compact result, never the transcript: `verified` (the verify command passed),
@@ -71,7 +165,7 @@ A plan groups its tasks under `### M1 — title` headings. Each milestone is **o
 pending task of the milestone, works them in order and gives each its own verdict; the supervisor verifies each task
 on its own. A task the session never reached because one it depends on failed is `skipped` (no attempt counted); the
 next session continues the unfinished milestone. With a pool, every milestone is then closed by an **audit session**
-(`M1-audit`): an agent that did not build it, of another provider when possible, reviews the diff against the spec,
+(`M1-audit`): a fresh session under the audit budget policy reviews the diff against the spec,
 checks tests and docs, fixes what is wrong, writes `AUDIT-M1.md`, and the supervisor re-runs every verify of the
 milestone. `run --no-audit` or `config set audit.mode off` turns it off. Plans without milestone headings run exactly
 as before: one session per task.
@@ -94,6 +188,16 @@ report is `null`, never 0). Each row also says **what** the work was and **why**
 | `why` | for a failure: each task's error (the verify output, the agent's reason); for a success: the evidence given |
 | `usage` | tokens in/out, cache read/write, reasoning, total, cost reported; `quality` says what the CLI actually reported |
 
+`model` remains the requested route for compatibility; new rows also carry `requested_model`,
+`reported_model` (currently null without provider identity evidence), and `identity_source: requested`.
+Do not describe a requested alias as a verified effective model. Codex JSON `turn.completed` usage is supported
+alongside the textual total; cached input is already included in Codex's input count and must not be added again.
+Invalid JSONL rows are counted and skipped with a diagnostic, preserving valid later rows. Invalid session numbers
+cannot enter quality histories. Duration aggregates include `seconds_measured` and `seconds_coverage`; missing
+durations stay null, and averages use measured durations only. Model advice compares elapsed time only with
+enough duration measurements in every candidate group. Daily `globalusage` uses the same reader/aggregator and
+shows token/cost coverage rather than turning unknown measurements into zero.
+
 - `bitacora.py metrics` — per agent, profile, model and effort. `--by kind,complexity,agent,model,effort` regroups
   (`agent, profile, model, effort, kind, tier, project, complexity, outcome`). `--advice` prints plain-language
   observations.
@@ -105,6 +209,20 @@ report is `null`, never 0). Each row also says **what** the work was and **why**
 - `success_rate` only counts attempts that had a verdict (a usage limit is not the agent's failure);
   `tokens_per_done` appears only when every attempt of the group was measured.
 - The router reads the same rows: a route with a clearly better record for a kind of work is preferred.
+
+**Quality by defects.** `success_rate` only says the verify command passed. A milestone audit (synthetic
+`Mn-audit` task) reports `task done REQ Mn-audit --evidence ... --findings N --severity high=N,med=N,low=N` (N >= 0,
+severities add up to N, 0 when clean). On an accepted audit the supervisor appends one row to
+`.state/events/defects-YYYY-MM.jsonl` (idempotent per audit attempt): auditor, findings, severity, and the builder
+attempts it is attributed to (each done task's last accepted attempt, any kind except audit; earlier failed attempts
+count as rework). The auditor is never judged on its own findings. `metrics` adds per group `audited`, `findings`,
+`findings_per_audited_task`, `high_findings`, `rework_attempts`, `rework_rate` (attempts of the summary's failed class
+that failed before the accepted one, over done + failed; an escalation counts in `rework_attempts` only) and
+`tokens_per_clean_task` (tokens of the audited attempts with 0 high findings only, over their count; null if any
+of them lacks a token count); unknown is `null`, and
+`advice` mentions quality only for groups with enough audited tasks. Limits: findings exist only for audits that
+reported the flag (an audit without it is `null`, not 0); a milestone's findings (and each severity bucket) are split into equal
+shares across the attributed attempts, so fractional values are normal and group totals add up to the audits' totals; samples are small; Claude's tokens exclude cache and Codex reports no cost.
 
 Read it with care: stronger models get the harder tasks, and a few attempts prove nothing.
 
@@ -127,6 +245,10 @@ bitacora.py --project P learn list --status candidate      # then: learn confirm
   (improvements to this methodology; see `self-improvement.md`) in the bitácora root.
 - Only **confirmed** learnings are injected: into every supervised session's prompt and into the SessionStart context
   of interactive sessions, with the count of candidates waiting. Anything that looks like a secret is refused.
+- SessionStart (including generic cwd/HQ), supervised prompts and `context` share `learn.inject_max`.
+  Project, owner and skill rules are interleaved; a large global history cannot exclude all project rules.
+  Only cosmetic spelling differences deduplicate: negation, order and comparison operators preserve identity.
+  Rejection reasons also pass the secret filter. Invalid storage yields an explicit warning in context.
 - A permanent choice is not a learning: it goes to `DECISIONS.md` with the alternatives rejected.
 
 ## Settings (`bitacora.py config get | set KEY VALUE | unset KEY`)
@@ -139,5 +261,6 @@ bitacora.py --project P learn list --status candidate      # then: learn confirm
 | `routing.mode` | `auto` | `auto`: the hand-off runs with the account pool; `fixed`: pinned to one agent |
 | `routing.pool` | `[]` | restrict the pool to these profiles (empty: every allowed account) |
 | `audit.mode` | `milestone` | `off` disables the audit sessions |
+| `audit.provider` | `antigravity` | provider preferred for audits (`claude`, `codex`, `none`) while it is available |
 | `learn.promote_after` / `learn.inject_max` | 3 / 12 | sightings to confirm; learnings injected per session |
 | `quota.default_cooldown_min` | 30 | cooldown when a usage limit does not announce its reset |

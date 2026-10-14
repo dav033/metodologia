@@ -122,10 +122,8 @@ def dirty_since_log(project: str, cwd: Path, day: Path) -> tuple[bool, str]:
 
 def hook_stop(harness: str = "claude") -> None:
     data = _read_stdin_json()
-    if data.get("stop_hook_active"):
-        return
     from bt_secrets import alert
-    if alert(ROOT):
+    if alert(ROOT) and not data.get("stop_hook_active"):
         print(json.dumps({"decision": "block", "reason": (
             "[bitácora] A possible secret was written into the bitácora and blocked from git. Find it (report: "
             f"{(ROOT / '.state' / 'secret-alert.txt').as_posix()}), replace the value with a reference (key path, env "
@@ -146,6 +144,10 @@ def hook_stop(harness: str = "claude") -> None:
             pdir, _ = ensure_project(project)
             ensure_session_block(pdir, sid, cwd)
     if not project:
+        return
+    from bt_continuation import save_checkpoint
+    save_checkpoint(ROOT, project, sid)
+    if data.get("stop_hook_active"):
         return
     day = day_paths(ROOT / project, today())["day"]
     if harness == "codex" or not tp:  # Codex transcript format isn't a stable interface: use git instead
@@ -168,6 +170,8 @@ def hook_end() -> None:
     project = resolve_project(cwd, sid)
     if not project:
         return
+    from bt_continuation import save_checkpoint
+    save_checkpoint(ROOT, project, sid)
     pdir = ROOT / project
     day = day_paths(pdir, today())["day"]
     if day.exists() and sid:

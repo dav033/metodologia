@@ -16,13 +16,17 @@ DEFAULTS: dict = {
     "approval": {"auto": True, "max_milestones": 8, "max_tasks": 40},
     "learn": {"promote_after": 3, "inject_max": 12},
     "routing": {"mode": "auto", "pool": []},
-    "audit": {"mode": "milestone", "cross_provider": True},
+    "audit": {"mode": "milestone", "cross_provider": True, "provider": "antigravity"},
     "quota": {"default_cooldown_min": 30},
+    "relay": {"enabled": False, "threshold_percent": 92, "exit_current": True, "max_chain": 3, "auto": True},
+    "run": {"isolation": "off"},
 }
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),
     "routing.mode": ("auto", "fixed"),
     "audit.mode": ("milestone", "off"),
+    "audit.provider": ("antigravity", "claude", "codex", "none"),
+    "run.isolation": ("off", "worktree"),
 }
 
 
@@ -83,21 +87,17 @@ def get(key: str, default=None):
     return load()[section][name]
 
 
-def _overrides() -> dict[str, object]:
+def _stored() -> dict:
+    """The file as written, or {} when it is missing, unreadable or not a JSON object."""
     try:
         stored = json.loads(_path().read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
-    return {key: value for key, value in _flatten(stored).items()
-            if key in _keys() and _valid(key, value) and value != _keys()[key]}
+    return stored if isinstance(stored, dict) else {}
 
 
-def _write(overrides: dict[str, object]) -> Path:
+def _write(data: dict) -> Path:
     path = _path()
-    data: dict[str, dict] = {}
-    for key, value in overrides.items():
-        section, name = key.split(".", 1)
-        data.setdefault(section, {})[name] = value
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -105,28 +105,40 @@ def _write(overrides: dict[str, object]) -> Path:
     return path
 
 
+def _change(key: str, value=None, *, remove: bool = False) -> Path:
+    """Edit one key of the stored file and leave everything else as it was: sections and keys this version does not
+    know (written by a newer one), and values it cannot use, survive a `set` or `unset` (REQ-007 R4, F-M1-01)."""
+    data = _stored()
+    section, name = key.split(".", 1)
+    values = data.get(section)
+    if not isinstance(values, dict):
+        values = {}
+    if remove:
+        values.pop(name, None)
+    else:
+        values[name] = value
+    if values:
+        data[section] = values
+    else:  # a section this change emptied is not left behind as {}
+        data.pop(section, None)
+    return _write(data)
+
+
 def set_value(key: str, value) -> Path:
-    """Validate and persist one setting, writing only non-default overrides."""
+    """Validate and persist one setting; a value equal to the default is removed, not stored."""
     if key not in _keys():
         raise ConfigError(f"Unknown configuration key '{key}'")
     if not _valid(key, value):
         expected = f"one of {ALLOWED[key]}" if key in ALLOWED else type(_keys()[key]).__name__
         raise ConfigError(f"Invalid value for '{key}': expected {expected}")
-    overrides = _overrides()
-    if value == _keys()[key]:
-        overrides.pop(key, None)
-    else:
-        overrides[key] = value
-    return _write(overrides)
+    return _change(key, value, remove=value == _keys()[key])
 
 
 def unset(key: str) -> Path:
     """Remove one setting override."""
     if key not in _keys():
         raise ConfigError(f"Unknown configuration key '{key}'")
-    overrides = _overrides()
-    overrides.pop(key, None)
-    return _write(overrides)
+    return _change(key, remove=True)
 
 
 def parse_cli_value(text: str):

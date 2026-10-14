@@ -49,6 +49,18 @@ def _read(path: Path) -> dict:
         raise LearnError(f"Could not read learnings: {exc}") from exc
     if not isinstance(data, dict) or data.get("schema") != 1 or not isinstance(data.get("items"), list):
         raise LearnError(f"Invalid learnings file: {path}")
+    seen = set()
+    for item in data["items"]:
+        if (not isinstance(item, dict) or not isinstance(item.get("id"), str) or
+                item["id"] in seen or item.get("scope") not in SCOPES or
+                item.get("kind") not in KINDS or item.get("status") not in STATUSES or
+                not isinstance(item.get("text"), str) or not isinstance(item.get("updated"), str) or
+                not isinstance(item.get("sightings"), int) or isinstance(item.get("sightings"), bool) or
+                item["sightings"] < 1 or not isinstance(item.get("evidence"), list) or
+                any(not isinstance(row, dict) or not all(isinstance(row.get(key), str)
+                    for key in ("at", "source", "note")) for row in item["evidence"])):
+            raise LearnError(f"Invalid learning record in {path}")
+        seen.add(item["id"])
     return data
 
 
@@ -75,12 +87,8 @@ def _secret(*values: str) -> bool:
 
 
 def _normalize(text: str) -> str:
-    return " ".join("".join(ch.lower() if ch.isalnum() else " " for ch in text).split())
-
-
-def _similar(left: str, right: str) -> bool:
-    a, b = set(_normalize(left).split()), set(_normalize(right).split())
-    return bool(a and b) and len(a & b) / len(a | b) >= 0.8
+    # Ignore cosmetic sentence punctuation, but preserve order, negation and operators.
+    return " ".join(text.casefold().strip().rstrip(".!?").replace(",", " ").split())
 
 
 GLOBAL_PREFIX = "LG"  # owner/skill learnings live in one root file; their ids never collide with a project's L-NNN
@@ -126,8 +134,7 @@ def add(project: str | None, text: str, evidence: str, source: str = "", scope: 
         data = _read(path)
         now = _now()
         found = next((item for item in data["items"] if item.get("scope") == scope and
-                      (_normalize(item.get("text", "")) == _normalize(clean_text) or
-                       _similar(item.get("text", ""), clean_text))), None)
+                      _normalize(item.get("text", "")) == _normalize(clean_text)), None)
         if found is not None:
             if found.get("status") == "rejected":
                 return _copy(found, ignored=True, created=False)
@@ -154,6 +161,8 @@ def add(project: str | None, text: str, evidence: str, source: str = "", scope: 
 def _change(project: str | None, item_id: str, status: str, scope: str, reason: str = "") -> dict:
     if scope not in SCOPES:
         raise LearnError(f"Unknown scope '{scope}'")
+    if not isinstance(reason, str) or _secret(reason):
+        raise LearnError("Invalid rejection reason or possible secret; nothing was stored")
     path = _file(project, scope)
     with bt_lock.central_lock("learn"):
         data = _read(path)
@@ -200,10 +209,12 @@ def brief(project: str | None, max_items: int = 12) -> str:
         raise LearnError("max_items must be a non-negative integer")
     all_items = listing(project)
     confirmed = [item for item in all_items if item.get("status") == "confirmed"]
-    # Keep global learnings ahead of project learnings and newest first within each scope.
-    confirmed = [item for selected in ("owner", "skill", "project")
-                 for item in sorted((row for row in confirmed if row["scope"] == selected),
-                                    key=lambda row: row.get("updated", ""), reverse=True)]
+    # Interleave scopes so a large global history cannot hide every project-specific rule.
+    buckets = [sorted((row for row in confirmed if row["scope"] == scope),
+                      key=lambda row: row.get("updated", ""), reverse=True)
+               for scope in ("project", "owner", "skill")]
+    confirmed = [bucket[n] for n in range(max(map(len, buckets), default=0))
+                 for bucket in buckets if n < len(bucket)]
     candidates = sum(item.get("status") == "candidate" for item in all_items)
     if not confirmed and not candidates:
         return ""
@@ -215,6 +226,16 @@ def brief(project: str | None, max_items: int = 12) -> str:
     if candidates:
         lines.append(f"Candidates awaiting confirmation: {candidates}")
     return "\n".join(lines)
+
+
+def context_brief(project: str | None) -> str:
+    """Keep all context consumers consistent; a storage failure must remain visible."""
+    import bt_config
+    try:
+        return brief(project, bt_config.get("learn.inject_max", 12))
+    except LearnError:
+        return ("WARNING: confirmed learnings could not be loaded (invalid or unreadable storage). "
+                "Run `bitacora.py learn list` for the diagnostic; do not assume the project has no learnings.")
 
 
 def render_md(project: str | None) -> Path:

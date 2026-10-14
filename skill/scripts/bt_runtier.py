@@ -51,6 +51,8 @@ def label(model: str | None, effort: str | None) -> str:
 
 def model_args(agent: str | None, model: str | None, effort: str | None) -> list[str]:
     """The model/effort part of the agent command line."""
+    if agent == "antigravity":  # the effort is part of the model id; `--effort` is not passed
+        return ["--model", model or "gemini-3.8-flash-low"]
     if agent == "codex":
         args = ["-m", model] if model and bt_agents.provider_of_model(model) != "claude" else []
         return args + (["-c", f'model_reasoning_effort="{effort}"'] if effort else [])

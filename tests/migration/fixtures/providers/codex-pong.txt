@@ -1,0 +1,26 @@
+PONG
+OpenAI Codex v0.162.1
+--------
+workdir: /work
+model: gpt-6-luna
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 00000000-0000-0000-0000-000000000000
+--------
+user
+Reply with exactly the single word PONG and do nothing else. Do not use any tools.
+hook: SessionStart
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+PONG
+hook: Stop
+hook: Stop
+hook: Stop Completed
+hook: Stop Completed
+tokens used
+14,254

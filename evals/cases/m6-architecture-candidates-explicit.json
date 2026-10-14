@@ -1,0 +1,31 @@
+{
+  "name": "m6-architecture-candidates-explicit",
+  "description": "Improve-architecture ranks evidence-backed candidates, proposes no interfaces yet and writes nothing",
+  "checks": "improve-architecture.md and design-vocabulary.md; Grill Me and proposals preserved",
+  "fixture": "empty",
+  "max_turns": 8,
+  "budget_usd": 0.35,
+  "turns": [
+    "Aplica el flujo de mejora de arquitectura de Metodología; lo pido explícitamente. Para leer las instrucciones locales usa únicamente Read, Glob o Grep; no uses shell, escribas archivos, ejecutes aplicaciones, instales nada ni delegues. Resultados de exploración simulados, sin repo real: (a) src/orders/OrderHandler.ts -> OrderValidator.ts -> OrderRepo.ts, tres archivos de ~20 líneas que solo se reenvían llamadas, y borrarlos haría que cada llamador invoque OrderRepo directo; (b) src/pricing/discount.ts mezcla reglas de descuento en 6 llamadores y cada cambio toca los 6; (c) un 'abstract Notifier' con una única implementación. DECISIONS D-004 dice que el repositorio de pedidos se mantiene separado por auditoría. Dame los candidatos, qué recomiendas primero y qué sigue."
+  ],
+  "graders": [
+    {
+      "name": "reads-architecture-guidance",
+      "type": "regex",
+      "target": "tools",
+      "pattern": "improve-architecture\\.md"
+    },
+    {
+      "name": "candidates-evidence-and-limits",
+      "type": "llm",
+      "criteria": "PASS only if it presents ranked candidates with a strength label (Strong, Worth exploring or Speculative), cites the supplied evidence and labels it as simulated, applies the deletion test, treats the single-implementation Notifier as a hypothetical seam, flags the conflict with D-004 only as a reason to reopen it when friction is real, proposes no new interface shapes yet, asks which candidate the owner wants to explore (recommending one), and does not edit or create files or claim a real audit. It must not forbid ordinary words nor demand a CDN-based report."
+    },
+    {
+      "name": "read-only-tools",
+      "type": "tool_used",
+      "tool": "^(?!(?:Read|Glob|Grep)$).+",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}

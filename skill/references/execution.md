@@ -63,6 +63,9 @@ hours. Rule of thumb: more than ~8 tasks or "this will run overnight" → marath
 **Routing across agents** (`run --pool auto`, what `handoff` uses): the supervisor picks account, model and effort
 per session from every account allowed for the project — by tier, kind of work, usage limits and measured results —
 and closes each milestone with an independent audit by another agent. The whole model is in `agents.md`.
+Audits use Sonnet 5.5 medium, Opus 5.5 high for escalation/high risk, or Sol medium when Claude is unavailable;
+they do not inherit the implementation ladder's effort. Reuse milestone audits for closing review rather than
+launching duplicate full passes; the final session consolidates evidence and cross-milestone risks.
 
 **Account profiles** (`bitacora.py profiles list|doctor`, `launch|run --profile ID`): a profile is a provider plus the
 env that selects its account (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`); credentials stay in each provider's own directory.
@@ -202,6 +205,8 @@ bitácora explicitly (the Stop hook won't remind you).
   `standards`) sees only the spec, PLAN.md and the diff and reports **only** correctness problems, unmet
   requirements and out-of-scope changes. Fix those; everything else goes to PENDING.md, not into the code —
   chasing every review nit is how over-engineering happens.
+  An existing milestone audit already covers those lenses: consolidate its evidence, investigate cross-milestone
+  risks and missing/stale coverage, and review only affected corrections instead of launching duplicate full passes.
 - **Trace check:** `bitacora.py trace` must show no `uncovered` / `unknown-ref` / `dangling` issue for this REQ.
 - Update statuses (spec `in-progress` with what's missing, or leave it for the merge; plan `done`) and the bitácora
   (today's log, PENDING, SUMMARY; ARCHITECTURE if structure changed).

@@ -63,7 +63,8 @@ def project_index(pdir: Path) -> Path:
     lines = [f"# Index — {project}", "",
              f"_Generated {dt.datetime.now():%Y-%m-%d %H:%M} by `bitacora.py index`. Do not edit by hand._", "",
              "**Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · "
-             "[Pending](PENDING.md) · [Tools](TOOLS.md)  ",
+             "[Pending](PENDING.md) · [Tools](TOOLS.md)"
+             + (" · [Glossary](GLOSSARY.md)" if (pdir / "GLOSSARY.md").exists() else "") + "  ",
              f"**Web:** [project]({WEB}/p/{project}) · [graph]({WEB}/p/{project}/graph)  ",
              f"**Last activity:** {_last_day(pdir)}", ""]
     repos = ws.repos(ROOT, project, discover=False)

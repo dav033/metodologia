@@ -113,10 +113,11 @@ PROJECT_TABS = [("summary", "Resumen"), ("requirements", "Requerimientos"), ("pe
 
 def project_page(project: str, tab: str) -> str:
     pdir = ROOT / project
+    shown = list(PROJECT_TABS) + ([("glossary", "Glosario")] if (pdir / "GLOSSARY.md").exists() else [])
     tabs = "".join(f'<a class="{"on" if k == tab else ""}" href="{purl(project)}?tab={k}">{v}</a>'
-                   for k, v in PROJECT_TABS) + f'<a href="{purl(project, "graph")}">Grafo ↗</a>'
+                   for k, v in shown) + f'<a href="{purl(project, "graph")}">Grafo ↗</a>'
     files = {"summary": "SUMMARY.md", "pending": "PENDING.md", "decisions": "DECISIONS.md",
-             "architecture": "ARCHITECTURE.md", "tools": "TOOLS.md"}
+             "architecture": "ARCHITECTURE.md", "tools": "TOOLS.md", "glossary": "GLOSSARY.md"}
     if tab in files:
         content = md("doc", read(pdir / files[tab]))
     elif tab == "requirements":

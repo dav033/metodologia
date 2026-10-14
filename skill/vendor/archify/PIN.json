@@ -1,0 +1,21 @@
+{
+ "name": "archify",
+ "upstream": "https://github.com/tt-a1i/archify",
+ "commit": "c21c31ffb879668900c5487ea24993bf45d89b15",
+ "path": "archify/",
+ "version": "3.1.0",
+ "license": "MIT",
+ "retrieved": "2026-10-13",
+ "files": 110,
+ "tree_sha256": "80a3d5b793902bf31ff4d236501c1eacf151e0cbd6231bd8799edb2c033adbc0",
+ "excluded": [
+  "examples/ (13 MB of rendered samples)",
+  "SKILL.md (a second skill entry would be discovered by harnesses; authoring guidance stays in references/)"
+ ],
+ "notices": [
+  "LICENSE",
+  "REPO-LICENSE",
+  "THIRD_PARTY_NOTICES.md"
+ ],
+ "local_changes": "none besides the exclusions above"
+}

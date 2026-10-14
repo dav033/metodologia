@@ -89,7 +89,11 @@ def install_hook(repo: Path) -> str:
     hooks_path = subprocess.run(["git", "config", "core.hooksPath"], cwd=repo, capture_output=True, text=True)
     if hooks_path.stdout.strip():
         return f"skipped: uses core.hooksPath={hooks_path.stdout.strip()} (husky?) — add gitleaks there if wanted"
-    hook = repo / ".git" / "hooks" / "pre-commit"
+    located = subprocess.run(["git", "rev-parse", "--git-path", "hooks"], cwd=repo, capture_output=True, text=True)
+    hooks_dir = Path(located.stdout.strip()) if located.returncode == 0 and located.stdout.strip() else None
+    if hooks_dir is not None and not hooks_dir.is_absolute():
+        hooks_dir = repo / hooks_dir  # a linked worktree has a `.git` file; its hooks live in the common git dir
+    hook = (hooks_dir or repo / ".git" / "hooks") / "pre-commit"
     if hook.exists() and HOOK_MARK not in hook.read_text(encoding="utf-8", errors="ignore"):
         return "skipped: has its own pre-commit hook"
     hook.parent.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,31 @@
+{
+  "name": "m6-wait-what-restate",
+  "description": "A confused owner gets the disputed claim restated in at most five plain Spanish sentences, then a wait",
+  "checks": "wait-what.md; Aye prefix and Spanish rule preserved",
+  "fixture": "empty",
+  "max_turns": 6,
+  "budget_usd": 0.2,
+  "turns": [
+    "Aplica la regla wait-what de Metodología. Para leer las instrucciones locales usa únicamente Read, Glob o Grep; no uses shell, escribas archivos, ejecutes aplicaciones, instales nada ni delegues. Contexto simulado: en tu mensaje anterior propusiste mover el envío de correos a una cola con patrón outbox y consumidores idempotentes porque 'el envío síncrono puede perder mensajes si el proceso cae'. Yo respondo: 'wait what, no entiendo para qué hace falta una cola'. Responde como corresponde a esa señal."
+  ],
+  "graders": [
+    {
+      "name": "reads-wait-what",
+      "type": "regex",
+      "target": "tools",
+      "pattern": "wait-what\\.md"
+    },
+    {
+      "name": "five-plain-sentences-then-wait",
+      "type": "llm",
+      "criteria": "PASS only if, apart from an optional 'Aye' prefix, the reply is in Spanish, has at most five sentences, restates the disputed claim (why a queue is proposed) in plain words with the one supporting fact, states what is uncertain or what would happen next at most briefly, and then waits: no new plan, no list of alternatives, no tool use to continue the work, no long apology, and no mention of ASD-STE100. It may ask at most one clarifying question."
+    },
+    {
+      "name": "read-only-tools",
+      "type": "tool_used",
+      "tool": "^(?!(?:Read|Glob|Grep)$).+",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}

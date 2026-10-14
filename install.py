@@ -157,6 +157,79 @@ def ensure_block(f: Path, block: str, already: str) -> None:
     say(f"added   {f}")
 
 
+# ---------------------------------------------------------------- transactional plan (dry-run, journal, rollback)
+
+def _owned_hook(item: object) -> bool:
+    """A hook GROUP (or a bare hook command) is ours when a command runs a script through the skill link. The relay
+    hooks have their own installer (`bitacora.py relay install`) and are never touched here. As in the original
+    installer, a group that holds one of our commands is replaced as a whole."""
+    if not isinstance(item, dict):
+        return False
+    commands = [item["command"]] if isinstance(item.get("command"), str) else [
+        h.get("command") for h in item.get("hooks", []) if isinstance(h, dict) and isinstance(h.get("command"), str)]
+    return any("/skills/metodologia/scripts/" in c.replace("\\", "/") and " hook relay" not in c for c in commands)
+
+
+def _claude_hooks_value() -> dict:
+    return {
+        "SessionStart": [{"matcher": "startup|resume|clear|compact",
+                          "hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "start"), "timeout": 20}]}],
+        "Stop": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "stop"), "timeout": 20}]}],
+        "SessionEnd": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "end"), "timeout": 15}]}],
+        "PostToolUse": [{"matcher": "Edit|Write|MultiEdit",
+                         "hooks": [{"type": "command", "command": _cmd("file_guard.py"), "timeout": 10}]}],
+    }
+
+
+def _codex_hooks_value() -> dict:
+    return {
+        "SessionStart": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "start", "--harness",
+                                                                        "codex"), "timeout": 20}]}],
+        "Stop": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "stop", "--harness", "codex"),
+                             "timeout": 20}]}],
+        "SessionEnd": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "end"), "timeout": 3}]}],
+        "PostToolUse": [{"hooks": [{"type": "command", "command": _cmd("file_guard.py"), "timeout": 10}]}],
+    }
+
+
+def _merge_owned(ours: dict):
+    def merge(current: dict) -> dict:
+        hooks = current.setdefault("hooks", {})
+        for event, groups in ours.items():
+            hooks.setdefault(event, []).extend(groups)
+        return current
+    return merge
+
+
+def _inner(block: str) -> str:
+    return "\n".join(line for line in block.strip("\n").splitlines()
+                     if not line.startswith("<!-- metodologia:"))
+
+
+def build_operations(claude_dirs: list[Path], codex_dirs: list[Path]):
+    """Steps 1-3 (links, hooks, always-on blocks) as one reversible plan."""
+    import bt_install_tx as tx
+    ops = [tx.symlink(config / "skills" / "metodologia", REPO / "skill") for config in claude_dirs]
+    ops.append(tx.symlink(HOME / ".agents" / "skills" / "metodologia", REPO / "skill"))
+    ops += [tx.json_merge(config / "settings.json", _merge_owned(_claude_hooks_value()), is_owned=_owned_hook)
+            for config in claude_dirs]
+    ops += [tx.json_merge(config / "hooks.json", _merge_owned(_codex_hooks_value()), is_owned=_owned_hook)
+            for config in codex_dirs]
+    def block_op(path: Path, inner: str, already: str):
+        real = path.resolve() if path.is_symlink() else path  # write through a link, like the original did
+        text = real.read_text(encoding="utf-8") if real.exists() else ""
+        if already in text:  # the import/pointer is already there (inside or outside our markers): never duplicate
+            return None
+        return tx.ensure_block(real, inner, "metodologia")
+
+    for config in claude_dirs:
+        skill = f"{tilde(config)}/skills/metodologia/SKILL.md"
+        ops.append(block_op(config / "CLAUDE.md", _inner(CLAUDE_BLOCK.format(skill=skill)), skill))
+    for config in codex_dirs:
+        ops.append(block_op(config / "AGENTS.md", _inner(CODEX_BLOCK), "skill `metodologia`"))
+    return [op for op in ops if op is not None]
+
+
 # ---------------------------------------------------------------- main
 
 def tilde(path: Path) -> str:
@@ -189,7 +262,20 @@ def main(argv: list[str] | None = None) -> None:
                         help="Install only the pinned RTK binary; leave hooks/settings/workspaces untouched")
     parser.add_argument("--with-rtk", action="store_true",
                         help="Include the pinned RTK binary in the normal methodology setup")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print what steps 1-3 (links, hooks, always-on blocks) would change; write nothing")
+    parser.add_argument("--core-only", action="store_true",
+                        help="Apply only steps 1-3 (links, hooks, always-on blocks) and stop (tests, repair)")
+    parser.add_argument("--rollback", metavar="JOURNAL",
+                        help="Undo a previous install using its journal (only files still in the state it left)")
+    parser.add_argument("--legacy", action="store_true",
+                        help="Apply steps 1-3 with the original in-place code (no journal, no preimages)")
     args = parser.parse_args(argv)
+    if args.rollback:
+        sys.path.insert(0, str(REPO / "skill" / "scripts"))
+        import bt_install_tx as tx
+        print(json.dumps(tx.rollback(args.rollback), indent=1, ensure_ascii=False))
+        return
     if args.rtk_only or args.with_rtk:
         sys.path.insert(0, str(REPO / "skill" / "scripts"))
         import install_rtk
@@ -200,23 +286,46 @@ def main(argv: list[str] | None = None) -> None:
     sys.path.insert(0, str(REPO / "skill" / "scripts"))
     claude_dirs, codex_dirs = account_dirs()
     root = bitacora_root()
-    print("1. links")
-    for config in claude_dirs:
-        link(config / "skills" / "metodologia", REPO / "skill")
-    link(HOME / ".agents" / "skills" / "metodologia", REPO / "skill")
-    root.mkdir(parents=True, exist_ok=True)  # the live bitácora is a real folder, never a link into this repo
-    say(f"ok      {root}")
-    print("2. hooks")
-    for config in claude_dirs:
-        claude_hooks(config)
-    for config in codex_dirs:
-        codex_hooks(config)
-    print("3. always-on")
-    for config in claude_dirs:
-        skill = f"{tilde(config)}/skills/metodologia/SKILL.md"
-        ensure_block(config / "CLAUDE.md", CLAUDE_BLOCK.format(skill=skill), skill)
-    for config in codex_dirs:
-        ensure_block(config / "AGENTS.md", CODEX_BLOCK, "skill `metodologia`")
+    if args.dry_run or not args.legacy:
+        import bt_install_tx as tx
+        transaction = tx.plan(build_operations(claude_dirs, codex_dirs), allowed_roots=(HOME,))
+        report = tx.dry_run(transaction)
+        if args.dry_run:
+            print(json.dumps(report, indent=1, ensure_ascii=False))
+            return
+        conflicts = [row for row in report["operations"] if row["action"] == "conflict"]
+        if conflicts:
+            sys.exit("ABORT: " + "; ".join(f"{row['path']}: {row.get('reason', 'conflict')}" for row in conflicts))
+        stamp = __import__("datetime").datetime.now().strftime("%Y%m%dT%H%M%S")
+        backup = HOME / ".local" / "share" / "metodologia-migration" / "installs" / stamp
+        print("1-3. links, hooks, always-on (journaled)")
+        result = tx.apply(transaction, backup)
+        for row in report["operations"]:
+            say(f"{row['action']:<9} {row['path']}")
+        say(f"journal {backup / 'journal.jsonl'}  (undo: install.py --rollback <that file>)")
+        del result
+        root.mkdir(parents=True, exist_ok=True)  # the live bitácora is a real folder, never a link into this repo
+        say(f"ok      {root}")
+        if args.core_only:
+            return
+    else:
+        print("1. links")
+        for config in claude_dirs:
+            link(config / "skills" / "metodologia", REPO / "skill")
+        link(HOME / ".agents" / "skills" / "metodologia", REPO / "skill")
+        root.mkdir(parents=True, exist_ok=True)
+        say(f"ok      {root}")
+        print("2. hooks")
+        for config in claude_dirs:
+            claude_hooks(config)
+        for config in codex_dirs:
+            codex_hooks(config)
+        print("3. always-on")
+        for config in claude_dirs:
+            skill = f"{tilde(config)}/skills/metodologia/SKILL.md"
+            ensure_block(config / "CLAUDE.md", CLAUDE_BLOCK.format(skill=skill), skill)
+        for config in codex_dirs:
+            ensure_block(config / "AGENTS.md", CODEX_BLOCK, "skill `metodologia`")
     print("4. subagents")
     agents = [sys.executable, str(REPO / "skill" / "scripts" / "install_agents.py")]
     for config in claude_dirs:

@@ -12,6 +12,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import ntpath
 import re
 import socket
 import time
@@ -22,7 +23,8 @@ from bt_core import STATE
 from bt_runtier import start_tier
 
 LOG_KEEP = 200
-DEFAULT_LIMITS = {"max_attempts": 4, "session_timeout_min": 60, "max_sessions": 300, "workers": 1}  # 4 = haiku, sonnet, opus, opus
+DEFAULT_LIMITS = {"max_attempts": 4, "session_timeout_min": 60, "max_sessions": 300, "workers": 1,
+                  "isolation": "off"}  # 4 = haiku, sonnet, opus, opus
 TASK_RE = re.compile(r"^\s*[-*]\s+\[( |x|X)\]\s+(T\d+(?:\.\d+)?[a-z]?)\s*(?:—|–|--|-|:)\s*(.+?)\s*$")
 MILESTONE_RE = re.compile(r"^#{3,4}\s+(M\d+)\b\s*(?:—|–|--|-|:)?\s*(.*?)\s*$")
 HEADING_RE = re.compile(r"^#{1,4}\s+\S")
@@ -57,12 +59,36 @@ def parse_task_line(rest: str) -> dict:
         key, _, value = p.partition(":")
         fields[key.strip().lower()] = value.strip()
     title = parts[0].strip()
+    files, files_invalid = _scope_values(fields.get("files"))
+    resources, _ = _scope_values(fields.get("resources"), validate_paths=False)
     return {"title": title, "repo": fields.get("repo") or None, "verify": verify,
             "after": [t for t in re.split(r"[,\s]+", fields.get("after", "")) if re.fullmatch(r"T\d+(?:\.\d+)?[a-z]?", t)],
+            "files": None if files_invalid else files,
+            "files_invalid": files_invalid,
+            "resources": resources,
             "level": (fields.get("level") or "").lower() or None,
             "kind": bt_agents.infer_kind(title, fields.get("kind")),
             "risk": (fields.get("risk") or "").lower() or None,
             "complexity": _complexity(fields.get("complexity") or fields.get("size"))}
+
+
+def _scope_values(raw: str | None, validate_paths: bool = True) -> tuple[list[str] | None, bool]:
+    """Parse comma-separated scope values and reject unsafe file paths as a whole."""
+    if not raw or not raw.strip():
+        return None, False
+    entries = raw.split(",")
+    values = [entry.strip().strip("`\"'").strip() for entry in entries]
+    if any(not value for value in values):
+        return None, validate_paths
+    if validate_paths and any(_unsafe_scope_path(value) for value in values):
+        return None, True
+    return values, False
+
+
+def _unsafe_scope_path(value: str) -> bool:
+    path = value.replace("\\", "/")
+    return (path.startswith("/") or bool(ntpath.splitdrive(path)[0]) or
+            any(part in ("", ".", "..") for part in path.split("/")))
 
 
 def _complexity(text: str | None) -> str | None:
@@ -110,6 +136,7 @@ def milestones(plan: Path) -> list[dict]:
 
 def _new_task(p: dict) -> dict:
     return {"id": p["id"], "title": p["title"], "repo": p["repo"], "after": p["after"], "verify": p["verify"],
+            "files": p.get("files"), "resources": p.get("resources"),
             "level": p["level"], "kind": p.get("kind") or "implement", "risk": p.get("risk"),
             "complexity": p.get("complexity"),
             "milestone": p.get("milestone"), "tier": start_tier(p["level"], p.get("kind"), p.get("complexity")),
@@ -117,14 +144,21 @@ def _new_task(p: dict) -> dict:
             "attempts": 0, "last_error": None, "error_hashes": [], "evidence": None, "pending_id": None, "notes": []}
 
 
+def _audit_level(members: list[dict]) -> str | None:
+    """A high-risk or architecture milestone needs the escalated audit budget from the start."""
+    return "architecture" if any(m.get("risk") == "high" or m.get("level") == "architecture"
+                                 for m in members) else None
+
+
 def _audit_task(milestone: str, members: list[dict], fresh: bool) -> dict:
     """The independent audit that closes a milestone: runs after its tasks, re-runs their verifies, may fix. Only a
     milestone that was already ticked when the run was CREATED is taken as audited; on any later sync (a resume, an
     old RUN.json gaining audits) the audit is real work to do."""
     done = fresh and bool(members) and all(m["status"] == "done" and m.get("attempts", 0) == 0 for m in members)
+    level = _audit_level(members)
     return {"id": milestone + AUDIT_SUFFIX, "title": f"Independent audit of milestone {milestone}", "repo": None,
-            "after": [m["id"] for m in members], "verify": None, "level": None, "kind": "audit", "risk": None,
-            "milestone": milestone, "synthetic": True, "tier": start_tier(None, "audit"),
+            "after": [m["id"] for m in members], "verify": None, "level": level, "kind": "audit", "risk": None,
+            "milestone": milestone, "synthetic": True, "tier": start_tier(level, "audit"),
             "status": "done" if done else "todo", "attempts": 0, "last_error": None, "error_hashes": [],
             "evidence": "already ticked in the approved plan" if done else None, "pending_id": None, "notes": []}
 
@@ -144,6 +178,8 @@ def _sync_audits(state: dict) -> None:
         aid = milestone + AUDIT_SUFFIX
         if aid in have:
             audit = get_task(state, aid)
+            audit["level"] = _audit_level(members)
+            audit["tier"] = max(int(audit.get("tier") or 0), start_tier(audit["level"], "audit"))
             ids = [m["id"] for m in members]
             if audit["after"] != ids:
                 if audit["status"] == "done" and set(ids) - set(audit["after"]):  # new work joined an audited milestone
@@ -160,7 +196,14 @@ def sync_plan(state: dict, rdir: Path) -> dict:
     in state['plan_drift'], never adopted, so the agent cannot rewrite its own gate or tick its way past verify."""
     by_id = {t["id"]: t for t in state["tasks"]}
     drift = []
-    for p in parse_plan(rdir / "PLAN.md"):
+    plan_tasks = parse_plan(rdir / "PLAN.md")
+    for p in plan_tasks:
+        if p.get("files_invalid"):
+            warning = f"PLAN.md {p['id']}.files is unsafe; task has no file scope and will run serially"
+            if not any(entry.get("warning") == warning for entry in state.get("log", [])):
+                state.setdefault("log", []).append({"at": now_iso(), "session": state.get("sessions", 0),
+                    "task": p["id"], "result": "plan_warning", "warning": warning, "summary": warning,
+                    "seconds": 0})
         t = by_id.get(p["id"])
         if t is None:
             state["tasks"].append(_new_task(p))
@@ -171,8 +214,9 @@ def sync_plan(state: dict, rdir: Path) -> dict:
                 t[key] = p.get(key)
         if t["status"] == "todo" and not t.get("attempts"):  # never lowers a tier the task already climbed to
             t["tier"] = max(int(t.get("tier") or 0), start_tier(t.get("level"), t.get("kind"), t.get("complexity")))
-        drift += [f"{t['id']}.{k}" for k in ("repo", "after", "verify", "level") if t.get(k) != p[k]]
-    state["plan_drift"] = drift
+        drift += [f"{t['id']}.{k}" for k in ("repo", "after", "verify", "level", "files", "resources")
+                  if (k not in ("files", "resources") or k in t) and t.get(k) != p[k]]
+    state["plan_drift"] = list(dict.fromkeys(drift))
     _sync_audits(state)
     return state
 
@@ -340,7 +384,8 @@ def ready_units(state: dict, workers: int = 1) -> list[list[dict]]:
     first = next_unit(state)
     if not first:
         return []
-    cap = max(1, min(int(workers or 1), MAX_WORKERS))
+    isolated = state.get("limits", {}).get("isolation") == "worktree"
+    cap = max(1, min(int(workers or 1), 3 if isolated else MAX_WORKERS))
     units = [first]
     if cap == 1 or any(not t.get("repo") for t in first):
         return units
@@ -354,10 +399,23 @@ def ready_units(state: dict, workers: int = 1) -> list[list[dict]]:
             continue
         unit = unit_of(state, t)
         repos = {u.get("repo") for u in unit}
-        if None in repos or repos & taken_repos or any(u["id"] in taken_ids for u in unit):
+        same_repo_isolated = isolated and len(repos) == 1 and repos == taken_repos
+        if None in repos or (repos & taken_repos and not same_repo_isolated) or any(u["id"] in taken_ids for u in unit):
             continue
+        if same_repo_isolated:
+            if any(not task.get("files") for member in [*units, unit] for task in member):
+                continue
+            from bt_worktree import parallel_capacity
+            proposed = [*units, unit]
+            summaries = [{"id": str(index), "scopes": [path for task in member for path in task["files"]],
+                          "resources": sorted({tag for task in member for tag in (task.get("resources") or [])})}
+                         for index, member in enumerate(proposed)]
+            grouped = parallel_capacity(summaries, max_workers=3)
+            if len(grouped) != 1 or len(grouped[0]) != len(proposed):
+                continue
         units.append(unit)
-        taken_repos |= repos
+        if not same_repo_isolated:
+            taken_repos |= repos
         taken_ids |= {u["id"] for u in unit}
     return units
 

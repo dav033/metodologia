@@ -188,7 +188,7 @@ class PoolAndRouteTests(AgentTests):
     def test_fixed_route_uses_legacy_model_and_pool_route_selects_candidate(self):
         fixed = bt_agents.route("personal-project", {"agent": "claude", "profile": "claude"}, 1, "audit")
         self.assertEqual((fixed["profile"], fixed["model"], fixed["effort"], fixed["why"]),
-                         ("claude", "sonnet", "xhigh", "fixed (no pool)"))
+                         ("claude", "sonnet", "medium", "fixed (no pool)"))
         with self._all_clis():
             pooled = bt_agents.route("personal-project", {"pool": ["codex-named", "claude"]}, 0)
         self.assertEqual(pooled["profile"], "codex-named")
@@ -259,6 +259,17 @@ class CandidateRankingTests(AgentTests):
         self.populate_rates("codex-named", "codex", "gpt-6-luna", 45, 5)
         routes, _ = bt_agents.candidates("personal-project", ["claude", "codex-named"], 0)
         self.assertEqual([r["agent"] for r in routes], ["claude", "codex"])
+
+    def test_audit_has_no_provider_preference_for_the_hosting_session(self):
+        # Regression: an audit used to rank every non-Claude route last, so the provider hosting the session always
+        # won. The best measured route for the kind decides; the builder's provider is avoided only when asked.
+        self.populate_rates("claude", "claude", "sonnet", 3, 2, kind="audit")
+        self.populate_rates("codex-named", "codex", "gpt-6.1-sol", 5, 0, kind="audit")
+        routes, _ = bt_agents.candidates("personal-project", ["claude", "codex-named"], 1, "audit")
+        self.assertEqual([r["agent"] for r in routes], ["codex", "claude"])
+        built_by_codex, _ = bt_agents.candidates("personal-project", ["codex-named", "claude"], 1, "audit",
+                                                 avoid_providers={"codex"})
+        self.assertEqual([r["agent"] for r in built_by_codex], ["claude", "codex"])
 
     def test_heavier_recent_load_loses_and_pool_order_breaks_remaining_ties(self):
         self.rows.extend(self.event("claude", "claude", "haiku", seconds=7200) for _ in range(1))

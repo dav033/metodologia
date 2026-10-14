@@ -10,11 +10,11 @@ import bt_agents
 import bt_events
 from bt_core import *  # noqa: F403
 
-SKILL = SCRIPT.parent.parent
+SKILL = SKILL_DIR  # resolved by bt_core.resource_root(): checkout, override or installed package
 
 
 def text(project: str | None) -> str:
-    cli = f'python "{SCRIPT.as_posix()}"' + (f" --project {project}" if project else "")
+    cli = f'"{PYTHON}" "{SCRIPT.as_posix()}"' + (f" --project {project}" if project else "")
     out = [f"# Agent context{' — ' + project if project else ''}", "", bt_agents.brief(project), "",
            "### Routing (what runs where, decided by the supervisor, not by habit)",
            "- Tier 0 light, 1 standard, 2 top. A task starts at 0 (`level: architecture` -> 2, audits -> 1); each "
@@ -35,14 +35,15 @@ def text(project: str | None) -> str:
            "[--scope project|owner|skill] [--kind preference|convention|pitfall|tooling|decision]`",
            f"- Review: `{cli} learn list [--status candidate]` · owner decides: `learn confirm|reject L-NNN`. A "
            "candidate seen from 3 independent sources is promoted on its own."]
-    try:
-        import bt_learn
-        learned = bt_learn.brief(project, 20)
-        if learned:
-            out += ["", learned]
-    except (SystemExit, Exception):
-        pass
-    out += ["", "### What the measurements say", *[f"- {line}" for line in bt_events.advice(bt_events.read_all())],
+    import bt_learn
+    learned = bt_learn.context_brief(project)
+    if learned:
+        out += ["", learned]
+    from bt_continuation import continuation_context
+    continuation = continuation_context(ROOT, project)
+    if continuation:
+        out += ["", continuation]
+    out += ["", "### What the measurements say", *[f"- {line}" for line in bt_events.advice(bt_events.read_all(), defects=bt_events.read_defects())],
             f"- Full table: `{cli} metrics --by agent,model,effort,kind`", "", "### Where things are"]
     if project:
         pdir = ROOT / project

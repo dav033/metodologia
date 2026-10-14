@@ -47,10 +47,14 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     # ------------------------------------------------------------ helpers
-    def send(self, body: str | bytes, status: int = 200, ctype: str = "text/html; charset=utf-8") -> None:
+    def send(self, body: str | bytes, status: int = 200, ctype: str = "text/html; charset=utf-8",
+             sandbox: bool = False) -> None:
         data = body.encode("utf-8") if isinstance(body, str) else body
         self.send_response(status)
         self.send_header("Content-Type", ctype)
+        if sandbox:  # generated or agent-written HTML must not reach the dashboard origin or its token
+            self.send_header("Content-Security-Policy", "sandbox allow-scripts; default-src 'none'; "
+                             "script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:")
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
@@ -67,7 +71,7 @@ class Handler(BaseHTTPRequestHandler):
         ctype = mimetypes.guess_type(p.name)[0] or "application/octet-stream"
         if ctype.startswith("text/") or ctype in ("application/javascript", "application/json", "image/svg+xml"):
             ctype += "; charset=utf-8"
-        self.send(p.read_bytes(), 200, ctype)
+        self.send(p.read_bytes(), 200, ctype, sandbox=p.suffix == ".html")
 
     # ------------------------------------------------------------ GET
     def do_GET(self):

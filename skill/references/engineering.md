@@ -64,6 +64,9 @@ In a **new project**, these standards plus the default stack apply directly.
 
 ## 3. Architecture
 
+For module interfaces, seams and abstractions (deep versus shallow), load [`design-vocabulary.md`](design-vocabulary.md);
+for an explicit request to find architecture improvements, [`improve-architecture.md`](improve-architecture.md).
+
 **Feature-first.** Organize by business feature, not by technical type. A feature folder owns everything about
 that feature and exposes a small public API; nothing outside the feature imports its internals.
 
@@ -168,6 +171,8 @@ settled.
 Always use the best method for the risk, but **don't bury a medium project under thousands of tests.** Tests are
 there to give confidence to change code, not to hit a number.
 
+- **Seams:** where tests attach and what to mock is in [`test-seams.md`](test-seams.md); load it when planning or
+  writing tests for business logic or a bug fix.
 - **TDD for business logic and bugs:** write the failing test first, then the code. Every bug fix starts with a
   test that reproduces it.
 - **Test behavior through public interfaces,** not implementation details. A refactor that doesn't change
@@ -183,6 +188,10 @@ there to give confidence to change code, not to hit a number.
 ## 6. Verification & self-review
 
 **No "done" without fresh evidence.** Run it, read the output, then claim.
+
+For interfaces or product copy, also apply [`interface-quality.md`](interface-quality.md). For a substantive
+diff review, use the evidence protocol in [`subagents.md`](subagents.md#evidence-for-diff-reviews); it strengthens
+the existing spec/standards review, without adding another review stage.
 
 | Excuse | Reality |
 |---|---|
@@ -203,6 +212,8 @@ Before closing, review your own diff (the `reviewer` subagent for larger changes
 - No speculative abstractions, no obvious comments, no dead code.
 
 ## 7. Debugging
+
+For a broken, failing, flaky or slow behavior, follow [`diagnosing-bugs.md`](diagnosing-bugs.md) before any repair.
 
 - Root cause before fixing (`runner` reproduces and distills the failure, `explorer` traces the code path):
   reproduce, read the actual error and stack trace, form a hypothesis, test it.

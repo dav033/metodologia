@@ -35,7 +35,11 @@ for _s in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-SKILL_DIR = Path(__file__).resolve().parent.parent
+from bt_resources import resource_root  # noqa: E402
+
+
+SKILL_DIR = resource_root()
+PYTHON = Path(sys.executable).as_posix()  # generated commands name the interpreter, never a bare `python`
 SCRIPT = Path(__file__).resolve().parent / "bitacora.py"
 TEMPLATES = SKILL_DIR / "templates"
 ROOT = Path(os.environ.get("BITACORA_ROOT", Path.home() / "bitacora"))
@@ -188,6 +192,14 @@ def ensure_project(project: str) -> tuple[Path, bool]:
     if created or not (pdir / "INDEX.md").exists():
         write_index(pdir)
     return pdir, created
+
+
+def ensure_glossary(pdir: Path) -> Path:
+    """GLOSSARY.md is created on demand (the first time a term is settled), never empty for every project."""
+    target = pdir / "GLOSSARY.md"
+    if not target.exists():
+        target.write_text(render("GLOSSARY.md", project=pdir.name, date=today().isoformat()), encoding="utf-8")
+    return target
 
 
 def ensure_day(pdir: Path, d: dt.date) -> dict:

@@ -1,0 +1,31 @@
+{
+  "name": "s-review-evidence-triage",
+  "description": "Diff-review triage values demonstrated impact over agreement or optional elegance",
+  "checks": "subagents.md evidence for diff reviews",
+  "fixture": "empty",
+  "max_turns": 8,
+  "budget_usd": 0.3,
+  "turns": [
+    "Aplica el protocolo de evidencia para revisiones de Metodología. Para leer las instrucciones locales usa únicamente Read, Glob o Grep; no uses shell, escribas archivos, revises un repo real, ejecutes comandos de aplicación o lances agentes. Sintetiza estos resultados de revisión simulados: A y B califican HIGH que src/parse.ts:4 usa unknown antes de validar el JSON externo; A propone bloquear porque un helper de 18 líneas podría escribirse en 12, sin mostrar diferencia de comportamiento ni mantenimiento; B demuestra que src/export.ts:42 quitó requireExportPermission(), y el endpoint que lo llama no tiene otra autorización, permitiendo exportar datos de otra cuenta. El dueño aprobó quitar un badge Beta de la UI, sin cambiar permisos. Devuelve un veredicto consolidado con los defectos, lo descartado y las propuestas. No conviertas la coincidencia de revisores en evidencia automática ni pidas aprobar cada hallazgo."
+  ],
+  "graders": [
+    {
+      "name": "reads-review-protocol",
+      "type": "regex",
+      "target": "tools",
+      "pattern": "subagents\\.md"
+    },
+    {
+      "name": "evidence-over-consensus-and-elegance",
+      "type": "llm",
+      "criteria": "PASS only if it blocks on the demonstrated cross-account export authorization regression at src/export.ts:42, rejects unknown-before-validation as a defect despite reviewer agreement, does not block on the 18-to-12-line suggestion, and accepts the explicitly agreed Beta badge removal without treating that as approval to remove permissions. It labels the scenario evidence as supplied/simulated rather than claiming an actual audit, deduplicates findings, and imposes no per-finding approval gate."
+    },
+    {
+      "name": "read-only-tools",
+      "type": "tool_used",
+      "tool": "^(?!(?:Read|Glob|Grep)$).+",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}

@@ -83,8 +83,10 @@ class ProfileGateTests(unittest.TestCase):
         self.assertEqual(bt_profiles.require_launchable("claude-personal"), "claude")
         with patch.object(bt_profiles, "LAUNCHABLE", ("claude",)), self.assertRaises(SystemExit):
             bt_profiles.require_launchable("codex-luis")
-        with self.assertRaises(SystemExit):  # the Gemini/Antigravity driver was removed on purpose
-            bt_profiles.add("x", "antigravity")
+        bt_profiles.add("agy-test", "antigravity")  # a machine-local account, never a built-in
+        self.assertEqual(bt_profiles.provider_of("agy-test"), "antigravity")
+        with self.assertRaises(SystemExit):
+            bt_profiles.add("x", "gemini")
 
 
 class WorkGateLauncherTests(ProfileGateTests):

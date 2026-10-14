@@ -1,0 +1,31 @@
+{
+  "name": "m6-test-seams-agreement",
+  "description": "Test planning uses agreed public seams, vertical slices and justified refactoring",
+  "checks": "test-seams.md routed on test planning; engineering.md section 5 preserved",
+  "fixture": "empty",
+  "max_turns": 8,
+  "budget_usd": 0.3,
+  "turns": [
+    "Aplica la guía de seams de pruebas de Metodología. Para leer las instrucciones locales usa únicamente Read, Glob o Grep; no uses shell, escribas archivos, ejecutes aplicaciones, instales nada ni delegues. Solo analiza: en un módulo de pedidos, OrderService usa internamente PriceCalculator y TaxClient (API externa de impuestos). Quiero añadir descuentos por volumen. Dame el plan de pruebas: dónde se prueba, en qué orden, qué se simula y si hace falta refactorizar. Ya aprobé trabajar de forma autónoma; no hace falta preguntar por cada prueba."
+  ],
+  "graders": [
+    {
+      "name": "reads-test-seam-guidance",
+      "type": "regex",
+      "target": "tools",
+      "pattern": "test-seams\\.md"
+    },
+    {
+      "name": "seams-slices-mocks-refactor",
+      "type": "llm",
+      "criteria": "PASS only if the plan (1) tests through the public OrderService interface as the agreed seam and states what that seam catches and what it misses; (2) works in vertical slices, one failing test then minimal code, not all tests first; (3) simulates only the external tax API (system boundary) and does not mock PriceCalculator or other internal collaborators; (4) takes expected values from independent literals or worked examples, not by recomputing the formula; (5) refactors only if needed, in a separate behaviour-preserving step, and neither requires a refactor phase nor defers all refactoring to review; (6) does not ask the owner to approve every test or seam, but records the seam choice as a plan assumption."
+    },
+    {
+      "name": "read-only-tools",
+      "type": "tool_used",
+      "tool": "^(?!(?:Read|Glob|Grep)$).+",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}

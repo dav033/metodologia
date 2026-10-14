@@ -60,8 +60,14 @@ current task when multiple rules conflict.
 What a session discovers about a project, about the owner's preferences or about this skill is recorded with
 `bitacora.py learn add … --evidence …` (`agents.md` §Learning): scope `skill` for friction or defects in the
 methodology itself. Candidates need the owner's confirmation or three independent sightings before they are injected
-into future sessions, so one session's guess never becomes a rule. A confirmed `skill` learning is the evidence that
-justifies a permanent change here.
+into future sessions, so one session's guess never becomes a rule. A confirmed `skill` learning is one source of
+evidence for a permanent change here. Explicit feedback and a reproduced defect also justify a scoped repair
+immediately; do not wait for three sightings to fix a proven bug. Recording a candidate does not itself edit
+instructions or change a project's policy. Keep project-specific conventions in project scope and owner
+preferences global; reject an obsolete rule explicitly rather than merging its evidence into a contradictory
+replacement. Cosmetic punctuation may deduplicate; negation, word order and operators must remain distinct.
+Context injection interleaves project, owner and skill scopes within `learn.inject_max` so global history cannot
+starve project rules. Corrupt learning storage must produce a visible warning, never an empty-success fallback.
 
 ## Record and report
 

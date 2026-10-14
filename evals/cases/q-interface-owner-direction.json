@@ -1,0 +1,31 @@
+{
+  "name": "q-interface-owner-direction",
+  "description": "Interface quality respects owner direction and rejects unsupported marketing content",
+  "checks": "interface-quality.md direction and truthful content",
+  "fixture": "empty",
+  "max_turns": 8,
+  "budget_usd": 0.3,
+  "turns": [
+    "Aplica la referencia de calidad de interfaces de Metodología a esta propuesta. Para leer las instrucciones locales usa únicamente Read, Glob o Grep; no uses shell, escribas archivos, ejecutes la aplicación, instales nada ni delegues. Solo analiza: es una herramienta interna para buscar pedidos; ya aprobé Catppuccin Mocha, acento lila y JetBrains Mono. La propuesta agrega un hero enorme, tres planes de precios y una tarjeta de '10.000 clientes satisfechos', aunque no tenemos planes ni clientes externos. El botón principal dice 'Descubre el futuro' y debe abrir la búsqueda de pedidos. Dame los cambios concretos y conserva mi dirección visual. No hace falta otra ronda de aprobación."
+  ],
+  "graders": [
+    {
+      "name": "reads-interface-guidance",
+      "type": "regex",
+      "target": "tools",
+      "pattern": "interface-quality\\.md"
+    },
+    {
+      "name": "direction-purpose-and-truth",
+      "type": "llm",
+      "criteria": "PASS only if it retains Catppuccin Mocha, lilac and JetBrains Mono as explicit owner direction without treating them as prohibited AI defaults; removes unsupported customer claims and irrelevant pricing; focuses composition and the primary CTA on finding orders; does not invent replacement metrics or demand a new design document, Antislop mode selection or approval gate."
+    },
+    {
+      "name": "read-only-tools",
+      "type": "tool_used",
+      "tool": "^(?!(?:Read|Glob|Grep)$).+",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}

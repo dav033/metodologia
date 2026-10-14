@@ -1,0 +1,115 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bitacora"
+version = "0.1.0"
+description = "Local engineering workspace: bitácora documents, marathon supervisor, provider routing and web UI"
+requires-python = ">=3.12"
+dependencies = []  # stdlib only; optional Node is a separate capability (REQ-007 M7)
+
+[project.scripts]
+bitacora = "bitacora:main"
+bt = "bitacora:main"
+globalusage = "bt_entrypoints:globalusage"
+relay-run = "relay_run:main"
+file-guard = "file_guard:main"
+install-agents = "install_agents:main"
+install-rtk = "bt_entrypoints:install_rtk"
+bitacora-inventory = "migration_inventory:main"
+
+[tool.setuptools]
+package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
+packages = ["bitacora_resources", "bitacora_platform"]
+py-modules = [
+  "bitacora",
+  "bt_agents",
+  "bt_agy",
+  "bt_audit",
+  "bt_autostart",
+  "bt_cli_accounts",
+  "bt_cli_diagram",
+  "bt_cli_docs",
+  "bt_cli_delegate",
+  "bt_cli_learn",
+  "bt_cli_review",
+  "bt_cli_flows",
+  "bt_config",
+  "bt_code_review",
+  "bt_context",
+  "bt_continuation",
+  "bt_core",
+  "bt_delegate",
+  "bt_delegate_modes",
+  "bt_diagram",
+  "bt_driver",
+  "bt_entrypoints",
+  "bt_events",
+  "bt_handoff",
+  "bt_hooks",
+  "bt_index",
+  "bt_install_tx",
+  "bt_integration_lock",
+  "bt_launch",
+  "bt_learn",
+  "bt_lock",
+  "bt_monitor",
+  "bt_notify",
+  "bt_nowindow",
+  "bt_page_graph",
+  "bt_page_metrics",
+  "bt_page_req",
+  "bt_page_review",
+  "bt_page_run",
+  "bt_pages",
+  "bt_pending",
+  "bt_platform",
+  "bt_profile_matrix",
+  "bt_profiles",
+  "bt_quality",
+  "bt_quota_live",
+  "bt_relay",
+  "bt_relay_cli",
+  "bt_relay_client",
+  "bt_relay_handoff",
+  "bt_relay_launch",
+  "bt_relay_proc",
+  "bt_resources",
+  "bt_review",
+  "bt_rounds",
+  "bt_run",
+  "bt_run_isolated",
+  "bt_runprompt",
+  "bt_runsession",
+  "bt_runsettle",
+  "bt_runstate",
+  "bt_runtask",
+  "bt_runtier",
+  "bt_runutil",
+  "bt_secrets",
+  "bt_server",
+  "bt_subscription_schedule",
+  "bt_subscription_sources",
+  "bt_subscriptions",
+  "bt_trace",
+  "bt_vcs",
+  "bt_views",
+  "bt_watch",
+  "bt_workspace",
+  "bt_worktree",
+  "file_guard",
+  "globalusage",
+  "install_agents",
+  "install_rtk",
+  "migration_inventory",
+  "relay_run",
+]
+
+# Templates, assets, policy references and agent definitions travel inside the wheel (REQ-007 R2).
+# test_package_install.py keeps py-modules complete against skill/scripts.
+[tool.setuptools.package-data]
+bitacora_resources = [
+  "SKILL.md", "templates/*", "templates/**/*", "assets/*", "agents/*", "githooks/*",
+  "references/*.md", "references/stacks/*", "vendor/archify/**/*",
+]

@@ -98,7 +98,12 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
     elif agent in bt_profiles.LAUNCHABLE:
         bt_profiles.authorize_ambient(agent, project, workdir)  # the inherited account may be a work-only one
     if agent not in bt_profiles.LAUNCHABLE:
-        raise SystemExit("Pass --profile ID, --agent claude|codex, or neither to let the router choose")
+        raise SystemExit(f"Pass --profile ID, --agent {'|'.join(bt_profiles.LAUNCHABLE)}, or neither to let the router choose")
+    if kind == "audit":
+        tier = bt_agents.start_tier(None, kind) if tier is None else tier
+        default_model, default_effort = bt_agents.model_for(agent, tier, kind=kind)
+        model = model or default_model
+        effort = effort or default_effort
     if agent == "codex" and model and not effort:  # an account's config default may not suit this model
         effort = "medium"
     workdir = Path(workdir).expanduser().resolve()
@@ -121,8 +126,10 @@ def _prompt(order: dict, result: Path) -> str:
     allow = f"- You may only modify: {', '.join(order['allow'])}\n" if order["allow"] else ""
     verify = (f"- This will be checked independently by running: `{order['verify']}`. Make it pass.\n"
               if order.get("verify") else "")
-    return PROMPT.format(project=order["project"], task=order["task"], workdir=order["workdir"], allow=allow,
-                         verify=verify, result=result.as_posix(), id=order["id"])
+    prompt = PROMPT.format(project=order["project"], task=order["task"], workdir=order["workdir"], allow=allow,
+                           verify=verify, result=result.as_posix(), id=order["id"])
+    previous = str(order.get("previous_attempt") or "")[:600]
+    return prompt + (f"\n## Previous attempt\n{previous}\n" if previous else "")
 
 
 def _git_changed(workdir: Path) -> list[str] | None:
@@ -366,9 +373,21 @@ def summary(did: str) -> dict:
     d = path_of(did)
     outcome = d / "OUTCOME.json"
     if outcome.exists():
-        return json.loads(outcome.read_text(encoding="utf-8"))
+        result = json.loads(outcome.read_text(encoding="utf-8"))
+        try:
+            order = json.loads((d / "TASK.json").read_text(encoding="utf-8"))
+            from bt_driver import driver_for
+            raw = (d / "session.log").read_text(encoding="utf-8", errors="replace")
+            contract = driver_for(order["agent"]).normalize(raw, result.get("rc"),
+                                                             timed_out=result.get("status") == "timeout")
+            result["contract"] = {"v": contract.version, "status": contract.status,
+                                  "terminal": contract.terminal_event}
+        except Exception:
+            result["contract"] = None
+        return result
     if (d / "TASK.json").exists():
-        return {"id": did, "status": "running_or_pending", "log": (d / "session.log").as_posix()}
+        return {"id": did, "status": "running_or_pending", "log": (d / "session.log").as_posix(),
+                "contract": None}
     raise SystemExit(f"Unknown delegation: {did}")
 
 

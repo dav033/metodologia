@@ -1,6 +1,9 @@
 """Behavior tests for evidence-backed learnings."""
 from __future__ import annotations
 
+import argparse
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
@@ -10,7 +13,7 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 
-import bt_learn  # noqa: E402
+import bt_learn
 
 
 class LearnTests(unittest.TestCase):
@@ -69,6 +72,75 @@ class LearnTests(unittest.TestCase):
         self.assertEqual(len(second["evidence"]), 1)
         self.assertGreater(second["updated"], first["updated"])
 
+    def test_opposite_or_reordered_rules_never_share_evidence(self):
+        pairs = (
+            ("Use transactions for all customer invoice state changes",
+             "Do not use transactions for all customer invoice state changes"),
+            ("Copy records from alpha to beta", "Copy records from beta to alpha"),
+            ("Require invoice amount > 100", "Require invoice amount < 100"),
+        )
+        for n, (first, second) in enumerate(pairs):
+            project = f"project-{n}"
+            original = bt_learn.add(project, first, "Observed", source="session-1")
+            bt_learn.reject(project, original["id"])
+            different = bt_learn.add(project, second, "Correction", source="session-2")
+            self.assertTrue(different["created"])
+            self.assertEqual(different["status"], "candidate")
+            self.assertEqual(different["sightings"], 1)
+
+    def test_rejection_reason_cannot_persist_secrets(self):
+        item = self.add_learning("REQ-1/T1")
+        before = (self.root / "alpha" / "learnings.json").read_bytes()
+        with self.assertRaises(bt_learn.LearnError):
+            bt_learn.reject("alpha", item["id"], reason="password=abcdef")
+        self.assertEqual((self.root / "alpha" / "learnings.json").read_bytes(), before)
+
+    def test_malformed_learning_is_a_deliberate_storage_error(self):
+        path = self.root / "alpha" / "learnings.json"
+        path.parent.mkdir()
+        path.write_text('{"schema":1,"items":[null]}', encoding="utf-8")
+        with self.assertRaises(bt_learn.LearnError):
+            bt_learn.brief("alpha")
+
+    def test_project_learning_never_leaks_to_another_project(self):
+        item = self.add_learning("REQ-1/T1")
+        bt_learn.confirm("alpha", item["id"])
+        self.assertIn(item["text"], bt_learn.brief("alpha"))
+        self.assertNotIn(item["text"], bt_learn.brief("beta"))
+
+    def test_context_consumers_respect_configured_limit_and_report_corruption(self):
+        import bt_config
+        import bt_context
+        import bt_runprompt
+        first = self.add_learning("REQ-1/T1")
+        bt_learn.confirm("alpha", first["id"])
+        with patch.object(bt_config, "get", return_value=0):
+            self.assertNotIn(first["text"], bt_learn.context_brief("alpha"))
+            self.assertNotIn(first["text"], "\n".join(bt_runprompt._team("alpha")))
+        (self.root / "alpha" / "learnings.json").write_text("broken", encoding="utf-8")
+        self.assertIn("WARNING", bt_learn.context_brief("alpha"))
+        self.assertIn("WARNING", "\n".join(bt_runprompt._team("alpha")))
+        with patch.object(bt_context.bt_agents, "brief", return_value=""), \
+                patch.object(bt_context.bt_events, "read_all", return_value=[]), \
+                patch.object(bt_context.bt_events, "read_defects", return_value=[]):
+            self.assertIn("confirmed learnings could not be loaded", bt_context.text("alpha"))
+
+    def test_cli_scope_filters_without_hiding_default_global_list(self):
+        import bt_cli_learn
+        self.add_learning("REQ-1/T1")
+        bt_learn.add(None, "Keep skill changes evidence based", "Observed", source="REQ/T2", scope="skill")
+        parser = argparse.ArgumentParser()
+        bt_cli_learn.register(parser.add_subparsers(dest="cmd"))
+        for suffix, expected, absent in ((["--scope", "skill"], "Keep skill", "Prefer small"),
+                                         (["--scope", "project"], "Prefer small", "Keep skill"),
+                                         ([], "Keep skill", None)):
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                bt_cli_learn.dispatch(parser.parse_args(["learn", "list", *suffix]), "alpha")
+            self.assertIn(expected, output.getvalue())
+            if absent:
+                self.assertNotIn(absent, output.getvalue())
+
     def test_third_independent_sighting_promotes(self):
         self.add_learning("REQ-1/T1")
         self.add_learning("REQ-2/T1")
@@ -124,6 +196,14 @@ class LearnTests(unittest.TestCase):
         result = bt_learn.brief("alpha", max_items=1)
         self.assertEqual(result.count("- ["), 1)
         self.assertIn("(+2 more: bitacora.py learn list)", result)
+
+    def test_global_volume_cannot_starve_project_learning(self):
+        for n in range(4):
+            item = bt_learn.add(None, f"Global owner convention number {n}", "Observed", source=f"chat-{n}", scope="owner")
+            bt_learn.confirm(None, item["id"], scope="owner")
+        project = self.add_learning("REQ-1/T1")
+        bt_learn.confirm("alpha", project["id"])
+        self.assertIn(project["text"], bt_learn.brief("alpha", max_items=2))
 
     def test_markdown_is_generated_for_global_and_project(self):
         self.add_learning("REQ-1/T1")

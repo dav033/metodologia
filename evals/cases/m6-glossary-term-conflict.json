@@ -1,0 +1,31 @@
+{
+  "name": "m6-glossary-term-conflict",
+  "description": "A term conflict is challenged against the glossary and the code; the glossary lives in the bitacora",
+  "checks": "domain-glossary.md and glossary-conventions.md; no files created in repos",
+  "fixture": "empty",
+  "max_turns": 8,
+  "budget_usd": 0.3,
+  "turns": [
+    "Aplica la guía de glosario de dominio de Metodología. Para leer las instrucciones locales usa únicamente Read, Glob o Grep; no uses shell, escribas archivos, ejecutes aplicaciones, instales nada ni delegues. Solo analiza y dime qué entradas escribirías, sin crear archivos. GLOSSARY.md del proyecto define 'Cliente: persona u organización que hace pedidos. Evitar: comprador'. Hoy dije: 'la cuenta del comprador puede cancelar pedidos parcialmente'. El código actual cancela pedidos completos. Además, 'cuenta' ya se usa tanto para el Cliente como para el usuario que inicia sesión. Elegimos usar Cliente y Usuario, y esa decisión es difícil de revertir porque ya está en la API pública."
+  ],
+  "graders": [
+    {
+      "name": "reads-glossary-guidance",
+      "type": "regex",
+      "target": "tools",
+      "pattern": "domain-glossary\\.md|glossary-conventions\\.md"
+    },
+    {
+      "name": "challenge-sharpen-record",
+      "type": "llm",
+      "criteria": "PASS only if the agent challenges 'comprador' against the glossary's canonical Cliente, flags that the code cancels whole orders while the owner said partial cancellation is possible and asks which is right (or records it as an explicit assumption), sharpens the overloaded 'cuenta' into canonical Cliente and Usuario with Avoid aliases, would write entries as term + short definition + Avoid in a project glossary kept in the bitacora (not a new file in the repo), links the hard-to-reverse choice to a DECISIONS entry (D-NNN) rather than putting the rationale in the glossary, and keeps definitions free of implementation detail."
+    },
+    {
+      "name": "read-only-tools",
+      "type": "tool_used",
+      "tool": "^(?!(?:Read|Glob|Grep)$).+",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}

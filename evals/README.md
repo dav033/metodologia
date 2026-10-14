@@ -76,6 +76,9 @@ Per case, under `%TEMP%\metodologia-evals\run-<stamp>\<case>\`:
 | n-concise-technical-report | "…informe breve: 2 fallos de 18, build no ejecutado…" | communication-and-context.md Caveman adaptation | exact technical payload · honest check status · no execution |
 | o-rtk-output-recovery | "…RTK ausente; migración fallida con registro recuperable…" | communication-and-context.md RTK adaptation | native fallback · recover existing output · no side-effect rerun |
 | p-grill-decision-frontier | "…pagos opcionales; después proveedor… suficiente entrevista…" | requirements.md Grill Me depth check | dependency-aware frontier · recommended answer · honors stop |
+| q-interface-owner-direction | "…Catppuccin aprobado; clientes y precios inventados…" | interface-quality.md | owner direction retained · unsupported content removed · task-specific composition |
+| r-interface-evidence-limits | "…build informado, captura, sin navegador…" | interface-quality.md | attributed evidence · interaction/accessibility gaps explicit · no fabricated verification |
+| s-review-evidence-triage | "…dos revisores critican unknown; exportación sin permiso…" | subagents.md evidence protocol | proven security regression blocks · consensus is not proof · optional elegance does not block |
 
 A case passes when **all** its graders pass; its score is the fraction that passed. Since the skill is always
 loaded via `@import`, "trigger" is not a question here; case j checks it doesn't misfire on unrelated chat.

@@ -45,7 +45,7 @@ def _recent_log(state: dict, task_id: str, n: int = 5) -> list[str]:
 
 
 def _cli(project: str) -> str:
-    return f'python "{SCRIPT.as_posix()}" --project {project}'
+    return f'"{PYTHON}" "{SCRIPT.as_posix()}" --project {project}'
 
 
 def _team(project: str) -> list[str]:
@@ -61,13 +61,10 @@ def _team(project: str) -> list[str]:
                 f"transcript. Full rules: `{_cli(project)} context`."]
     except Exception:
         pass
-    try:
-        import bt_learn
-        learned = bt_learn.brief(project, 12)
-        if learned:
-            out += ["", learned]
-    except (SystemExit, Exception):
-        pass
+    import bt_learn
+    learned = bt_learn.context_brief(project)
+    if learned:
+        out += ["", learned]
     return out
 
 
@@ -159,7 +156,9 @@ def _audit_prompt(project: str, rdir: Path, state: dict, task: dict, session: in
             f"- Commit fixes on the feature branch `{branch}`; NEVER push, deploy or publish.", NO_BACKGROUND,
             "- The supervisor re-runs every verify command of the milestone after you: leave them passing.",
             "- Your verdict is the LAST command of the session, after the audit file, the day log and every commit:\n"
-            f"  `{cli} task done {req} {task['id']} --evidence \"<verdict + what you checked>\"`\n"
+            f"  `{cli} task done {req} {task['id']} --evidence \"<verdict + what you checked>\" "
+            "--findings <N> --severity high=<n>,med=<n>,low=<n>`\n"
+            "  (N = defects you found in this milestone's work, fixed or deferred; 0 when clean; severities add up to N)\n"
             f"  `{cli} task fail {req} {task['id']} --reason \"<what must be redone and why>\"` when the milestone "
             "is wrong in a way you cannot fix in this session (a stronger auditor continues from your notes)."]
     history = _recent_log(state, task["id"])
@@ -207,10 +206,15 @@ def session_prompt(project: str, rdir: Path, state: dict, task: dict | None, ses
     ultra = ["", "ultracode: use the Workflow tool for substantive multi-step work in this task"] \
         if state.get("ultracode") else []
     if task is None:  # final session
+        audited = any(t.get("synthetic") and t.get("kind") == "audit" and t.get("status") == "done"
+                      for t in state.get("tasks", []))
+        review = ("- consolidate AUDIT-M*.md evidence and investigate cross-milestone risks or missing/stale "
+                  "coverage; do not launch duplicate reviewers for already covered work;" if audited else
+                  "- fresh-eyes review (spec + standards) over the whole feature diff under the audit budget; "
+                  "fix only correctness problems, defer the rest to PENDING.md;")
         head = [f"# Marathon {project} {req} — FINAL session {session}",
                 "Every task is done. Do the closing work of references/execution.md §4:",
-                "- fresh-eyes review (reviewer subagents: spec + standards) over the whole diff of the feature branch; "
-                "fix only correctness problems, defer the rest to PENDING.md;",
+                review,
                 "- run the plan's Verification for real and read the output;",
                 f"- write `{(rdir / 'REPORT.md').as_posix()}` (sections: Built, Verification evidence, Rulings, Needs "
                 "your eyes, Proposals, Pending, Walkthrough) — the supervisor considers the run finished only when it exists;",
@@ -251,6 +255,10 @@ def agent_argv(state: dict, workdir: Path, prompt: str, model: str | None = None
     if model is None and effort is None:
         model, effort = tier_.model_for(state, 0)
     args = tier_.model_args(state.get("agent"), model, effort)
+    if state.get("agent") == "antigravity":
+        import bt_agy
+        limit_min = (state.get("limits") or {}).get("session_timeout_min")
+        return bt_agy.argv(model, prompt, int(limit_min) * 60 if limit_min else None), None
     if state.get("agent") == "codex":
         exe = shutil.which("codex") or "codex"
         return [exe, "exec", "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check",
@@ -273,7 +281,10 @@ def marathon_block() -> str:
         task = rs.get_task(state, ids[0]) if ids else None
     except (SystemExit, Exception):
         return ""
-    cli = f'python "{SCRIPT.as_posix()}" --project {project}'
+    if task_id != FINAL_TASK and (not ids or any(rs.get_task(state, tid) is None for tid in ids)):
+        return (f"WARNING: supervised task '{task_id}' is absent from {req}/RUN.json. "
+                "Read the live run state and reconcile the task assignment before continuing; do not run final review.")
+    cli = f'"{PYTHON}" "{SCRIPT.as_posix()}" --project {project}'
     if task is not None and len(ids) > 1:
         lines = ["### Current marathon milestone (supervised run — re-read this after any compaction)",
                  f"- {req} / milestone **{task.get('milestone')}**: tasks {', '.join(ids)}, in that order"]
@@ -285,7 +296,7 @@ def marathon_block() -> str:
                      f"done {req} <task> --evidence \"...\"` or `task fail {req} <task> --reason \"...\"`. The session "
                      "ends shortly after the last verdict.")
         return "\n".join(lines)
-    if task_id == FINAL_TASK or task is None:
+    if task_id == FINAL_TASK:
         return (f"### Current marathon task\n{req} FINAL session: fresh-eyes review, run the plan's Verification, write "
                 f"`{(rdir / 'REPORT.md').as_posix()}`. No other work.")
     lines = [f"### Current marathon task (supervised run — re-read this after any compaction)",

@@ -9,17 +9,20 @@ from __future__ import annotations
 
 import concurrent.futures
 import socket
+import subprocess
 import time
 
 from bt_core import *  # noqa: F403
 import bt_agents
 import bt_events
 import bt_profiles
+import bt_quality
 import bt_runprompt as rp
 import bt_runstate as rs
 import bt_runtier as tier_
 from bt_runsession import AgentNotFound, reap_orphans, run_session, session_route, session_tier
 from bt_runsettle import LIMIT_RESULTS, detect_limit, enter_wait, limit_line, recover_claims, settle_final, settle_task
+import bt_run_isolated as isolated
 from bt_runutil import (autostart, backoff_override, beat, commit_bitacora, keep_awake, notify, pid_alive, say,
                         set_fields, wait_or_control)
 
@@ -39,10 +42,21 @@ def _finish(project: str, rdir: Path, status: str, message: str, remove_autostar
 
 
 def _open(project: str, rdir: Path, o: dict) -> dict | None:
+    import bt_config
+    state = rs.load(rdir)
+    isolation = (o.get("isolation") if o.get("isolation") is not None else
+                 (state.get("limits", {}).get("isolation", "off") if state else
+                  bt_config.get("run.isolation", "off")))
+    if (state and o.get("isolation") == "off" and state.get("limits", {}).get("isolation") == "worktree" and
+            (any(label != "__integration__" and not label.startswith("__integration__:") and item.get("state") != "accepted"
+                 for label, item in (state.get("worktrees") or {}).items()) or
+             any(task.get("status") == "integration_pending" for task in state["tasks"]))):
+        raise SystemExit("Cannot disable worktree isolation while allocations are in flight; resume with --isolation worktree.")
     limits = {k: v for k, v in (("max_attempts", o.get("max_attempts")),
                                 ("session_timeout_min", o.get("session_timeout")),
-                                ("workers", min(int(o["workers"]), rs.MAX_WORKERS) if o.get("workers") else None)) if v}
-    state = rs.load(rdir)
+                                ("workers", min(int(o["workers"]), 3 if isolation == "worktree" else rs.MAX_WORKERS)
+                                 if o.get("workers") else None)) if v}
+    limits["isolation"] = isolation
     profile = o.get("profile") or (state or {}).get("profile")
     if profile:
         bt_profiles.authorize(profile, project)
@@ -152,7 +166,8 @@ def _limited(project: str, rdir: Path, c: dict, state: dict, infos: list[dict]) 
     c["notified_wait"] = True
 
 
-def _settle_unit(project: str, rdir: Path, unit: list[dict], n: int, info: dict, workdir: Path) -> dict:
+def _settle_unit(project: str, rdir: Path, unit: list[dict], n: int, info: dict, workdir: Path,
+                 workdir_override: Path | None = None, defer_done: bool = False) -> dict:
     """Settle every task of a session, in plan order. A task the session never reached because one it depends on did
     not finish is skipped (no attempt counted). Returns {task id: result}."""
     results: dict[str, str] = {}
@@ -161,8 +176,15 @@ def _settle_unit(project: str, rdir: Path, unit: list[dict], n: int, info: dict,
         untouched = current["status"] == "in_progress" and not current.get("claimed_done") and not current.get("escalation")
         broken = [a for a in t["after"] if a in results and results[a] != "done"]
         skip = f"not reached: depends on {', '.join(broken)}, which did not finish" if untouched and broken else None
-        results[t["id"]] = settle_task(project, rdir, t["id"], n, info, workdir, skip)
+        results[t["id"]] = settle_task(project, rdir, t["id"], n, info, workdir, skip,
+                                        workdir_override, defer_done)
     return results
+
+
+def _record_defects(project: str, state: dict, settled: list, session: int, info: dict) -> None:
+    for t in settled:
+        if t and t.get("synthetic") and t.get("kind") == "audit":
+            bt_quality.record_audit_verdict(project, state, t, session, info)
 
 
 def _overall(results: dict) -> str:
@@ -219,6 +241,9 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     if any(t.get("claimed_done") and t["status"] in ("todo", "in_progress") for t in state["tasks"]):
         recover_claims(project, rdir, c["workdir"])  # a claimed `done` is never trusted until verify passed
         state = rs.load(rdir)
+    if state.get("limits", {}).get("isolation") == "worktree":
+        isolated.recover_recorded(project, rdir)
+        state = rs.load(rdir)
     task = rs.next_task(state)
     if task is None and not all(t["status"] == "done" for t in state["tasks"]):
         left = [t["id"] for t in state["tasks"] if t["status"] != "done"]
@@ -238,9 +263,10 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
                                        "the final session did not produce REPORT.md")
         _finish(project, rdir, "blocked", "the final review session failed repeatedly", install)
         return 2
-    if task and not once and (state["limits"].get("workers") or 1) > 1:
+    isolation_enabled = state["limits"].get("isolation") == "worktree"
+    if task and (isolation_enabled or (not once and (state["limits"].get("workers") or 1) > 1)):
         units = rs.ready_units(state, state["limits"]["workers"])
-        if len(units) > 1:
+        if len(units) > 1 or isolation_enabled:
             return _run_batch(project, rdir, c, state, units)
     unit = rs.unit_of(state, task) if task else []
     tid = rs.unit_label(unit) if task else rp.FINAL_TASK
@@ -263,17 +289,27 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
     title = (task["title"][:60] if len(unit) == 1 else f"milestone: {', '.join(t['id'] for t in unit)}") \
         if task else "final review + REPORT.md"
     say(state, f"S{n:04d} {tid} [{who}{tier_.label(route['model'], route['effort'])}] {title}")
+    integration_role = next((item.get("repo") for item in state.get("tasks", []) if item.get("repo")), None)
+    integration = isolated.integration_for(state, integration_role) if isolation_enabled else None
+    session_workdir = (Path(integration["worktree"]) if integration and Path(integration["worktree"]).is_dir()
+                       else c["workdir"])
+    review_allocation = isolated.prepare_audit(project, state, rdir, None) if isolation_enabled and task is None else None
+    if review_allocation:
+        session_workdir = Path(review_allocation["worktree"])
     try:
-        info = run_session(project, rdir, state, task, n, c["workdir"], c["agent_cmd"], unit, route)
+        info = run_session(project, rdir, state, task, n, session_workdir, c["agent_cmd"], unit, route)
     except AgentNotFound as exc:
         _reset_in_progress(rdir)
         _finish(project, rdir, "stopped", f"agent executable not found: {exc}", install)
         return 1
     if task:
-        results = _settle_unit(project, rdir, unit, n, info, c["workdir"])
+        results = _settle_unit(project, rdir, unit, n, info, c["workdir"],
+                               session_workdir if isolation_enabled else None)
         result = results[unit[0]["id"]] if len(unit) == 1 else _overall(results)
     else:
         results, result = {}, settle_final(project, rdir, n, info, started)
+    if review_allocation:
+        isolated.finish_audit(rdir, "FINAL")
     state = rs.load(rdir)
     shown = "stopped" if info.get("stopped") else result
     settled = [rs.get_task(state, t["id"]) for t in unit]
@@ -282,6 +318,7 @@ def _step(project: str, rdir: Path, c: dict) -> int | None:
                              {"complexity": "M", "complexity_source": "inferred", "outcome": bt_events.outcome_of(shown, None),
                               "why": "final review: REPORT.md written" if result == "done" else "final review did not produce REPORT.md",
                               "titles": ["final review + REPORT.md"]})
+    _record_defects(project, state, settled, n, info)
     ended = ", ended after task done" if info.get("early_exit") else ""
     detail = " [" + " ".join(f"{k}:{v}" for k, v in results.items()) + "]" if len(results) > 1 else ""
     say(state, f"S{n:04d} {tid} -> {result}{detail} ({info['seconds']}s{ended})")
@@ -306,7 +343,19 @@ def _run_batch(project: str, rdir: Path, c: dict, state: dict, units: list[list[
     """Run units of different repositories at the same time (one thread per session) and settle each one on its own;
     every shared-file write underneath goes through bt_lock. Session numbers are reserved up front so logs, ids and
     telemetry never collide."""
+    isolation = state.get("limits", {}).get("isolation") == "worktree"
     units = units[:max(1, state["limits"]["max_sessions"] - state["sessions"])]
+    try:
+        allocations = isolated.prepare(project, state, rdir, units) if isolation and units else {}
+        if allocations:
+            isolated.ensure_integration(project, state, rdir, Path(next(iter(allocations.values()))["repo"]))
+        if isolation:
+            for unit in units:
+                if any(task.get("synthetic") or not task.get("repo") for task in unit):
+                    allocations[rs.unit_label(unit)] = isolated.prepare_audit(project, rs.load(rdir), rdir, unit[0])
+    except isolated.IsolationError as exc:
+        _finish(project, rdir, "stopped", str(exc), c["install"])
+        return 1
     base = state["sessions"]
     plan, busy = [], set()
     for unit in units:
@@ -341,8 +390,53 @@ def _run_batch(project: str, rdir: Path, c: dict, state: dict, units: list[list[
     def run_unit(unit: list[dict], route: dict):
         label = rs.unit_label(unit)
         n = nums[label]
-        info = run_session(project, rdir, rs.load(rdir), unit[0], n, c["workdir"], c["agent_cmd"], unit, route)
-        results = _settle_unit(project, rdir, unit, n, info, c["workdir"])
+        allocation = allocations.get(label)
+        synthetic = any(task.get("synthetic") for task in unit)
+        current_state = rs.load(rdir)
+        integration_role = next((rs.get_task(current_state, task_id).get("repo")
+                                 for task_id in unit[0].get("after", [])
+                                 if rs.get_task(current_state, task_id) and rs.get_task(current_state, task_id).get("repo")), None)
+        integration = isolated.integration_for(current_state, integration_role) if isolation and synthetic else None
+        workdir = (Path(allocation["worktree"]) if allocation else
+                   Path(integration["worktree"]) if integration and Path(integration["worktree"]).is_dir() else
+                   c["workdir"])
+        try:
+            info = run_session(project, rdir, rs.load(rdir), unit[0], n, workdir, c["agent_cmd"], unit, route)
+            if isolation and allocation and allocation.get("audit"):
+                info.update(isolation="worktree", branch=allocation.get("branch"))
+                results = _settle_unit(project, rdir, unit, n, info, workdir, workdir_override=workdir)
+                isolated.finish_audit(rdir, label)
+            elif isolation and allocation:
+                info.update(isolation="worktree", branch=allocation["branch"])
+                results = _settle_unit(project, rdir, unit, n, info, workdir, workdir, defer_done=True)
+            elif integration and Path(integration["worktree"]).is_dir():
+                results = _settle_unit(project, rdir, unit, n, info, c["workdir"], workdir)
+            else:
+                results = _settle_unit(project, rdir, unit, n, info, c["workdir"])
+        except (isolated.bt_worktree.WorktreeError, subprocess.CalledProcessError, OSError) as exc:
+            if allocation and allocation.get("audit"):
+                isolated._audit_warning(rdir, label, allocation, str(exc))
+                failed = {"rc": 1, "text": str(exc), "stopped": False, "timed_out": False, "seconds": 0,
+                          "agent": route["agent"], "profile": route.get("profile"), "model": route.get("model"),
+                          "effort": route.get("effort"), "early_exit": False}
+                results = {}
+                for task in unit:
+                    current = rs.get_task(rs.load(rdir), task["id"])
+                    if current and current["status"] == "in_progress":
+                        results[task["id"]] = settle_task(project, rdir, task["id"], n, failed, workdir,
+                                                           workdir_override=workdir)
+                    else:
+                        results[task["id"]] = current["status"]
+                isolated.finish_audit(rdir, label)
+                info = failed
+            elif not allocation:
+                raise
+            else:
+                isolated.block_integration(project, rdir, allocation, str(exc))
+                info = {"rc": 1, "text": str(exc), "stopped": False, "timed_out": False, "seconds": 0,
+                        "agent": route["agent"], "profile": route.get("profile"), "model": route.get("model"),
+                        "effort": route.get("effort"), "early_exit": False}
+                results = {task["id"]: "integration_failed" for task in unit}
         return label, n, info, (results[unit[0]["id"]] if len(unit) == 1 else _overall(results)), results, unit
 
     outcomes, missing = [], None
@@ -358,10 +452,13 @@ def _run_batch(project: str, rdir: Path, c: dict, state: dict, units: list[list[
         _finish(project, rdir, "stopped", f"agent executable not found: {missing}", c["install"])
         return 1
     state = rs.load(rdir)
+    if isolation:
+        outcomes = isolated.settle_batch(project, rdir, outcomes, allocations)
     for label, n, info, result, results, unit in outcomes:
         shown = "stopped" if info.get("stopped") else result
         bt_events.record_attempt(project, state, label, n, info, shown,
                                  bt_events.detail_for([rs.get_task(state, t["id"]) for t in unit], shown, results))
+        _record_defects(project, state, [rs.get_task(state, t["id"]) for t in unit], n, info)
         say(state, f"S{n:04d} {label} -> {result} ({info['seconds']}s)")
     beat(rdir, task=",".join(o[0] for o in outcomes), state="batch settled")
     commit_bitacora(project, f"marathon {state['req']} " + " ".join(f"S{n:04d} {t} {r}" for t, n, _, r, _, _ in outcomes))

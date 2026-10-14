@@ -91,6 +91,23 @@ Every finding must state its evidence, affected component/flow, impact, confiden
 recommended next action. For low confidence, say what observation would confirm or reject it. Distinguish facts,
 owner statements, and inference. Do not present preferences or generic best practices as defects.
 
+## 4b. Diagrams (native, from the platform)
+
+Every audit that reaches a draft also publishes two diagrams, with the platform's own command so they are validated,
+standalone, and kept with their source IR (the renderer is pinned; `bitacora.py diagram doctor` says whether Node is
+available; without Node, say so in the coverage matrix instead of drawing by hand):
+
+- `architecture-map` — type `architecture`: the confirmed boundary, containers/repos, shared stores and external
+  systems, as in `ARCHITECTURE.md`.
+- `core-flows` — type `workflow` (or `sequence` when the order between actors is the point): the two or three flows
+  the owner named in the product purpose.
+
+Write the IR JSON in a scratch location, then run
+`bitacora.py --project <p> diagram publish architecture-map architecture <ir.json> --title "<title>"`. A failed
+validation changes nothing already published: fix the IR from the diagnostics and publish again. Link both pages from
+`ARCHITECTURE.md` (`/p/<project>/view/diagram-<name>.html`) and name them in the coverage matrix. Diagrams show
+confirmed facts; mark candidates and unknowns as such in the IR labels instead of drawing certainty.
+
 ## 5. Independent review
 
 After drafting the architecture and findings, ask **one independent reviewer** who has not authored the synthesis to

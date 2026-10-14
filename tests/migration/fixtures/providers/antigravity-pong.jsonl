@@ -1,0 +1,5 @@
+{"event": "init", "init": {"model": "gemini-3.8-flash-low", "permission_mode": "always-proceed"}}
+{"event": "step_update", "step_update": {"step_index": 0, "state": "DONE", "step_type": "user_input"}}
+{"event": "step_update", "step_update": {"step_index": 1, "state": "ACTIVE", "step_type": "agent_response", "text_delta": "PONG"}}
+{"event": "step_update", "step_update": {"step_index": 1, "state": "DONE", "step_type": "agent_response", "text_delta": "\n", "duration_seconds": 2.900589061, "usage": {"input_tokens": 11931, "output_tokens": 2, "thinking_tokens": 0, "cache_read_tokens": 0, "total_tokens": 11933}}}
+{"event": "result", "result": {"conversation_id": "ed7ade96-df9a-4607-9043-85703f7f2998", "status": "SUCCESS", "response": "PONG\n", "duration_seconds": 2.934726642, "num_turns": 1, "usage": {"input_tokens": 11931, "output_tokens": 2, "thinking_tokens": 0, "cache_read_tokens": 0, "total_tokens": 11933}}}

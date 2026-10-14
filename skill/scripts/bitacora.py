@@ -27,6 +27,12 @@ from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _load_bindings, _save_bindings
 from bt_views import *  # noqa: F403
 from bt_hooks import hook_end, hook_start, hook_stop
+import bt_cli_accounts
+import bt_cli_diagram
+import bt_cli_docs
+import bt_cli_delegate
+import bt_cli_learn
+import bt_cli_review
 
 # ---------------------------------------------------------------- CLI
 
@@ -49,7 +55,7 @@ def main() -> None:
     p_bind.add_argument("project")
     p_launch = sub.add_parser("launch", help="HQ: open a new executor session for an approved plan")
     p_launch.add_argument("req", help="REQ-NNN")
-    p_launch.add_argument("--agent", choices=["claude", "codex"], default="claude")
+    p_launch.add_argument("--agent", choices=["claude", "codex", "antigravity"], default="claude")
     p_launch.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
     p_launch.add_argument("--mode", choices=["loop", "goal", "marathon"], default="loop",
                           help="loop/goal: one long session (codex always /goal); marathon: supervisor, a fresh session per task or milestone")
@@ -61,13 +67,14 @@ def main() -> None:
     p_launch.add_argument("--dry-run", action="store_true")
     p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task or per milestone (days)")
     p_run.add_argument("req", help="REQ-NNN")
-    p_run.add_argument("--agent", choices=["claude", "codex"])
+    p_run.add_argument("--agent", choices=["claude", "codex", "antigravity"])
     p_run.add_argument("--pool", help="accounts the router may use: auto (every account allowed for the project), "
                                       "profile ids a,b, or none (pin to --agent/--profile)")
     p_run.add_argument("--audit", dest="audit", action="store_true", default=None,
                        help="independent audit session after each milestone (default with a pool)")
     p_run.add_argument("--no-audit", dest="audit", action="store_false")
     p_run.add_argument("--workers", type=int, help="sessions at once, only across different repos (default 1, max 2)")
+    p_run.add_argument("--isolation", choices=["off", "worktree"], help="isolate same-repo sessions in worktrees")
     p_run.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
     p_run.add_argument("--model", help="tier 0 of the escalation ladder (default haiku)")
     p_run.add_argument("--no-ultracode", action="store_true")
@@ -84,6 +91,8 @@ def main() -> None:
     p_task.add_argument("req", help="REQ-NNN")
     p_task.add_argument("task", help="T3")
     p_task.add_argument("--evidence", default="", help="done: what proves it")
+    p_task.add_argument("--findings", type=int, help="done (audit): number of defects found in the milestone, 0 when clean")
+    p_task.add_argument("--severity", help="done (audit): high=N,med=N,low=N; must add up to --findings")
     p_task.add_argument("--reason", default="", help="fail / escalate: why")
     p_task.add_argument("--to", choices=["standard", "top", "sonnet", "opus"],
                         help="escalate: top (architecture; alias opus) or standard (stuck; alias sonnet)")
@@ -118,58 +127,21 @@ def main() -> None:
     p_prof = sub.add_parser("profiles", help="account profiles: list, doctor, or check one against a project")
     p_prof.add_argument("action", choices=["list", "doctor", "check", "add", "gate", "wrapper"])
     p_prof.add_argument("profile", nargs="?", help="check/add: profile id")
-    p_prof.add_argument("--provider", choices=["claude", "codex"], help="add: provider")
+    p_prof.add_argument("--provider", choices=["claude", "codex", "antigravity"], help="add: provider")
     p_prof.add_argument("--env", action="append", default=[], metavar="KEY=VALUE",
                         help="add: environment selecting the account, e.g. CLAUDE_CONFIG_DIR=~/.claude-work")
     p_prof.add_argument("--work-only", action="store_true", help="add: only runs projects with work=true")
     p_prof.add_argument("--bin", help="add: executable name if not the provider default")
+    p_prof.add_argument("--relay", action="store_true", help="wrapper: run the agent under relay_run.py (quota relay parent launcher)")
     p_prof.add_argument("--dir", help="wrapper: directory for the launcher (default ~/.local/bin)")
     p_work = sub.add_parser("work", help="show or set the project's work flag (gates work-only profiles)")
     p_work.add_argument("value", nargs="?", choices=["true", "false"])
-    p_del = sub.add_parser("delegate", help="run ONE task in a headless agent session and get a compact checked result")
-    p_del.add_argument("action", choices=["start", "exec", "status", "list"])
-    p_del.add_argument("target", nargs="?", help="start: the task text; exec/status: delegation id")
-    p_del.add_argument("--profile", help="account profile (sets the agent; work gate applies)")
-    p_del.add_argument("--agent", choices=["claude", "codex"], help="when no --profile (neither: the router chooses)")
-    p_del.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research"],
-                       help="what the work is (routing; default: inferred from the task text)")
-    p_del.add_argument("--tier", type=int, choices=[0, 1, 2], help="capability tier: 0 light, 1 standard, 2 top")
-    p_del.add_argument("--complexity", choices=["S", "M", "L"], help="how big the task is (telemetry)")
-    p_del.add_argument("--wait-quota", action="store_true",
-                       help="when every account is waiting for a usage-limit reset, wait and run it then")
-    p_del.add_argument("--workdir", help="folder the agent works in (default: --cwd)")
-    p_del.add_argument("--allow", action="append", default=[], help="path the agent may modify (repeatable)")
-    p_del.add_argument("--verify", help="command whose exit status decides success (run by the supervisor)")
-    p_del.add_argument("--timeout", type=float, default=30, help="minutes (default 30)")
-    p_del.add_argument("--model")
-    p_del.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"])
-    p_del.add_argument("--background", action="store_true", help="start: return the id immediately")
-    p_del.add_argument("--agent-cmd", help="tests: command template with {prompt_file} {workdir} {result} {id}")
-    p_met = sub.add_parser("metrics", help="attempt telemetry per agent/profile/model/effort (null = not reported)")
-    p_met.add_argument("--by", help="group keys, comma separated: agent,profile,model,effort,kind,tier,project")
-    p_met.add_argument("--advice", action="store_true", help="plain-language observations instead of the table")
-    p_met.add_argument("--attempts", type=int, metavar="N", help="the last N attempts, each as a key/value table")
-    p_met.add_argument("--why", action="store_true", help="how attempts ended per agent/model/effort/kind/complexity, "
-                                                          "with the reasons they failed or worked")
-    p_ag = sub.add_parser("agents", help="agent catalog: models, ladder, accounts and usage-limit state; route preview")
-    p_ag.add_argument("action", nargs="?", choices=["list", "route", "brief", "quota-clear"], default="list")
-    p_ag.add_argument("profile", nargs="?", help="quota-clear: profile id")
-    p_ag.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research"], default="implement")
-    p_ag.add_argument("--tier", type=int, choices=[0, 1, 2])
-    p_cfg = sub.add_parser("config", help="machine settings (.state/config.json): get | set KEY VALUE | unset KEY")
-    p_cfg.add_argument("action", choices=["get", "set", "unset"])
-    p_cfg.add_argument("key", nargs="?")
-    p_cfg.add_argument("value", nargs="?")
-    p_learn = sub.add_parser("learn", help="evidence-backed learnings about the project and the owner's preferences")
-    p_learn.add_argument("action", choices=["add", "list", "confirm", "reject", "brief"])
-    p_learn.add_argument("target", nargs="?", help="add: the learning (one sentence); confirm/reject: L-NNN")
-    p_learn.add_argument("--evidence", default="", help="add: what was observed (required)")
-    p_learn.add_argument("--source", default="", help="add: where it was observed, e.g. REQ-006/T3")
-    p_learn.add_argument("--scope", choices=["project", "owner", "skill"], default="project")
-    p_learn.add_argument("--kind", choices=["preference", "convention", "pitfall", "tooling", "decision"],
-                         default="convention")
-    p_learn.add_argument("--status", choices=["candidate", "confirmed", "rejected"], help="list: filter")
-    p_learn.add_argument("--reason", default="", help="reject: why")
+    bt_cli_delegate.register(sub)
+    bt_cli_review.register(sub)
+    bt_cli_accounts.register(sub)
+    bt_cli_diagram.register(sub)
+    bt_cli_docs.register(sub)
+    bt_cli_learn.register(sub)
     p_ho = sub.add_parser("handoff", help="validate a plan, approve it when safe and start it in the background")
     p_ho.add_argument("req", help="REQ-NNN")
     p_ho.add_argument("--dry-run", action="store_true", help="only say what would happen and why")
@@ -197,11 +169,35 @@ def main() -> None:
     p_commit = sub.add_parser("commit", help="commit the bitácora (local git)")
     p_commit.add_argument("message")
     p_hook = sub.add_parser("hook", help="Claude Code hook entry point (reads JSON on stdin)")
-    p_hook.add_argument("event", choices=["start", "stop", "end"])
-    p_hook.add_argument("--harness", choices=["claude", "codex"], default="claude")
+    p_hook.add_argument("event", choices=["start", "stop", "end", "relay"])
+    p_hook.add_argument("--harness", choices=["claude", "codex", "antigravity"], default="claude")
+    p_relay = sub.add_parser("relay", help="quota relay: hand an interactive session over to another account")
+    p_relay.add_argument("action", choices=["handoff", "launch", "cancel", "install", "status", "wrap-status"])
+    p_relay.add_argument("--to", help="handoff/launch: successor profile (default: the router chooses)")
+    p_relay.add_argument("--session", help="handoff/launch: session id of the agent being relayed")
+    p_relay.add_argument("--handoff", help="launch: handoff file")
+    p_relay.add_argument("--mux", choices=["zellij", "tmux", "kitty"], help="launch: multiplexer of the pane")
+    p_relay.add_argument("--target", help="launch: pane id in that multiplexer")
+    p_relay.add_argument("--pid", type=int, help="launch: verified agent pid")
+    p_relay.add_argument("--start", type=int, help="launch: start time of that pid (/proc ticks)")
+    p_relay.add_argument("--force", action="store_true", help="handoff: write the handoff even if relay.enabled is false (never auto-closes)")
+    p_relay.add_argument("--mux-env", help="launch: JSON of the multiplexer variables of the client")
+    p_relay.add_argument("--wrapper-pid", type=int, help="launch: pid of the relay_run.py parent of the client")
+    p_relay.add_argument("--wrapper-start", type=int, help="launch: start time of that wrapper (/proc ticks)")
+    p_relay.add_argument("--apply", action="store_true", help="wrap-status: regenerate the wrappers (default: only report)")
+    p_relay.add_argument("--dir", help="wrap-status: wrapper directory (default ~/.local/bin)")
+    p_relay.add_argument("--exit-current", choices=["0", "1"], default="1")
+    p_relay.add_argument("--settings", help="install: settings.json to merge the hooks into (default: print only)")
+    p_relay.add_argument("--dry-run", action="store_true", help="install: print, change nothing")
     a = ap.parse_args()
 
+    if a.cmd == "relay":
+        import bt_relay_cli
+        return bt_relay_cli.dispatch(a)
     if a.cmd == "hook":
+        if a.event == "relay":
+            import bt_relay
+            return bt_relay.hook_main(sys.stdin.read())
         try:
             if a.event == "end":
                 hook_end()
@@ -249,56 +245,36 @@ def main() -> None:
                     print(f"{d.name}/{role}: {install_hook(path)}")
         return
 
-    if a.cmd == "delegate":  # no project binding needed beyond the name
-        import bt_delegate
-        if a.action == "list":
-            print(json.dumps(bt_delegate.listing(), indent=1, ensure_ascii=False))
-            return
-        if a.action == "status":
-            print(json.dumps(bt_delegate.summary(a.target or ""), indent=1, ensure_ascii=False))
-            return
-        if a.action == "exec":  # internal: runs a delegation that `start --background` created
-            print(json.dumps(bt_delegate.execute(a.target or "", a.agent_cmd), indent=1, ensure_ascii=False))
-            return
+    if a.cmd == "delegate":
+        bt_cli_delegate.dispatch(a)
+        return
+
+    if a.cmd == "review":
         project = slugify(a.project, 60) if a.project else (
             slugify(os.environ["BITACORA_PROJECT"], 60) if os.environ.get("BITACORA_PROJECT") else None)
         if not project:
             import bt_audit
-            project = bt_audit.project_for_cwd(ROOT, Path(a.workdir or a.cwd))
+            project = bt_audit.project_for_cwd(ROOT, Path(a.cwd))
+        bt_cli_review.dispatch(a, project)
+        return
+
+    if a.cmd == "glossary":
+        project = slugify(a.project, 60) if a.project else (
+            slugify(os.environ["BITACORA_PROJECT"], 60) if os.environ.get("BITACORA_PROJECT") else None)
         if not project:
-            sys.exit("No project resolved; pass --project <name>.")
-        if not a.target:
-            sys.exit("delegate start needs the task text")
-        order = bt_delegate.create(project, a.target, a.profile, a.agent, Path(a.workdir or a.cwd), a.allow,
-                                   a.verify, a.timeout, a.model, a.effort, a.kind, a.tier, a.complexity, a.wait_quota)
-        if a.background:
-            print(json.dumps({"id": order["id"], "status": "started", "pid": bt_delegate.start_background(order["id"])}))
-        else:
-            print(json.dumps(bt_delegate.execute(order["id"], a.agent_cmd), indent=1, ensure_ascii=False))
-        return
+            import bt_audit
+            project = bt_audit.project_for_cwd(ROOT, Path(a.cwd))
+        sys.exit(bt_cli_docs.dispatch(a, project, ROOT))
 
-    if a.cmd == "metrics":  # machine-level: reads <root>/.state/events
-        import bt_events
-        rows = bt_events.read_all()
-        if a.advice:
-            print("\n".join(bt_events.advice(rows)))
-            return
-        if a.attempts:
-            for row in rows[-a.attempts:]:
-                pairs = bt_events.key_values(row)
-                width = max(len(k) for k, _ in pairs)
-                print("\n".join(f"{k.ljust(width)} : {v}" for k, v in pairs) + "\n" + "-" * 60)
-            return
-        if a.why:
-            print(json.dumps(bt_events.reasons(rows), indent=1, ensure_ascii=False))
-            return
-        by = [k.strip() for k in (a.by or "").split(",") if k.strip()] or None
-        print(json.dumps(bt_events.summary(rows, by), indent=1, ensure_ascii=False))
-        return
+    if a.cmd == "diagram":
+        project = slugify(a.project, 60) if a.project else (
+            slugify(os.environ["BITACORA_PROJECT"], 60) if os.environ.get("BITACORA_PROJECT") else None)
+        if not project:
+            import bt_audit
+            project = bt_audit.project_for_cwd(ROOT, Path(a.cwd))
+        sys.exit(bt_cli_diagram.dispatch(a, project, ROOT))
 
-    if a.cmd == "config":  # machine-level
-        import bt_config
-        print(bt_config.cli(a.action, a.key, a.value))
+    if bt_cli_accounts.dispatch_machine(a):
         return
 
     if a.cmd in ("agents", "context", "learn"):  # the project is optional: owner-level answers work anywhere
@@ -312,43 +288,9 @@ def main() -> None:
             print(bt_context.text(project))
             return
         if a.cmd == "agents":
-            import bt_agents
-            if a.action == "brief":
-                print(bt_agents.brief(project))
-            elif a.action == "quota-clear":
-                print("cleared" if bt_agents.quota_clear(a.profile or "") else "nothing to clear")
-            elif a.action == "route":
-                if not project:
-                    sys.exit("agents route needs a project (--project <name>)")
-                import bt_delegate
-                print(json.dumps(bt_delegate.auto_route(project, a.kind, a.tier), indent=1, ensure_ascii=False))
-            else:
-                print(json.dumps(bt_agents.catalog(project), indent=1, ensure_ascii=False))
+            bt_cli_accounts.dispatch_agents(a, project)
             return
-        import bt_config
-        import bt_learn
-        if a.action in ("confirm", "reject") and bt_learn.scope_of_id(a.target or "") is None and a.scope == "project":
-            a.scope = "owner"  # an LG- id is global: no --scope needed
-        scope_project = project if a.scope == "project" else None
-        if a.action in ("add", "confirm", "reject") and a.scope == "project" and not project:
-            sys.exit("No project resolved; pass --project <name> or --scope owner.")
-        if a.action == "add":
-            item = bt_learn.add(scope_project, a.target or "", a.evidence, a.source, a.scope, a.kind,
-                                bt_config.get("learn.promote_after", 3))
-            state = "ignored (the owner rejected it before)" if item.get("ignored") else item["status"]
-            print(f"{item['id']} {state} ({item['sightings']} sighting(s)){'' if item['created'] else ' — merged into an existing learning'}")
-        elif a.action in ("confirm", "reject"):
-            item = (bt_learn.confirm(scope_project, a.target or "", a.scope) if a.action == "confirm" else
-                    bt_learn.reject(scope_project, a.target or "", a.scope, a.reason))
-            print(f"{item['id']} {item['status']}: {item['text']}")
-        elif a.action == "brief":
-            print(bt_learn.brief(project, bt_config.get("learn.inject_max", 12)) or "(nothing learned yet)")
-        else:
-            for item in bt_learn.listing(project, None, a.status):
-                print(f"{item['id']} [{item['scope']} · {item['kind']} · {item['status']} · {item['sightings']}x] {item['text']}")
-        if a.action in ("add", "confirm", "reject"):
-            from bt_vcs import commit
-            commit(ROOT, f"{project or 'owner'}: learning {a.action}")
+        bt_cli_learn.dispatch(a, project)
         return
 
     if a.cmd == "profiles" and a.action in ("list", "doctor", "add", "gate", "wrapper"):  # machine-level
@@ -362,7 +304,7 @@ def main() -> None:
             if not a.profile:
                 sys.exit("profiles wrapper needs a profile id")
             target = Path(a.dir).expanduser() if a.dir else Path.home() / ".local" / "bin"
-            print(bt_profiles.write_wrapper(a.profile, target))
+            print(bt_profiles.write_wrapper(a.profile, target, a.relay))
             return
         if a.action == "add":
             if not (a.profile and a.provider):
@@ -457,7 +399,7 @@ def main() -> None:
                            max_attempts=a.max_attempts, session_timeout=a.session_timeout,
                            retry_blocked=a.retry_blocked, agent_cmd=a.agent_cmd, once=a.once,
                            no_autostart=a.no_autostart, profile=a.profile,
-                           workers=a.workers, pool=a.pool, audit=a.audit))
+                           workers=a.workers, pool=a.pool, audit=a.audit, isolation=a.isolation))
     elif a.cmd == "handoff":
         import bt_handoff
         result = bt_handoff.handoff(project, a.req, a.dry_run, a.pool, a.model, a.profile)
@@ -476,7 +418,7 @@ def main() -> None:
         if a.cmd == "run-control":
             print(rt.run_control(rdir, a.action))
         else:
-            print({"done": lambda: rt.task_done(rdir, a.task, a.evidence),
+            print({"done": lambda: rt.task_done(rdir, a.task, a.evidence, a.findings, a.severity),
                    "fail": lambda: rt.task_fail(rdir, a.task, a.reason, a.blocked),
                    "note": lambda: rt.task_note(rdir, a.task, a.text),
                    "escalate": lambda: rt.task_escalate(rdir, a.task, a.to or "", a.reason)}[a.action]())

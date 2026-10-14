@@ -60,7 +60,11 @@ def _kind_rows(groups, rows) -> str:
         f"<tr><td>{_value(g.get('kind'))}</td><td>{_value(g.get('agent'))}</td><td>{_value(g.get('model'))}</td>"
         f"<td>{_effort(g)}</td><td>{g['attempts']}</td><td>{g['done']}</td><td>{g['failed']}</td>"
         f"<td>{_rate(g.get('success_rate'))}</td>"
-        f"<td>{_number(_avg_seconds(g, rows, ('kind', 'agent', 'model', 'effort')))}</td></tr>" for g in groups)
+        f"<td>{_number(_avg_seconds(g, rows, ('kind', 'agent', 'model', 'effort')))}</td>"
+        f"<td>{_number(g.get('audited') or None)}</td><td>{_number(g.get('findings'))}</td>"
+        f"<td>{_value(g.get('findings_per_audited_task'))}</td><td>{_number(g.get('high_findings'))}</td>"
+        f"<td>{g.get('rework_attempts', 0)}</td><td>{_rate(g.get('rework_rate'))}</td>"
+        f"<td>{_number(g.get('tokens_per_clean_task'))}</td></tr>" for g in groups)
 
 
 def _account_rows(accounts) -> str:
@@ -134,10 +138,11 @@ def metrics_page() -> str:
     catalog = bt_agents.catalog()
     work_profiles = {a["profile"] for a in catalog["accounts"] if a.get("work_only")}
     groups = bt_events.summary(rows, ("agent", "profile", "model", "effort"))
-    kinds = bt_events.summary(rows, ("kind", "agent", "model", "effort"))
+    defects = bt_events.read_defects()
+    kinds = bt_events.summary(rows, ("kind", "agent", "model", "effort"), defects)
     sized = bt_events.summary(rows, ("kind", "complexity", "agent", "model", "effort"))
     why = bt_events.reasons(rows)
-    advice = "".join(f"<li>{e(text)}</li>" for text in bt_events.advice(rows))
+    advice = "".join(f"<li>{e(text)}</li>" for text in bt_events.advice(rows, defects=defects))
     body = f"""<h1>Métricas de agentes</h1>
 <p class="muted">Cada fila agrupa intentos de maratón y delegaciones. Un dato que el proveedor no informó queda en «—»,
 nunca en 0; los tokens solo cuentan intentos con medición (columna cobertura). No son un saldo de suscripción.</p>
@@ -145,7 +150,8 @@ nunca en 0; los tokens solo cuentan intentos con medición (columna cobertura). 
 <h2>Por agente, modelo y esfuerzo</h2>
 {_table(["Agente", "Perfil", "Modelo", "Esfuerzo", "Intentos", "Hechos", "Fallidos", "Otros", "Tasa", "Seg. medio", "Tokens medidos", "Tokens/hecho", "Coste USD informado", "Cobertura"], _main_rows(groups, work_profiles, rows)) if groups else '<p class="muted">Aún no hay intentos registrados.</p>'}
 <h2>Por tipo de trabajo</h2>
-{_table(["Tipo", "Agente", "Modelo", "Esfuerzo", "Intentos", "Hechos", "Fallidos", "Tasa", "Seg. medio"], _kind_rows(kinds, rows)) if kinds else '<p class="muted">Aún no hay intentos registrados.</p>'}
+{_table(["Tipo", "Agente", "Modelo", "Esfuerzo", "Intentos", "Hechos", "Fallidos", "Tasa", "Seg. medio", "Auditadas", "Hallazgos", "Hallazgos/tarea", "Altos", "Retrabajo", "Tasa retrabajo", "Tokens/tarea limpia"], _kind_rows(kinds, rows)) if kinds else '<p class="muted">Aún no hay intentos registrados.</p>'}
+<p class="muted">Calidad: los hallazgos vienen solo de auditorías independientes que los informaron (<code>task done --findings</code>); sin dato queda «—». Muestras pequeñas; los tokens de Claude excluyen caché y Codex no informa coste.</p>
 <h2>Por tipo y complejidad</h2>
 <p class="muted">Complejidad S/M/L: la declarada en el plan (<code>complexity: M</code>) o, si falta, inferida (se indica en cada intento).</p>
 {_table(["Tipo", "Complejidad", "Agente", "Modelo", "Esfuerzo", "Intentos", "Hechos", "Fallidos", "Tasa", "Seg. medio", "Tokens/hecho"], _complexity_rows(sized)) if sized else '<p class="muted">Aún no hay intentos registrados.</p>'}

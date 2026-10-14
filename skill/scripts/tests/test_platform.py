@@ -70,7 +70,8 @@ class PlatformTests(unittest.TestCase):
         self.assertIn("& 'codex' '--yolo' $prompt", content)
 
     def test_linux_terminal_uses_kitty_without_windows_flags(self):
-        with patch.object(host, "platform", return_value="linux"), \
+        graphical = {k: v for k, v in os.environ.items() if k != "BITACORA_TERMINAL"} | {"DISPLAY": ":0"}
+        with patch.object(host, "platform", return_value="linux"), patch.dict(os.environ, graphical, clear=True), \
                 patch.object(host.shutil, "which", side_effect=lambda exe: '/bin/kitty' if exe == 'kitty' else None), \
                 patch.object(host.subprocess, "Popen") as spawn:
             host.open_terminal(self.root, self.root / "run.sh", "a title")

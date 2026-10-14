@@ -60,9 +60,13 @@ current state, pending items, what the last session said to start with, and any 
   `ARCHITECTURE.md` (`references/architecture-audit.md`), alongside `references/documentation.md` §Bootstrap. Persist
   the confirmed purpose and `Last confirmed with owner` date in `SUMMARY.md`.
 - If **Rollups due** are listed, finalize them early and quickly.
-- If no project was detected and the session becomes project work, ask which project and `bind` it.
+- Without a detected project, read continuation candidates. For "continue", bind to the unambiguous project and
+  read live Goal/Next, pending items and plan/run state. Ask once if ambiguous. A checkpoint is context, not proof.
 - If the block is missing (hooks not installed, e.g. in Codex), run `python <skill>/scripts/bitacora.py where`
   yourself and read SUMMARY.md and PENDING.md; you'll also have to update the bitácora without the Stop reminder.
+  From an unrelated folder, run `bitacora.py context` first: it also recovers continuation from canonical logs
+  when private checkpoints or hooks are unavailable. Before closing, fill Goal, Done, Pending and Next in your
+  session section so another agent can resume without the conversation.
 
 ## HQ mode (planning room)
 
@@ -87,10 +91,18 @@ files in the bitácora, versioned with local git — no dependency on any agent 
 | A spec is ready (or the request was Quick track) → plan, get it approved, run it as a loop (Claude Code) or goal (Codex) | `references/execution.md` |
 | A spec and plan are written → leave the conversation: validate, auto-approve when safe, run in the background by milestones | `references/requirements.md` §8 (`bitacora.py handoff REQ-NNN`) |
 | Which agent/model/effort for a piece of work, delegating to another provider or subscription, usage limits, telemetry, what was learned | `references/agents.md` (live copy: `bitacora.py context`) |
+| Interactive one-task delegation, retries, isolated branches, recovery, or independent review | `delegate start --retries/--worktree`, `delegate resume`, `bitacora review`; read `references/agents.md` |
+| An interactive session near its 5 h quota; relay to another account in the same pane; `relay handoff` | `references/relay.md` |
 | An approved plan that will run for days; "maratón"; supervised run, pause/resume/stop, stuck or blocked tasks, usage limits | `references/marathon.md` (launch details in `execution.md` §1c) |
 | Large independent workstreams, safe concurrency, agent delegation, or work that must resume across sessions | `references/agent-orchestration.md` (+ `references/subagents.md`; use `references/marathon.md` for multi-day execution) |
 | Designing, writing, refactoring, reviewing or debugging code | `references/engineering.md` (+ the `references/stacks/*.md` it points to) |
+| Building or auditing interfaces, visual mockups or product copy | `references/interface-quality.md` (direction, honest content and interaction evidence; use the existing requirements/review flow) |
 | Anything worth recording happened; wrap-up; Stop hook reminder; rollups; "¿en qué estamos?"; a visual page/artifact would help; the web UI | `references/documentation.md` |
+| An ambiguous or conflicting domain term; creating or editing `GLOSSARY.md` | `references/domain-glossary.md` (file format: `glossary-conventions.md`) |
+| Something broken, failing, flaky or slow, before any repair | `references/diagnosing-bugs.md` |
+| An explicit retro, or "qué salió mal" after repeated friction | `references/retro-feedback.md` |
+| Writing or shortening SKILL.md, references, CLAUDE.md/AGENTS.md or a delegation brief | `references/writing-for-agents.md` |
+| "wait what", "no entiendo", "no te entendí", "¿por qué dices eso?" | `references/wait-what.md` |
 | Deciding whether/how to delegate: exploring, researching, running tests, implementing plan tasks, reviewing | `references/subagents.md` |
 | Servers, deploys, hosting CLIs (Vercel, Netlify…), SSH, storage, "revisa el deploy en X", "conéctate a Y y haz Z" | `references/tools.md` |
 
@@ -116,6 +128,11 @@ things. "¿Qué hay pendiente?": PENDING.md is already sorted by urgency, then c
 
 "¿En qué estamos?" / "¿qué quedó pendiente?": answer from SUMMARY.md, PENDING.md and the latest day logs in ≤6
 lines, with links.
+
+## Quota at a glance
+
+`scripts/globalusage.py` (linked as `~/.local/bin/globalusage`; `-f` re-measures) prints every subscription's 5 h / 7 d quota, the
+current session's profile highlighted, and today's tokens/cost per model, with zero model tokens. Run it as `! globalusage`.
 
 ## Hooks installed
 

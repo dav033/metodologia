@@ -226,7 +226,8 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
     run_dir = STATE / "runs" / f"{project}-{state['req']}"
     run_dir.mkdir(parents=True, exist_ok=True)
     from bt_review import feature_branch
-    prompt = rp.session_prompt(project, rdir, state, task, n, feature_branch(rdir), unit)
+    branch = (task or {}).get("_worktree_branch") or feature_branch(rdir)
+    prompt = rp.session_prompt(project, rdir, state, task, n, branch, unit)
     prompt_file, log_file = run_dir / f"prompt-{n:04d}.txt", run_dir / f"session-{n:04d}.log"
     prompt_file.write_text(prompt, encoding="utf-8")
     env = {**bt_profiles.session_env(state.get("profile"), state["agent"], None, project), "BITACORA_PROJECT": project,
@@ -290,4 +291,16 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
     return {"rc": proc.returncode, "timed_out": timed_out, "stopped": stopped, "early_exit": early, "text": text,
             "seconds": int(time.time() - start), "model": model, "effort": effort, "agent": state["agent"],
             "profile": state.get("profile"), "kind": route.get("kind"), "tier": route.get("tier"),
-            "tasks": [t["id"] for t in unit], "why": route.get("why")}
+            "tasks": [t["id"] for t in unit], "why": route.get("why"),
+            "contract": _contract_shadow(state["agent"], text, proc.returncode, timed_out, stopped)}
+
+
+def _contract_shadow(agent: str, text: str, rc: int | None, timed_out: bool, stopped: bool) -> dict | None:
+    """Shadow mode of the provider driver contract (D-015): what bt_driver would call this session. It is recorded in
+    the attempt log for parity measurement and never changes a supervisor decision; any error leaves it None."""
+    try:
+        import bt_driver
+        out = bt_driver.driver_for(agent).normalize(text, rc, timed_out=timed_out, cancelled=stopped)
+        return {"v": out.version, "status": out.status, "terminal": out.terminal_event}
+    except Exception:
+        return None
