@@ -1,6 +1,6 @@
 # Index — maros
 
-_Generated 2026-10-14 14:20 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 14:40 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/maros) · [graph](http://127.0.0.1:8765/p/maros/graph)  
@@ -29,6 +29,7 @@ _Generated 2026-10-14 14:20 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-003 — Central MCP simulation and attribution with shared role guard rails
 - D-002 — Explicit MCP capability inventory and system attribution
 - D-001 — Role audit events are recorded best-effort after the role write
 

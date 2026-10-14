@@ -14,12 +14,12 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T14:36:37",
+  "at": "2026-10-14T14:40:37",
   "pid": 2274846,
   "machine": "precision7760",
   "task": "M3",
   "session": 13,
-  "state": "session running 16 min",
+  "state": "session running 20 min",
   "session_pids": {
    "13": 2512163
   },
@@ -350,7 +350,8 @@
    "evidence": "Reviewed commit 588f35b recovered by fast-forward on wt/M3-b82d588f; fresh npx jest src/modules/mcp --silent exit 0: 16 suites/242 tests; tsc and build pass. Independent T7 spec review APPROVE. Full lint has exactly 2 known baseline errors, 19 warnings. Prior rejection was scope_unchecked, live supervisor now derives missing allowed paths. Evidence /tmp/maros-m3-session13-t7-{jest,tsc,build,lint}.log. No DB or external writes.",
    "pending_id": null,
    "notes": [
-    "588f35b: 253-route map uses live discovery and real registration. SSE is explicitly transport-excluded. list_permissions preserves code array and adds permissionMetadata/templates. Financials uses trusted MCP no-user context, attribution user has no permissions. 16 suites/242 tests green; full lint baseline 2 unrelated errors. T8 and M3 independent audit remain."
+    "588f35b: 253-route map uses live discovery and real registration. SSE is explicitly transport-excluded. list_permissions preserves code array and adds permissionMetadata/templates. Financials uses trusted MCP no-user context, attribution user has no permissions. 16 suites/242 tests green; full lint baseline 2 unrelated errors. T8 and M3 independent audit remain.",
+    "Recovered reviewed 588f35b on wt/M3-b82d588f; final M3 candidate 383f1e4 includes T8. Source parity covers 253 routes and actual registrations. Prior rejection was scope_unchecked after incomplete M3, not tests. Both exact Jest gates, types/build/touched lint pass; full lint retains 2 baseline errors. Supervisor must bind audit to accepted integration SHA; no DB."
    ],
    "limit_streak": 0,
    "last_route": {
@@ -382,14 +383,15 @@
    "tier": 2,
    "status": "in_progress",
    "attempts": 1,
-   "last_error": "integration: candidate was rejected",
+   "last_error": null,
    "error_hashes": [
     "5e775b2a7409"
    ],
-   "evidence": null,
+   "evidence": "Commit 383f1e4 on wt/M3-b82d588f, ancestor T7 588f35b. Additive dry_run, real shared-service R4 previews, system actor in role and mcp_write audit events; provisioning and template-name regressions first red then green. Exact gates: MCP 18 suites/253 tests and MCP+users 33 suites/447 tests pass. tsc, targeted lint and build pass. Full lint retains 2 baseline errors/19 warnings; task-workspaces has no dedicated suites, real service covered in MCP tests. Antagonist 2 fixed/0 deferred/0 dropped, one re-review SOUND. D-003/docs/day/week/index updated, notes saved. Path-scope diagnostic safe for 82 paths; all jobs finished and tree clean. Evidence /tmp/maros-m3-session13-t8-reviewed-*.log. D-001/P-010/P-011/P-012 retained; no SQL, DB, push or deployment. Supervisor integration and independent M3 audit remain.",
    "pending_id": null,
    "notes": [
-    "Monitor continuation: preserved candidate 2db6796 is clean; independent offline Jest on that SHA passed 32 suites/437 tests (exit 0), /tmp/maros-m3-preserved-check.log. Recover existing changes rather than redo. Acceptance still needs R10 audit durability (P-011), destructive previews through the same guards, and M3 independent audit. S12 integration rejection was scope_unchecked: scope declarations are missing, not a failing test."
+    "Monitor continuation: preserved candidate 2db6796 is clean; independent offline Jest on that SHA passed 32 suites/437 tests (exit 0), /tmp/maros-m3-preserved-check.log. Recover existing changes rather than redo. Acceptance still needs R10 audit durability (P-011), destructive previews through the same guards, and M3 independent audit. S12 integration rejection was scope_unchecked: scope declarations are missing, not a failing test.",
+    "383f1e4: dry_run on writes, real shared R4 previews, mcp_write actor/outcome. get_task_workspace_options is a write (lazy General provisioning); actor propagated. Template create preview checks occupied names. D-001/P-011 fallback remains. Gates: 253 MCP / 447 MCP+users tests; types/build/touched lint green; global lint 2 baseline errors. Antagonist 2 fixed, re-review SOUND. Task-workspaces has no own suites; real service tested via MCP. No SQL applied; next independent M3 audit."
    ],
    "limit_streak": 1,
    "last_route": {
@@ -398,7 +400,10 @@
     "model": "gpt-6.1-sol",
     "effort": "xhigh",
     "result": "usage_limit"
-   }
+   },
+   "claimed_done": true,
+   "findings": null,
+   "severity": null
   },
   {
    "id": "M3-audit",
