@@ -15,6 +15,10 @@
   "t12": {
    "remote": "",
    "hint": "~/dev/pictures-wt/t12"
+  },
+  "ops-matrix-jxjn7vd9": {
+   "remote": "",
+   "hint": "/tmp/ops-matrix-jxjn7vd9"
   }
  },
  "work": true

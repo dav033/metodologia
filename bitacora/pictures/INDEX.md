@@ -12,6 +12,7 @@ _Generated 2026-10-13 23:30 by `bitacora.py index`. Do not edit by hand._
 - **t7** → `/home/david/dev/pictures-wt/t7` (not cloned here)
 - **audit** → `/home/david/dev/pictures-wt/audit` (not cloned here)
 - **t12** → `/home/david/dev/pictures-wt/t12`
+- **ops-matrix-jxjn7vd9** → `/tmp/ops-matrix-jxjn7vd9`
 
 ## Needs attention
 
