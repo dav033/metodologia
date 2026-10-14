@@ -22,9 +22,9 @@ row-level security) were rejected as out of scope.
 ## Tasks
 
 ### M1 — Backend: catalog and role operations
-- [ ] T1 — Extend the permission catalog with label, description, risk and `implies` per permission, add role templates (Viewer, Sales, Finance, Project manager, Admin) and an `expandImplied()` helper; keep existing codes and exports · repo: backend · covers: R1, R2 · verify: `npx jest src/common/auth --silent`
-- [ ] T2 — Roles service/controller: implied expansion on save, duplicate role, impact preview endpoint (`POST /roles/impact`), guard rails for last-admin and system roles with 409 codes, richer `GET /permissions` and `GET /roles` per the contract · repo: backend · after: T1 · covers: R2, R3, R4 · verify: `npx jest src/modules/users src/common --silent`
-- [ ] T3 — Role audit trail: entity, idempotent `db/add-role-audit-events.sql` (not applied), recording on create/update/delete/duplicate/bulk and `GET /roles/audit` · repo: backend · after: T2 · covers: R3 · verify: `npx jest src/modules/users --silent`
+- [x] T1 — Extend the permission catalog with label, description, risk and `implies` per permission, add role templates (Viewer, Sales, Finance, Project manager, Admin) and an `expandImplied()` helper; keep existing codes and exports · repo: backend · covers: R1, R2 · verify: `npx jest src/common/auth --silent`
+- [x] T2 — Roles service/controller: implied expansion on save, duplicate role, impact preview endpoint (`POST /roles/impact`), guard rails for last-admin and system roles with 409 codes, richer `GET /permissions` and `GET /roles` per the contract · repo: backend · after: T1 · covers: R2, R3, R4 · verify: `npx jest src/modules/users src/common --silent`
+- [x] T3 — Role audit trail: entity, idempotent `db/add-role-audit-events.sql` (not applied), recording on create/update/delete/duplicate/bulk and `GET /roles/audit` · repo: backend · after: T2 · covers: R3 · verify: `npx jest src/modules/users --silent`
 
 ### M2 — Backend: access explanation, bulk and requests
 - [ ] T4 — `GET /users/:id/access` (effective access with per-permission reason and sections) and `POST /users/bulk-role` honoring the guard rails and skipping deactivated users · repo: backend · after: T3 · covers: R3, R4 · verify: `npx jest src/modules/users --silent`
@@ -60,3 +60,6 @@ MCP capability report lists no administrative route without a tool; each accepta
 - 2026-10-14 11:21 plan APPROVED (terminal)
 - 2026-10-14 11:21 launched marathon supervisor (pool auto, haiku) from HQ in `/home/david/dev/maros`
 - 2026-10-14 12:55 M1 session 6 (4c48366e): earlier M1 failures were environmental (no node_modules in the integration worktree). Review fixes committed as 56cf2dc on wt/M1-f37f0106. T1–T3 verify commands green (48 / 215 / 126 tests) and tsc clean; D-001, P-010 and P-011 added.
+- 2026-10-14 12:52 T1 done (isolated integration) — commit 4de4bcf (+ review fixes 56cf2dc) on wt/M1-f37f0106; 'npx jest src/common/auth --silent' exit 0: 5 suites, 48 tests pass; tsc --noEmit clean; eslint clean; prior failures were the integration worktree lacking node_modules (npx install prompt), now resolved — plain npx resolves local jest 30.1.3 there
+- 2026-10-14 12:52 T2 done (isolated integration) — commit bfd0340 + 56cf2dc on wt/M1-f37f0106; 'npx jest src/modules/users src/common --silent' exit 0: 17 suites, 215 tests pass; tsc --noEmit clean (2 spec TS2554 errors fixed in 56cf2dc); description clearing regression fixed with tests; antagonist approved after re-review
+- 2026-10-14 12:52 T3 done (isolated integration) — commit 8b46730 + 56cf2dc on wt/M1-f37f0106; 'npx jest src/modules/users --silent' exit 0: 8 suites, 126 tests pass; audit made best-effort after the committed role write (D-001), logged events carry the full payload + time (tests spy the log); db/add-role-audit-events.sql idempotent, not applied (P-010); antagonist approved after re-review

@@ -14,15 +14,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T12:51:42",
+  "at": "2026-10-14T12:52:57",
   "pid": 2274846,
   "machine": "precision7760",
   "task": "M1",
   "session": 6,
-  "state": "session running 11 min",
-  "session_pids": {
-   "6": 2274876
-  },
+  "state": "batch settled",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -42,7 +40,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 3,
    "last_error": null,
    "error_hashes": [
@@ -63,9 +61,8 @@
     "profile": "claude-personal",
     "model": "opus",
     "effort": "xhigh",
-    "result": "stopped"
-   },
-   "claimed_done": true
+    "result": "done"
+   }
   },
   {
    "id": "T2",
@@ -83,7 +80,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 2,
    "last_error": null,
    "error_hashes": [
@@ -101,11 +98,10 @@
     "profile": "claude-personal",
     "model": "opus",
     "effort": "xhigh",
-    "result": "stopped"
+    "result": "done"
    },
    "findings": null,
-   "severity": null,
-   "claimed_done": true
+   "severity": null
   },
   {
    "id": "T3",
@@ -123,7 +119,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 2,
    "last_error": null,
    "error_hashes": [
@@ -143,9 +139,8 @@
     "profile": "claude-personal",
     "model": "opus",
     "effort": "xhigh",
-    "result": "stopped"
-   },
-   "claimed_done": true
+    "result": "done"
+   }
   },
   {
    "id": "M1-audit",
@@ -817,6 +812,66 @@
    },
    "isolation": "worktree",
    "branch": "wt/M1-f37f0106"
+  },
+  {
+   "at": "2026-10-14T12:52:42",
+   "session": 6,
+   "task": "T1",
+   "result": "integration_pending",
+   "summary": "commit 4de4bcf (+ review fixes 56cf2dc) on wt/M1-f37f0106; 'npx jest src/common/auth --silent' exit 0: 5 suites, 48 tests pass; tsc --noEmit clean; eslint clean; prior failures were the integration worktree lacking node_modules (npx install prompt), now resolved — plain npx resolves local jest 30.1.",
+   "seconds": 718,
+   "model": "opus",
+   "effort": "xhigh",
+   "cost_usd": 4.1619974950000005,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-f37f0106"
+  },
+  {
+   "at": "2026-10-14T12:52:45",
+   "session": 6,
+   "task": "T2",
+   "result": "integration_pending",
+   "summary": "commit bfd0340 + 56cf2dc on wt/M1-f37f0106; 'npx jest src/modules/users src/common --silent' exit 0: 17 suites, 215 tests pass; tsc --noEmit clean (2 spec TS2554 errors fixed in 56cf2dc); description clearing regression fixed with tests; antagonist approved after re-review",
+   "seconds": 718,
+   "model": "opus",
+   "effort": "xhigh",
+   "cost_usd": 4.1619974950000005,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-f37f0106"
+  },
+  {
+   "at": "2026-10-14T12:52:48",
+   "session": 6,
+   "task": "T3",
+   "result": "integration_pending",
+   "summary": "commit 8b46730 + 56cf2dc on wt/M1-f37f0106; 'npx jest src/modules/users --silent' exit 0: 8 suites, 126 tests pass; audit made best-effort after the committed role write (D-001), logged events carry the full payload + time (tests spy the log); db/add-role-audit-events.sql idempotent, not applied (P-",
+   "seconds": 718,
+   "model": "opus",
+   "effort": "xhigh",
+   "cost_usd": 4.1619974950000005,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-f37f0106"
   }
  ],
  "pool": [
@@ -835,7 +890,7 @@
    "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
    "repo": "/home/david/dev/maros/maros-nest",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "allocated",
+   "state": "accepted",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
@@ -845,9 +900,43 @@
     "T2",
     "T3"
    ],
-   "allowed_paths": [],
+   "allowed_paths": [
+    "db/add-role-audit-events.sql",
+    "src/common/auth/effective-permissions.spec.ts",
+    "src/common/auth/effective-permissions.ts",
+    "src/common/auth/permission-catalog.spec.ts",
+    "src/common/auth/permission-catalog.ts",
+    "src/common/auth/permissions.ts",
+    "src/common/auth/role-templates.spec.ts",
+    "src/common/auth/role-templates.ts",
+    "src/common/exceptions/domain/user.exceptions.spec.ts",
+    "src/common/exceptions/domain/user.exceptions.ts",
+    "src/entities/role-audit-event.entity.ts",
+    "src/modules/mcp/tools/users.spec.ts",
+    "src/modules/mcp/tools/users.ts",
+    "src/modules/users/user-management/dto/duplicate-role.dto.ts",
+    "src/modules/users/user-management/dto/role-impact.dto.ts",
+    "src/modules/users/user-management/mappers/user.mapper.ts",
+    "src/modules/users/user-management/repositories/role-audit.repository.spec.ts",
+    "src/modules/users/user-management/repositories/role-audit.repository.ts",
+    "src/modules/users/user-management/repositories/users.repository.spec.ts",
+    "src/modules/users/user-management/repositories/users.repository.ts",
+    "src/modules/users/user-management/services/role-guard-rails.service.spec.ts",
+    "src/modules/users/user-management/services/role-guard-rails.service.ts",
+    "src/modules/users/user-management/services/role-impact.service.spec.ts",
+    "src/modules/users/user-management/services/role-impact.service.ts",
+    "src/modules/users/user-management/services/roles.service.spec.ts",
+    "src/modules/users/user-management/services/roles.service.ts",
+    "src/modules/users/user-management/users.controller.spec.ts",
+    "src/modules/users/user-management/users.controller.ts",
+    "src/modules/users/user-management/users.service.spec.ts",
+    "src/modules/users/user-management/users.service.ts",
+    "src/modules/users/users.module.ts"
+   ],
    "resources": [],
-   "repo_role": "backend"
+   "repo_role": "backend",
+   "candidate_sha": "56cf2dce916aba2df54df120d7f08963c69a80a6",
+   "cleaned": true
   },
   "__integration__:backend": {
    "task_id": "REQ-005-integration",
