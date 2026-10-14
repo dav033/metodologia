@@ -63,6 +63,10 @@ MCP capability report lists no administrative route without a tool; each accepta
 - 2026-10-14 (M2, session 8): an access request approved or denied records the decision and notifies the requester; it grants nothing. The role is changed by hand, so the role audit trail stays the only place access is given.
 - 2026-10-14 (M2, session 8): nobody decides their own access request (`OWN_ACCESS_REQUEST`, 422). Decisions are a conditional UPDATE on `status = 'pending'`, so two admins deciding at once cannot both win (409 `ACCESS_REQUEST_ALREADY_RESOLVED`).
 
+- 2026-10-14 (M3, session 12): T7 inventories all 253 routes, including permission-guarded business routes. Personal session views, OAuth callbacks, public token endpoints and HTML/multipart transport are explicitly excluded. The report discovers live routes; offline parity tests use controller source and actual McpService registration (D-002).
+- 2026-10-14 (M3, session 12): preserve list_permissions.permissions as codes; add permissionMetadata/templates. Notification preference tools accept explicit userId, like existing notification administration. Sharing writes retain the system user's per-note checks; no employee impersonation is added.
+- 2026-10-14 (M3, session 12): Workflow is unavailable in this harness; use bounded subagents and explicit task verdicts. The offline MCP handler/registration seam catches schema/delegation/parity drift; existing domain service tests own business-rule checks.
+
 ## Progress log
 - 2026-10-14: spec and plan written by the HQ session (790c0548) under the owner's "assume and go" instruction.
 - 2026-10-14 11:21 plan APPROVED (terminal)
@@ -77,3 +81,4 @@ MCP capability report lists no administrative route without a tool; each accepta
 - 2026-10-14 13:09 T5 done (isolated integration) — commit 8ed59b8 on wt/M2-f2e51f10: 'npx jest src/modules/users src/modules/notifications --silent' exit 0: 14 suites, 176 tests; tsc --noEmit clean; eslint clean on new files. Antagonist: first review (no blockers; fixed external-free checks, duplicate pending, whitespace reason, timestamptz), re-review CONCERNS on the race only, documented as best-effort. Follow-ups in the T4 task note.
 - 2026-10-14 13:13 M2-audit done (marathon) — pass-with-fixes: T4 and T5 verified against SPEC R3, R4, R8; 15 suites, 182 tests pass; tsc and eslint clean; added missing AccessRequestsRepository unit tests; P-012 logged for manual DB migration
 - 2026-10-14 13:52 T6 done (isolated integration) — commit a580d3e on wt/T6-0724f01c; npx jest src/modules/mcp --silent exit 0 (13 suites, 197 tests pass); tsc --noEmit clean; eslint clean
+- 2026-10-14 M3 session 12: T7 committed as 588f35b on wt/M3-c2e32ae9. 253 routes (SSE included), 44 new tools; npx jest src/modules/mcp --silent: 16 suites/242 tests pass; tsc and touched lint/build pass. Antagonist: 3 fixed (financial trusted context, SSE inventory, regression envelope), 0 deferred, 0 dropped; one re-review. Full lint baseline has 2 unrelated errors.

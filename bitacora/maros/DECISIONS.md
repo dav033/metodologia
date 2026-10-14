@@ -28,3 +28,12 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
   enough to backfill. − R10 ("every MCP write attributable in the audit trail") is not guaranteed: a failed insert
   leaves only a log line. Revisit in REQ-005/T8 (transaction or outbox once the SQL is applied).
 - **Source:** [day log](2026-10/W3/2026-10-14.md) · REQ-005
+
+## D-002 — Explicit MCP capability inventory and system attribution
+- **Date:** 2026-10-14 · **Status:** Accepted
+- **Context:** REQ-005/T7 found 253 API routes and gaps across CRM, projects, catalogs, users and sharing. Matching tool names alone hid partial coverage.
+- **Decision:** Map controller/handler pairs explicitly to tool names; build the runtime report from live Nest route metadata and the actual per-server registrations. An offline source inventory test rejects unclassified routes, missing tools and stale entries. OAuth callbacks, public token routes, binary transport and personal session-only views carry explicit exclusions.
+- **Alternatives:** Hand-maintained report detached from registration — could claim nonexistent tools; automatically infer parity from similar service calls — conflates variants and composite operations; impersonate employees for note sharing — loses attribution and bypasses ownership.
+- **Consequences:** + New routes fail the parity gate until reviewed. + Notification preferences use explicit userId, like existing notification tools. + Sharing writes name the system actor and retain note access checks; an ungranted system user may be refused. + Existing list_permissions.permissions stays a string array; additive permissionMetadata and templates carry v2 metadata. − Inventory requires review when route semantics change. − Personal/OAuth/transport exclusions are reported, not silently counted as covered.
+- **Rollback:** Revert the T7 commit; existing tool names and input fields are unchanged.
+- **Source:** [day log](2026-10/W3/2026-10-14.md) · REQ-005/T7

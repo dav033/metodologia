@@ -18,6 +18,24 @@
       "created": "2026-10-14T12:51:54.732234-05:00",
       "updated": "2026-10-14T12:51:54.732234-05:00",
       "promoted_by": null
+    },
+    {
+      "id": "L-002",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "MCP attribution identity has no role or permissions; use it for authorship, and retain the established trusted service context for administrator-wide financial reads.",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-14T14:16:33.952489-05:00",
+          "source": "REQ-005/T7",
+          "note": "T7 antagonist reproduced get_projects_financials always returning [] with installed system actor; real ProjectsService regression now covers this in 588f35b."
+        }
+      ],
+      "created": "2026-10-14T14:16:33.952489-05:00",
+      "updated": "2026-10-14T14:16:33.952489-05:00",
+      "promoted_by": null
     }
   ]
 }
