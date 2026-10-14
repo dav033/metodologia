@@ -18,13 +18,15 @@
   "pid": 2114493,
   "machine": "precision7760",
   "task": "M1",
-  "session": 2,
-  "state": "batch settled",
-  "session_pids": {},
+  "session": 3,
+  "state": "1 sessions starting",
+  "session_pids": {
+   "3": 2140100
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 2,
+ "sessions": 3,
  "tasks": [
   {
    "id": "T1",
@@ -40,7 +42,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 1,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 1,
    "last_error": "integration: candidate was rejected",
    "error_hashes": [
@@ -76,7 +78,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 1,
    "last_error": "integration: candidate was rejected",
    "error_hashes": [
@@ -110,7 +112,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 1,
    "last_error": "integration: candidate was rejected",
    "error_hashes": [
