@@ -11,6 +11,7 @@ _Generated 2026-10-13 23:29 by `bitacora.py index`. Do not edit by hand._
 - **skill** → `/home/david/dev/metodologia`
 - **ops-matrix-cujggjqq** → `/tmp/ops-matrix-cujggjqq`
 - **ops-matrix-gwx4a4rl** → `/tmp/ops-matrix-gwx4a4rl`
+- **ops-matrix-pduh5t5x** → `/tmp/ops-matrix-pduh5t5x`
 
 ## Needs attention
 
