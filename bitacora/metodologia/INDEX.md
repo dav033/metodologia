@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-14 17:03 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 17:40 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -21,6 +21,8 @@ _Generated 2026-10-14 17:03 by `bitacora.py index`. Do not edit by hand._
 - REQ-006: plan waiting for approval
 - REQ-009: executor finished — review & merge
 - REQ-010: executor finished — review & merge
+- REQ-011: executor finished — review & merge
+- REQ-012: executor finished — review & merge
 
 ## Requirements
 
@@ -36,26 +38,26 @@ _Generated 2026-10-14 17:03 by `bitacora.py index`. Do not edit by hand._
 | [REQ-008](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/SPEC.md) | Fresh milestone orchestration and bounded context execution | `in-progress` | [paused](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/PLAN.md) | report ✓ |
 | [REQ-009](requirements/REQ-009-planner-plan-json-classification-contrac/SPEC.md) | Planner PLAN.json classification contract | `ready` | [done](requirements/REQ-009-planner-plan-json-classification-contrac/PLAN.md) | report ✓ |
 | [REQ-010](requirements/REQ-010-isolated-planner-contract-module/SPEC.md) | Isolated planner-contract module | `ready` | [done](requirements/REQ-010-isolated-planner-contract-module/PLAN.md) | report ✓ |
-| [REQ-011](requirements/REQ-011-scheduler-core-m1-isolated-deterministic/SPEC.md) | Scheduler Core M1: isolated deterministic module `bt_scheduler_core` | `ready` | [approved](requirements/REQ-011-scheduler-core-m1-isolated-deterministic/PLAN.md) |  |
-| [REQ-012](requirements/REQ-012-planner-phase-1-closure-strict-plan-sync/SPEC.md) | Planner phase 1 closure: strict PLAN sync, launch gate, evidence, real planning trials | `in-progress` | — |  |
+| [REQ-011](requirements/REQ-011-scheduler-core-m1-isolated-deterministic/SPEC.md) | Scheduler Core M1: isolated deterministic module `bt_scheduler_core` | `ready` | [done](requirements/REQ-011-scheduler-core-m1-isolated-deterministic/PLAN.md) | report ✓ |
+| [REQ-012](requirements/REQ-012-planner-phase-1-closure-strict-plan-sync/SPEC.md) | Planner phase 1 closure: strict PLAN sync, launch gate, evidence, real planning trials | `in-progress` | [done](requirements/REQ-012-planner-phase-1-closure-strict-plan-sync/PLAN.md) | report ✓ |
 
 ## Top pending (urgency, then complexity)
 
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
 - P-003 · Visual review of the local web UI · med/S
-- P-019 · Freeze approved PLAN.json also in the foreground launch path (`bt_orchestration_transition · med/S
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · med/M
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T · med/L
 - P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · low/S
+- P-006 · Marathon: pass the claude prompt via stdin instead of argv (cmd-shim 8191-char / newline r · low/S
 
 ## Recent decisions
 
+- D-022 — The Scheduler Core (M1) is an isolated module with one authority per requirement; approval is a hash
+- D-021 — Planner phase 1 closes with schema 1.1.0 (argued classifications) and one launch gate
 - D-020 — The methodology is divided into modules; the planner is the first (`bt_planner`)
 - D-019 — PLAN.json is the planner's classified contract; Python-only validator; opt-in per requirement
 - D-018 — Verified completion can be superseded without resetting execution history
-- D-017 — Enforceable bounded milestone orchestration with structured decisions
-- D-016 — Versioned durable requirements revalidation before execution
 
 ## Artifacts
 

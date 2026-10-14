@@ -29,11 +29,12 @@ sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(HERE))
 
 import bt_plan_adapter as adapter  # noqa: E402
-import bt_planner as planner  # noqa: E402
 import bt_rounds  # noqa: E402
-from bt_planner import contract as pc  # noqa: E402
-from bt_planner import quality  # noqa: E402
 from trials_data import ROOTS, TRIALS  # noqa: E402
+
+planner = adapter.planner  # the methodology reaches the module only through its adapter, this harness included
+pc = planner.contract
+quality = planner.quality
 
 CREATION_WORDS = re.compile(r"\b(add|create|write|new|build|implement|provide|introduce|define|document|record)\b", re.I)
 RESULTS: list[dict] = []
@@ -43,7 +44,7 @@ class Trial:
     def __init__(self, name: str, spec: dict, root: Path):
         self.name, self.spec = name, spec
         self.dir = root / name
-        self.dir.mkdir(parents=True)
+        self.dir.mkdir(parents=True, exist_ok=True)
         self.steps: list[tuple[str, bool, str]] = []
         self.repo = ROOTS[spec["repo"]]
         self.roots = {spec["repo"]: self.repo}
@@ -71,8 +72,10 @@ class Trial:
         (self.dir / "PLAN.json").write_text(planner.dumps(plan), encoding="utf-8")
 
     def check(self, plan: dict | None = None) -> pc.Report:
-        return planner.check(self.dir, plan, repo_roots=self.roots) if plan is not None else \
-            planner.check(self.dir, repo_roots=self.roots)
+        verifier = adapter.ref_verifier(self.dir)  # command: and precedent: evidence must exist on this machine
+        return planner.check(self.dir, plan, repo_roots=self.roots, verify_files=True, ref_exists=verifier) \
+            if plan is not None else planner.check(self.dir, repo_roots=self.roots, verify_files=True,
+                                                   ref_exists=verifier)
 
     # -- quality judgement (beyond the schema) -------------------------------------------------------------------
     def judge(self, plan: dict) -> None:
@@ -213,6 +216,7 @@ class Trial:
 
     # -- approval -> launch lifecycle ---------------------------------------------------------------------------------
     def lifecycle(self, plan: dict) -> None:
+        adapter.repo_roots = lambda rdir: self.roots  # stands for the project's registered workspace
         self.write(plan, status="review")
         run = self.dir / "RUN.json"
         run.write_text(json.dumps({"req": self.name, "status": "running", "sessions": 3,
@@ -285,7 +289,22 @@ class Trial:
                 "warnings": report.warnings if "report" in dir() else []}
 
 
+def export(target: Path) -> None:
+    """Fixtures for the module's own suite: the exact plans of the trials, without the machine-specific parts."""
+    for name, spec in TRIALS.items():
+        trial = Trial(name, spec, target)
+        plan = trial.plan_dict()
+        trial.write(plan, status="approved")
+        expect = dict(spec.get("expect", {}))
+        expect.pop("covers_inventory", None)
+        (trial.dir / "EXPECT.json").write_text(json.dumps({"intent": spec["intent"], **expect}, indent=1) + "\n",
+                                               encoding="utf-8")
+
+
 def main() -> int:
+    if "--export" in sys.argv:
+        export(Path(sys.argv[sys.argv.index("--export") + 1]))
+        return 0
     keep = Path(sys.argv[sys.argv.index("--keep") + 1]) if "--keep" in sys.argv else None
     with tempfile.TemporaryDirectory(prefix="planning-trials-") as tmp:
         root = Path(tmp)

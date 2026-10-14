@@ -24,7 +24,7 @@ No commit/push; do not modify any RUN.json; stdlib only; new modules under 500 l
 - [x] T5 — PLAN.md <-> PLAN.json consistency check · after: T4
 - [x] T6 — Immutable approved revisions and run reference · after: T4
 
-### M3 — Validation and backwards compatibility
+### M3 — Validation and compatibility
 - [x] T7 — Full validator with negative tests · after: T2, T4
 - [x] T8 — Compatibility report on REQ-013/015/016 · after: T5, T7
 - [x] T9 — End-to-end planner cycle test · after: T6, T8

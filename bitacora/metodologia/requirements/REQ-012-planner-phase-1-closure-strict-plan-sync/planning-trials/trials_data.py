@@ -131,7 +131,7 @@ status: approved
 # Plan — TRAIN-2
 
 ### M1 — Rename
-- [ ] T1 — Inventory every reference of the old scope · repo: trainingapp · verify: `grep -rn "@training/" . --include=* --exclude-dir=node_modules --exclude-dir=.next --exclude=package-lock.json`
+- [ ] T1 — Inventory every reference of the old scope · repo: trainingapp · verify: `grep -rn "@training/" . --exclude-dir=node_modules --exclude-dir=.next --exclude=package-lock.json`
 - [ ] T2 — Rename the contracts package and its API consumers · repo: trainingapp · after: T1 · files: packages/contracts/package.json, apps/api/package.json, apps/api/src/app.ts, apps/api/src/repositories/project-repository.ts, apps/api/Dockerfile · resources: workspace-package-scope
 - [ ] T3 — Rename the web package and its imports · repo: trainingapp · after: T2 · files: apps/web/package.json, apps/web/lib/types.ts · resources: workspace-package-scope
 - [ ] T4 — Rename root scripts and the Netlify build command · repo: trainingapp · after: T3 · files: package.json, netlify.toml · resources: workspace-package-scope
@@ -236,7 +236,7 @@ status: approved
 # Plan — TRAIN-3
 
 ### M1 — Decide and specify
-- [ ] T1 — Find out who consumes the list endpoint outside this repository · repo: trainingapp · files: scripts/check-contract-drift.mjs, docs/api-contract.md
+- [ ] T1 — Find out who consumes the list endpoint outside this repository · repo: trainingapp · files: scripts/check-contract-drift.mjs
 - [ ] T2 — Define the list response schema in contracts · repo: trainingapp · after: T1 · files: packages/contracts/src/project.ts, packages/contracts/test/project.test.ts · verify: `npm run test -w @training/contracts` · resources: projects-list-response
 
 ### M2 — Implement

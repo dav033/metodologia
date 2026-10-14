@@ -1,19 +1,15 @@
 {
  "trials": 6,
- "steps": 154,
- "passed": 151,
- "failed": [
-  "TRAIN-2-package-scope: publication gate passes with evidence verified against the real checkout",
-  "METH-4-plan-quality-in-review: refused: dependency contradicts PLAN.md",
-  "METH-5-relay-test-wait: refused: dependency contradicts PLAN.md"
- ],
+ "steps": 182,
+ "passed": 182,
+ "failed": [],
  "roots": {
   "trainingapp": "/home/david/dev/trainingapp",
   "metodologia": "/home/david/dev/metodologia"
  },
  "head": {
   "trainingapp": "01861ad",
-  "metodologia": "9418442"
+  "metodologia": "29f3b29"
  },
  "results": [
   {
@@ -75,7 +71,7 @@
     {
      "step": "refused: task id defined twice in PLAN.json",
      "ok": true,
-     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id"
+     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id (tasks[0], tasks[3])\nT1: defined more than once in PLAN.json"
     },
     {
      "step": "refused: title contradicts PLAN.md",
@@ -85,7 +81,7 @@
     {
      "step": "refused: repository contradicts PLAN.md",
      "ok": true,
-     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'trainingapp', PLAN.json says 'elsewhere'"
+     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'trainingapp', PLAN.json says 'elsewhere'\nclassification_evidence: repository 'elsewhere' has no checkout here, so its file evidence could not be verified"
     },
     {
      "step": "refused: dependency contradicts PLAN.md",
@@ -224,21 +220,216 @@
    "trial": "TRAIN-2-package-scope",
    "intent": "mechanical-large-change",
    "repo": "/home/david/dev/trainingapp",
-   "ok": false,
+   "ok": true,
    "steps": [
     {
      "step": "publication gate passes with evidence verified against the real checkout",
-     "ok": false,
-     "detail": "T1.verification: PLAN.md verifies with `grep -rn \"@training/\" . --include=* --exclude-dir=node_modules --exclude-dir=.next --exclude=package-lock.json` but PLAN.json has only `grep -rn \"@training/\" . --exclude-dir=node_modules --exclude-dir=.next --exclude=package-lock.json`"
+     "ok": true,
+     "detail": ""
     },
     {
      "step": "evidence files were really checked, not skipped",
      "ok": true,
+     "detail": "T1.classification_evidence.complexity.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?; T1.classification_evidence.coupling.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?; T2.classification_evidence.scope.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?"
+    },
+    {
+     "step": "critical path is the expected dependency chain",
+     "ok": true,
+     "detail": "got ['T1', 'T2', 'T3', 'T4', 'T5']"
+    },
+    {
+     "step": "every task has a machine-checked verification or an explicit manual check with expected result",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "every high-risk task names a command or an explicit manual check (AC-07)",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "verification commands refer to scripts and modules that exist",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "planned paths exist, or belong to a task that creates them (no invented paths)",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "no task floats outside the dependency graph",
+     "ok": true,
+     "detail": "loose: []"
+    },
+    {
+     "step": "plan covers all 9 real files that reference the old scope",
+     "ok": true,
+     "detail": "uncovered: []"
+    },
+    {
+     "step": "refused: task id defined twice in PLAN.md",
+     "ok": true,
+     "detail": "needles ('T1: defined 2 times in PLAN.md',) not all in: T1: defined 2 times in PLAN.md (lines 7, 14); task ids must be unique\nT1.milestone_id: PLAN.md puts it under M2, PLAN.json says M1\nT1.title: PLAN.md says 'Another T1', PLAN.json says 'Inventory every reference of the old scope'"
+    },
+    {
+     "step": "refused: task id defined twice in PLAN.json",
+     "ok": true,
+     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id (tasks[0], tasks[5])\nT1: defined more than once in PLAN.json"
+    },
+    {
+     "step": "refused: title contradicts PLAN.md",
+     "ok": true,
+     "detail": "needles ('T1.title',) not all in: T1.title: PLAN.md says 'Inventory every reference of the old scope', PLAN.json says 'Something else entirely'"
+    },
+    {
+     "step": "refused: repository contradicts PLAN.md",
+     "ok": true,
+     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'trainingapp', PLAN.json says 'elsewhere'\nclassification_evidence: repository 'elsewhere' has no checkout here, so its file evidence could not be verified"
+    },
+    {
+     "step": "refused: dependency contradicts PLAN.md",
+     "ok": true,
+     "detail": "needles ('T2.after',) not all in: T2.after: PLAN.md has ['T1'], PLAN.json has []"
+    },
+    {
+     "step": "refused: verification contradicts PLAN.md",
+     "ok": true,
+     "detail": "needles ('T1.verification',) not all in: T1.verification: PLAN.md verifies with `grep -rn \"@training/\" . --exclude-dir=node_modules --exclude-dir=.next --exclude=package-lock.json` but PLAN.json has only `make test`"
+    },
+    {
+     "step": "refused: risk classification without evidence",
+     "ok": true,
+     "detail": "needles ('T1.classification_evidence.risk',) not all in: T1.classification_evidence.risk: missing"
+    },
+    {
+     "step": "refused: evidence names a file that does not exist",
+     "ok": true,
+     "detail": "needles ('does not exist in repository',) not all in: T1.classification_evidence.scope.evidence[0]: file 'src/does/not/exist.py' does not exist in repository 'trainingapp'; evidence must be something actually inspected"
+    },
+    {
+     "step": "refused: justification is a placeholder",
+     "ok": true,
+     "detail": "needles ('complexity.justification',) not all in: T1.classification_evidence.complexity.justification: is a placeholder"
+    },
+    {
+     "step": "refused: confidence high resting on assumptions",
+     "ok": true,
+     "detail": "needles ('T1.confidence',) not all in: T1.confidence: high, but complexity, scope, duration rest only on assumptions; investigate (file/command/precedent evidence) or lower the confidence\nT1.confidence: high requires evidence that something was inspected or run (file/command/precedent)"
+    },
+    {
+     "step": "refused: unordered tasks share a path while one claims coupling low",
+     "ok": true,
+     "detail": "T1 and T2: nothing orders them yet both touch path 'src/shared.ts'~'src/shared.ts', and one declares coupling low; add `after` between them or raise the coupling"
+    },
+    {
+     "step": "refused: a full_system task without a documented exception",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "unapproved plan is not launchable",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "approval succeeds and freezes r1",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "frozen revision equals exactly the approved PLAN.json",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "launch gate passes for the approved revision",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "an edit after approval is refused as PLAN_DRIFT and nothing is frozen",
+     "ok": true,
+     "detail": "PLAN_DRIFT: PLAN.json cannot be launched: PLAN.json (revision 2) is not the approved revision r1; approve it (`plan approve`, or `plan-json freeze` once the owner accepts it) before launching, or rest"
+    },
+    {
+     "step": "re-approval freezes r2 and r1 stays recoverable",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "launch gate passes for the newly approved revision",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "RUN.json was never touched by planning",
+     "ok": true,
+     "detail": ""
+    },
+    {
+     "step": "the scheduler core reads the frozen revision (read-only interoperability)",
+     "ok": true,
      "detail": ""
     }
    ],
-   "analysis": null,
-   "warnings": []
+   "analysis": {
+    "tasks": 5,
+    "milestones": 2,
+    "total_minutes": 110,
+    "critical_path": {
+     "tasks": [
+      "T1",
+      "T2",
+      "T3",
+      "T4",
+      "T5"
+     ],
+     "minutes": 110
+    },
+    "widest_level": 1,
+    "distribution": {
+     "complexity": {
+      "low": 4,
+      "medium": 1
+     },
+     "scope": {
+      "isolated_fix": 1,
+      "large_change": 1,
+      "small_change": 3
+     },
+     "risk": {
+      "low": 1,
+      "medium": 4
+     },
+     "coupling": {
+      "high": 3,
+      "low": 2
+     },
+     "confidence": {
+      "high": 4,
+      "medium": 1
+     }
+    },
+    "without_command_verification": [],
+    "low_confidence": [],
+    "with_evidence": [
+     "T1",
+     "T2",
+     "T3",
+     "T4",
+     "T5"
+    ],
+    "unordered_conflicts": [],
+    "redundant_edges": []
+   },
+   "warnings": [
+    "T1.classification_evidence.complexity.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?",
+    "T1.classification_evidence.coupling.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?",
+    "T2.classification_evidence.scope.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?",
+    "T3.classification_evidence.complexity.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?",
+    "T4.classification_evidence.complexity.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?"
+   ]
   },
   {
    "trial": "TRAIN-3-project-list-contract",
@@ -254,7 +445,7 @@
     {
      "step": "evidence files were really checked, not skipped",
      "ok": true,
-     "detail": ""
+     "detail": "T1.classification_evidence.risk.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?; T5.classification_evidence.complexity.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?"
     },
     {
      "step": "critical path is the expected dependency chain",
@@ -304,7 +495,7 @@
     {
      "step": "refused: task id defined twice in PLAN.json",
      "ok": true,
-     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id"
+     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id (tasks[0], tasks[5])\nT1: defined more than once in PLAN.json"
     },
     {
      "step": "refused: title contradicts PLAN.md",
@@ -314,7 +505,7 @@
     {
      "step": "refused: repository contradicts PLAN.md",
      "ok": true,
-     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'trainingapp', PLAN.json says 'elsewhere'"
+     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'trainingapp', PLAN.json says 'elsewhere'\nclassification_evidence: repository 'elsewhere' has no checkout here, so its file evidence could not be verified"
     },
     {
      "step": "refused: dependency contradicts PLAN.md",
@@ -459,13 +650,16 @@
     "unordered_conflicts": [],
     "redundant_edges": []
    },
-   "warnings": []
+   "warnings": [
+    "T1.classification_evidence.risk.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?",
+    "T5.classification_evidence.complexity.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?"
+   ]
   },
   {
    "trial": "METH-4-plan-quality-in-review",
    "intent": "new-feature",
    "repo": "/home/david/dev/metodologia",
-   "ok": false,
+   "ok": true,
    "steps": [
     {
      "step": "publication gate passes with evidence verified against the real checkout",
@@ -475,7 +669,7 @@
     {
      "step": "evidence files were really checked, not skipped",
      "ok": true,
-     "detail": ""
+     "detail": "T3.classification_evidence.complexity.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?"
     },
     {
      "step": "critical path is the expected dependency chain",
@@ -515,7 +709,7 @@
     {
      "step": "refused: task id defined twice in PLAN.json",
      "ok": true,
-     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id"
+     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id (tasks[0], tasks[3])\nT1: defined more than once in PLAN.json"
     },
     {
      "step": "refused: title contradicts PLAN.md",
@@ -525,12 +719,12 @@
     {
      "step": "refused: repository contradicts PLAN.md",
      "ok": true,
-     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'metodologia', PLAN.json says 'elsewhere'"
+     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'metodologia', PLAN.json says 'elsewhere'\nclassification_evidence: repository 'elsewhere' has no checkout here, so its file evidence could not be verified"
     },
     {
      "step": "refused: dependency contradicts PLAN.md",
-     "ok": false,
-     "detail": "needles ('T2.after',) not all in: T1 and T2: nothing orders them yet both touch resource 'plan-adapter-api', and one declares coupling low; add `after` between them or raise the coupling"
+     "ok": true,
+     "detail": "needles ('T2.after',) not all in: T1 and T2: nothing orders them yet both touch resource 'plan-adapter-api', and one declares coupling low; add `after` between them or raise the coupling\nT2.after: PLAN.md has ['T1'], PLAN.json has []"
     },
     {
      "step": "refused: verification contradicts PLAN.md",
@@ -659,13 +853,15 @@
     "unordered_conflicts": [],
     "redundant_edges": []
    },
-   "warnings": []
+   "warnings": [
+    "T3.classification_evidence.complexity.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?"
+   ]
   },
   {
    "trial": "METH-5-relay-test-wait",
    "intent": "investigation",
    "repo": "/home/david/dev/metodologia",
-   "ok": false,
+   "ok": true,
    "steps": [
     {
      "step": "publication gate passes with evidence verified against the real checkout",
@@ -675,7 +871,7 @@
     {
      "step": "evidence files were really checked, not skipped",
      "ok": true,
-     "detail": ""
+     "detail": "T3.classification_evidence.duration.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?"
     },
     {
      "step": "critical path is the expected dependency chain",
@@ -720,7 +916,7 @@
     {
      "step": "refused: task id defined twice in PLAN.json",
      "ok": true,
-     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id"
+     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id (tasks[0], tasks[3])\nT1: defined more than once in PLAN.json"
     },
     {
      "step": "refused: title contradicts PLAN.md",
@@ -730,12 +926,12 @@
     {
      "step": "refused: repository contradicts PLAN.md",
      "ok": true,
-     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'metodologia', PLAN.json says 'elsewhere'"
+     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'metodologia', PLAN.json says 'elsewhere'\nclassification_evidence: repository 'elsewhere' has no checkout here, so its file evidence could not be verified"
     },
     {
      "step": "refused: dependency contradicts PLAN.md",
-     "ok": false,
-     "detail": "needles ('T2.after',) not all in: T1 and T2: nothing orders them yet both touch path 'skill/scripts/tests/test_relay.py'~'skill/scripts/tests/test_relay.py', and one declares coupling low; add `after` between them or raise the coupling"
+     "ok": true,
+     "detail": "needles ('T2.after',) not all in: T1 and T2: nothing orders them yet both touch path 'skill/scripts/tests/test_relay.py'~'skill/scripts/tests/test_relay.py', and one declares coupling low; add `after` between them or raise the coupling\nT2.after: PLAN.md has ['T1'], PLAN.json has []"
     },
     {
      "step": "refused: verification contradicts PLAN.md",
@@ -866,7 +1062,9 @@
     "unordered_conflicts": [],
     "redundant_edges": []
    },
-   "warnings": []
+   "warnings": [
+    "T3.classification_evidence.duration.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?"
+   ]
   },
   {
    "trial": "TRAIN-6-postgres-migration",
@@ -927,7 +1125,7 @@
     {
      "step": "refused: task id defined twice in PLAN.json",
      "ok": true,
-     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id"
+     "detail": "needles ('T1: duplicate task id',) not all in: T1: duplicate task id (tasks[0], tasks[6])\nT1: defined more than once in PLAN.json"
     },
     {
      "step": "refused: title contradicts PLAN.md",
@@ -937,7 +1135,7 @@
     {
      "step": "refused: repository contradicts PLAN.md",
      "ok": true,
-     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'trainingapp', PLAN.json says 'elsewhere'"
+     "detail": "needles ('T1.repository',) not all in: T1.repository: PLAN.md says repo 'trainingapp', PLAN.json says 'elsewhere'\nclassification_evidence: repository 'elsewhere' has no checkout here, so its file evidence could not be verified"
     },
     {
      "step": "refused: dependency contradicts PLAN.md",
@@ -1099,6 +1297,7 @@
    "warnings": [
     "T1.estimated_minutes: 600 exceeds 480; consider splitting",
     "T1.scope: full_system accepted only through scope_exception ('owner wants the whole migration reviewed as one unit'); the owner must review it at approval",
+    "T1.classification_evidence.duration.justification: shares no term with the task (title, objective, paths, criteria) or its evidence; is it about this task?",
     "T1.verification: risk is high but nothing is machine-checked; add a command (or a task that creates one, with created_by)"
    ]
   }

@@ -8,6 +8,8 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
 
 ## Current state
 - 2026-10-14 REQ-009 + REQ-010 done: planner contract `PLAN.json` (D-019) now an isolated module `skill/scripts/bt_planner/` reached only through `bt_plan_adapter.py` (D-020, convention `references/modules.md`). Suites: module 111, methodology 752, packaging 802 OK. Merged into `main` (`fe3735d`, pushed); see `requirements/REQ-010-*/REPORT.md`.
+- 2026-10-14 REQ-011 done (uncommitted): Scheduler Core M1 `skill/scripts/bt_scheduler_core/` + `bt_scheduler_adapter.py` (D-022; one authority per requirement, approval = sha256, projection `RUN.projection.json`). Suites: module 234, integration 28, methodology 797, packaging 11 OK; see `requirements/REQ-011-*/REPORT.md`.
+- 2026-10-14 REQ-012 closes planner phase 1: PLAN.md↔PLAN.json sync compares ids/titles/repo/after/verify; one launch gate (`bind_approved`) on every path; schema 1.1.0 with argued classifications (D-021). Suites: module 179, methodology 797, scheduler core 234 OK; 6 real planning trials 182/182. Uncommitted; see `requirements/REQ-012-*/REPORT.md`.
 - 2026-10-14 strict audit repaired project/global learning, telemetry integrity and cross-agent continuation.
   Native review panel: `artifacts/revision-flujo.html`; detailed evidence and limitations: `artifacts/audit-2026-10-14.md`.
   Final suite: 823 tests pass without thread/resource warnings; three native diagrams pass visual checks.
