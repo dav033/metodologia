@@ -28,6 +28,9 @@ real planning trials (`planning-trials/RESULTS.json`, 182 checks).
 | AC-14 | Negative tests name task/field | M: `test_md_sync.py`, `test_evidence.py`, `test_scenarios.py` (every needle is `<task>.<field>`) |
 | AC-15 | No model / account / worker assignment | M: `test_contract.py::test_forbidden_keys_at_every_level` · `test_evidence.py::test_forbidden_scheduling_keys_inside_evidence_are_rejected` |
 
+Independent per-criterion verdicts (a reviewer that did not use this table) are summarised in REPORT.md §Independent
+audit, third round: all PASS except AC-06 and AC-15, which were PARTIAL and are addressed (AC-15) or documented (AC-06).
+
 Constraint checks: Scheduler untouched (`git status` shows `bt_scheduler_core/`, `bt_scheduler_adapter.py` and
 `PLAN-SCHEDULER-CORE-M1.md` only as another session's untracked work; none edited here); no historical RUN.json
 modified; no push, no publish, no deploy.

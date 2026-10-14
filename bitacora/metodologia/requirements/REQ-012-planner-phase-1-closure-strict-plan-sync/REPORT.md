@@ -49,15 +49,15 @@ Final runs of this session (2026-10-14, after the last code change):
 
 | Suite | Result |
 |---|---|
-| Module `bt_planner/tests` (normal and `python -I`, includes the isolated lone-copy run and the six scenarios) | 196 tests OK, both |
-| Methodology `tests` (includes packaging and `test_plan_integration` 45) | 801 tests OK |
+| Module `bt_planner/tests` (normal and `python -I`, includes the isolated lone-copy run and the six scenarios) | 198 tests OK, both |
+| Methodology `tests` (includes packaging and `test_plan_integration` 46) | 802 tests OK |
 | Scheduler core `bt_scheduler_core/tests` (not modified; run only to prove it is unaffected) | 234 tests OK |
 | `run_trials.py` against the real repositories | 182/182 checks |
 | Baseline before this requirement | module 111, methodology 752 (REQ-010 report) |
 
 Not run / not claimed: provider-dependent live suites and the Windows/macOS packaging matrix (deferred by the owner).
-Independent audit: two fresh reviewer agents (spec, standards) plus a re-verification pass, all findings fixed (below);
-they are same-provider reviewers, not another vendor's.
+Independent audit: three fresh reviewer rounds (spec, standards, per-criterion) by same-provider agents, all findings
+fixed (below); the cross-vendor attempt was inconclusive.
 
 ## Independent audit (two fresh reviewers, spec and standards axes)
 
@@ -81,17 +81,35 @@ Both returned CHANGES_NEEDED on the first pass; every verified finding was fixed
 
 Second independent pass (fresh reviewer, items 1–7 re-attacked): all confirmed fixed; it found four more, fixed with tests: resume with PLAN.json deleted after a freeze (now PLAN_MISSING), foreground froze before the workspace check (moved after it), resume demanded file evidence (a resume only verifies existence/validity/latest revision: the run's own work may move files), `T3.1.2` / `**T3**` / `T3 foo` task lines silently ignored (reported). One serialisation nit (a task without `verification` omitted the empty list) restored for byte parity with the old writer.
 
+**Third round (after the approval-record and verifier changes):**
+- Per-criterion verdict by an independent reviewer who derived its own evidence and falsified inputs of its own:
+  AC-01..05, 07..14 PASS; AC-06 PARTIAL (the "no parallelism guarantee" is documentation plus the collision lint, free
+  text such as "safe to run in parallel" cannot be judged); AC-15 PARTIAL because the forbidden-key list matched exact
+  spellings → now matches any key made of a scheduling word (`model_hint`, `assignee`, `max_parallel`, `numWorkers`…).
+  Its other notes were fixed: stale `launch_problem` docstring, boundary scan reading gitignored review snapshots.
+- A launch can no longer create the approval record at all (`PLAN_NOT_FROZEN`; only `--force` freezes, as
+  `launch-forced`) — closes P-025. `command:` and `precedent:` evidence is verified for existence through the adapter
+  (executable/path, requirement+task, decision, pending item, commit) — a fabricated `precedent:REQ-999` or
+  `command:madeup-tool` is an error.
+- A **planner session with no context** (fresh agent, only plan-contract.md and the module README) planned a new
+  requirement on the real trainingapp repo (`independent-evidence/REQ-901.*`): 10 tasks, critical path T1-T2-T5-T6-T10,
+  valid on the first try with real evidence; I re-checked it with the verifiers and opened its claims. It shows AC-12
+  (a new session can use the contract without conversation) and that honest plans pass; it did not need the gate to
+  push back, so it says nothing about leniency — the corruption batteries do.
+- Cross-provider audit: **attempted and inconclusive.** Codex is not installed here; Antigravity (Gemini) reviewed twice
+  through `bitacora review`: the first run ended `incomplete` with no findings (375 s), the second crashed in cleanup
+  without output. No cross-vendor verdict exists; I do not claim one.
+
 Not changed on purpose: `--force` of an unapproved plan with nothing frozen freezes it (owner's explicit launch,
 recorded `launch-forced`); `in-progress` is a SPEC status, no flow sets it on PLAN.md.
 
 ## Limitations (demonstrated)
 
-- Evidence is judged by structure and existence, not truth: a fluent but false justification passes (P-023).
-- Hand-edited `status: approved` has no approval record; first launch freezes what it validates, now recorded as `source: launch` in the manifest (P-025 keeps the digest-hook idea).
+- Evidence is judged by structure and existence (files, specs, tasks, requirements, decisions, commits, executables), not by semantic truth: a fluent but false justification passes (P-023). No deterministic validator can do otherwise; AC-03/07/09 ask for justification with verifiable evidence, which is what is enforced.
 - The ten-corruption battery and expectations (`EXPECT.json`) were written by the same planner (me); they are regression
   guards, not an independent oracle. The independent reviewers were same-provider agents; a cross-provider `bitacora review` remains open (Proposals).
 - Another session's `test_scheduler_integration` errored once in one earlier full run while its adapter was being
-  edited; the three later full runs (final: 801 OK) were clean.
+  edited; the three later full runs (final: 802 OK) were clean.
 
 ## Proposals (not done)
 1. Independent audit of REQ-012 by another provider (`bitacora review`) before the Scheduler consumes 1.1.0.
