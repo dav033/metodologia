@@ -14,17 +14,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T11:33:52",
+  "at": "2026-10-14T11:34:52",
   "pid": 2114493,
   "machine": "precision7760",
   "task": "M1",
-  "session": 1,
-  "state": "batch settled",
-  "session_pids": {},
+  "session": 2,
+  "state": "session running 1 min",
+  "session_pids": {
+   "2": 2137105
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 1,
+ "sessions": 2,
  "tasks": [
   {
    "id": "T1",
@@ -39,11 +41,13 @@
    "risk": null,
    "complexity": null,
    "milestone": "M1",
-   "tier": 0,
-   "status": "integration_pending",
-   "attempts": 0,
-   "last_error": null,
-   "error_hashes": [],
+   "tier": 1,
+   "status": "in_progress",
+   "attempts": 1,
+   "last_error": "integration: candidate was rejected",
+   "error_hashes": [
+    "5e775b2a7409"
+   ],
    "evidence": "commit 8551cee on wt/M1-50d08786; npx jest src/common/auth --silent: 4 suites, 42 tests pass; tsc --noEmit and eslint clean; antagonist review findings A1-A8 (descriptions vs enforced behaviour, template contents, policy tests) fixed",
    "pending_id": null,
    "notes": [],
@@ -73,11 +77,13 @@
    "risk": null,
    "complexity": null,
    "milestone": "M1",
-   "tier": 1,
-   "status": "todo",
-   "attempts": 0,
-   "last_error": null,
-   "error_hashes": [],
+   "tier": 2,
+   "status": "in_progress",
+   "attempts": 1,
+   "last_error": "integration: candidate was rejected",
+   "error_hashes": [
+    "5e775b2a7409"
+   ],
    "evidence": null,
    "pending_id": null,
    "notes": [],
@@ -105,11 +111,13 @@
    "risk": null,
    "complexity": null,
    "milestone": "M1",
-   "tier": 1,
-   "status": "todo",
-   "attempts": 0,
-   "last_error": null,
-   "error_hashes": [],
+   "tier": 2,
+   "status": "in_progress",
+   "attempts": 1,
+   "last_error": "integration: candidate was rejected",
+   "error_hashes": [
+    "5e775b2a7409"
+   ],
    "evidence": null,
    "pending_id": null,
    "notes": [],
@@ -573,8 +581,8 @@
  "worktrees": {
   "M1": {
    "task_id": "M1",
-   "branch": "wt/M1-50d08786",
-   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M1-50d08786",
+   "branch": "wt/M1-a939c065",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M1-a939c065",
    "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
    "repo": "/home/david/dev/maros/maros-nest",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
@@ -582,7 +590,7 @@
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
-   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M1-50d08786.json",
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M1-a939c065.json",
    "task_ids": [
     "T1",
     "T2",
