@@ -19,6 +19,10 @@
   "ops-matrix-jxjn7vd9": {
    "remote": "",
    "hint": "/tmp/ops-matrix-jxjn7vd9"
+  },
+  "pictures": {
+   "remote": "https://github.com/dav033/pictures.git",
+   "hint": "~/dev/pictures"
   }
  },
  "work": true

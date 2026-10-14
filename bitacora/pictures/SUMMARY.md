@@ -7,8 +7,8 @@ Sempertex balloon-decoration demo (`demo-decoracion`: Next 16 on Vercel + Python
 engine: the **Taller 3D** (`/3d`, pro tool with a scene AI agent) and the **guided customer chat** (`/asistente`,
 quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
-## Current state (last deployment record: `65edd83b`, 2026-10-11 06:14; local work: 2026-10-13)
-- REQ-015 local branch `feat/req-015-judge-fix` at `4b7b5cab`, 21 commits ahead of tracked origin/main; T12 cap and audit #3 corrections integrated as uncommitted working-tree changes. No push/deploy in this session. Both independent review axes approve the corrected findings; all 10 gate suites pass (P-076 closed).
+## Current state (last deployment record: `65edd83b`, 2026-10-11 06:14; local work: 2026-10-14)
+- REQ-015 local branch `feat/req-015-judge-fix` at `26db7b8b`, 24 commits ahead of tracked origin/main; T12 cap and audit #3 corrections are committed locally. Current uncommitted work makes the colour regression reproducible without the ignored Shopify snapshot and includes it in guiada:test. No push/deploy in this session. Previous REQ-015 independent reviews approve; prior full gate passed (P-076 closed).
 - **One quote everywhere (D-038) live:** same plan = same price on every surface; per-balloon spares with a cost cap;
   Python = engine (42-BOM shared fixture in CI). Every guided idea (engine and curated) is priced by the single pricer;
   prod e2e «paridad de precio» checks assistant = Taller on every release.
@@ -40,12 +40,13 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 ## Active focus
 - REQ-016 (Guided 3D edit leftovers: exact undo and colour resolver) **DONE**: Verified and closed in local worktree `t12` on branch `feat/req-016-guided-3d-edit-leftovers-exact-undo-and` (commits 58f10c04..fb872bce). Exact in-memory undo (D-045, P-042), signed last colour order with suppressed redundant asking (D-046, P-058 A1-A4, D-047), reader-before-writer rollout compatibility (D-035) and untouched-piece replay protection (D-048, P-082). Gate 10/10 green (`GATE OK`), tsc clean (0 errors), lint 0 errors. REPORT.md written; PLAN.md status: done.
 - REQ-015 implementation and verification complete locally, ready for owner review/commit/publication: chosen-idea chips by rules, shared price, honest color counts, durable quote cap. Restored ambiguous/composite idea prices show “Precio al elegir”; no session contract change. REPORT.md contains evidence; visual rating UI 9/9, contract 27/27, final types/build pass.
+- 2026-10-14 follow-up: deterministic colour coverage passes in guiada:test (15 scripts); final lint 0 errors/49 warnings, workspace builds and app types pass. Application build/full gate not rerun for this test-only change.
 
 ## Top pending (see PENDING.md)
-- P-075 remaining historical test debt; P-077 calibrate the 300/hour quote cap from production counts (not queried in this session). Historic type-error counts were stale generated Next route references; source types pass. REQ-015's root build passed previously; current t12 application build is blocked by P-083.
+- P-075: colour regression repaired locally; quotation UI integration still needs configured Python (reproduced 503 PYTHON_BACKEND_NOT_CONFIGURED). P-041 closed after verifying existing capacity regressions (salon 27/27). P-077 requires production counts; t12 app build remains P-083.
 
 ## Recent decisions (see DECISIONS.md)
 - D-027 helium sphere volume · D-028/D-030 product judge timing · D-029 class-prefixed ids · D-031 manual VPS deploy ·
   D-032 owner-away defaults · D-033 dev servers allowed · D-034 no VPS deploy this weekend · D-035 reader-first persisted fields · D-036 review stop-rule · D-037 VPS approved · D-038 one quote · D-039 everything on.
 
-_Last updated: 2026-10-13_
+_Last updated: 2026-10-14_

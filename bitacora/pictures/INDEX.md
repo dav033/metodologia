@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-10-13 23:31 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 06:51 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-10-13
+**Last activity:** 2026-10-14
 
 ## Workspace
 
@@ -13,6 +13,7 @@ _Generated 2026-10-13 23:31 by `bitacora.py index`. Do not edit by hand._
 - **audit** → `/home/david/dev/pictures-wt/audit` (not cloned here)
 - **t12** → `/home/david/dev/pictures-wt/t12`
 - **ops-matrix-jxjn7vd9** → `/tmp/ops-matrix-jxjn7vd9`
+- **pictures** → `/home/david/dev/pictures`
 
 ## Needs attention
 
@@ -46,10 +47,10 @@ _Generated 2026-10-13 23:31 by `bitacora.py index`. Do not edit by hand._
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/?
 - P-015 · REQ-002 go-live checklist: apply migrations 028 + 029 on Neon (with notice), run indexer - · high/?
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/?
-- P-041 · ajustar_salon reports grid capacity («40 invitados, caben 96») while only 5 tables of 8 ar · med/S
 - P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
 - P-079 · Stale persisted image: a plain adjust of a plan with a generated image drops the in-memory · med/S
 - P-039 · Finish library ideas 29/30/31 fix (branch fix/biblioteca-feedback 998a7b18, e7f): re-resol · med/M
+- P-048 · Scenario matrix gaps: 18 % of representable pieces fall to noRepresentables («colour doesn · med/M
 
 ## Recent decisions
 
@@ -62,5 +63,5 @@ _Generated 2026-10-13 23:31 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W3](2026-10/W3/WEEK.md): [13](2026-10/W3/2026-10-13.md)
+  - [W3](2026-10/W3/WEEK.md): [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md)
   - [W2](2026-10/W2/WEEK.md): [11](2026-10/W2/2026-10-11.md), [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)
