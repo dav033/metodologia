@@ -1,7 +1,7 @@
 {
  "req": "REQ-005",
  "project": "maros",
- "status": "running",
+ "status": "stopped",
  "agent": "claude",
  "model": "haiku",
  "ultracode": true,
@@ -12,14 +12,14 @@
   "workers": 1,
   "isolation": "worktree"
  },
- "control": "stop",
+ "control": null,
  "heartbeat": {
   "at": "2026-10-14T12:40:11",
   "pid": 2114493,
   "machine": "precision7760",
-  "task": "M1",
+  "task": null,
   "session": 5,
-  "state": "batch settled",
+  "state": "stopped",
   "session_pids": {},
   "session_pid": null
  },
