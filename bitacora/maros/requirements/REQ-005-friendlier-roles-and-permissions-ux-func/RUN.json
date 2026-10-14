@@ -44,15 +44,17 @@
    "tier": 2,
    "status": "in_progress",
    "attempts": 3,
-   "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
+   "last_error": null,
    "error_hashes": [
     "5e775b2a7409",
     "217735cb4729",
     "f829b8c1fd55"
    ],
-   "evidence": "commit 4de4bcf on wt/M1-a939c065; npx jest src/common/auth --silent: 4 suites, 42 tests pass; tsc and eslint clean",
+   "evidence": "commit 4de4bcf (+ review fixes 56cf2dc) on wt/M1-f37f0106; 'npx jest src/common/auth --silent' exit 0: 5 suites, 48 tests pass; tsc --noEmit clean; eslint clean; prior failures were the integration worktree lacking node_modules (npx install prompt), now resolved — plain npx resolves local jest 30.1.3 there",
    "pending_id": null,
-   "notes": [],
+   "notes": [
+    "Code is fine since 4de4bcf; earlier failures were the integration worktree missing node_modules (npx install prompt). If it fails again, check 'npx jest --version' in the integration worktree before touching code."
+   ],
    "findings": null,
    "severity": null,
    "limit_streak": 0,
@@ -62,7 +64,8 @@
     "model": "opus",
     "effort": "xhigh",
     "result": "stopped"
-   }
+   },
+   "claimed_done": true
   },
   {
    "id": "T2",
@@ -82,14 +85,16 @@
    "tier": 2,
    "status": "in_progress",
    "attempts": 2,
-   "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
+   "last_error": null,
    "error_hashes": [
     "5e775b2a7409",
     "f829b8c1fd55"
    ],
-   "evidence": "commit bfd0340 on wt/M1-a939c065; npx jest src/modules/users src/common --silent: 16 suites, 196 tests pass; antagonist approved",
+   "evidence": "commit bfd0340 + 56cf2dc on wt/M1-f37f0106; 'npx jest src/modules/users src/common --silent' exit 0: 17 suites, 215 tests pass; tsc --noEmit clean (2 spec TS2554 errors fixed in 56cf2dc); description clearing regression fixed with tests; antagonist approved after re-review",
    "pending_id": null,
-   "notes": [],
+   "notes": [
+    "bfd0340 reviewed again in session 6; follow-up fixes in 56cf2dc (description clearing restored, spec tsc errors). Run 'npx tsc --noEmit -p tsconfig.json' too: jest does not type-check specs."
+   ],
    "limit_streak": 0,
    "last_route": {
     "agent": "claude",
@@ -99,7 +104,8 @@
     "result": "stopped"
    },
    "findings": null,
-   "severity": null
+   "severity": null,
+   "claimed_done": true
   },
   {
    "id": "T3",
@@ -119,14 +125,16 @@
    "tier": 2,
    "status": "in_progress",
    "attempts": 2,
-   "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
+   "last_error": null,
    "error_hashes": [
     "5e775b2a7409",
     "f829b8c1fd55"
    ],
-   "evidence": "commit 8b46730 on wt/M1-a939c065; npx jest src/modules/users --silent: 8 suites, 118 tests pass; antagonist approved",
+   "evidence": "commit 8b46730 + 56cf2dc on wt/M1-f37f0106; 'npx jest src/modules/users --silent' exit 0: 8 suites, 126 tests pass; audit made best-effort after the committed role write (D-001), logged events carry the full payload + time (tests spy the log); db/add-role-audit-events.sql idempotent, not applied (P-010); antagonist approved after re-review",
    "pending_id": null,
-   "notes": [],
+   "notes": [
+    "56cf2dc made the audit best-effort (D-001): failed inserts are logged with the full event and the role change succeeds; GET /roles/audit returns 500 until db/add-role-audit-events.sql is applied (P-010). The audit diff uses effective permissions."
+   ],
    "limit_streak": 0,
    "findings": null,
    "severity": null,
@@ -136,7 +144,8 @@
     "model": "opus",
     "effort": "xhigh",
     "result": "stopped"
-   }
+   },
+   "claimed_done": true
   },
   {
    "id": "M1-audit",

@@ -59,3 +59,4 @@ MCP capability report lists no administrative route without a tool; each accepta
 - 2026-10-14: spec and plan written by the HQ session (790c0548) under the owner's "assume and go" instruction.
 - 2026-10-14 11:21 plan APPROVED (terminal)
 - 2026-10-14 11:21 launched marathon supervisor (pool auto, haiku) from HQ in `/home/david/dev/maros`
+- 2026-10-14 12:55 M1 session 6 (4c48366e): earlier M1 failures were environmental (no node_modules in the integration worktree). Review fixes committed as 56cf2dc on wt/M1-f37f0106. T1–T3 verify commands green (48 / 215 / 126 tests) and tsc clean; D-001, P-010 and P-011 added.
