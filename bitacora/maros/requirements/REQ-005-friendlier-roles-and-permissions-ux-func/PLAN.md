@@ -51,6 +51,9 @@ MCP capability report lists no administrative route without a tool; each accepta
 
 ## Rulings
 <!-- Judgment calls made during execution without asking. -->
+- 2026-10-14 (M1, session 6): role audit recording is best-effort — a failed `role_audit_events` insert is logged with the full event and the already-written role change succeeds (D-001; atomicity revisited in T8, P-011).
+- 2026-10-14 (M1, session 6): the update audit diff records what the role effectively grants after the save (`resultingPermissions`), so edits to the code-resolved `member` role do not claim permission changes that never take effect.
+- 2026-10-14 (M1, session 6): `PATCH /roles/:id` keeps the base behaviour of clearing the description with `''`; NULL and `''` are both "no description" and moving between them is neither written nor audited.
 
 ## Progress log
 - 2026-10-14: spec and plan written by the HQ session (790c0548) under the owner's "assume and go" instruction.

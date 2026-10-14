@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "L-001",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "In maros-nest, jest does not type-check specs: run 'npx tsc --noEmit -p tsconfig.json' as well, it caught a spec calling a helper with an ignored argument that jest passed",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-14T12:51:54.732234-05:00",
+          "source": "REQ-005/T3",
+          "note": "REQ-005 M1: jest 215/215 green while tsc reported TS2554 twice in roles.service.spec.ts"
+        }
+      ],
+      "created": "2026-10-14T12:51:54.732234-05:00",
+      "updated": "2026-10-14T12:51:54.732234-05:00",
+      "promoted_by": null
+    }
+  ]
+}
