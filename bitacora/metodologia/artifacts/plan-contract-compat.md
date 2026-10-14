@@ -1,6 +1,6 @@
 # PLAN.json compatibility report: REQ-013, REQ-015, REQ-016 (pictures)
 
-Generated 2026-10-14 by `bt_plan_sync.compat` (read-only). Each requirement folder was hashed before and after:
+Generated 2026-10-14 by `bt_planner.compat` (module `skill/scripts/bt_planner`, REQ-010) (read-only). Each requirement folder was hashed before and after:
 no file changed (including REQ-016's `RUN.json` and `HANDOFF.md`). Nothing was written, no value was imputed.
 
 | Requirement | PLAN.md status | Tasks | `### M` milestones | Tasks without milestone | RUN.json | HANDOFF.md | Gaps in a derived skeleton |
@@ -40,4 +40,4 @@ Structural findings:
 Migration is opt-in per requirement: `plan-json init` derives a skeleton; the owner or planner supplies the classification
 explicitly. Historical plans keep working in the old flow without `PLAN.json` (`handoff`/`launch` only act when the file exists).
 
-Reproduce: `python3 -c` over `bt_plan_sync.compat(<requirement dir>)` for each folder, as in `skill/scripts/tests/test_plan_compat_real.py`.
+Reproduce: `python3 -c` over `bt_planner.compat(<requirement dir>)` for each folder, as in `skill/scripts/tests/test_plan_integration.py` (class `RealHistoricalPlans`).

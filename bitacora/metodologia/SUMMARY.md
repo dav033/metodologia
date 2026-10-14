@@ -7,6 +7,7 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
 (D-008, D-009, D-011), and since D-012 the pictures bitácora itself. The rest of the live bitácora is `~/bitacora`.
 
 ## Current state
+- 2026-10-14 REQ-009 + REQ-010 done: planner contract `PLAN.json` (D-019) now an isolated module `skill/scripts/bt_planner/` reached only through `bt_plan_adapter.py` (D-020, convention `references/modules.md`). Suites: module 111, methodology 752, packaging 802 OK. Uncommitted; see `requirements/REQ-010-*/REPORT.md`.
 - 2026-10-14 strict audit repaired project/global learning, telemetry integrity and cross-agent continuation.
   Native review panel: `artifacts/revision-flujo.html`; detailed evidence and limitations: `artifacts/audit-2026-10-14.md`.
   Final suite: 823 tests pass without thread/resource warnings; three native diagrams pass visual checks.

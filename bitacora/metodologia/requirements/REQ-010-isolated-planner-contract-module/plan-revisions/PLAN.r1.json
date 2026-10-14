@@ -1,0 +1,286 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "REQ-010",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Standalone module",
+      "acceptance_criteria": [
+        "The bt_planner package exists with its own lock, parser, CLI and data"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Isolation proof",
+      "acceptance_criteria": [
+        "Boundary, end-to-end and lone-copy tests pass"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Re-integrate the methodology",
+      "acceptance_criteria": [
+        "Only the adapter imports the module",
+        "Hooks and run state behave as before"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Verify and document",
+      "acceptance_criteria": [
+        "Suites and packaging pass; module and convention documented"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Create the `bt_planner` package and move contract/revisions with an own lock",
+      "objective": "Create the bt_planner package and move contract and revisions with an own lock",
+      "repository": "skill",
+      "after": [],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 40,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Mostly moving verified code; the lock replaces bt_lock (classified retrospectively on 2026-10-14 after implementation; minutes are rough actuals)",
+      "expected_paths": [
+        "skill/scripts/bt_planner/contract.py",
+        "skill/scripts/bt_planner/revisions.py",
+        "skill/scripts/bt_planner/_lock.py"
+      ],
+      "shared_resources": [
+        "plan-json-contract"
+      ],
+      "acceptance_criteria": [
+        "The package imports only the standard library and itself"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && PYTHONDONTWRITEBYTECODE=1 python3 -I -m unittest discover -s bt_planner/tests",
+          "purpose": "Module suite"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Own PLAN.md parser, sync, compat, CLI (`python -m bt_planner`), bundled schema and example",
+      "objective": "Add the own PLAN.md parser, sync, compat, CLI and bundled data",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "full_feature",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "New small parser must match the supervisor's; CLI is a thin layer (classified retrospectively on 2026-10-14 after implementation; minutes are rough actuals)",
+      "expected_paths": [
+        "skill/scripts/bt_planner/markdown.py",
+        "skill/scripts/bt_planner/sync.py",
+        "skill/scripts/bt_planner/cli.py",
+        "skill/scripts/bt_planner/data/*"
+      ],
+      "shared_resources": [
+        "plan-json-contract"
+      ],
+      "acceptance_criteria": [
+        "`python -m bt_planner <action>` works for every documented action"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && PYTHONDONTWRITEBYTECODE=1 python3 -I -m unittest discover -s bt_planner/tests",
+          "purpose": "Module suite incl. CLI e2e"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Migrate core tests into the module and add import-boundary, bundled-fixtures and end-to-end CLI tests",
+      "objective": "Migrate core tests into the module and add boundary, markdown, flow and e2e tests",
+      "repository": "skill",
+      "after": [
+        "T2"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 75,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Mechanical migration plus new AST boundary checks (classified retrospectively on 2026-10-14 after implementation; minutes are rough actuals)",
+      "expected_paths": [
+        "skill/scripts/bt_planner/tests/*"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Boundary test fails when a forbidden import or string appears",
+        "The CLI session runs in `python -I` from an unrelated cwd"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && PYTHONDONTWRITEBYTECODE=1 python3 -I -m unittest discover -s bt_planner/tests",
+          "purpose": "Module suite"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Prove it works from a fresh `python -I` interpreter in an unrelated cwd, with nothing else of the methodology on the path",
+      "objective": "Prove the suite passes from a lone copy of the package with python -I",
+      "repository": "skill",
+      "after": [
+        "T3"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 25,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "One subprocess test; recursion guarded by an env flag (classified retrospectively on 2026-10-14 after implementation; minutes are rough actuals)",
+      "expected_paths": [
+        "skill/scripts/bt_planner/tests/test_isolation.py"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The copy has no methodology module reachable and passes its own suite"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && PYTHONDONTWRITEBYTECODE=1 python3 -I -m unittest discover -s bt_planner/tests",
+          "purpose": "Includes test_isolation"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M3",
+      "title": "Thin adapter `bt_plan_adapter.py`; rewire bt_cli_plan, bt_launch, bt_handoff, bt_runstate; remove old modules; packaging",
+      "objective": "Add the thin adapter, rewire cli/launch/handoff/run state, remove old modules, update packaging",
+      "repository": "skill",
+      "after": [
+        "T4"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Touches launch, handoff and run state; the wheel must include the package and data (classified retrospectively on 2026-10-14 after implementation; minutes are rough actuals)",
+      "expected_paths": [
+        "skill/scripts/bt_plan_adapter.py",
+        "skill/scripts/bt_cli_plan.py",
+        "skill/scripts/bt_launch.py",
+        "skill/scripts/bt_handoff.py",
+        "skill/scripts/bt_runstate.py",
+        "pyproject.toml"
+      ],
+      "shared_resources": [
+        "launch-flow",
+        "RUN.json-schema",
+        "packaging"
+      ],
+      "acceptance_criteria": [
+        "Only the adapter imports bt_planner",
+        "Existing RUN.json is untouched"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests",
+          "purpose": "Methodology suite"
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M3",
+      "title": "Integration tests (hooks, run state, real-plan parser parity and compat)",
+      "objective": "Methodology integration tests: hooks, run state, parser parity and real-plan compat",
+      "repository": "skill",
+      "after": [
+        "T5"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 50,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Parity over every real PLAN.md guards the deliberate duplication (classified retrospectively on 2026-10-14 after implementation; minutes are rough actuals)",
+      "expected_paths": [
+        "skill/scripts/tests/test_plan_integration.py"
+      ],
+      "shared_resources": [
+        "bt_runstate.parse_plan",
+        "bt_plan_adapter"
+      ],
+      "acceptance_criteria": [
+        "Parser parity holds on every real plan",
+        "Hooks behave as before"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests",
+          "purpose": "Methodology suite"
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M4",
+      "title": "Full suites, independent review, docs (module README, `references/modules.md`, plan-contract reference), bitácora and report",
+      "objective": "Run suites and packaging, independent review, document module and convention, update bitacora",
+      "repository": "skill",
+      "after": [
+        "T6"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Mostly verification and writing (classified retrospectively on 2026-10-14 after implementation; minutes are rough actuals)",
+      "expected_paths": [
+        "skill/scripts/bt_planner/README.md",
+        "skill/references/modules.md",
+        "skill/references/plan-contract.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Both suites and the wheel tests pass",
+        "An independent review finds nothing blocking"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests",
+          "purpose": "Methodology suite"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && PYTHONDONTWRITEBYTECODE=1 python3 -I -m unittest discover -s bt_planner/tests",
+          "purpose": "Module suite"
+        }
+      ]
+    }
+  ]
+}

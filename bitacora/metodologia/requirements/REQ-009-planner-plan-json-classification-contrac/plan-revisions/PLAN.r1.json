@@ -1,0 +1,418 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "REQ-009",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Diagnosis and contract design",
+      "acceptance_criteria": [
+        "The real flow is mapped",
+        "Schema, validator and rubric exist"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Structured output and sync",
+      "acceptance_criteria": [
+        "PLAN.json is generated, cross-checked with PLAN.md and frozen per approved revision"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Validation and compatibility",
+      "acceptance_criteria": [
+        "Negative tests pass",
+        "Historical plans are evaluated read-only",
+        "The full planner cycle is reproducible"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Documentation and adoption",
+      "acceptance_criteria": [
+        "The contract is documented and routable",
+        "A scheduler can parse a plan without agents"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Map producers/consumers of SPEC/PLAN/HANDOFF/RUN",
+      "objective": "Document the real producers and consumers of SPEC/PLAN/HANDOFF/RUN and the parse grammar",
+      "repository": "skill",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 25,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Read-only exploration by a subagent plus direct reads of bt_runstate and bt_launch (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "bitacora/metodologia/artifacts/plan-contract-map.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The map names producers, consumers, task-line grammar, approval mechanics and tests with file:line references"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s /home/david/bitacora/metodologia/artifacts/plan-contract-map.md",
+          "purpose": "The map artifact exists"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "JSON Schema 1.0.0 and validator core",
+      "objective": "Publish the 1.0.0 JSON Schema and a hand-written stdlib validator for plans, milestones and tasks",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "full_feature",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Stdlib-only constraint forces a hand-written validator; schema file kept in step by a parity test (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "skill/schemas/plan.schema.json",
+        "skill/scripts/bt_plan_contract.py",
+        "skill/scripts/tests/test_plan_contract.py"
+      ],
+      "shared_resources": [
+        "plan-json-contract"
+      ],
+      "acceptance_criteria": [
+        "Valid plans pass and invalid ones fail naming task and field",
+        "Schema enums and required lists equal the validator constants"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Contract, schema parity and negative cases"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Classification rubric with boundary examples",
+      "objective": "Write the classification rubric with boundary examples",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Prose with judgement calls; examples cover sensitive fix, mechanical refactor, contract change, full system (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "skill/references/plan-contract.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Rubric defines the five dimensions and confidence independently",
+        "At least the four boundary cases of the design are classified with a reason"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Docs tests keep the reference consistent with the code"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "PLAN.json generation (init) in the planner flow",
+      "objective": "Generate PLAN.json (skeleton) from the existing planner flow without replacing the Markdown",
+      "repository": "skill",
+      "after": [
+        "T2",
+        "T3"
+      ],
+      "complexity": "medium",
+      "scope": "full_feature",
+      "estimated_minutes": 45,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Reuses bt_runstate.parse_plan; init never defaults classification (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "skill/scripts/bt_plan_sync.py",
+        "skill/scripts/bt_cli_plan.py",
+        "skill/scripts/bitacora.py"
+      ],
+      "shared_resources": [
+        "plan-json-contract",
+        "bitacora-cli"
+      ],
+      "acceptance_criteria": [
+        "`plan-json init` writes a parseable skeleton from PLAN.md",
+        "Classification fields stay absent and are reported as gaps"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Skeleton and CLI tests"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "PLAN.md <-> PLAN.json consistency check",
+      "objective": "Check PLAN.md and PLAN.json agree on ids, milestones and dependencies",
+      "repository": "skill",
+      "after": [
+        "T4"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Compares only structured identifiers, never prose (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "skill/scripts/bt_plan_sync.py"
+      ],
+      "shared_resources": [
+        "plan-json-contract"
+      ],
+      "acceptance_criteria": [
+        "Deliberate inconsistencies fail with the task or milestone named"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Consistency negative tests"
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M2",
+      "title": "Immutable approved revisions and run reference",
+      "objective": "Freeze approved revisions immutably and let new runs reference them without touching existing RUN.json",
+      "repository": "skill",
+      "after": [
+        "T4"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Touches launch, run state and the revision store; must never alter a running RUN.json (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "skill/scripts/bt_plan_revisions.py",
+        "skill/scripts/bt_runstate.py",
+        "skill/scripts/bt_launch.py"
+      ],
+      "shared_resources": [
+        "RUN.json-schema",
+        "launch-flow"
+      ],
+      "acceptance_criteria": [
+        "Editing a frozen revision is an error until revision N+1",
+        "A new run records plan_ref only when a revision is frozen",
+        "Existing RUN.json bytes are unchanged"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Revision, run isolation and launch hook tests"
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M3",
+      "title": "Full validator with negative tests",
+      "objective": "Validate duplicates, missing references, cycles, orphan milestones, missing metadata and empty criteria",
+      "repository": "skill",
+      "after": [
+        "T2",
+        "T4"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Graph checks are small; the effort is in negative tests (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "skill/scripts/bt_plan_contract.py",
+        "skill/scripts/tests/test_plan_contract.py"
+      ],
+      "shared_resources": [
+        "plan-json-contract"
+      ],
+      "acceptance_criteria": [
+        "Each listed defect yields a diagnostic naming task and field",
+        "No input makes validate() raise"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Negative suite"
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M3",
+      "title": "Compatibility report on REQ-013/015/016",
+      "objective": "Evaluate the contract against REQ-013, REQ-015 and REQ-016 read-only",
+      "repository": "skill",
+      "after": [
+        "T5",
+        "T7"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 35,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Read-only compat over real folders with before/after hashing (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "bitacora/metodologia/artifacts/plan-contract-compat.md",
+        "skill/scripts/tests/test_plan_compat_real.py"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "No file of the three requirements changes",
+        "Missing classification is reported, not invented"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Real-plan compatibility tests"
+        }
+      ]
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M3",
+      "title": "End-to-end planner cycle test",
+      "objective": "Prove the whole planner cycle from objective to frozen revision without starting executors",
+      "repository": "skill",
+      "after": [
+        "T6",
+        "T8"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Integration test with subprocess forbidden by patches (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "skill/scripts/tests/test_plan_flow.py"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Output is canonical and reproducible",
+        "No RUN.json and no process is created"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Planner cycle test"
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M4",
+      "title": "Document contract, rubric and review process",
+      "objective": "Document contract, rubric and review process and route to it from SKILL.md",
+      "repository": "skill",
+      "after": [
+        "T9"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 25,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Documentation of already implemented behavior (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "skill/references/plan-contract.md",
+        "skill/SKILL.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "A fresh session can run init, check, freeze and compat from the reference alone"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Docs-vs-code tests"
+        }
+      ]
+    },
+    {
+      "id": "T11",
+      "milestone_id": "M4",
+      "title": "Scheduler read-only loader and example input",
+      "objective": "Prepare the read-only loader, error codes and example input for a future Scheduler",
+      "repository": "skill",
+      "after": [
+        "T9"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 25,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Loader reuses the validator; the engine is out of scope (classified retrospectively on 2026-10-14; minutes are rough actuals, not a prior estimate)",
+      "expected_paths": [
+        "skill/schemas/plan.example.json",
+        "skill/scripts/bt_plan_contract.py"
+      ],
+      "shared_resources": [
+        "plan-json-contract"
+      ],
+      "acceptance_criteria": [
+        "The example loads without starting processes",
+        "Error codes are stable and documented"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skill/scripts/tests -p \"test_plan_*.py\"",
+          "purpose": "Scheduler interface tests"
+        }
+      ]
+    }
+  ]
+}

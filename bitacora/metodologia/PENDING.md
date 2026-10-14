@@ -13,6 +13,8 @@ month summary._
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remaining: Windows/macOS matrix (deferred by the owner), src/ move (deferred by D-014), commits (owner decision) · urgency: high · complexity: L · added 2026-10-13 · independent spec review
   - Context: see migracion/CONTINUE.md and the PLAN progress log. Committed locally 2026-10-14 (cdf9ea7, b3954d1, 89f2021); push is the owner's call.
 - P-003 · Visual review of the local web UI · urgency: med · complexity: S · added 2026-10-08 · session
+- P-019 · Freeze approved PLAN.json also in the foreground launch path (`bt_orchestration_transition`, REQ-008 in-flight work) · urgency: med · complexity: S · added 2026-10-14 · REQ-009 proposal
+  - Context: `bt_launch.launch` freezes the approved revision and `handoff.assess` gates an invalid PLAN.json, but the foreground transition checks only `status == approved`. Left untouched because it is security-hardened, uncommitted REQ-008 work.
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · urgency: med · complexity: M · added 2026-10-08 · user: "no por ahora, documéntalo"
   - Ideas: STATUS.json written by the executor, stale-heartbeat flag + Resume button in the web UI, Notification/Stop/StopFailure hooks, `claude --bg` restarts.
   - Real Maros REQ-005 E2E remains in progress on 2026-10-14: M1/M2 accepted; T6 accepted as `a580d3e` after 38 min (13 suites/197 tests, tsc and ESLint clean); M3 is running. Follow `e2e-maros/FINDINGS.md`: F-24's read loop resolved before its 60 min timeout; F-25 audit/test receipt mismatch; F-26 task-kind substring routing fix locally verified. Finish M3–M5, audit and autonomy verdict before calling the run successful. Branch cleanup is a proposal only.
@@ -28,6 +30,12 @@ month summary._
 - P-012 · Split tests/test_marathon.py (396 lines, over the 300-line target) · urgency: low · complexity: S · added 2026-10-09 · ladder review
 - P-004 · Concurrent edits to central files (PENDING/DECISIONS) from several sessions/machines · urgency: low · complexity: M · added 2026-10-08 · review
 - P-014 · Prune closed items older than 14 days into the month summary: the rule is written in the file header, but normalize never applies it, so Recently closed only grows · urgency: low · complexity: M · added 2026-10-13 · antagonist review of the pending fix
+- P-021 · Optional: show PLAN.json classification in the web UI plan review and `bitacora.py run` status; enrich REQ-013/015/016 only if the owner wants them in the contract · urgency: low · complexity: M · added 2026-10-14 · REQ-009 proposal
+  - Context: `artifacts/plan-contract-compat.md` lists what each historical plan lacks (no `### M` milestones in REQ-013/015, no repo/verify values).
+- P-020 · Scheduler (future): consume PLAN.json (`bt_plan_contract.load` / `bt_plan_revisions.load_revision`), calibrate `estimated_minutes` against real durations, own concurrency · urgency: low · complexity: L · added 2026-10-14 · REQ-009 proposal
+  - Context: explicitly out of scope of REQ-009; `references/plan-contract.md` §Consuming a plan lists the stable error codes.
+- P-022 · Split further parts of the methodology into modules following `references/modules.md` (candidates to evaluate: requirements gate, marathon supervisor state/run, bitácora documents/index, agent routing) · urgency: low · complexity: L · added 2026-10-14 · REQ-010 proposal
+  - Context: `bt_planner` is the first module and the template (boundary + isolation + adapter tests). Do one at a time, each with its own requirement and review; the owner picks the order.
 
 ## Blocked
 _None_
