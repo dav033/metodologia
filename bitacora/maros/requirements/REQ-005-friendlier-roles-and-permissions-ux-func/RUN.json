@@ -14,15 +14,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T11:34:52",
+  "at": "2026-10-14T11:35:18",
   "pid": 2114493,
   "machine": "precision7760",
   "task": "M1",
   "session": 2,
-  "state": "session running 1 min",
-  "session_pids": {
-   "2": 2137105
-  },
+  "state": "batch settled",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -42,7 +40,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 1,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 1,
    "last_error": "integration: candidate was rejected",
    "error_hashes": [
@@ -53,13 +51,13 @@
    "notes": [],
    "findings": null,
    "severity": null,
-   "limit_streak": 0,
+   "limit_streak": 1,
    "last_route": {
-    "agent": "claude",
-    "profile": "claude-personal",
-    "model": "sonnet",
+    "agent": "codex",
+    "profile": "codex-1",
+    "model": "gpt-6.1-sol",
     "effort": "xhigh",
-    "result": "done"
+    "result": "usage_limit"
    }
   },
   {
@@ -78,7 +76,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 1,
    "last_error": "integration: candidate was rejected",
    "error_hashes": [
@@ -87,7 +85,7 @@
    "evidence": null,
    "pending_id": null,
    "notes": [],
-   "limit_streak": 1,
+   "limit_streak": 0,
    "last_route": {
     "agent": "claude",
     "profile": "claude-personal",
@@ -112,7 +110,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 1,
    "last_error": "integration: candidate was rejected",
    "error_hashes": [
@@ -568,6 +566,63 @@
    },
    "isolation": "worktree",
    "branch": "wt/M1-50d08786"
+  },
+  {
+   "at": "2026-10-14T11:35:18",
+   "session": 2,
+   "task": "T1",
+   "result": "usage_limit",
+   "summary": "(typeof PERMISSIONS)[number]; const PERMISSION_SET = new Set<string>(PERMISSIONS); export function isPermission(value: string): value is Permission { return PERMISSION_SET.has(value); } /** Groups used to lay out the role editor in the admin UI. */ export const PERMISSION_GROUPS: ReadonlyArray",
+   "seconds": 86,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-1",
+   "contract": {
+    "v": 1,
+    "status": "limit",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-a939c065"
+  },
+  {
+   "at": "2026-10-14T11:35:18",
+   "session": 2,
+   "task": "T2",
+   "result": "skipped",
+   "summary": "not reached: depends on T1, which did not finish",
+   "seconds": 86,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-1",
+   "contract": {
+    "v": 1,
+    "status": "limit",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-a939c065"
+  },
+  {
+   "at": "2026-10-14T11:35:18",
+   "session": 2,
+   "task": "T3",
+   "result": "skipped",
+   "summary": "not reached: depends on T2, which did not finish",
+   "seconds": 86,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-1",
+   "contract": {
+    "v": 1,
+    "status": "limit",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-a939c065"
   }
  ],
  "pool": [
