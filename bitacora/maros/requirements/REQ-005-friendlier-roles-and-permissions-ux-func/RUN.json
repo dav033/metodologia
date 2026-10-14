@@ -14,15 +14,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T13:57:01",
+  "at": "2026-10-14T13:57:14",
   "pid": 2274846,
   "machine": "precision7760",
   "task": "M3",
   "session": 11,
-  "state": "session running 4 min",
-  "session_pids": {
-   "11": 2441500
-  },
+  "state": "batch settled",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -341,13 +339,21 @@
    "complexity": null,
    "milestone": "M3",
    "tier": 2,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
    "evidence": null,
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "limit_streak": 1,
+   "last_route": {
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "opus",
+    "effort": "xhigh",
+    "result": "usage_limit"
+   }
   },
   {
    "id": "T8",
@@ -365,13 +371,14 @@
    "complexity": null,
    "milestone": "M3",
    "tier": 1,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
    "evidence": null,
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "limit_streak": 0
   },
   {
    "id": "M3-audit",
@@ -1044,6 +1051,46 @@
    },
    "isolation": "worktree",
    "branch": "wt/T6-0724f01c"
+  },
+  {
+   "at": "2026-10-14T13:57:14",
+   "session": 11,
+   "task": "T7",
+   "result": "usage_limit",
+   "summary": "You've hit your session limit · resets 4:40pm (America/Bogota)",
+   "seconds": 253,
+   "model": "opus",
+   "effort": "xhigh",
+   "cost_usd": 1.7765022000000001,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "limit",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M3-c2e32ae9"
+  },
+  {
+   "at": "2026-10-14T13:57:14",
+   "session": 11,
+   "task": "T8",
+   "result": "skipped",
+   "summary": "not reached: depends on T7, which did not finish",
+   "seconds": 253,
+   "model": "opus",
+   "effort": "xhigh",
+   "cost_usd": 1.7765022000000001,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "limit",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M3-c2e32ae9"
   }
  ],
  "pool": [
