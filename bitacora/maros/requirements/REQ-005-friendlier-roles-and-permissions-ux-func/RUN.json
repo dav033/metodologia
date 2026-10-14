@@ -1,7 +1,7 @@
 {
  "req": "REQ-005",
  "project": "maros",
- "status": "stopped",
+ "status": "running",
  "agent": "claude",
  "model": "haiku",
  "ultracode": true,
@@ -14,17 +14,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T12:40:11",
-  "pid": 2114493,
+  "at": "2026-10-14T12:41:42",
+  "pid": 2274846,
   "machine": "precision7760",
-  "task": null,
-  "session": 5,
-  "state": "stopped",
-  "session_pids": {},
+  "task": "M1",
+  "session": 6,
+  "state": "session running 1 min",
+  "session_pids": {
+   "6": 2274876
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 5,
+ "sessions": 6,
  "tasks": [
   {
    "id": "T1",
@@ -40,7 +42,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 3,
    "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
@@ -78,7 +80,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 2,
    "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
@@ -115,7 +117,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 2,
    "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [

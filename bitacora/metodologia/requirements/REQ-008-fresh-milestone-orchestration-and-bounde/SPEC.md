@@ -1,68 +1,47 @@
 ---
 id: REQ-008
-status: clarifying
+status: planned
 created: 2026-10-14
-track: standard
+track: deep
 ---
 # REQ-008 — Fresh milestone orchestration and bounded context execution
 
-<!-- status: clarifying → ready → planned → in-progress → done | dropped -->
-
 ## Problem & goal
-_What pain, for whom, why now._
+The owner requires execution without a long-lived agent accumulating implementation context. Planning must aggressively establish requirements, limits, scope and acceptance, including on continuation. Execution must replace planning in the same terminal and use fresh milestone orchestrators with bounded context, delegated work, durable documentation and autonomous recovery.
 
-**Success looks like:** _measurable outcome(s)._
+## Actors
+David approves scope and the plan. A deterministic terminal supervisor owns process lifecycle. Each fresh milestone orchestrator owns bounded delegation, integration, verification, recovery rulings and documentation. Independent agents implement, inspect or debate within assigned scope.
 
-## Users / actors / stakeholders
--
-
-## Scope (in)
-<!-- User stories, ranked. Each one independently valuable and testable.
-### US-1 (P1, Must) — <title>
-As a <actor>, I want <capability> so that <benefit>.
-**Acceptance:**
-- Given <context>, when <action>, then <result>.
--->
+## Requirements and acceptance
+- R1. At conversation entry, including `continue`, revalidate authoritative scope, requirements, limits and acceptance. Preserve confirmed decisions; ask about missing or contradictory decisions only. Execution cannot silently skip an unresolved material ambiguity. Acceptance: continuation fixtures with drift require clarification; unchanged approved scope retains approval.
+- R2. Once the plan is approved, exit the planning session and execute successive fresh milestone orchestrators in the SAME terminal. Acceptance: a foreground launcher test proves identical TTY, distinct child processes/sessions and no resumed conversation argument; interrupt/exit restores terminal state.
+- R3. Each orchestrator receives a bounded, milestone-specific context package with approved scope, constraints, acceptance, relevant decisions and evidence references. Never forward complete transcripts, all previous milestone notes or unbounded log text. Acceptance: oversized histories do not grow the input past its configured cap; mandatory constraints cannot be silently truncated.
+- R4. Orchestrators delegate bounded implementation/exploration/testing, own integration and verification, and ensure documentation is persisted before completing or yielding. Acceptance: realistic fake-provider execution records delegated task ownership, verify evidence, updated documentation and final verdict.
+- R5. Rotate before a configured context limit even within a milestone. Persist completed work, remaining work and evidence; resume with a new instance and a bounded package. Acceptance: injected context pressure produces a checkpoint and a distinct successor without duplicate completed effects. If reliable usage is unavailable, enforce an observable conservative turn/output budget; never claim estimated counts are exact tokens.
+- R6. On a recoverable stall, automatically request THREE independent read-only proposals using available Haiku medium or gpt-6-luna medium accounts. Agents receive distinct solution briefs, then exchange bounded proposals and critique them. The orchestrator decides from evidence and persists alternatives, rationale and next action. Acceptance: fake-provider stall executes proposal, debate and ruling phases and resumes; consensus alone cannot mark a task done.
+- R7. Recovery is durable, bounded and availability-aware: no recursive councils, unlimited retries, invented proposals or unauthorized side effects. Unavailable providers wait or produce an explicit blocked state; account restrictions and quotas remain enforced. Acceptance: crash/resume, repeated stall, missing proposals, quota and user-stop scenarios preserve recovery state and budgets.
+- R8. Preserve approval, task dependencies, independent audits, verification, locks, isolation and no-push/no-commit permissions. Acceptance: regression suite plus end-to-end scheduler/relay tests; fresh orchestration never broadens approval.
+- R9. Aggressively audit the actual entry, continuation, planning, launch, milestone, recovery and closing flows. Resolve contradictory instructions/templates and audit implementation independently. Acceptance: requirement-to-test evidence matrix, two fresh review axes and documented remaining limits.
 
 ## Out of scope
--
+Push, merge, commits, deleting existing files, changing credentials/security permissions, unrelated fixes, global configuration changes and installing updated wrappers without specific authorization. Existing background runs must not be silently replaced or duplicated. Windows/macOS live validation stays deferred as previously requested; avoid introducing platform-specific regressions.
 
-## Requirements
-<!-- EARS style, numbered so tests/plan can cite them:
-- R1. When <trigger>, the system shall <response>.
-- R2. If <unwanted condition>, then the system shall <response>.
-- R3. While <state>, the system shall <response>.
-For business processes, "the system" can be a role or the process ("the approver shall…"). -->
+## Constraints and edge cases
+Use existing local file-based state and providers. Preserve unrelated changes. No personal-browser control. A wrong or stale handoff, missing wrapper, concurrent run, oversized mandatory context, interrupted delegation, absent usage telemetry or unavailable accounts must produce explicit safe behavior. Infrastructure/access failures requiring owner permission cannot be solved by agent debate.
 
-## Edge cases & errors
--
+## Priorities and timeline
+All R1–R9 are required for completion. No owner deadline. Implement in independently verified milestones after plan approval.
 
-## Constraints
-_Tech, integrations, data, security/privacy, compliance, budget, people._
-
-## Priorities & phases
-_MoSCoW + what is MVP vs later._
-
-## Timeline & dependencies
--
-
-## Assumptions
-_Best guesses taken instead of asking, with why. Revisit if they turn out wrong._
+## Assumptions to validate during implementation
+- Reuse the relay parent launcher lifecycle rather than typing commands into a terminal. Unsupported current launcher contexts need an explicit migration command, never a fabricated in-place replacement.
+- Context thresholds and debate/output caps must be explicit configurable policy, documented and tested against actual provider telemetry; numeric defaults will be justified from measured entry packages and supported context capacity.
+- A council proposes and critiques; only one writer integrates the chosen solution. Three agents can use the same eligible account if provider capacity allows; three different accounts are not required.
 
 ## Coverage
-| Topic | State |
-|---|---|
-| Goal & problem | Missing |
-| Users / actors | Missing |
-| Scope | Missing |
-| Out of scope | Missing |
-| Flows & behavior | Missing |
-| Edge cases | Missing |
-| Acceptance criteria | Missing |
-| Constraints | Missing |
-| Priorities & phases | Missing |
-| Timeline | Missing |
+Goal, actors, scope, exclusions, flow, errors, acceptance, constraints and priorities: clear. Timeline: no deadline. Exact budget defaults: delegated engineering decision with measurement evidence.
 
-## Clarifications
-<!-- ### Round N — YYYY-MM-DD
-- Q: … → A: … -->
+## Clarifications — 2026-10-14
+- Same terminal: owner confirmed replacing the planning session and rotating per milestone.
+- Continue: owner selected revalidation, not repeating settled interview questions.
+- Context: owner confirmed rotation by limit inside a milestone as well.
+- Recovery: original request specifies three Haiku medium or Luna medium agents, proposals, debate and orchestrator ruling.
