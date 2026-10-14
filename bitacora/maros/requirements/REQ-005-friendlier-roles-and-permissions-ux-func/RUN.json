@@ -14,15 +14,13 @@
  },
  "control": "stop",
  "heartbeat": {
-  "at": "2026-10-14T12:40:10",
+  "at": "2026-10-14T12:40:11",
   "pid": 2114493,
   "machine": "precision7760",
   "task": "M1",
   "session": 5,
-  "state": "session running 1 min",
-  "session_pids": {
-   "5": 2271262
-  },
+  "state": "batch settled",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -42,7 +40,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 3,
    "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
@@ -57,11 +55,11 @@
    "severity": null,
    "limit_streak": 0,
    "last_route": {
-    "agent": "antigravity",
-    "profile": "antigravity",
-    "model": "gemini-3.8-flash-medium",
-    "effort": null,
-    "result": "done"
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "opus",
+    "effort": "xhigh",
+    "result": "stopped"
    }
   },
   {
@@ -80,7 +78,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 2,
    "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
@@ -92,11 +90,11 @@
    "notes": [],
    "limit_streak": 0,
    "last_route": {
-    "agent": "antigravity",
-    "profile": "antigravity",
-    "model": "gemini-3.8-flash-medium",
-    "effort": null,
-    "result": "done"
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "opus",
+    "effort": "xhigh",
+    "result": "stopped"
    },
    "findings": null,
    "severity": null
@@ -117,7 +115,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 2,
    "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
@@ -131,11 +129,11 @@
    "findings": null,
    "severity": null,
    "last_route": {
-    "agent": "antigravity",
-    "profile": "antigravity",
-    "model": "gemini-3.8-flash-medium",
-    "effort": null,
-    "result": "done"
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "opus",
+    "effort": "xhigh",
+    "result": "stopped"
    }
   },
   {
@@ -751,6 +749,63 @@
    },
    "isolation": "worktree",
    "branch": "wt/M1-a939c065"
+  },
+  {
+   "at": "2026-10-14T12:40:11",
+   "session": 5,
+   "task": "T1",
+   "result": "stopped",
+   "summary": "stopped by the user",
+   "seconds": 60,
+   "model": "opus",
+   "effort": "xhigh",
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "cancelled",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-f37f0106"
+  },
+  {
+   "at": "2026-10-14T12:40:11",
+   "session": 5,
+   "task": "T2",
+   "result": "stopped",
+   "summary": "stopped by the user",
+   "seconds": 60,
+   "model": "opus",
+   "effort": "xhigh",
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "cancelled",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-f37f0106"
+  },
+  {
+   "at": "2026-10-14T12:40:11",
+   "session": 5,
+   "task": "T3",
+   "result": "stopped",
+   "summary": "stopped by the user",
+   "seconds": 60,
+   "model": "opus",
+   "effort": "xhigh",
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "cancelled",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-f37f0106"
   }
  ],
  "pool": [
