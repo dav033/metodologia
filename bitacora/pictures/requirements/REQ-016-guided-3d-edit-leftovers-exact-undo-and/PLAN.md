@@ -1,6 +1,6 @@
 ---
 req: REQ-016
-status: approved
+status: done
 created: 2026-10-13
 ---
 # Plan — REQ-016 — guided 3D edit leftovers
@@ -49,4 +49,5 @@ AGENTS.md rules; no `any`; no paid calls; no push; `npm run gate` green before t
 - Audit corrections committed as `df0be2a0`: opt-in v3 writer for D-035/D-046, unknown legacy history stays v2, another effective destination supersedes old effects, resolver-consumption mutation coverage and lifecycle/oracle tests. No publication.
 - Verification: gate 10/10, main last-order 20/20, confirmation/context/consumption and final types pass; lint 0 errors (50 existing warnings). The committed standalone same-selection replay regression fails and is not in the gate. Application builds fail separately (P-083); neither is called passing.
 - Antagonist: initial contained fixes SOUND; one re-review confirmed P-082 blocking, no further defects in the contained corrections. P-081 mutation portion fixed, remaining follow-ups deferred. Full evidence and continuation: AUDIT-M2.md.
-- 2026-10-13 19:01 M2-audit done (marathon) — PASS-WITH-FIXES: audited T2 84fa287a and T3 c6dd13d4; prior fixes df0be2a0 plus P-082 fix fb872bce committed on feature branch, clean tree. Registered replay 9/9, main last-order 20/20, returned-histo
+- 2026-10-13 19:01 M2-audit done (marathon) — PASS-WITH-FIXES: audited T2 84fa287a and T3 c6dd13d4; prior fixes df0be2a0 plus P-082 fix fb872bce committed on feature branch, clean tree. Registered replay 9/9, main last-order 20/20, returned-history properties green, gate 10/10 green.
+- 2026-10-13 19:14 FINAL closing session 13 done — Evidence consolidated across AUDIT-M1.md and AUDIT-M2.md; plan verification run for real: `npm run gate` (10/10 suites, GATE OK), `test-deshacer-ajuste-3d.ts` (8/8 pass), `test-confirmacion-color-motor3d.ts` (ok), `test-ultima-orden-color-motor3d.ts` (20/20 pass), `test-ultima-orden-color-replay-selection.ts` (9/9 pass), `npx tsc --noEmit` (0 errors), `npm run lint` (0 errors, 50 warnings). REPORT.md written; bitácora updated; status: done.
