@@ -1,6 +1,6 @@
 ---
 req: REQ-007
-status: review
+status: approved
 created: 2026-10-13
 ---
 # Migration plan — platform first, controlled capability expansion
@@ -116,3 +116,5 @@ Acceptance: actual available models pass smoke, remain family zai despite claude
 
 ## Progress log
 - 2026-10-13: planning against current dirty checkout; source inventory, original blueprint, code findings and baseline evidence persisted under migracion. No implementation tasks completed.
+- 2026-10-13 20:58 review comments (terminal): Owner said continua in session 01a1381d: authorize reversible local implementation. No commit/push/deletion/live cutover/account activation. Execute manually by milestones; M9 remains separately gated. Relay to claude-personal Sonnet 5.5 high at 85 percent 5h usage; check usage between work blocks.
+- 2026-10-13 20:58 plan APPROVED (terminal)
