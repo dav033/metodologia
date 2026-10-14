@@ -14,17 +14,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T11:35:23",
+  "at": "2026-10-14T12:25:24",
   "pid": 2114493,
   "machine": "precision7760",
   "task": "M1",
-  "session": 3,
-  "state": "batch settled",
-  "session_pids": {},
+  "session": 4,
+  "state": "session running 50 min",
+  "session_pids": {
+   "4": 2140578
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 3,
+ "sessions": 4,
  "tasks": [
   {
    "id": "T1",
@@ -40,14 +42,14 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 2,
-   "last_error": "session ended without task done/fail (rc=1), provider contract: failed, no end-of-turn event: urns a compact checked result, not a transcript. Full rules: `\"/usr/bin/python3\" \"/home/david/dev/metodologia/skill/scripts/bitacora.py\" --project maros context`.\n\n### Learned so far\n- [LG-002 · prefe",
+   "last_error": null,
    "error_hashes": [
     "5e775b2a7409",
     "217735cb4729"
    ],
-   "evidence": "commit 8551cee on wt/M1-50d08786; npx jest src/common/auth --silent: 4 suites, 42 tests pass; tsc --noEmit and eslint clean; antagonist review findings A1-A8 (descriptions vs enforced behaviour, template contents, policy tests) fixed",
+   "evidence": "commit 4de4bcf on wt/M1-a939c065; npx jest src/common/auth --silent: 4 suites, 42 tests pass; tsc and eslint clean",
    "pending_id": null,
    "notes": [],
    "findings": null,
@@ -59,7 +61,8 @@
     "model": "gpt-6.1-sol",
     "effort": "xhigh",
     "result": "failed"
-   }
+   },
+   "claimed_done": true
   },
   {
    "id": "T2",
@@ -77,13 +80,13 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 1,
-   "last_error": "integration: candidate was rejected",
+   "last_error": null,
    "error_hashes": [
     "5e775b2a7409"
    ],
-   "evidence": null,
+   "evidence": "commit bfd0340 on wt/M1-a939c065; npx jest src/modules/users src/common --silent: 16 suites, 196 tests pass; antagonist approved",
    "pending_id": null,
    "notes": [],
    "limit_streak": 0,
@@ -93,7 +96,10 @@
     "model": "sonnet",
     "effort": "xhigh",
     "result": "usage_limit"
-   }
+   },
+   "claimed_done": true,
+   "findings": null,
+   "severity": null
   },
   {
    "id": "T3",
@@ -111,7 +117,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 1,
    "last_error": "integration: candidate was rejected",
    "error_hashes": [
