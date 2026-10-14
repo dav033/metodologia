@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-14 16:32 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 17:03 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -36,7 +36,8 @@ _Generated 2026-10-14 16:32 by `bitacora.py index`. Do not edit by hand._
 | [REQ-008](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/SPEC.md) | Fresh milestone orchestration and bounded context execution | `in-progress` | [paused](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/PLAN.md) | report ✓ |
 | [REQ-009](requirements/REQ-009-planner-plan-json-classification-contrac/SPEC.md) | Planner PLAN.json classification contract | `ready` | [done](requirements/REQ-009-planner-plan-json-classification-contrac/PLAN.md) | report ✓ |
 | [REQ-010](requirements/REQ-010-isolated-planner-contract-module/SPEC.md) | Isolated planner-contract module | `ready` | [done](requirements/REQ-010-isolated-planner-contract-module/PLAN.md) | report ✓ |
-| [REQ-011](requirements/REQ-011-scheduler-core-m1-isolated-deterministic/SPEC.md) | Scheduler Core M1: isolated deterministic module bt_scheduler_core | `clarifying` | — |  |
+| [REQ-011](requirements/REQ-011-scheduler-core-m1-isolated-deterministic/SPEC.md) | Scheduler Core M1: isolated deterministic module `bt_scheduler_core` | `ready` | [approved](requirements/REQ-011-scheduler-core-m1-isolated-deterministic/PLAN.md) |  |
+| [REQ-012](requirements/REQ-012-planner-phase-1-closure-strict-plan-sync/SPEC.md) | Planner phase 1 closure: strict PLAN sync, launch gate, evidence, real planning trials | `in-progress` | — |  |
 
 ## Top pending (urgency, then complexity)
 
