@@ -14,17 +14,17 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T13:09:16",
+  "at": "2026-10-14T13:13:54",
   "pid": 2274846,
   "machine": "precision7760",
-  "task": "M2",
-  "session": 8,
+  "task": "M2-audit",
+  "session": 9,
   "state": "batch settled",
   "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 8,
+ "sessions": 9,
  "tasks": [
   {
    "id": "T1",
@@ -265,13 +265,27 @@
    "milestone": "M2",
    "synthetic": true,
    "tier": 1,
-   "status": "todo",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "pass-with-fixes: T4 and T5 verified against SPEC R3, R4, R8; 15 suites, 182 tests pass; tsc and eslint clean; added missing AccessRequestsRepository unit tests; P-012 logged for manual DB migration",
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "findings": 2,
+   "severity": {
+    "high": 1,
+    "med": 0,
+    "low": 1
+   },
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "antigravity",
+    "profile": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "T6",
@@ -963,6 +977,41 @@
    },
    "isolation": "worktree",
    "branch": "wt/M2-f2e51f10"
+  },
+  {
+   "at": "2026-10-14T13:13:54",
+   "session": 9,
+   "task": "M2-audit",
+   "result": "done",
+   "summary": "pass-with-fixes: T4 and T5 verified against SPEC R3, R4, R8; 15 suites, 182 tests pass; tsc and eslint clean; added missing AccessRequestsRepository unit tests; P-012 logged for manual DB migration",
+   "seconds": 271,
+   "model": "gemini-3.8-flash-low",
+   "agent": "antigravity",
+   "profile": "antigravity",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree"
+  },
+  {
+   "at": "2026-10-14T13:13:54",
+   "session": 9,
+   "task": "M2-audit",
+   "result": "plan_warning",
+   "warning": "audit_modified_tree: review M2-audit created shared ref refs/heads/feat/req-005-friendlier-roles-and-permissions-ux-func",
+   "summary": "audit_modified_tree: review M2-audit created shared ref refs/heads/feat/req-005-friendlier-roles-and-permissions-ux-func",
+   "seconds": 0
+  },
+  {
+   "at": "2026-10-14T13:13:54",
+   "session": 9,
+   "task": "M2-audit",
+   "result": "plan_warning",
+   "warning": "audit_modified_tree: review M2-audit changed its disposable tree; preserved on branch wt/M2-audit-audit-changes-1",
+   "summary": "audit_modified_tree: review M2-audit changed its disposable tree; preserved on branch wt/M2-audit-audit-changes-1",
+   "seconds": 0
   }
  ],
  "pool": [
