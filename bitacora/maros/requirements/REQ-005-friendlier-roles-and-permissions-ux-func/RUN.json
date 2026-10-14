@@ -12,19 +12,21 @@
   "workers": 1,
   "isolation": "worktree"
  },
- "control": null,
+ "control": "stop",
  "heartbeat": {
-  "at": "2026-10-14T12:39:02",
+  "at": "2026-10-14T12:40:10",
   "pid": 2114493,
   "machine": "precision7760",
   "task": "M1",
-  "session": 4,
-  "state": "batch settled",
-  "session_pids": {},
+  "session": 5,
+  "state": "session running 1 min",
+  "session_pids": {
+   "5": 2271262
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 4,
+ "sessions": 5,
  "tasks": [
   {
    "id": "T1",
@@ -40,7 +42,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 3,
    "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
@@ -78,7 +80,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 2,
    "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
@@ -115,7 +117,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 2,
    "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)",
    "error_hashes": [
@@ -762,58 +764,24 @@
  "worktrees": {
   "M1": {
    "task_id": "M1",
-   "branch": "wt/M1-a939c065",
-   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M1-a939c065",
+   "branch": "wt/M1-f37f0106",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M1-f37f0106",
    "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
    "repo": "/home/david/dev/maros/maros-nest",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "blocked",
+   "state": "allocated",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
-   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M1-a939c065.json",
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M1-f37f0106.json",
    "task_ids": [
     "T1",
     "T2",
     "T3"
    ],
-   "allowed_paths": [
-    "db/add-role-audit-events.sql",
-    "src/common/auth/effective-permissions.spec.ts",
-    "src/common/auth/effective-permissions.ts",
-    "src/common/auth/permission-catalog.spec.ts",
-    "src/common/auth/permission-catalog.ts",
-    "src/common/auth/permissions.ts",
-    "src/common/auth/role-templates.spec.ts",
-    "src/common/auth/role-templates.ts",
-    "src/common/exceptions/domain/user.exceptions.spec.ts",
-    "src/common/exceptions/domain/user.exceptions.ts",
-    "src/entities/role-audit-event.entity.ts",
-    "src/modules/mcp/tools/users.spec.ts",
-    "src/modules/mcp/tools/users.ts",
-    "src/modules/users/user-management/dto/duplicate-role.dto.ts",
-    "src/modules/users/user-management/dto/role-impact.dto.ts",
-    "src/modules/users/user-management/mappers/user.mapper.ts",
-    "src/modules/users/user-management/repositories/role-audit.repository.spec.ts",
-    "src/modules/users/user-management/repositories/role-audit.repository.ts",
-    "src/modules/users/user-management/repositories/users.repository.spec.ts",
-    "src/modules/users/user-management/repositories/users.repository.ts",
-    "src/modules/users/user-management/services/role-guard-rails.service.spec.ts",
-    "src/modules/users/user-management/services/role-guard-rails.service.ts",
-    "src/modules/users/user-management/services/role-impact.service.spec.ts",
-    "src/modules/users/user-management/services/role-impact.service.ts",
-    "src/modules/users/user-management/services/roles.service.spec.ts",
-    "src/modules/users/user-management/services/roles.service.ts",
-    "src/modules/users/user-management/users.controller.spec.ts",
-    "src/modules/users/user-management/users.controller.ts",
-    "src/modules/users/user-management/users.service.spec.ts",
-    "src/modules/users/user-management/users.service.ts",
-    "src/modules/users/users.module.ts"
-   ],
+   "allowed_paths": [],
    "resources": [],
-   "repo_role": "backend",
-   "candidate_sha": "8b46730ccfa166e4bad2372015631e6c5bcb62a1",
-   "last_error": "integration: combined verification failed: Need to install the following packages:\njest@30.5.2\nOk to proceed? (y)"
+   "repo_role": "backend"
   },
   "__integration__:backend": {
    "task_id": "REQ-005-integration",
