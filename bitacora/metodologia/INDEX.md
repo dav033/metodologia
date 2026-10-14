@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-14 12:41 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 13:29 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -19,7 +19,6 @@ _Generated 2026-10-14 12:41 by `bitacora.py index`. Do not edit by hand._
 - REQ-004: executor finished — review & merge
 - REQ-005: executor finished — review & merge
 - REQ-006: plan waiting for approval
-- REQ-008: plan waiting for approval
 
 ## Requirements
 
@@ -32,7 +31,7 @@ _Generated 2026-10-14 12:41 by `bitacora.py index`. Do not edit by hand._
 | [REQ-005](requirements/REQ-005-rtk-runtime-measurement/SPEC.md) | RTK runtime installation and measurement | `implemented` | [done](requirements/REQ-005-rtk-runtime-measurement/PLAN.md) | report ✓ |
 | [REQ-006](requirements/REQ-006-automatic-requirement-to-milestones-flow/SPEC.md) | Automatic requirement-to-milestones flow with learning | `ready` | [review](requirements/REQ-006-automatic-requirement-to-milestones-flow/PLAN.md) |  |
 | [REQ-007](requirements/REQ-007-engineering-workspace-migration-without/SPEC.md) | Engineering workspace migration without capability or data loss | `planned` | [approved](requirements/REQ-007-engineering-workspace-migration-without/PLAN.md) |  |
-| [REQ-008](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/SPEC.md) | Fresh milestone orchestration and bounded context execution | `planned` | [review](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/PLAN.md) |  |
+| [REQ-008](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/SPEC.md) | Fresh milestone orchestration and bounded context execution | `planned` | [approved](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -46,11 +45,11 @@ _Generated 2026-10-14 12:41 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-016 — Versioned durable requirements revalidation before execution
 - D-015 — ADR of REQ-007 ratified by the owner: local platform, thin optional skills
 - D-014 — ADR-PROPOSED direction provisionally adopted for REQ-007; owner ratification pending
 - D-013 — Audit routing order after the preferred auditor (REQ-007 T3)
 - D-004 — Gemini 3.8 Flash (Antigravity) is the default auditor; it builds only as a reserve
-- D-012 — The pictures bitácora is a junction into the metodologia repo
 
 ## Artifacts
 

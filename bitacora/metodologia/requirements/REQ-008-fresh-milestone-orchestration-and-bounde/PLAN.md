@@ -1,6 +1,6 @@
 ---
 req: REQ-008
-status: review
+status: approved
 created: 2026-10-14
 ---
 # Plan — REQ-008 — Fresh milestone orchestration and bounded context execution
@@ -12,7 +12,7 @@ Reuse durable marathon scheduling, delegation/router and relay parent lifecycle.
 M1/M2 must use the existing bounded delegation path while the new launcher is being built. This is a scoped bootstrap exception for implementing the tool itself, not the final user workflow. After real-subprocess PTY checks pass, prepare the concrete checkout command and validate existing-wrapper preconditions. A live client without a compatible parent needs a manual entry command; do not signal it or claim retroactive attachment. Installation stays separately authorized.
 
 ## Global constraints
-SPEC R1–R9 govern. No commits/push/merge/deletions/global install. Preserve unrelated edits and current runs. One writer, bounded delegates, explicit permissions and verified completion. Numeric policy defaults require telemetry/measurement evidence. Pending owner plan approval; interview answers confirm product choices, not plan approval.
+SPEC R1–R9 govern. No commits/push/merge/deletions/global install. Preserve unrelated edits and current runs. One writer, bounded delegates, explicit permissions and verified completion. Numeric policy defaults require telemetry/measurement evidence. Owner approved the concrete plan in chat; execute autonomously within its scope.
 
 ## Tasks
 ### M1 — Entry contract, architecture and context boundaries
@@ -39,3 +39,5 @@ Each command names a planned behavioral test, not an existing passing check. Run
 - 2026-10-14: Continuation revalidated PLAN review status. Added BASELINE-AUDIT.md with concrete acceptance gaps; closing token totals do not prove live context control. Fresh spec review requested before implementation.
 - 2026-10-14: Fresh spec review CHANGES_NEEDED: incorporated bootstrap/activation contract, real PTY proof, runtime context reserve and explicit stall/budget semantics. Implementation remains gated on plan approval.
 - 2026-10-14: Third consecutive goal-turn approval check: PLAN still review, no owner approval recorded. Planning audits are complete; execution is blocked pending explicit plan approval, not a technical failure. No runtime edits or tests performed.
+- 2026-10-14 13:23 review comments (chat): Owner explicitly said apruebo in the conversation.
+- 2026-10-14 13:23 plan APPROVED (chat)

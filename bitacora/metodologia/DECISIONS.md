@@ -135,3 +135,12 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Alternatives:** no skills at all and a remote service were offered and not chosen.
 - **Consequences:** + T2 closed; + structural work unblocked; − "skills when they improve" means each adapter must show a measured benefit (M6 records context bytes and behavior, no invented reduction target).
 - **Source:** owner's answer in session 862a2e59 · [ADR](migracion/ADR-PROPOSED.md) · D-014
+
+## D-016 — Versioned durable requirements revalidation before execution
+- **Date:** 2026-10-14 · **Status:** Accepted
+- **Context:** REQ-008 R1 requires entry/continue to preserve unchanged approval while rejecting material drift; approved execution children must not restart owner interviews. Existing launch/run/handoff only relied on plan approval.
+- **Decision:** Introduce opt-in `execution_contract: requirements-v1` and durable schema-1 REQUIREMENTS.json with reviewed goal, scope, requirements, limits, acceptance, approval reference, evidence fingerprints and unresolved decisions. Gate actual launch/run/handoff before effects; render live entry diagnostics. Existing snapshots activate enforcement even if the marker is removed. Use atomic locked writes, bounded local evidence, strict versions and fail-closed validation. Operational status/checkmarks/progress do not revoke approval. Snapshot persistence never grants plan approval.
+- **Alternatives:** Always reinterview (repeats settled decisions); trust approval frontmatter alone (misses drift); enable the new default immediately (bypasses the verified foreground transition required by M2).
+- **Consequences:** + durable provider-independent review and a small T2 API; + unchanged legacy plans remain usable during bootstrap; − semantic contradictions still require an agent/owner ruling, and decision excerpts require live-source reconciliation. M2 must activate the contract by default only after its terminal checks pass.
+- **Rollback:** Remove runtime/entry gate calls and opt-in for future plans; retain snapshots as evidence. Do not silently downgrade already opted-in execution or broaden permissions. Existing RUN schema and approvals are unchanged.
+- **Source:** [REQ-008 SPEC](requirements/REQ-008-fresh-milestone-orchestration-and-bounde/SPEC.md) · T1 approved PLAN. ID allocated with `bt_core.next_id`, `bt_vcs.pull` mocked to avoid unauthorized network/rebase.
