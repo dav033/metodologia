@@ -30,6 +30,9 @@ month summary._
 _None_
 
 ## Recently closed
+_None_
+
+## Notes
 - ✓ P-015 · Verify the other computer's bitácora cleanup after D-011 (`9d1b796`) · closed 2026-10-14 · no file under `bitacora/` was deleted or renamed between `9d1b796^` and `origin/main`, and `origin/main` has no bitácora file missing from the live tree (778 tracked files); `origin/main` has not moved since
 - ✓ P-002 · First real end-to-end test · closed 2026-10-14 · `ops_flow_check.py --live`: RESULT OK, 24 PASS/0 FAIL (claude haiku builds, Antigravity Gemini flash low audits, learned preference honoured, 5 commits, nothing pushed); plus web path in a throwaway root: token-less POST 403, web plan approval launched the marathon, run done (T1 + M1-audit + FINAL), 3 commits. Limits: the HQ interview rounds were not driven through the web form, Linux only
 - ✓ P-016 · Antigravity provider defects (stale quota reset, result parsing, 90% Gemini audit routing) · closed 2026-10-14 · fixed by the 2026-10-14 audit; `test_agy.py` 29, `test_audit_routing.py` 14, `test_subscription_usage.py` 20 pass, verified in session 790c0548

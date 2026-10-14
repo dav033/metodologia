@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-14 07:35 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 12:27 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -34,13 +34,13 @@ _Generated 2026-10-14 07:35 by `bitacora.py index`. Do not edit by hand._
 
 ## Top pending (urgency, then complexity)
 
-- P-002 · First real end-to-end test (HQ → rounds → web approval → executor loop → bitácora) · high/M
-- P-013 · Live bitácora (~/bitacora) has no remote and no backup (local git repo since `b49b8c7`): d · high/M
-- P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; remaining: wire driver (T7), T8 schedul · high/L
+- P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
+- P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
 - P-003 · Visual review of the local web UI · med/S
-- P-016 · Fix Antigravity provider defects found by `test_agy.py` · med/S
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · med/M
-- P-015 · Verify the other computer's cleanup of the bitácora in `main` after D-011 (`9d1b796`): its · med/M
+- P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · low/S
+- P-006 · Marathon: pass the claude prompt via stdin instead of argv (cmd-shim 8191-char / newline r · low/S
+- P-007 · Marathon: `run --accept-plan` to adopt deliberate edits to frozen repo/after/verify fields · low/S
 
 ## Recent decisions
 
@@ -59,6 +59,7 @@ _Generated 2026-10-14 07:35 by `bitacora.py index`. Do not edit by hand._
 - [diagram-continuidad.visual-check](http://127.0.0.1:8765/p/metodologia/view/diagram-continuidad.visual-check.html)
 - [diagram-flujo-auditado](http://127.0.0.1:8765/p/metodologia/view/diagram-flujo-auditado.html)
 - [diagram-flujo-auditado.visual-check](http://127.0.0.1:8765/p/metodologia/view/diagram-flujo-auditado.visual-check.html)
+- [diagram-herramienta](http://127.0.0.1:8765/p/metodologia/view/diagram-herramienta.html)
 - [revision-flujo](http://127.0.0.1:8765/p/metodologia/view/revision-flujo.html)
 
 ## Timeline
