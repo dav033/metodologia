@@ -14,15 +14,13 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T11:35:18",
+  "at": "2026-10-14T11:35:23",
   "pid": 2114493,
   "machine": "precision7760",
   "task": "M1",
   "session": 3,
-  "state": "1 sessions starting",
-  "session_pids": {
-   "3": 2140100
-  },
+  "state": "batch settled",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -41,25 +39,26 @@
    "risk": null,
    "complexity": null,
    "milestone": "M1",
-   "tier": 1,
-   "status": "in_progress",
-   "attempts": 1,
-   "last_error": "integration: candidate was rejected",
+   "tier": 2,
+   "status": "todo",
+   "attempts": 2,
+   "last_error": "session ended without task done/fail (rc=1), provider contract: failed, no end-of-turn event: urns a compact checked result, not a transcript. Full rules: `\"/usr/bin/python3\" \"/home/david/dev/metodologia/skill/scripts/bitacora.py\" --project maros context`.\n\n### Learned so far\n- [LG-002 · prefe",
    "error_hashes": [
-    "5e775b2a7409"
+    "5e775b2a7409",
+    "217735cb4729"
    ],
    "evidence": "commit 8551cee on wt/M1-50d08786; npx jest src/common/auth --silent: 4 suites, 42 tests pass; tsc --noEmit and eslint clean; antagonist review findings A1-A8 (descriptions vs enforced behaviour, template contents, policy tests) fixed",
    "pending_id": null,
    "notes": [],
    "findings": null,
    "severity": null,
-   "limit_streak": 1,
+   "limit_streak": 0,
    "last_route": {
     "agent": "codex",
-    "profile": "codex-1",
+    "profile": "codex-luis",
     "model": "gpt-6.1-sol",
     "effort": "xhigh",
-    "result": "usage_limit"
+    "result": "failed"
    }
   },
   {
@@ -78,7 +77,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 1,
    "last_error": "integration: candidate was rejected",
    "error_hashes": [
@@ -112,7 +111,7 @@
    "complexity": null,
    "milestone": "M1",
    "tier": 2,
-   "status": "in_progress",
+   "status": "todo",
    "attempts": 1,
    "last_error": "integration: candidate was rejected",
    "error_hashes": [
@@ -621,6 +620,63 @@
    "contract": {
     "v": 1,
     "status": "limit",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-a939c065"
+  },
+  {
+   "at": "2026-10-14T11:35:23",
+   "session": 3,
+   "task": "T1",
+   "result": "failed",
+   "summary": "urns a compact checked result, not a transcript. Full rules: `\"/usr/bin/python3\" \"/home/david/dev/metodologia/skill/scripts/bitacora.py\" --project maros context`. ### Learned so far - [LG-002 · preference] The owner wants problems settled by three subagents arguing different alternatives and a clea",
+   "seconds": 4,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-luis",
+   "contract": {
+    "v": 1,
+    "status": "failed",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-a939c065"
+  },
+  {
+   "at": "2026-10-14T11:35:23",
+   "session": 3,
+   "task": "T2",
+   "result": "skipped",
+   "summary": "not reached: depends on T1, which did not finish",
+   "seconds": 4,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-luis",
+   "contract": {
+    "v": 1,
+    "status": "failed",
+    "terminal": false
+   },
+   "isolation": "worktree",
+   "branch": "wt/M1-a939c065"
+  },
+  {
+   "at": "2026-10-14T11:35:23",
+   "session": 3,
+   "task": "T3",
+   "result": "skipped",
+   "summary": "not reached: depends on T2, which did not finish",
+   "seconds": 4,
+   "model": "gpt-6.1-sol",
+   "effort": "xhigh",
+   "agent": "codex",
+   "profile": "codex-luis",
+   "contract": {
+    "v": 1,
+    "status": "failed",
     "terminal": false
    },
    "isolation": "worktree",
