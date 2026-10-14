@@ -14,17 +14,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T12:56:09",
+  "at": "2026-10-14T13:08:12",
   "pid": 2274846,
   "machine": "precision7760",
-  "task": "M1-audit",
-  "session": 7,
-  "state": "batch settled",
-  "session_pids": {},
+  "task": "M2",
+  "session": 8,
+  "state": "session running 12 min",
+  "session_pids": {
+   "8": 2306067
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 7,
+ "sessions": 8,
  "tasks": [
   {
    "id": "T1",
@@ -196,13 +198,18 @@
    "complexity": null,
    "milestone": "M2",
    "tier": 0,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "commit 06756bb on wt/M2-f2e51f10 (on top of f574f58). 'npx jest src/modules/users --silent' exit 0 on the staged index exported to a clean dir: 11 suites, 153 tests pass; tsc --noEmit clean; eslint clean on touched files (one pre-existing warning in user-invitations.service.spec.ts). Antagonist: three passes, last CLEAR. Known limit recorded as follow-up: R4 check and UPDATE are not one transaction (same window as PATCH).",
    "pending_id": null,
-   "notes": []
+   "notes": [
+    "Follow-ups left open on purpose (M2 review): (1) R4 check and bulk/PATCH UPDATE are not one transaction or row lock; fix with P-011. (2) GET /access-requests has a 200-row cap and no cursor; add cursor pagination (engineering.md §3). (3) ids above int4 range reach Postgres and return 500 in PATCH /access-requests/:id and POST /users/bulk-role; cap or 404. (4) Neither db/add-access-requests.sql nor db/add-role-audit-events.sql was executed; both need checking against Postgres before deploy (P-010"
+   ],
+   "claimed_done": true,
+   "findings": null,
+   "severity": null
   },
   {
    "id": "T5",
@@ -220,13 +227,16 @@
    "complexity": null,
    "milestone": "M2",
    "tier": 0,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "commit 8ed59b8 on wt/M2-f2e51f10: 'npx jest src/modules/users src/modules/notifications --silent' exit 0: 14 suites, 176 tests; tsc --noEmit clean; eslint clean on new files. Antagonist: first review (no blockers; fixed external-free checks, duplicate pending, whitespace reason, timestamptz), re-review CONCERNS on the race only, documented as best-effort. Follow-ups in the T4 task note.",
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "claimed_done": true,
+   "findings": null,
+   "severity": null
   },
   {
    "id": "M2-audit",
@@ -982,6 +992,26 @@
    ],
    "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/REQ-005-integration-86795b50.json",
    "integration": true,
+   "repo_role": "backend"
+  },
+  "M2": {
+   "task_id": "M2",
+   "branch": "wt/M2-f2e51f10",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M2-f2e51f10",
+   "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
+   "repo": "/home/david/dev/maros/maros-nest",
+   "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
+   "state": "allocated",
+   "allowed_roots": [
+    "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
+   ],
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M2-f2e51f10.json",
+   "task_ids": [
+    "T4",
+    "T5"
+   ],
+   "allowed_paths": [],
+   "resources": [],
    "repo_role": "backend"
   }
  },

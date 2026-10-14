@@ -55,6 +55,14 @@ MCP capability report lists no administrative route without a tool; each accepta
 - 2026-10-14 (M1, session 6): the update audit diff records what the role effectively grants after the save (`resultingPermissions`), so edits to the code-resolved `member` role do not claim permission changes that never take effect.
 - 2026-10-14 (M1, session 6): `PATCH /roles/:id` keeps the base behaviour of clearing the description with `''`; NULL and `''` are both "no description" and moving between them is neither written nor audited.
 
+- 2026-10-14 (M2, session 8): bulk role change skips the acting user always (`self_modification`), not only when their demotion would break R4; it matches PATCH /users/:id, which refuses every self role change (stricter than SPEC's wording).
+- 2026-10-14 (M2, session 8): the last-admin count (`countActiveByRoleIds` and its Excluding variant) counts internal users only. External users cannot use permission-guarded routes, so counting them let the guard say yes while nobody could administer (review finding).
+- 2026-10-14 (M2, session 8): `UsersRepository.findById` loads `role.permissions`. Without them `effectivePermissionsOf` returned no permissions for custom roles, so the access explanation and the guard rails were wrong for them.
+- 2026-10-14 (M2, session 8): bulk assignment never gives an external user a role that grants permissions (`external_role_not_allowed`), the same rule as the invitation.
+- 2026-10-14 (M2, session 8): the R4 check and the bulk UPDATE are not one transaction or row lock; the window is the same as PATCH /users/:id. Recorded as follow-up together with P-011.
+- 2026-10-14 (M2, session 8): an access request approved or denied records the decision and notifies the requester; it grants nothing. The role is changed by hand, so the role audit trail stays the only place access is given.
+- 2026-10-14 (M2, session 8): nobody decides their own access request (`OWN_ACCESS_REQUEST`, 422). Decisions are a conditional UPDATE on `status = 'pending'`, so two admins deciding at once cannot both win (409 `ACCESS_REQUEST_ALREADY_RESOLVED`).
+
 ## Progress log
 - 2026-10-14: spec and plan written by the HQ session (790c0548) under the owner's "assume and go" instruction.
 - 2026-10-14 11:21 plan APPROVED (terminal)
@@ -64,3 +72,4 @@ MCP capability report lists no administrative route without a tool; each accepta
 - 2026-10-14 12:52 T2 done (isolated integration) — commit bfd0340 + 56cf2dc on wt/M1-f37f0106; 'npx jest src/modules/users src/common --silent' exit 0: 17 suites, 215 tests pass; tsc --noEmit clean (2 spec TS2554 errors fixed in 56cf2dc); description clearing regression fixed with tests; antagonist approved after re-review
 - 2026-10-14 12:52 T3 done (isolated integration) — commit 8b46730 + 56cf2dc on wt/M1-f37f0106; 'npx jest src/modules/users --silent' exit 0: 8 suites, 126 tests pass; audit made best-effort after the committed role write (D-001), logged events carry the full payload + time (tests spy the log); db/add-role-audit-events.sql idempotent, not applied (P-010); antagonist approved after re-review
 - 2026-10-14 12:56 M1-audit done (marathon) — pass: verified R1-R4 against 3a4ce7b..f574f58; npx jest auth (48) + users/common (215) + users (126) passed; tsc and eslint clean; unapplied sql db/add-role-audit-events.sql clean
+- 2026-10-14 M2 session 8: T4 done — commit 06756bb on wt/M2-f2e51f10 (on top of f574f58). 'npx jest src/modules/users --silent' exit 0 on the exported index: 11 suites, 153 tests; tsc clean; three antagonist passes, last CLEAR.
