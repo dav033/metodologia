@@ -2,13 +2,16 @@
 
 ## Implemented boundary
 
-`bt_orchestration_terminal.run_child` starts a fresh direct child without setsid or a
-new process group. Child and supervisor share the controlling terminal and foreground
-group; bounded JSON stdin/stdout are protocol streams and `/dev/tty` remains available.
+`bt_orchestration_terminal.run_child` starts a fresh direct child without setsid, in its
+own process group within the supervisor's SID and controlling terminal. Foreground
+ownership transfers to that group; bounded JSON stdin/stdout are protocol streams and
+`/dev/tty` remains available. SIGCONT after transfer resumes an early SIGTTIN startup stop.
 Input is limited before startup; aggregate output, deadline and stop are enforced while
 running. Handlers and termios are restored on normal exit, interruption, timeout,
-overflow and failed startup. Only the unreaped direct Popen child is signalled; never
-the shared process group. Its instance UUID is not proof of a provider conversation ID.
+overflow and failed startup. The leader remains unreaped via waitid(WNOWAIT) until its
+owned group is terminated, including surviving descendants; ownership is checked before
+group signalling and PID/PGID reuse cannot occur during containment. The supervisor group
+is never signalled. Its instance UUID is not proof of a provider conversation ID.
 
 `ForegroundRuntime` version 1 supplies `check_capabilities`, `session_route` and
 `run_session` to the existing supervisor. Routing precedes attempt/session reservation;
@@ -37,18 +40,31 @@ starting the supervisor. There is no multiplexer fallback. Only the helper is de
 
 ## Evidence and remaining T4 work
 
-Terminal suite: 14 tests, OK, 1.775 seconds, `/tmp/req008-t3-terminal.log`. Real PTYs check
+Continuation coordinator reran `PYTHONDONTWRITEBYTECODE=1 python -m unittest discover
+-s skill/scripts/tests -p test_orchestration_terminal.py -q`: 21 tests, OK, 4.329 seconds,
+exit 0. Final bounded standards re-review approved the startup fix, group containment,
+terminal restoration and reservation callers without concrete findings; it was static.
+
+Final coordinator terminal suite: 21 tests, OK, 4.375 seconds, exit 0, after the SIGCONT
+startup correction and fixture extraction (handoff evidence). Real PTYs check
 controlling terminal/SID/foreground PGID, planner exit before successor, fresh process
-and controlled provider conversation IDs, direct SIGTERM, terminal SIGINT, timeout,
+and controlled provider conversation IDs, owned-group containment, early SIGTTIN,
+direct SIGTERM, terminal SIGINT, timeout,
 overflow and termios/handler restoration. A controlled runtime drives the real supervisor
 through two dependent milestones and FINAL with T2 packages and task verification;
 an assertion forbids every automatic commit call. Missing/stale/colliding parent cases
 preserve the active client. No paid provider was invoked.
 
-Other checks: marathon 27/27; relay 52/52; isolation/handoff/milestones/context-integrity
+Before the final SIGCONT correction, combined focused regression passed 109/109 in
+17.335 seconds (`/tmp/req008-t3-final-regressions.log`); package/install passed 10/10.
+These checks were not rerun after that correction. The SIGTTIN regression was reproduced
+red then green in `/tmp/req008-t3-sigttin-red.log` and `...-green.log`.
+
+Earlier checks: marathon 27/27; relay 52/52; isolation/handoff/milestones/context-integrity
 30/30 (3.421s, `/tmp/req008-t3-integration.log`); wheel/install 10/10 (3.182s,
 `/tmp/req008-t3-package.log`). New modules/tests pass ruff; diff check and three CLI help
-entries pass. Broad legacy-file lint remains preexisting debt; full combined regression
+entries pass. Final scoped ruff passed with exit 0; closure must repeat diff check.
+Broad legacy-file lint remains preexisting debt; full combined regression
 belongs to the parent after M2. No separate typecheck configuration was found.
 
 T4 must implement `configured_runtime()` with verified Claude structured reasoning and

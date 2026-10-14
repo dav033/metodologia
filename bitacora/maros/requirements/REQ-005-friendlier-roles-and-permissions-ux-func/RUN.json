@@ -14,17 +14,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T14:20:33",
+  "at": "2026-10-14T14:36:37",
   "pid": 2274846,
   "machine": "precision7760",
   "task": "M3",
-  "session": 12,
-  "state": "batch settled",
-  "session_pids": {},
+  "session": 13,
+  "state": "session running 16 min",
+  "session_pids": {
+   "13": 2512163
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 12,
+ "sessions": 13,
  "tasks": [
   {
    "id": "T1",
@@ -339,11 +341,13 @@
    "complexity": null,
    "milestone": "M3",
    "tier": 2,
-   "status": "integration_pending",
-   "attempts": 0,
+   "status": "in_progress",
+   "attempts": 1,
    "last_error": null,
-   "error_hashes": [],
-   "evidence": "Commit 588f35b on wt/M3-c2e32ae9. 253 routes classified; 44 missing tools plus mcp_capability_report added; live registration/source parity and financial/SSE regressions tested. npx jest src/modules/mcp --silent: 16 suites, 242 tests pass; tsc, targeted lint, build pass; full lint baseline has 2 unrelated errors. Antagonist reviewed once plus one re-review: 3 fixed, 0 deferred. No DB, push or deployment.",
+   "error_hashes": [
+    "5e775b2a7409"
+   ],
+   "evidence": "Reviewed commit 588f35b recovered by fast-forward on wt/M3-b82d588f; fresh npx jest src/modules/mcp --silent exit 0: 16 suites/242 tests; tsc and build pass. Independent T7 spec review APPROVE. Full lint has exactly 2 known baseline errors, 19 warnings. Prior rejection was scope_unchecked, live supervisor now derives missing allowed paths. Evidence /tmp/maros-m3-session13-t7-{jest,tsc,build,lint}.log. No DB or external writes.",
    "pending_id": null,
    "notes": [
     "588f35b: 253-route map uses live discovery and real registration. SSE is explicitly transport-excluded. list_permissions preserves code array and adds permissionMetadata/templates. Financials uses trusted MCP no-user context, attribution user has no permissions. 16 suites/242 tests green; full lint baseline 2 unrelated errors. T8 and M3 independent audit remain."
@@ -357,7 +361,8 @@
     "result": "done"
    },
    "findings": null,
-   "severity": null
+   "severity": null,
+   "claimed_done": true
   },
   {
    "id": "T8",
@@ -374,14 +379,18 @@
    "risk": null,
    "complexity": null,
    "milestone": "M3",
-   "tier": 1,
-   "status": "todo",
-   "attempts": 0,
-   "last_error": null,
-   "error_hashes": [],
+   "tier": 2,
+   "status": "in_progress",
+   "attempts": 1,
+   "last_error": "integration: candidate was rejected",
+   "error_hashes": [
+    "5e775b2a7409"
+   ],
    "evidence": null,
    "pending_id": null,
-   "notes": [],
+   "notes": [
+    "Monitor continuation: preserved candidate 2db6796 is clean; independent offline Jest on that SHA passed 32 suites/437 tests (exit 0), /tmp/maros-m3-preserved-check.log. Recover existing changes rather than redo. Acceptance still needs R10 audit durability (P-011), destructive previews through the same guards, and M3 independent audit. S12 integration rejection was scope_unchecked: scope declarations are missing, not a failing test."
+   ],
    "limit_streak": 1,
    "last_route": {
     "agent": "codex",
@@ -413,7 +422,9 @@
    "error_hashes": [],
    "evidence": null,
    "pending_id": null,
-   "notes": []
+   "notes": [
+    "Acceptance must bind to the actual accepted integration SHA. Check R10 literally: recordMcpWrite currently delegates to best-effort recordAudit (D-001/P-011); on insert failure it logs and the write succeeds. Tests passing do not guarantee every MCP write is stored in the audit trail. Report this limitation/findings explicitly; do not describe unintegrated auditor edits as accepted fixes (F-25). Preserve candidates; no DB access."
+   ]
   },
   {
    "id": "T9",
@@ -1377,8 +1388,8 @@
   },
   "M3": {
    "task_id": "M3",
-   "branch": "wt/M3-c2e32ae9",
-   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M3-c2e32ae9",
+   "branch": "wt/M3-b82d588f",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M3-b82d588f",
    "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
    "repo": "/home/david/dev/maros/maros-nest",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
@@ -1386,7 +1397,7 @@
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
-   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M3-c2e32ae9.json",
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M3-b82d588f.json",
    "task_ids": [
     "T7",
     "T8"

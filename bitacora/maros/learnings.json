@@ -36,6 +36,24 @@
       "created": "2026-10-14T14:16:33.952489-05:00",
       "updated": "2026-10-14T14:16:33.952489-05:00",
       "promoted_by": null
+    },
+    {
+      "id": "L-003",
+      "scope": "project",
+      "kind": "pitfall",
+      "text": "get_task_workspace_options is a mutating MCP operation: listOptions lazily provisions the General workspace, so dry-run and attribution must cover it despite its get_ name.",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-14T14:37:25.155812-05:00",
+          "source": "REQ-005/T8",
+          "note": "Antagonist A1 traced listOptions -> ensureGeneral -> createIfMissing. workspace-write-policy.spec.ts initially reproduced an insertion during dry_run, then passed with write classification and actor propagation."
+        }
+      ],
+      "created": "2026-10-14T14:37:25.155812-05:00",
+      "updated": "2026-10-14T14:37:25.155812-05:00",
+      "promoted_by": null
     }
   ]
 }
