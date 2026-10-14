@@ -14,17 +14,17 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T14:41:37",
+  "at": "2026-10-14T14:49:15",
   "pid": 2274846,
   "machine": "precision7760",
-  "task": "M3",
-  "session": 13,
+  "task": "M3-audit",
+  "session": 14,
   "state": "batch settled",
   "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 13,
+ "sessions": 14,
  "tasks": [
   {
    "id": "T1",
@@ -417,15 +417,29 @@
    "milestone": "M3",
    "synthetic": true,
    "tier": 2,
-   "status": "todo",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "pass: T6, T7, T8 verified against integration SHA 4a80e90; 43 suites, 540 tests pass (mcp, users, notifications, common); tsc, eslint and build clean; R10 dry-run, previews and attribution verified; P-011 audit trail durability limitation deferred",
    "pending_id": null,
    "notes": [
     "Acceptance must bind to the actual accepted integration SHA. Check R10 literally: recordMcpWrite currently delegates to best-effort recordAudit (D-001/P-011); on insert failure it logs and the write succeeds. Tests passing do not guarantee every MCP write is stored in the audit trail. Report this limitation/findings explicitly; do not describe unintegrated auditor edits as accepted fixes (F-25). Preserve candidates; no DB access."
-   ]
+   ],
+   "findings": 1,
+   "severity": {
+    "high": 0,
+    "med": 1,
+    "low": 0
+   },
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "antigravity",
+    "profile": "antigravity",
+    "model": "gemini-3.8-flash-medium",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "T9",
@@ -1190,6 +1204,23 @@
    },
    "isolation": "worktree",
    "branch": "wt/M3-b82d588f"
+  },
+  {
+   "at": "2026-10-14T14:49:15",
+   "session": 14,
+   "task": "M3-audit",
+   "result": "done",
+   "summary": "pass: T6, T7, T8 verified against integration SHA 4a80e90; 43 suites, 540 tests pass (mcp, users, notifications, common); tsc, eslint and build clean; R10 dry-run, previews and attribution verified; P-011 audit trail durability limitation deferred",
+   "seconds": 441,
+   "model": "gemini-3.8-flash-medium",
+   "agent": "antigravity",
+   "profile": "antigravity",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree"
   }
  ],
  "pool": [

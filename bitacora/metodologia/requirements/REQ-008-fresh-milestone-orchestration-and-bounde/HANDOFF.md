@@ -1,5 +1,68 @@
 # REQ-008 — Coordinator handoff to codex-luis
 
+## Latest continuation checkpoint — session 01a13bdc (quota relay)
+
+The plan remains approved. T3 final bounded standards re-review APPROVED without findings.
+Coordinator reran terminal tests: 21/21, 4.329s, exit 0. TERMINAL-LIFECYCLE.md and PLAN.md
+now correct the obsolete shared-PGID/14-test description. ACCEPTANCE-MATRIX.md was added;
+SUMMARY and this session's day log record the live scope. No commit, push, global install or
+current-client replacement was performed by this coordinator; preserve concurrent edits.
+
+T4 implementation is present but NOT accepted and defaults remain unactivated. Fresh
+implementer `/root/t4` owns new provider/actions/runtime/effects/storage/identity/verify
+modules and tests/support, plus necessary supervisor/package integration. Its latest
+targeted evidence: 17 tests, OK, 6.804s, `/tmp/req008-t4-final-targeted.log`; scoped ruff
+and diff check reported pass. Controlled-PATH actual CLI uses PTY, eight fresh reasoning
+sessions, two separately identified workers, real implementation checks, documentation,
+checkpoint rotation and rejection of claim-without-implementation. No public test flag.
+
+Focused regression `/tmp/req008-t4-regressions.log`: 109 tests, 32.106s, ONE failure,
+exit 1. T3's unavailable-runtime test expected configured_runtime=None; with the adapter
+present it instead reached CONTROLLING_TTY_REQUIRED. A narrowly authorized test correction
+mocks configured_runtime=None to retain the original missing-backend scenario; available
+runtime and unsupported version have separate actual CLI tests. Confirm the correction and
+rerun; do not describe this regression as green. Package log `/tmp/req008-t4-package.log`:
+10 tests, 2.776s, ONE error, PermissionError [Errno 1] Operation not permitted in socket
+creation. This sandbox failure is not a passing package check; rerun with proper tool
+escalation if required. Implementer has stopped writing and applied the missing-backend
+fixture correction. Previous handles 73132/41514 ended. Its functions exec cell 44 was still
+open for escalated package rerun and a following corrected regression; coordinator told it
+not to start the following regression, to stop any pending handle without deleting files,
+and report status. Inspect final agent report/cell 44 before starting any writer or tests.
+
+Important implemented fixes to inspect independently: persistent decision/session ledger;
+latest-work verification/document ordering; no auto settlement without foreground finish;
+real worker attribution for independent audits; safe old-run UUID adoption; kernel flock
+checkpoint locks; orphan recovery uses verified pidfds rather than numeric killpg (PID/PGID
+reuse race); bounded verification transport and schema-parametrizable Haiku medium reasoning.
+Luna reasoning remains ineligible pending effective-request proof, per D-017.
+
+### Next
+Final implementer closure supersedes the earlier pending handle: all writers and tests
+stopped. Corrected focused regression 109/109, 29.064s, exit 0,
+`/tmp/req008-t4-final-regressions.log`; escalated package rerun 10/10, 3.482s, exit 0,
+`/tmp/req008-t4-package-unsandboxed.log`. T4 own tests 17/17, 6.804s, exit 0.
+Repeat scoped ruff/diff check after the final assertions/evidence/T3 mock adjustments.
+DONE_WITH_CONCERNS means implementation present, not acceptance: independent T4 reviews,
+audit/FINAL integration and quota taxonomy remain to inspect. Defaults are still unchanged.
+
+1. Collect final T4 implementer status and stop all writer/test handles; the quota instruction
+   told it to finish only its current atomic check and stop. Verify current diff, targeted
+   tests and scoped lint. Obtain fresh independent spec/standards reviews of T4, preserving
+   the completed T3 review rather than duplicating it. Fix proven findings.
+2. Finish M2 regression/package checks and activate new-plan defaults only after M2 passes.
+   Default/UI work was deliberately not started: PLAN template contract/mode markers,
+   launch/handoff/run detection, new-mode approval paths without automatic commits, and
+   honest manual checkout response where wrapper/TTY is unavailable. Keep legacy compatibility.
+3. Fresh T5 implementer, then T6/T7/T8 as the approved PLAN specifies. Read-only recovery map:
+   bt_runsettle._fail_attempt blocks before council; retry_blocked resets task attempts,
+   _open resets FINAL attempts, audit sync can reset too. Council budgets must persist
+   independently and cannot reset on resume. Exactly three proposals, bounded peer critiques,
+   persisted evidence-based ruling; no recursion or success inferred from agreement.
+
+An active goal was created under the owner's requested /goal execution method; it is NOT
+complete. The quota relay is a session boundary, not a completion or technical blocker.
+
 ## Owner authorization and goal
 
 The owner explicitly approved this PLAN (`apruebo`). Do not repeat approval or onboarding. Implement the full SPEC: rigorous entry/continue requirements revalidation; fresh bounded milestone orchestrators in the same terminal; delegated work and durable documentation; mid-milestone context rotation; autonomous three Haiku-medium or Luna-medium proposals, peer debate and orchestrator ruling on recoverable stalls; independent end-to-end audit. No commits, push, merges, deletion of existing files, global installation/config changes or credential changes authorized.
