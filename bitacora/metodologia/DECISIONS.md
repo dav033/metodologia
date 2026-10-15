@@ -344,3 +344,21 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Rollback:** Append a new correction if a preserved report is later shown not to meet the stated queue/fixture criteria; do not rewrite the evidence.
 - **Source:** [REQ-017 report](requirements/REQ-017-scheduler-m4-agent-monitor/REPORT.md) · preserved `/tmp/req-017-m4-*.json` benchmark reports.
 
+## D-039 — Keep M1–M4 ingestion caller-driven at the M1 ownership boundary
+- **Date:** 2026-10-15 · **Status:** Accepted under REQ-018.
+- **Context:** The M3 FIFO, M4 durable store, M2 read-only metric history, and M1 incident reference port needed one integrated runtime path without changing the global Scheduler activation policy or duplicating module authority.
+- **Decision:** Enable M4 only when the methodology `wire()` caller supplies a separate `monitor_store_path`. The owning M1 loop invokes `Wiring.drain_stream(attempt_id, run_id)` to drain bounded M3 batches into M4; M2 reads metric snapshots without mutation, and an owner-controlled retry cadence delivers M4 incident references to M1. Do not add a global/background poller or let M4 change task/attempt state.
+- **Alternatives:** Have M4 read child pipes (breaks M3 ownership); auto-start an independent poller (silently changes activation and lifecycle); persist into M1/M3 databases (crosses ownership); let incidents trigger task state (turns observations into decisions).
+- **Consequences:** + M1 remains the single run-state owner and the bridge is testable end to end; + M4 stays optional. − The caller must drain during execution and after terminal output; undrained in-memory frames can be lost on process restart.
+- **Rollback:** Omit `monitor_store_path` to disable M4 runtime wiring while preserving M1–M3 execution and their existing contracts.
+- **Source:** [REQ-018 plan](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md) · [M4 operations](../../skill/scripts/bt_scheduler_monitor/README.md).
+
+## D-040 — Recover M4 only through a verified offline candidate
+- **Date:** 2026-10-15 · **Status:** Accepted under REQ-018.
+- **Context:** At the hard store cap, retention intentionally preserves open incidents and undelivered M1 outbox records. Recovery must not destroy the source database or those protected records.
+- **Decision:** Stop all M4 writers, publish a no-overwrite owner-only full archive and integrity manifest, verify them, then prepare and verify a bounded candidate from a disposable copy. The workflow never edits the source, overwrites an artifact, or activates/restores the candidate; restore remains an explicit operator action.
+- **Alternatives:** Delete protected rows or rewrite the live database in place (loses evidence and makes rollback uncertain); automatically replace the active store (unreviewed authority transfer); raise the cap or change journal mode (evades the approved store bound).
+- **Consequences:** + Source and protected evidence remain recoverable and candidate integrity is independently checked. − Archive, preparation, and operator-managed restore require downtime and extra disk space.
+- **Rollback:** Discard an unaccepted candidate and continue using the preserved source; if the operator later restores, retain the full archive for recovery.
+- **Source:** [REQ-018 plan](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md) · [M4 recovery operations](../../skill/scripts/bt_scheduler_monitor/README.md).
+

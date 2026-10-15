@@ -1,6 +1,6 @@
 ---
 id: REQ-018
-status: planned
+status: done
 created: 2026-10-15
 track: standard
 ---
@@ -53,13 +53,13 @@ As the Scheduler owner, I want the persisted route-choice smoke completed with f
 - R3. While <state>, the system shall <response>.
 For business processes, "the system" can be a role or the process ("the approver shall…"). -->
 
-R1. When an M3 output frame is observed, the methodology adapter shall normalize provider JSONL into allowlisted M4 records and persist the source cursor atomically before acknowledging the queued frame.
-R2. If parsing, storage, or queue capacity fails, the flow shall retain retryable input or persist an explicit bounded gap; it shall not fabricate successful monitoring evidence.
-R3. M1 shall remain the sole authority for task state; M4 incident references shall be audit-only and M2 metric history shall be read-only.
-R4. Offline recovery shall create a no-overwrite full archive, verify its integrity and manifest, and prepare a candidate under the existing 512 MiB active-store cap without modifying the source.
-R5. Any recovery VACUUM shall receive the complete caller-supplied `sqlite_temp_dirs` list and shall fail closed when space or paths are insufficient.
-R6. P-036 shall refresh quota immediately before execution and shall launch only a profile whose evidence is fresh, verified and permitted; if fewer than two profiles qualify, the smoke remains explicitly pending.
-R7. The full fixture flow shall prove the M2-selected route reaches the matching fake provider and only the independent verifier can complete a task.
+- R1. When an M3 output frame is observed, the methodology adapter shall normalize provider JSONL into allowlisted M4 records and persist the source cursor atomically before acknowledging the queued frame.
+- R2. If parsing, storage, or queue capacity fails, the flow shall retain retryable input or persist an explicit bounded gap; it shall not fabricate successful monitoring evidence.
+- R3. M1 shall remain the sole authority for task state; M4 incident references shall be audit-only and M2 metric history shall be read-only.
+- R4. Offline recovery shall create a no-overwrite full archive, verify its integrity and manifest, and prepare a candidate under the existing 512 MiB active-store cap without modifying the source.
+- R5. Any recovery VACUUM shall receive the complete caller-supplied `sqlite_temp_dirs` list and shall fail closed when space or paths are insufficient.
+- R6. P-036 shall refresh quota immediately before execution and shall launch only a profile whose evidence is fresh, verified and permitted; if fewer than two profiles qualify, the smoke remains explicitly pending.
+- R7. The full fixture flow shall prove the M2-selected route reaches the matching fake provider and only the independent verifier can complete a task.
 
 ## Edge cases & errors
 - Split or multiple JSONL events, malformed lines, provider mismatch, stream gaps, bounded queue pressure, SQLite full/busy, duplicate delivery, corrupt archive, destination already exists, active-store ceiling, insufficient VACUUM temp space, stale quota evidence, and no pair of eligible profiles.
