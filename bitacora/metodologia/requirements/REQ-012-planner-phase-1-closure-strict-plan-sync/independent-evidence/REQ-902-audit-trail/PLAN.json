@@ -191,7 +191,7 @@
       "id": "T3",
       "milestone_id": "M1",
       "title": "Verify the delete cascade guarantee on lead_status_events: SQL declaration by command, live delete as an optional owner-gated step",
-      "objective": "The repository SQL provably declares lead_status_events.lead_id REFERENCES leads(id) ON DELETE CASCADE, so no explicit deletion code is added; an owner-gated live delete in a non-production database is optional and not run by a scheduler",
+      "objective": "The repository SQL provably declares lead_status_events.lead_id REFERENCES leads(id) ON DELETE CASCADE, so no explicit deletion code is added; an owner-gated live delete in a non-production database is optional and not run by a scheduler; whether the migration was applied to production is an owner-gated question this plan does not resolve",
       "repository": "maros-nest",
       "after": [],
       "complexity": "low",
@@ -210,7 +210,8 @@
       "acceptance_criteria": [
         "The grep finds the REFERENCES leads(id) ON DELETE CASCADE declaration for lead_id",
         "No explicit deletion code is added to deleteLead",
-        "Optional owner-gated step: after deleting a throwaway lead in a non-production database its event count is zero"
+        "Optional owner-gated step: after deleting a throwaway lead in a non-production database its event count is zero",
+        "The recorded result states that production application of the migration is not proven by this task and stays with the owner"
       ],
       "verification": [
         {
@@ -257,7 +258,7 @@
           ]
         },
         "confidence": {
-          "justification": "The cascade declaration was found by grep and read in the SQL file, but whether production applied it is unconfirmed, hence medium",
+          "justification": "The cascade declaration was found by grep and read in the SQL file, but production application of the migration is an owner-gated question this plan does not resolve, hence medium",
           "evidence": [
             "command:grep -n 'REFERENCES leads(id) ON DELETE CASCADE' db/add-lead-sales-fields.sql -> line 69: lead_id INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE",
             "file:db/add-lead-sales-fields.sql",
@@ -518,6 +519,7 @@
       "objective": "The whole maros-next verify chain passes with the history panel merged: lint, typecheck, tests and build",
       "repository": "maros-next",
       "after": [
+        "T3",
         "T6"
       ],
       "complexity": "low",
@@ -533,7 +535,8 @@
       ],
       "acceptance_criteria": [
         "Lint, typecheck, vitest and next build exit with code 0",
-        "No unrelated test is modified to make the chain pass"
+        "No unrelated test is modified to make the chain pass",
+        "The T3 cascade check has been recorded before the plan is closed"
       ],
       "verification": [
         {
@@ -568,9 +571,10 @@
           ]
         },
         "coupling": {
-          "justification": "Runs after the page wiring, consuming its output without editing it, and shares only the details page resource",
+          "justification": "Runs after the page wiring and the cascade check, consuming their outputs without editing them, and shares only the details page resource",
           "evidence": [
-            "task:T6"
+            "task:T6",
+            "task:T3"
           ]
         },
         "confidence": {

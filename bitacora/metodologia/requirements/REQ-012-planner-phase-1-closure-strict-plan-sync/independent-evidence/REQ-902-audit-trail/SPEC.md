@@ -42,7 +42,9 @@ the column is varchar and history must survive enum edits.
 1. Whether `lead_status_events` and its cascading foreign key exist in the production database (tables are
    managed by hand in Supabase; nothing in the repos or the bitacora records the migration as applied). The SQL
    declaration is checked by a command in T3; a live delete in a non-production database is an optional, owner-gated
-   step. Neither blocks the endpoint or the UI.
+   step. Neither blocks the endpoint or the UI, but T3 gates the final closure task. Whether the migration was applied to
+   production is an owner-gated question this plan does not resolve: a live delete proves a test database, not
+   production.
 
 ## Acceptance
 

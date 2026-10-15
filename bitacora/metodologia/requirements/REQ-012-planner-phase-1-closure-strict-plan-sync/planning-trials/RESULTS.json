@@ -9,7 +9,7 @@
  },
  "head": {
   "trainingapp": "01861ad",
-  "metodologia": "9bb9b5b"
+  "metodologia": "35c0e6a"
  },
  "results": [
   {
@@ -212,6 +212,8 @@
      "T3"
     ],
     "unordered_conflicts": [],
+    "unordered_shared": [],
+    "unconsumed_results": [],
     "redundant_edges": []
    },
    "warnings": []
@@ -421,6 +423,8 @@
      "T5"
     ],
     "unordered_conflicts": [],
+    "unordered_shared": [],
+    "unconsumed_results": [],
     "redundant_edges": []
    },
    "warnings": [
@@ -648,6 +652,8 @@
      "T5"
     ],
     "unordered_conflicts": [],
+    "unordered_shared": [],
+    "unconsumed_results": [],
     "redundant_edges": []
    },
    "warnings": [
@@ -851,6 +857,8 @@
      "T3"
     ],
     "unordered_conflicts": [],
+    "unordered_shared": [],
+    "unconsumed_results": [],
     "redundant_edges": []
    },
    "warnings": [
@@ -1060,6 +1068,8 @@
      "T3"
     ],
     "unordered_conflicts": [],
+    "unordered_shared": [],
+    "unconsumed_results": [],
     "redundant_edges": []
    },
    "warnings": [
@@ -1292,6 +1302,10 @@
      "T6"
     ],
     "unordered_conflicts": [],
+    "unordered_shared": [
+     "T3 and T4: unordered but both touch resource 'database-schema'; order them with `after` or the scheduler must serialise them"
+    ],
+    "unconsumed_results": [],
     "redundant_edges": []
    },
    "warnings": [

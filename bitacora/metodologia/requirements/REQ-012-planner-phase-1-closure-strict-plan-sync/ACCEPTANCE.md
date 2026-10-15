@@ -1,8 +1,7 @@
 # REQ-012 — Acceptance record (who verified what, and how independently)
 
 Evidence sources: **R** = fresh reviewer agents (spec / standards / per-criterion rounds, same provider, no access to
-AC-TRACE); **G** = delegated audit by Gemini 3.8 flash-high on an isolated copy (other vendor, 101 adversarial checks,
-claims C1–C4); **P** = plans written by planner sessions with no context from the methodology documents alone
+AC-TRACE); **G** = delegated audits on an isolated copy by other vendors: Gemini 3.8 flash-high (101 checks, C1–C4 held) and Codex gpt-6.1-sol high (237 observations: found C1/C2/C3/C5 counterexamples, all fixed, see REPORT.md §Fourth round); **P** = plans written by planner sessions with no context from the methodology documents alone
 (`independent-evidence/REQ-901/902/903`, verified by `verify_independent.py` → `VERIFICATION.json`);
 **T** = automated tests; **I** = the six implementer-authored trials (`planning-trials/`, regression guards); **Q** = independent content review of P (`QUALITY-REVIEW.md`).
 
@@ -33,3 +32,6 @@ Constraints: Scheduler and its modules untouched by this work; no historical RUN
 published or deployed.
 
 Final live-tree run (2026-10-15): module 200 OK, methodology 953 OK (3 skipped), scheduler core unchanged.
+
+After the Codex round the criteria above were re-checked on the fixed code by the module suite (211 tests) and the three
+independent plans (3/3, 0 warnings); no new cross-vendor pass was run on the fixed code.

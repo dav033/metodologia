@@ -296,7 +296,8 @@
       ],
       "shared_resources": [
         "asistente-guiado-route",
-        "package.json-scripts"
+        "package.json-scripts",
+        "local-next-dev-server"
       ],
       "acceptance_criteria": [
         "The test passes against the unmodified behaviour with a scripted model and no network",
@@ -378,7 +379,7 @@
       "risk": "high",
       "coupling": "high",
       "confidence": "low",
-      "estimate_rationale": "The lever is unknown until T3: it may be a one-line environment default or a change across the round loop, the route and the Python hop; expected_paths is the candidate set of files, not a prediction, and the figure is a placeholder for the middle of that range",
+      "estimate_rationale": "The lever is unknown until T3: it may be a one-line environment default or a change across the round loop, the route and the Python hop; expected_paths is the candidate set of files, not a prediction. The 120 minutes derive from comparable commits c125be56 (4 files, 243 lines of which 144 are tests) and 62e48657 (3 files, 30 lines), landed within a day of each other; about three of those covers a Python-side change, its own test and five suites. Confidence stays low because the lever is unknown until T3",
       "expected_paths": [
         "src/app/api/asistente-guiado/route.ts",
         "packages/agente-core/src/ejecutar.ts",
@@ -442,10 +443,11 @@
           ]
         },
         "duration": {
-          "justification": "Earlier performance changes in this codebase were commits of a single mechanism each, a useful but loose yardstick",
+          "justification": "Earlier performance changes in this codebase were commits of a single mechanism each, three to four files with their test, which bounds the figure",
           "evidence": [
             "precedent:c125be56",
-            "precedent:62e48657"
+            "precedent:62e48657",
+            "command:git -C /home/david/dev/pictures show --stat c125be56 -> 4 files changed, 243 insertions(+), 12 deletions(-) including 144 test lines"
           ]
         },
         "risk": {
@@ -463,7 +465,7 @@
           ]
         },
         "confidence": {
-          "justification": "The lever is unknown and the figure is a placeholder, so the estimate cannot be defended any better than this",
+          "justification": "The lever is unknown until the decision exists, so the figure rests on comparable commits and the real effort may sit outside that range",
           "evidence": [
             "assumption:T3 picks one lever that fits one working session",
             "task:T3"

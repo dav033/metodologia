@@ -7,8 +7,8 @@ plan_id: REQ-901
 
 Narrative: the API grows one mutation endpoint that clones a project and its images atomically; the web list gets a
 "Duplicar" button modelled on the existing "Borrar" button (commit 01861ad). One unknown shapes the backend work, the
-atomicity and dangling-photo design, so a short decision task comes first. Web work only needs the endpoint shape,
-so it can start right after the decision and run beside the backend.
+atomicity and dangling-photo design, so a short decision task comes first. The web client is written after the endpoint (T4) exists so it targets the
+implemented path, and the final verification waits for every test task (T5, T6), the docs (T7) and the button (T9).
 
 ### M1 — Decision and API implementation
 
@@ -27,4 +27,4 @@ so it can start right after the decision and run beside the backend.
 
 - [ ] T8 — Add duplicateProject to the web API client · repo: trainingapp · after: T4 · files: apps/web/lib/api/client.ts · resources: duplicate-endpoint-contract · verify: `npm run typecheck -w @training/web`
 - [ ] T9 — Add the Duplicar button to the project list · repo: trainingapp · after: T8 · files: apps/web/components/project-list.tsx · resources: projects-changed-event · verify: `npm run lint -w @training/web`
-- [ ] T10 — Run the full workspace checks end to end · repo: trainingapp · after: T6, T7, T9 · verify: `npm run typecheck`
+- [ ] T10 — Run the full workspace checks end to end · repo: trainingapp · after: T5, T6, T7, T9 · verify: `npm run typecheck`

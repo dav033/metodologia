@@ -744,6 +744,7 @@
       "title": "Run the full workspace checks end to end",
       "repository": "trainingapp",
       "after": [
+        "T5",
         "T6",
         "T7",
         "T9"

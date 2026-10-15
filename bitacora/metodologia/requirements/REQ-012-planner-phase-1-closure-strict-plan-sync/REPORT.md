@@ -49,8 +49,8 @@ Final runs of this session (2026-10-14, after the last code change):
 
 | Suite | Result |
 |---|---|
-| Module `bt_planner/tests` (normal and `python -I`, includes the isolated lone-copy run and the six scenarios) | 200 tests OK (199 before the three independent-plan fixtures) |
-| Methodology `tests` (includes packaging and `test_plan_integration` 46) | 953 tests with the Scheduler modules in the tree: **953 OK (3 skipped) in the live tree**, after the owner authorised excluding `.venv` in `test_scheduler_integration.Boundary` (a `uv` venv left in the repo root tripped it; one line, scan only) |
+| Module `bt_planner/tests` (normal and `python -I`, includes the isolated lone-copy run and the six scenarios) | 211 tests OK (after the Codex round) |
+| Methodology `tests` (includes packaging and `test_plan_integration` 46) | 953 tests with the Scheduler modules in the tree: **956 OK (3 skipped) in the live tree**, after the owner authorised excluding `.venv` in `test_scheduler_integration.Boundary` (a `uv` venv left in the repo root tripped it; one line, scan only) |
 | Scheduler core `bt_scheduler_core/tests` (not modified; run only to prove it is unaffected) | 234 tests OK |
 | `run_trials.py` against the real repositories | 182/182 checks |
 | Baseline before this requirement | module 111, methodology 752 (REQ-010 report) |
@@ -111,6 +111,31 @@ Second independent pass (fresh reviewer, items 1–7 re-attacked): all confirmed
   `expected_paths` without the task saying it creates it — fed back to its planner, which corrected PLAN.md and
   PLAN.json; now 3/3. All three are
   now fixtures of the module suite. Per-criterion record: `ACCEPTANCE.md`.
+
+**Fourth round — cross-vendor audit with Codex (gpt-6.1-sol, high, delegated D-20261015-084652-b103, 585 s).** The
+earlier claim that Codex was not installed was wrong (a stale PATH in the tool shell made `shutil.which` return None);
+once the owner confirmed quota the audit ran. Verdict: **C1, C2, C3, C5 BROKEN, C4 HOLDS** — the strongest result of
+the whole requirement, and exactly what a second vendor is for. Every counterexample was reproduced and fixed:
+
+| Codex finding | Fix |
+|---|---|
+| title normalisation deleted underscores (`disable_auth` == `disableauth`) | only emphasis markers are stripped (`_word_`), interior underscores are part of the title |
+| resumed r1 run accepted against approved r2, keeping old verification | `PLAN_REF_STALE` (and `PLAN_REF_MISMATCH` when the hash differs): start a new run |
+| PLAN.md prose changed after approval reaches the executor through HANDOFF.md | digest of the narrative stored in the manifest at approval; `PLAN_PROSE_DRIFT` at launch/resume (front matter, dated log lines, checkbox ticks ignored) |
+| `command:python3 scratch/does-not-exist.py` accepted (only `python3` was checked) | the verifier also checks the script path an interpreter runs, `npm run <script>` against package.json and `npx tsx <file>` |
+| `file:src/*/nonexistent.py` accepted (only `src` existed) | file evidence is one concrete path: wildcards are refused |
+| `precedent:XYZ-999999` accepted (unknown family returned "cannot tell") | families this workspace does not keep are refused |
+| `TBD TBD TBD TBD`, `estimate_rationale: TBD` accepted | repeated/placeholder tokens refused; the rationale is held to the same standard; a rationale that admits "placeholder" is an error (AC-09) |
+| "guaranteed safe" objective and a "Safe to run in parallel" title accepted | titles are checked, pattern widened (EN/ES) |
+| keys `selectedmodel`, `modelhint`, `backendmodel`, `assignedto` accepted | glued scheduling words are matched (with benign-suffix exceptions such as `modeling_notes`) |
+| `schema_version` with 5000 digits raised ValueError; lone surrogate raised UnicodeEncodeError and left an empty revision file | bounded version regex; surrogates are a validation error and nothing is written |
+| JSON `null` published as valid; duplicate JSON keys resolved silently | both refused |
+| plan content: a task nobody waits for (REQ-901 T5, REQ-902 T3), a placeholder estimate (REQ-903 T5) | new lint `unconsumed_results`; the planners revised their plans; 0 errors and 0 warnings |
+
+Honest scope notes from that audit: the claim "resume never rewrites state" was too broad (the supervisor's own resume
+bookkeeping still updates RUN.json; the gate does not); and the audit was run on a copy taken before the last plan
+revisions, so the three plans were re-validated afterwards (3/3). A fifth cross-vendor pass on the fixed code was
+not run.
 
 Not changed on purpose: `--force` of an unapproved plan with nothing frozen freezes it (owner's explicit launch,
 recorded `launch-forced`); `in-progress` is a SPEC status, no flow sets it on PLAN.md.
