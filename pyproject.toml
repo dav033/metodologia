@@ -53,6 +53,7 @@ py-modules = [
   "bt_continuation",
   "bt_requirements_gate",
   "bt_plan_adapter",
+  "bt_plan_adapter_evidence",
   "bt_scheduler_adapter",
   "bt_scheduler_executor_adapter",
   "bt_scheduler_integrator",

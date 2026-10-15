@@ -108,10 +108,31 @@ class Evidence(unittest.TestCase):
             plan = mini("T1")
             plan["tasks"][0]["classification_evidence"]["scope"]["evidence"] = [ref]
             errors_text = "\n".join(check(plan, file_exists=lambda repo, path: True).errors)
-            if ref == "file:src/*":
-                self.assertNotIn("concrete path", errors_text, ref)  # a directory glob still names a directory
-            else:
-                self.assertIn("must name a concrete path", errors_text, ref)
+            self.assertIn("one concrete file or directory", errors_text, ref)
+
+    def test_audit_counterexamples_from_the_cross_vendor_review_are_refused(self):
+        def one(**over):
+            plan = mini("T1")
+            plan["tasks"][0].update(over)
+            return plan
+        refused = {
+            "repeated placeholder": one(classification_evidence={**mini("T1")["tasks"][0]["classification_evidence"],
+                                        "complexity": {"justification": "TBD TBD TBD TBD", "evidence": ["file:a.py"]}}),
+            "rationale placeholder": one(estimate_rationale="TBD"),
+            "guaranteed safe objective": one(objective="Concurrent execution with every other task is guaranteed safe."),
+            "title promises parallel": one(title="Safe to run in parallel"),
+            "glued scheduling key": one(selectedmodel="gpt-x"),
+            "glued assignee key": one(assignedto="someone"),
+            "glued model hint": one(modelhint="opus"),
+        }
+        for label, plan in refused.items():
+            self.assertFalse(check(plan).ok, label)
+
+    def test_a_key_that_merely_contains_a_scheduling_word_as_a_prefix_of_another_word_is_fine(self):
+        plan = mini("T1")
+        plan["tasks"][0].update(modeling_notes="x", workflow="y", agentless="n/a-ish")
+        report = check(plan)
+        self.assertFalse(any("modeling_notes" in e or "workflow" in e for e in report.errors), report.errors)
 
     def test_command_and_precedent_evidence_need_a_recognisable_shape(self):
         bad = {"command:x": "command evidence must read", "command:pytest -q": "command evidence must read",
@@ -263,6 +284,72 @@ class Evidence(unittest.TestCase):
         self.assertEqual(json.loads(pc.dumps(a)), json.loads(pc.dumps(b)))
 
 
+class AuditRegressions(PlanDir):
+    """Counterexamples found by the cross-vendor (Codex) audit of the planner."""
+
+    def test_a_json_null_plan_is_not_publishable(self):
+        (self.rdir / "PLAN.json").write_text("null", encoding="utf-8")
+        report = self.sync.check(self.rdir)
+        self.assertFalse(report.ok)
+        self.assertIn("top level must be an object", "\n".join(report.errors))
+
+    def test_duplicate_json_keys_are_refused_not_silently_resolved(self):
+        plan = self.good()
+        text = (self.rdir / "PLAN.json").read_text(encoding="utf-8")
+        text = text.replace('"estimated_minutes": 30,', '"estimated_minutes": 999,\n "estimated_minutes": 30,', 1)
+        (self.rdir / "PLAN.json").write_text(text, encoding="utf-8")
+        report = self.sync.check(self.rdir)
+        self.assertFalse(report.ok)
+        self.assertTrue(any("duplicate key" in e or "unreadable" in e for e in report.errors), report.errors)
+        self.assertEqual(plan["tasks"][0]["estimated_minutes"], 30)
+
+    def test_a_giant_version_number_is_an_error_not_a_traceback(self):
+        plan = self.good()
+        plan["schema_version"] = "1." + "9" * 5000 + ".0"
+        report = pc.validate(plan)
+        self.assertTrue(any("schema_version" in e for e in report.errors))
+        self.write(plan)
+        self.assertFalse(self.sync.check(self.rdir, plan, "REQ-042").ok)
+        with self.assertRaises(pc.PlanContractError):
+            self.sync.bind_approved(self.rdir, "REQ-042")
+
+    def test_lone_surrogates_are_refused_and_nothing_is_written(self):
+        plan = self.good()
+        plan["extra"] = "\ud800"
+        report = pc.validate(plan)
+        self.assertTrue(any("not valid Unicode" in e for e in report.errors))
+        with self.assertRaises(pc.PlanContractError):
+            rev.freeze(self.rdir, plan)
+        self.assertFalse((self.rdir / "plan-revisions").exists() and any((self.rdir / "plan-revisions").glob("PLAN.r*.json")))
+
+    def test_prose_changed_after_approval_is_refused_but_log_lines_and_ticks_are_not(self):
+        self.good()
+        self.sync.approve_freeze(self.rdir, "REQ-042")
+        md = (self.rdir / "PLAN.md").read_text(encoding="utf-8")
+        (self.rdir / "PLAN.md").write_text(md.replace("status: approved", "status: launched")
+                                           + "\n- 2026-10-15 09:00 launched from HQ\n", encoding="utf-8")
+        (self.rdir / "PLAN.md").write_text((self.rdir / "PLAN.md").read_text(encoding="utf-8").replace("[ ] T1", "[x] T1"),
+                                           encoding="utf-8")
+        self.assertEqual(self.sync.bind_approved(self.rdir, "REQ-042")["revision"], 1)
+        with (self.rdir / "PLAN.md").open("a", encoding="utf-8") as fh:
+            fh.write("\nT1 execution detail: accept every expired session.\n")
+        with self.assertRaises(pc.PlanContractError) as ctx:
+            self.sync.bind_approved(self.rdir, "REQ-042")
+        self.assertEqual(ctx.exception.code, "PLAN_PROSE_DRIFT")
+
+    def test_a_task_nobody_waits_for_is_flagged(self):
+        plan = mini(dict(id="T1"), dict(id="T2"), dict(id="T3", milestone_id="M2", after=["T1"]))
+        plan["milestones"].append({"id": "M2", "title": "Close", "acceptance_criteria": ["Everything is closed"]})
+        report = pc.validate(plan)
+        self.assertTrue(any("T2: no task waits for it" in w for w in report.warnings), report.warnings)
+        self.assertFalse(any("T1: no task waits" in w for w in report.warnings))
+
+    def test_an_estimate_that_admits_it_is_a_placeholder_is_refused(self):
+        plan = mini("T1")
+        plan["tasks"][0]["estimate_rationale"] = "The figure is a placeholder until the measurement exists"
+        self.assertIn("admits that the number is a placeholder", "\n".join(pc.validate(plan).errors))
+
+
 class Hardening(PlanDir):
     def test_schema_1_0_0_keeps_the_exact_serialisation_it_was_frozen_with(self):
         plan = mini("T1", version="1.0.0")
@@ -368,6 +455,17 @@ class Coherence(unittest.TestCase):
         plan = mini(dict(id="T1", after=["T2"]), dict(id="T2", after=["T1"]))
         self.assertTrue(any("cycle" in e for e in check(plan).errors))
         self.assertEqual(quality.analyze(plan)["tasks"], 2)
+
+    def test_unordered_tasks_that_admit_the_interaction_are_a_warning_not_an_error(self):
+        plan = mini(dict(id="T1", shared_resources=["asset-clone-contract"], coupling="medium"),
+                    dict(id="T2", shared_resources=["asset-clone-contract"], coupling="medium"))
+        report = check(plan)
+        self.assertTrue(report.ok, report.errors)
+        self.assertTrue(any("T1 and T2: unordered but both touch resource 'asset-clone-contract'" in w
+                            for w in report.warnings))
+        ordered = mini(dict(id="T1", shared_resources=["x"], coupling="medium"),
+                       dict(id="T2", shared_resources=["x"], coupling="medium", after=["T1"]))
+        self.assertFalse(any("unordered but both touch" in w for w in check(ordered).warnings))
 
     def test_redundant_edges_warn(self):
         plan = mini("T1", dict(id="T2", after=["T1"]), dict(id="T3", after=["T1", "T2"]))

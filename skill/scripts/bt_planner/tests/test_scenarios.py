@@ -46,10 +46,14 @@ class Scenarios(unittest.TestCase):
     def plan(self, rdir: Path) -> dict:
         return json.loads((rdir / "PLAN.json").read_text(encoding="utf-8"))
 
-    def test_there_are_six_representative_scenarios_covering_distinct_intents(self):
+    def test_there_are_representative_scenarios_covering_distinct_intents(self):
         intents = {json.loads((SCENARIOS / n / "EXPECT.json").read_text())["intent"] for n in NAMES}
-        self.assertEqual(intents, {"sensitive-small-fix", "mechanical-large-change", "cross-contract", "new-feature",
-                                   "investigation", "full-system-decomposition"})
+        self.assertTrue({"sensitive-small-fix", "mechanical-large-change", "cross-contract", "new-feature",
+                         "investigation", "full-system-decomposition"} <= intents)
+
+    def test_at_least_one_scenario_was_written_by_a_planner_with_no_context(self):
+        independent = [n for n in NAMES if "authored_by" in json.loads((SCENARIOS / n / "EXPECT.json").read_text())]
+        self.assertTrue(independent, "keep a plan produced by a fresh session from the methodology documents alone")
 
     def test_each_scenario_publishes_and_meets_its_expectations(self):
         for name in NAMES:

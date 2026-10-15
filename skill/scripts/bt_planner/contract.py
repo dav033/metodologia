@@ -25,7 +25,7 @@ LEVELS = ("low", "medium", "high")  # risk, coupling and confidence share the th
 VERIFICATION_TYPES = ("command", "manual")
 TASK_ID_RE = re.compile(r"T[0-9]+(?:\.[0-9]+)?[a-z]?")  # ASCII digits only: \d would accept other scripts
 MILESTONE_ID_RE = re.compile(r"M[0-9]+")
-VERSION_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
+VERSION_RE = re.compile(r"[0-9]{1,6}\.[0-9]{1,6}\.[0-9]{1,6}")  # bounded: int() of 5000 digits raises
 MAX_REVISION = 1_000_000
 MAX_DEPTH = 24
 LONG_TASK_MINUTES = 480  # warning threshold: consider splitting
@@ -97,11 +97,29 @@ SCHEDULING_TOKENS = frozenset({"model", "models", "agent", "agents", "account", 
                                "concurrency", "concurrent", "parallel", "parallelism"})
 
 
+_SCHEDULING_AFFIXES = ("model", "worker", "agent", "assignee", "assignedto", "assignto", "executor", "llm", "parallel",
+                       "concurren")
+_BENIGN_REMAINDERS = frozenset({"", "s", "ing", "ings", "ed", "er", "ers", "ler", "lers", "ling", "lings", "ity", "ize",
+                                "ized", "ization", "cy", "t", "tly", "ce"})
+
+
 def forbidden_key(key: str) -> bool:
-    if key.lower() in FORBIDDEN_TASK_KEYS:
+    lowered = key.lower()
+    if lowered in FORBIDDEN_TASK_KEYS:
         return True
     tokens = {w.lower() for w in re.findall(r"[A-Z]?[a-z]+|[A-Z]+(?![a-z])", key)}
-    return bool(tokens & SCHEDULING_TOKENS)
+    if tokens & SCHEDULING_TOKENS:
+        return True
+    # `modelhint`, `selectedmodel`, `assignedto`: a scheduling word glued to another with no separator
+    flat = re.sub(r"[^a-z]", "", lowered)
+    if flat in _SCHEDULING_AFFIXES:
+        return True
+    for word in _SCHEDULING_AFFIXES:
+        if flat.startswith(word) and flat[len(word):] not in _BENIGN_REMAINDERS and len(flat) > len(word):
+            return not flat.startswith(word + "ing")  # `modeling` is not `model`
+        if flat.endswith(word) and flat != word:
+            return True
+    return False
 
 
 def _scan_forbidden(report: Report, where: str, node: object, depth: int = 0) -> None:
@@ -312,7 +330,11 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
         report.errors.append(f"plan.revision: must be an integer between 1 and {MAX_REVISION}, got {shown!r}")
     _scan_forbidden(report, "plan", {k: v for k, v in plan.items() if k not in ("tasks", "milestones")})
     try:
-        json.dumps(plan, allow_nan=False)
+        json.dumps(plan, allow_nan=False, ensure_ascii=False).encode("utf-8")
+    except UnicodeEncodeError:
+        report.errors.append("plan: contains characters that are not valid Unicode (lone surrogates) and cannot be "
+                             "written as UTF-8")
+        return report
     except (ValueError, TypeError, RecursionError) as exc:
         report.errors.append(f"plan: not serialisable as standard JSON ({type(exc).__name__}: NaN/Infinity, "
                              "oversized numbers, non-JSON values or excessive nesting)")
@@ -333,6 +355,8 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
     _check_graph(report, [t for t in tasks if isinstance(t, dict)], milestones)
     if not report.errors or all("cycle" not in e for e in report.errors):
         (report.errors if strict else report.warnings).extend(quality.conflicts(plan))
+        report.warnings.extend(quality.shared_unordered(plan))
+        report.warnings.extend(quality.unconsumed_results(plan))
         report.warnings.extend(quality.redundant_edges(plan))
     reused: dict[str, set[str]] = {}
     for task in tasks:
@@ -408,10 +432,19 @@ def _reject_constant(name: str):
     raise ValueError(f"non-standard JSON constant {name}")
 
 
+def _no_duplicate_keys(pairs: list[tuple[str, object]]) -> dict:
+    seen: dict[str, object] = {}
+    for key, value in pairs:
+        if key in seen:
+            raise ValueError(f"duplicate key {key!r} (the later value would silently win)")
+        seen[key] = value
+    return seen
+
+
 def loads(text: str) -> object:
-    """json.loads that refuses NaN/Infinity and turns runaway nesting into ValueError."""
+    """json.loads that refuses NaN/Infinity and duplicate keys and turns runaway nesting into ValueError."""
     try:
-        return json.loads(text, parse_constant=_reject_constant)
+        return json.loads(text, parse_constant=_reject_constant, object_pairs_hook=_no_duplicate_keys)
     except RecursionError as exc:
         raise ValueError("nesting too deep") from exc
 

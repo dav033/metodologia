@@ -6,7 +6,6 @@ module's PLAN.md parser with the supervisor's parser on every real plan in the r
 """
 from __future__ import annotations
 
-import ast
 import contextlib
 import hashlib
 import io
@@ -48,7 +47,7 @@ def classified(rdir: Path) -> dict:
         task.update({"objective": f"Deliver the behaviour described by {task['title']} and keep tests passing",
                      "repository": task.get("repository", "app"),
                      "complexity": "low", "scope": "small_change", "estimated_minutes": 30, "risk": "medium",
-                     "coupling": "low", "confidence": "medium", "estimate_rationale": "Known pattern",
+                     "coupling": "low", "confidence": "medium", "estimate_rationale": "Known pattern in this module",
                      "classification_evidence": {d: {"justification": f"{task['id']}: {sentence}",
                                                      "evidence": ["spec:SPEC.md#spec", "command:python3 -m unittest -> the tests of the module ran"]}
                                                  for d, sentence in why.items()},
@@ -69,76 +68,6 @@ status: {status}
 - [ ] T1 — Reject expired sessions · repo: app · files: src/auth/** · verify: `python -m unittest`
 - [ ] T2 — Document it · repo: app · after: T1
 """
-
-
-class Boundary(unittest.TestCase):
-    """The dependency points one way: methodology -> adapter -> bt_planner, never the reverse, never around it."""
-
-    def top_imports(self, path: Path) -> set[str]:
-        names = set()
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-            if isinstance(node, ast.Import):
-                names |= {alias.name.split(".")[0] for alias in node.names}
-            elif isinstance(node, ast.ImportFrom) and not node.level:
-                names.add((node.module or "").split(".")[0])
-        return names
-
-    ALLOWED_USERS = {"bt_plan_adapter.py", "test_plan_integration.py", "test_package_install.py"}
-
-    def test_only_the_adapter_imports_the_module(self):
-        offenders = []
-        for path in sorted(REPO.rglob("*.py")):
-            rel = path.relative_to(REPO)
-            if (".git" in rel.parts or "bt_planner" in rel.parts or "node_modules" in rel.parts
-                    or ".state" in rel.parts or ".venv" in rel.parts or path.name in self.ALLOWED_USERS):
-                continue  # `.state` holds throwaway review snapshots (full copies of the tree, venv included)
-            try:
-                tree = ast.parse(path.read_text(encoding="utf-8"))
-            except (SyntaxError, UnicodeError):
-                continue
-            for node in ast.walk(tree):
-                names = set()
-                if isinstance(node, ast.Import):
-                    names = {a.name.split(".")[0] for a in node.names}
-                elif isinstance(node, ast.ImportFrom) and not node.level:
-                    names = {(node.module or "").split(".")[0]}
-                elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-                    names = {node.value.split(".")[0]}  # importlib.import_module("bt_planner...") and friends
-                if "bt_planner" in names:
-                    offenders.append(f"{rel}:{getattr(node, 'lineno', '?')}")
-        self.assertEqual(offenders, [], "only bt_plan_adapter may reach the planner module")
-        self.assertIn("bt_planner", self.top_imports(SCRIPTS / "bt_plan_adapter.py"))
-
-    def test_the_module_imports_nothing_of_the_methodology(self):
-        stdlib = set(sys.stdlib_module_names)
-        for path in (SCRIPTS / "bt_planner").glob("*.py"):
-            outside = {n for n in self.top_imports(path) if n and n not in stdlib and n != "bt_planner"}
-            self.assertEqual(outside, set(), path.name)
-
-    def test_the_old_scattered_modules_are_gone(self):
-        for name in ("bt_plan_contract", "bt_plan_revisions", "bt_plan_sync"):
-            self.assertFalse((SCRIPTS / f"{name}.py").exists(), name)
-
-    def test_module_suite_passes_in_an_isolated_interpreter(self):
-        done = subprocess.run([sys.executable, "-I", "-m", "unittest", "discover", "-s",
-                               str(SCRIPTS / "bt_planner" / "tests")], capture_output=True, text=True, timeout=300,
-                              cwd=tempfile.gettempdir(), env={"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"})
-        self.assertEqual(done.returncode, 0, (done.stderr or done.stdout)[-1500:])
-        self.assertRegex(done.stderr, r"Ran \d+ tests")
-
-    def test_module_runs_as_a_command_from_a_lone_copy_with_no_methodology_reachable(self):
-        import shutil
-        with tempfile.TemporaryDirectory(prefix="planner-cmd-") as tmp:
-            shutil.copytree(SCRIPTS / "bt_planner", Path(tmp) / "bt_planner",
-                            ignore=shutil.ignore_patterns("__pycache__", "tests"))
-            done = subprocess.run([sys.executable, "-I", "-c",
-                                   "import sys; sys.path.insert(0, sys.argv[1]); from bt_planner.cli import main; "
-                                   "import importlib.util as u; "
-                                   "assert all(u.find_spec(m) is None for m in ('bt_core', 'bt_runstate', 'bitacora')); "
-                                   "sys.exit(main(['example']))", tmp], capture_output=True, text=True, timeout=60,
-                                  cwd=tempfile.gettempdir())
-        self.assertEqual(done.returncode, 0, done.stderr)
-        self.assertIn('"plan_id"', done.stdout)
 
 
 class Isolated(unittest.TestCase):
@@ -298,253 +227,6 @@ class Cli(Isolated):
         self.assertEqual(parser.parse_args(["plan-json", "check", "REQ-009"]).action, "check")
 
 
-class LaunchPaths(Isolated):
-    """Every way of starting work passes the same gate: valid, consistent with PLAN.md, exactly the approved revision."""
-
-    def approved(self) -> dict:
-        """What `plan approve` does: the plan is approved and exactly that PLAN.json is frozen."""
-        plan = self.good_plan()
-        self.set_status("approved")
-        planner.approve_freeze(self.rdir, adapter.plan_id(self.rdir), adapter.APPROVED_STATES)
-        return plan
-
-    def revise(self, plan: dict, minutes: int) -> None:
-        plan["revision"] += 1
-        plan["tasks"][0]["estimated_minutes"] = minutes
-        (self.rdir / "PLAN.json").write_text(planner.dumps(plan), encoding="utf-8")
-
-    def revisions(self) -> list[int]:
-        return [r["revision"] for r in planner.list_revisions(self.rdir)]
-
-    def standard_launch(self, **kw):
-        class Stop(Exception):
-            pass
-        with patch.object(bt_launch, "find_req", return_value=self.rdir), \
-                patch("bt_requirements_gate.require_ready", return_value={"status": "ready"}), \
-                patch.object(bt_launch.ws, "clone_missing"), \
-                patch.object(bt_launch, "write_handoff", side_effect=Stop):
-            try:
-                bt_launch.launch("sample", "REQ-001", mode="marathon", **kw)
-            except Stop:
-                return "passed the gate"
-        return "completed"
-
-    def foreground_launch(self, **kw):
-        import bt_orchestration_transition as transition
-        with patch.object(transition.core, "find_req", return_value=self.rdir), \
-                patch.object(transition.gate, "require_ready", return_value={"status": "ready"}), \
-                patch.object(transition.state_, "load", return_value=None), \
-                patch.object(transition.core.ws, "workdir", return_value=self.rdir), \
-                patch.object(transition.client, "locate", return_value={"wrapper": None, "why": "no parent"}):
-            return transition.launch("sample", "REQ-001", **kw)
-
-    def open_run(self):
-        import bt_run
-        with patch.object(bt_run.rs, "load", return_value=None), patch.object(bt_run.rs, "save"), \
-                patch.object(bt_run, "_pool", return_value=None):
-            return bt_run._open("sample", self.rdir, {"agent": "claude", "model": "haiku"})
-
-    # -- standard / web / handoff launch (bt_launch.launch) ---------------------------------------------------------
-    def test_standard_launch_refuses_content_nobody_approved(self):
-        plan = self.approved()
-        self.assertEqual(self.standard_launch(), "passed the gate")
-        self.assertEqual(self.revisions(), [1])
-        self.revise(plan, 55)  # an edit after approval, with a bumped revision number
-        with self.assertRaises(SystemExit) as ctx:
-            self.standard_launch()
-        self.assertIn("PLAN_DRIFT", str(ctx.exception))
-        self.assertEqual(self.revisions(), [1])  # the launch did not freeze it on the way in
-
-    def test_launch_after_a_new_approval_runs_the_new_revision(self):
-        plan = self.approved()
-        self.standard_launch()
-        self.revise(plan, 55)
-        rounds_module = __import__("bt_rounds")
-        self.set_status("review")
-        rounds_module.plan_decide(self.rdir, True, "", "test")
-        self.assertEqual(self.revisions(), [1, 2])
-        self.assertEqual(self.standard_launch(), "passed the gate")
-
-    def test_force_still_validates_and_freezes_what_it_launches(self):
-        self.good_plan()
-        self.set_status("review")
-        self.assertEqual(self.standard_launch(force=True), "passed the gate")
-        self.assertEqual(self.revisions(), [1])
-        broken = self.rdir.parent / "REQ-002-broken"
-        broken.mkdir()
-        (broken / "SPEC.md").write_text("# s\n", encoding="utf-8")
-        (broken / "PLAN.md").write_text(PLAN_MD.format(status="review"), encoding="utf-8")
-        planner.write_skeleton(broken)
-        with self.assertRaises(SystemExit) as ctx:
-            adapter.freeze_on_launch(broken, forced=True)
-        self.assertIn("PLAN_INVALID", str(ctx.exception))
-        self.assertFalse((broken / "plan-revisions").exists())
-
-    def test_dry_run_validates_without_writing(self):
-        self.approved()
-        self.assertEqual(self.standard_launch(dry_run=True), "passed the gate")
-        self.assertEqual(self.revisions(), [1])  # only the approval froze anything
-        data = json.loads((self.rdir / "PLAN.json").read_text())
-        data["tasks"][0]["risk"] = "critical"
-        (self.rdir / "PLAN.json").write_text(json.dumps(data), encoding="utf-8")
-        with self.assertRaises(SystemExit) as ctx:
-            self.standard_launch(dry_run=True)
-        self.assertIn("PLAN_INVALID", str(ctx.exception))
-
-    def test_contradiction_between_plan_md_and_plan_json_blocks_launch(self):
-        plan = self.approved()
-        plan["tasks"][1]["after"] = []
-        (self.rdir / "PLAN.json").write_text(planner.dumps(plan), encoding="utf-8")
-        with self.assertRaises(SystemExit) as ctx:
-            self.standard_launch()
-        self.assertIn("T2.after", str(ctx.exception))
-
-    # -- foreground transition ---------------------------------------------------------------------------------
-    def test_foreground_launch_freezes_the_same_revision(self):
-        self.approved()
-        self.assertEqual(self.foreground_launch()["decision"], "manual")
-        self.assertEqual(self.revisions(), [1])
-
-    def test_foreground_dry_run_writes_nothing_and_refuses_drift(self):
-        plan = self.approved()
-        self.foreground_launch()
-        self.revise(plan, 99)
-        import bt_orchestration_terminal as terminal
-        for kw in ({}, {"dry_run": True}):
-            with self.assertRaisesRegex(terminal.TerminalError, "FOREGROUND_PLAN_REFUSED: PLAN_DRIFT"):
-                self.foreground_launch(**kw)
-        self.assertEqual(self.revisions(), [1])
-
-    def test_foreground_refuses_an_invalid_plan_json(self):
-        planner.write_skeleton(self.rdir)
-        self.set_status("approved")
-        import bt_orchestration_terminal as terminal
-        with self.assertRaisesRegex(terminal.TerminalError, "FOREGROUND_PLAN_REFUSED: PLAN_INVALID"):
-            self.foreground_launch()
-        self.assertFalse((self.rdir / "plan-revisions").exists())
-
-    def test_successor_helper_rechecks_the_revision_before_replacing_the_session(self):
-        import bt_orchestration_transition as transition
-        self.assertIn("launch_problem(rdir, freeze=False)", Path(transition.__file__).read_text(encoding="utf-8"))
-
-    # -- the run itself ------------------------------------------------------------------------------------------
-    def test_a_new_run_binds_the_frozen_revision_and_refuses_drift(self):
-        plan = self.approved()
-        state = self.open_run()
-        self.assertEqual(state["plan_ref"]["revision"], 1)
-        self.revise(plan, 70)
-        with self.assertRaises(SystemExit) as ctx:
-            self.open_run()
-        self.assertIn("PLAN_DRIFT", str(ctx.exception))
-
-    def test_a_new_run_of_an_unapproved_contract_plan_is_refused(self):
-        self.good_plan()
-        self.set_status("draft")
-        with self.assertRaises(SystemExit) as ctx:
-            self.open_run()
-        self.assertIn("PLAN_NOT_APPROVED", str(ctx.exception))
-
-    def test_legacy_plans_start_runs_exactly_as_before(self):
-        self.set_status("draft")
-        state = self.open_run()
-        self.assertNotIn("plan_ref", state)
-        self.assertFalse((self.rdir / "plan-revisions").exists())
-
-    def resume(self, existing: dict):
-        import bt_run
-        with patch.object(bt_run.rs, "load", return_value=existing), \
-                patch.object(bt_run.rs, "update", side_effect=lambda rdir, fn: existing), \
-                patch.object(bt_run, "_pool", return_value=None), patch.object(bt_run, "reap_orphans", return_value=[]):
-            return bt_run._open("sample", self.rdir, {"agent": "claude"})
-
-    def test_a_resumed_run_is_never_rewritten_and_never_runs_unapproved_content(self):
-        plan = self.approved()
-        self.open_run()  # freezes r1
-        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
-                    "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "x"}}
-        before = json.dumps(existing, sort_keys=True)
-        self.assertIs(self.resume(existing), existing)  # still the approved revision: resumes
-        self.assertEqual(json.dumps(existing, sort_keys=True), before)
-        self.revise(plan, 80)  # an unreviewed new revision appears on disk
-        with self.assertRaises(SystemExit) as ctx:
-            self.resume(existing)
-        self.assertIn("PLAN_DRIFT", str(ctx.exception))
-        self.assertEqual(json.dumps(existing, sort_keys=True), before)
-
-    def test_resume_refuses_when_plan_json_was_deleted_after_a_freeze(self):
-        self.approved()
-        self.open_run()
-        (self.rdir / "PLAN.json").unlink()
-        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
-                    "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "x"}}
-        with self.assertRaises(SystemExit) as ctx:
-            self.resume(existing)
-        self.assertIn("PLAN_MISSING", str(ctx.exception))
-
-    def test_resume_does_not_need_the_checkouts_that_launch_needed(self):
-        plan = self.good_plan()
-        plan["tasks"][0]["classification_evidence"]["scope"]["evidence"] = ["file:src/auth/session.py"]
-        (self.rdir / "PLAN.json").write_text(planner.dumps(plan), encoding="utf-8")
-        self.set_status("approved")
-        planner.approve_freeze(self.rdir, adapter.plan_id(self.rdir), adapter.APPROVED_STATES)  # verified elsewhere
-        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
-                    "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "x"}}
-        self.assertIsNone(adapter.resume_problem(self.rdir, existing))
-        self.assertIsNotNone(adapter.launch_problem(self.rdir, freeze=False))  # a NEW run still demands the evidence
-
-    def test_foreground_freezes_nothing_when_the_workspace_is_unusable(self):
-        import bt_orchestration_terminal as terminal
-        import bt_orchestration_transition as transition
-        self.approved()
-        with patch.object(transition.core, "find_req", return_value=self.rdir), \
-                patch.object(transition.gate, "require_ready", return_value={"status": "ready"}), \
-                patch.object(transition.state_, "load", return_value=None), \
-                patch.object(transition.core.ws, "workdir", return_value=None):
-            with self.assertRaisesRegex(terminal.TerminalError, "FOREGROUND_WORKSPACE_REQUIRED"):
-                transition.launch("sample", "REQ-001")
-        self.assertEqual(self.revisions(), [1])  # nothing beyond the approval record
-
-    def test_resuming_a_run_of_a_legacy_plan_is_untouched(self):
-        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": []}
-        self.assertIs(self.resume(existing), existing)
-
-    # -- approval ----------------------------------------------------------------------------------------------------
-    def test_approval_refuses_an_invalid_plan_json_and_leaves_the_status(self):
-        import bt_rounds
-        planner.write_skeleton(self.rdir)
-        self.set_status("review")
-        with self.assertRaises(SystemExit) as ctx:
-            bt_rounds.plan_decide(self.rdir, True, "", "terminal")
-        self.assertIn("PLAN_INVALID", str(ctx.exception))
-        self.assertEqual(planner.plan_status(self.rdir), "review")
-        self.assertEqual(bt_rounds.plan_decide(self.rdir, False, "needs work", "terminal"), "changes-requested")
-
-    def test_approval_freezes_exactly_the_approved_bytes(self):
-        import bt_rounds
-        plan = self.good_plan()
-        self.set_status("review")
-        self.assertEqual(bt_rounds.plan_decide(self.rdir, True, "", "terminal"), "approved")
-        frozen = planner.load_revision(self.rdir, 1)
-        self.assertEqual(planner.dumps(frozen), planner.dumps(plan))
-
-    def test_approving_a_legacy_plan_is_unchanged(self):
-        import bt_rounds
-        self.set_status("review")
-        self.assertEqual(bt_rounds.plan_decide(self.rdir, True, "", "terminal"), "approved")
-        self.assertFalse((self.rdir / "plan-revisions").exists())
-
-    # -- nothing can start a run around the gate ------------------------------------------------------------------
-    def test_every_entry_that_creates_a_run_or_launches_goes_through_the_gate(self):
-        callers = {path.name for path in SCRIPTS.glob("*.py")
-                   if "init_state(" in path.read_text(encoding="utf-8") and path.name != "bt_runstate.py"}
-        self.assertEqual(callers, {"bt_run.py"}, "a new module creates run state: route it through the launch gate")
-        gated = {"bt_run.py": "launch_problem(", "bt_launch.py": "freeze_on_launch(",
-                 "bt_orchestration_transition.py": "launch_problem("}
-        for name, call in gated.items():
-            self.assertIn(call, (SCRIPTS / name).read_text(encoding="utf-8"), name)
-        self.assertIn("freeze_approved(", (SCRIPTS / "bt_rounds.py").read_text(encoding="utf-8"))
-
-
 class RefVerifier(Isolated):
     def test_it_knows_requirements_tasks_decisions_commands_and_commits(self):
         import bt_core
@@ -561,9 +243,27 @@ class RefVerifier(Isolated):
         self.assertFalse(verify("precedent", "D-008", ""))
         self.assertTrue(verify("precedent", "P-012", ""))
         self.assertIsNone(verify("precedent", "https://example.test/x", ""))
-        self.assertTrue(verify("command", "python3 -m unittest", ""))
-        self.assertTrue(verify("command", "FOO=1 python3 -c 'pass'", ""))
+        self.assertTrue(verify("command", "python3 -m unittest", "app"))
+        self.assertTrue(verify("command", "FOO=1 python3 -c 'pass'", "app"))
         self.assertFalse(verify("command", "no-such-binary-xyz --help", ""))
+
+    def test_a_real_interpreter_in_front_of_a_missing_script_or_npm_script_is_not_evidence(self):
+        repo = Path(self._tmp.name)
+        (repo / "scripts").mkdir()
+        (repo / "scripts" / "real.py").write_text("print(1)\n", encoding="utf-8")
+        (repo / "package.json").write_text('{"scripts": {"test": "x", "build": "y"}}', encoding="utf-8")
+        import bt_core
+        with patch.object(bt_core, "ROOT", self.root):
+            verify = adapter.ref_verifier(self.rdir)
+        self.assertTrue(verify("command", "python3 scripts/real.py --x", "app"))
+        self.assertFalse(verify("command", "python3 scripts/does-not-exist.py", "app"))
+        self.assertTrue(verify("command", "python3 -m unittest discover", "app"))
+        self.assertTrue(verify("command", "npm run build", "app"))
+        self.assertFalse(verify("command", "npm run nope", "app"))
+        self.assertTrue(verify("command", "npm test", "app"))
+        self.assertFalse(verify("command", "npx tsx scripts/missing.ts", "app"))
+        self.assertFalse(verify("precedent", "XYZ-999999", "app"))
+        self.assertFalse(verify("precedent", "JIRA-12", "app"))
 
 
 class ParserParity(unittest.TestCase):

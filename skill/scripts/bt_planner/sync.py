@@ -32,6 +32,23 @@ def default_plan_id(directory: Path) -> str:
     return found.group(0) if found else name
 
 
+def narrative_digest(directory: Path) -> str | None:
+    """Digest of what a reader of PLAN.md is told, ignoring what legitimately changes after approval: the front
+    matter (status), dated log lines and the checkbox marks. Whoever consumes the live PLAN.md later reads it as if
+    it had been approved, so prose changed after approval must not pass unnoticed."""
+    try:
+        text = (Path(directory) / PLAN_MD).read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return None
+    text = re.sub(r"\A---\n.*?\n---\n", "", text, count=1, flags=re.S)
+    lines = []
+    for line in text.splitlines():
+        if re.match(r"^\s*-\s+\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}\b", line):
+            continue
+        lines.append(re.sub(r"\[[xX]\]", "[ ]", line).strip())
+    return rev.sha256("\n".join(l for l in lines if l))
+
+
 def plan_status(directory: Path) -> str:
     try:
         return md.status((Path(directory) / PLAN_MD).read_text(encoding="utf-8"))
@@ -43,7 +60,10 @@ def _same_text(a: object, b: object) -> bool:
     """Titles compare without markup noise (emphasis/backticks), spacing or case: a rewording is a contradiction, a
     different capitalisation is not."""
     def norm(value: object) -> str:
-        return re.sub(r"\s+", " ", re.sub(r"[*_`]", "", str(value or ""))).strip().casefold()
+        text = re.sub(r"[*`]", "", str(value or ""))
+        text = text.strip("_")  # emphasis around an entire title
+        text = re.sub(r"(?<!\w)_([^ \t\r\n]+)_(?!\w)", r"\1", text)  # paired emphasis, never identifier underscores
+        return re.sub(r"\s+", " ", text).strip().casefold()
     return norm(a) == norm(b)
 
 
@@ -176,7 +196,11 @@ def read_plan(directory: Path) -> tuple[object | None, pc.Report]:
     report = pc.Report()
     path = Path(directory) / PLAN_JSON
     try:
-        return pc.loads(path.read_text(encoding="utf-8")), report
+        loaded = pc.loads(path.read_text(encoding="utf-8"))
+        if loaded is None:  # a JSON `null` is not "no plan": it is a plan that is not an object
+            report.errors.append(f"{PLAN_JSON}: top level must be an object (found null)")
+            return None, report
+        return loaded, report
     except FileNotFoundError:
         report.errors.append(f"{PLAN_JSON}: not found (legacy plan; run `init` to derive a skeleton)")
     except (OSError, ValueError, UnicodeError) as exc:
@@ -185,19 +209,22 @@ def read_plan(directory: Path) -> tuple[object | None, pc.Report]:
 
 
 def _file_resolver(repo_roots: Mapping[str, Path]) -> ev.FileExists:
-    """`file:` evidence must name something that exists: a glob is checked up to its first wildcard segment."""
+    """`file:` evidence must resolve to a concrete path that stays inside its registered repository."""
     def exists(repository: str, path: str) -> bool | None:
         root = repo_roots.get(repository)
         if root is None:
             return None
-        static = []
-        for part in path.replace("\\", "/").split("/"):
-            if re.search(r"[*?\[]", part):
-                break
-            static.append(part)
-        if not [part for part in static if part and part != "."]:
-            return False  # a bare pattern or `.` names the whole repository: not evidence of anything
-        return (Path(root).joinpath(*static)).exists()
+        normalized = path.replace("\\", "/")
+        parts = [part for part in normalized.split("/") if part and part != "."]
+        if (not parts or any(part == ".." for part in parts) or normalized.startswith("/")
+                or re.match(r"^[A-Za-z]:", normalized) or "\0" in normalized or re.search(r"[*?\[]", path)):
+            return False  # a pattern or `.` is not something that was inspected
+        try:
+            repository_root = Path(root).resolve(strict=True)
+            target = repository_root.joinpath(*parts).resolve(strict=True)
+            return target.is_relative_to(repository_root) and target.exists()
+        except (OSError, RuntimeError, ValueError):
+            return False
     return exists
 
 
@@ -311,12 +338,13 @@ def approve_freeze(directory: Path, plan_id: str | None = None,
     status = plan_status(directory)
     if status not in approved_states:
         raise pc.PlanContractError("PLAN_NOT_APPROVED", [f"PLAN.md status is {status or 'missing'!r}; freeze after approval"])
+    rev.list_revisions(directory)  # preserve the revision store's stable error code at the approval boundary
     plan, report = read_plan(directory)
     if plan is not None:
         report = check(directory, plan, plan_id, repo_roots, verify_files, ref_exists)  # the very object frozen below
     if not report.ok:
         raise pc.PlanContractError("PLAN_INVALID", report.errors)
-    return rev.freeze(directory, plan)
+    return rev.freeze(directory, plan, narrative=narrative_digest(directory))
 
 
 def freeze_if_present(directory: Path, plan_id: str | None = None,
@@ -364,6 +392,11 @@ def bind_approved(directory: Path, plan_id: str | None = None, approved_states: 
     digest = rev.sha256(pc.dumps(plan))
     if last:
         if plan.get("revision") == last["revision"] and digest == last["sha256"]:
+            approved_prose = last.get("plan_md_sha256")
+            if approved_prose and narrative_digest(directory) != approved_prose:
+                raise pc.PlanContractError("PLAN_PROSE_DRIFT", [
+                    "PLAN.md prose changed after the plan was approved (readers take the live file as approved); "
+                    "re-approve it with `plan approve`/`plan-json freeze` so what is run is what was approved"])
             return last
         approved = f"r{last['revision']}"
         message = (f"PLAN.json (revision {plan.get('revision')}) is not the approved revision {approved}; approve it "
@@ -376,7 +409,7 @@ def bind_approved(directory: Path, plan_id: str | None = None, approved_states: 
             "`plan approve` (or run `plan-json freeze` once the owner accepted exactly this PLAN.json) and launch again"])
     if not freeze:  # an explicit --force is the owner's own approval of this content
         return {"revision": plan["revision"], "sha256": digest, "frozen_at": None, "source": "launch-forced"}
-    return rev.freeze(directory, plan, "launch-forced")
+    return rev.freeze(directory, plan, "launch-forced", narrative=narrative_digest(directory))
 
 
 def compat(directory: Path, plan_id: str | None = None) -> dict:

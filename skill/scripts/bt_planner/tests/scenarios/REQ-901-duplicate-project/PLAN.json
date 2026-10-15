@@ -1,0 +1,829 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-901",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Decision and API implementation",
+      "acceptance_criteria": [
+        "The duplicate endpoint exists and compiles",
+        "Project row and asset copies are created together"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "API tests and documentation",
+      "acceptance_criteria": [
+        "API tests prove independence of copied files",
+        "The endpoint is documented"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Web workspace and integration",
+      "acceptance_criteria": [
+        "The project list offers a working Duplicar button",
+        "The full workspace checks pass"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Decide duplication design (atomicity, dangling photos, key rules)",
+      "repository": "trainingapp",
+      "after": [],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "Read the decisions section of SPEC.md",
+          "purpose": "confirm every open question has an answer",
+          "expected": "atomicity, dangling photo handling and key format are each stated as a decision"
+        }
+      ],
+      "objective": "A written decision that fixes atomicity, dangling-photo handling and key and name rules for duplication",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 20,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Code is read and the design is mostly clear, but the dangling-photo choice and key collision handling are real decisions; no code changes",
+      "expected_paths": [
+        "SPEC.md"
+      ],
+      "shared_resources": [
+        "duplicate-endpoint-contract",
+        "asset-clone-contract"
+      ],
+      "acceptance_criteria": [
+        "SPEC.md section Decisions to make first is replaced by the chosen answers",
+        "The endpoint path, status codes and key format are written down for T4 and T8"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Foreign key ordering between projects and assets forces a choice between hooks and compensation, so it needs reasoning rather than lookup",
+          "evidence": [
+            "file:apps/api/src/db/database.ts",
+            "file:apps/api/src/repositories/project-repository.ts"
+          ]
+        },
+        "scope": {
+          "justification": "Only a written decision in the spec is produced and no repository source file changes",
+          "evidence": [
+            "spec:SPEC.md#Decisions to make first (T1)"
+          ]
+        },
+        "duration": {
+          "justification": "Short read of the already inspected repository and asset code followed by writing three decisions",
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts",
+            "file:apps/api/src/services/asset-service.ts"
+          ]
+        },
+        "risk": {
+          "justification": "A wrong decision is cheap to revise before any code exists and nothing runs in production",
+          "evidence": [
+            "spec:SPEC.md#Decisions to make first (T1)"
+          ]
+        },
+        "coupling": {
+          "justification": "Its answers define the shared asset clone and endpoint contracts that T2, T3, T4 and T8 consume",
+          "evidence": [
+            "task:T2",
+            "task:T8"
+          ]
+        },
+        "confidence": {
+          "justification": "Decision inputs were read in the code but the handling of dangling references is an owner preference not yet confirmed",
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts",
+            "file:apps/api/src/services/asset-service.ts",
+            "assumption:the owner accepts null for photo references whose asset row is missing"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Add asset cloning to AssetService with its test",
+      "repository": "trainingapp",
+      "after": [
+        "T1"
+      ],
+      "expected_paths": [
+        "apps/api/src/services/asset-service.ts",
+        "apps/api/src/repositories/asset-repository.ts",
+        "apps/api/test/asset-clone.test.ts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/api",
+          "purpose": "the new asset-clone test proves byte identity, new ids and removal of planned copies",
+          "created_by": "T2"
+        }
+      ],
+      "objective": "AssetService can clone a list of asset rows into new files and rows for another project and return the rewritten refs",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Small service method that copies files, resolves paths under the asset root and cleans up on failure, plus its own test file; no copy precedent exists",
+      "shared_resources": [
+        "asset-clone-contract"
+      ],
+      "acceptance_criteria": [
+        "Cloned files have new uuid names under the asset root and identical bytes",
+        "Returned refs carry the new asset id and a url built from publicBaseUrl",
+        "Planned copies can be removed again when the surrounding transaction fails"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "It combines filesystem copying, path containment checks and id and url rewriting with failure cleanup, which needs careful design",
+          "evidence": [
+            "file:apps/api/src/services/asset-service.ts"
+          ]
+        },
+        "scope": {
+          "justification": "One service method and a row lookup helper change, with no endpoint or schema change involved",
+          "evidence": [
+            "file:apps/api/src/services/asset-service.ts",
+            "file:apps/api/src/repositories/asset-repository.ts"
+          ]
+        },
+        "duration": {
+          "justification": "Similar in size to save and deleteProjectAssets in the same file, plus a cleanup path and a new test file built on the existing temp-dir pattern",
+          "evidence": [
+            "file:apps/api/src/services/asset-service.ts",
+            "file:apps/api/test/repository.test.ts",
+            "precedent:01861ad"
+          ]
+        },
+        "risk": {
+          "justification": "Mistakes here can write outside the asset root or leave orphan files, which touches stored user data",
+          "evidence": [
+            "file:apps/api/src/services/asset-service.ts",
+            "spec:SPEC.md#Security"
+          ]
+        },
+        "coupling": {
+          "justification": "T3 inserts the asset rows this method plans, so both must agree on one clone contract",
+          "evidence": [
+            "task:T3",
+            "spec:SPEC.md#Behaviour"
+          ]
+        },
+        "confidence": {
+          "justification": "The asset service and repository were read in full, but no existing code copies files so the estimate is partial",
+          "evidence": [
+            "file:apps/api/src/services/asset-service.ts",
+            "file:apps/api/src/repositories/asset-repository.ts",
+            "command:npm run typecheck -w @training/api -> tsc --noEmit finished with no errors"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Add transactional duplicate to ProjectRepository with its test",
+      "repository": "trainingapp",
+      "after": [
+        "T2"
+      ],
+      "expected_paths": [
+        "apps/api/src/repositories/project-repository.ts",
+        "apps/api/test/project-duplicate.test.ts"
+      ],
+      "shared_resources": [
+        "asset-clone-contract"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/api",
+          "purpose": "the new project-duplicate test proves revision 1, rewritten photo refs and all-or-nothing rows; the existing revision test runs alongside",
+          "created_by": "T3"
+        }
+      ],
+      "objective": "ProjectRepository can insert a copy of a project at revision 1 with photo refs rewritten to the cloned assets, together with its asset rows, in one transaction",
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 55,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "One method plus a test file; it must keep the BEGIN IMMEDIATE transaction, the unique key and the foreign key ordering correct, so data integrity is at stake",
+      "acceptance_criteria": [
+        "The copy has revision 1, a new id and exactly the external key and name it is given",
+        "The photo refs inside data_json are replaced by the new asset ids and urls returned by the asset clone",
+        "Project row and asset rows are committed together or not at all",
+        "Existing create and update behaviour is unchanged"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The private mutate method owns its own transaction, so adding in-transaction asset inserts with foreign keys needs cross-component reasoning",
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts",
+            "file:apps/api/src/db/database.ts"
+          ]
+        },
+        "scope": {
+          "justification": "Confined to the project repository file, adding one public method and an optional hook in mutate",
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts"
+          ]
+        },
+        "duration": {
+          "justification": "Comparable to the remove and upsertImport additions in this file, with extra care around the transaction and a new test file",
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts",
+            "file:apps/api/test/repository.test.ts",
+            "precedent:01861ad"
+          ]
+        },
+        "risk": {
+          "justification": "A transaction mistake corrupts or duplicates stored project data and cannot be reverted easily once written",
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts",
+            "file:apps/api/src/db/database.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "It consumes the clone contract that T2 defines and returns the snapshot that T4 then calls it for, sharing the asset clone contract resource",
+          "evidence": [
+            "task:T2",
+            "task:T4"
+          ]
+        },
+        "confidence": {
+          "justification": "The repository and schema were read closely and the existing test passes, but the hook design depends on the T1 decision",
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts",
+            "command:npm run test -w @training/api -> 1 test passed (persists revisions and rejects stale writes)"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M1",
+      "title": "Expose POST /v1/projects/:projectId/duplicate with key and name generation",
+      "repository": "trainingapp",
+      "after": [
+        "T3"
+      ],
+      "expected_paths": [
+        "apps/api/src/app.ts"
+      ],
+      "shared_resources": [
+        "duplicate-endpoint-contract"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run typecheck -w @training/api",
+          "purpose": "route compiles against the repository and service signatures; T6 proves the 404, the hub event and the key and name rules over HTTP"
+        }
+      ],
+      "objective": "POST /v1/projects/:projectId/duplicate generates the new key and name, orchestrates asset clone, repository copy and file cleanup on failure, and publishes the revision event",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "The route mirrors the create and delete handlers but also generates key and name and orchestrates file copy, transaction and cleanup on failure; no precedent for that orchestration",
+      "acceptance_criteria": [
+        "The route uses the mutation middleware",
+        "The new external key is derived from the source key with a random suffix within 120 characters and the name ends with (copia) within 200 characters",
+        "Files copied before a failed repository call are removed again",
+        "The route publishes project.revision for the new project through the hub"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The handler sequences file copy, the repository transaction and cleanup on failure and generates key and name, which needs care beyond the neighbouring routes",
+          "evidence": [
+            "file:apps/api/src/app.ts",
+            "file:apps/api/src/services/asset-service.ts"
+          ]
+        },
+        "scope": {
+          "justification": "One route registration in app.ts with no schema, storage or client change",
+          "evidence": [
+            "file:apps/api/src/app.ts"
+          ]
+        },
+        "duration": {
+          "justification": "The delete route took about eight lines in this file, but key generation and failure cleanup roughly double the work",
+          "evidence": [
+            "precedent:01861ad",
+            "file:apps/api/src/app.ts"
+          ]
+        },
+        "risk": {
+          "justification": "A mistake here can leave orphan files or duplicate keys in stored data, and it is a mutation endpoint behind CSRF and bearer auth",
+          "evidence": [
+            "file:apps/api/src/http/auth.ts",
+            "file:apps/api/src/app.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "The web client in T8 and the docs in T7 depend on this exact path and response shape",
+          "evidence": [
+            "task:T8",
+            "task:T7"
+          ]
+        },
+        "confidence": {
+          "justification": "The surrounding handlers were read and a similar route shipped in commit 01861ad, but the orchestration with cleanup has no precedent",
+          "evidence": [
+            "file:apps/api/src/app.ts",
+            "precedent:01861ad"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Test copy independence and rollback across service and repository",
+      "repository": "trainingapp",
+      "after": [
+        "T3"
+      ],
+      "expected_paths": [
+        "apps/api/test/duplicate.test.ts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/api",
+          "purpose": "runs the new duplicate tests with the existing suite",
+          "created_by": "T5"
+        }
+      ],
+      "objective": "Tests prove that deleting the original leaves the copy's files readable and that a forced failure leaves no rows or files",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 35,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "New node:test file using the existing temp-dir database pattern plus small png fixtures; deterministic, no network",
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Deleting the original's assets leaves the copy's files readable",
+        "A forced failure leaves no new project row and no new files",
+        "Both projects keep serving their own asset ids"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Test design needs fixtures for images, temp directories and a failure injection, which takes moderate thought",
+          "evidence": [
+            "file:apps/api/test/repository.test.ts"
+          ]
+        },
+        "scope": {
+          "justification": "One new test file added beside the existing repository test without touching production code",
+          "evidence": [
+            "file:apps/api/test/repository.test.ts"
+          ]
+        },
+        "duration": {
+          "justification": "The existing test shows the full database setup pattern so only fixtures and assertions are new",
+          "evidence": [
+            "file:apps/api/test/repository.test.ts",
+            "command:npm run test -w @training/api -> 1 test passed (persists revisions and rejects stale writes)"
+          ]
+        },
+        "risk": {
+          "justification": "A weak test could let a shared-file bug through, but production data is untouched by test code",
+          "evidence": [
+            "file:apps/api/test/repository.test.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "Runs after T3, which follows T2, and only calls their public methods while owning its own test file",
+          "evidence": [
+            "task:T2",
+            "task:T3"
+          ]
+        },
+        "confidence": {
+          "justification": "The test runner command passes today and the pattern to follow was read in full",
+          "evidence": [
+            "file:apps/api/test/repository.test.ts",
+            "command:npm run test -w @training/api -> 1 test passed (persists revisions and rejects stale writes)"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M2",
+      "title": "Test the duplicate endpoint over HTTP",
+      "repository": "trainingapp",
+      "after": [
+        "T4"
+      ],
+      "expected_paths": [
+        "apps/api/test/duplicate-route.test.ts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/api",
+          "purpose": "runs the HTTP tests with the rest of the suite",
+          "created_by": "T6"
+        }
+      ],
+      "objective": "HTTP-level tests show the duplicate route returns 201 with revision 1, a generated key and name, a 404 for unknown ids and a published hub event",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 55,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Needs the express app started on an ephemeral port with bearer auth; no HTTP test exists yet so the harness is new",
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "A bearer-authenticated POST returns 201 and a snapshot with revision 1",
+        "The copy key differs from the source key and the name ends with (copia)",
+        "An unknown project id returns 404",
+        "The hub publishes project.revision for the new project id",
+        "A request without credentials is rejected with 401"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Building createApp with a database, asset service, hub and config in a test harness is new work needing some trial",
+          "evidence": [
+            "file:apps/api/src/app.ts",
+            "file:apps/api/src/http/auth.ts"
+          ]
+        },
+        "scope": {
+          "justification": "Single new test file exercising the endpoint added in T4",
+          "evidence": [
+            "file:apps/api/src/app.ts"
+          ]
+        },
+        "duration": {
+          "justification": "No HTTP test harness exists in this package so setup is new, but bearer auth keeps cookies and CSRF out of it",
+          "evidence": [
+            "file:apps/api/src/http/auth.ts",
+            "file:apps/api/test/repository.test.ts"
+          ]
+        },
+        "risk": {
+          "justification": "Only test code changes, so a mistake cannot affect the running product",
+          "evidence": [
+            "file:apps/api/test/repository.test.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "Consumes the finished route and config shape and shares no file with other tasks",
+          "evidence": [
+            "task:T4",
+            "task:T5"
+          ]
+        },
+        "confidence": {
+          "justification": "The auth path and createApp signature were read, yet no existing HTTP test proves the harness works",
+          "evidence": [
+            "file:apps/api/src/http/auth.ts",
+            "file:apps/api/src/app.ts",
+            "assumption:Node fetch can call an express server listening on port 0"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M2",
+      "title": "Document the endpoint in the API contract",
+      "repository": "trainingapp",
+      "after": [
+        "T4"
+      ],
+      "expected_paths": [
+        "docs/api-contract.md"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "Read docs/api-contract.md",
+          "purpose": "check the endpoint is documented",
+          "expected": "path, responses and asset independence are stated"
+        }
+      ],
+      "objective": "docs/api-contract.md describes the duplicate endpoint, its response, errors and the asset independence guarantee",
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 15,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "A short paragraph appended to an existing short document once the endpoint shape is fixed",
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The document names the path and its 201 and 404 responses",
+        "The document states that image files are copied rather than shared"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Plain documentation of behaviour that earlier tasks already fixed, with nothing to investigate",
+          "evidence": [
+            "file:docs/api-contract.md"
+          ]
+        },
+        "scope": {
+          "justification": "One short markdown document changes and no code is touched",
+          "evidence": [
+            "file:docs/api-contract.md"
+          ]
+        },
+        "duration": {
+          "justification": "The existing contract document is under twenty lines so a paragraph is a quick addition",
+          "evidence": [
+            "file:docs/api-contract.md"
+          ]
+        },
+        "risk": {
+          "justification": "Documentation errors are easy to correct and do not change runtime behaviour",
+          "evidence": [
+            "file:docs/api-contract.md"
+          ]
+        },
+        "coupling": {
+          "justification": "The page only reads the endpoint shape that T4 delivers, it is ordered after it and nothing else edits this document",
+          "evidence": [
+            "task:T4",
+            "file:docs/api-contract.md"
+          ]
+        },
+        "confidence": {
+          "justification": "The document was read in full and the behaviour to describe is specified in the spec",
+          "evidence": [
+            "file:docs/api-contract.md",
+            "spec:SPEC.md#Behaviour"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M3",
+      "title": "Add duplicateProject to the web API client",
+      "repository": "trainingapp",
+      "after": [
+        "T4"
+      ],
+      "expected_paths": [
+        "apps/web/lib/api/client.ts"
+      ],
+      "shared_resources": [
+        "duplicate-endpoint-contract"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run typecheck -w @training/web",
+          "purpose": "client function compiles with existing request helper types"
+        }
+      ],
+      "objective": "The web API client exports duplicateProject that POSTs to the endpoint with CSRF headers and returns the snapshot",
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 15,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "One-line function modelled on the existing deleteProject and createProject helpers in the same file",
+      "acceptance_criteria": [
+        "duplicateProject encodes the id and sends the X-CSRF-Token header",
+        "The function returns a ProjectSnapshot typed value"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The new helper copies the shape of deleteProject and createProject with no logic of its own",
+          "evidence": [
+            "file:apps/web/lib/api/client.ts"
+          ]
+        },
+        "scope": {
+          "justification": "One exported function is added to a single client module",
+          "evidence": [
+            "file:apps/web/lib/api/client.ts"
+          ]
+        },
+        "duration": {
+          "justification": "Existing helpers are one line each so the addition is quick and the web typecheck is fast",
+          "evidence": [
+            "file:apps/web/lib/api/client.ts",
+            "command:npm run typecheck -w @training/web -> tsc --noEmit finished with no errors"
+          ]
+        },
+        "risk": {
+          "justification": "A wrong path would only fail the new button and is caught at once by the typecheck and manual run",
+          "evidence": [
+            "file:apps/web/lib/api/client.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "It encodes the endpoint path from T1 that T4 implements, and T9 calls this function",
+          "evidence": [
+            "task:T4",
+            "task:T9"
+          ]
+        },
+        "confidence": {
+          "justification": "The client file was read in full and the typecheck command is known to pass today",
+          "evidence": [
+            "file:apps/web/lib/api/client.ts",
+            "command:npm run typecheck -w @training/web -> tsc --noEmit finished with no errors"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M3",
+      "title": "Add the Duplicar button to the project list",
+      "repository": "trainingapp",
+      "after": [
+        "T8"
+      ],
+      "expected_paths": [
+        "apps/web/components/project-list.tsx"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run lint -w @training/web",
+          "purpose": "component stays lint clean"
+        },
+        {
+          "type": "manual",
+          "value": "Run apps/api and apps/web locally and click Duplicar on a project with a photo",
+          "purpose": "see the real button work",
+          "expected": "a new card named with (copia) appears and both projects still show their photo"
+        }
+      ],
+      "objective": "Each project card in the list shows a Duplicar button that duplicates the project and refreshes the list",
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 35,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Copy of the delete button pattern with busy and error states plus the shared list-changed event; no web tests exist so the check is lint, typecheck and a manual run",
+      "shared_resources": [
+        "projects-changed-event"
+      ],
+      "acceptance_criteria": [
+        "The button calls duplicateProject without opening the project",
+        "The list refreshes and PROJECTS_CHANGED_EVENT is dispatched after success",
+        "A failure shows an error message and re-enables the button"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The delete button in the same component already shows the state and event pattern to follow",
+          "evidence": [
+            "file:apps/web/components/project-list.tsx",
+            "precedent:01861ad"
+          ]
+        },
+        "scope": {
+          "justification": "A button, a handler and a busy state in one component without new routes or components",
+          "evidence": [
+            "file:apps/web/components/project-list.tsx"
+          ]
+        },
+        "duration": {
+          "justification": "The earlier deletion commit added a comparable button and handler in under ninety lines of the same file",
+          "evidence": [
+            "precedent:01861ad",
+            "file:apps/web/components/project-list.tsx"
+          ]
+        },
+        "risk": {
+          "justification": "The list-changed event also drives the persistent tabs bar sync, so a bad handler could prune or rename tabs of other open projects",
+          "evidence": [
+            "file:apps/web/lib/open-tabs.ts",
+            "file:apps/web/components/project-tabs-bar.tsx"
+          ]
+        },
+        "coupling": {
+          "justification": "Dispatching the shared projects-changed event couples it to the tabs bar listener, and it consumes duplicateProject from T8",
+          "evidence": [
+            "file:apps/web/components/project-tabs-bar.tsx",
+            "task:T8"
+          ]
+        },
+        "confidence": {
+          "justification": "The component is read in full but no web test framework exists so only lint, typecheck and a manual run back it",
+          "evidence": [
+            "file:apps/web/components/project-list.tsx",
+            "command:npm run lint -w @training/web -> 0 errors and 6 warnings, all in pdf-generator.ts",
+            "command:npm run test -w @training/web -> 0 tests run, no web test files exist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M3",
+      "title": "Run the full workspace checks end to end",
+      "repository": "trainingapp",
+      "after": [
+        "T5",
+        "T6",
+        "T7",
+        "T9"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run typecheck",
+          "purpose": "every workspace compiles with the feature in place"
+        },
+        {
+          "type": "command",
+          "value": "npm run test",
+          "purpose": "all workspaces pass including the new duplicate tests"
+        },
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "no lint errors in the workspace"
+        }
+      ],
+      "objective": "The full workspace typecheck, API test suite and web lint all pass with the feature merged together",
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 20,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Pure verification run; time depends on fixes if the contracts check cannot run because the sibling MCP checkout is missing",
+      "expected_paths": [],
+      "shared_resources": [
+        "duplicate-endpoint-contract"
+      ],
+      "acceptance_criteria": [
+        "npm run typecheck exits zero for all workspaces",
+        "npm run test passes including the new duplicate tests",
+        "npm run lint reports no errors"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Only the existing root scripts are run and failures are fixed in the earlier tasks, so no new reasoning is needed",
+          "evidence": [
+            "file:package.json"
+          ]
+        },
+        "scope": {
+          "justification": "No new code is written, only the workspace scripts are executed and reported",
+          "evidence": [
+            "file:package.json"
+          ]
+        },
+        "duration": {
+          "justification": "Each of the three root scripts finishes in seconds as seen in the workspace runs of the individual packages",
+          "evidence": [
+            "file:package.json",
+            "command:npm run test -w @training/api -> 1 test passed (persists revisions and rejects stale writes)"
+          ]
+        },
+        "risk": {
+          "justification": "It changes nothing, so a failure only reports problems from the earlier tasks",
+          "evidence": [
+            "file:package.json"
+          ]
+        },
+        "coupling": {
+          "justification": "It joins the outputs of T6, T7 and T9 and shares the endpoint contract with them",
+          "evidence": [
+            "task:T6",
+            "task:T9"
+          ]
+        },
+        "confidence": {
+          "justification": "The package scripts were read and run per package, but the root contracts check cannot run here",
+          "evidence": [
+            "file:package.json",
+            "command:npm run contracts:check -> failed ENOENT because ../trainingApp-mcp is not checked out here"
+          ]
+        }
+      }
+    }
+  ]
+}

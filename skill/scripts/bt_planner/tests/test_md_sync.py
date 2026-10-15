@@ -73,6 +73,27 @@ class Contradictions(PlanDir):
         out = self.edit(lambda p: p["tasks"][0].update(title="Rewrite the whole auth layer"))
         self.assertIn("T1.title: PLAN.md says 'Fix validation', PLAN.json says 'Rewrite the whole auth layer'", out)
 
+    def test_underscores_inside_identifiers_are_part_of_the_title(self):
+        self.md(text=PLAN_MD.format(status="approved").replace("Fix validation", "Implement disable_auth flag"))
+        self.plan["tasks"][0]["title"] = "Implement disableauth flag"
+        self.write(self.plan)
+        self.assertIn("T1.title: PLAN.md says 'Implement disable_auth flag'", self.errors())
+        self.plan["tasks"][0]["title"] = "Implement disable_auth flag"
+        self.write(self.plan)
+        self.assertEqual(self.errors(), "")
+        self.plan["tasks"][0]["title"] = "Implement _disable_auth_ flag"  # emphasis around a whole word is formatting
+        self.write(self.plan)
+        self.assertEqual(self.errors(), "")
+
+    def test_repeated_internal_underscores_are_not_markdown_emphasis(self):
+        for markdown_title, json_title in (("foo__bar", "foobar"), ("foo___bar", "foo__bar"),
+                                           ("disable_ auth", "disable auth"), ("a _ b", "a b")):
+            with self.subTest(markdown_title=markdown_title, json_title=json_title):
+                self.md(text=PLAN_MD.format(status="approved").replace("Fix validation", markdown_title))
+                self.plan["tasks"][0]["title"] = json_title
+                self.write(self.plan)
+                self.assertIn("T1.title:", self.errors())
+
     def test_title_formatting_is_not_a_contradiction(self):
         self.assertEqual(self.edit(lambda p: p["tasks"][0].update(title="  fix   `validation` ")), "")
 

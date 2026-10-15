@@ -1,0 +1,16 @@
+{
+ "intent": "independent-new-feature",
+ "critical_path": [
+  "T1",
+  "T2",
+  "T3",
+  "T4",
+  "T6",
+  "T10"
+ ],
+ "authored_by": "a fresh planner session with no context (REQ-012 independent-evidence)",
+ "low_confidence": [],
+ "revised_after_independent_quality_review": true,
+ "quality_review_rounds": 2,
+ "cross_vendor_audit_rounds": 1
+}

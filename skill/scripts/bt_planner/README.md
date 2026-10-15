@@ -192,7 +192,9 @@ approved revision**. The approved revision is the latest frozen one; the approva
 - no PLAN.json and nothing ever frozen → legacy plan, nothing to bind;
 - PLAN.json removed after a freeze → `PLAN_MISSING`;
 - not approved (and not an explicit `--force`) → `PLAN_NOT_APPROVED`; invalid or contradicting PLAN.md → `PLAN_INVALID`;
-- equal to the latest frozen revision → bound, nothing written;
+- equal to the latest frozen revision → bound, nothing written; the PLAN.md prose is compared too (digest recorded in
+  the manifest at approval, ignoring front matter, dated log lines and checkbox marks): changed prose is
+  `PLAN_PROSE_DRIFT`;
 - different (an edit after approval, or a new revision number nobody approved) → `PLAN_DRIFT`; a launch never turns
   an unreviewed edit into a revision;
 - a run that is only being RESUMED keeps its RUN.json untouched but, if the plan has frozen revisions or the run
@@ -222,7 +224,7 @@ and refused otherwise. `run_reference` gives an executor the three fields it sho
 `PlanContractError.code` is stable; `issues` are actionable lines naming the task and field.
 Reading: `PLAN_NOT_FOUND`, `PLAN_UNREADABLE`, `PLAN_NOT_JSON` (also NaN/Infinity and absurd nesting), `PLAN_TOO_LARGE`,
 `PLAN_NOT_SERIALISABLE`, `PLAN_INVALID` (e.g. `T3.risk: 'critical' is not one of low, medium, high`).
-Launch gate: `PLAN_MISSING`, `PLAN_DRIFT`, `PLAN_NOT_FROZEN` (and `PLAN_NOT_APPROVED`, `PLAN_INVALID` above).
+Launch gate: `PLAN_MISSING`, `PLAN_DRIFT`, `PLAN_PROSE_DRIFT`, `PLAN_NOT_FROZEN` (and `PLAN_NOT_APPROVED`, `PLAN_INVALID` above).
 Revisions: `REVISION_UNKNOWN`, `REVISION_TAMPERED`, `REVISION_FROZEN`, `REVISION_ORDER`, `REVISION_STORE_DAMAGED`,
 `REVISION_STORE_UNREADABLE`, `REVISION_STORE_UNSAFE` (symlinked directory), `REVISION_STORE_UNWRITABLE`,
 `REVISION_STORE_BUSY`. CLI-side refusals: `PLAN_EXISTS`, `PLAN_MD_EMPTY`, `PLAN_MD_AMBIGUOUS`, `PLAN_NOT_APPROVED`.

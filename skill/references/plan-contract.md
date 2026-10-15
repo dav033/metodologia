@@ -64,13 +64,15 @@ Only `bt_plan_adapter.py` imports `bt_planner` (enforced by `tests/test_plan_int
   PLAN.md and exactly the latest frozen revision. Every path that starts work goes through it:
   `bt_launch.launch` (standard, web approve-and-launch, handoff; a dry run verifies without writing; `--force`
   still validates), `bt_orchestration_transition.launch` and its successor helper (foreground), and
-  `bt_run._open` for any NEW run. A resumed run is never rewritten, but it refuses to go on when PLAN.json is no longer
-  the latest approved revision (`resume_problem`). The gate fails closed: an unexpected error is `PLAN_CHECK_FAILED`.
+  `bt_run._open` for any NEW run. A resumed run's RUN.json is never touched by the gate, and it refuses to go on when PLAN.json is no longer
+  the latest approved revision, its prose changed, or the run was started under an older revision than the approved
+  one (`resume_problem`: `PLAN_REF_STALE` = start a new run). The gate fails closed: an unexpected error is `PLAN_CHECK_FAILED`.
 - `bt_runstate.init_state` → `adapter.run_state_fields` : `plan_ref` for new runs only; existing `RUN.json` are never touched.
 
-Outcomes: `PLAN_NOT_APPROVED`, `PLAN_INVALID`, `PLAN_MISSING` (PLAN.json removed after a freeze), `PLAN_NOT_FROZEN` and `PLAN_DRIFT` (an
-edit or an unapproved new revision: approve it with `plan approve` or `plan-json freeze`; a launch never freezes an
-unreviewed edit). A plan approved by hand and never frozen has no approval record and is refused (`PLAN_NOT_FROZEN`). A test
+Outcomes: `PLAN_NOT_APPROVED`, `PLAN_INVALID`, `PLAN_MISSING` (PLAN.json removed after a freeze), `PLAN_NOT_FROZEN`,
+`PLAN_DRIFT` (an edit or an unapproved new revision: approve it with `plan approve` or `plan-json freeze`; a launch
+never freezes an unreviewed edit) and `PLAN_PROSE_DRIFT` (PLAN.md prose changed after approval; front matter, dated
+log lines and checkbox ticks are ignored). A plan approved by hand and never frozen has no approval record and is refused (`PLAN_NOT_FROZEN`). A test
 (`LaunchPaths`) fails if a new module creates run state around the gate.
 
 ## Verify

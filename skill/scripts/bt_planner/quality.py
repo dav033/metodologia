@@ -112,6 +112,53 @@ def conflicts(plan: dict) -> list[str]:
     return sorted(out)
 
 
+def shared_unordered(plan: dict) -> list[str]:
+    """Same overlap as `conflicts`, but where nobody claims `coupling: low`: the plan admits the interaction yet leaves
+    the two tasks unordered, so whoever schedules them has to serialise or coordinate. A warning, never a decision."""
+    order, tasks, bit, mask = _ordered_masks(plan)
+    if len(order) > MAX_LINTED_TASKS:
+        return []
+    out = []
+    for i, a in enumerate(order):
+        ta = tasks[a]
+        for b in order[i + 1:]:
+            if mask[b] & bit[a] or mask[a] & bit[b]:
+                continue
+            tb = tasks[b]
+            if ta.get("coupling") == "low" or tb.get("coupling") == "low":
+                continue  # reported as an error by `conflicts`
+            if str(ta.get("repository")) != str(tb.get("repository")):
+                continue
+            shared = sorted(set(_strs(ta.get("shared_resources"))) & set(_strs(tb.get("shared_resources"))))
+            paths = [p for p in _strs(ta.get("expected_paths")) for q in _strs(tb.get("expected_paths"))
+                     if paths_overlap(p, q)]
+            if shared or paths:
+                what = f"resource {shared[0]!r}" if shared else f"path {paths[0]!r}"
+                first, second = sorted((a, b))
+                out.append(f"{first} and {second}: unordered but both touch {what}; order them with `after` or the "
+                           "scheduler must serialise them")
+    return sorted(out)
+
+
+def unconsumed_results(plan: dict) -> list[str]:
+    """A task that nothing waits for, outside the plan's last milestone: its result can be lost or arrive after the
+    final verification already ran (an `after`-driven scheduler may overlap them). Warning only."""
+    tasks = _tasks(plan)
+    raw = plan.get("milestones")
+    milestones = [m.get("id") for m in raw if isinstance(m, dict)] if isinstance(raw, list) else []
+    if len(tasks) < 2 or not milestones:
+        return []
+    depended = {d for t in tasks.values() for d in _after(t)}
+    last = milestones[-1]
+    out = []
+    for tid, task in tasks.items():
+        if tid in depended or task.get("milestone_id") == last:
+            continue
+        out.append(f"{tid}: no task waits for it (nothing lists it in `after`) and it is not in the last milestone; "
+                   "a final verification could run before its result exists")
+    return sorted(out)
+
+
 def redundant_edges(plan: dict) -> list[str]:
     """`after` entries already implied by another prerequisite (T3 after T1, T2 while T2 after T1)."""
     order, tasks, bit, mask = _ordered_masks(plan)
@@ -170,7 +217,7 @@ def analyze(plan: dict) -> dict:
         return any(isinstance(v, dict) and v.get("type") == "command" for v in task.get("verification") or [])
 
     return {
-        "tasks": len(tasks), "milestones": len(plan.get("milestones", [])),
+        "tasks": len(tasks), "milestones": len(plan["milestones"]) if isinstance(plan.get("milestones"), list) else 0,
         "total_minutes": sum(_minutes(t) for t in tasks.values()),
         "critical_path": {"tasks": path[::-1], "minutes": finish.get(end, 0) if end else 0},
         "widest_level": max(width.values(), default=0),
@@ -179,5 +226,7 @@ def analyze(plan: dict) -> dict:
         "low_confidence": sorted(t["id"] for t in tasks.values() if t.get("confidence") == "low"),
         "with_evidence": sorted(t["id"] for t in tasks.values() if isinstance(t.get("classification_evidence"), dict)),
         "unordered_conflicts": conflicts(plan),
+        "unordered_shared": shared_unordered(plan),
+        "unconsumed_results": unconsumed_results(plan),
         "redundant_edges": redundant_edges(plan),
     }

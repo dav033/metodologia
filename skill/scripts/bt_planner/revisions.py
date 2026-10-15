@@ -29,12 +29,21 @@ def sha256(text: str) -> str:
 
 
 def _manifest(directory: Path) -> dict:
-    path = Path(directory) / DIR / MANIFEST
+    folder = Path(directory) / DIR
+    path = folder / MANIFEST
+    if folder.is_symlink():
+        raise pc.PlanContractError("REVISION_STORE_UNSAFE", [f"{folder}: revision store must not be a symlink"])
+    if folder.exists() and not folder.is_dir():
+        raise pc.PlanContractError("REVISION_STORE_UNSAFE", [f"{folder}: revision store must be a directory"])
+    if path.is_symlink():
+        raise pc.PlanContractError("REVISION_STORE_UNSAFE", [f"{path}: manifest must not be a symlink"])
+    if path.exists() and not path.is_file():
+        raise pc.PlanContractError("REVISION_STORE_UNSAFE", [f"{path}: manifest must be a regular file"])
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
         return {"schema": 1, "revisions": []}
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, RecursionError) as exc:
         raise pc.PlanContractError("REVISION_STORE_UNREADABLE", [f"{path}: {type(exc).__name__}"]) from exc
     entries = data.get("revisions") if isinstance(data, dict) else None
     numbers = [e.get("revision") for e in entries if isinstance(e, dict)] if isinstance(entries, list) else None
@@ -64,10 +73,21 @@ def load_revision(directory: Path, revision: int) -> dict:
     entry = next((item for item in list_revisions(directory) if item["revision"] == revision), None)
     if entry is None:
         raise pc.PlanContractError("REVISION_UNKNOWN", [f"revision {revision} was never frozen"])
-    text = revision_path(directory, revision).read_text(encoding="utf-8")
+    path = revision_path(directory, revision)
+    if path.is_symlink() or not path.is_file():
+        raise pc.PlanContractError("REVISION_STORE_UNSAFE", [f"PLAN.r{revision}.json is not a regular file"])
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError, ValueError, RecursionError) as exc:
+        raise pc.PlanContractError("REVISION_STORE_UNREADABLE", [
+            f"PLAN.r{revision}.json: {type(exc).__name__}"]) from exc
     if sha256(text) != entry["sha256"]:
         raise pc.PlanContractError("REVISION_TAMPERED", [f"PLAN.r{revision}.json does not match its recorded hash"])
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except (ValueError, RecursionError) as exc:
+        raise pc.PlanContractError("REVISION_STORE_UNREADABLE", [
+            f"PLAN.r{revision}.json: {type(exc).__name__}"]) from exc
 
 
 def orphans(directory: Path) -> list[int]:
@@ -89,10 +109,17 @@ def verify_store(directory: Path, tolerate: int | None = None) -> list[str]:
         if item["revision"] != previous + 1:
             problems.append(f"revisions: gap before r{item['revision']} (previous r{previous})")
         previous = item["revision"]
+        path = revision_path(directory, item["revision"])
+        if path.is_symlink():
+            problems.append(f"PLAN.r{item['revision']}.json: revision file must not be a symlink")
+            continue
+        if not path.is_file():
+            problems.append(f"PLAN.r{item['revision']}.json: file missing or not a regular file")
+            continue
         try:
-            text = revision_path(directory, item["revision"]).read_text(encoding="utf-8")
-        except OSError:
-            problems.append(f"PLAN.r{item['revision']}.json: file missing")
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            problems.append(f"PLAN.r{item['revision']}.json: unreadable ({type(exc).__name__})")
             continue
         if sha256(text) != item["sha256"]:
             problems.append(f"PLAN.r{item['revision']}.json: content changed after it was frozen")
@@ -106,7 +133,33 @@ def _write_manifest(folder: Path, data: dict) -> None:
     os.replace(name, folder / MANIFEST)
 
 
-def freeze(directory: Path, plan: dict, source: str = "approval") -> dict:
+def _write_revision(folder: Path, target: Path, text: str) -> None:
+    """Install complete bytes atomically and exclusively; a failed write never leaves a partial revision path."""
+    fd, name = tempfile.mkstemp(dir=folder, prefix=target.name + ".", suffix=".tmp")
+    temporary = Path(name)
+    installed = False
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temporary, 0o444)
+        os.link(temporary, target)
+        installed = True
+    except OSError:
+        if installed:
+            target.unlink(missing_ok=True)
+        raise
+    finally:
+        try:
+            temporary.unlink(missing_ok=True)
+        except OSError:
+            if installed:
+                target.unlink(missing_ok=True)
+            raise
+
+
+def freeze(directory: Path, plan: dict, source: str = "approval", narrative: str | None = None) -> dict:
     """Freeze a validated plan as its revision. Idempotent for identical content; a different content under an already
     frozen revision number is refused (create revision N+1 instead); gaps are refused. Serialised by a lock; a file
     left by an interrupted freeze is adopted when its content is identical and refused otherwise. `source` is recorded in
@@ -116,6 +169,11 @@ def freeze(directory: Path, plan: dict, source: str = "approval") -> dict:
     if not report.ok:
         raise pc.PlanContractError("PLAN_INVALID", report.errors)
     text = pc.dumps(plan)
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError as exc:  # lone surrogates: refuse before anything is written
+        raise pc.PlanContractError("PLAN_NOT_SERIALISABLE", ["plan contains characters that are not valid Unicode "
+                                                              "(lone surrogates)"]) from exc
     number = plan["revision"]
     with exclusive(Path(directory) / DIR / LOCK_NAME):
         last = latest(directory)
@@ -135,23 +193,43 @@ def freeze(directory: Path, plan: dict, source: str = "approval") -> dict:
         if folder.is_symlink():  # revisions live inside the requirement folder, never behind a link
             raise pc.PlanContractError("REVISION_STORE_UNSAFE", [f"{DIR} must be a real directory, not a symlink"])
         target = revision_path(directory, number)
+        target_created = False
         try:
             folder.mkdir(exist_ok=True)
-            try:
-                with open(target, "x", encoding="utf-8") as handle:  # exclusive: never overwrite a frozen file
-                    handle.write(text)
-                os.chmod(target, 0o444)
-            except FileExistsError:
-                if sha256(target.read_text(encoding="utf-8")) != sha256(text):
+            if target.is_symlink():
+                raise pc.PlanContractError("REVISION_STORE_UNSAFE", [f"PLAN.r{number}.json must not be a symlink"])
+            if target.exists():
+                if not target.is_file():
+                    raise pc.PlanContractError("REVISION_STORE_UNSAFE", [
+                        f"PLAN.r{number}.json must be a regular file"])
+                try:
+                    existing_text = target.read_text(encoding="utf-8")
+                except (OSError, UnicodeError) as exc:
+                    raise pc.PlanContractError("REVISION_STORE_DAMAGED", [
+                        f"PLAN.r{number}.json is unreadable ({type(exc).__name__})"]) from exc
+                if sha256(existing_text) != sha256(text):
                     raise pc.PlanContractError("REVISION_STORE_DAMAGED", [
                         f"PLAN.r{number}.json exists from an interrupted freeze with different content; "
-                        "inspect and remove it"]) from None
+                        "inspect and remove it"])
+                os.chmod(target, 0o444)
+            else:
+                _write_revision(folder, target, text)
+                target_created = True
             entry = {"revision": number, "sha256": sha256(text),
                      "frozen_at": dt.datetime.now().isoformat(timespec="seconds"), "source": source}
+            if narrative:
+                entry["plan_md_sha256"] = narrative  # not part of the revision hash: prose may carry log lines
             data = _manifest(directory)
             data["revisions"].append(entry)
             _write_manifest(folder, data)
         except OSError as exc:
+            if target_created:
+                try:
+                    target.unlink(missing_ok=True)
+                except OSError as cleanup_error:
+                    raise pc.PlanContractError("REVISION_STORE_UNWRITABLE", [
+                        f"{type(exc).__name__}: cannot write {DIR} for revision {number}; "
+                        f"rollback failed ({type(cleanup_error).__name__})"]) from cleanup_error
             raise pc.PlanContractError("REVISION_STORE_UNWRITABLE",
                                        [f"{type(exc).__name__}: cannot write {DIR} for revision {number}"]) from exc
         return entry

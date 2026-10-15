@@ -1,0 +1,20 @@
+{
+ "intent": "independent-investigation",
+ "critical_path": [
+  "T1",
+  "T2",
+  "T4",
+  "T5",
+  "T6"
+ ],
+ "low_confidence": [
+  "T2",
+  "T3",
+  "T4",
+  "T5"
+ ],
+ "authored_by": "a fresh planner session with no context (REQ-012 independent-evidence)",
+ "revised_after_independent_quality_review": true,
+ "quality_review_rounds": 2,
+ "cross_vendor_audit_rounds": 1
+}

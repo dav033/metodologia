@@ -26,11 +26,17 @@ KINDS = ("file", "command", "precedent", "spec", "task", "assumption")
 MIN_JUSTIFICATION_WORDS = 4
 MIN_CRITERION_WORDS = 3
 MIN_OBJECTIVE_WORDS = 4
+_PLACEHOLDER_WORDS = frozenset({"tbd", "todo", "tba", "wip", "fixme", "xxx", "etc", "na", "none", "pending", "unknown",
+                                "pendiente", "ninguno", "same", "ok"})
 PLACEHOLDERS = frozenset({"tbd", "todo", "to do", "na", "n a", "none", "tba", "wip", "fixme", "pending", "unknown",
                           "same", "same as above", "as above", "lorem ipsum", "ok", "done", "works", "etc", "xxx",
                           "por definir", "pendiente", "igual", "ninguno"})
-# only a command that is *nothing but* a no-op: any pipe, list, redirection or substitution makes it real
-TRIVIAL_COMMAND_RE = re.compile(r"^\s*(true|:|exit\s+0|ls|pwd|(?:echo|printf|sleep)\b[^&;|<>$`()]*)\s*$")
+# Simple shell-only probes that cannot fail; compound forms are checked below as well.
+TRIVIAL_COMMAND_CHAIN = re.compile(r"^\s*(?:true|:|exit\s+0|ls|pwd|(?:echo|printf|sleep)\b[^&;|<>$`()]*?)"
+                                   r"(?:\s*(?:&&|\|\||;|\|)\s*(?:true|:|exit\s+0|ls|pwd|"
+                                   r"(?:echo|printf|sleep)\b[^&;|<>$`()]*?))*\s*$")
+ALWAYS_SUCCESS_SUFFIX = re.compile(r"(?:\|\||;)\s*(?:true|:|exit\s+0)\s*$")
+ALWAYS_SUCCESS_PREFIX = re.compile(r"^\s*(?:true|:)\s*\|\|")
 PRECEDENT_RE = re.compile(r"^(?:[A-Za-z][A-Za-z0-9_.-]*-[0-9]+(?:[/#][A-Za-z0-9._-]+)*|(?:commit )?[0-9a-f]{7,40}|"
                           r"https?://\S+)$")
 COMMAND_RE = re.compile(r"^\S.*\s(?:->|=>)\s+\S")
@@ -49,11 +55,22 @@ def weak(text: object, min_words: int) -> str | None:
     norm = normalise(text)
     if not norm or norm in PLACEHOLDERS:
         return "is a placeholder"
+    tokens = norm.split()
+    if tokens and all(tok in PLACEHOLDERS or tok in _PLACEHOLDER_WORDS for tok in tokens):
+        return "is a placeholder repeated"
+    if len(tokens) >= 3 and len(set(tokens)) * 2 <= len(tokens):
+        return "repeats the same words instead of saying anything"
     # scripts written without spaces (CJK) count roughly one word per three characters
     words = sum(max(1, len(tok) // 3) if any(ord(ch) > 0x2E7F for ch in tok) else 1 for tok in norm.split())
     if words < min_words:
         return f"is too short to justify anything (needs at least {min_words} words)"
     return None
+
+
+def command_cannot_fail(value: str) -> bool:
+    """Reject simple no-op commands and obvious shell compositions with an unconditional success result."""
+    return bool(TRIVIAL_COMMAND_CHAIN.fullmatch(value) or ALWAYS_SUCCESS_SUFFIX.search(value)
+                or ALWAYS_SUCCESS_PREFIX.search(value))
 
 
 def parse_ref(ref: object) -> tuple[str, str] | None:
@@ -156,11 +173,10 @@ def check_task(where: str, task: dict, *, strict: bool, task_ids: set[str], own_
                     errors.append(f"{spot}.evidence[{index}]: {kind} {shown!r} {what}")
             if kind == "file":
                 path = _file_path(value)
-                static = [part for part in path.replace("\\", "/").split("/") if part and part != "."]
-                static = [part for part in static if not re.search(r"[*?\[]", part)]
-                if not static:
-                    errors.append(f"{spot}.evidence[{index}]: file {value!r} must name a concrete path, not a pattern "
-                                  "or the repository root")
+                parts = [part for part in path.replace("\\", "/").split("/") if part and part != "."]
+                if not parts or re.search(r"[*?\[]", path):
+                    errors.append(f"{spot}.evidence[{index}]: file {value!r} must name one concrete file or directory "
+                                  "that was inspected: no wildcard patterns and not the repository root")
                 elif _unsafe(path):
                     errors.append(f"{spot}.evidence[{index}]: file path {value!r} must be relative, without '..'")
                 elif file_exists is not None:
@@ -213,19 +229,24 @@ def check_task(where: str, task: dict, *, strict: bool, task_ids: set[str], own_
 # `coupling` is a signal for the scheduler, never a promise: text that presents tasks as safe to run in parallel is a
 # scheduling decision the planner does not make (AC-06, AC-15).
 PARALLEL_CLAIM_RE = re.compile(
-    r"(?:safe|ok|fine|free|able|ready)\s+(?:to|for)\s+(?:be\s+)?(?:run\s+|executed?\s+|done\s+|worked\s+on\s+)?"
-    r"(?:in\s+parallel|concurrently|simultaneously|side\s+by\s+side)|"
-    r"(?:can|may|could|should|must)\s+(?:be\s+)?(?:run|executed?|done|worked\s+on|started)\s+"
-    r"(?:in\s+parallel|concurrently|simultaneously|alongside)|parallel(?:l?y)?[-\s]safe|safely\s+parallel|"
+    r"(?:safe|ok|fine|free|able|ready|guaranteed)\s+(?:to|for)\s+(?:be\s+)?(?:run\s+|executed?\s+|done\s+|"
+    r"worked\s+on\s+)?(?:in\s+parallel|concurrently|simultaneously|side\s+by\s+side)|"
+    r"(?:can|may|could|should|must|will)\s+(?:safely\s+)?(?:be\s+)?(?:run|executed?|done|worked\s+on|started)\s+"
+    r"(?:in\s+parallel|concurrently|simultaneously|alongside)|parallel(?:l?y)?[-\s]safe|safely\s+(?:in\s+)?parallel|"
+    r"(?:concurrent|parallel|simultaneous)\w*\s+(?:execution|run|runs|work|processing|operation)s?\b[^.]{0,40}"
+    r"\b(?:safe|guaranteed|ok|fine|allowed)\b|guaranteed\s+safe|"
     r"no\s+(?:conflicts?|collisions?)\s+(?:with|between)\s+(?:other|any)\s+tasks?|"
     r"(?:se\s+puede|puede|pueden|se\s+pueden)\s+(?:ejecutar|correr|hacer|trabajar)\w*\s+en\s+paralelo|"
     r"seguro\s+(?:para|de)\s+(?:ejecutar|correr)\s+en\s+paralelo|paralelizable|en\s+paralelo\s+sin\s+(?:riesgo|conflicto)",
     re.I)
 
 
+ADMITTED_GUESS_RE = re.compile(r"\bplaceholder\b|\barbitrary\b|\bmade[-\s]up\b|\b(?:pure|wild|just\s+a)\s+guess\b|\bsin\s+base\b", re.I)
+
+
 def parallel_claims(task: dict) -> list[tuple[str, str]]:
     """(field, text) of every free-text field of a task that promises parallel safety."""
-    fields: list[tuple[str, object]] = [("objective", task.get("objective")),
+    fields: list[tuple[str, object]] = [("title", task.get("title")), ("objective", task.get("objective")),
                                         ("estimate_rationale", task.get("estimate_rationale"))]
     evidence = task.get("classification_evidence")
     for dim, entry in (evidence.items() if isinstance(evidence, dict) else ()):
@@ -244,6 +265,15 @@ def check_text_quality(where: str, task: dict, *, strict: bool) -> tuple[list[st
     for name, text in parallel_claims(task):
         soft.append(f"{where}.{name}: {PARALLEL_CLAIM_RE.search(text).group(0)!r} promises parallel safety; coupling "
                     "is a signal for the scheduler, never a guarantee (the scheduler decides concurrency)")
+    rationale = task.get("estimate_rationale")
+    if isinstance(rationale, str):
+        why = weak(rationale, 3)
+        if why:
+            soft.append(f"{where}.estimate_rationale: {why}")
+        elif ADMITTED_GUESS_RE.search(rationale):
+            soft.append(f"{where}.estimate_rationale: admits that the number is a placeholder/guess; with no defensible "
+                        "figure do not publish one: add a research task first or split the work (confidence low keeps "
+                        "an honest estimate, not an invented one)")
     objective = task.get("objective")
     if isinstance(objective, str) and objective.strip():
         why = weak(objective, MIN_OBJECTIVE_WORDS)
@@ -265,6 +295,6 @@ def check_text_quality(where: str, task: dict, *, strict: bool) -> tuple[list[st
             seen.add(normalise(item))
     for index, item in enumerate(task.get("verification") if isinstance(task.get("verification"), list) else ()):
         if (isinstance(item, dict) and item.get("type") == "command" and isinstance(item.get("value"), str)
-                and TRIVIAL_COMMAND_RE.match(item["value"])):
+                and command_cannot_fail(item["value"])):
             soft.append(f"{where}.verification[{index}].value: {item['value']!r} cannot fail, so it verifies nothing")
     return errors, warnings

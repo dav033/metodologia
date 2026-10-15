@@ -7,8 +7,11 @@ what to do on a launch) lives here. No other file may import `bt_planner` (test_
 from __future__ import annotations
 
 from pathlib import Path
+import re
+import subprocess
 
 import bt_planner as planner
+from bt_plan_adapter_evidence import verify_command
 from bt_planner import cli as planner_cli
 
 # What the methodology calls an approved plan; the module itself only has a default for these words.
@@ -38,8 +41,6 @@ def ref_verifier(rdir: Path):
     path for a command; a requirement (and task), decision, pending item or commit for a precedent. True/False when
     it can tell, None when it cannot (a URL, an unresolved repository)."""
     import re
-    import shlex
-    import shutil
     import subprocess
 
     roots = repo_roots(rdir) or {}
@@ -67,21 +68,7 @@ def ref_verifier(rdir: Path):
 
     def check(kind: str, value: str, repository: str) -> bool | None:
         if kind == "command":
-            try:
-                words = shlex.split(value)
-            except ValueError:
-                return None
-            while words and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", words[0]):
-                words = words[1:]
-            if not words:
-                return None
-            first = words[0]
-            if first in ("cd", "export", "source", "set", "test", "[", "exec", "time"):
-                return True
-            if "/" in first:
-                base = roots.get(repository)
-                return (base / first).exists() if base else None
-            return shutil.which(first) is not None
+            return verify_command(value, roots.get(repository))
         if kind == "precedent":
             req = re.fullmatch(r"REQ-([0-9]+)(?:/(T[0-9]+(?:\.[0-9]+)?[a-z]?))?(?:#.*)?", value)
             if req:
@@ -90,6 +77,9 @@ def ref_verifier(rdir: Path):
             if ident:
                 names = {"D": "DECISIONS.md", "P": "PENDING.md"}[ident.group(1)]
                 return re.search(rf"\b{ident.group(1)}-{ident.group(2)}\b", text_of(project_dir / names)) is not None
+            family = re.fullmatch(r"([A-Za-z][A-Za-z0-9_.-]*?)-[0-9]+(?:[/#].*)?", value)
+            if family and family.group(1) not in ("REQ", "D", "P", "PLAN", "SCH", "PR", "ISSUE"):
+                return False  # an id of a family this workspace does not keep: cannot be a precedent here
             commit = re.fullmatch(r"(?:commit )?([0-9a-f]{7,40})", value)
             if commit:
                 if not roots:
@@ -152,17 +142,23 @@ def freeze_on_launch(rdir: Path, *, dry_run: bool = False, forced: bool = False)
 
 
 def resume_problem(rdir: Path, state: dict) -> str | None:
-    """A RESUMED run keeps its RUN.json untouched but must not go on executing content nobody approved: when the run
-    carries a `plan_ref` or the plan has frozen revisions, PLAN.json must still exist, be valid and be the latest
-    approved revision. File evidence is not re-verified (the run's own work may have moved those files and this machine may hold no
-    checkouts; it was verified at approval and launch). Runs of plans without the contract are never gated."""
-    if not (state.get("plan_ref") or planner.list_revisions(rdir) or (Path(rdir) / planner.PLAN_JSON).exists()):
-        return None
-    if not state.get("plan_ref") and not planner.list_revisions(rdir):
-        return None  # a contract plan that was never frozen: nothing approved to compare with
+    """A RESUMED run must not go on executing content nobody approved. When the run carries a `plan_ref` (or the plan
+    has frozen revisions): PLAN.json must still exist, be valid and be the latest approved revision, the PLAN.md prose
+    must be the approved one, and the run's own `plan_ref` must point at that same revision (a run started under r1
+    while r2 was approved keeps r1's verification commands: start a new run instead). The gate never writes RUN.json.
+    File evidence is not re-verified (the run's own work may have moved those files). Plans without the contract are
+    never gated."""
+    raw_ref = state.get("plan_ref") if isinstance(state, dict) else None
+    ref = raw_ref if isinstance(raw_ref, dict) else None
     try:
-        planner.bind_approved(rdir, plan_id(rdir), APPROVED_STATES, repo_roots=None, freeze=False, forced=True,
-                              verify_files=False)  # evidence files may legitimately have moved while the run worked
+        frozen = planner.list_revisions(rdir)
+        if not (ref or frozen):
+            return None
+        if frozen and not ref:
+            return ("PLAN_REF_MISSING: this run has no plan_ref for the approved revision; "
+                    "start a new run so its approved plan identity and hash are recorded")
+        entry = planner.bind_approved(rdir, plan_id(rdir), APPROVED_STATES, repo_roots=None, freeze=False,
+                                      forced=True, verify_files=False)
     except planner.PlanContractError as exc:
         more = f" (+{len(exc.issues) - 5} more)" if len(exc.issues) > 5 else ""
         return (f"{exc.code}: this run cannot resume on PLAN.json: " + "; ".join(exc.issues[:5]) + more +
@@ -170,6 +166,18 @@ def resume_problem(rdir: Path, state: dict) -> str | None:
     except Exception as exc:  # noqa: BLE001 - fail closed
         return (f"PLAN_CHECK_FAILED: PLAN.json could not be checked ({type(exc).__name__}); "
                 f"run `bitacora.py plan-json check {plan_id(rdir)}`")
+    if ref and entry:
+        if ref.get("plan_id") != plan_id(rdir):
+            return (f"PLAN_REF_MISMATCH: the run's plan_ref names {ref.get('plan_id')!r}, but this requirement is "
+                    f"{plan_id(rdir)}")
+        revision = ref.get("revision")
+        if not (isinstance(revision, int) and not isinstance(revision, bool)) or revision != entry["revision"]:
+            return (f"PLAN_REF_STALE: this run was started under revision {ref.get('revision')} but revision "
+                    f"{entry['revision']} is the approved one; resuming would keep running the old plan values. "
+                    "Start a new run for the approved revision")
+        if not isinstance(ref.get("sha256"), str) or ref["sha256"] != entry["sha256"]:
+            return (f"PLAN_REF_MISMATCH: the run's plan_ref hash does not match approved revision "
+                    f"{entry['revision']}; the run state or the revision store was altered")
     return None
 
 
