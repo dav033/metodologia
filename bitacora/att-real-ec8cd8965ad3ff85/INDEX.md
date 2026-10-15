@@ -8,7 +8,7 @@ _Generated 2026-10-14 21:35 by `bitacora.py index`. Do not edit by hand._
 
 ## Workspace
 
-- **att-real-ec8cd8965ad3ff85** → `/tmp/m3-real-jzg421on/root/ws/worktrees/att-real-ec8cd8965ad3ff85`
+- **att-real-ec8cd8965ad3ff85** → `/tmp/m3-real-r7djbdup/root/ws/worktrees/att-real-ec8cd8965ad3ff85`
 
 ## Requirements
 
