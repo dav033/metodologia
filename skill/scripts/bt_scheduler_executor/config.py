@@ -29,6 +29,7 @@ class Config:
     handoff_tries: int = 3            # attempts to capture the handoff before stating that it failed
     handoff_retry_seconds: float = 0.5
     settle_retry_seconds: float = 5.0  # a settle that failed is retried this slowly
+    spare_interactive: bool = True    # the worktree sweep leaves processes with a controlling terminal that are not the agent's live descendants
 
     def validate(self) -> Config:
         positive = ("max_running", "max_queued", "timeout_seconds", "max_timeout_seconds", "grace_seconds",

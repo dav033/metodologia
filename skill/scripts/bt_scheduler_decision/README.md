@@ -6,11 +6,11 @@ methodology module. `bt_scheduler_decision_adapter.py` is the sole methodology a
 existing catalog, profile, quota and telemetry facts into this contract.
 
 The frozen Python API is exported by `__init__.py`: `DecisionRequest`, `TaskFacts`, `Candidate`, `RouteHistory`,
-`LayaChoice`, `DecisionRecord`, `RouteSummary`, `Exclusion`, `Confidence`, `ValidatedRequest`,
+`LayaChoice`, `DecisionRecord`, `RouteSummary`, `RouteBinding`, `Exclusion`, `Confidence`, `ValidatedRequest`,
 `DecisionInputError`, `validate_request`, `candidate_route_id`, `account_reference`, `executor_reference`,
 `parse_executor_reference`, `canonical_json`, `sha256_json`, `rank_candidates`, `deterministic_reference`,
 `CandidateRanking`, `assess_history`, `HistoryAssessment`, `DecisionLedger`, `DecisionLedgerError`,
-`idempotency_key`, `decision_id_for`, and `resolve_executor_reference`. Their normative serialized fields and enums are in
+`idempotency_key`, `decision_id_for`, `resolve_executor_reference`, and `resolve_executor_binding`. Their normative serialized fields and enums are in
 `api-contract.json`. The decision service itself is added in the next implementation milestone; callers use only this
 public surface, never package internals.
 Malformed identity/route values, non-finite numbers, invalid SHA-256 values, and oversized collections are rejected.
@@ -106,8 +106,11 @@ M1 still applies its own atomic checks and may refuse any proposal.
 The stable selected-route reference placed in M1's opaque `Assignment.executor` is
 `m2:v1:<decision_sha256>:<route_sha256>`. It contains no credentials or profile environment. The public
 `resolve_executor_reference()` resolves only the selected route of that persisted decision and returns `None` for an
-unknown, malformed, excluded or non-selected route. This gives a future executor a lookup seam without implementing
-M3 here. A recommendation is not evidence that M1 accepted or dispatched it.
+unknown, malformed, excluded or non-selected route. `resolve_executor_binding()` answers the same question and adds the
+decision's plan/revision/task and `superseded_by` (the id of a later decision for the same plan/task, if any): an executor
+uses it to refuse a decision made for another task or already replaced. This gives an executor a lookup seam without
+implementing M3 here. A ledger file is per project (plan ids are unique only within a project): never share one file
+across projects, or one project's decision for `REQ-042/T1` would supersede another's. A recommendation is not evidence that M1 accepted or dispatched it.
 
 The decision record includes the selected provider/model/profile/effort, eligible alternatives, filtered candidates and
 stable reasons, baseline rank, selection factors, confidence semantics, policy/checkpoint versions, quota and source

@@ -108,7 +108,7 @@ explicit operator action (`GitWorkspaces.release`).
 ## Configuration (`Config`, all explicit)
 
 `max_running=2` (a safety ceiling; M1 owns global capacity), `max_queued=64`, `timeout_seconds=1800`, `max_timeout_seconds=86400`,
-`grace_seconds=10`, `heartbeat_seconds=30`, `poll_seconds=0.5`, `output_head_bytes=8 MiB`, `output_tail_bytes=256 KiB`,
+`grace_seconds=10`, `spare_interactive=True`, `heartbeat_seconds=30`, `poll_seconds=0.5`, `output_head_bytes=8 MiB`, `output_tail_bytes=256 KiB`,
 `classify_head_bytes=64 KiB`, `patch_max_bytes=16 MiB`, `log_tail_bytes=64 KiB`, `max_event_backlog=10000`, `deliver_batch=100`,
 `spawn_wait_seconds=10`, `settle_retry_seconds=5`, `handoff_tries=3`, `handoff_retry_seconds=0.5`. An order's own timeout wins over the default, both capped by the maximum.
 
@@ -194,10 +194,10 @@ during/after the handoff, before/after the terminal transaction, between deliver
 - M2's route lookup does not exist yet: `route:<id>` is delegated to a callable the caller supplies; the interim operator-written
   `direct:<provider>/<model>[@profile][#effort]` grammar lives in the adapter, not in this module.
 - The module never integrates prerequisite work: `after` only orders tasks in time and a task starts from `base_ref` (default `HEAD` of its
-  repository). The methodology's `wire(..., integrate_predecessors=True)` (`bt_scheduler_integrator`, opt-in) supplies a `base_ref` that
+  repository). The methodology's `wire(..., integrate_predecessors=True)` (`bt_scheduler_integrator`, on by default; `integrate_predecessors=False` turns it off) supplies a `base_ref` that
   merges the accepted same-repository predecessors' handoff snapshots (`git merge-tree`, objects only, kept under `refs/m3/integration/`);
   a conflict or a missing snapshot rejects the order with `INTEGRATION_CONFLICT` / `PREDECESSOR_HANDOFF_MISSING` instead of guessing.
-  Without that option a dependent task does not see its predecessors' work.
+  With the option off a dependent task does not see its predecessors' work.
 - Route binding is partial: M2's public lookup does not yet expose plan, task, revision or validity, so a `route:` reference is bound by
   `single_use` (a reference may start ONE attempt, ever, recorded in `route_refs`) plus the optional `check_context` the adapter applies when
   the selector supplies those fields. Superseded decisions cannot be told apart until M2 exposes a most-recent-decision-per-task rule (P-029).
@@ -206,6 +206,12 @@ during/after the handoff, before/after the terminal transaction, between deliver
   at launch (TOCTOU), and refuses `direct:` references when an M2 lookup is configured unless `allow_direct=True`.
 - Branches and handoff refs live in the shared repository, so they are scoped by the executor root (`m3/<attempt>-<root hash>`,
   `refs/m3/handoff/<attempt>-<root hash>`): a second run of the same plan, with its own root, never collides with or overwrites the first run's.
+- The cwd sweep (`spare_interactive=True`, the default) leaves alone a process that has a controlling terminal and is not a descendant of
+  a STILL-LIVING recorded shim or agent, so an operator's shell or editor opened in the worktree survives; a headless straggler is
+  swept. By the time the sweep runs the agent has normally exited and its leftovers are orphaned to init, so ancestry no longer
+  separates them: an agent that daemonised something onto a terminal of its own (`tmux new -d`, `screen -dm`, `script`) leaves
+  processes the sweep spares, and they can keep writing while the handoff is taken. Set `spare_interactive=False` to sweep every
+  process in the worktree regardless (the pre-P-032 rule). A pid is a root only while its recorded start identity still matches.
 - The cwd sweep runs only when the worktree path is exclusive to the attempt; a workspace manager that returns a path another live attempt uses
   is refused at start (`WORKSPACE_ERROR`) instead of risking a neighbour's agent.
 - A PREPARING attempt that no job drives (a start job died, a transient settle failure) is reconciled again after `settle_retry_seconds`

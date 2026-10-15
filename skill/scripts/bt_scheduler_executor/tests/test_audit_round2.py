@@ -121,6 +121,83 @@ class SettleRetries(unittest.TestCase):
         self.assertEqual(len(sweeps), 1, sweeps)
 
 
+class SweepSparesTheOperator(unittest.TestCase):
+    """P-032: an interactive shell or editor opened in the worktree is not something the agent left behind."""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dir = Path(self.tmp.name)
+        self.children: list[int] = []
+        self.addCleanup(self._reap)
+
+    def _reap(self):
+        for pid in self.children:
+            try:
+                os.kill(pid, signal.SIGKILL)
+                os.waitpid(pid, 0)
+            except OSError:
+                pass
+
+    def interactive_in_worktree(self) -> int:
+        """A process with a controlling terminal (a pty, like a terminal emulator's shell) whose cwd is the worktree."""
+        import pty
+        pid, _fd = pty.fork()
+        if pid == 0:
+            os.chdir(self.dir)
+            os.execvp("sleep", ["sleep", "60"])
+        self.children.append(pid)
+        self.assertTrue(wait_for(lambda: os.path.realpath(f"/proc/{pid}/cwd") == os.path.realpath(self.dir)))
+        return pid
+
+    def test_an_interactive_process_that_is_not_the_agents_descendant_is_spared(self):
+        pid = self.interactive_in_worktree()
+        self.assertEqual(procinfo.kill_in_cwd(str(self.dir), 0, spare_interactive=True), 0)
+        self.assertEqual(procinfo.kill_in_cwd(str(self.dir), 0, spare_interactive=False), 1)      # the old rule would hit it
+        self.assertTrue(procinfo.start_ident(pid))
+
+    def test_the_agents_pty_child_is_swept_only_while_the_agent_is_alive(self):
+        self.interactive_in_worktree()
+        # the child's parent is this process: pretend this process is the (live) attempt's agent
+        self.assertEqual(procinfo.kill_in_cwd(str(self.dir), 0, roots={os.getpid()}, spare_interactive=True), 1)
+        # once the agent is gone nothing links the child to it: an orphaned terminal process is spared (documented limit)
+        self.assertEqual(procinfo.kill_in_cwd(str(self.dir), 0, roots={1 << 30}, spare_interactive=True), 0)
+
+    def test_the_operator_can_turn_sparing_off_and_everything_in_the_worktree_is_swept(self):
+        from unittest.mock import patch
+        seen = {}
+        with patch.object(procinfo, "kill_in_cwd", lambda d, *a, **k: seen.update(k) or 0):
+            w = World(self, config=ex.Config(poll_seconds=0.05, heartbeat_seconds=3600, grace_seconds=1.0,
+                                             timeout_seconds=60, spare_interactive=False))
+            w.x.start(order(1, "ok"))
+            w.finish("att-0001")
+        self.assertIs(seen.get("spare_interactive"), False)
+
+    def test_a_recycled_pid_is_never_a_sweep_root(self):
+        w = World(self, autostart=False)
+        adir = w.x.attempts_dir / "att-x"
+        adir.mkdir(parents=True)
+        (adir / "shim.json").write_text(json.dumps({"pid": os.getpid(), "ident": "not-this-process",
+                                                    "child_pid": 1, "child_ident": "nope"}))
+        self.assertEqual(w.x._sweep_roots(adir), set())
+        (adir / "shim.json").write_text(json.dumps({"pid": os.getpid(), "ident": procinfo.start_ident(os.getpid())}))
+        self.assertEqual(w.x._sweep_roots(adir), {os.getpid()})
+
+    def test_a_headless_straggler_is_swept(self):
+        import subprocess
+        proc = subprocess.Popen(["sleep", "60"], cwd=self.dir, start_new_session=True)
+        self.addCleanup(lambda: (proc.kill(), proc.wait()))
+        self.assertEqual(procinfo.kill_in_cwd(str(self.dir), 0, spare_interactive=True), 1)
+
+    def test_descends_from_follows_the_parent_links(self):
+        import subprocess
+        proc = subprocess.Popen(["sleep", "60"])
+        self.addCleanup(lambda: (proc.kill(), proc.wait()))
+        self.assertTrue(procinfo.descends_from(proc.pid, {os.getpid()}))
+        self.assertFalse(procinfo.descends_from(proc.pid, {1 << 30}))
+
+
 class PreparingRedrive(unittest.TestCase):
     def test_a_preparing_attempt_that_no_job_drives_is_prepared_again_and_finishes_once(self):
         cfg = ex.Config(poll_seconds=0.05, heartbeat_seconds=3600, grace_seconds=1.0, timeout_seconds=60,

@@ -158,7 +158,14 @@ class M2Routes(s.World):
             from bt_scheduler_decision.tests.test_recorder import _record
         except Exception as error:  # noqa: BLE001
             self.skipTest(f"M2 module not importable here: {type(error).__name__}")
-        self.m2, self.candidate, self.request, self.make_record = m2, candidate, request, _record
+        import dataclasses
+
+        def for_this_plan(**kw):                         # the decisions are for the plan and task the tests run (REQ-042/T1)
+            asked = request(**kw)
+            return dataclasses.replace(asked, plan_id="REQ-042", revision=1,
+                                       task=dataclasses.replace(asked.task, task_id="T1"))
+
+        self.m2, self.candidate, self.request, self.make_record = m2, candidate, for_this_plan, _record
         self.ledger_path = self.tmp / "decisions.db"
         self.ledger = m2.DecisionLedger(self.ledger_path)
 
@@ -176,6 +183,33 @@ class M2Routes(s.World):
         route = resolver.resolve(req(selected_ref))
         self.assertEqual((route.provider, route.model, route.profile, route.effort, route.reference),
                          ("claude", "sonnet", "claude-personal", "low", selected_ref))
+
+    def test_a_decision_made_for_another_task_is_refused(self):
+        selected_ref, _ = self.refs()                    # the fixture's decision belongs to REQ-042 / T1
+        resolver = adapter.RouteResolver("proj", m2_lookup=adapter.m2_ledger_lookup(self.ledger_path))
+        with self.assertRaises(m3.ExecutorError) as caught:
+            resolver.resolve(req(selected_ref, plan_id="REQ-777", task_id="T9"))
+        self.assertEqual(caught.exception.code, "ROUTE_INVALID")
+
+    def test_a_decision_that_a_later_one_replaced_is_refused(self):
+        first_ref, _ = self.refs()
+        replacement = self.candidate(provider="codex", model="gpt-6-luna", profile="codex-1", effort="low", rank=0)
+        asked = self.request(candidates=(replacement,), requested_at=500.0)
+        self.ledger.persist(asked, self.make_record(asked, created_at=500.0))
+        binding = self.m2.resolve_executor_binding(self.ledger_path, first_ref)
+        resolver = adapter.RouteResolver("proj", m2_lookup=adapter.m2_ledger_lookup(self.ledger_path))
+        with self.assertRaises(m3.ExecutorError) as caught:
+            resolver.resolve(req(first_ref, plan_id=binding.plan_id, revision=binding.revision, task_id=binding.task_id))
+        self.assertEqual(caught.exception.code, "ROUTE_INVALID")
+        self.assertIn("replaced", caught.exception.detail)
+
+    def test_the_live_decision_for_its_own_task_launches(self):
+        selected_ref, _ = self.refs()
+        binding = self.m2.resolve_executor_binding(self.ledger_path, selected_ref)
+        resolver = adapter.RouteResolver("proj", m2_lookup=adapter.m2_ledger_lookup(self.ledger_path))
+        route = resolver.resolve(req(selected_ref, plan_id=binding.plan_id, revision=binding.revision,
+                                     task_id=binding.task_id))
+        self.assertEqual(route.reference, selected_ref)
 
     def test_an_alternative_that_m2_did_not_select_is_never_run(self):
         _, alternative_ref = self.refs()

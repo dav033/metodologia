@@ -20,6 +20,7 @@ from .contracts import (
     Confidence,
     DecisionRecord,
     Exclusion,
+    RouteBinding,
     RouteSummary,
     ValidatedRequest,
 )
@@ -386,6 +387,36 @@ class DecisionLedger:
         finally:
             connection.close()
 
+    def resolve_executor_binding(self, reference: str) -> RouteBinding | None:
+        """Like `resolve_executor_reference`, with the plan/revision/task the decision was made for and the id of the
+        NEXT decision for the same plan/task when one exists (the most recent decision per task is the live one).
+        A ledger file belongs to ONE project: the record stores no project, so plan ids are only unique within it."""
+        parsed = parse_executor_reference(reference)
+        if parsed is None:
+            return None
+        decision_id, route_id = parsed
+        try:
+            connection = self._connect(readonly=True)
+        except sqlite3.Error as exc:
+            raise DecisionLedgerError("ledger_unavailable") from exc
+        try:
+            row = connection.execute("SELECT seq, record_json FROM decision_records WHERE decision_id = ?",
+                                     (decision_id,)).fetchone()
+            if row is None:
+                return None
+            record = _decode_record(row[1])
+            if record.selected is None or record.selected.route_id != route_id:
+                return None
+            later = connection.execute(
+                "SELECT decision_id FROM decision_records WHERE plan_id = ? AND task_id = ? AND seq > ? "
+                "ORDER BY seq DESC LIMIT 1", (record.plan_id, record.task_id, row[0])).fetchone()
+        except sqlite3.Error as exc:
+            raise DecisionLedgerError("ledger_unavailable") from exc
+        finally:
+            connection.close()
+        return RouteBinding(record.selected, record.decision_id, record.plan_id, record.revision, record.plan_sha256,
+                            record.task_id, record.created_at, later[0] if later else None)
+
     def resolve_executor_reference(self, reference: str) -> RouteSummary | None:
         """Resolve only the selected route; unknown, malformed, excluded and alternative refs return `None`."""
         parsed = parse_executor_reference(reference)
@@ -409,6 +440,11 @@ class DecisionLedger:
         if record.selected is None or record.selected.route_id != route_id:
             return None
         return record.selected
+
+
+def resolve_executor_binding(path: str | Path, reference: str) -> RouteBinding | None:
+    """`resolve_executor_reference` plus the decision's plan/revision/task and whether it was superseded, read-only."""
+    return DecisionLedger(path, create=False).resolve_executor_binding(reference)
 
 
 def resolve_executor_reference(path: str | Path, reference: str) -> RouteSummary | None:

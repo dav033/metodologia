@@ -53,7 +53,8 @@ class RecoverMixin:
                 self._starting.add(row["attempt_id"])  # nothing is running for it: safe to prepare again
             ws = row.get("workspace")
             if ws and self._workspace_exclusive(row):  # an agent the dead shim started but never recorded still holds the tree
-                procinfo.kill_in_cwd(ws["path"])
+                procinfo.kill_in_cwd(ws["path"], roots=self._sweep_roots(self.attempts_dir / row["dirname"]),
+                                     spare_interactive=self.cfg.spare_interactive)
             self._prep_pool.submit(self._launch_job, row["attempt_id"])
 
     def _adopt_running(self, row: dict[str, Any], info: dict[str, Any]) -> None:

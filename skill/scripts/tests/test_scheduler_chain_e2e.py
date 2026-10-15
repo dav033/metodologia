@@ -227,7 +227,7 @@ class Chain(s.World):
         self.assertEqual(len(self.records()), 2)
 
     def test_with_integration_every_task_builds_on_its_accepted_predecessors_work(self):
-        w = self.build(self.dag(), integrate_predecessors=True)
+        w = self.build(self.dag())                                     # integration is on by default
         self.assertTrue(self.run_until(w, lambda snap: snap.status == "completed", 120), w.scheduler.snapshot())
         rows = {a["request"]["task_id"]: a for a in self.attempts(w)}
         plan = w.scheduler.plan

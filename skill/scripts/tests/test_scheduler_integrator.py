@@ -210,7 +210,7 @@ class Through(s.World):
 
     def test_a_dependent_task_starts_from_a_tree_that_contains_its_predecessors_work(self):
         self.approve([s.task("T1", "first"), s.task("T2", "second", after=["T1"])])
-        w = self.wire("direct:claude/haiku", integrate_predecessors=True)
+        w = self.wire("direct:claude/haiku")                       # on by default
         self.assertTrue(self.run_until(w, lambda snap: snap.status == "completed", 90), w.scheduler.snapshot())
         repo = self.repos["app"]
         t1, t2 = self.attempt_of(w, "T1"), self.attempt_of(w, "T2")
@@ -220,9 +220,9 @@ class Through(s.World):
         git(repo, "cat-file", "-e", f"{t2['workspace']['base_sha']}:claude-made.txt")            # ...which has T1's file
         self.assertEqual(git(repo, "status", "--porcelain"), "")                                 # the user's checkout is clean
 
-    def test_without_the_option_nothing_changes(self):
+    def test_with_the_option_off_every_task_starts_from_head(self):
         self.approve([s.task("T1", "first"), s.task("T2", "second", after=["T1"])])
-        w = self.wire("direct:claude/haiku")
+        w = self.wire("direct:claude/haiku", integrate_predecessors=False)
         self.assertTrue(self.run_until(w, lambda snap: snap.status == "completed", 90))
         head = git(self.repos["app"], "rev-parse", "HEAD")
         self.assertEqual({self.attempt_of(w, t)["workspace"]["base_sha"] for t in ("T1", "T2")}, {head})

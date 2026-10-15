@@ -150,6 +150,20 @@ class RouteSummary:
 
 
 @dataclass(frozen=True)
+class RouteBinding:
+    """What a persisted decision says about WHERE its selected route is valid: the plan, revision and task it was made
+    for, and whether a later decision for the same plan/task has replaced it (`superseded_by`)."""
+    route: RouteSummary
+    decision_id: str
+    plan_id: str
+    revision: int
+    plan_sha256: str
+    task_id: str
+    created_at: float
+    superseded_by: str | None = None
+
+
+@dataclass(frozen=True)
 class Exclusion:
     route_id: str
     provider: str

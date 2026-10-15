@@ -83,7 +83,7 @@ class SettleMixin:
         # nothing of the agent may outlive it and keep writing. Only on the first pass: a settle retried after a git or disk
         # hiccup must not keep killing whatever (an operator's shell, an editor) has since been opened in the worktree
         if first and row.get("workspace") and self._workspace_exclusive(row):
-            procinfo.kill_in_cwd(row["workspace"]["path"])
+            self._sweep(row, adir)
         preserved = self._preserve(row, outcome, adir)
         if preserved.get("status") == "failed" and outcome["final"] == m.FINISHED:
             # never a silent success: the agent stopped, but its work could not be preserved. The files are still in the worktree.
@@ -97,6 +97,19 @@ class SettleMixin:
         self._heartbeat.pop(attempt_id, None)
         self._cancel_sent.pop(attempt_id, None)
         self._settle_tried.pop(attempt_id, None)
+
+    def _sweep(self, row: dict[str, Any], adir: Path) -> None:
+        """Stop what the agent left in its worktree; with `spare_interactive` an operator's shell or editor opened there
+        (a controlling terminal, not descended from a still-living shim or agent) is left alone."""
+        procinfo.kill_in_cwd(row["workspace"]["path"], roots=self._sweep_roots(adir),
+                             spare_interactive=self.cfg.spare_interactive)
+
+    @staticmethod
+    def _sweep_roots(adir: Path) -> set[int]:
+        """The recorded shim/agent pids that are still THE SAME processes: a recycled pid is never a root."""
+        info = artifacts.read_shim(adir / "shim.json")
+        return {pid for pid, ident in ((info.get("pid"), info.get("ident")), (info.get("child_pid"), info.get("child_ident")))
+                if pid and procinfo.alive(pid, ident)}
 
     def _workspace_exclusive(self, row: dict[str, Any]) -> bool:
         """The cwd sweep is only safe when this attempt is the sole user of its worktree path (a shared directory would

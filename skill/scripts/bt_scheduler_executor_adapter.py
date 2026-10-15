@@ -149,6 +149,8 @@ class RouteResolver:
         for key, wanted in (("plan_id", request.plan_id), ("revision", request.revision), ("task_id", request.task_id)):
             if key in found and found[key] != wanted:
                 raise m3.ExecutorError("ROUTE_INVALID", f"the route was selected for another {key} ({found[key]!r})")
+        if found.get("superseded_by"):                   # only the most recent decision for a task may launch an attempt
+            raise m3.ExecutorError("ROUTE_INVALID", f"the decision was replaced by {str(found['superseded_by'])[:16]}")
         if "valid_until" in found and isinstance(found["valid_until"], (int, float)) and found["valid_until"] < time.time():
             raise m3.ExecutorError("ROUTE_INVALID", "the selector's quota evidence for this route has expired")
 
@@ -173,18 +175,23 @@ def m2_ledger_lookup(ledger_path: Path | str) -> M2_LOOKUP:
     """M2's public lookup over its decision ledger: only the route M2 SELECTED resolves (alternatives, exclusions, malformed
     and unknown references are `None`). Accepts the `route:`-prefixed form M1's assignment port emits. The ledger is opened
     read-only; M2 is imported lazily, so this adapter works without it. An unreadable ledger is a transient PORT_ERROR
-    (not a sticky "unknown"). Plan/task/time context is added to the answer when M2's record exposes it."""
+    (not a sticky "unknown"). The answer carries the decision's plan/revision/task and, when a later decision for that task exists, `superseded_by`."""
     def lookup(reference: str, request: m3.StartRequest | None = None) -> Mapping[str, Any] | None:
         import bt_scheduler_decision as m2
         raw = reference[len("route:"):] if reference.startswith("route:") else reference
         try:
-            found = m2.resolve_executor_reference(ledger_path, raw)
+            bound = m2.resolve_executor_binding(ledger_path, raw)
         except m2.DecisionLedgerError:
             raise m3.ExecutorError("PORT_ERROR", "the M2 decision ledger is unavailable") from None
-        if found is None:
+        if bound is None:
             return None
-        return {"provider": found.provider, "model": found.model, "profile": found.profile or "",
-                "effort": found.effort or "", "account_ref": found.account_ref or ""}
+        found = bound.route
+        out = {"provider": found.provider, "model": found.model, "profile": found.profile or "",
+               "effort": found.effort or "", "account_ref": found.account_ref or "",
+               "plan_id": bound.plan_id, "revision": bound.revision, "task_id": bound.task_id}
+        if bound.superseded_by:
+            out["superseded_by"] = bound.superseded_by
+        return out
     return lookup
 
 
@@ -401,16 +408,17 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
          m2_lookup: M2_LOOKUP | None = None, m2_ledger: Path | str | None = None, allow_direct: bool | None = None,
          repos: Mapping[str, Path | str] | None = None, base_ref: str | Callable[[str], str] = "HEAD",
          default_repository: str = "", clock: Callable[[], float] | None = None, driver: m3.AgentDriver | None = None,
-         autostart: bool = True, integrate_predecessors: bool = False) -> Wiring:
+         autostart: bool = True, integrate_predecessors: bool = True) -> Wiring:
     """A scheduler core for this requirement whose ExecutionPort is a real agent executor.
 
     Opt-in and non-destructive: refuses a requirement already run by the legacy supervisor (the core's own rule). The
     executor's local state lives in `executor_root(rdir, run_identity)`: one root per core RUN and plan revision.
     `verification` is the caller's independent verifier. With an M2 ledger/lookup `direct:` references are refused unless
     `allow_direct=True`. `base_ref` (a ref or `task_id -> ref`) is where each task's worktree starts. The executor does
-    not integrate accepted prerequisite work: with `integrate_predecessors=True` a task starts from a commit that merges
-    its accepted same-repository predecessors' handoff snapshots (`bt_scheduler_integrator`; `base_ref` stays the
-    fallback for tasks with nothing to integrate), and a conflict or missing snapshot rejects the order with its cause."""
+    not integrate accepted prerequisite work; by default (`integrate_predecessors=True`) a task starts from a commit that
+    merges its accepted same-repository predecessors' handoff snapshots (`bt_scheduler_integrator`; `base_ref` stays the
+    fallback for tasks with nothing to integrate), and a conflict or missing snapshot rejects the order with its cause.
+    Pass `integrate_predecessors=False` to start every task from `base_ref` alone."""
     rdir = Path(rdir)
     if m2_ledger is not None and m2_lookup is None:
         m2_lookup = m2_ledger_lookup(m2_ledger)

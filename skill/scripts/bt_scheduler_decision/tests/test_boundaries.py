@@ -55,7 +55,8 @@ class Boundaries(unittest.TestCase):
         self.assertIn("__all__", init)
         for name in ("DecisionRequest", "TaskFacts", "Candidate", "RouteHistory", "LayaChoice", "DecisionRecord",
                      "validate_request", "executor_reference", "parse_executor_reference", "DecisionLedger",
-                     "idempotency_key", "decision_id_for", "resolve_executor_reference"):
+                     "idempotency_key", "decision_id_for", "resolve_executor_reference", "resolve_executor_binding",
+                     "RouteBinding"):
             self.assertIn(f"`{name}`", readme)
         self.assertIn("api-contract.json", readme)
 

@@ -23,6 +23,7 @@ from .contracts import (
     Exclusion,
     LayaChoice,
     RouteHistory,
+    RouteBinding,
     RouteSummary,
     TaskFacts,
     ValidatedRequest,
@@ -49,6 +50,7 @@ from .recorder import (
     DecisionLedgerError,
     decision_id_for,
     idempotency_key,
+    resolve_executor_binding,
     resolve_executor_reference,
 )
 from .validation import validate_request
@@ -85,6 +87,7 @@ __all__ = [
     "LayaChoice",
     "QualityGate",
     "RouteHistory",
+    "RouteBinding",
     "RouteSummary",
     "TaskFacts",
     "ValidatedRequest",
@@ -98,6 +101,7 @@ __all__ = [
     "idempotency_key",
     "parse_executor_reference",
     "rank_candidates",
+    "resolve_executor_binding",
     "resolve_executor_reference",
     "sha256_json",
     "task_is_ambiguous",

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import signal
 import subprocess
+from collections.abc import Collection
 from pathlib import Path
 
 from .errors import ExecutorError
@@ -82,10 +83,38 @@ def signal_pid(pid: int, sig: int) -> bool:
         return False
 
 
-def kill_in_cwd(directory: str, sig: int = signal.SIGKILL) -> int:
+def _stat_tail(pid: int) -> tuple[int, int] | None:
+    """(ppid, controlling tty number) of a process, from /proc; None when unreadable."""
+    try:
+        raw = Path(f"/proc/{int(pid)}/stat").read_text(encoding="utf-8", errors="replace")
+        fields = raw[raw.rindex(")") + 2:].split()
+        return int(fields[1]), int(fields[4])         # state ppid pgrp session tty_nr ...
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def descends_from(pid: int, roots: Collection[int]) -> bool:
+    """True when `pid` is one of `roots` or has one of them as an ancestor (bounded walk through the parent links)."""
+    current = int(pid)
+    for _ in range(64):
+        if current in roots:
+            return True
+        tail = _stat_tail(current)
+        if tail is None or tail[0] <= 1:
+            return False
+        current = tail[0]
+    return False
+
+
+def kill_in_cwd(directory: str, sig: int = signal.SIGKILL, *, roots: Collection[int] = (),
+                spare_interactive: bool = False) -> int:
     """Signal every process (but this one) whose working directory is inside `directory`: the stragglers an agent left
     behind, even ones that called setsid and escaped its process group. Linux /proc only; returns how many were signalled.
-    A process that moved away from the worktree is out of reach (stated limit)."""
+    A process that moved away from the worktree is out of reach (stated limit).
+
+    With `spare_interactive`, a process that has a controlling terminal and is NOT a descendant of one of `roots` (the
+    attempt's shim and agent) is left alone: it is an operator's shell or editor that happens to be in the worktree, not
+    something the agent started. An agent's own pty children are still swept while they remain its descendants."""
     proc, base, hit = Path("/proc"), os.path.realpath(directory), 0
     if not proc.exists():
         return 0
@@ -97,6 +126,10 @@ def kill_in_cwd(directory: str, sig: int = signal.SIGKILL) -> int:
         except OSError:
             continue
         if cwd == base or cwd.startswith(base + os.sep):
+            if spare_interactive:
+                tail = _stat_tail(int(entry.name))
+                if tail is not None and tail[1] != 0 and not descends_from(int(entry.name), roots):
+                    continue
             try:
                 os.kill(int(entry.name), sig)
                 hit += 1

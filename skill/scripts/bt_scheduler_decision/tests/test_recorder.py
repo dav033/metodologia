@@ -19,6 +19,7 @@ from bt_scheduler_decision import (
     executor_reference,
     idempotency_key,
     rank_candidates,
+    resolve_executor_binding,
     resolve_executor_reference,
     validate_request,
 )
@@ -132,6 +133,25 @@ class DecisionLedgerTests(unittest.TestCase):
         resolved = resolve_executor_reference(self.path, reference)
         self.assertEqual(resolved, saved.selected)
         self.assertEqual(self.path.read_bytes(), before)
+
+    def test_binding_names_the_plan_task_and_the_decision_that_replaced_it(self):
+        first_candidate = candidate(profile="one", rank=0)
+        second_candidate = candidate(provider="codex", model="sol", profile="two", rank=0)
+        first_request = request(candidates=(first_candidate,))
+        first = self.ledger.persist(first_request, _record(first_request))
+        first_ref = executor_reference(first.decision_id, first.selected.route_id)
+        live = resolve_executor_binding(self.path, first_ref)
+        self.assertEqual((live.plan_id, live.revision, live.task_id, live.decision_id, live.superseded_by),
+                         (first.plan_id, first.revision, first.task_id, first.decision_id, None))
+        self.assertEqual(live.route, first.selected)
+        second_request = request(candidates=(second_candidate,))
+        second = self.ledger.persist(second_request, _record(second_request))
+        self.assertNotEqual(first.decision_id, second.decision_id)
+        self.assertEqual(resolve_executor_binding(self.path, first_ref).superseded_by, second.decision_id)
+        second_ref = executor_reference(second.decision_id, second.selected.route_id)
+        self.assertIsNone(resolve_executor_binding(self.path, second_ref).superseded_by)
+        self.assertIsNone(resolve_executor_binding(self.path, executor_reference("f" * 64, first.selected.route_id)))
+        self.assertIsNone(resolve_executor_binding(self.path, "not-an-m2-reference"))
 
     def test_record_decision_id_must_be_derived_from_its_idempotency_key(self):
         request_value = request()
