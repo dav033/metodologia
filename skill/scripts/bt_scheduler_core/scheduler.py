@@ -223,9 +223,14 @@ class SchedulerCore:
                 rec = ctx.state.tasks[spec.id]
                 if rec.state != T.READY.value or first_conflict(claims_for(spec, ctx.config), ctx.state.holds):
                     continue
-                ready.append(TaskView(spec.id, spec.milestone_id, spec.repository, spec.shared_resources,
-                                      spec.expected_paths, len(rec.attempts), dict(spec.meta)))
-            return (AssignmentRequest(ctx.state.plan_id, ctx.state.revision, tuple(ready), slots, ctx.now)
+                ready.append(TaskView(
+                    spec.id, spec.milestone_id, spec.repository, spec.shared_resources,
+                    spec.expected_paths, len(rec.attempts), dict(spec.meta),
+                    dependencies=spec.after, acceptance_criteria=spec.acceptance_criteria,
+                    verification=spec.verification,
+                ))
+            return (AssignmentRequest(ctx.state.plan_id, ctx.state.revision, tuple(ready), slots, ctx.now,
+                                      plan_sha256=ctx.plan.sha256)
                     if ready and slots > 0 else None)
 
         request = self.read(eligible)

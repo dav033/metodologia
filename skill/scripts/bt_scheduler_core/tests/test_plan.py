@@ -36,6 +36,13 @@ class Loading(unittest.TestCase):
         meta = sc.load_plan(text, approved_sha256=digest(text)).task("T1").meta
         self.assertEqual((meta["risk"], meta["complexity"], meta["estimated_minutes"]), ("high", "low", 25))
 
+    def test_planner_classification_evidence_travels_as_opaque_meta(self):
+        evidence = {"risk": {"justification": "auth-sensitive operation", "evidence": ["file:src/auth.py"]}}
+        data = json.loads(plan_text([task("T1", classification_evidence=evidence)]))
+        text = json.dumps(data)
+        meta = sc.load_plan(text, approved_sha256=digest(text)).task("T1").meta
+        self.assertEqual(meta["classification_evidence"], evidence)
+
     def test_loading_a_file_never_modifies_it(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "PLAN.json"

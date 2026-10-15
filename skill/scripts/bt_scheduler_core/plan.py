@@ -22,7 +22,7 @@ MAX_TASKS = 10_000
 HASH_RE = re.compile(r"[0-9a-f]{64}")
 VERSION_RE = re.compile(r"([0-9]+)\.[0-9]+\.[0-9]+")
 OPAQUE_KEYS = ("title", "objective", "complexity", "scope", "estimated_minutes", "risk", "coupling", "confidence",
-               "estimate_rationale")
+               "estimate_rationale", "classification_evidence")
 
 
 @dataclass(frozen=True, eq=False)

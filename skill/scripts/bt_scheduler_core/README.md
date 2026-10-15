@@ -40,11 +40,11 @@ output (M4) and retry strategy (M5) live in sibling modules that implement the p
 | `simulators.py`, `simulation.py` | deterministic doubles of M2–M5 and a scripted "world" |
 | `cli.py`, `__main__.py` | command line |
 
-## Contracts (version `1.0.0`, `CONTRACT_VERSION`)
+## Contracts (version `1.1.0`, `CONTRACT_VERSION`)
 
 | Port | Direction | Methods |
 |---|---|---|
-| `AssignmentPort` | M1 ↔ M2 | `propose(AssignmentRequest) -> [Assignment]` — M1 validates every proposal |
+| `AssignmentPort` | M1 ↔ M2 | `propose(AssignmentRequest) -> [Assignment]` — request includes the approved plan SHA-256, READY tasks, dependencies, acceptance criteria, verification and opaque classification metadata; M1 validates every proposal |
 | `ExecutionPort` | M1 → M3 | `start(StartOrder)`, `cancel(CancelOrder)`, `query(attempt_id)`; every order has an idempotency key |
 | `EventPort` | M4 → M1 | `SchedulerCore.ingest(Event)` and `.submit_verdict(Verdict)` |
 | `RecoveryPort` | M1 ↔ M5 | `propose(FailureContext) -> RecoveryProposal` (`retry` \| `block` \| `wait`); advice only |
@@ -56,6 +56,9 @@ port returns is validated (wrong shape → `port_invalid` in the audit trail and
 raises → `port_error` and the intent stays. `Event`: `event_id, plan_id, revision, task_id, attempt_id, source, kind,
 occurred_at, payload, token, contract_version`; kinds `execution_started | execution_finished | execution_failed |
 execution_cancelled | heartbeat`. Events are not exactly-once: duplicates, late and reordered ones are expected.
+Contract 1.1.0 appends optional, defaulted fields to `TaskView` and `AssignmentRequest`, preserving old positional calls.
+The scheduler emits 1.1.0 events by default; M1 continues to accept events explicitly tagged 1.0.0, whose shape is
+unchanged.
 
 Absent ports: no assignment port → plan-order FIFO with the label `local`; no execution port → orders wait in the
 outbox (`pending_orders()` for pull-style adapters); no recovery port → "retry while the attempt budget lasts, then

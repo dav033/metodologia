@@ -22,6 +22,20 @@ def snapshot_of(h):
     return h.core.read(lambda c: c.state.to_dict())
 
 
+class ContractVersion(unittest.TestCase):
+    def test_new_events_advertise_contract_v11(self):
+        event = sc.Event("e1", "REQ-T", 1, "T1", "a1", "monitor", "execution_started")
+        self.assertEqual(sc.CONTRACT_VERSION, "1.1.0")
+        self.assertEqual(event.to_dict()["contract_version"], "1.1.0")
+
+    def test_v10_events_remain_readable(self):
+        event = sc.Event("e1", "REQ-T", 1, "T1", "a1", "monitor", "execution_started",
+                         contract_version="1.0.0")
+        parsed = sc.Event.from_dict(event.to_dict())
+        self.assertEqual(parsed.contract_version, "1.0.0")
+        self.assertEqual(parsed.to_dict(), event.to_dict())
+
+
 class Lifecycle(unittest.TestCase):
     def test_started_then_finished_moves_the_attempt_but_never_completes_the_task(self):
         h = fresh()

@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[2])]
 
-from support import Harness, indep
+from support import Harness, indep, task
 
 import bt_scheduler_core as sc
 
@@ -150,6 +150,34 @@ class AssignmentAdvice(unittest.TestCase):
         self.assertEqual(request.free_slots, 2)
         self.assertEqual(request.ready[0].meta["risk"], "high")
         self.assertEqual(h.state("T1"), "ready")                 # an empty answer reserves nothing
+
+    def test_v11_request_passes_approved_hash_and_all_validated_task_evidence(self):
+        evidence = {"risk": {"justification": "auth-sensitive change", "evidence": ["file:src/auth.py"]}}
+        tasks = [indep("T0"), task(
+            "T1", ["T0"], repo="repo-T1", paths=["src/auth.py"],
+            acceptance_criteria=["The auth check rejects expired tokens"],
+            verification=[{"type": "command", "value": "pytest tests/auth", "purpose": "regression"}],
+            complexity="medium", classification_evidence=evidence,
+        )]
+        h, port = self.harness(lambda r: [], tasks)
+        h.core.claim(sc.Assignment("T0", "seed"))
+        h.finish_and_accept("T0")
+
+        request = port.requests[-1]
+        self.assertEqual(request.plan_sha256, h.sha)
+        self.assertEqual([view.id for view in request.ready], ["T1"])
+        view = request.ready[0]
+        self.assertEqual(view.dependencies, ("T0",))
+        self.assertEqual(view.acceptance_criteria, ("The auth check rejects expired tokens",))
+        self.assertEqual(view.verification, ({"type": "command", "value": "pytest tests/auth", "purpose": "regression"},))
+        self.assertEqual(view.meta["classification_evidence"], evidence)
+
+    def test_v10_positional_assignment_contract_callers_keep_working(self):
+        view = sc.TaskView("T1", "M1", "repo", (), (), 0, {"risk": "low"})
+        request = sc.AssignmentRequest("REQ-OLD", 1, (view,), 1, 123.0)
+        self.assertEqual((request.plan_id, request.now, request.plan_sha256), ("REQ-OLD", 123.0, ""))
+        self.assertEqual((view.meta, view.dependencies, view.acceptance_criteria, view.verification),
+                         ({"risk": "low"}, (), (), ()))
 
     def test_the_executor_label_is_opaque_and_recorded_verbatim(self):
         h, _ = self.harness(lambda r: [sc.Assignment(t.id, "pool-7/slow lane") for t in r.ready])

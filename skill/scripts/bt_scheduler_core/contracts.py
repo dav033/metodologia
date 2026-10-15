@@ -13,7 +13,7 @@ from typing import Any, Protocol, runtime_checkable
 from .errors import SchedulerError
 from .states import EventKind
 
-CONTRACT_VERSION = "1.0.0"
+CONTRACT_VERSION = "1.1.0"
 
 ACK = ("accepted", "duplicate", "rejected")
 EXEC_STATES = ("running", "finished", "failed", "cancelled", "not_found", "unknown")
@@ -105,7 +105,10 @@ class IngestResult:
 
 @dataclass(frozen=True)
 class TaskView:
-    """What a sibling module may know about a task: identity, conflict signals, opaque classification."""
+    """What a sibling module may know about a task: identity, conflict signals and planning evidence.
+
+    Fields after `meta` are additive v1.1.0 fields. Their defaults keep existing positional v1.0.0 constructors valid.
+    """
     id: str
     milestone_id: str
     repository: str
@@ -113,6 +116,9 @@ class TaskView:
     expected_paths: tuple[str, ...]
     attempts: int
     meta: Mapping[str, Any] = field(default_factory=dict)
+    dependencies: tuple[str, ...] = ()
+    acceptance_criteria: tuple[str, ...] = ()
+    verification: tuple[Mapping[str, Any], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -122,6 +128,7 @@ class AssignmentRequest:
     ready: tuple[TaskView, ...]     # eligible tasks, in plan order
     free_slots: int
     now: float
+    plan_sha256: str = ""         # approved plan identity; empty only for compatible legacy v1.0.0 callers
 
 
 @dataclass(frozen=True)
