@@ -10,17 +10,16 @@ import json
 import re
 import socket
 import subprocess
+import sys
 import time
 import unittest
 import urllib.request
 import zipfile
 from pathlib import Path
 
-import sys
-
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # also collected as tests.migration.*
 
-import installed_wheel  # noqa: E402
+import installed_wheel
 
 REPO = installed_wheel.REPO
 SCRIPTS = REPO / "skill" / "scripts"
@@ -52,7 +51,7 @@ class PackageCase(unittest.TestCase):
 
     def installed(self, *args: str, stdin: str | None = None) -> subprocess.CompletedProcess:
         return subprocess.run([str(self.venv_python), "-I", *args], input=stdin, capture_output=True, text=True,
-                              cwd=self.cwd, env=self.env, timeout=120)
+                              cwd=self.cwd, env=self.env, timeout=120, check=False)
 
 
 class WheelContentsTests(PackageCase):
@@ -71,7 +70,10 @@ class WheelContentsTests(PackageCase):
                          "bitacora_resources/assets/style.css", "bitacora_resources/agents/reviewer.md",
                          "bitacora_resources/references/agents.md", "bitacora_resources/githooks/pre-commit",
                          "bt_planner/__init__.py", "bt_planner/contract.py", "bt_planner/data/plan.schema.json",
-                         "bt_planner/data/plan.example.json", "bt_planner/README.md"):
+                         "bt_planner/data/plan.example.json", "bt_planner/README.md",
+                         "bt_scheduler_decision/__init__.py", "bt_scheduler_decision/api-contract.json",
+                         "bt_scheduler_decision/README.md", "bt_scheduler_decision/laya-requirements.lock",
+                         "bt_scheduler_executor/__init__.py", "bt_scheduler_executor/shim.py", "bt_scheduler_executor/README.md"):
             self.assertIn(required, names)
         self.assertFalse([n for n in names if "/tests/" in n or n.startswith("tests/") or "ops_" in n])
 
@@ -114,6 +116,28 @@ class InstalledRuntimeTests(PackageCase):
         path, core, bita = out.stdout.split()
         self.assertTrue(Path(path).is_relative_to(self.site))
         self.assertEqual((core, bita), ("False", "False"))  # importing the module pulls in nothing else
+
+    def test_executor_module_runs_standalone_from_the_installed_wheel(self) -> None:
+        done = self.installed("-m", "bt_scheduler_executor", "selftest", "--json", "--keep", str(self.work / "m3-selftest"))
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertTrue(json.loads(done.stdout)["ok"])
+        probe = ("import bt_scheduler_executor, sys; print(bt_scheduler_executor.__file__, "
+                 "sorted(m for m in sys.modules if m.startswith('bt_') and not m.startswith('bt_scheduler_executor')))")
+        out = self.installed("-c", probe)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        path, _, rest = out.stdout.partition(" ")
+        self.assertTrue(Path(path).is_relative_to(self.site))
+        self.assertEqual(rest.strip(), "[]")
+
+    def test_decision_module_and_contract_are_standalone_in_the_installed_wheel(self) -> None:
+        probe = ("import bt_scheduler_decision, json, sys; print(json.dumps({'file': bt_scheduler_decision.__file__, "
+                 "'other_bt_modules': sorted(m for m in sys.modules if m.startswith('bt_') "
+                 "and not m.startswith('bt_scheduler_decision'))}))")
+        out = self.installed("-c", probe)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        info = json.loads(out.stdout)
+        self.assertTrue(Path(info["file"]).is_relative_to(self.site))
+        self.assertEqual(info["other_bt_modules"], [])
 
     def test_context_names_policy_files_inside_the_installed_package(self) -> None:
         self.installed("-m", "bitacora", "--project", "demo", "init")
@@ -161,7 +185,7 @@ class InstalledRuntimeTests(PackageCase):
         (override / "templates").mkdir(parents=True)
         done = subprocess.run(
             [str(self.venv_python), "-I", "-c", "import bt_core;print(bt_core.SKILL_DIR)"], capture_output=True,
-            text=True, cwd=self.cwd, env={**self.env, "BITACORA_RESOURCES": str(override)})
+            text=True, cwd=self.cwd, env={**self.env, "BITACORA_RESOURCES": str(override)}, check=False)
         self.assertEqual(Path(done.stdout.strip()), override.resolve(), done.stderr)
 
 

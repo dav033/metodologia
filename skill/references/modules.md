@@ -1,7 +1,7 @@
 # Modules: how the methodology is divided
 
 The methodology is one product split into modules. A module is a package `skill/scripts/bt_<name>/` that can be
-understood, run and verified **without the rest**. Modules so far: `bt_planner` (plans) and `bt_scheduler_core` (runs an approved plan). Use this page when you extract,
+understood, run and verified **without the rest**. Modules so far: `bt_planner` (plans), `bt_scheduler_core` (runs an approved plan) and `bt_scheduler_executor` (launches and supervises the agents). Use this page when you extract,
 add or review a module.
 
 ## Rules (each one is enforced by a test, not by good intentions)
@@ -59,3 +59,30 @@ be simulated with `bt_scheduler_core.simulators`.
 - Tests: module suite `bt_scheduler_core/tests/` (boundaries, lone-copy isolation, CLI end to end, fuzzed invariants,
   crash-at-every-commit restarts) and `tests/test_scheduler_integration.py` (boundary from outside, frozen-plan hand-over,
   authority rules, historical `RUN.json` byte-identical).
+
+## Agent executor (`bt_scheduler_executor`, REQ-014)
+
+The third Scheduler module (M3), built under the same five rules. It receives the core's authorised, idempotent start/cancel/query
+orders plus the route M2 selected, launches Claude Code, Codex or Gemini (Antigravity `agy`) in an **isolated git worktree per
+attempt**, supervises the process through a detached shim, and **preserves the work whatever way the agent ends** (clean, failed,
+out of quota, connection lost, timeout, killed, cancelled, lost) as a recoverable handoff of committed + uncommitted + untracked
+state. It emits technical events with a classified cause, survives its own restart (re-attach / finalise from `exit.json` /
+stop an orphan by process identity) and never decides: not who runs (M2), not state or capacity (M1), not what a stream means
+(M4), not whether to retry (M5), not whether work is accepted (the independent verifier). `execution_finished` means "the
+agent stopped"; no private reasoning is claimed to transfer between providers.
+
+- Ports (own `typing.Protocol`s, own frozen types; no sibling class crosses the boundary): `RouteResolver`, `BriefSource`,
+  `AgentDriver`, `WorkspaceManager`, `EventSink`. README: ports, life cycle, artefacts, cause classes, events, limits.
+- Adapter: `skill/scripts/bt_scheduler_executor_adapter.py` (only importer). It validates M2's reference against the one
+  catalogue (`bt_agents`) and the profile policy (`bt_profiles`: authorisation, work-only gate by the project's repository,
+  account environment boundary), launches through `bt_driver`/`bt_runprompt`, builds the brief from the frozen plan, resolves
+  repositories through `bt_workspace`, translates to the core's `Ack`/`ExecutionStatus`/`Event` (reached through
+  `bt_scheduler_adapter`, the only importer of the core) and exposes workspaces in `bt_worktree`'s allocation shape
+  (`worktree_allocation`) so its scope/integration tooling can consume what M3 produced. `wire(rdir, ...)` is the opt-in entry
+  point; nothing in an existing command changes. State lives in `<bitácora root>/.state/executor/<project>-<REQ>/`.
+- Until M2 exists `route:<id>` is delegated to a caller-supplied lookup, and the operator may write `direct:<provider>/<model>
+  [@profile][#effort]` (`PinnedRoute` assigns one to every ready task). The core's FIFO label `local` is rejected: M3 never defaults a model.
+- Tests: module suite `bt_scheduler_executor/tests/` (boundaries, lone-copy isolation, CLI, crash-at-every-step, concurrency,
+  cancel/reconcile/classification matrices, real git handoff cases) and, in the methodology suite, `tests/test_scheduler_executor_adapter.py`,
+  `tests/test_scheduler_executor_integration.py` (the real core + executor + fake provider binaries; boundary from outside;
+  historical `RUN.json` byte-identical) and the opt-in `tests/test_scheduler_executor_real.py` (`BITACORA_M3_REAL=1`, bounded spend).
