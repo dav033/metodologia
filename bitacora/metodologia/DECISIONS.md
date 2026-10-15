@@ -188,7 +188,7 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Alternatives:** keep evidence optional (the owner asked to require it); make 1.0.0 invalid (breaks the frozen REQ-009/010 revisions); freeze at launch without a drift refusal (approves unreviewed edits); judge evidence with a model (not deterministic, not stdlib-only); compare prose (false positives).
 - **Consequences:** + a scheduler can trust task titles, repos, dependencies, verification and classification arguments; + no launch path runs content nobody approved; − textual rules cannot judge truth (a fluent but false justification passes; only existence of cited files/specs/tasks is verified); − a plan approved by hand-editing `status:` must be frozen explicitly (`plan-json freeze`) before it can launch; the manifest records `source` (approval|launch-forced); − `command:`/`precedent:` references are verified for existence only through the methodology adapter, never for truth.
 - **Rollback:** the gate is `bt_plan_adapter.launch_problem` called from four places; removing those calls restores the previous behaviour. `evidence.py`/`quality.py` are additive; set `schema_version` 1.0.0 to opt out per plan (publication gate then refuses new revisions, existing frozen ones stay valid).
-- **Evidence:** `requirements/REQ-012-*/REPORT.md`, `AC-TRACE.md`, `planning-trials/RESULTS.json` (6 real trials, 182 checks); module suite 179 tests; methodology suite. ID from `bitacora.py id D`.
+- **Evidence:** `requirements/REQ-012-*/REPORT.md`, `ACCEPTANCE.md`, `AC-TRACE.md`, `planning-trials/RESULTS.json` (6 implementer trials, 182 checks), `independent-evidence/` (3 context-free planner plans verified 3/3, Gemini delegated audit C1-C4 hold); module suite 201 tests; methodology 953. ID from `bitacora.py id D`.
 
 ## D-022 — The Scheduler Core (M1) is an isolated module with one authority per requirement; approval is a hash
 - **Date:** 2026-10-14 · **Status:** Accepted under REQ-011 (owner's `/goal`, `PLAN-SCHEDULER-CORE-M1.md`)
@@ -220,4 +220,20 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Alternatives:** keep integration opt-in (silent stale trees); auto-resolve merge conflicts (guessing); track the agent's descendants from the shim (see P-033).
 - **Consequences:** + dependent tasks see their predecessors' work; + a stale or foreign route cannot launch; − an agent that daemonises onto its own terminal (tmux/screen) is spared by the sweep and may write during the handoff; − an M2 ledger file must be per project.
 - **Evidence:** commits on `feat/scheduler-m2-m3`; two antagonist reviews (A1-A7, then A1-A4) with fixes; 372+ tests, 8-way stress clean.
+
+## D-026 — The 85% Laya complexity investigation is English-only
+- **Date:** 2026-10-15 · **Status:** Superseded by D-027
+- **Context:** The owner narrowed the task-complexity target after multilingual comparisons produced weak results and added evaluation cost without useful progress toward the English target.
+- **Decision:** Use only English task text and the pinned `english` Laya checkpoint for all remaining inference, training, model selection, and final evaluation for the approximately 85% four-class Planner-complexity objective. Keep previous multilingual and typed-decisions results only as historical diagnostics. Keep the separate M2 route-quality gate distinct.
+- **Alternatives:** Continue multilingual/typed-checkpoint comparisons (rejected by the owner as wasted effort); claim language coverage without English-only evidence (unsupported).
+- **Consequences:** + narrower, reproducible goal / − no Spanish or other-checkpoint performance claim; independent labels and an untouched English test remain required.
+- **Source:** [day log](2026-10/W3/2026-10-15.md) · REQ-015
+
+## D-027 — All remaining Scheduler Laya experiments use the English checkpoint on English tasks
+- **Date:** 2026-10-15 · **Status:** Accepted
+- **Context:** The owner narrowed the work to improving the English Laya path and directed that it be the only path used. The approximately 85% Planner classifier target and M2 route-quality target remain separate metrics.
+- **Decision:** For all remaining REQ-015/REQ-016 experiments, use only the pinned `english` checkpoint and English task text. Keep multilingual and typed-decisions measurements as historical diagnostics only. Do not infer route quality from complexity accuracy or modify M1/M2 runtime authorization.
+- **Alternatives:** Continue Spanish/multilingual or typed-checkpoint experiments (rejected by the owner); combine the two quality targets (invalid because they measure different decisions).
+- **Consequences:** + one model/input path for reproducible work / − no language-coverage claim outside English; independent labels and an untouched English holdout remain required.
+- **Source:** [day log](2026-10/W3/2026-10-15.md) · REQ-015, REQ-016
 

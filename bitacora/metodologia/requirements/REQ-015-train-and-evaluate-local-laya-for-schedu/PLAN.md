@@ -6,10 +6,10 @@ created: 2026-10-15
 # Plan — REQ-015 — Train and evaluate local Laya for Scheduler routing
 
 ## Approach
-Build a new real-task, independently human-labeled corpus and keep the frozen synthetic v1 fixtures only for
-contract/smoke regressions. Reuse M2's deterministic eligibility and verified telemetry, then fine-tune local Laya
-with the encoder frozen first because the A3000 has 6 GiB; compare the bilingual multilingual and typed-decision base
-models on development data before freezing one recipe. Fit any runtime confidence gate on separate calibration cases
+Build a new real-task, independently human-labeled English corpus and keep the frozen synthetic v1 fixtures only for
+contract/smoke regressions. Reuse M2's deterministic eligibility and verified telemetry, then fine-tune only the
+English Laya checkpoint with the encoder frozen first because the A3000 has 6 GiB. Do not select or evaluate
+multilingual or typed-decision checkpoints. Fit any runtime confidence gate on separate calibration cases
 and compare the complete production hybrid to `bt_agents` on a locked, powered holdout. The existing M2 evidence gate
 and deterministic fallback stay authoritative unless every criterion passes and the exact evidence is independently
 reviewed.
@@ -36,11 +36,11 @@ REQ-014 changes in the shared worktree.
   R1, R2, R4, R8
 
 ### M2 — Local CUDA fine-tuning
-- [ ] T4 — Compare zero-shot multilingual and typed-decisions checkpoints on development data; run
-  `laya-train --dry-run` and profile frozen-encoder CUDA memory using a tiny throwaway copy · repo: methodology ·
+- [ ] T4 — Run `laya-train --dry-run` with the English checkpoint and profile frozen-encoder CUDA memory using a tiny
+  throwaway copy; keep every task input English · repo: methodology ·
   after: T3 · verify:
   `HF_HUB_OFFLINE=1 python skill/scripts/bt_scheduler_laya_train.py dry-run --device cuda` · covers: R6, R7
-- [ ] T5 — Fine-tune the selected bilingual base with frozen encoder, randomized choices and recorded soft-CE/RLCD
+- [ ] T5 — Fine-tune the English base with frozen encoder, randomized choices and recorded soft-CE/RLCD
   variants across at least three seeds; save checkpoints outside the repo and retain per-run metrics/hashes · repo:
   methodology · after: T4 · verify:
   `HF_HUB_OFFLINE=1 python skill/scripts/bt_scheduler_laya_train.py train --device cuda --seeds 3` · covers: R6, R7
@@ -50,9 +50,9 @@ REQ-014 changes in the shared worktree.
   R7, R9
 
 ### M3 — Locked quality and operational benchmark
-- [ ] T7 — Compare the frozen fine-tuned checkpoint, the same base checkpoint and deterministic `bt_agents` reference
-  on every locked holdout case; report top-1, weighted regret, paired cluster bootstrap, calibration/selective
-  coverage and English/Spanish/family/provider/effort slices · repo: methodology · after: T6 · verify:
+- [ ] T7 — Compare the frozen fine-tuned English checkpoint, the same English base checkpoint and deterministic
+  `bt_agents` reference on every locked English holdout case; report top-1, weighted regret, paired cluster bootstrap,
+  calibration/selective coverage and task-family/provider/effort slices · repo: methodology · after: T6 · verify:
   `python skill/scripts/bt_scheduler_laya_train.py evaluate --split held-out --resamples 10000` · covers: R3, R8,
   R9, R10
 - [ ] T8 — Measure CUDA cold/warm latency, peak VRAM/RSS, offline restart, multiple seeds and fallback; refuse
@@ -130,7 +130,7 @@ REQ-014 changes in the shared worktree.
   `d8a112e8cd598845a5dde7df3ca660493dadb6dcd6ea6113370ce629b62694be`. It may seed training/dev after human review,
   but cannot serve as final test because Laya has already seen the texts. Real-plan `laya-train --dry-run` produced
   only four default optimizer updates; a 32-epoch dry-run yields 32 updates on the same small set. No training ran.
-  Keep the 85% objective active; collect new, independently labelled, bilingual tasks and an untouched test set before
+  Keep the 85% objective active; collect new, independently labelled English tasks and an untouched test set before
   any training or success claim.
 - 2026-10-15 — Separately ran a disposable, label-revealing positive-control fine-tune on CUDA to verify the local
   Laya training path and A3000 resource use. It completed 144 updates in 69.432 s, sampled 2,075 MiB whole-GPU peak,
@@ -167,6 +167,35 @@ REQ-014 changes in the shared worktree.
   annotator's provisional judgment with standardized class-level reasons, not independent human gold or a locked test.
   Full report, metrics, hashes, labels and scoring script:
   `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/human-review-batch-02-v1.2/`.
+- 2026-10-15 — Compared Laya's ordinal `score` head with its `choice` head on the same 200 mixed-source development
+  tasks using the same pinned checkpoints and a fixed half-up score-to-class mapping. Exact agreement was 40.5% /
+  27.5% / 42.5% (English / multilingual / typed-decisions) versus choice's 31.5% / 29.5% / 31.0%; four-class majority
+  is 38.5%, and confidence intervals overlap it. Typed-decisions binary accuracy was 68.0% against 52.5% majority,
+  but this comes from predicting no `low` or `extreme` cases: their recall is zero; high/extreme recall is 85.7% with
+  64.7% precision. All 600 calls used RTX A3000 CUDA and had zero failures. English/typed checkpoints warned about
+  invalid temperatures, so confidence was ignored. This is a development diagnostic against one assistant annotator,
+  not human accuracy or a locked test. Latency/memory and raw outputs:
+  `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/human-review-batch-02-v1.2/ordinal-score-v1-report.md`.
+- 2026-10-15 — A paired analysis confirms ordinal-head effects vary by checkpoint and language: correct/wrong transitions
+  vs. `choice` were English 30/12, multilingual 10/14, typed-decisions 47/24. `score` English/typed accuracy was
+  41.5%/45.3% on 159 English rows and 36.6%/31.7% on only 41 Spanish rows; multilingual was 30.2%/17.1% (choice:
+  28.3%/34.1%). Spanish slices are descriptive and low-powered. Detail: `ordinal-score-v1-comparison.md`.
+- 2026-10-15 — The owner confirmed the ~85% objective means exact-match accuracy across the four complexity labels,
+  expected to hold across representative suite sizes. A five-task suite cannot demonstrate 85%: its accuracy moves in
+  20-point steps, and 4/5 has a 95% Wilson interval of 37.6–96.4%. Reanalysis of six cross-source training seeds found
+  at most three net extra correct answers in 40 held-out tasks (exact paired p=0.25–1.00), with 50% binary accuracy,
+  0–5% complex recall, and 35–38 `medium` predictions per fold. This is no evidence for aggressive epoch increases;
+  independently adjudicated labels and a fresh representative holdout remain prerequisites. Analysis script/report:
+  `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/analyze_cross_source_paired.py` and
+  `cross-source-paired-seed-analysis.md`.
 - This leaves independent adjudication and a prospective, untouched test set open. Complexity is measured separately
   from scope, duration, risk, coupling, confidence, evidence, and M2 route preference/outcomes. Plan remains in
   `review`; this diagnostic does not authorize a Scheduler checkpoint, M2 routing change, or completion claim.
+- 2026-10-15 — Owner narrowed the remaining Laya work to English-only inputs and the `english` checkpoint. The
+  multilingual and typed-decisions results remain historical diagnostics; do not use those checkpoints in further
+  model selection, training, or evaluation. An English-only reanalysis of the existing 159 English development rows
+  scored 66/159 (41.5%) for ordinal scoring, equal to the English-subset majority baseline; recall was 0/29 `low`
+  and 0/17 `extreme`. The 40.3% anchored-prompt result also remains development-only. Labels are one assistant's
+  provisional judgments and the task texts were already seen by Laya. Reproducible analysis:
+  `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/analyze_english_only.py` and
+  `human-review-batch-02-v1.2/english-only-analysis-v1.md`. Do not train on this packet or claim the 85% target.

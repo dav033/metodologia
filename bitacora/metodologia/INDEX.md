@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-15 08:14 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 08:56 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -45,6 +45,7 @@ _Generated 2026-10-15 08:14 by `bitacora.py index`. Do not edit by hand._
 | [REQ-013](requirements/REQ-013-scheduler-m2-decision-engine-with-local/SPEC.md) | Scheduler M2 Decision Engine with local Laya | `implemented` | [done](requirements/REQ-013-scheduler-m2-decision-engine-with-local/PLAN.md) | report ✓ |
 | [REQ-014](requirements/REQ-014-scheduler-m3-agent-executor/SPEC.md) | Scheduler M3 Agent Executor | `done` | [approved](requirements/REQ-014-scheduler-m3-agent-executor/PLAN.md) | report ✓ |
 | [REQ-015](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/SPEC.md) | Train and evaluate local Laya for Scheduler routing | `clarifying` | [review](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/PLAN.md) |  |
+| [REQ-016](requirements/REQ-016-train-and-validate-an-english-only-laya/SPEC.md) | Train and validate an English-only Laya Planner complexity classifier | `ready` | [approved](requirements/REQ-016-train-and-validate-an-english-only-laya/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -58,11 +59,11 @@ _Generated 2026-10-15 08:14 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-027 — All remaining Scheduler Laya experiments use the English checkpoint on English tasks
+- D-026 — The 85% Laya complexity investigation is English-only
 - D-025 — Scheduler hand-over of prerequisite work is on by default; routes are bound to their task; the sweep spares terminal processes (2026-10-15)
 - D-024 — M3 agent executor: isolated module, shim-owned agents, no model choice (2026-10-14)
 - D-023 — Local Laya requires code-reviewed benchmark evidence; deterministic fallback stays authoritative (2026-10-14)
-- D-022 — The Scheduler Core (M1) is an isolated module with one authority per requirement; approval is a hash
-- D-021 — Planner phase 1 closes with schema 1.1.0 (argued classifications) and one launch gate
 
 ## Artifacts
 

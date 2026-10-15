@@ -27,6 +27,8 @@ project: new external key, name suffixed ` (copia)`, same data, its own copies o
 2. The copy has: a new `id`; a new unique `externalKey` derived from the source key with a random suffix, valid for
    the existing key rules (max 120 chars); `name = source.name + " (copia)"` (max 200, suffix always kept);
    the same `description` and `data`; `revision = 1`; fresh `createdAt`/`updatedAt`.
+   Ownership: the route handler (T4) generates key and name; the repository (T3) inserts them, rewrites the photo
+   refs in `data` with the refs returned by the asset clone (T2) and sets `revision = 1`.
 3. Every photo referenced by the source data is cloned: a new file on disk, a new `assets` row owned by the copy, and
    the copy's `AssetRef` points to the new id/url. Deleting either project never removes the other's files.
 4. All-or-nothing: if anything fails, no project row, asset row or stray file is left behind.

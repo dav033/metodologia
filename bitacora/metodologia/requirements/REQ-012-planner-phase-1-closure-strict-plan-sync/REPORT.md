@@ -49,15 +49,15 @@ Final runs of this session (2026-10-14, after the last code change):
 
 | Suite | Result |
 |---|---|
-| Module `bt_planner/tests` (normal and `python -I`, includes the isolated lone-copy run and the six scenarios) | 198 tests OK, both |
-| Methodology `tests` (includes packaging and `test_plan_integration` 46) | 802 tests OK |
+| Module `bt_planner/tests` (normal and `python -I`, includes the isolated lone-copy run and the six scenarios) | 200 tests OK (199 before the three independent-plan fixtures) |
+| Methodology `tests` (includes packaging and `test_plan_integration` 46) | 953 tests with the Scheduler modules in the tree: **953 OK (3 skipped) in the live tree**, after the owner authorised excluding `.venv` in `test_scheduler_integration.Boundary` (a `uv` venv left in the repo root tripped it; one line, scan only) |
 | Scheduler core `bt_scheduler_core/tests` (not modified; run only to prove it is unaffected) | 234 tests OK |
 | `run_trials.py` against the real repositories | 182/182 checks |
 | Baseline before this requirement | module 111, methodology 752 (REQ-010 report) |
 
 Not run / not claimed: provider-dependent live suites and the Windows/macOS packaging matrix (deferred by the owner).
 Independent audit: three fresh reviewer rounds (spec, standards, per-criterion) by same-provider agents, all findings
-fixed (below); the cross-vendor attempt was inconclusive.
+fixed (below); one cross-vendor audit (Gemini, delegated) found no defects.
 
 ## Independent audit (two fresh reviewers, spec and standards axes)
 
@@ -96,9 +96,21 @@ Second independent pass (fresh reviewer, items 1–7 re-attacked): all confirmed
   valid on the first try with real evidence; I re-checked it with the verifiers and opened its claims. It shows AC-12
   (a new session can use the contract without conversation) and that honest plans pass; it did not need the gate to
   push back, so it says nothing about leniency — the corruption batteries do.
-- Cross-provider audit: **attempted and inconclusive.** Codex is not installed here; Antigravity (Gemini) reviewed twice
-  through `bitacora review`: the first run ended `incomplete` with no findings (375 s), the second crashed in cleanup
-  without output. No cross-vendor verdict exists; I do not claim one.
+- Cross-provider audit: two `bitacora review` attempts through Antigravity were inconclusive (`incomplete`, then a
+  cleanup crash), so the audit was re-run as a delegated task (`delegate`, Gemini 3.8 flash-high, isolated copy of the
+  code, brief `TASK.md` with claims C1–C4 to refute). Verdict (D-20261014-175510-7d86, 591 s, RESULT.json): **C1–C4
+  HOLD** — duplicate/contradiction rejection, launch gate and resume immutability, evidence and scheduling-key
+  rejection, frozen 1.0.0 byte stability; module suite 199/199 plus 101 adversarial checks of its own (C1 15, C2 20,
+  C3 53, C4 13), no defects, no follow-ups. It is a flash-tier model's audit, not an exhaustive one.
+- Two more context-free planner sessions were retried after the first attempt was cut by a quota relay: REQ-902 (Maros
+  audit trail: 8 tasks, critical path 255 min, one low-confidence decision task) and REQ-903 (Pictures latency
+  investigation: 6 tasks, 360 min, four low-confidence tasks). Both validate clean first time with live-verified
+  evidence. `independent-evidence/verify_independent.py` (→ `VERIFICATION.json`) runs the gate with real
+  `file:`/`command:`/`precedent:` verification, a corruption battery and approval → drift on each: REQ-901 and REQ-903
+  pass everything; REQ-902 passed every hard gate and one soft quality check flagged a new DTO file listed in
+  `expected_paths` without the task saying it creates it — fed back to its planner, which corrected PLAN.md and
+  PLAN.json; now 3/3. All three are
+  now fixtures of the module suite. Per-criterion record: `ACCEPTANCE.md`.
 
 Not changed on purpose: `--force` of an unapproved plan with nothing frozen freezes it (owner's explicit launch,
 recorded `launch-forced`); `in-progress` is a SPEC status, no flow sets it on PLAN.md.
@@ -107,7 +119,7 @@ recorded `launch-forced`); `in-progress` is a SPEC status, no flow sets it on PL
 
 - Evidence is judged by structure and existence (files, specs, tasks, requirements, decisions, commits, executables), not by semantic truth: a fluent but false justification passes (P-023). No deterministic validator can do otherwise; AC-03/07/09 ask for justification with verifiable evidence, which is what is enforced.
 - The ten-corruption battery and expectations (`EXPECT.json`) were written by the same planner (me); they are regression
-  guards, not an independent oracle. The independent reviewers were same-provider agents; a cross-provider `bitacora review` remains open (Proposals).
+  guards, not an independent oracle. The reviewer agents were same-provider; the cross-vendor audit (Gemini, delegated) is a flash-tier pass, not exhaustive.
 - Another session's `test_scheduler_integration` errored once in one earlier full run while its adapter was being
   edited; the three later full runs (final: 802 OK) were clean.
 

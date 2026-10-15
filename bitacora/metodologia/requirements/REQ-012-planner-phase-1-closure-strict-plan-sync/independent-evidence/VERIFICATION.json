@@ -1,0 +1,366 @@
+[
+ {
+  "plan": "REQ-901-duplicate-project",
+  "ok": true,
+  "tasks": 10,
+  "critical_path": {
+   "tasks": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6",
+    "T10"
+   ],
+   "minutes": 250
+  },
+  "low_confidence": [],
+  "warnings": [],
+  "steps": [
+   {
+    "step": "repositories resolve on this machine (['trainingapp'])",
+    "ok": true,
+    "detail": "unresolved set()"
+   },
+   {
+    "step": "publication gate with file/command/precedent evidence verified",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "no unordered task collisions, no redundant edges",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "schema 1.1.0 with evidence on every task",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "uncertain work is kept as confidence low (or the plan has none)",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "planned paths exist or are created by the task that lists them",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "refused: task id twice in PLAN.md",
+    "ok": true,
+    "detail": "'T1: defined 2 times in PLAN.md' not in T1: defined 2 times in PLAN.md (lines 15, 31); task ids must be unique\nT1.milestone_id: PLAN.md puts it under M3, PLAN.json says M1\nT1.title: PLAN.md says 'Again', PLAN.json says 'Decide duplication d"
+   },
+   {
+    "step": "refused: task id twice in PLAN.json",
+    "ok": true,
+    "detail": "'T1: duplicate task id' not in T1: duplicate task id (tasks[0], tasks[10])\nT1: defined more than once in PLAN.json"
+   },
+   {
+    "step": "refused: title contradiction",
+    "ok": true,
+    "detail": "'T1.title' not in T1.title: PLAN.md says 'Decide duplication design (atomicity, dangling photos, key rules)', PLAN.json says 'Something else entirely'"
+   },
+   {
+    "step": "refused: repository contradiction",
+    "ok": true,
+    "detail": "'T1.repository' not in T1.repository: PLAN.md says repo 'trainingapp', PLAN.json says 'maros-nest'\nclassification_evidence: repository 'maros-nest' has no checkout here, so its file evidence could not be verified"
+   },
+   {
+    "step": "refused: dependency contradiction",
+    "ok": true,
+    "detail": "'T2.after' not in T2.after: PLAN.md has ['T1'], PLAN.json has []"
+   },
+   {
+    "step": "refused: risk without evidence",
+    "ok": true,
+    "detail": "'T1.classification_evidence.risk' not in T1.classification_evidence.risk: missing"
+   },
+   {
+    "step": "refused: fabricated file evidence",
+    "ok": true,
+    "detail": "'does not exist in repository' not in T1.classification_evidence.scope.evidence[0]: file 'src/does/not/exist.py' does not exist in repository 'trainingapp'; evidence must be something actually inspected"
+   },
+   {
+    "step": "refused: fabricated precedent",
+    "ok": true,
+    "detail": "\"precedent 'REQ-999/T1' does not exist\" not in T1.classification_evidence.duration.evidence[0]: precedent 'REQ-999/T1' does not exist (requirement, task, decision, pending item or commit not found)"
+   },
+   {
+    "step": "refused: placeholder justification",
+    "ok": true,
+    "detail": "'complexity.justification' not in T1.classification_evidence.complexity.justification: is a placeholder"
+   },
+   {
+    "step": "refused: scheduling key",
+    "ok": true,
+    "detail": "'T1.model_hint' not in T1.model_hint: not allowed in a plan (scheduling/execution state is not planned here)"
+   },
+   {
+    "step": "refused: parallel-safety promise",
+    "ok": true,
+    "detail": "'promises parallel safety' not in T1.estimate_rationale: 'safe to run in parallel' promises parallel safety; coupling is a signal for the scheduler, never a guarantee (the scheduler decides concurrency)"
+   },
+   {
+    "step": "approval freezes exactly the approved bytes",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "launch gate passes for the approved revision",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "an unapproved edit is PLAN_DRIFT and nothing is frozen",
+    "ok": true,
+    "detail": ""
+   }
+  ]
+ },
+ {
+  "plan": "REQ-902-audit-trail",
+  "ok": true,
+  "tasks": 7,
+  "critical_path": {
+   "tasks": [
+    "T1",
+    "T2",
+    "T4",
+    "T5",
+    "T6",
+    "T7"
+   ],
+   "minutes": 250
+  },
+  "low_confidence": [],
+  "warnings": [],
+  "steps": [
+   {
+    "step": "repositories resolve on this machine (['maros-nest', 'maros-next'])",
+    "ok": true,
+    "detail": "unresolved set()"
+   },
+   {
+    "step": "publication gate with file/command/precedent evidence verified",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "no unordered task collisions, no redundant edges",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "schema 1.1.0 with evidence on every task",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "uncertain work is kept as confidence low (or the plan has none)",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "planned paths exist or are created by the task that lists them",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "refused: task id twice in PLAN.md",
+    "ok": true,
+    "detail": "'T1: defined 2 times in PLAN.md' not in T1: defined 2 times in PLAN.md (lines 11, 22); task ids must be unique\nT1.milestone_id: PLAN.md puts it under M3, PLAN.json says M1\nT1.title: PLAN.md says 'Again', PLAN.json says 'Lead status history "
+   },
+   {
+    "step": "refused: task id twice in PLAN.json",
+    "ok": true,
+    "detail": "'T1: duplicate task id' not in T1: duplicate task id (tasks[0], tasks[7])\nT1: defined more than once in PLAN.json"
+   },
+   {
+    "step": "refused: title contradiction",
+    "ok": true,
+    "detail": "'T1.title' not in T1.title: PLAN.md says 'Lead status history service method gated by canSeeLeadNumber, creating the new lead-status-event.dto.ts', PLAN.json says 'Something else entirely'"
+   },
+   {
+    "step": "refused: repository contradiction",
+    "ok": true,
+    "detail": "'T1.repository' not in T1.repository: PLAN.md says repo 'maros-nest', PLAN.json says 'trainingapp'\nclassification_evidence: repository 'trainingapp' has no checkout here, so its file evidence could not be verified"
+   },
+   {
+    "step": "refused: dependency contradiction",
+    "ok": true,
+    "detail": "'T2.after' not in T2.after: PLAN.md has ['T1'], PLAN.json has []"
+   },
+   {
+    "step": "refused: risk without evidence",
+    "ok": true,
+    "detail": "'T1.classification_evidence.risk' not in T1.classification_evidence.risk: missing"
+   },
+   {
+    "step": "refused: fabricated file evidence",
+    "ok": true,
+    "detail": "'does not exist in repository' not in T1.classification_evidence.scope.evidence[0]: file 'src/does/not/exist.py' does not exist in repository 'maros-nest'; evidence must be something actually inspected"
+   },
+   {
+    "step": "refused: fabricated precedent",
+    "ok": true,
+    "detail": "\"precedent 'REQ-999/T1' does not exist\" not in T1.classification_evidence.duration.evidence[0]: precedent 'REQ-999/T1' does not exist (requirement, task, decision, pending item or commit not found)"
+   },
+   {
+    "step": "refused: placeholder justification",
+    "ok": true,
+    "detail": "'complexity.justification' not in T1.classification_evidence.complexity.justification: is a placeholder"
+   },
+   {
+    "step": "refused: scheduling key",
+    "ok": true,
+    "detail": "'T1.model_hint' not in T1.model_hint: not allowed in a plan (scheduling/execution state is not planned here)"
+   },
+   {
+    "step": "refused: parallel-safety promise",
+    "ok": true,
+    "detail": "'promises parallel safety' not in T1.estimate_rationale: 'safe to run in parallel' promises parallel safety; coupling is a signal for the scheduler, never a guarantee (the scheduler decides concurrency)"
+   },
+   {
+    "step": "approval freezes exactly the approved bytes",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "launch gate passes for the approved revision",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "an unapproved edit is PLAN_DRIFT and nothing is frozen",
+    "ok": true,
+    "detail": ""
+   }
+  ]
+ },
+ {
+  "plan": "REQ-903-assistant-latency",
+  "ok": true,
+  "tasks": 6,
+  "critical_path": {
+   "tasks": [
+    "T1",
+    "T2",
+    "T4",
+    "T5",
+    "T6"
+   ],
+   "minutes": 435
+  },
+  "low_confidence": [
+   "T2",
+   "T3",
+   "T4",
+   "T5"
+  ],
+  "warnings": [],
+  "steps": [
+   {
+    "step": "repositories resolve on this machine (['pictures'])",
+    "ok": true,
+    "detail": "unresolved set()"
+   },
+   {
+    "step": "publication gate with file/command/precedent evidence verified",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "no unordered task collisions, no redundant edges",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "schema 1.1.0 with evidence on every task",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "uncertain work is kept as confidence low (or the plan has none)",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "planned paths exist or are created by the task that lists them",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "refused: task id twice in PLAN.md",
+    "ok": true,
+    "detail": "'T1: defined 2 times in PLAN.md' not in T1: defined 2 times in PLAN.md (lines 21, 30); task ids must be unique\nT1.milestone_id: PLAN.md puts it under M2, PLAN.json says M1\nT1.title: PLAN.md says 'Again', PLAN.json says 'Build the first-turn"
+   },
+   {
+    "step": "refused: task id twice in PLAN.json",
+    "ok": true,
+    "detail": "'T1: duplicate task id' not in T1: duplicate task id (tasks[0], tasks[6])\nT1: defined more than once in PLAN.json"
+   },
+   {
+    "step": "refused: title contradiction",
+    "ok": true,
+    "detail": "'T1.title' not in T1.title: PLAN.md says 'Build the first-turn latency harness', PLAN.json says 'Something else entirely'"
+   },
+   {
+    "step": "refused: repository contradiction",
+    "ok": true,
+    "detail": "'T1.repository' not in T1.repository: PLAN.md says repo 'pictures', PLAN.json says 'trainingapp'\nclassification_evidence: repository 'trainingapp' has no checkout here, so its file evidence could not be verified"
+   },
+   {
+    "step": "refused: dependency contradiction",
+    "ok": true,
+    "detail": "'T2.after' not in T1 and T4: nothing orders them yet both touch path 'package.json'~'package.json', and one declares coupling low; add `after` between them or raise the coupling\nT2.after: PLAN.md has ['T1'], PLAN.json "
+   },
+   {
+    "step": "refused: risk without evidence",
+    "ok": true,
+    "detail": "'T1.classification_evidence.risk' not in T1.classification_evidence.risk: missing"
+   },
+   {
+    "step": "refused: fabricated file evidence",
+    "ok": true,
+    "detail": "'does not exist in repository' not in T1.classification_evidence.scope.evidence[0]: file 'src/does/not/exist.py' does not exist in repository 'pictures'; evidence must be something actually inspected"
+   },
+   {
+    "step": "refused: fabricated precedent",
+    "ok": true,
+    "detail": "\"precedent 'REQ-999/T1' does not exist\" not in T1.classification_evidence.duration.evidence[0]: precedent 'REQ-999/T1' does not exist (requirement, task, decision, pending item or commit not found)"
+   },
+   {
+    "step": "refused: placeholder justification",
+    "ok": true,
+    "detail": "'complexity.justification' not in T1.classification_evidence.complexity.justification: is a placeholder"
+   },
+   {
+    "step": "refused: scheduling key",
+    "ok": true,
+    "detail": "'T1.model_hint' not in T1.model_hint: not allowed in a plan (scheduling/execution state is not planned here)"
+   },
+   {
+    "step": "refused: parallel-safety promise",
+    "ok": true,
+    "detail": "'promises parallel safety' not in T1.estimate_rationale: 'safe to run in parallel' promises parallel safety; coupling is a signal for the scheduler, never a guarantee (the scheduler decides concurrency)"
+   },
+   {
+    "step": "approval freezes exactly the approved bytes",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "launch gate passes for the approved revision",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "step": "an unapproved edit is PLAN_DRIFT and nothing is frozen",
+    "ok": true,
+    "detail": ""
+   }
+  ]
+ }
+]
