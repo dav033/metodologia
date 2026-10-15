@@ -37,17 +37,24 @@ locked-test rows or tune after opening their labels.
 ### M2 — Train and choose on development data
 - [x] T4 — Run Laya dry-run and base-model development evaluation offline on CUDA · after: T3 · verify: exact
   English revision/hash and actual CUDA device are recorded; no locked-test input is scored · covers: R1, R6
-- [ ] T5 — Fine-tune the English checkpoint with its encoder frozen for three fixed seeds, then compare on development
-  only · after: T4 · verify: immutable logs record updates, data/base hashes, CUDA placement, elapsed time, peak VRAM
+- [x] T5 — Fine-tune the English checkpoint with its encoder frozen for three fixed seeds, then compare on development
+  only · after: T4 · verify: immutable logs record the update budget, data/base hashes, CUDA placement, elapsed time, peak VRAM
   and offline checkpoint reload · covers: R6
+- [ ] T5b — Compare one- and two-final-layer partial-unfreeze Laya recipes on development after full-encoder CUDA OOM ·
+  after: T5 · verify: only explicitly listed final encoder layers and decision heads receive gradients; CUDA memory cap,
+  AMP, checkpointing, elapsed time, warning log and offline reload are recorded; no locked-test input is scored · covers: R6
+- [ ] T5c — Implement and evaluate a deterministic unigram/bigram Naive Bayes reference on development · after: T5 ·
+  verify: it trains on the frozen training split only, accepts blind task text without reading labels, emits reproducible
+  predictions under a fixed smoothing/tie-break configuration, and its source hash is recorded · covers: R7
 - [ ] T6 — Select the checkpoint and fixed class mapping from development results, then freeze the evaluation command
-  and all hashes · after: T5 · verify: lock manifest identifies the blind test input hash but contains no test labels
+  and all hashes · after: T5b, T5c · verify: lock manifest identifies the blind test input hash but contains no test labels
   or predictions · covers: R5, R7
 
 ### M3 — One locked evaluation and audit
 - [ ] T7 — Score base and selected fine-tuned English checkpoints once on the locked 1000 cases; compare with the
-  deterministic balanced-class baseline · after: T6 · verify: report exact accuracy, Wilson interval, per-class
-  precision/recall, macro-F1, confusion matrix, ordinal error, invalid outputs, latency and peak memory · covers:
+  25% balanced-majority baseline and frozen deterministic Naive Bayes reference · after: T6 · verify: report exact accuracy, Wilson interval, per-class
+  precision/recall, family-cluster bootstrap interval, macro-F1, confusion matrix, ordinal error, invalid outputs,
+  latency and peak memory · covers:
   R7, R8
 - [ ] T8 — Audit label derivation, family/template leakage, prior-input similarity, hashes, English-only and
   no-runtime-change invariants; record point-target and lower-bound verdict separately · after: T7 · verify: a
@@ -57,10 +64,11 @@ locked-test rows or tune after opening their labels.
 The validator must pass before model access and again against the frozen artifacts: exactly 1008 train / 400 dev /
 1000 test, 250 examples per class in test, no shared scenario family or wording template across splits, no direct
 class-word leakage, no exact or near-duplicate test text in any prior Laya input, and no labels in blind inputs.
-Run at least three offline frozen-encoder CUDA seeds; select on development only. Open the test once after freezing the
-model, prompt, mapping and hashes. Report the 25% balanced deterministic baseline. Require at least 850/1000 for the
-85% point target; claim benchmark accuracy is at least 85% only if the 95% Wilson lower bound also clears 85%
-(approximately 873/1000). State that synthetic results do not estimate natural production accuracy.
+Run at least three offline frozen-encoder CUDA seeds; compare partial-unfreeze recipes if full-encoder tuning does not
+fit. Evaluate both the 25% majority and deterministic Naive Bayes reference. Select on development only. Open the test
+once after freezing the model, prompt, mapping, reference policy and hashes. Require at least 850/1000 for the
+85% point target. Show the ordinary Wilson interval as descriptive and use family-cluster bootstrap for any claim
+about transfer beyond these scenario families. State that synthetic results do not estimate natural production accuracy.
 
 ## Rulings
 - Use labels derived from a frozen structured scenario rubric before text generation: this makes the synthetic suite
@@ -88,3 +96,16 @@ model, prompt, mapping and hashes. Report the 25% balanced deterministic baselin
   eight epochs (908 train rows after Laya reserves 100 for internal calibration). Frozen-encoder CUDA training has
   started with seeds 7, 17, and 42; seed 7 completed in 394.813 s at 2427 MiB sampled whole-GPU peak. The pinned
   training log contains a PyTorch GradScaler/scheduler warning; preserve and audit it before accepting checkpoints.
+- 2026-10-15 — All frozen-encoder seeds completed offline on CUDA and were independently reloaded/scored on the 400
+  development tasks: 50.25% (seed 7), 43.75% (seed 17), and 49.0% (seed 42), all above the 25% deterministic
+  baseline but far below the 85% target. Every log records one initial GradScaler/scheduler warning; Laya reports the
+  912-update budget but not successful optimizer-step count. Do not open the test yet; next assess full-encoder memory
+  with a small throwaway CUDA run, then continue development-only tuning if it fits safely.
+- 2026-10-15 — The development-only unigram/bigram Naive Bayes reference scored 317/400 (79.25%) with fixed alpha
+  0.1, greatly exceeding the best Laya head-only seed (50.25%) and the 25% majority baseline. Most reference errors
+  are low/extreme boundary confusions; medium recall is 99% and high recall is 97%.
+- 2026-10-15 — Two full-encoder probes on CUDA failed at the optimizer update: the 88% allocator-cap run peaked at
+  5307 MiB and requested 22 MiB beyond its artificial cap; the 94% run with max_len 256 peaked at 5675 MiB, had
+  182 MiB device memory free, and failed under its 5.38 GiB allocator cap. Preserve both artifacts. Full-encoder
+  AdamW tuning is not safe on this 6 GiB device; continue with final-layer partial-unfreeze and the deterministic
+  development reference. Locked test remains unopened.

@@ -16,10 +16,11 @@ establish the behavior of a new benchmark or justify more epochs.
 four-class accuracy on a new, locked English benchmark, without changing Planner or M2 runtime behavior.
 
 **Success looks like:** at least 850/1000 correct on a class-balanced benchmark with 250 tasks in each of `low`,
-`medium`, `high`, and `extreme`; report its 95% Wilson interval and every class's precision/recall. A statistical
-claim that underlying accuracy is at least 85% requires the lower 95% Wilson bound to clear 85% (approximately
-873/1000 correct). A five-task run is only a smoke check: its score moves in 20-point steps and cannot validate the
-target. Because the benchmark labels are generated from a frozen scenario rubric, this measures agreement with that
+`medium`, `high`, and `extreme`; report every class's precision/recall, a 95% Wilson interval, and a scenario-family
+cluster-bootstrap interval. The Wilson interval is descriptive because several wording variants share a scenario
+family. A claim that performance generalizes to unseen scenario families requires the lower 95% cluster-bootstrap
+bound to clear 85%. A five-task run is only a smoke check: its score moves in 20-point steps and cannot validate the
+target. Because benchmark labels are generated from a frozen scenario rubric, this measures agreement with that
 synthetic English benchmark, not accuracy on future production tasks.
 
 ## Users / actors / stakeholders
@@ -75,11 +76,15 @@ Scheduler behavior.
 - R5. Before test inference, freeze task-family splits, generator/rubric hashes, model revision, checkpoint hash,
   prompt, score-to-class mapping and primary metric. Test data cannot be used for training or tuning.
 - R6. Training shall use the installed pinned Laya runtime offline, first with the encoder frozen on CUDA. Compare at
-  least three seeds on development data; run full-encoder tuning only after a measured safe dry run fits the 6 GiB
-  GPU budget and host safety margin.
-- R7. The primary test metric shall be exact four-class accuracy with a 95% Wilson interval and per-class metrics.
-  The point target is at least 850/1000; claim underlying benchmark accuracy of at least 85% only if the interval's
-  lower bound is also at least 85% (approximately 873/1000 at n=1000).
+  least three seeds on development data. If full-encoder tuning cannot fit the measured 6 GiB GPU budget, compare a
+  partial-unfreeze recipe that trains only the final encoder layer(s) plus Laya's decision head; record the exact
+  trainable parameter set and cap CUDA allocation below device capacity. Do not retry full-encoder training after a
+  confirmed out-of-memory result.
+- R7. Compare Laya with both the 25% balanced majority baseline and a reproducible deterministic word unigram/bigram
+  Naive Bayes reference trained on the same training split. Freeze its tokenizer, smoothing constant, tie-breaking
+  order and source hash before opening the test. The primary test metric shall be exact four-class accuracy with a descriptive 95% Wilson interval, a
+  scenario-family cluster-bootstrap interval, and per-class metrics. The point target is at least 850/1000; claim
+  generalization to unseen scenario families at 85% only if the lower 95% cluster-bootstrap bound is also at least 85%.
 - R8. A five-task score may be reported as a smoke check only; it shall not count as evidence that the 85% target is
   met.
 - R9. Report synthetic-benchmark accuracy separately from any future, independently labeled natural-task estimate.
