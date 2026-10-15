@@ -199,6 +199,15 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Rollback:** remove the two-line guard in `bt_runentry.supervise` and the adapter; the package is additive and nothing else imports it. Run databases under `.state/scheduler/` can be deleted.
 - **Evidence:** `requirements/REQ-011-*/REPORT.md` (SC-AC01..20 map, three independent reviews A1–A8 fixed); module 234, integration 28, methodology 797, packaging 11 OK.
 
+## D-023 — Local Laya requires code-reviewed benchmark evidence; deterministic fallback stays authoritative (2026-10-14)
+- **Date:** 2026-10-14 · **Status:** Accepted under REQ-013
+- **Context:** M2 recalculates quality metrics from local artifacts, but tests demonstrated that self-authored perfect predictions could claim the canonical corpus and declare CUDA without running Laya. Real RTX A3000 measurements also found no confidence cutoff and no held-out improvement over the deterministic route reference.
+- **Decision:** Keep deterministic recommendations active unless calibration and the paired held-out gate both pass and the exact digest of all five evidence artifacts appears in `laya_quality_gate.approved_evidence_sha256`. Updating that allowlist is an explicit reviewed contract change; an artifact cannot authorize itself. Keep the current allowlist empty. Local CUDA inference remains available for benchmark and diagnosis; M1 stays the sole authority to accept and reserve a route.
+- **Alternatives:** Trust internally consistent reports and rehashed fixtures (rejected: synthetic outputs reproduced a passing gate); enable Laya despite inconclusive/negative evidence (rejected: contradicts the approved quality gate); remove Laya and its benchmarks (rejected: retain reproducible local evaluation and future guarded use).
+- **Consequences:** + fabricated or edited results cannot activate route selection; + negative quality evidence remains visible; − Laya does not make live M2 recommendations until a new reviewed benchmark digest is explicitly approved.
+- **Rollback:** Do not remove the deterministic fallback or digest check. A future benchmark can add a reviewed evidence digest; to retire Laya, remove its opt-in integration and preserve the evidence files.
+- **Source:** [REQ-013 report](requirements/REQ-013-scheduler-m2-decision-engine-with-local/REPORT.md) · [REQ-013 plan](requirements/REQ-013-scheduler-m2-decision-engine-with-local/PLAN.md)
+
 ## D-024 — M3 agent executor: isolated module, shim-owned agents, no model choice (2026-10-14)
 - **Decision:** `bt_scheduler_executor` (stdlib only, own types, five ports) reached only through `bt_scheduler_executor_adapter.py`; each agent runs under a detached double-forked shim so exit status/output survive an executor restart; work is preserved at every end as a snapshot commit under `refs/m3/*`; Gemini = Antigravity `agy`; M3 rejects any route reference it cannot resolve (never defaults a model).
 - **Alternatives:** agents as direct children (lose exit status on restart); reuse `bt_worktree.allocate` (random suffix, not idempotent per attempt); standalone `gemini` CLI (no profile/quota support).

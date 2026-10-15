@@ -40,8 +40,6 @@ month summary._
 - P-022 · Split further parts of the methodology into modules following `references/modules.md` (candidates to evaluate: requirements gate, marathon supervisor state/run, bitácora documents/index, agent routing) · urgency: low · complexity: L · added 2026-10-14 · REQ-010 proposal
   - Context: `bt_planner` is the first module and the template (boundary + isolation + adapter tests). Do one at a time, each with its own requirement and review; the owner picks the order.
 
-- **P-027** · REQ-014 follow-up: wire M2's `route:<id>` lookup into `bt_scheduler_executor_adapter.RouteResolver(m2_lookup=...)` when `bt_scheduler_decision` lands; REQ-014 changes are uncommitted · med/S
-
 ## Blocked
 _None_
 
@@ -49,6 +47,8 @@ _None_
 _None_
 
 ## Notes
+- ✓ P-027 · M3 route lookup for M2 `route:<id>` references · closed 2026-10-14 · adapter resolves only M2's persisted selected route; Plan→M1→M2 reference test passes
+- ✓ P-028 · Package all M2 runtime modules and `bt_scheduler_decision` data in the installed wheel · closed 2026-10-14 · package migration suite 13/13, including isolated M2 import
 - ✓ P-025 · Plans approved by hand had no approval record · closed 2026-10-14 · a launch never freezes anymore: `PLAN_NOT_FROZEN` until `plan approve` / `plan-json freeze` (explicit `--force` is recorded `launch-forced`); REQ-012, D-021.
 - ✓ P-024 · REQ-009 PLAN.md M3 heading differed from its frozen PLAN.json title · closed 2026-10-14 · PLAN.md heading aligned to the frozen title (narrative only; frozen revision and history untouched); `plan-json check REQ-009` is OK again.
 - ✓ P-019 · Freeze approved PLAN.json also in the foreground launch path · closed 2026-10-14 · REQ-012: one launch gate (`bt_plan_adapter.launch_problem` -> planner `bind_approved`) now guards standard, web, handoff, foreground (+ successor helper) and every NEW run; approval freezes the approved bytes; tests `LaunchPaths` (17). D-021.

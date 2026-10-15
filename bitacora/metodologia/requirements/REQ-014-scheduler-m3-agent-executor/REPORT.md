@@ -25,3 +25,6 @@ POSIX/Linux only (identity via `/proc`, `ps` fallback untested elsewhere); same-
 ## Not done / proposals
 - Nothing committed or pushed (not requested). M1 contract 1.1.0 changes in `bt_scheduler_core` belong to the parallel M2 work.
 - Proposal 1: wire M2's route lookup when `bt_scheduler_decision` lands (P-027). Proposal 2: macOS/`ps` identity tests. Proposal 3: a subreaper helper outside the stdlib-only module for full descendant control. Proposal 4: bump PLAN revision 2 so task verify commands use `discover -s` (rev 1 lists dotted module names that need `-I` off).
+
+## Final consolidated run (2026-10-14, one pass, no edits afterwards)
+Module 243 OK (lone copy + README table included) · core 239 OK · planner 199 OK · M2 `bt_scheduler_decision` 56 OK · methodology `discover -s tests` 893 OK (3 opt-in skipped; includes adapter 37, integration, M2 tests) · packaging `tests.migration.test_package_install` 12/12 OK on the live repo (M2's new `bt_*` modules, incl. `bt_scheduler_bench_quality`, were added to `py-modules` so the gate passes; M2 must keep it current) · real CLIs (opt-in, bounded): antigravity direct:gemini/gemini-3.8-flash-low finished/clean 6.8 s 12160 tok; claude direct:claude/haiku@claude-personal finished/clean 8.6 s $0.0044; codex direct:codex/gpt-6-luna#low finished/clean 8.2 s 20768 tok.

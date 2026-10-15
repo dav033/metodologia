@@ -1,6 +1,6 @@
 ---
 id: REQ-013
-status: ready
+status: implemented
 created: 2026-10-14
 track: deep
 ---

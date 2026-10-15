@@ -1,0 +1,192 @@
+{
+  "calibration_result_sha256": "dcc51d325bcdcc0fde9fd8dc0004c433952c305a03ad809197846adb40e9b95e",
+  "calibration_version": "scheduler-m2-calibration-v1:dcc51d325bcdcc0f",
+  "checkpoint": "typed-decisions",
+  "checkpoint_repository": "convaiinnovations/laya-typed-decisions",
+  "checkpoint_results": [
+    {
+      "checkpoint": "english",
+      "confidence_gate": {
+        "accuracy": null,
+        "correct": 0,
+        "cutoff": null,
+        "deterministic_accuracy": 0.26,
+        "hard_filter_violations": 0,
+        "minimum_retained": 50,
+        "passed": false,
+        "retained": 0,
+        "truncated_choices": 0,
+        "valid_choices": 100,
+        "wilson_lower_bound": null
+      },
+      "repository": "convaiinnovations/laya",
+      "requested_device": "cuda",
+      "revision": "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851",
+      "sha256": "891102d372688fc2a094dac56a384bc537b87c63f21f9f3dac0be2b7cbc8d86c",
+      "summary": {
+        "agreement_with_baseline": 0.21,
+        "cases": 100,
+        "deterministic_accuracy": 0.26,
+        "invalid_or_failed": 0,
+        "oracle_accuracy": 0.16,
+        "peak_cuda_allocated_bytes": 2454268928,
+        "peak_cuda_load_allocated_bytes": 1685436928,
+        "peak_cuda_load_reserved_bytes": 1799356416,
+        "peak_cuda_reserved_bytes": 2682257408,
+        "peak_rss_bytes": 3539832832,
+        "regret": {
+          "deterministic": {
+            "coverage": 1.0,
+            "mean": 0.083277183,
+            "measured_cases": 100,
+            "median": 0.0623747
+          },
+          "laya": {
+            "coverage": 1.0,
+            "mean": 0.09926370699999999,
+            "measured_cases": 100,
+            "median": 0.09426999999999999
+          }
+        },
+        "valid_choices": 100,
+        "wall_latency_ms": {
+          "cold_first": 7376.967,
+          "median": 77.8825,
+          "p95": 79.644
+        },
+        "worker_inference_latency_ms": {
+          "median": 77.0095,
+          "p95": 78.773
+        }
+      }
+    },
+    {
+      "checkpoint": "multilingual",
+      "confidence_gate": {
+        "accuracy": null,
+        "correct": 0,
+        "cutoff": null,
+        "deterministic_accuracy": 0.26,
+        "hard_filter_violations": 0,
+        "minimum_retained": 50,
+        "passed": false,
+        "retained": 0,
+        "truncated_choices": 0,
+        "valid_choices": 100,
+        "wilson_lower_bound": null
+      },
+      "repository": "convaiinnovations/laya-multilingual",
+      "requested_device": "cuda",
+      "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "sha256": "9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+      "summary": {
+        "agreement_with_baseline": 0.17,
+        "cases": 100,
+        "deterministic_accuracy": 0.26,
+        "invalid_or_failed": 0,
+        "oracle_accuracy": 0.18,
+        "peak_cuda_allocated_bytes": 1607674880,
+        "peak_cuda_load_allocated_bytes": 1307824640,
+        "peak_cuda_load_reserved_bytes": 1333788672,
+        "peak_cuda_reserved_bytes": 1629487104,
+        "peak_rss_bytes": 3046678528,
+        "regret": {
+          "deterministic": {
+            "coverage": 1.0,
+            "mean": 0.083277183,
+            "measured_cases": 100,
+            "median": 0.0623747
+          },
+          "laya": {
+            "coverage": 1.0,
+            "mean": 0.09415648600000001,
+            "measured_cases": 100,
+            "median": 0.0847
+          }
+        },
+        "valid_choices": 100,
+        "wall_latency_ms": {
+          "cold_first": 10580.474,
+          "median": 41.376000000000005,
+          "p95": 42.897
+        },
+        "worker_inference_latency_ms": {
+          "median": 40.5455,
+          "p95": 41.873
+        }
+      }
+    },
+    {
+      "checkpoint": "typed-decisions",
+      "confidence_gate": {
+        "accuracy": null,
+        "correct": 0,
+        "cutoff": null,
+        "deterministic_accuracy": 0.26,
+        "hard_filter_violations": 0,
+        "minimum_retained": 50,
+        "passed": false,
+        "retained": 0,
+        "truncated_choices": 0,
+        "valid_choices": 100,
+        "wilson_lower_bound": null
+      },
+      "repository": "convaiinnovations/laya-typed-decisions",
+      "requested_device": "cuda",
+      "revision": "1a793eb568e6718f15941d08f85432581df534e3",
+      "sha256": "4fa56de72383a9d3efa9cfa78955733c81b9fc8067a587ca4beb82c78107a24e",
+      "summary": {
+        "agreement_with_baseline": 0.05,
+        "cases": 100,
+        "deterministic_accuracy": 0.26,
+        "invalid_or_failed": 0,
+        "oracle_accuracy": 0.27,
+        "peak_cuda_allocated_bytes": 2454268928,
+        "peak_cuda_load_allocated_bytes": 1685436928,
+        "peak_cuda_load_reserved_bytes": 1799356416,
+        "peak_cuda_reserved_bytes": 2682257408,
+        "peak_rss_bytes": 3539402752,
+        "regret": {
+          "deterministic": {
+            "coverage": 1.0,
+            "mean": 0.083277183,
+            "measured_cases": 100,
+            "median": 0.0623747
+          },
+          "laya": {
+            "coverage": 1.0,
+            "mean": 0.093369547,
+            "measured_cases": 100,
+            "median": 0.07622999999999999
+          }
+        },
+        "valid_choices": 100,
+        "wall_latency_ms": {
+          "cold_first": 7682.0,
+          "median": 78.0815,
+          "p95": 79.651
+        },
+        "worker_inference_latency_ms": {
+          "median": 77.2045,
+          "p95": 78.778
+        }
+      }
+    }
+  ],
+  "checkpoint_revision": "1a793eb568e6718f15941d08f85432581df534e3",
+  "checkpoint_sha256": "4fa56de72383a9d3efa9cfa78955733c81b9fc8067a587ca4beb82c78107a24e",
+  "confidence_cutoff": null,
+  "dataset_sha256": "b5cbcc43d70b7fbd2a191400cad411ba5e8992d1b49b30d10d406575c2228b2d",
+  "dataset_version": "scheduler-m2-synthetic-choice-v1",
+  "device": "cuda",
+  "diagnostic_only_when_disabled": true,
+  "frozen_at_utc": "2026-10-15T03:01:03.151836+00:00",
+  "gate_enabled": false,
+  "gate_reason": "no_checkpoint_cleared_calibrated_wilson_gate",
+  "head_max_len": 512,
+  "held_out_touched": false,
+  "label_protocol": "synthetic utility oracle v1: sum(normalized, predeclared task priority weights * independently generated route attributes); maximum utility wins; stable route SHA-256 breaks ties; no Laya output and no baseline rank enter the label",
+  "labeler_independence": "algorithmic synthetic oracle; labels depend only on frozen feature and priority-weight data, not Laya, bt_agents baseline order, a hosted model or attempt outcomes; not human or production-outcome labels",
+  "max_len": 1536,
+  "schema_version": 1
+}

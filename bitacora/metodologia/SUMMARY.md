@@ -10,6 +10,7 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
 - 2026-10-14 REQ-009 + REQ-010 done: planner contract `PLAN.json` (D-019) now an isolated module `skill/scripts/bt_planner/` reached only through `bt_plan_adapter.py` (D-020, convention `references/modules.md`). Suites: module 111, methodology 752, packaging 802 OK. Merged into `main` (`fe3735d`, pushed); see `requirements/REQ-010-*/REPORT.md`.
 - 2026-10-14 REQ-011 done (uncommitted): Scheduler Core M1 `skill/scripts/bt_scheduler_core/` + `bt_scheduler_adapter.py` (D-022; one authority per requirement, approval = sha256, projection `RUN.projection.json`). Suites: module 234, integration 28, methodology 797, packaging 11 OK; see `requirements/REQ-011-*/REPORT.md`.
 - 2026-10-14 REQ-014 done (uncommitted): Scheduler M3 Agent Executor `skill/scripts/bt_scheduler_executor/` + `bt_scheduler_executor_adapter.py` (D-024; worktree per attempt, shim-owned agents, recoverable handoff, restart reconcile; never decides). Suites: module 243, adapter+integration 132, methodology 880 OK; real Claude/Codex/Gemini smoke OK; see `requirements/REQ-014-*/REPORT.md`.
+- 2026-10-14 REQ-013 done (uncommitted): Scheduler M2 `skill/scripts/bt_scheduler_decision/` + methodology adapter, pinned offline Laya worker and M1 integration (D-023). Laya ran on the RTX A3000/CUDA 13.2, but actual held-out results were 14% vs 21% deterministic and no checkpoint passed calibration; the exact-artifact allowlist stays empty and live recommendations remain deterministic. Suites: M2 64, Planner 199, M1 239, Plan/M1/M2 integration 89, package 13; full methodology 916 OK/3 skipped. See `requirements/REQ-013-*/REPORT.md`.
 - 2026-10-14 REQ-012 closes planner phase 1: PLAN.md↔PLAN.json sync compares ids/titles/repo/after/verify; one launch gate (`bind_approved`) on every path; schema 1.1.0 with argued classifications (D-021). Suites: module 179, methodology 797, scheduler core 234 OK; 6 real planning trials 182/182. Uncommitted; see `requirements/REQ-012-*/REPORT.md`.
 - 2026-10-14 strict audit repaired project/global learning, telemetry integrity and cross-agent continuation.
   Native review panel: `artifacts/revision-flujo.html`; detailed evidence and limitations: `artifacts/audit-2026-10-14.md`.
@@ -41,9 +42,8 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
   P-014 prune closed items (low)
 
 ## Recent decisions (see DECISIONS.md)
-- D-012 the pictures bitácora is a junction into `metodologia` · D-011 the live bitácora is published to `main` over the
-  other clone's copies · D-010 (superseded) · D-009 the other clone's bitácora integrated into the repo · D-008 pictures
-  bitácora copied into the repo (superseded by D-012) · D-007 bitácora lives in `~/bitacora` (partly superseded)
+- D-024 M3 agent executor stays a separate, non-routing module · D-023 Laya requires reviewed passing evidence ·
+  D-022 M1 Scheduler Core is an isolated module · D-021 Planner phase 1 closes with schema 1.1.0 · D-020 methodology modules
 
 ## Known issues
 - Codex hooks need one-time approval with `/hooks` on each machine.
@@ -52,4 +52,4 @@ registry. The repo `github.com/dav033/metodologia` (private) holds `skill/`, `ev
 - The other computer pushes to `main` while we work. A push can be rejected until we fetch and rebase.
 - The bitácora web server started before the migration runs old code until it restarts.
 
-_Last updated: 2026-10-13_
+_Last updated: 2026-10-14_
