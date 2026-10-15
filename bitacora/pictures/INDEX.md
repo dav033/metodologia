@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-15 13:21 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 15:55 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -54,11 +54,11 @@ _Generated 2026-10-15 13:21 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-049 — Calibrate semiarco fill to the contractual quarter-ellipse axis
 - D-048 — 2026-10-13 · REQ-016 M2: retain requested untouched colour resolutions in versioned signed history
 - D-047 — 2026-10-13 · REQ-016 T3 (P-058 A2–A4): sumar una idea conserva el origen; «rosa → rosado» con el rosado ya puesto no pregunta; `origen.tipo` se declara como `resolutor`
 - D-046 — 2026-10-13 · REQ-016 T2 design: signed last-colour-order context replaces the origin heuristic for known history
 - D-045 — 2026-10-13 · REQ-016 T1 (P-042): «Deshacer» a guided 3D adjustment restores the stored previous widget (signed plan + quote), in memory only; never an inverse edit
-- D-044 — 2026-10-13 · REQ-015 audit P1-2: the rule path accionIdea:costear is bounded by a durable global hourly cap in Neon (topeDurable key costeo_idea_hora, no migration), checked before costearIdeaElegida; denied → rule answer (SSE 200, no model), store down → in-memory cap with the same N, never unlimited. Chosen by debate (A in-memory, B durable cap, C memo/dedupe; judge haiku-max: B). N default is a conservative guess, to be calibrated from COTIZACION_IDEA_* counts.
 
 ## Timeline
 

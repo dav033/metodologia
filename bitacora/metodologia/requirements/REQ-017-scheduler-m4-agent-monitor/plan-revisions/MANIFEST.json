@@ -7,6 +7,20 @@
    "frozen_at": "2026-10-15T11:40:50",
    "source": "approval",
    "plan_md_sha256": "6f39aadefd8b9d20da437b95d2f4dbb6af11236bd2b96a1d30880d25eab37064"
+  },
+  {
+   "revision": 2,
+   "sha256": "5308e28ec53cda7023c09289ef54f719374dd9868139404821623fd82e20b769",
+   "frozen_at": "2026-10-15T15:55:05",
+   "source": "approval",
+   "plan_md_sha256": "b2d9fac2218094dc46ba569afcdd31c0846090d2816107aacf322f6e82c15daa"
+  },
+  {
+   "revision": 3,
+   "sha256": "1c42502df93712858f771b68dae6d15cb73f2add2716cf37a96fb861da73af12",
+   "frozen_at": "2026-10-15T16:01:04",
+   "source": "approval",
+   "plan_md_sha256": "2697202bb426341e837a82ca63a5a57fd25100e9b7a4671ba6b71acce44ce91c"
   }
  ]
 }

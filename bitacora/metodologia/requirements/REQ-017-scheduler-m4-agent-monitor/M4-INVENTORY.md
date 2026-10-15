@@ -67,4 +67,4 @@ These upstream documents are useful for authoring isolated fixtures, not proof t
 6. Gemini remains unsupported by the M3 launch route until an independent M3 authorization changes that boundary.
 7. T9 requires an additive M1 Event contract revision and tests proving that an incident reference changes audit history only, not projection/state.
 8. T10 consumes M4 metric snapshots as optional read-only evidence. Unknown quota stays unknown; provider/model/profile comparability is explicit.
-9. Owner-approved defaults are a per-project SQLite store, 90/365/730-day retention, 512 MiB store cap and bounded FIFO/queue/evidence sizes (D-030–D-033). T12 must replace CPU/RSS/throughput budget guesses with measured data; it does not change the accepted storage caps.
+9. Owner-approved defaults are a per-project SQLite store, 90/365/730-day retention, 512 MiB store cap and bounded FIFO/queue/evidence sizes (D-030–D-033). T12 replaced pre-measurement CPU/RSS/throughput guesses with host-local budgets recorded in D-037; it did not change the accepted storage caps.

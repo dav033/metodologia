@@ -309,3 +309,38 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Consequences:** + deterministic and testable alerts with explicit confidence; − thresholds may need revision if fixture and measured workload evidence contradicts them.
 - **Source:** [REQ-017 architecture](requirements/REQ-017-scheduler-m4-agent-monitor/M4-ARCHITECTURE.md) · owner approval in chat.
 
+## D-035 — Pause REQ-016 Laya classifier training while Scheduler M2 is the active focus
+- **Date:** 2026-10-15 · **Status:** Accepted at the owner's direction.
+- **Context:** The v4 locked task test scored selected Laya at 65.6% versus 78.7% for the deterministic reference; the 91.33% answer-tag control deliberately exposed labels and is not task accuracy. A four-layer AMP/checkpointing run was interrupted before development evaluation, with an AMP scheduler-order warning.
+- **Decision:** Keep REQ-016 paused, preserve but do not select its partial checkpoint, and focus on M2 closeout. M2 continues deterministic live recommendations under D-023; the Laya allowlist remains empty. Resume classifier experiments only after owner reprioritization and a materially new evaluation approach.
+- **Alternatives:** Continue the interrupted recipe or treat the answer-tag control as accuracy (rejected: no completed task score and explicit label leakage); enable Laya routing despite the negative held-out comparison (rejected by D-023's quality gate).
+- **Consequences:** + no more GPU time is spent on the current underperforming recipe; + M2 remains safe and usable; − the 85% Planner-complexity target remains unachieved and paused.
+- **Source:** [REQ-016 plan](requirements/REQ-016-train-and-validate-an-english-only-laya/PLAN.md) · [REQ-013 report](requirements/REQ-013-scheduler-m2-decision-engine-with-local/REPORT.md).
+
+## D-036 — M3 must recheck persisted M2 quota evidence at launch
+- **Date:** 2026-10-15 · **Status:** Accepted as a correction to the M2/M3 route contract.
+- **Context:** M2 excluded unknown and stale quota correctly, but its persisted selected route retained only a quota snapshot hash. The M2 lookup therefore omitted the sample expiry and M3 could launch a queued route after that evidence expired. The Codex usage schema also exposes explicit usage-denial state and model-specific quota buckets that its reader previously ignored.
+- **Decision:** Persist each eligible route's quota observation time, measured usage percentage and validity deadline in the M2 route summary. Pass the deadline through the M3 route record and reject absent, malformed or expired evidence at resolution and immediately before launch. Honor explicit Codex usage-denial fields; include model-specific buckets by exact `normalModelSlug`, and fail closed when a returned bucket cannot be mapped or parsed. Read legacy 1.0.0 ledger records, but do not launch them without quota evidence.
+- **Alternatives:** Trust the quota timestamp only at recommendation time (allows delayed queued routes past freshness); treat missing Codex permission/bucket fields as available (turns unknown quota into inferred headroom).
+- **Consequences:** + expired or unknown quota can no longer pass the M2→M3 handoff; + stored decisions expose the exact sample/deadline used. − older route references without evidence fail closed and need a new M2 recommendation; quota can still change server-side after a valid usage read.
+- **Rollback:** Disable the M2 route lookup and use an explicit operator route only when the caller deliberately permits direct routes; do not restore implicit quota trust.
+- **Source:** REQ-013 M2 closeout and the Codex [app-server rate-limit schema](https://github.com/openai/codex/blob/main/codex-rs/app-server-protocol/schema/json/v2/GetAccountRateLimitsResponse.json).
+
+## D-037 — M4 uses host-local fixture budgets from the T12 measurements
+- **Date:** 2026-10-15 · **Status:** Accepted under the owner-approved REQ-017 plan; D-038 corrects the sample count.
+- **Context:** REQ-017 requires runtime budgets to come from a reproducible three-agent fixture run. Thirteen 300-event runs on Linux 7.2.6, Python 3.14.7 and 16 logical CPUs measured 823.60–961.40 events/s, p95 289.45–339.40 ms, CPU 0.309–0.361 s and sampled RSS 26,344–26,640 KiB, with zero drops.
+- **Decision:** Set the same-host fixture budget to throughput ≥800 events/s, p95 ≤350 ms, CPU ≤0.38 s, sampled RSS ≤27,000 KiB and zero loss for the 300-event fixture. These rounded limits extend beyond the slower/higher observed edge to accommodate measured run-to-run variation. They describe the synthetic burst/drain workload and are not production SLOs; remeasure when the host or workload changes.
+- **Alternatives:** Leave budgets unset (misses the approved T12 deliverable); advertise them as production capacity (unsupported by the fixture workload).
+- **Consequences:** + Provides measured host-local budget bounds; − does not establish sustained provider or SQLite contention capacity.
+- **Rollback:** Replace the bounds only after repeating the fixture on the target host/workload and recording the measurements; keep them labeled as fixture evidence.
+- **Source:** [REQ-017 plan](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md), [M4 baseline](requirements/REQ-017-scheduler-m4-agent-monitor/REPORT.md).
+
+## D-038 — Correct the T12 fixture sample count; retain D-037 budgets
+- **Date:** 2026-10-15 · **Status:** Accepted as a measurement correction under the owner-approved REQ-017 plan.
+- **Context:** A final audit found fourteen preserved 300-event reports with a 300-frame / 5,100-byte queue, three simulated producers, and the same host/fixture. The prior report counted thirteen. The separate direct-SQL report had no queued consumer and is excluded.
+- **Decision:** Record fourteen comparable queue/consumer runs. Keep D-037's host-local fixture limits unchanged: throughput ≥800 events/s, p95 ≤350 ms, CPU ≤0.38 s, sampled RSS ≤27,000 KiB, and zero drops. These are synthetic burst/drain regression bounds, not production SLOs.
+- **Alternatives:** Keep the thirteen-run count (inaccurate); include the direct-SQL check (different measurement path, with no queue).
+- **Consequences:** + Aligns the documented sample count with preserved reports; − the budget still describes burst/drain behavior, not sustained SQLite contention.
+- **Rollback:** Append a new correction if a preserved report is later shown not to meet the stated queue/fixture criteria; do not rewrite the evidence.
+- **Source:** [REQ-017 report](requirements/REQ-017-scheduler-m4-agent-monitor/REPORT.md) · preserved `/tmp/req-017-m4-*.json` benchmark reports.
+

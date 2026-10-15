@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "plan_id": "REQ-017",
-  "revision": 1,
+  "revision": 3,
   "spec_ref": "SPEC.md",
   "milestones": [
     {

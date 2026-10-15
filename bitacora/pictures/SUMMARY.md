@@ -7,7 +7,7 @@ Sempertex balloon-decoration demo (`demo-decoracion`: Next 16 on Vercel + Python
 engine: the **Taller 3D** (`/3d`, pro tool with a scene AI agent) and the **guided customer chat** (`/asistente`,
 quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
-## Current state (last deployment record: `65edd83b`, 2026-10-11 06:14; local work: 2026-10-14)
+## Current state (last deployment record: `65edd83b`, 2026-10-11 06:14; local work: 2026-10-15)
 - REQ-015 local branch `feat/req-015-judge-fix` at `26db7b8b`, 24 commits ahead of tracked origin/main; T12 cap and audit #3 corrections are committed locally. Current uncommitted work makes the colour regression reproducible without the ignored Shopify snapshot and includes it in guiada:test. No push/deploy in this session. Previous REQ-015 independent reviews approve; prior full gate passed (P-076 closed).
 - **One quote everywhere (D-038) live:** same plan = same price on every surface; per-balloon spares with a cost cap;
   Python = engine (42-BOM shared fixture in CI). Every guided idea (engine and curated) is priced by the single pricer;
@@ -39,16 +39,16 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 - Branch `feat/req-015-judge-fix` (24 commits, local, not pushed): count/price parity, chips by rules (D-043), cost cap (D-044), honest colour-swap, rating row. Gate GATE OK, tsc 0, lint 0 errors. Owner decides push/PR. Report: requirements/REQ-015-*/REPORT.md.
 
 ## Active focus
-- REQ-014 local branch `feat/req-014-motor-bandas`: P-091 is committed locally as `4916115f` (not pushed). P-092 ring maxima measured per centimetre (+5 %) and sub-1 m rings left unbanded; regression, matrix, CI sweep, types and lint pass. P-092 is closed locally but uncommitted. P-099 semiarco under-count and P-100 ring minimum edge remain open.
+- REQ-014 local branch `feat/req-014-motor-bandas` at `125548cf`: P-091 (`4916115f`) and P-092 (`125548cf`) are committed locally, not pushed. P-092 retains centimetre-measured aro maxima with a strict 5% cap, `sin_banda` below 1 m and measured provenance distinct from PARIDAD. P-099 and P-100 are verified and closed locally but remain uncommitted; P-099 preserves the semiarco contour and calibrates fill to the clamped contractual axis. Antagonist review is SOUND. Seed 2 n=4000 yields 3,999/4,000, with only baseline E-03532 (guirnalda lujosa); no failure was allowlisted. Two P-087 files remain modified separately; nothing was pushed or deployed.
 - REQ-016 (Guided 3D edit leftovers: exact undo and colour resolver) **DONE**: Verified and closed in local worktree `t12` on branch `feat/req-016-guided-3d-edit-leftovers-exact-undo-and` (commits 58f10c04..fb872bce). Exact in-memory undo (D-045, P-042), signed last colour order with suppressed redundant asking (D-046, P-058 A1-A4, D-047), reader-before-writer rollout compatibility (D-035) and untouched-piece replay protection (D-048, P-082). Gate 10/10 green (`GATE OK`), tsc clean (0 errors), lint 0 errors. REPORT.md written; PLAN.md status: done.
 - REQ-015 implementation and verification complete locally, ready for owner review/commit/publication: chosen-idea chips by rules, shared price, honest color counts, durable quote cap. Restored ambiguous/composite idea prices show “Precio al elegir”; no session contract change. REPORT.md contains evidence; visual rating UI 9/9, contract 27/27, final types/build pass.
 - 2026-10-14 follow-up: deterministic colour coverage passes in guiada:test (15 scripts); final lint 0 errors/49 warnings, workspace builds and app types pass. Application build/full gate not rerun for this test-only change.
 
 ## Top pending (see PENDING.md)
-- P-099/P-100 track the semiarco PARIDAD under-count and ring minimum edge found during P-092. P-075 still has real-Python UI and quote-cap follow-ups; see PENDING.md for the full queue.
+- P-075 still has real-Python UI and quote-cap follow-ups; see PENDING.md for the full queue. P-087 remains separate from local P-099/P-100 work.
 
 ## Recent decisions (see DECISIONS.md)
 - D-027 helium sphere volume · D-028/D-030 product judge timing · D-029 class-prefixed ids · D-031 manual VPS deploy ·
-  D-032 owner-away defaults · D-033 dev servers allowed · D-034 no VPS deploy this weekend · D-035 reader-first persisted fields · D-036 review stop-rule · D-037 VPS approved · D-038 one quote · D-039 everything on.
+  D-032 owner-away defaults · D-033 dev servers allowed · D-034 no VPS deploy this weekend · D-035 reader-first persisted fields · D-036 review stop-rule · D-037 VPS approved · D-038 one quote · D-039 everything on · D-049 semiarco fill calibrated to the contractual axis.
 
 _Last updated: 2026-10-15_

@@ -1,6 +1,6 @@
 ---
 req: REQ-016
-status: approved
+status: paused
 created: 2026-10-15
 ---
 # Plan — REQ-016 — Train and validate an English-only Laya Planner complexity classifier
@@ -156,3 +156,17 @@ selected Laya 656/1000 (65.6%); both fail the 850/1000 point target and their fa
   Wilson 76.1–81.1%, family bootstrap 74.1–83.2%); selected Laya scored 656/1000 (65.6%, Wilson 62.6–68.5%,
   family bootstrap 62.1–69.0%); base scored 264/1000 (26.4%). All miss the 85% point target. A standalone post-open
   audit passed without rereading the key. Full evidence: `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-016/REPORT-v4.md`.
+- 2026-10-15 — Ran Laya's official answer-tag positive control on the same train/development split, with the gold
+  class deliberately exposed as `label=<gold>;`. Three two-layer partial-unfreeze CUDA seeds scored 367/400 (91.75%,
+  seed 7), 364/400 (91.00%, seed 17), and 365/400 (91.25%, seed 42); mean 91.33%. Two passed the frozen warning
+  gate. Seed 7 retained its rejected status because the calibration temperature hit the 0.5 clamp; a separate scorer
+  preserved the warning and measured it for diagnosis only. The prefix parser scored 400/400 by construction. The
+  independent audit passed and did not read the locked test. This is a label-leakage control, not task accuracy; v4
+  task accuracy still misses 85%. Evidence: `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-016/positive-control-v2-answer-tag/REPORT.md`.
+- 2026-10-15 — At the owner's direction, paused further Laya training while returning focus to Scheduler M2. The
+  final-four-layer AMP/checkpointing diagnostic (`v4-partial-last4-amp-ckpt-seed-7`) was interrupted with Ctrl-C at
+  epoch 4/8, step 400, after 544.4 seconds. Sampled whole-GPU usage was 3,175 MiB of 6,144 MiB; no OOM occurred.
+  PyTorch had warned that `lr_scheduler.step()` ran before `optimizer.step()`, consistent with GradScaler skipping an
+  update. No completed development score or accepted checkpoint exists. Preserve but do not select the partial
+  `checkpoint_latest/model.safetensors` (SHA-256 `150cb79b7b31fe442f45028634f207b34d81856f962baa55a0dcac8698b0925d`).
+  The locked test was not reopened or changed. Resume only after M2 closeout and a new owner-directed priority.
