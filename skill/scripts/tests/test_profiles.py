@@ -138,6 +138,17 @@ class WorkGateLauncherTests(ProfileGateTests):
             with self.assertRaises(SystemExit):
                 bt_profiles.write_wrapper("claude-personal", out)
 
+    def test_write_wrapper_keeps_bare_command_dynamic_on_path(self):
+        bt_profiles.add("codex-dynamic", "codex", binary="codex")
+        out = Path(self.tmp.name) / "dynamic-bin"
+        out.mkdir()
+        resolved = "/nix/store/temporary-fnm-session/bin/codex"
+        with patch.object(bt_profiles.shutil, "which", return_value=resolved):
+            wrapper = bt_profiles.write_wrapper("codex-dynamic", out)
+        content = wrapper.read_text(encoding="utf-8")
+        self.assertIn('exec "codex" "$@"', content)
+        self.assertNotIn(resolved, content)
+
 
 class AccountIsolationTests(unittest.TestCase):
     """A session of one account must never inherit another account's selector variables."""
