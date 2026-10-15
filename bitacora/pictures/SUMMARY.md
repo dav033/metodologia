@@ -19,6 +19,7 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
   scale and floor come from the installation, the garland spans the real balloons with the photo's colour shares, a
   second glitter wall, plum chrome → Reflex. Left in P-068 (doors, pink roses, low camera).
 - **Spend caps are global (392fff68):** paid-call hourly caps count in Neon `topes_gasto` (migration 035), not per Vercel instance.
+- **Happia Integrations API client live (2026-10-15, 2e43a113):** HappiaClient reads the new `{status,data,pagination}` contract (prod recommender had been 502 since 2026-10-12); services reader and session-guarded check route `/api/happie/prueba-api`; outside-consumer guide `docs/happie-external-integration.md`. Open: P-094 (UI routes recomendar/recomendar-pasos still fail the strict happie.v1 schema).
 - **Ship gate:** `npm run gate` locally + `escena:test` (405-scene golden, honesty, photo suites) in CI; free prod pulse `npm run prod:pulso`; rollback drill on prod 2026-10-11 all PASS (research/ciclo/SIMULACRO-ROLLBACK-2026-10-11.md).
 - **72 h marathon STOPPED** at cycle 26 (2026-10-11 06:14; planned end 2026-10-12 16:44). Its state is in `research/ciclo/STATE.md`.
   From 2026-10-13 development runs entirely from this laptop (owner decision, D-041); origin/main is still `65edd83b` and the

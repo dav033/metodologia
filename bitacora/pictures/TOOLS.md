@@ -36,7 +36,7 @@ _None registered yet._
 _None registered yet._
 
 ### advin-vps (production VPS)
-- **Type:** VPS (8 vCPU AMD EPYC, 15 GB RAM, no GPU) · **Access:** `ssh advin-vps` (alias in ~/.ssh/config)
+- **Type:** VPS (8 vCPU AMD EPYC, 15 GB RAM, no GPU) · **Access:** `ssh advin` (alias in ~/.ssh/config, host 185.147.157.25, key id_ed25519_advin; `advin-vps` does NOT resolve)
 - **What runs here:** Docker: demo-decoracion (Next, env /etc/demo-decoracion/demo.env) + demo-decoracion-ai-api (Python,
   /etc/demo-decoracion-ai/ai.env), other projects (maros, lotm, trainingapp, fichas-fotos); Caddy edge proxy
   (/opt/edge-proxy/Caddyfile): web https://185-147-157-25.sslip.io, ai-api https://api-decoracion.185-147-157-25.sslip.io.

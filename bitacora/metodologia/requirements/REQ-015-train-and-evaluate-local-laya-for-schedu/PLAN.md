@@ -105,3 +105,68 @@ REQ-014 changes in the shared worktree.
   empirical route-success dataset and is excluded from REQ-015 training/quality claims.
 - 2026-10-15 — Drafted this evidence-first plan. Status remains `review`; implementation waits for owner approval and
   an independently labeled dataset source.
+- 2026-10-15 — Ran a separate Planner-complexity diagnostic at the owner's requested ~85% target. The frozen 80-case
+  bilingual synthetic set scored 37.5% / 28.75% / 32.5% top-1 on the three pinned checkpoints, all on CUDA. The
+  corrected v1.1 option schedule reused the same cases after an exploratory v1 pass, so neither pass is confirmatory.
+  See `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/` for corpus, protocol, runner and raw results.
+  `laya-train --dry-run` calculated eight optimizer updates from 72 training items and eight calibration items; no
+  model weights were loaded, no gradient updates ran and no checkpoint was produced. Do not fine-tune on this corpus.
+- 2026-10-15 — Audited all available approved Planner JSON plans: only 35 unique labelled tasks across three plans,
+  English only, with labels 2 low / 21 medium / 12 high / 0 extreme. A separate frozen archive evaluation scored
+  42.9% / 45.7% / 42.9% against stored Planner labels, below its 60% majority baseline. Labels were not independently
+  adjudicated; this is a consistency diagnostic, not a release test. Its frozen dataset, manifest, runner and raw
+  results are under `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/`.
+- 2026-10-15 — Collapsed that frozen archive to easy/complex: the 65.7% not-complex majority baseline was matched
+  only by multilingual Laya, which had 0% complex recall. English and typed-decisions recalled every complex example
+  but scored 48.6% / 51.4% overall and recalled only 21.7% / 26.1% of not-complex tasks. Derived report:
+  `plan-archive-binary-summary.json`; this is not independent gold or an 85% result.
+- 2026-10-15 — Evaluated a separate, frozen 25-task set from six Planner test-scenario plans that was not present in
+  the prior local evaluation files. Four-class accuracy was 40% / 48% / 28% versus a 48% majority baseline; binary
+  accuracy was 64% / 76% / 56% versus 76% majority, with multilingual complex recall 0%. CUDA inference had zero
+  errors. Fixture labels are not independent gold; checkpoint pretraining exposure is unknown; the set lacks Spanish
+  and `extreme`. It strengthens diagnosis only, not production/final-test evidence. Artifacts are under
+  `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/planner-fixture-*`.
+- 2026-10-15 — Prepared a blinded annotation batch of those 35 task texts with no source labels or task IDs, SHA-256
+  `d8a112e8cd598845a5dde7df3ca660493dadb6dcd6ea6113370ce629b62694be`. It may seed training/dev after human review,
+  but cannot serve as final test because Laya has already seen the texts. Real-plan `laya-train --dry-run` produced
+  only four default optimizer updates; a 32-epoch dry-run yields 32 updates on the same small set. No training ran.
+  Keep the 85% objective active; collect new, independently labelled, bilingual tasks and an untouched test set before
+  any training or success claim.
+- 2026-10-15 — Separately ran a disposable, label-revealing positive-control fine-tune on CUDA to verify the local
+  Laya training path and A3000 resource use. It completed 144 updates in 69.432 s, sampled 2,075 MiB whole-GPU peak,
+  and its offline-reloaded checkpoint reproduced 39/40 on the deliberately trivial holdout. This does not satisfy
+  T3/T5/T7, does not train a Scheduler checkpoint, and does not support the 85% real-task claim. Calibration warned
+  on only 16 rows and a temperature at the 0.5 clamp. Detailed source-backed protocol and raw evidence:
+  `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/TRAINING-PROTOCOL.md` and `positive-control-v1/`.
+- 2026-10-15 — Reviewed the other project bitacoras and built corpus v1.3: 10 projects, 33 dated logs / 113 Goal
+  sections, 45 plans / 363 task lines, and 167 PENDING rows; 723 unique candidates, 34 prior-evaluated methodology
+  tasks excluded, 689 unlabeled texts evaluated by the three pinned checkpoints on CUDA (0 errors). Found and
+  corrected v1.1's unqualified numeric REQ exclusion, which had dropped 75 unrelated Pictures/Proposal Studio tasks.
+  v1.3's 40 simulated cases now use actual project slugs across all ten workspaces, alongside 40 separate invented
+  cases; both groups have 10 cases per complexity level and 20 English / 20 Spanish. The 200-task blind development
+  annotation batch is balanced across plans, PENDING, logs, simulated, and invented sources.
+- 2026-10-15 — v1.3 balanced synthetic exact accuracy was 26.2% / 31.2% / 25.0% (English / multilingual /
+  typed-decisions) versus 25% baseline; complex recall 22.5% / 5% / 25%, extreme recall 0% for all. On 129 weak
+  historical size proxies accuracy was 41.9% / 41.1% / 38.0%, below the 46.5% majority baseline. No ~85% evidence;
+  do not train aggressively on these provisional labels. v1.3 has not been fine-tuned; prior group-held-out training
+  maxed at 32.5% on 40 cases/fold. Report, raw predictions, hashes, resource measurements, and source manifest:
+  `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/mixed-bitacora-corpus-v1.3/`; human batch:
+  `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/human-review-batch-02-v1.2/`.
+- 2026-10-15 — Ran a paired context diagnostic over the same 35 archived Planner tasks and pinned CUDA checkpoints.
+  English accuracy changed 42.9% → 51.4% (+3 cases), multilingual 45.7% → 40.0% (-2), and typed-decisions
+  stayed 42.9%; pooled gain was only 1/105 decisions. The 60% majority baseline still exceeds each result. Adding
+  M1 dependencies, shared resources, and sanitized verification purposes therefore did not show a reliable lift.
+  No `extreme` or Spanish cases; report and frozen scores: `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/archive-context-paired-v1-report.md`.
+- 2026-10-15 — Applied provisional single-assistant labels to the 200-row blind development packet only after the
+  label choices were frozen without viewing model outputs or source mappings. Counts: 39 low / 56 medium / 77 high /
+  28 extreme; 30 incomplete, stale, or truncated rows are flagged. The packet itself is unchanged. Exact text matching
+  linked every row to predictions already produced by the v1.3 CUDA run; labels were never sent to Laya. Four-class
+  accuracy was 31.5% / 29.5% / 31.0% against 38.5% majority; binary accuracy was 53.5% / 45.0% / 55.0% against
+  52.5% majority. Complex recall was only 25.7% / 1.9% / 26.7%, and `extreme` recall was 0% for every checkpoint.
+  Excluding the 30 flagged rows still scored 30.0% / 27.6% / 28.8%, below the 39.4% majority. Labels are one
+  annotator's provisional judgment with standardized class-level reasons, not independent human gold or a locked test.
+  Full report, metrics, hashes, labels and scoring script:
+  `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-015/human-review-batch-02-v1.2/`.
+- This leaves independent adjudication and a prospective, untouched test set open. Complexity is measured separately
+  from scope, duration, risk, coupling, confidence, evidence, and M2 route preference/outcomes. Plan remains in
+  `review`; this diagnostic does not authorize a Scheduler checkpoint, M2 routing change, or completion claim.

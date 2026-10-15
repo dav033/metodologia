@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-15 06:24 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 08:14 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -52,17 +52,17 @@ _Generated 2026-10-15 06:24 by `bitacora.py index`. Do not edit by hand._
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
 - P-003 · Visual review of the local web UI · med/S
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · med/M
-- P-029 · Ask M2 to expose plan/task/revision/valid_until/account binding in its public lookup (Rout · med/M
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T · med/L
 - P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · low/S
+- P-006 · Marathon: pass the claude prompt via stdin instead of argv (cmd-shim 8191-char / newline r · low/S
 
 ## Recent decisions
 
+- D-025 — Scheduler hand-over of prerequisite work is on by default; routes are bound to their task; the sweep spares terminal processes (2026-10-15)
 - D-024 — M3 agent executor: isolated module, shim-owned agents, no model choice (2026-10-14)
 - D-023 — Local Laya requires code-reviewed benchmark evidence; deterministic fallback stays authoritative (2026-10-14)
 - D-022 — The Scheduler Core (M1) is an isolated module with one authority per requirement; approval is a hash
 - D-021 — Planner phase 1 closes with schema 1.1.0 (argued classifications) and one launch gate
-- D-020 — The methodology is divided into modules; the planner is the first (`bt_planner`)
 
 ## Artifacts
 
