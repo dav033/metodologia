@@ -55,6 +55,7 @@ py-modules = [
   "bt_plan_adapter",
   "bt_scheduler_adapter",
   "bt_scheduler_executor_adapter",
+  "bt_scheduler_integrator",
   # Scheduler module adapters and local M2 runtime modules.
   "bt_scheduler_decision_adapter",
   "bt_scheduler_laya",

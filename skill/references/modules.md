@@ -80,6 +80,10 @@ agent stopped"; no private reasoning is claimed to transfer between providers.
   `bt_scheduler_adapter`, the only importer of the core) and exposes workspaces in `bt_worktree`'s allocation shape
   (`worktree_allocation`) so its scope/integration tooling can consume what M3 produced. `wire(rdir, ...)` is the opt-in entry
   point; nothing in an existing command changes. State lives in `<bitácora root>/.state/executor/<project>-<REQ>/`.
+- Predecessor hand-over (P-031): `skill/scripts/bt_scheduler_integrator.py`, used by `wire(..., integrate_predecessors=True)`. It merges
+  the accepted same-repository ancestors' handoff snapshots into one commit (`git merge-tree`, no worktree touched, kept under
+  `refs/m3/integration/<run>/<task>`) and passes it as the task's `base_ref`; a conflict or a missing snapshot rejects the order
+  with a stated cause. Opt-in: without it `after` only orders tasks in time.
 - Until M2 exists `route:<id>` is delegated to a caller-supplied lookup, and the operator may write `direct:<provider>/<model>
   [@profile][#effort]` (`PinnedRoute` assigns one to every ready task). The core's FIFO label `local` is rejected: M3 never defaults a model.
 - Tests: module suite `bt_scheduler_executor/tests/` (boundaries, lone-copy isolation, CLI, crash-at-every-step, concurrency,

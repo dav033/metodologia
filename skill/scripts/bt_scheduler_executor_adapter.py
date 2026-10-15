@@ -35,6 +35,7 @@ import bt_driver
 import bt_profiles
 import bt_scheduler_adapter as sched
 import bt_scheduler_executor as m3
+import bt_scheduler_integrator as integrator
 import bt_workspace
 
 core = sched.core                      # the core's classes, through the one adapter that imports it
@@ -272,7 +273,12 @@ class CoreExecutionPort:
             return core.Ack("rejected", "ORDER_INVALID: unknown task")
         if not repo:
             return core.Ack("rejected", "REPOSITORY_UNKNOWN: the task names no repository")
-        base = self.base_ref(order.task_id) if callable(self.base_ref) else self.base_ref
+        try:
+            base = self.base_ref(order.task_id) if callable(self.base_ref) else self.base_ref
+        except integrator.IntegrationError as error:
+            if not error.permanent:                         # a hiccup says nothing about the plan: retry, don't burn an attempt
+                raise RuntimeError(f"{error.code}: {error.detail}"[:300]) from None
+            return core.Ack("rejected", f"{error.code}: {error.detail}"[:300])   # never run on a tree that lacks the work
         request = m3.StartRequest(
             idempotency_key=order.idempotency_key, plan_id=order.plan_id, revision=order.revision, task_id=order.task_id,
             attempt_id=order.attempt_id, token=order.token, executor=order.executor, repository=repo,
@@ -377,19 +383,34 @@ class Wiring:
         self.executor.close()
 
 
+def _accepted_attempts(scheduler) -> dict[str, str]:
+    """{task id: the attempt the core accepted} for every completed task, from ONE snapshot of the run."""
+    return {tid: view["attempt"] for tid, view in scheduler.snapshot().tasks.items()
+            if view.get("state") == "completed" and view.get("attempt")}
+
+
+def _snapshot_sha(executor, attempt_id: str) -> str | None:
+    """The snapshot commit the executor preserved for that attempt (None when the handoff failed or is absent)."""
+    described = executor.describe(attempt_id) or {}
+    handoff = described.get("handoff") or {}
+    return handoff.get("snapshot_sha") if handoff.get("status") == "captured" else None
+
+
 def wire(rdir: Path, *, project: str, assignment=None, verification=None, recovery=None, config=None,
          executor_config: m3.Config | None = None, resolver: m3.RouteResolver | None = None,
          m2_lookup: M2_LOOKUP | None = None, m2_ledger: Path | str | None = None, allow_direct: bool | None = None,
          repos: Mapping[str, Path | str] | None = None, base_ref: str | Callable[[str], str] = "HEAD",
          default_repository: str = "", clock: Callable[[], float] | None = None, driver: m3.AgentDriver | None = None,
-         autostart: bool = True) -> Wiring:
+         autostart: bool = True, integrate_predecessors: bool = False) -> Wiring:
     """A scheduler core for this requirement whose ExecutionPort is a real agent executor.
 
     Opt-in and non-destructive: refuses a requirement already run by the legacy supervisor (the core's own rule). The
     executor's local state lives in `executor_root(rdir, run_identity)`: one root per core RUN and plan revision.
     `verification` is the caller's independent verifier. With an M2 ledger/lookup `direct:` references are refused unless
-    `allow_direct=True`. `base_ref` (a ref or `task_id -> ref`) is where each task's worktree starts: the executor does
-    not integrate accepted prerequisite work, so a task only sees it if an integrator supplies it here."""
+    `allow_direct=True`. `base_ref` (a ref or `task_id -> ref`) is where each task's worktree starts. The executor does
+    not integrate accepted prerequisite work: with `integrate_predecessors=True` a task starts from a commit that merges
+    its accepted same-repository predecessors' handoff snapshots (`bt_scheduler_integrator`; `base_ref` stays the
+    fallback for tasks with nothing to integrate), and a conflict or missing snapshot rejects the order with its cause."""
     rdir = Path(rdir)
     if m2_ledger is not None and m2_lookup is None:
         m2_lookup = m2_ledger_lookup(m2_ledger)
@@ -407,6 +428,13 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         briefs=PlanBriefs(scheduler.plan), driver=driver or MethodologyDriver(project),
         workspaces=m3.GitWorkspaces(root / "ws", repo_of), sink=sink, config=executor_config, autostart=False)
     port.executor = executor
+    if integrate_predecessors:
+        integrate = integrator.PredecessorIntegrator(fallback=base_ref)
+        integrate.bind(plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
+                       identity=run_identity(scheduler),
+                       accepted=lambda: _accepted_attempts(scheduler),
+                       snapshot_of=lambda attempt: _snapshot_sha(executor, attempt))
+        port.base_ref = integrate.base_ref
     sink.bind(scheduler)
     if autostart:
         executor.start_loop()

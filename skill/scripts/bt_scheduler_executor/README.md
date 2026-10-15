@@ -193,8 +193,11 @@ during/after the handoff, before/after the terminal transaction, between deliver
 - Events enter the core through the adapter's sink because M4 does not exist yet; the sink is a port so M4 can sit in between.
 - M2's route lookup does not exist yet: `route:<id>` is delegated to a callable the caller supplies; the interim operator-written
   `direct:<provider>/<model>[@profile][#effort]` grammar lives in the adapter, not in this module.
-- Prerequisite work is not integrated: `after` only orders tasks in time. A task starts from `base_ref` (default `HEAD` of its repository), so
-  it does not see an accepted predecessor's changes unless an integrator supplies a `base_ref` that contains them.
+- The module never integrates prerequisite work: `after` only orders tasks in time and a task starts from `base_ref` (default `HEAD` of its
+  repository). The methodology's `wire(..., integrate_predecessors=True)` (`bt_scheduler_integrator`, opt-in) supplies a `base_ref` that
+  merges the accepted same-repository predecessors' handoff snapshots (`git merge-tree`, objects only, kept under `refs/m3/integration/`);
+  a conflict or a missing snapshot rejects the order with `INTEGRATION_CONFLICT` / `PREDECESSOR_HANDOFF_MISSING` instead of guessing.
+  Without that option a dependent task does not see its predecessors' work.
 - Route binding is partial: M2's public lookup does not yet expose plan, task, revision or validity, so a `route:` reference is bound by
   `single_use` (a reference may start ONE attempt, ever, recorded in `route_refs`) plus the optional `check_context` the adapter applies when
   the selector supplies those fields. Superseded decisions cannot be told apart until M2 exposes a most-recent-decision-per-task rule (P-029).

@@ -226,6 +226,27 @@ class Chain(s.World):
         self.assertEqual({t: v["attempts"] for t, v in snap.tasks.items()}, {"T1": 1, "T2": 1})   # budget of 1 was enough
         self.assertEqual(len(self.records()), 2)
 
+    def test_with_integration_every_task_builds_on_its_accepted_predecessors_work(self):
+        w = self.build(self.dag(), integrate_predecessors=True)
+        self.assertTrue(self.run_until(w, lambda snap: snap.status == "completed", 120), w.scheduler.snapshot())
+        rows = {a["request"]["task_id"]: a for a in self.attempts(w)}
+        plan = w.scheduler.plan
+        checked = 0
+        for tid, row in rows.items():
+            for dep in plan.task(tid).after:
+                if plan.task(dep).repository != plan.task(tid).repository:
+                    continue                                                     # another repository: never merged
+                repo = Path(row["workspace"]["repo"])
+                snap = rows[dep]["handoff"]["snapshot_sha"]
+                done = s.subprocess.run(["git", "merge-base", "--is-ancestor", snap, row["workspace"]["base_sha"]],
+                                        cwd=str(repo))
+                self.assertEqual(done.returncode, 0, f"{tid} does not build on {dep}")
+                checked += 1
+        self.assertGreater(checked, 0)
+        for p in self.repos.values():
+            self.assertEqual(s.git(p, "status", "--porcelain"), "")
+        self.assertEqual(self.strays(), [])
+
     def test_a_second_core_run_of_the_same_plan_gets_its_own_executor_root_and_runs_again(self):
         w = self.build(self.dag(2))
         self.assertTrue(self.run_until(w, lambda snap: snap.status == "completed", 60))
