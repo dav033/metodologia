@@ -14,17 +14,19 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-14T19:55:59",
+  "at": "2026-10-14T20:10:07",
   "pid": 836,
   "machine": "precision7760",
   "task": "T9",
-  "session": 16,
-  "state": "batch settled",
-  "session_pids": {},
+  "session": 17,
+  "state": "session running 14 min",
+  "session_pids": {
+   "17": 37732
+  },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 16,
+ "sessions": 17,
  "tasks": [
   {
    "id": "T1",
@@ -457,7 +459,7 @@
    "complexity": null,
    "milestone": "M4",
    "tier": 2,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 2,
    "last_error": "integration: combined verification failed: No tests found, exiting with code 1\nRun with `--passWithNoTests` to exit with code 0\nIn /home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/REQ-005-integration-768f8753\n  1290 files checked.\n  testMatch: **/__tests__/**/*.?([mc])[jt]s?(x), **/?(*.)+(spec|test).?([mc])[jt]s?(x) - 76 matches\n  testPathIgnorePatterns: /node_modules/ - 1290 matches\n  testRegex:  - 0 matches\nPattern: src/common/auth - 0 matches\nnpm warn exec The following package was not found and will be installed: jest@30.5.2\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me",
    "error_hashes": [
@@ -1613,53 +1615,22 @@
   },
   "T9": {
    "task_id": "T9",
-   "branch": "wt/T9-a1315158",
-   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T9-a1315158",
+   "branch": "wt/T9-c17cbb32",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T9-c17cbb32",
    "base_sha": "b8efd6aa01f53257d25a4cdd198e94f97a2f6052",
    "repo": "/home/david/dev/maros/maros-next",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "blocked",
+   "state": "allocated",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
-   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T9-a1315158.json",
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T9-c17cbb32.json",
    "task_ids": [
     "T9"
    ],
-   "allowed_paths": [
-    "src/di/factories/usersFactory.ts",
-    "src/features/users/application/context.ts",
-    "src/features/users/application/index.ts",
-    "src/features/users/application/keys/usersKeys.ts",
-    "src/features/users/application/usecases/mutations/bulkAssignRole.ts",
-    "src/features/users/application/usecases/mutations/createAccessRequest.ts",
-    "src/features/users/application/usecases/mutations/duplicateRole.ts",
-    "src/features/users/application/usecases/mutations/previewRoleImpact.ts",
-    "src/features/users/application/usecases/mutations/resolveAccessRequest.ts",
-    "src/features/users/application/usecases/queries/explainUserAccess.ts",
-    "src/features/users/application/usecases/queries/listAccessRequests.ts",
-    "src/features/users/application/usecases/queries/listRoleAudit.ts",
-    "src/features/users/application/usecases/usecases.test.ts",
-    "src/features/users/domain/models.ts",
-    "src/features/users/domain/ports.ts",
-    "src/features/users/index.ts",
-    "src/features/users/infra/http/AccessRequestsHttpRepository.ts",
-    "src/features/users/infra/http/RolesHttpRepository.ts",
-    "src/features/users/infra/http/UsersHttpRepository.ts",
-    "src/features/users/infra/http/UsersRepositories.test.ts",
-    "src/features/users/infra/http/endpoints.ts",
-    "src/features/users/infra/http/mappers.test.ts",
-    "src/features/users/infra/http/mappers.ts",
-    "src/features/users/infra/index.ts",
-    "src/features/users/presentation/hooks/data/useAccessRequests.ts",
-    "src/features/users/presentation/hooks/data/useRoleAudit.ts",
-    "src/features/users/presentation/hooks/data/useUserAccessExplanation.ts",
-    "src/features/users/presentation/hooks/mutations/useUsersPermissionsMutations.ts"
-   ],
+   "allowed_paths": [],
    "resources": [],
-   "repo_role": "frontend",
-   "candidate_sha": "420c74fb4461bc8b9285210826b556d2577c2768",
-   "last_error": "integration: combined verification failed: No tests found, exiting with code 1\nRun with `--passWithNoTests` to exit with code 0\nIn /home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/REQ-005-integration-768f8753\n  1290 files checked.\n  testMatch: **/__tests__/**/*.?([mc])[jt]s?(x), **/?(*.)+(spec|test).?([mc])[jt]s?(x) - 76 matches\n  testPathIgnorePatterns: /node_modules/ - 1290 matches\n  testRegex:  - 0 matches\nPattern: src/common/auth - 0 matches\nnpm warn exec The following package was not found and will be installed: jest@30.5.2\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me"
+   "repo_role": "frontend"
   },
   "__integration__:frontend": {
    "task_id": "REQ-005-integration",

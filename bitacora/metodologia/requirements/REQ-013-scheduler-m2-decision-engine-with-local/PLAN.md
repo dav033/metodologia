@@ -1,0 +1,72 @@
+---
+req: REQ-013
+status: review
+created: 2026-10-14
+---
+# Plan — REQ-013 — Scheduler M2 Decision Engine with local Laya
+
+## Approach
+Build `bt_scheduler_decision` as a standard-library-only sibling module. Its public API owns typed inputs, deterministic
+eligibility/scoring, an idempotent decision ledger and fallback behavior; a methodology adapter supplies the existing
+catalog, profile/quota and telemetry facts. A separate pinned Laya environment and bounded local worker keep torch out
+of the methodology runtime. First additively extend M1's assignment contract to v1.1.0 so its adapter receives the
+approved plan hash and the dependency, acceptance, verification and classification evidence already present in its
+frozen Plan. The M1 adapter wires the module through `AssignmentPort`: M2 persists a complete decision and returns its
+opaque reference; M1 still applies atomic reservations and global capacity.
+
+Use the existing `bt_agents` routing policy as the deterministic benchmark/reference and candidate source. Laya sees
+only eligible candidates and runs only for ambiguous cases. Enable its recommendation path only if a predeclared,
+held-out local benchmark clears the documented quality gate; otherwise preserve deterministic recommendations and
+record Laya's measured limitation.
+
+## Global constraints
+- Do not implement M3, M4 or M5; do not change Planificador classification contracts or M1 state-machine semantics. The additive M1 assignment transport extension is in scope.
+- Do not use hosted inference or paid model APIs. Subscription quota reads are usage-only and existing readers remain the source of truth.
+- Unknown/stale quota, authentication, provider or route capacity never means unlimited or available.
+- Do not alter any historical run or `RUN.json`; preserve the concurrent Maros file already modified in the worktree.
+- Keep the core package isolated (stdlib only), typed, deterministic when Laya is absent, offline after checkpoint setup and bounded in memory, time and concurrency.
+- Persist bounded, redacted decision evidence outside plans and M1 state. Never persist credentials, full prompts, conversations or raw agent output.
+- No commit, push, merge or deploy.
+
+## Tasks
+
+### M1 — Versioned M1 transport and deterministic decision module
+- [ ] T1 — Bump shared M1 contract to v1.1.0; extend AssignmentRequest/TaskView additively with plan hash, dependencies, acceptance, verification and planner classification evidence; verify positional and Event 1.0 compatibility · repo: methodology · verify: `python -m unittest discover -s skill/scripts/bt_scheduler_core/tests && python -m unittest discover -s skill/scripts/bt_planner/tests` · covers: R2, R10, R13
+- [ ] T2 — Freeze M2 public contract, route-reference semantics, idempotency fingerprint, benchmark labels/gates and architecture ruling · repo: methodology · after: T1 · verify: `python -m unittest tests.test_scheduler_decision_contract` · covers: R1, R8, R9, R10, R12, US-1, US-2
+- [ ] T3 — Add isolated module types, input validation, classification/evidence handling and public API · repo: methodology · after: T2 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest discover -s bt_scheduler_decision/tests` · covers: R1, R2, R6, R13
+- [ ] T4 — Build configured candidate enumeration, hard eligibility filters, deterministic reference ranking and sparse-history scoring · repo: methodology · after: T3 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest bt_scheduler_decision.tests.test_candidates bt_scheduler_decision.tests.test_policy bt_scheduler_decision.tests.test_history` · covers: R3, R4, R5, R7
+- [ ] T5 — Add bounded/idempotent decision persistence and stable executor references · repo: methodology · after: T3 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest bt_scheduler_decision.tests.test_recorder bt_scheduler_decision.tests.test_isolation` · covers: R8, R9, R13
+
+### M2 — Local Laya runtime
+- [ ] T6 — Create reproducible isolated Laya environment, pin package/checkpoint revisions and verify artifact hashes · repo: methodology · after: T2 · verify: `skill/scripts/bt_scheduler_decision/setup_laya.py --check` · covers: R11, R14
+- [ ] T7 — Implement lazy typed local worker with CUDA/CPU selection, one-model residency, deadlines, memory/concurrency bounds and circuit-breaker fallback · repo: methodology · after: T3, T6 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest bt_scheduler_decision.tests.test_laya_adapter bt_scheduler_decision.tests.test_resilience` · covers: R5, R11, R13
+- [ ] T8 — Measure all compatible official checkpoints on the A3000 and CPU; choose only from observed Spanish/English task results · repo: methodology · after: T6, T7 · verify: `skill/scripts/bt_scheduler_decision/bench_local.py --checkpoints all --devices cuda,cpu --json bitacora/metodologia/requirements/REQ-013-scheduler-m2-decision-engine-with-local/laya-results.json` · covers: R11, R12, US-3
+
+### M3 — Methodology sources and M1 integration
+- [ ] T9 — Adapt existing model catalog, profile policy, live quota states and verified attempt telemetry into M2 inputs without duplicating their source policies · repo: methodology · after: T4 · verify: `python -m unittest tests.test_scheduler_decision_sources` · covers: R2, R3, R4, R7
+- [ ] T10 — Wire an explicit M2 `AssignmentPort` option through the sole M1 adapter; pass v1.1.0 fields and preserve M1 atomic reservation, global free slots and resource claims · repo: methodology · after: T5, T9 · verify: `python -m unittest tests.test_scheduler_decision_integration tests.test_scheduler_integration` · covers: R1, R2, R8, R10, R13, US-1
+- [ ] T11 — Verify task-level scenarios: no inference for easy tasks; risk floor; exhausted/unknown quota; invalid auth; sparse history; unavailable/timeout/malformed Laya; multiple READY tasks; refusal, replay and restart · repo: methodology · after: T7, T10 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest discover -s bt_scheduler_decision/tests` · covers: R1, R2, R4, R5, R7, R9, R13
+
+### M4 — Evaluation, audit and closure
+- [ ] T12 — Run versioned calibration and held-out selection benchmark against the deterministic reference, report accuracy/regret/limits and collect cold/warm latency, RSS and VRAM · repo: methodology · after: T8, T11 · verify: `skill/scripts/bt_scheduler_decision/bench_quality.py --json bitacora/metodologia/requirements/REQ-013-scheduler-m2-decision-engine-with-local/benchmark-results.json` · covers: R5, R6, R11, R12
+- [ ] T13 — Complete independent spec/standards/adversarial reviews and fix every verified finding with a regression · repo: methodology · after: T12 · verify: `python -m unittest tests.test_scheduler_decision_integration` · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14
+- [ ] T14 — Package M2, publish installation/offline/integration docs and D-023; run M2, M1, Planner, methodology and package regression suites · repo: methodology · after: T10, T11, T12, T13 · verify: `python -m unittest tests.test_scheduler_decision_integration tests.test_scheduler_integration tests.test_plan_integration tests.migration.test_package_install` · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14
+
+## Verification
+1. `cd skill/scripts && PYTHONPATH=. python -W error::ResourceWarning -m unittest discover -s bt_scheduler_decision/tests` — M2 package suite, including `-I` CLI and standalone-copy isolation.
+2. `python -W error::ResourceWarning -m unittest tests.test_scheduler_decision_integration tests.test_scheduler_integration tests.test_plan_integration` — M2↔M1 v1.1.0 additive transport and Planner contracts; historical-run test must remain byte-identical.
+3. `cd skill/scripts && python -W error::ResourceWarning -m unittest discover -s bt_scheduler_core/tests` — existing M1 module regression suite.
+4. `cd skill/scripts && python -W error::ResourceWarning -m unittest discover -s tests` and `python -m unittest tests.migration.test_package_install` — methodology and packaging suites.
+5. Run local Laya checkpoint/device benchmark and offline restart/resilience checks; retain raw JSON, commands, commit/checkpoint hashes, model version, median/p95 latency, peak RSS and CUDA allocated/reserved memory.
+6. Run the versioned selection benchmark with at least 100 labeled calibration cases and 100 held-out cases across the five specified families. On every held-out case, compare the hybrid production policy (calibrated Laya choice when accepted, otherwise deterministic fallback) with the deterministic reference on that same full sample; fixed-seed paired bootstrap (10,000 resamples), Wilson calibration rule and zero hard-filter violations are required to enable Laya. If evidence is too small, negative or unstable, state that and keep deterministic recommendations active; never convert Laya scores into success probabilities.
+7. Check `git diff --check`, package/module import boundaries and final `git status`; confirm the unrelated Maros `RUN.json` remains only an externally changing file and no historical run was written by M2.
+
+## Rulings
+- T1: The shared `CONTRACT_VERSION=1.0.0` contract cannot carry the approved plan hash, dependencies, acceptance criteria, verification or `classification_evidence`. Append defaulted fields to `TaskView` and `AssignmentRequest`, populate them from the already approved Plan and bump the common contract to v1.1.0. Existing positional construction and reading old v1.0.0 events remain compatible; Event shape and M1 reservation/state behavior stay unchanged. M2 fails closed on a missing/invalid plan hash. Update and verify scheduler constructor, FIFO simulator, assignment tests, Event serialization/parser, README and methodology adapter.
+- T2: The recommendation key is SHA-256 over canonical validated request inputs and content-addressed candidate/quota/telemetry, policy and checkpoint snapshots. Exact replay returns one persisted decision; changed snapshot yields a new decision linked by plan/task; SQLite uniqueness serializes concurrent duplicates.
+- T6: Use an isolated local environment/worker if the methodology's Python runtime cannot safely host Laya's PyTorch dependencies. Pin the actual compatible Python, wheel set, checkpoint revision and hashes after hardware verification.
+- T8/T12: Before benchmark labels are inspected by a model, freeze and hash the fixture corpus. Calibration uses at least 100 cases and a deterministic confidence-cutoff procedure; held-out evaluation uses at least 100 cases stratified across five named families. Compare the production hybrid's result with baseline on every held-out case, including fallbacks, using a paired bootstrap with a fixed seed. Failure to satisfy any gate means Laya is measured but not enabled for recommendations.
+- T10: Opt-in integration only. M1 continues to validate every proposal and apply its own global free-slot/resource reservation.
+
+## Progress log
+- 2026-10-14 — Inspected M1, planner, routing/profile/quota/telemetry sources and official Laya repo; hardware is RTX A3000 6 GiB, Python 3.14.7. Spec drafted; no packages/weights installed and no source code changed. Existing Maros `RUN.json` is already being updated by another process and remains out of scope.

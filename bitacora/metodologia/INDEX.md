@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-14 18:38 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-14 20:01 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -9,9 +9,9 @@ _Generated 2026-10-14 18:38 by `bitacora.py index`. Do not edit by hand._
 ## Workspace
 
 - **skill** → `/home/david/dev/metodologia`
-- **ops-matrix-cujggjqq** → `/tmp/ops-matrix-cujggjqq`
-- **ops-matrix-gwx4a4rl** → `/tmp/ops-matrix-gwx4a4rl`
-- **ops-matrix-pduh5t5x** → `/tmp/ops-matrix-pduh5t5x`
+- **ops-matrix-cujggjqq** → `/tmp/ops-matrix-cujggjqq` (not cloned here)
+- **ops-matrix-gwx4a4rl** → `/tmp/ops-matrix-gwx4a4rl` (not cloned here)
+- **ops-matrix-pduh5t5x** → `/tmp/ops-matrix-pduh5t5x` (not cloned here)
 
 ## Needs attention
 
@@ -40,6 +40,7 @@ _Generated 2026-10-14 18:38 by `bitacora.py index`. Do not edit by hand._
 | [REQ-010](requirements/REQ-010-isolated-planner-contract-module/SPEC.md) | Isolated planner-contract module | `ready` | [done](requirements/REQ-010-isolated-planner-contract-module/PLAN.md) | report ✓ |
 | [REQ-011](requirements/REQ-011-scheduler-core-m1-isolated-deterministic/SPEC.md) | Scheduler Core M1: isolated deterministic module `bt_scheduler_core` | `ready` | [done](requirements/REQ-011-scheduler-core-m1-isolated-deterministic/PLAN.md) | report ✓ |
 | [REQ-012](requirements/REQ-012-planner-phase-1-closure-strict-plan-sync/SPEC.md) | Planner phase 1 closure: strict PLAN sync, launch gate, evidence, real planning trials | `in-progress` | [done](requirements/REQ-012-planner-phase-1-closure-strict-plan-sync/PLAN.md) | report ✓ |
+| [REQ-013](requirements/REQ-013-scheduler-m2-decision-engine-with-local/SPEC.md) | Scheduler M2 Decision Engine with local Laya | `clarifying` | [in-progress](requirements/REQ-013-scheduler-m2-decision-engine-with-local/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
