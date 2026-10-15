@@ -301,9 +301,12 @@ def _integrate_one(project: str, rdir: Path, state: dict, allocation: dict,
                    lock: IntegrationLock | None = None, lock_held: bool = False) -> str:
     unit_tasks = _allocation_tasks(state, allocation)
     accepted_tasks = []
+    allocation_repo = Path(allocation.get("repo", "")).resolve() if allocation.get("repo") else None
     for previous in (state.get("worktrees") or {}).values():
         if previous.get("state") == "accepted":
-            accepted_tasks.extend(_allocation_tasks(state, previous))
+            previous_repo = Path(previous.get("repo", "")).resolve() if previous.get("repo") else None
+            if not allocation_repo or previous_repo == allocation_repo:
+                accepted_tasks.extend(_allocation_tasks(state, previous))
     command = _verify_cmd([*accepted_tasks, *unit_tasks])
     try:
         repo = Path(allocation["repo"])
