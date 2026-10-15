@@ -44,4 +44,4 @@ Independent spec and standards reviews approved the scope and the pidfd race fix
 | Focused `ruff check` on changed module/test files | 6 existing findings remain in unchanged legacy lines; no new finding in the P-033 changes |
 | `python -W error::ResourceWarning -m unittest tests.migration.test_package_install` | Initial run exposed `bt_plan_adapter_evidence.py` missing from `pyproject.toml`'s `py-modules`; added it, then reran the package/install suite: 13 tests OK. This helper belongs to the Planner adapter used by the integrated M1/M3 path; the isolated M3 module remains independent. |
 
-Known sampling limits remain: a daemon re-parented between scans or one that changes cwd away from the worktree can escape. P-033 is committed locally as `9849dfe`; the owner-requested push to `main` is pending. M4/M5 remain future modules, and P-001 stays deferred by the owner.
+Known sampling limits remain: a daemon re-parented between scans or one that changes cwd away from the worktree can escape. P-033 commit `9849dfe` was included in the successful fast-forward push of `main` to `939288d`. M4/M5 remain future modules, and P-001 stays deferred by the owner.
