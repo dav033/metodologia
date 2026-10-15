@@ -265,3 +265,47 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Evidence:** P-033 regressions, M3 module suite (272 tests) and integration suite (138 tests) in `requirements/REQ-014-scheduler-m3-agent-executor/REPORT.md`; Python 3.9+ `os.pidfd_open` and Linux 5.3+ `signal.pidfd_send_signal` official availability; the project requires Python 3.12+.
 - **Source:** P-033 in `PENDING.md`; [REQ-014 report](requirements/REQ-014-scheduler-m3-agent-executor/REPORT.md); [Python `os.pidfd_open`](https://docs.python.org/3/library/os.html#os.pidfd_open); [Python `signal.pidfd_send_signal`](https://docs.python.org/3/library/signal.html#signal.pidfd_send_signal).
 
+## D-030 — M4 is an isolated observer with its own SQLite store
+- **Date:** 2026-10-15 · **Status:** Accepted under REQ-017 (owner approval in chat)
+- **Context:** M1, M2, and M3 own separate contracts and persistence; M4 needs restart-safe cursors, retention, and an incident outbox.
+- **Decision:** Create `bt_scheduler_monitor` as an isolated standard-library package with its own project-scoped SQLite WAL database. Reach it through one methodology adapter; do not import sibling modules or write into M1/M3 stores.
+- **Alternatives:** Put monitor state in M1 or M3 databases (breaks ownership); reuse legacy monthly JSONL (no transactional cursor/outbox); add a service database (unneeded deployment dependency).
+- **Consequences:** + clear ownership and isolated tests; − a separate database lifecycle and idempotent cross-module delivery are required.
+- **Rollback:** Stop monitor ingestion and adapters; preserve M4 history for export and leave M1/M3 stores untouched.
+- **Source:** [REQ-017 plan](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md) · ADR-001.
+
+## D-031 — M3 exposes a separate bounded nonblocking stream to M4
+- **Date:** 2026-10-15 · **Status:** Accepted under REQ-017 (owner approval in chat)
+- **Context:** M3 owns process pipes and currently reports lifecycle facts through M1; M4 needs live output without delaying M3 or changing lifecycle semantics.
+- **Decision:** Add a versioned private POSIX FIFO per execution, keep it separate from M1 lifecycle events, use nonblocking frames no larger than `PIPE_BUF` (initial Linux payload cap 3,840 bytes), independent stream offsets, bounded 10,000-frame/16 MiB buffering, and explicit durable loss summaries.
+- **Alternatives:** Have M4 read child pipes (breaks M3 process ownership); send chunks through M1 (mixes lifecycle and stream traffic); persist raw streams in M4 (unbounded and sensitive); use an external service (unneeded network boundary).
+- **Consequences:** + M3 remains responsible for process I/O and can continue draining under backpressure; − M3/M4 require coordinated gap, cursor, and restart tests.
+- **Rollback:** Disable M4 stream registration and retain existing lifecycle and bounded M3 output artifacts.
+- **Source:** [REQ-017 plan](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md) · ADR-002.
+
+## D-032 — M4 incidents are advisory and M1 remains authoritative
+- **Date:** 2026-10-15 · **Status:** Accepted under REQ-017 (owner approval in chat)
+- **Context:** Monitor detections may indicate quota, authentication, transport, or process inconsistencies but cannot own execution state or recovery.
+- **Decision:** M4 stores full incidents and sends only an idempotent versioned audit reference to M1; M2 reads provenance-aware metrics. M1 task/attempt state and M3 process control stay authoritative; no incident triggers recovery or completion.
+- **Alternatives:** Let M4 transition M1 state or trigger retries (duplicates M1/M5 authority); keep incidents only in M4 (loses the requested audit reference).
+- **Consequences:** + future M5 can consume durable evidence without coupling M4 to recovery; − capability negotiation and retryable outbox delivery are required.
+- **Rollback:** Stop outbox delivery and M2 metric reads; preserve M4 evidence without changing current M1 state.
+- **Source:** [REQ-017 plan](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md) · ADR-003.
+
+## D-033 — M4 minimizes persisted data and uses bounded retention
+- **Date:** 2026-10-15 · **Status:** Accepted under REQ-017 (owner approval in chat)
+- **Context:** Provider output can contain secrets, prompts, code, reasoning, tool arguments, and private project data; unbounded data also risks disk exhaustion.
+- **Decision:** Persist only typed allowlisted metadata and bounded redacted evidence/digests; never store raw provider bytes. Limit normalized records to 16 KiB, evidence excerpts to 4 KiB, SQLite database plus WAL to 512 MiB, normalized event detail to 90 days, resolved incident detail to 365 days, and daily aggregates to 730 days. Keep open incidents and bounded undelivered outbox records. Under pressure, prune eligible detail and compact aggregates first; if the cap still prevents writes, expose degraded state and explicit gaps without fabricating resolution or delivery.
+- **Alternatives:** Store raw JSONL indefinitely (sensitive and unbounded); delete all evidence at run end (insufficient audit trail).
+- **Consequences:** + bounded storage and lower exposure; − evidence is less detailed and parser evolution relies on versioned normalizers.
+- **Rollback:** Disable optional evidence capture or shorten retention; never restore raw stream persistence.
+- **Source:** [REQ-017 plan](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md) · ADR-004.
+
+## D-034 — M4 detector defaults remain deterministic, configurable, and advisory
+- **Date:** 2026-10-15 · **Status:** Accepted under REQ-017 (owner approval in chat)
+- **Context:** M4 needs testable defaults while avoiding false process-death or progress claims.
+- **Decision:** Use an initial missed-heartbeat threshold of 90 seconds, an informational silent-but-live notice after five minutes, repetitive-activity notice at 20 matching events in five minutes, a two-second authorized-cancel drain grace, and a 30-second source-disagreement reconciliation window. Keep thresholds configurable and validate them with deterministic fixtures; establish CPU/RSS/throughput/p95 limits only from T12's simulated baseline. No threshold changes M1 state or signals a process.
+- **Alternatives:** Treat silence as failure (false positives on long operations); set unmeasured runtime budgets (unsupported); infer progress semantically (violates the deterministic M4 boundary).
+- **Consequences:** + deterministic and testable alerts with explicit confidence; − thresholds may need revision if fixture and measured workload evidence contradicts them.
+- **Source:** [REQ-017 architecture](requirements/REQ-017-scheduler-m4-agent-monitor/M4-ARCHITECTURE.md) · owner approval in chat.
+

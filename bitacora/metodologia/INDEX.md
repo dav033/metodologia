@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-15 11:03 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 11:43 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -46,6 +46,7 @@ _Generated 2026-10-15 11:03 by `bitacora.py index`. Do not edit by hand._
 | [REQ-014](requirements/REQ-014-scheduler-m3-agent-executor/SPEC.md) | Scheduler M3 Agent Executor | `done` | [approved](requirements/REQ-014-scheduler-m3-agent-executor/PLAN.md) | report ✓ |
 | [REQ-015](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/SPEC.md) | Train and evaluate local Laya for Scheduler routing | `clarifying` | [review](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/PLAN.md) |  |
 | [REQ-016](requirements/REQ-016-train-and-validate-an-english-only-laya/SPEC.md) | Train and validate an English-only Laya Planner complexity classifier | `ready` | [approved](requirements/REQ-016-train-and-validate-an-english-only-laya/PLAN.md) |  |
+| [REQ-017](requirements/REQ-017-scheduler-m4-agent-monitor/SPEC.md) | Scheduler M4 Agent Monitor | `in-progress` | [approved](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -59,11 +60,11 @@ _Generated 2026-10-15 11:03 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
-- D-029 — M3 predecessor hand-off, task-bound routes, and pidfd-safe terminal sweep (2026-10-15)
-- D-028 — The REQ-016 synthetic benchmark uses rubric-derived labels without a human-review gate
-- D-027 — All remaining Scheduler Laya experiments use the English checkpoint on English tasks
-- D-026 — The 85% Laya complexity investigation is English-only
-- D-025 — Scheduler hand-over of prerequisite work is on by default; routes are bound to their task; the sweep spares terminal processes (2026-10-15)
+- D-034 — M4 detector defaults remain deterministic, configurable, and advisory
+- D-033 — M4 minimizes persisted data and uses bounded retention
+- D-032 — M4 incidents are advisory and M1 remains authoritative
+- D-031 — M3 exposes a separate bounded nonblocking stream to M4
+- D-030 — M4 is an isolated observer with its own SQLite store
 
 ## Artifacts
 

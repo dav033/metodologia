@@ -1,0 +1,1077 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-017",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "M4.1 Contracts and compatibility",
+      "acceptance_criteria": [
+        "Versioned stream, event, incident and metric contracts validate from fixtures",
+        "Compatibility policy describes unknown fields and schema versions"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "M4.2 Stream adapter and provider normalizers",
+      "acceptance_criteria": [
+        "M3 continues draining both streams when the M4 queue fills",
+        "Provider fixtures normalize supported fields and preserve unsupported states"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "M4.3 Activity and incidents",
+      "acceptance_criteria": [
+        "Activity views correlate process identity and expose uncertainty",
+        "Every detector has a deterministic trigger, dedupe key and resolution rule"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "M4.4 Durable history and queries",
+      "acceptance_criteria": [
+        "Restart replay is idempotent and outbox retries are durable",
+        "Retention, query and resource-pressure behavior are bounded and visible"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "M4.5 M1/M2 integration",
+      "acceptance_criteria": [
+        "M1 records incident references without changing task or attempt state",
+        "M2 reads only provenance-aware metrics and does not compare incompatible values"
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "M4.6 Operations and adversarial verification",
+      "acceptance_criteria": [
+        "SSH operations and compatibility limits are documented",
+        "Offline matrix and measured three-agent baseline meet approved limits"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Define versioned stream, normalized-event, incident and metric contracts",
+      "objective": "Specify versioned shapes and compatibility rules for the M4 data boundaries.",
+      "repository": "skill",
+      "after": [],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "M4 boundaries are new, but M1 event shapes and all required fields are already inventoried.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts",
+            "file:skill/scripts/bt_scheduler_core/contracts.py"
+          ],
+          "justification": "Several schemas need consistent identity, clocks, allowlists and evolution rules"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "The task defines contracts and fixtures without adding monitor runtime behavior"
+        },
+        "duration": {
+          "evidence": [
+            "spec:PLAN.md#tasks",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "Schema drafting and focused fixtures fit one bounded contract session"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "A weak version boundary could corrupt correlation or preserve sensitive data"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "The stream contract is consumed next by the M3 adapter task"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "Existing M1 contracts and the requested fields have been inspected"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/contracts.py",
+        "skill/scripts/bt_scheduler_monitor/tests/test_contracts.py",
+        "skill/scripts/bt_scheduler_monitor/__init__.py"
+      ],
+      "shared_resources": [
+        "m4-contracts"
+      ],
+      "acceptance_criteria": [
+        "Stream, event, incident and metric schemas validate versions",
+        "Missing identities and timestamps remain explicit unknowns",
+        "Unknown provider schemas do not create fabricated fields"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_monitor/tests -p 'test_contracts.py' -v",
+          "purpose": "validate M4 boundary contracts and fixtures",
+          "created_by": "T1"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M2",
+      "title": "Add bounded nonblocking M3 stdout/stderr stream frames",
+      "objective": "Expose independently drained stdout and stderr frames through a bounded M3 stream port.",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 240,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "The shim currently merges streams; exact queue tuning still depends on implementation measurements.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_executor/shim.py",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "Separating current pipes while preserving artifact behavior touches the supervisor boundary"
+        },
+        "scope": {
+          "evidence": [
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "The change spans the M3 shim and the M4 stream handoff contract"
+        },
+        "duration": {
+          "evidence": [
+            "task:T1",
+            "spec:PLAN.md#tasks"
+          ],
+          "justification": "Pipe separation and overflow tests require a focused integration session"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals"
+          ],
+          "justification": "Stream frame blocking or mislabeling could stall agents or corrupt parsing."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "The stream adapter must implement T1 contracts and preserve M3 pipe ownership"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_executor/shim.py",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "The current merged output and bounded shim behavior were inspected"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/shim.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_shim.py",
+        "skill/scripts/bt_scheduler_monitor/stream.py",
+        "skill/scripts/bt_scheduler_monitor/tests/test_stream.py",
+        "skill/scripts/bt_scheduler_executor/model.py",
+        "skill/scripts/bt_scheduler_executor/ports.py",
+        "skill/scripts/bt_scheduler_executor/executor.py",
+        "skill/scripts/bt_scheduler_executor/ledger.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_stream.py",
+        "skill/scripts/bt_scheduler_executor_adapter.py",
+        "skill/scripts/bt_scheduler_executor/README.md"
+      ],
+      "shared_resources": [
+        "m3-stream-contract",
+        "m4-contracts"
+      ],
+      "acceptance_criteria": [
+        "Stdout and stderr keep independent sequence and byte offsets",
+        "Queue saturation produces gaps while both pipes continue draining",
+        "Existing output artifact size limits continue to hold"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_executor/tests -p 'test_shim.py' -v && python3 -m unittest discover -s bt_scheduler_executor/tests -p 'test_stream.py' -v && python3 -m unittest discover -s bt_scheduler_monitor/tests -p 'test_stream.py' -v",
+          "purpose": "verify detached stream framing, nonblocking delivery and explicit gaps",
+          "created_by": "T2"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Normalize Claude, Codex and Antigravity JSONL with Gemini fixture-only support",
+      "objective": "Normalize supported provider JSONL into allowlisted M4 events with fixture coverage.",
+      "repository": "skill",
+      "after": [
+        "T2"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 240,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Claude and Antigravity conventions are known, while Codex and Gemini event fixtures remain new.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/tests/test_telemetry.py",
+            "spec:M4-INVENTORY.md#existing-fixture-coverage-and-gaps",
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "Three launchable providers have distinct event vocabularies and usage fields"
+        },
+        "scope": {
+          "evidence": [
+            "spec:M4-INVENTORY.md#existing-fixture-coverage-and-gaps",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "The task adds per-provider normalizers plus a fixture-only Gemini parser"
+        },
+        "duration": {
+          "evidence": [
+            "task:T2",
+            "spec:PLAN.md#tasks"
+          ],
+          "justification": "Four fixture adapters and compatibility cases need one substantial session"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "Provider payloads can contain private text and schema changes can mislead M2"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T1"
+          ],
+          "justification": "Every provider parser consumes the T2 frame and T1 envelope contracts"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/tests/test_telemetry.py",
+            "spec:M4-INVENTORY.md#existing-fixture-coverage-and-gaps",
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "Claude fixtures exist while Codex JSONL and Gemini remain documentation-derived"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/providers/claude.py",
+        "skill/scripts/bt_scheduler_monitor/providers/codex.py",
+        "skill/scripts/bt_scheduler_monitor/providers/antigravity.py",
+        "skill/scripts/bt_scheduler_monitor/providers/gemini.py",
+        "skill/scripts/bt_scheduler_monitor/tests/fixtures/providers",
+        "skill/scripts/bt_runprompt.py",
+        "skill/scripts/bt_driver.py"
+      ],
+      "shared_resources": [
+        "provider-normalizer-contracts",
+        "m3-driver-contract"
+      ],
+      "acceptance_criteria": [
+        "Claude Codex and Antigravity fixtures normalize allowlisted fields",
+        "Gemini fixtures never advertise an M3 launch route",
+        "Unknown source event shapes remain visible as unsupported"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p 'test_driver*.py' -v && python3 -m unittest discover -s bt_scheduler_monitor/tests -p 'test_provider_*.py' -v",
+          "purpose": "verify M3 driver compatibility and M4 provider fixtures",
+          "created_by": "T3"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Apply field allowlists and bounded redaction before persistence",
+      "objective": "Remove unrestricted provider content before any normalized data reaches M4 storage.",
+      "repository": "skill",
+      "after": [
+        "T3"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "The allowlist is narrow, but fail-closed redaction behavior requires adversarial fixtures.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts",
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "Redaction and allowlisting must fail closed across nested untrusted provider objects"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals"
+          ],
+          "justification": "The task owns one privacy boundary between parsers and persistence"
+        },
+        "duration": {
+          "evidence": [
+            "task:T3",
+            "spec:PLAN.md#tasks"
+          ],
+          "justification": "Field allowlists and injected redaction failures fit a focused security session"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals"
+          ],
+          "justification": "A redaction miss could persist secrets code or private project text"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "The persistence boundary consumes provider output produced by T3"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/tests/test_telemetry_v2.py",
+            "spec:M4-INVENTORY.md#existing-fixture-coverage-and-gaps"
+          ],
+          "justification": "The redaction boundary can reuse existing provider telemetry fixtures."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/redaction.py",
+        "skill/scripts/bt_scheduler_monitor/tests/test_redaction.py"
+      ],
+      "shared_resources": [
+        "m4-persistence-boundary"
+      ],
+      "acceptance_criteria": [
+        "Raw provider values are absent from persisted query results",
+        "Redaction failure withholds excerpts instead of saving text",
+        "Evidence digests and excerpts obey their size limits"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_monitor/tests -p 'test_redaction.py' -v",
+          "purpose": "verify fail-closed allowlisting and redaction",
+          "created_by": "T4"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M3",
+      "title": "Build per-attempt activity state with process identity corroboration",
+      "objective": "Project correlated activity and process identity without treating silence as death.",
+      "repository": "skill",
+      "after": [
+        "T3"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "The output envelope is defined, but activity reconciliation edge behavior is new.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "Activity needs separate source clocks process state and stream integrity"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#activity-view"
+          ],
+          "justification": "The task adds an activity projection and read-only process identity checks"
+        },
+        "duration": {
+          "evidence": [
+            "task:T3",
+            "spec:PLAN.md#tasks"
+          ],
+          "justification": "Per-attempt state and identity edge cases need a dedicated modeling session"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#activity-view"
+          ],
+          "justification": "False process death could mislead operators and future recovery decisions"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "Activity joins normalized events with M3 identity observations and T3 output"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_executor/shim.py",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "M3 shim identity ownership and event fields are visible in the checkout"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/activity.py",
+        "skill/scripts/bt_scheduler_monitor/process_identity.py",
+        "skill/scripts/bt_scheduler_monitor/tests/test_activity.py"
+      ],
+      "shared_resources": [
+        "m4-event-envelope",
+        "m3-process-identity"
+      ],
+      "acceptance_criteria": [
+        "Activity separates source time receipt time and process status",
+        "PID reuse never joins two execution identities",
+        "Quiet live processes remain informational and nonblocking"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_monitor/tests -p 'test_activity.py' -v",
+          "purpose": "verify activity projection and process identity handling",
+          "created_by": "T5"
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M3",
+      "title": "Implement deterministic detectors and deduplicated incident lifecycle",
+      "objective": "Emit stable deduplicated incidents from explicit deterministic observation rules.",
+      "repository": "skill",
+      "after": [
+        "T4",
+        "T5"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 240,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Rules are specified, though thresholds and false-positive tradeoffs need fixture feedback.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#deterministic-detector-matrix",
+            "spec:M4-TEST-MATRIX.md#required-deterministic-scenarios"
+          ],
+          "justification": "Detector rules combine evidence thresholds confidence dedupe and resolution behavior"
+        },
+        "scope": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#deterministic-detector-matrix",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "The task implements the documented M4 incident lifecycle and detector set"
+        },
+        "duration": {
+          "evidence": [
+            "spec:M4-TEST-MATRIX.md#required-deterministic-scenarios",
+            "spec:PLAN.md#tasks"
+          ],
+          "justification": "Fifteen fixture scenarios cover detector positives and nearby negatives"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#deterministic-detector-matrix"
+          ],
+          "justification": "A false incident can mislead future operators even without changing M1 state"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "task:T4"
+          ],
+          "justification": "Incident records share the versioned contract and activity facts from T5"
+        },
+        "confidence": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#deterministic-detector-matrix",
+            "spec:M4-TEST-MATRIX.md#required-deterministic-scenarios"
+          ],
+          "justification": "Detector triggers and proposed thresholds are enumerated in the architecture matrix"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/detectors.py",
+        "skill/scripts/bt_scheduler_monitor/incidents.py",
+        "skill/scripts/bt_scheduler_monitor/tests/test_detectors.py"
+      ],
+      "shared_resources": [
+        "incident-v1-contract"
+      ],
+      "acceptance_criteria": [
+        "Each detector has positive and negative fixture cases",
+        "Stable incident IDs merge repeated evidence deterministically",
+        "Resolution updates M4 records without changing M1 state"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_monitor/tests -p 'test_detectors.py' -v",
+          "purpose": "verify detector triggers dedupe and resolution",
+          "created_by": "T6"
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M4",
+      "title": "Persist events, cursors, incidents and an idempotent delivery outbox",
+      "objective": "Persist normalized observations and incidents with restart-safe cursors and delivery.",
+      "repository": "skill",
+      "after": [
+        "T6"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 240,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "SQLite conventions exist, while independent M4 cursor and pressure semantics are new.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/sqlite_repository.py",
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals"
+          ],
+          "justification": "SQLite transactions must coordinate event cursors incidents retention and outbox retries"
+        },
+        "scope": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "The task creates an isolated M4 store without editing M1 or M3 databases"
+        },
+        "duration": {
+          "evidence": [
+            "task:T6",
+            "task:T1"
+          ],
+          "justification": "Schema transactions replay and store-pressure tests require a substantial session"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals"
+          ],
+          "justification": "Cursor or outbox inconsistency could lose evidence or duplicate M1 audit facts"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "task:T9"
+          ],
+          "justification": "M4 storage uses the incident contract and is consumed by T8 and T9"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/sqlite_repository.py",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "M1 WAL repository patterns and their ownership boundary were inspected"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/store.py",
+        "skill/scripts/bt_scheduler_monitor/tests/test_store.py"
+      ],
+      "shared_resources": [
+        "m4-sqlite-schema",
+        "incident-v1-contract"
+      ],
+      "acceptance_criteria": [
+        "Event insertion and cursor advancement share a transaction",
+        "Restart replay preserves idempotent event and outbox keys",
+        "M4 database remains separate from M1 and M3 stores"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_monitor/tests -p 'test_store.py' -v",
+          "purpose": "verify SQLite transactions replay and outbox behavior",
+          "created_by": "T7"
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M4",
+      "title": "Add retention, metric compaction and headless status/query commands",
+      "objective": "Expose bounded retained history and read-only status queries over SSH.",
+      "repository": "skill",
+      "after": [
+        "T7"
+      ],
+      "complexity": "medium",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "The store model is explicit, though the cap policy still needs measured limits.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals",
+            "spec:M4-ARCHITECTURE.md#activity-view"
+          ],
+          "justification": "Retention compaction and status projection must preserve metric provenance"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals"
+          ],
+          "justification": "The task adds read-only queries retention and a headless command surface"
+        },
+        "duration": {
+          "evidence": [
+            "task:T7",
+            "spec:PLAN.md#tasks"
+          ],
+          "justification": "Query output and expiry rules build directly on the T7 store"
+        },
+        "risk": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Incorrect retention can delete audit evidence or combine incompatible metrics"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7",
+            "task:T11"
+          ],
+          "justification": "Queries share the M4 schema and operator interface contract"
+        },
+        "confidence": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals",
+            "spec:M4-ARCHITECTURE.md#activity-view"
+          ],
+          "justification": "The proposed tables retention periods and activity fields are documented"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/queries.py",
+        "skill/scripts/bt_scheduler_monitor/retention.py",
+        "skill/scripts/bt_scheduler_monitor/cli.py",
+        "skill/scripts/bt_scheduler_monitor/tests/test_query_cli.py",
+        "skill/scripts/bt_scheduler_monitor/__main__.py"
+      ],
+      "shared_resources": [
+        "m4-sqlite-schema",
+        "m4-operator-cli"
+      ],
+      "acceptance_criteria": [
+        "SSH queries show incidents activity and provenance-aware metrics",
+        "Retention preserves open incidents and flags store pressure",
+        "Unknown metrics are not aggregated as zero or infinity"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_monitor/tests -p 'test_query_cli.py' -v",
+          "purpose": "verify status queries retention and headless command behavior",
+          "created_by": "T8"
+        }
+      ]
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M5",
+      "title": "Add an additive M1 audit-only incident reference contract",
+      "objective": "Record M4 incident references in M1 audit without changing scheduler state.",
+      "repository": "skill",
+      "after": [
+        "T7"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "M1 ingestion is understood, while the additive event and no-state-change guarantee need tests.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "file:skill/scripts/bt_scheduler_core/events.py"
+          ],
+          "justification": "The additive event must pass validation while leaving the reducer state unchanged"
+        },
+        "scope": {
+          "evidence": [
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "The task adds one M1 audit fact and an M4 idempotent delivery adapter"
+        },
+        "duration": {
+          "evidence": [
+            "task:T6",
+            "task:T7"
+          ],
+          "justification": "M1 contract updates and outbox integration need a focused cross-module session"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "Any reducer side effect would violate M1 state authority and the incident contract"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "The adapter joins M4 outbox records to M1 audit capability checks"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "file:skill/scripts/bt_scheduler_core/sqlite_repository.py"
+          ],
+          "justification": "Current M1 event validation and transactional audit implementation were inspected"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_core/contracts.py",
+        "skill/scripts/bt_scheduler_core/events.py",
+        "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/bt_scheduler_core/tests",
+        "skill/scripts/bt_scheduler_monitor_adapter.py",
+        "skill/scripts/tests/test_scheduler_monitor_m1_adapter.py"
+      ],
+      "shared_resources": [
+        "m1-audit-contract",
+        "m4-incident-outbox",
+        "m4-methodology-adapter"
+      ],
+      "acceptance_criteria": [
+        "M1 accepts versioned incident references through its adapter",
+        "Incident events append audit facts with idempotent keys",
+        "Applying an incident reference leaves task state unchanged"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests -p 'test_incident*.py' -v && python3 -m unittest discover -s tests -p 'test_scheduler_monitor_m1_adapter.py' -v",
+          "purpose": "verify additive M1 audit events and unchanged reducer state",
+          "created_by": "T9"
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M5",
+      "title": "Expose provenance-aware M4 metrics to M2 as read-only history",
+      "objective": "Provide M2 with optional metrics carrying source quality and comparison keys.",
+      "repository": "skill",
+      "after": [
+        "T8",
+        "T9"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "M2 consumption paths are known, but metric usefulness must stay optional and provenance-aware.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "file:skill/scripts/bt_scheduler_decision/engine.py"
+          ],
+          "justification": "Metric history must keep provider units quality and compatibility dimensions aligned"
+        },
+        "scope": {
+          "evidence": [
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "The task adds an optional read-only M2 source without replacing routing history"
+        },
+        "duration": {
+          "evidence": [
+            "task:T8",
+            "task:T9"
+          ],
+          "justification": "Metric adapter and cross-provider checks depend on completed T8 and T9"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#proposed-versioned-contracts"
+          ],
+          "justification": "Incompatible usage comparisons could distort routing evidence or quota interpretation"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T9",
+            "task:T8"
+          ],
+          "justification": "M2 reads the M4 metric contract and retains its current decision owner"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "M2 history and route choice ownership are present in current adapter code"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision_adapter.py",
+        "skill/scripts/bt_scheduler_decision/engine.py",
+        "skill/scripts/bt_scheduler_monitor/metrics.py",
+        "skill/scripts/bt_scheduler_monitor_adapter.py",
+        "skill/scripts/tests/test_scheduler_monitor_m2_adapter.py"
+      ],
+      "shared_resources": [
+        "m2-metric-history-contract",
+        "m4-methodology-adapter"
+      ],
+      "acceptance_criteria": [
+        "M2 can read M4 metric snapshots without writing them",
+        "Different providers do not share token comparability keys",
+        "Unknown quota remains distinct from zero and infinity"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_decision/tests -p 'test_metric*.py' -v && python3 -m unittest discover -s tests -p 'test_scheduler_monitor_m2_adapter.py' -v",
+          "purpose": "verify read-only metric provenance and cross-provider comparability",
+          "created_by": "T10"
+        }
+      ]
+    },
+    {
+      "id": "T11",
+      "milestone_id": "M6",
+      "title": "Document SSH operations, limits, compatibility and recovery boundaries",
+      "objective": "Document safe SSH operation and publish the monitor through one adapter.",
+      "repository": "skill",
+      "after": [
+        "T10"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "The query contract is planned, while exact CLI output stabilizes after T8.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment",
+            "file:skill/scripts/bt_scheduler_adapter.py"
+          ],
+          "justification": "The operational surface is small but exposes a new public query boundary"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "The task adds operator documentation compatibility notes and one methodology adapter"
+        },
+        "duration": {
+          "evidence": [
+            "spec:PLAN.md#tasks",
+            "spec:M4-ARCHITECTURE.md#proposed-adrs"
+          ],
+          "justification": "CLI examples and bounded operational notes fit one documentation session"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:M4-ARCHITECTURE.md#boundaries-and-data-flow"
+          ],
+          "justification": "Incorrect SSH monitor documentation could imply process-control authority."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T8",
+            "task:T9"
+          ],
+          "justification": "The adapter documents and exposes the query surface delivered by T8"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "spec:M4-INVENTORY.md#current-modules-and-intended-treatment"
+          ],
+          "justification": "Existing adapter conventions and the agreed read-only boundary were inspected"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/README.md",
+        "skill/scripts/bt_scheduler_monitor_adapter.py",
+        "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/tests/test_scheduler_monitor_cli.py",
+        "skill/scripts/bt_cli_scheduler_monitor.py",
+        "skill/scripts/pyproject.toml",
+        "skill/scripts/tests/test_scheduler_monitor_integration.py"
+      ],
+      "shared_resources": [
+        "m4-operator-cli",
+        "m4-compatibility-matrix",
+        "m4-methodology-adapter"
+      ],
+      "acceptance_criteria": [
+        "SSH examples use read-only commands and fixture stores",
+        "Documentation lists limits schemas and unsupported Gemini route",
+        "One methodology adapter exposes the public monitor API"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p 'test_scheduler_monitor_integration.py' -v",
+          "purpose": "verify the isolated package boundary and single methodology adapter",
+          "created_by": "T11"
+        }
+      ]
+    },
+    {
+      "id": "T12",
+      "milestone_id": "M6",
+      "title": "Run the failure matrix and establish the three-agent resource baseline",
+      "objective": "Exercise every offline failure case and measure bounded three-agent behavior.",
+      "repository": "skill",
+      "after": [
+        "T11"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "All acceptance scenarios are listed, but resource limits remain unmeasured until this task.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:M4-TEST-MATRIX.md#required-deterministic-scenarios",
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals"
+          ],
+          "justification": "The final gate combines detector coverage restart pressure retention and resource measurement"
+        },
+        "scope": {
+          "evidence": [
+            "spec:M4-TEST-MATRIX.md#required-deterministic-scenarios",
+            "spec:PLAN.md#tasks"
+          ],
+          "justification": "The task validates the integrated M4 and focused scheduler suites with simulators"
+        },
+        "duration": {
+          "evidence": [
+            "task:T2",
+            "task:T11"
+          ],
+          "justification": "Full matrix and repeated benchmark runs require a complete verification session"
+        },
+        "risk": {
+          "evidence": [
+            "spec:M4-ARCHITECTURE.md#persistence-retention-and-resource-proposals",
+            "spec:M4-TEST-MATRIX.md#required-deterministic-scenarios"
+          ],
+          "justification": "The three-agent benchmark may hide queue loss if limits are too high."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7",
+            "task:T10"
+          ],
+          "justification": "The benchmark consumes the integrated M4 stream store and operator paths"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_integration.py",
+            "spec:M4-TEST-MATRIX.md#required-deterministic-scenarios"
+          ],
+          "justification": "Existing scheduler integration tests and the proposed fixture matrix are available"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/tests",
+        "skill/scripts/tests",
+        "skill/scripts/bt_scheduler_monitor/bench.py",
+        "skill/scripts/bt_scheduler_monitor/README.md"
+      ],
+      "shared_resources": [
+        "m4-failure-matrix",
+        "m4-resource-baseline"
+      ],
+      "acceptance_criteria": [
+        "All fifteen deterministic scenarios pass without provider calls",
+        "Three simulated agents produce a reproducible resource report",
+        "CPU RSS throughput and p95 budgets follow measured results"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_monitor/tests -v && python3 -m unittest discover -s tests -p 'test_scheduler*.py' -v && python3 -m bt_scheduler_monitor.bench --concurrency 3 --fixtures tests/fixtures/scheduler-monitor --report /tmp/req-017-m4-benchmark.json",
+          "purpose": "verify complete offline matrix and three-agent benchmark",
+          "created_by": "T12"
+        }
+      ]
+    }
+  ]
+}

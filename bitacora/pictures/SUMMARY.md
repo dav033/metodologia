@@ -39,15 +39,16 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 - Branch `feat/req-015-judge-fix` (24 commits, local, not pushed): count/price parity, chips by rules (D-043), cost cap (D-044), honest colour-swap, rating row. Gate GATE OK, tsc 0, lint 0 errors. Owner decides push/PR. Report: requirements/REQ-015-*/REPORT.md.
 
 ## Active focus
+- REQ-014 local branch `feat/req-014-motor-bandas`: P-092 ring maxima measured per centimetre (+5 %) and sub-1 m rings left unbanded; regression, matrix, CI sweep, types and lint pass. P-092 closed locally but uncommitted. P-091 edits remain local/uncommitted; P-099 semiarco under-count and P-100 ring minimum edge remain open.
 - REQ-016 (Guided 3D edit leftovers: exact undo and colour resolver) **DONE**: Verified and closed in local worktree `t12` on branch `feat/req-016-guided-3d-edit-leftovers-exact-undo-and` (commits 58f10c04..fb872bce). Exact in-memory undo (D-045, P-042), signed last colour order with suppressed redundant asking (D-046, P-058 A1-A4, D-047), reader-before-writer rollout compatibility (D-035) and untouched-piece replay protection (D-048, P-082). Gate 10/10 green (`GATE OK`), tsc clean (0 errors), lint 0 errors. REPORT.md written; PLAN.md status: done.
 - REQ-015 implementation and verification complete locally, ready for owner review/commit/publication: chosen-idea chips by rules, shared price, honest color counts, durable quote cap. Restored ambiguous/composite idea prices show “Precio al elegir”; no session contract change. REPORT.md contains evidence; visual rating UI 9/9, contract 27/27, final types/build pass.
 - 2026-10-14 follow-up: deterministic colour coverage passes in guiada:test (15 scripts); final lint 0 errors/49 warnings, workspace builds and app types pass. Application build/full gate not rerun for this test-only change.
 
 ## Top pending (see PENDING.md)
-- P-075: both deterministic and real-Python UI suites pass, including repaired product-name parity; app build/types/lint pass, full gate running. Python loopback :8000 ready, real quote 39,111 COP. P-041 closed (salon 27/27). P-083 reproduced and being corrected in isolated t12; P-077 still requires production count evidence.
+- P-091 blocks merge of the REQ-014 motor branch and remains uncommitted. P-099/P-100 track the semiarco PARIDAD under-count and ring minimum edge found during P-092. P-075 still has real-Python UI and quote-cap follow-ups; see PENDING.md for the full queue.
 
 ## Recent decisions (see DECISIONS.md)
 - D-027 helium sphere volume · D-028/D-030 product judge timing · D-029 class-prefixed ids · D-031 manual VPS deploy ·
   D-032 owner-away defaults · D-033 dev servers allowed · D-034 no VPS deploy this weekend · D-035 reader-first persisted fields · D-036 review stop-rule · D-037 VPS approved · D-038 one quote · D-039 everything on.
 
-_Last updated: 2026-10-14_
+_Last updated: 2026-10-15_

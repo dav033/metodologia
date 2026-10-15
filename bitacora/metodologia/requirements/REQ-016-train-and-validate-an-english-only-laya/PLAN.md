@@ -40,7 +40,7 @@ locked-test rows or tune after opening their labels.
 - [x] T3 — Freeze the blind model inputs, private label key, source/family map, and hashes before any new Laya call ·
   after: T2 · verify: independent validator reproduces hashes and proves split disjointness; test key is not passed
   to training or inference · covers: R4, R5
-- [ ] T3b — Independently audit and freeze v2 data and manifest before training · after: T2b · verify: regenerate all
+- [x] T3b — Independently audit and freeze v2 data and manifest before model comparison · after: T2b · verify: regenerate all
   hashes and family/context/template counts from saved files, compare prior Laya inputs, and verify blind inputs omit
   labels/provenance · covers: R2, R4, R5, R11
 
@@ -59,36 +59,36 @@ locked-test rows or tune after opening their labels.
 - [x] T5d — Audit development accuracy by task family and inspect source diversity · after: T5b, T5c · verify: saved
   v1 family metrics show 16 development families, with Naive Bayes at 0/25 on two low families; the 79.25% row score
   therefore does not transfer consistently across all families · covers: R4, R7, R11
-- [ ] T5e — Train v2 Laya candidates offline on CUDA and score only v2 development data · after: T3b · verify: at least
-  three fixed frozen-encoder seeds, plus a partial-unfreeze recipe if still safe; record successful optimizer steps and
-  resolve or avoid the v1 GradScaler/scheduler warning; reload checkpoints offline · covers: R1, R6
-- [ ] T5f — Train and score the deterministic unigram/bigram reference on v2 development data · after: T3b · verify:
-  same v2 training split, fixed tokenizer/smoothing/tie-breaks and frozen implementation hash · covers: R7
-- [ ] T6 — Select the best Laya checkpoint from v2 development, freeze class mapping and both baselines, then freeze
-  the one-time test command and all hashes · after: T5e, T5f · verify: lock stores blind test hashes from the suite
-  manifest without reading the private key; a preflight proves the label-key file is not opened until all model and
-  deterministic predictions are saved and hashed · covers: R5, R7, R11
+- [x] T5e — Train and independently score corrected v4 Laya candidates offline on CUDA · after: T3b · verify: three
+  frozen-encoder seeds and four one/two-layer partial-unfreeze runs record 912/912 successful updates, no warnings,
+  checkpoint hashes, VRAM, latency, and development predictions · covers: R1, R6
+- [x] T5f — Compare three predeclared deterministic smoothing values on v4 development · after: T3b · verify:
+  alpha 1.0/0.1/0.01 score 338/400, 339/400 and 336/400; alpha 0.1 remains the fixed reference · covers: R7
+- [x] T6 — Select the best Laya checkpoint from v4 development, freeze class mapping and both baselines, then seal
+  the one-time test command and hashes · after: T5e, T5f · verify: lock selects `v4-partial-last2-seed-7` at 227/400;
+  preflight validates 1000 blind inputs and confirms the label key remains unread · covers: R5, R7, R11
 
 ### M3 — One locked evaluation and audit
-- [ ] T7 — Score base and selected fine-tuned English checkpoints once on the v2 locked 1000 cases; compare with the
-  25% balanced-majority baseline and frozen deterministic Naive Bayes reference · after: T6 · verify: report exact accuracy, Wilson interval, per-class
-  precision/recall, family-cluster bootstrap interval, macro-F1, confusion matrix, ordinal error, invalid outputs,
-  latency and peak memory · covers:
+- [x] T7 — Score base and selected fine-tuned English checkpoints once on the v4 locked 1000 cases; compare with the
+  25% balanced-majority baseline and frozen deterministic Naive Bayes reference · after: T6 · verify: report exact
+  accuracy, Wilson and family-cluster intervals, per-class precision/recall, macro-F1, confusion matrix, invalid
+  outputs, latency and CUDA memory; all models miss the 85% point target · covers:
   R7, R8
-- [ ] T8 — Audit label derivation, family/template leakage, prior-input similarity, hashes, English-only and
-  no-runtime-change invariants; record point-target and lower-bound verdict separately · after: T7 · verify: a
-  standalone audit script reproduces each verdict from frozen artifacts · covers: R2, R4, R5, R7, R9, R10
+- [x] T8 — Audit the one-time v4 result, label derivation, split/leakage evidence, hashes, English-only and
+  no-runtime-change invariants; record point-target and lower-bound verdict separately · after: T7 · verify:
+  standalone audit reproduces prediction seals, confusion aggregates and one key read without rereading its contents ·
+  covers: R2, R4, R5, R7, R9, R10
 
 ## Verification
 The validator must pass before model access and again against the frozen artifacts: exactly 1008 train / 400 dev /
 1000 test, 250 examples per class in test, at least 252 / 100 / 200 families in train / dev / test, and no shared
 scenario family, project context, or wording template across splits. Check for class-word leakage, exact or near-
 duplicate test text in prior Laya inputs, and labels/provenance in blind inputs.
-Run at least three offline frozen-encoder CUDA seeds; compare partial-unfreeze recipes if full-encoder tuning does not
-fit. Evaluate both the 25% majority and deterministic Naive Bayes reference. Select on development only. Open the test
-once after freezing the model, prompt, mapping, reference policy and hashes. Require at least 850/1000 for the
-85% point target. Show the ordinary Wilson interval as descriptive and use family-cluster bootstrap for any claim
-about transfer beyond these scenario families. State that synthetic results do not estimate natural production accuracy.
+Run at least three offline frozen-encoder CUDA seeds and safe partial-unfreeze candidates. Evaluate the 25% majority
+and deterministic Naive Bayes reference. Select on development only. Open the test once after freezing the model,
+prompt, mapping, reference policy and hashes. The v4 one-time test returned deterministic 787/1000 (78.7%) and
+selected Laya 656/1000 (65.6%); both fail the 850/1000 point target and their family-bootstrap upper bounds are
+83.2% and 69.0%. State that synthetic results do not estimate natural production accuracy.
 
 ## Rulings
 - Use labels derived from a frozen structured scenario rubric before text generation: this makes the synthetic suite
@@ -99,6 +99,13 @@ about transfer beyond these scenario families. State that synthetic results do n
   only the deliberately balanced suite.
 - Human reviewers are not a prerequisite for this synthetic benchmark. A later claim about real tasks requires a
   separate naturally sampled English set with independent human labels.
+- The v2 deterministic 400/400 development result is diagnostic evidence of lexical shortcuts, not a model-quality
+  result; no Laya candidate was trained on v2. Preserve v2 unchanged.
+- Preserve v3 after detecting its malformed 63-character base-checkpoint hash before any Laya call. Corrected v4
+  pins the local checkpoint manifest and was independently audited before training and again before selection.
+- Repeated partial-unfreeze runs raised Laya development results over frozen-encoder seeds but did not approach the
+  deterministic reference. The one-time v4 test confirms more of the same recipe is not justified for this 85%
+  target; new work would need a materially different representation/data approach and a fresh untouched test.
 - The v1 locked test remains unopened: its development split has only 16 scenario families and family-wise NB errors
   show that the 79.25% row average hides complete failures on two low families. A fresh v2 must meet the family minimum
   before selection; this ruling uses only v1 development labels, never its locked key.
@@ -132,3 +139,20 @@ about transfer beyond these scenario families. State that synthetic results do n
   182 MiB device memory free, and failed under its 5.38 GiB allocator cap. Preserve both artifacts. Full-encoder
   AdamW tuning is not safe on this 6 GiB device; continue with final-layer partial-unfreeze and the deterministic
   development reference. Locked test remains unopened.
+- 2026-10-15 — v2 passed its independent suite audit but deterministic Naive Bayes scored 400/400 on development,
+  revealing class-specific lexical shortcuts; it was retained as a diagnostic and not used for Laya training. v3 was
+  preserved after its manifest exposed an invalid 63-character checkpoint digest before any model call. Corrected
+  v4 binds the checkpoint to the trusted local manifest, passed its independent audit, and preserves the English-only
+  1008/400/1000 split.
+- 2026-10-15 — On v4 development, the pinned base scored 116/400 (29.0%), frozen Laya seeds 185/400 (46.25%),
+  184/400 (46.0%), and 192/400 (48.0%); deterministic alpha 0.1 scored 339/400 (84.75%). Three smoothing rounds
+  scored 338/400, 339/400, and 336/400, so alpha 0.1 remained best.
+- 2026-10-15 — Four partial-unfreeze checkpoints ran locally on the RTX A3000: final-two-layer seed 7 scored
+  227/400 (56.75%); the three additional user-requested rounds scored 213/400 (53.25%, final-one-layer seed 7),
+  224/400 (56.0%, final-two-layer seed 17), and 218/400 (54.5%, final-two-layer seed 42). Each completed 912/912
+  updates without warnings; observed whole-GPU peaks were 2599–2751 MiB. Three same-recipe seeds averaged 55.75%.
+- 2026-10-15 — Sealed `selection-lock-v4.json`, opened the v4 gold key once only after all 3000 model predictions
+  were saved and hashed, and evaluated the 1000-case blind test. Deterministic Naive Bayes scored 787/1000 (78.7%,
+  Wilson 76.1–81.1%, family bootstrap 74.1–83.2%); selected Laya scored 656/1000 (65.6%, Wilson 62.6–68.5%,
+  family bootstrap 62.1–69.0%); base scored 264/1000 (26.4%). All miss the 85% point target. A standalone post-open
+  audit passed without rereading the key. Full evidence: `/home/david/.local/share/bt-scheduler-laya/evaluation/REQ-016/REPORT-v4.md`.

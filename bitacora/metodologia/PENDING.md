@@ -49,6 +49,7 @@ month summary._
 _None_
 
 ## Recently closed
+- P-034 · Review and approve REQ-017 Scheduler M4 Agent Monitor plan; decide retention and store-pressure policy · CLOSED 2026-10-15 · owner approved all proposals and plan; decisions D-030–D-034; execution active on `feat/scheduler-m4-agent-monitor`
 - P-033 · M3 sweep records observed descendant identities and signals matched terminal processes through pidfds · CLOSED 2026-10-15 · 272 M3 tests and 138 adapter/integration tests; P-032 terminal preservation and `spare_interactive=False` retained; standards review approved the PID reuse fix
   - ✓ P-030 · M3 antagonist leftovers (A3 forged exit.json while agent alive, A5 repeated cwd sweep) · closed 2026-10-15 · always stop the live agent before settling, sweep on first pass only
 
