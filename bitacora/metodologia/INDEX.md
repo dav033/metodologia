@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-15 16:29 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 16:55 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -48,7 +48,7 @@ _Generated 2026-10-15 16:29 by `bitacora.py index`. Do not edit by hand._
 | [REQ-015](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/SPEC.md) | Train and evaluate local Laya for Scheduler routing | `clarifying` | [review](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/PLAN.md) |  |
 | [REQ-016](requirements/REQ-016-train-and-validate-an-english-only-laya/SPEC.md) | Train and validate an English-only Laya Planner complexity classifier | `ready` | [paused](requirements/REQ-016-train-and-validate-an-english-only-laya/PLAN.md) |  |
 | [REQ-017](requirements/REQ-017-scheduler-m4-agent-monitor/SPEC.md) | Scheduler M4 Agent Monitor | `in-progress` | [done](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md) | report ✓ |
-| [REQ-018](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/SPEC.md) | Scheduler M1-M4 integration and offline monitor recovery | `clarifying` | [in-progress](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md) |  |
+| [REQ-018](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/SPEC.md) | Scheduler M1-M4 integration and offline monitor recovery | `planned` | [approved](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
