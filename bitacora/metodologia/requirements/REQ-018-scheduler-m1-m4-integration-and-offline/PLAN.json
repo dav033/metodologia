@@ -1,0 +1,458 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-018",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Stream ingestion boundary",
+      "acceptance_criteria": [
+        "Provider output frames become bounded, allowlisted M4 records",
+        "Durable event and cursor writes precede frame acknowledgement"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Full fixture flow",
+      "acceptance_criteria": [
+        "A frozen plan traverses M1, M2, M3 and M4",
+        "M4 metric reads and incident delivery preserve M1 and M2 ownership"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Offline recovery",
+      "acceptance_criteria": [
+        "A no-overwrite archive passes integrity and manifest verification",
+        "Recovery prepares a bounded candidate and preserves protected records"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Conditional live route smoke",
+      "acceptance_criteria": [
+        "Quota evidence is fresh and verified for at least two eligible profiles",
+        "The persisted M2 decision matches the provider launched by M3"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Acceptance and handoff",
+      "acceptance_criteria": [
+        "Focused module, integration and package checks pass with counts recorded",
+        "Pending status reflects the actual quota-gated smoke result"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Convert M3 frames to durable allowlisted M4 events, metrics and gaps with retry-safe cursor acknowledgement",
+      "repository": "skill",
+      "after": [],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p 'test_scheduler_monitor_runtime.py' -v",
+          "purpose": "verify command declared in PLAN.md",
+          "created_by": "T1"
+        }
+      ],
+      "objective": "Persist normalized M3 output in M4 while preserving each module's state authority.",
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 240,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "The FIFO, provider parsing and SQLite contracts are known; their retry-safe handoff is not yet implemented.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The work crosses FIFO parsing redaction and transactional M4 storage",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_stream_adapter.py",
+            "file:skill/scripts/bt_scheduler_monitor/store.py"
+          ]
+        },
+        "scope": {
+          "justification": "The adapter turns provider frames into durable events and metrics",
+          "evidence": [
+            "spec:SPEC.md#scope-in",
+            "file:skill/scripts/bt_scheduler_monitor_adapter.py"
+          ]
+        },
+        "duration": {
+          "justification": "A bounded conversion and persistence pipeline needs focused retry tests",
+          "evidence": [
+            "precedent:REQ-017/T7",
+            "spec:PLAN.md#tasks"
+          ]
+        },
+        "risk": {
+          "justification": "Premature acknowledgement can lose evidence after a storage failure",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:skill/scripts/bt_scheduler_monitor/stream.py"
+          ]
+        },
+        "coupling": {
+          "justification": "The stream adapter and M4 queue share frame sequence and cursor contracts",
+          "evidence": [
+            "task:T2",
+            "file:skill/scripts/bt_scheduler_stream_adapter.py"
+          ]
+        },
+        "confidence": {
+          "justification": "The frame reader and store APIs were inspected but no ingestion bridge exists",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_stream_adapter.py",
+            "file:skill/scripts/bt_scheduler_monitor/store.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor_adapter.py",
+        "skill/scripts/tests/test_scheduler_monitor_runtime.py"
+      ],
+      "shared_resources": [
+        "m3-m4-stream-contract",
+        "m4-store-writer"
+      ],
+      "acceptance_criteria": [
+        "Provider output frames normalize into bounded allowlisted M4 records",
+        "Durable event and cursor writes complete before frames leave the queue",
+        "Parser storage and capacity failures remain retryable or explicit"
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M2",
+      "title": "Exercise frozen Planner plan through M1/M2/M3 fake execution and M4 store/outbox in one test",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p 'test_scheduler_m1_m4_e2e.py' -v",
+          "purpose": "verify command declared in PLAN.md",
+          "created_by": "T2"
+        }
+      ],
+      "objective": "Prove one frozen plan traverses the public M1, M2, M3 and M4 boundaries.",
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "high",
+      "estimate_rationale": "Existing Planner-to-M3 fixtures and M4 boundary tests provide reusable isolated harnesses.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The fixture must preserve plan identity route choice and verifier ownership",
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_chain_e2e.py",
+            "file:skill/scripts/tests/scheduler_chain_support.py"
+          ]
+        },
+        "scope": {
+          "justification": "One test composes four modules through the real public adapters",
+          "evidence": [
+            "spec:SPEC.md#scope-in",
+            "precedent:REQ-017/T9"
+          ]
+        },
+        "duration": {
+          "justification": "The existing fake-provider chain runs quickly with disposable repositories",
+          "evidence": [
+            "command:cd skill/scripts && python3 -m unittest discover -s tests -p 'test_scheduler_chain_e2e.py' -v -> 14 tests passed",
+            "file:skill/scripts/tests/test_scheduler_chain_e2e.py"
+          ]
+        },
+        "risk": {
+          "justification": "A seam regression could allow monitoring to affect task state",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:skill/scripts/tests/test_scheduler_monitor_m1_adapter.py"
+          ]
+        },
+        "coupling": {
+          "justification": "The new scenario consumes the T1 ingestion adapter and existing M1 M2 M3 fixtures",
+          "evidence": [
+            "task:T1",
+            "file:skill/scripts/tests/scheduler_chain_support.py"
+          ]
+        },
+        "confidence": {
+          "justification": "The current Planner to M3 chain and M4 adapter tests were run and inspected",
+          "evidence": [
+            "command:cd skill/scripts && python3 -m unittest discover -s tests -p 'test_scheduler_chain_e2e.py' -v -> 14 tests passed",
+            "file:skill/scripts/tests/test_scheduler_monitor_integration.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_scheduler_m1_m4_e2e.py"
+      ],
+      "shared_resources": [
+        "scheduler-m1-m4-fixture",
+        "frozen-plan-contract"
+      ],
+      "acceptance_criteria": [
+        "One frozen plan traverses M1 M2 M3 and M4",
+        "The fake provider invoked matches the persisted M2 decision",
+        "M4 metrics and incidents do not mutate M1 task state"
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M3",
+      "title": "Implement no-overwrite M4 archive, integrity manifest and safe staged recovery candidate for P-038",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_monitor/tests -p 'test_recovery.py' -v",
+          "purpose": "verify command declared in PLAN.md",
+          "created_by": "T3"
+        }
+      ],
+      "objective": "Create a verified full archive and staged compact candidate for owner-operated M4 recovery.",
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 300,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "The M4 schema and retention limits are explicit; safe archive and candidate semantics still need implementation.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Recovery must coordinate SQLite backup integrity limits and retention behavior",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_monitor/retention.py",
+            "file:skill/scripts/bt_scheduler_monitor/store.py"
+          ]
+        },
+        "scope": {
+          "justification": "The recovery flow adds export verification and candidate preparation for operators",
+          "evidence": [
+            "spec:SPEC.md#scope-in",
+            "precedent:P-038"
+          ]
+        },
+        "duration": {
+          "justification": "Archive verification and constrained pruning need isolated failure fixtures",
+          "evidence": [
+            "precedent:REQ-017/T12",
+            "spec:PLAN.md#tasks"
+          ]
+        },
+        "risk": {
+          "justification": "An incorrect reclaim step could remove the only available monitor history",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:skill/scripts/bt_scheduler_monitor/storage_limits.py"
+          ]
+        },
+        "coupling": {
+          "justification": "Candidate preparation must honor existing M4 retention and temporary space contracts",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_monitor/retention.py",
+            "precedent:D-033"
+          ]
+        },
+        "confidence": {
+          "justification": "The current store schema hard cap and explicit vacuum directory contract were inspected",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_monitor/store.py",
+            "file:skill/scripts/bt_scheduler_monitor/README.md"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_monitor/recovery.py",
+        "skill/scripts/bt_scheduler_monitor/tests/test_recovery.py",
+        "skill/scripts/bt_scheduler_monitor_recovery.py"
+      ],
+      "shared_resources": [
+        "m4-store-recovery",
+        "sqlite-temp-dirs"
+      ],
+      "acceptance_criteria": [
+        "Archive export refuses an existing destination and preserves the source bytes",
+        "Archive verification checks integrity schema identity and bounded manifest evidence",
+        "The recovery candidate stays under the active cap and preserves open incidents and unacknowledged outbox items"
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M4",
+      "title": "Run P-036 with fresh quota evidence and two eligible profiles in a separate disposable real-provider smoke",
+      "repository": "skill",
+      "after": [
+        "T2"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && BITACORA_LIVE_SCHEDULER_SMOKE=1 python3 -m unittest discover -s tests -p 'test_scheduler_m2_live_smoke.py' -v",
+          "purpose": "verify command declared in PLAN.md",
+          "created_by": "T4"
+        }
+      ],
+      "objective": "Complete the persisted M2 route-choice smoke using two fresh eligible subscription profiles.",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "The smoke path is known but current profile freshness and subscription quota can change immediately.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The test must connect quota evidence persisted M2 choice and an isolated real run",
+          "evidence": [
+            "precedent:P-036",
+            "file:skill/scripts/bt_scheduler_decision_adapter.py"
+          ]
+        },
+        "scope": {
+          "justification": "This is one bounded live smoke using an existing Scheduler flow",
+          "evidence": [
+            "spec:SPEC.md#scope-in",
+            "precedent:REQ-013"
+          ]
+        },
+        "duration": {
+          "justification": "Quota refresh and one disposable agent run fit a short smoke window",
+          "evidence": [
+            "precedent:P-036",
+            "file:skill/scripts/tests/test_scheduler_chain_e2e.py"
+          ]
+        },
+        "risk": {
+          "justification": "Launching a subscription profile consumes external account capacity",
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "precedent:D-036"
+          ]
+        },
+        "coupling": {
+          "justification": "The selected profile depends on live quota evidence and M3 account gates",
+          "evidence": [
+            "task:T2",
+            "file:skill/scripts/bt_scheduler_executor_adapter.py"
+          ]
+        },
+        "confidence": {
+          "justification": "Profile eligibility is uncertain until quota is refreshed at launch time",
+          "evidence": [
+            "assumption:At least two permitted profiles may be quota-valid"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_scheduler_m2_live_smoke.py"
+      ],
+      "shared_resources": [
+        "live-provider-quota",
+        "disposable-scheduler-run"
+      ],
+      "acceptance_criteria": [
+        "Two profiles have fresh verified and permitted quota evidence",
+        "The M2 route decision is durably tied to the approved plan revision",
+        "M3 launches exactly the provider and profile selected by M2"
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M5",
+      "title": "Run the Scheduler module suites, package install regression and focused integrated flow; record actual outcomes and close eligible pending items",
+      "repository": "skill",
+      "after": [
+        "T3",
+        "T4"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p 'test_scheduler*.py' -v",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "Run affected Scheduler module and package checks and record truthful completion evidence.",
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "The relevant module, integration and package commands are already known from approved plans.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Acceptance spans four module suites adapters integration and packaging",
+          "evidence": [
+            "precedent:REQ-017/T12",
+            "file:skill/scripts/tests/test_scheduler_monitor_integration.py"
+          ]
+        },
+        "scope": {
+          "justification": "The closeout consolidates end to end evidence across all Scheduler modules",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:PLAN.md#verification"
+          ]
+        },
+        "duration": {
+          "justification": "Focused suites and the installed wheel check have recorded runnable commands",
+          "evidence": [
+            "precedent:REQ-017/T12",
+            "precedent:REQ-013"
+          ]
+        },
+        "risk": {
+          "justification": "A failed module test could leave a broken shared Scheduler contract unnoticed",
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_chain_e2e.py",
+            "spec:PLAN.md#verification"
+          ]
+        },
+        "coupling": {
+          "justification": "The final gate depends on completed integration recovery and smoke outcomes",
+          "evidence": [
+            "task:T1",
+            "task:T2",
+            "task:T3",
+            "task:T4"
+          ]
+        },
+        "confidence": {
+          "justification": "The Scheduler suite layout and installed package gate were inspected",
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_monitor_integration.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "bitacora/metodologia/requirements/REQ-018-scheduler-m1-m4-integration-and-offline/REPORT.md",
+        "bitacora/metodologia/PENDING.md"
+      ],
+      "shared_resources": [
+        "scheduler-m1-m4-acceptance",
+        "plan-trace"
+      ],
+      "acceptance_criteria": [
+        "Affected M1 M2 M3 and M4 suites finish with exact counts recorded",
+        "The installed wheel exposes M4 monitor adapters and the recovery command",
+        "P-036 and P-038 status matches verified implementation and smoke results"
+      ]
+    }
+  ]
+}
