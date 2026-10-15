@@ -8,10 +8,12 @@ created: 2026-10-15
 ## Approach
 Freeze the Planner reasoning-complexity rubric and generate a controlled English task suite from structured
 scenarios whose labels are assigned before their prose is rendered. Mix fresh simulations grounded in project
-bitacoras with invented engineering scenarios. Split by scenario family and wording template, not random rows. The
-locked test contains 1000 cases (250 per class); separate training and development sets support local CUDA training
-and model selection. This validates agreement with this synthetic rubric distribution only, not real production-task
-accuracy. Keep the experiment separate from M1/M2 runtime authorization.
+bitacoras with invented engineering scenarios. The v1 pilot has only 16 development families, and its Naive Bayes
+errors include two whole failed `low` families; preserve it and keep its locked test unopened. Build an independent
+v2 with at least 252/100/200 train/development/test scenario families, split by context and wording template, before
+model selection. The locked v2 test contains 1000 cases (250 per class). This validates agreement with this synthetic
+rubric distribution only, not real production-task accuracy. Keep the experiment separate from M1/M2 runtime
+authorization.
 
 ## Global constraints
 Only English task text and the pinned `english` checkpoint. Use the installed Laya offline on the RTX A3000; begin
@@ -30,9 +32,17 @@ locked-test rows or tune after opening their labels.
   locked-test cases in English, with exactly 250 per test class · after: T1 · verify: generator checks family/template
   disjointness, exact balance, no label leakage, English-only text, uniqueness, and prior-input near-duplicates ·
   covers: R1, R2, R4, R5
+- [ ] T2b — Build independent suite v2 from structured project simulations and invented domains; render 1008 train,
+  400 development, and 1000 locked-test rows from 252/100/200 task families (63/25/50 per class), with four/four/five
+  wording variants per family · after: T2 · verify: 138 disjoint project contexts are split 63/25/50, 69 project-
+  simulated and 69 invented contexts overall, exact class/source balance, no label leakage, English-only text,
+  unique tasks, and no prior-input near-duplicates · covers: R1, R2, R4, R5, R11
 - [x] T3 — Freeze the blind model inputs, private label key, source/family map, and hashes before any new Laya call ·
   after: T2 · verify: independent validator reproduces hashes and proves split disjointness; test key is not passed
   to training or inference · covers: R4, R5
+- [ ] T3b — Independently audit and freeze v2 data and manifest before training · after: T2b · verify: regenerate all
+  hashes and family/context/template counts from saved files, compare prior Laya inputs, and verify blind inputs omit
+  labels/provenance · covers: R2, R4, R5, R11
 
 ### M2 — Train and choose on development data
 - [x] T4 — Run Laya dry-run and base-model development evaluation offline on CUDA · after: T3 · verify: exact
@@ -40,18 +50,27 @@ locked-test rows or tune after opening their labels.
 - [x] T5 — Fine-tune the English checkpoint with its encoder frozen for three fixed seeds, then compare on development
   only · after: T4 · verify: immutable logs record the update budget, data/base hashes, CUDA placement, elapsed time, peak VRAM
   and offline checkpoint reload · covers: R6
-- [ ] T5b — Compare one- and two-final-layer partial-unfreeze Laya recipes on development after full-encoder CUDA OOM ·
+- [x] T5b — Compare one- and two-final-layer partial-unfreeze Laya recipes on development after full-encoder CUDA OOM ·
   after: T5 · verify: only explicitly listed final encoder layers and decision heads receive gradients; CUDA memory cap,
   AMP, checkpointing, elapsed time, warning log and offline reload are recorded; no locked-test input is scored · covers: R6
-- [ ] T5c — Implement and evaluate a deterministic unigram/bigram Naive Bayes reference on development · after: T5 ·
+- [x] T5c — Implement and evaluate a deterministic unigram/bigram Naive Bayes reference on development · after: T5 ·
   verify: it trains on the frozen training split only, accepts blind task text without reading labels, emits reproducible
   predictions under a fixed smoothing/tie-break configuration, and its source hash is recorded · covers: R7
-- [ ] T6 — Select the checkpoint and fixed class mapping from development results, then freeze the evaluation command
-  and all hashes · after: T5b, T5c · verify: lock manifest identifies the blind test input hash but contains no test labels
-  or predictions · covers: R5, R7
+- [x] T5d — Audit development accuracy by task family and inspect source diversity · after: T5b, T5c · verify: saved
+  v1 family metrics show 16 development families, with Naive Bayes at 0/25 on two low families; the 79.25% row score
+  therefore does not transfer consistently across all families · covers: R4, R7, R11
+- [ ] T5e — Train v2 Laya candidates offline on CUDA and score only v2 development data · after: T3b · verify: at least
+  three fixed frozen-encoder seeds, plus a partial-unfreeze recipe if still safe; record successful optimizer steps and
+  resolve or avoid the v1 GradScaler/scheduler warning; reload checkpoints offline · covers: R1, R6
+- [ ] T5f — Train and score the deterministic unigram/bigram reference on v2 development data · after: T3b · verify:
+  same v2 training split, fixed tokenizer/smoothing/tie-breaks and frozen implementation hash · covers: R7
+- [ ] T6 — Select the best Laya checkpoint from v2 development, freeze class mapping and both baselines, then freeze
+  the one-time test command and all hashes · after: T5e, T5f · verify: lock stores blind test hashes from the suite
+  manifest without reading the private key; a preflight proves the label-key file is not opened until all model and
+  deterministic predictions are saved and hashed · covers: R5, R7, R11
 
 ### M3 — One locked evaluation and audit
-- [ ] T7 — Score base and selected fine-tuned English checkpoints once on the locked 1000 cases; compare with the
+- [ ] T7 — Score base and selected fine-tuned English checkpoints once on the v2 locked 1000 cases; compare with the
   25% balanced-majority baseline and frozen deterministic Naive Bayes reference · after: T6 · verify: report exact accuracy, Wilson interval, per-class
   precision/recall, family-cluster bootstrap interval, macro-F1, confusion matrix, ordinal error, invalid outputs,
   latency and peak memory · covers:
@@ -62,8 +81,9 @@ locked-test rows or tune after opening their labels.
 
 ## Verification
 The validator must pass before model access and again against the frozen artifacts: exactly 1008 train / 400 dev /
-1000 test, 250 examples per class in test, no shared scenario family or wording template across splits, no direct
-class-word leakage, no exact or near-duplicate test text in any prior Laya input, and no labels in blind inputs.
+1000 test, 250 examples per class in test, at least 252 / 100 / 200 families in train / dev / test, and no shared
+scenario family, project context, or wording template across splits. Check for class-word leakage, exact or near-
+duplicate test text in prior Laya inputs, and labels/provenance in blind inputs.
 Run at least three offline frozen-encoder CUDA seeds; compare partial-unfreeze recipes if full-encoder tuning does not
 fit. Evaluate both the 25% majority and deterministic Naive Bayes reference. Select on development only. Open the test
 once after freezing the model, prompt, mapping, reference policy and hashes. Require at least 850/1000 for the
@@ -79,6 +99,9 @@ about transfer beyond these scenario families. State that synthetic results do n
   only the deliberately balanced suite.
 - Human reviewers are not a prerequisite for this synthetic benchmark. A later claim about real tasks requires a
   separate naturally sampled English set with independent human labels.
+- The v1 locked test remains unopened: its development split has only 16 scenario families and family-wise NB errors
+  show that the 79.25% row average hides complete failures on two low families. A fresh v2 must meet the family minimum
+  before selection; this ruling uses only v1 development labels, never its locked key.
 
 ## Progress log
 - 2026-10-15 — Owner requested an English-only task suite and Laya training/evaluation, clarified an approximately

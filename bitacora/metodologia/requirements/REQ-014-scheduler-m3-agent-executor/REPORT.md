@@ -28,3 +28,20 @@ POSIX/Linux only (identity via `/proc`, `ps` fallback untested elsewhere); same-
 
 ## Final consolidated run (2026-10-14, one pass, no edits afterwards)
 Module 243 OK (lone copy + README table included) · core 239 OK · planner 199 OK · M2 `bt_scheduler_decision` 56 OK · methodology `discover -s tests` 893 OK (3 opt-in skipped; includes adapter 37, integration, M2 tests) · packaging `tests.migration.test_package_install` 12/12 OK on the live repo (M2's new `bt_*` modules, incl. `bt_scheduler_bench_quality`, were added to `py-modules` so the gate passes; M2 must keep it current) · real CLIs (opt-in, bounded): antigravity direct:gemini/gemini-3.8-flash-low finished/clean 6.8 s 12160 tok; claude direct:claude/haiku@claude-personal finished/clean 8.6 s $0.0044; codex direct:codex/gpt-6-luna#low finished/clean 8.2 s 20768 tok.
+
+## P-033 follow-up (2026-10-15)
+
+The shim now samples `/proc` while the agent is alive and atomically records up to 4,096 observed descendant PID/start identities in `descendants.json` (scan cap: 16,384 process entries; interval: 0.1 s). Settle validates the record before using it to identify an orphaned agent terminal. The sweep opens a pidfd, rechecks current identity/cwd/terminal ownership, and signals through the descriptor. If pidfd support is unavailable, interactive processes are preserved. `spare_interactive=False` keeps its explicit unconditional sweep behavior. A recycled PID cannot redirect a terminal-process signal.
+
+Independent spec and standards reviews approved the scope and the pidfd race fix.
+
+| Command | Result |
+|---|---|
+| `cd skill/scripts && python -W error::ResourceWarning -I -m unittest discover -s bt_scheduler_executor/tests` | 272 tests OK, including the isolated-copy run |
+| `cd skill/scripts && python -W error::ResourceWarning -m unittest tests.test_scheduler_executor_adapter tests.test_scheduler_executor_integration tests.test_scheduler_chain_e2e tests.test_scheduler_integrator tests.test_scheduler_integration` | 138 OK |
+| `python -W error::ResourceWarning -m unittest tests.migration.test_package_install.InstalledRuntimeTests.test_executor_module_runs_standalone_from_the_installed_wheel` | 1 OK |
+| `python -m compileall -q skill/scripts/bt_scheduler_executor` and `git diff --check -- skill/scripts/bt_scheduler_executor skill/references/modules.md` | OK |
+| Focused `ruff check` on changed module/test files | 6 existing findings remain in unchanged legacy lines; no new finding in the P-033 changes |
+| `python -W error::ResourceWarning -m unittest tests.migration.test_package_install` | Initial run exposed `bt_plan_adapter_evidence.py` missing from `pyproject.toml`'s `py-modules`; added it, then reran the package/install suite: 13 tests OK. This helper belongs to the Planner adapter used by the integrated M1/M3 path; the isolated M3 module remains independent. |
+
+Known sampling limits remain: a daemon re-parented between scans or one that changes cwd away from the worktree can escape. P-033 is committed locally as `9849dfe`; the owner-requested push to `main` is pending. M4/M5 remain future modules, and P-001 stays deferred by the owner.

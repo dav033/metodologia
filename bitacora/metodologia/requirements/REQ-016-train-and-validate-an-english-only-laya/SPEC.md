@@ -33,9 +33,11 @@ synthetic English benchmark, not accuracy on future production tasks.
 ### US-1 (P1, Must) — Create a controlled English benchmark
 As the Planner owner, I want a large suite of English engineering tasks with labels fixed by the Planner rubric before
 inference, so I can measure whether Laya understands the four complexity levels.
-**Acceptance:** the frozen test has 1000 unique tasks, 250 per class, generated from held-out scenario families and
-wording templates; the 1008-task training set and 400-task development set use disjoint families/templates; no test
-text or near-duplicate was previously sent to Laya; the generator and rubric hashes are recorded.
+**Acceptance:** the active frozen test has 1000 unique tasks, 250 per class, from at least 200 held-out scenario
+families (50 per class, at most five wording variants per family); the 1008-task training set has at least 252
+families (63 per class) and the 400-task development set has at least 100 families (25 per class). Families,
+project contexts, and wording templates are split before rendering. No test text or near-duplicate was previously
+sent to Laya; the generator and rubric hashes are recorded.
 
 ### US-2 (P1, Must) — Fine-tune the English checkpoint locally
 As the Planner owner, I want a reproducible offline CUDA fine-tune using a separate labeled training set, so training
@@ -70,16 +72,19 @@ Scheduler behavior.
   is rendered; neither labels nor class names may be present in Laya's input.
 - R3. The complexity rubric shall measure reasoning needed (`low`, `medium`, `high`, `extreme`), not task duration,
   file count, scope, risk, coupling or model strength.
-- R4. The locked test shall contain 1000 new English tasks, 250 per class, generated from scenario/wording families
-  absent from the 1008-task training set and 400-task development set. No test task or near-duplicate may appear in
+- R4. The active locked test shall contain 1000 new English tasks, 250 per class, from at least 200 scenario
+  families (50 per class, at most five variants per family). Training shall contain 1008 tasks from at least 252
+  families (63 per class), and development 400 tasks from at least 100 families (25 per class). Scenario families,
+  project contexts, and wording templates are disjoint across splits. No locked task or near-duplicate may appear in
   prior Laya inputs.
 - R5. Before test inference, freeze task-family splits, generator/rubric hashes, model revision, checkpoint hash,
   prompt, score-to-class mapping and primary metric. Test data cannot be used for training or tuning.
 - R6. Training shall use the installed pinned Laya runtime offline, first with the encoder frozen on CUDA. Compare at
   least three seeds on development data. If full-encoder tuning cannot fit the measured 6 GiB GPU budget, compare a
   partial-unfreeze recipe that trains only the final encoder layer(s) plus Laya's decision head; record the exact
-  trainable parameter set and cap CUDA allocation below device capacity. Do not retry full-encoder training after a
-  confirmed out-of-memory result.
+  trainable parameter set, precision mode, successful optimizer-step count, warning log, and cap CUDA allocation
+  below device capacity. Do not accept a run with an unexplained scheduler/optimizer warning or retry full-encoder
+  training after a confirmed out-of-memory result.
 - R7. Compare Laya with both the 25% balanced majority baseline and a reproducible deterministic word unigram/bigram
   Naive Bayes reference trained on the same training split. Freeze its tokenizer, smoothing constant, tie-breaking
   order and source hash before opening the test. The primary test metric shall be exact four-class accuracy with a descriptive 95% Wilson interval, a
@@ -90,6 +95,9 @@ Scheduler behavior.
 - R9. Report synthetic-benchmark accuracy separately from any future, independently labeled natural-task estimate.
 - R10. No result from this requirement shall authorize or alter M1/M2 routing, reservation, quotas, or checkpoint
   allowlists.
+- R11. If development errors show strong family-level concentration or the family minimum in R4 is not met, keep
+  the locked test unopened and create a new versioned suite before model selection. Preserve the prior suite and do
+  not use its locked labels to tune the new version.
 
 ## Edge cases & errors
 - Generator emits non-English text, class-name leakage, exact/near duplicates, or a split-family overlap: reject the

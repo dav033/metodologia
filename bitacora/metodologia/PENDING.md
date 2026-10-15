@@ -38,8 +38,6 @@ month summary._
   - 2026-10-15 delegated Codex audit D-20261015-084652-b103 broke C1/C2/C3/C5 on the supplied copy; every counterexample was fixed with a regression test the same day (REQ-012 REPORT §Fourth round). Residual: truth of a justification is still not judged; no fifth cross-vendor pass on the fixed code.
 - P-026 · Scheduler core adoption: opt-in switch in `launch --mode marathon` to create a scheduler-owned run (watch/web read `RUN.projection.json`), and enforce `plan_ref` on resume in the legacy supervisor (gap found in REQ-011 §12.5; the resume half is done since 2026-10-15 by REQ-012: `resume_problem` refuses `PLAN_REF_STALE`/`PLAN_PROSE_DRIFT`) · urgency: low · complexity: M · added 2026-10-14 · REQ-011 proposal
   - 2026-10-15 D-20261015-084652-b103 executed reproduction: approve r2 with a changed verify after creating RUN on r1; resume_problem returns None and _open rewrites RUN while retaining plan_ref r1 and the old verification, recording only T1.verify drift. Evidence is in the delegation's scratch/extra-observations.json; no fix applied.
-- P-033 · M3 sweep: have the shim record the agent's descendants (scan /proc while it runs, write `descendants.json`) so the settle sweep can tell the agent's own terminal processes (tmux/screen/script) from an operator's shell once the agent is dead · urgency: low · complexity: M · added 2026-10-15 · antagonist review of P-032
-  - ✓ P-030 · M3 antagonist leftovers (A3 forged exit.json while agent alive, A5 repeated cwd sweep) · closed 2026-10-15 · always stop the live agent before settling, sweep on first pass only; residual: the first-pass sweep still kills an operator shell opened in the worktree (documented)
 - P-020 · Scheduler (future): consume PLAN.json (`bt_plan_contract.load` / `bt_plan_revisions.load_revision`), calibrate `estimated_minutes` against real durations, own concurrency · urgency: low · complexity: L · added 2026-10-14 · REQ-009 proposal
   - 2026-10-14 owner ruling: M1 must never touch agents, sessions or the methodology flow; being inert until the future modules plug into its ports is intended, not a defect. Do not wire M1 into `launch`/supervisor ahead of those modules.
   - 2026-10-14 REQ-011 delivered M1 of the Scheduler (`bt_scheduler_core`, D-022): modules M2 (decision), M3 (executor), M4 (monitor), M5 (recovery) remain, as implementations of the core's ports (`requirements/REQ-011-*/REPORT.md`).
@@ -51,7 +49,8 @@ month summary._
 _None_
 
 ## Recently closed
-_None_
+- P-033 · M3 sweep records observed descendant identities and signals matched terminal processes through pidfds · CLOSED 2026-10-15 · 272 M3 tests and 138 adapter/integration tests; P-032 terminal preservation and `spare_interactive=False` retained; standards review approved the PID reuse fix
+  - ✓ P-030 · M3 antagonist leftovers (A3 forged exit.json while agent alive, A5 repeated cwd sweep) · closed 2026-10-15 · always stop the live agent before settling, sweep on first pass only
 
 ## Notes
 - ✓ P-027 · M3 route lookup for M2 `route:<id>` references · closed 2026-10-14 · adapter resolves only M2's persisted selected route; Plan→M1→M2 reference test passes

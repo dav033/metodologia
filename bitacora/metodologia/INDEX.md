@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-15 09:59 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 10:58 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -59,11 +59,11 @@ _Generated 2026-10-15 09:59 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-029 — M3 predecessor hand-off, task-bound routes, and pidfd-safe terminal sweep (2026-10-15)
 - D-028 — The REQ-016 synthetic benchmark uses rubric-derived labels without a human-review gate
 - D-027 — All remaining Scheduler Laya experiments use the English checkpoint on English tasks
 - D-026 — The 85% Laya complexity investigation is English-only
 - D-025 — Scheduler hand-over of prerequisite work is on by default; routes are bound to their task; the sweep spares terminal processes (2026-10-15)
-- D-024 — M3 agent executor: isolated module, shim-owned agents, no model choice (2026-10-14)
 
 ## Artifacts
 
