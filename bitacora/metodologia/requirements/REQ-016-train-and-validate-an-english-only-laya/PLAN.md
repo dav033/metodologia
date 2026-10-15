@@ -23,19 +23,19 @@ locked-test rows or tune after opening their labels.
 ## Tasks
 
 ### M1 — Freeze rubric and build data
-- [ ] T1 — Record the four Planner reasoning definitions, explicit boundary cases, deterministic synthetic label
+- [x] T1 — Record the four Planner reasoning definitions, explicit boundary cases, deterministic synthetic label
   oracle, and production-claim limitation · verify: oracle tests cover each class and boundary; its hash is in the
   manifest · covers: R2, R3, R9
-- [ ] T2 — Author project-grounded and invented scenario families; render 1008 train, 400 development, and 1000
+- [x] T2 — Author project-grounded and invented scenario families; render 1008 train, 400 development, and 1000
   locked-test cases in English, with exactly 250 per test class · after: T1 · verify: generator checks family/template
   disjointness, exact balance, no label leakage, English-only text, uniqueness, and prior-input near-duplicates ·
   covers: R1, R2, R4, R5
-- [ ] T3 — Freeze the blind model inputs, private label key, source/family map, and hashes before any new Laya call ·
+- [x] T3 — Freeze the blind model inputs, private label key, source/family map, and hashes before any new Laya call ·
   after: T2 · verify: independent validator reproduces hashes and proves split disjointness; test key is not passed
   to training or inference · covers: R4, R5
 
 ### M2 — Train and choose on development data
-- [ ] T4 — Run Laya dry-run and base-model development evaluation offline on CUDA · after: T3 · verify: exact
+- [x] T4 — Run Laya dry-run and base-model development evaluation offline on CUDA · after: T3 · verify: exact
   English revision/hash and actual CUDA device are recorded; no locked-test input is scored · covers: R1, R6
 - [ ] T5 — Fine-tune the English checkpoint with its encoder frozen for three fixed seeds, then compare on development
   only · after: T4 · verify: immutable logs record updates, data/base hashes, CUDA placement, elapsed time, peak VRAM
@@ -78,3 +78,13 @@ model, prompt, mapping and hashes. Report the 25% balanced deterministic baselin
   the suite; no paid API, deployment or runtime change is in scope. Replaced the human-review gate with a synthetic,
   pre-render label oracle and explicitly bounded the resulting claim. Dataset and model work had not started at plan
   approval.
+- 2026-10-15 — Built the frozen v1 suite outside the repository: 1008 train / 400 development / 1000 locked test,
+  250 per class per split, from 48 / 16 / 32 disjoint scenario families and 50% project-grounded / 50% invented
+  cases. Independent audit passed 14 checks across 1076 previously saved Laya input texts with zero exact/near
+  matches; seven unit tests passed. The pinned English base scored 122/400 (30.5%) on development, versus the
+  deterministic balanced baseline's 25%; CUDA inference used the RTX A3000 (sampled 2657 MiB peak). Locked test
+  remains unscored.
+- 2026-10-15 — Laya dry-run validated 1008 train and 400 development rows and budgeted 912 updates for the planned
+  eight epochs (908 train rows after Laya reserves 100 for internal calibration). Frozen-encoder CUDA training has
+  started with seeds 7, 17, and 42; seed 7 completed in 394.813 s at 2427 MiB sampled whole-GPU peak. The pinned
+  training log contains a PyTorch GradScaler/scheduler warning; preserve and audit it before accepting checkpoints.

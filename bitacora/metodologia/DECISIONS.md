@@ -237,3 +237,20 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Consequences:** + one model/input path for reproducible work / − no language-coverage claim outside English; independent labels and an untouched English holdout remain required.
 - **Source:** [day log](2026-10/W3/2026-10-15.md) · REQ-015, REQ-016
 
+## D-028 — The REQ-016 synthetic benchmark uses rubric-derived labels without a human-review gate
+- **Date:** 2026-10-15 · **Status:** Accepted under the owner's request to build and test an English task suite locally
+- **Context:** The provisional English classifier scored 41.5%, equal to its majority baseline, and its examples had
+  already been shown to Laya. A fresh evaluation needs frozen labels before inference, family-disjoint splits, and a
+  clear statement of what its score can establish. Requiring reviewers to validate a deliberately synthetic oracle
+  would block the requested controlled benchmark without making it evidence about natural tasks.
+- **Decision:** For REQ-016, derive labels from structured scenario facts through the frozen Planner reasoning rubric
+  before rendering task text. Build disjoint English train/development/locked-test sets, use only the pinned `english`
+  checkpoint, and do not require human review for claims limited to agreement on this synthetic suite. Any claim about
+  real production tasks requires a separate naturally sampled English set with independent human labels. Keep
+  complexity evaluation separate from M2 route quality and runtime authorization.
+- **Alternatives:** Block synthetic evaluation on two reviewers (unneeded for a constructed oracle); label tasks from
+  Laya predictions (circular); treat synthetic scores as production accuracy (unsupported).
+- **Consequences:** + local suite and training can proceed reproducibly / − the benchmark cannot establish real-task
+  accuracy, prevalence, or future task-success probability.
+- **Source:** [REQ-016 plan](requirements/REQ-016-train-and-validate-an-english-only-laya/PLAN.md) · D-027
+
