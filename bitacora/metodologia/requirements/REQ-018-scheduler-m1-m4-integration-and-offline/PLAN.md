@@ -1,6 +1,6 @@
 ---
 req: REQ-018
-status: review
+status: approved
 created: 2026-10-15
 ---
 # Plan — REQ-018 — Scheduler M1-M4 integration and offline monitor recovery
@@ -48,3 +48,4 @@ Run the M1, M2, M3 and M4 module suites plus the new M1–M4 fixture E2E and rec
 
 ## Progress log
 <!-- One line per meaningful step, so work survives a context reset. -->
+- 2026-10-15 16:45 plan APPROVED (terminal)
