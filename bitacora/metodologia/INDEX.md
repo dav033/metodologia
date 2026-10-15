@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-15 06:10 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 06:24 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -24,6 +24,7 @@ _Generated 2026-10-15 06:10 by `bitacora.py index`. Do not edit by hand._
 - REQ-011: executor finished — review & merge
 - REQ-012: executor finished — review & merge
 - REQ-013: executor finished — review & merge
+- REQ-015: plan waiting for approval
 
 ## Requirements
 
@@ -43,7 +44,7 @@ _Generated 2026-10-15 06:10 by `bitacora.py index`. Do not edit by hand._
 | [REQ-012](requirements/REQ-012-planner-phase-1-closure-strict-plan-sync/SPEC.md) | Planner phase 1 closure: strict PLAN sync, launch gate, evidence, real planning trials | `in-progress` | [done](requirements/REQ-012-planner-phase-1-closure-strict-plan-sync/PLAN.md) | report ✓ |
 | [REQ-013](requirements/REQ-013-scheduler-m2-decision-engine-with-local/SPEC.md) | Scheduler M2 Decision Engine with local Laya | `implemented` | [done](requirements/REQ-013-scheduler-m2-decision-engine-with-local/PLAN.md) | report ✓ |
 | [REQ-014](requirements/REQ-014-scheduler-m3-agent-executor/SPEC.md) | Scheduler M3 Agent Executor | `done` | [approved](requirements/REQ-014-scheduler-m3-agent-executor/PLAN.md) | report ✓ |
-| [REQ-015](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/SPEC.md) | Train and evaluate local Laya for Scheduler routing | `clarifying` | [in-progress](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/PLAN.md) |  |
+| [REQ-015](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/SPEC.md) | Train and evaluate local Laya for Scheduler routing | `clarifying` | [review](requirements/REQ-015-train-and-evaluate-local-laya-for-schedu/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 

@@ -1,0 +1,137 @@
+{
+  "benchmark": "scheduler-m2-local-checkpoint-calibration-v1",
+  "dataset_sha256": "b5cbcc43d70b7fbd2a191400cad411ba5e8992d1b49b30d10d406575c2228b2d",
+  "dataset_version": "scheduler-m2-synthetic-choice-v1",
+  "deadline_seconds": 240.0,
+  "frozen_before_first_laya_call": true,
+  "held_out_touched": false,
+  "laya_setup_root": "/home/david/.local/share/bt-scheduler-laya",
+  "results": [
+    {
+      "cases": [
+        {
+          "answer_confidence": null,
+          "baseline_matches_oracle": false,
+          "case_id": "calibration-ambiguous_tradeoff-000-en",
+          "deterministic_regret": 0.0617189,
+          "deterministic_route_id": "e84c99123f1066048d97fa997b072f03a9ce8ecc19759179512e3b2429ba0621",
+          "eligible_choice": null,
+          "error": "laya_unavailable",
+          "family": "ambiguous_tradeoff",
+          "language": "en",
+          "laya_regret": null,
+          "matches_baseline": null,
+          "matches_oracle": null,
+          "oracle_route_id": "62532f556849cd31f4e2ab468c552cd22d348b5830d6d08f7c68b1db7f38057b",
+          "predicted_route_id": null,
+          "requested_device": "cpu",
+          "wall_ms": 2.739
+        }
+      ],
+      "checkpoint": "english",
+      "checkpoint_revision": "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851",
+      "checkpoint_sha256": "891102d372688fc2a094dac56a384bc537b87c63f21f9f3dac0be2b7cbc8d86c",
+      "complete_calibration": false,
+      "requested_device": "cpu",
+      "sampled_cases": 1,
+      "summary": {
+        "cgroup_memory_limit_bytes": 0,
+        "cgroup_swap_limit_bytes": 0,
+        "errors": 1,
+        "inference_ms_median": null,
+        "load_ms_median": null,
+        "observed_devices": [],
+        "peak_cuda_reserved_bytes": 0,
+        "peak_rss_bytes": 0,
+        "quality_evaluation": "not_evaluated",
+        "sampled_cases": 1,
+        "wall_ms_p95": 2.739
+      }
+    },
+    {
+      "cases": [
+        {
+          "answer_confidence": null,
+          "baseline_matches_oracle": false,
+          "case_id": "calibration-ambiguous_tradeoff-000-en",
+          "deterministic_regret": 0.0617189,
+          "deterministic_route_id": "e84c99123f1066048d97fa997b072f03a9ce8ecc19759179512e3b2429ba0621",
+          "eligible_choice": null,
+          "error": "laya_unavailable",
+          "family": "ambiguous_tradeoff",
+          "language": "en",
+          "laya_regret": null,
+          "matches_baseline": null,
+          "matches_oracle": null,
+          "oracle_route_id": "62532f556849cd31f4e2ab468c552cd22d348b5830d6d08f7c68b1db7f38057b",
+          "predicted_route_id": null,
+          "requested_device": "cpu",
+          "wall_ms": 2.569
+        }
+      ],
+      "checkpoint": "multilingual",
+      "checkpoint_revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "checkpoint_sha256": "9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+      "complete_calibration": false,
+      "requested_device": "cpu",
+      "sampled_cases": 1,
+      "summary": {
+        "cgroup_memory_limit_bytes": 0,
+        "cgroup_swap_limit_bytes": 0,
+        "errors": 1,
+        "inference_ms_median": null,
+        "load_ms_median": null,
+        "observed_devices": [],
+        "peak_cuda_reserved_bytes": 0,
+        "peak_rss_bytes": 0,
+        "quality_evaluation": "not_evaluated",
+        "sampled_cases": 1,
+        "wall_ms_p95": 2.569
+      }
+    },
+    {
+      "cases": [
+        {
+          "answer_confidence": null,
+          "baseline_matches_oracle": false,
+          "case_id": "calibration-ambiguous_tradeoff-000-en",
+          "deterministic_regret": 0.0617189,
+          "deterministic_route_id": "e84c99123f1066048d97fa997b072f03a9ce8ecc19759179512e3b2429ba0621",
+          "eligible_choice": null,
+          "error": "laya_unavailable",
+          "family": "ambiguous_tradeoff",
+          "language": "en",
+          "laya_regret": null,
+          "matches_baseline": null,
+          "matches_oracle": null,
+          "oracle_route_id": "62532f556849cd31f4e2ab468c552cd22d348b5830d6d08f7c68b1db7f38057b",
+          "predicted_route_id": null,
+          "requested_device": "cpu",
+          "wall_ms": 2.477
+        }
+      ],
+      "checkpoint": "typed-decisions",
+      "checkpoint_revision": "1a793eb568e6718f15941d08f85432581df534e3",
+      "checkpoint_sha256": "4fa56de72383a9d3efa9cfa78955733c81b9fc8067a587ca4beb82c78107a24e",
+      "complete_calibration": false,
+      "requested_device": "cpu",
+      "sampled_cases": 1,
+      "summary": {
+        "cgroup_memory_limit_bytes": 0,
+        "cgroup_swap_limit_bytes": 0,
+        "errors": 1,
+        "inference_ms_median": null,
+        "load_ms_median": null,
+        "observed_devices": [],
+        "peak_cuda_reserved_bytes": 0,
+        "peak_rss_bytes": 0,
+        "quality_evaluation": "not_evaluated",
+        "sampled_cases": 1,
+        "wall_ms_p95": 2.477
+      }
+    }
+  ],
+  "schema_version": 1,
+  "split": "calibration",
+  "started_at_utc": "2026-10-15T02:56:38.019641+00:00"
+}
