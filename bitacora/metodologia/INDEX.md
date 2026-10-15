@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-15 18:06 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 18:36 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -50,6 +50,7 @@ _Generated 2026-10-15 18:06 by `bitacora.py index`. Do not edit by hand._
 | [REQ-016](requirements/REQ-016-train-and-validate-an-english-only-laya/SPEC.md) | Train and validate an English-only Laya Planner complexity classifier | `ready` | [paused](requirements/REQ-016-train-and-validate-an-english-only-laya/PLAN.md) |  |
 | [REQ-017](requirements/REQ-017-scheduler-m4-agent-monitor/SPEC.md) | Scheduler M4 Agent Monitor | `in-progress` | [done](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md) | report ✓ |
 | [REQ-018](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/SPEC.md) | Scheduler M1-M4 integration and offline monitor recovery | `done` | [done](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md) | report ✓ |
+| [REQ-019](requirements/REQ-019-scheduler-m5-recovery-manager/SPEC.md) | Scheduler M5 Recovery Manager | `in-progress` | [approved](requirements/REQ-019-scheduler-m5-recovery-manager/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -63,11 +64,11 @@ _Generated 2026-10-15 18:06 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-041 — M5 advises through the unchanged RecoveryPort and preserves same-task snapshots
 - D-040 — Recover M4 only through a verified offline candidate
 - D-039 — Keep M1–M4 ingestion caller-driven at the M1 ownership boundary
 - D-038 — Correct the T12 fixture sample count; retain D-037 budgets
 - D-037 — M4 uses host-local fixture budgets from the T12 measurements
-- D-036 — M3 must recheck persisted M2 quota evidence at launch
 
 ## Artifacts
 

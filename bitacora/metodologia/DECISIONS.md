@@ -362,3 +362,20 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Rollback:** Discard an unaccepted candidate and continue using the preserved source; if the operator later restores, retain the full archive for recovery.
 - **Source:** [REQ-018 plan](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md) · [M4 recovery operations](../../skill/scripts/bt_scheduler_monitor/README.md).
 
+## D-041 — M5 advises through the unchanged RecoveryPort and preserves same-task snapshots
+- **Date:** 2026-10-15 · **Status:** Accepted through David's explicit M5 implementation request.
+- **Context:** M1 has a recovery port but lacks structured M3 evidence and a durable policy ledger; retries start
+  from the original/predecessor base and do not automatically continue partial work.
+- **Decision:** Add an isolated deterministic M5 package and one adapter, using unchanged M1 contract 1.2.0.
+  Enrich cases from public, identity-checked M1/M3 read views; keep only opaque evidence hashes in M5. Bound waits,
+  attempts, repeated causes and the private SQLite decision ledger. A full/unavailable ledger blocks visibly.
+  Opt-in wiring resumes a failed/rejected task from its verified M3 snapshot and a sanitized note, while normal
+  M1 assignment invokes M2 again. M4 stays advisory; M6 alone accepts work. Tighten finite wait validation in M1.
+- **Alternatives:** Extend M1 failure types (unnecessary with existing reads); parse logs (untrusted and sensitive);
+  embed routing/process control in M5 (duplicates owners); retry from HEAD (loses partial progress).
+- **Consequences:** No M1 schema/signature migration; no M2/M4 dependency for pinned operation. Unknown/live/stale
+  evidence blocks automatically. Decision-cap pressure needs operator intervention instead of losing dedupe history.
+- **Rollback:** Omit recovery_store_path; preserve M5 history and M3 worktrees/refs. Existing recovery= ports remain
+  supported; no legacy RUN or live configuration is migrated.
+- **Source:** REQ-019 SPEC and `/home/david/PLAN-FASE-5-M5-RECOVERY-MANAGER.md`.
+

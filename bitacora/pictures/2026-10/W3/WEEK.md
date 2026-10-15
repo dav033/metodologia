@@ -27,7 +27,7 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 
 ## Not done / dropped
 - No new commit, push, merge, deploy, paid journey or production migration in the REQ-015 close-out. Full selected-idea browser journey remains a proposed test; historical test debt is separate.
-- `next build` and the full local repository gate were not run; the affected suites and PR checks passed before merge. Post-merge Quality checks and a Vercel deployment were still in progress at log time; no manual VPS deploy was initiated. The two P-087 worktree modifications remain separate. E-03532 is a baseline guirnalda failure outside P-099 and remains follow-up work.
+- `next build` and the full local repository gate were not run; the affected suites and PR checks passed before merge. Post-merge Quality workflow `38816458147` succeeded and Vercel reports deployment completed; no manual VPS deploy was initiated. The two P-087 worktree modifications remain separate. E-03532 is a baseline guirnalda failure outside P-099 and remains follow-up work.
 
 ## Carried over to next week
 - Keep the two local P-087 follow-up modifications separate from merged code; track the exact baseline E-03532 guirnalda failure independently and do not add an allowlist entry. P-077 calibrates the default quote cap, P-075 retains historical tests to reproduce separately. Current evidence: [REQ-015 report](../../requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/REPORT.md).
