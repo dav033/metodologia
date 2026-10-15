@@ -74,6 +74,12 @@ a temporary index and `commit-tree` into a private ref, never touching the attem
 - Gemini = Antigravity `agy` (D-004). Standalone `gemini` CLI is not supported.
 - Shim over direct child: only way to keep exit status and output across an executor restart.
 
+- Reviews (2026-10-14): three independent reviews (spec, standards, adversarial) produced ~45 findings; all blocker/major ones fixed with regressions (second writer after a PREPARING crash, untracked agent after a failed spawn, double settle, NaN timeout, hostile ids/files, base pinning, stragglers, env credentials, handoff failure never a silent success, per-attempt event ordering, read-only CLI, etc.).
+- Scope ruling: `PinnedRoute` (operator-pinned assignment), `wire()` (opt-in integration entry), the CLI and `worktree_allocation` go beyond a bare ExecutionPort adapter. They are kept because T14 needs a runnable M1+M3 chain before M2 exists, they hold no selection logic (the operator writes the reference) and none is on by default.
+- Deviation ruling: the adapter does not build `WorkspaceManager` over `bt_worktree.allocate` (random suffix per call, not idempotent per attempt: a crash would leak or duplicate a worktree). `GitWorkspaces` is idempotent; `worktree_allocation` exposes its result in `bt_worktree`'s shape so `check_scope`/`integrate` can consume it (tested).
+- Sink ruling: the sink runs in the supervisor thread; a slow sink delays watching. Documented rather than threaded, because M4 will own delivery policy.
+
 ## Progress log
 - 2026-10-14 — SPEC and PLAN written after inspecting M1 contracts (`contracts.py`, `dispatch.py`, adapter), `bt_driver`, `bt_worktree`, `bt_profiles`, `bt_agents`, `bt_delegate`. No source code changed yet.
 - 2026-10-14 plan APPROVED (owner instruction: the /goal to implement M3 completely with technical autonomy; the approved SPEC/PLAN it presupposed did not exist and were written here)
+- 2026-10-14 M1–M5 built: module `bt_scheduler_executor` (ledger, workspaces+handoff, shim, executor, reconcile, cancel, CLI; suite 205+ tests incl. crash-at-every-step and lone-copy isolation), adapter `bt_scheduler_executor_adapter.py` (34 tests) and real-core integration (21 tests with fake provider binaries). Opt-in real smoke run: Claude haiku (via claude-personal; ambient claude-work correctly refused for a repo outside a work project), Codex gpt-6-luna and Gemini flash-low (agy) all finished clean through the real drivers. Next: independent reviews (T16), docs/packaging/regressions (T17).

@@ -40,6 +40,8 @@ month summary._
 - P-022 · Split further parts of the methodology into modules following `references/modules.md` (candidates to evaluate: requirements gate, marathon supervisor state/run, bitácora documents/index, agent routing) · urgency: low · complexity: L · added 2026-10-14 · REQ-010 proposal
   - Context: `bt_planner` is the first module and the template (boundary + isolation + adapter tests). Do one at a time, each with its own requirement and review; the owner picks the order.
 
+- **P-027** · REQ-014 follow-up: wire M2's `route:<id>` lookup into `bt_scheduler_executor_adapter.RouteResolver(m2_lookup=...)` when `bt_scheduler_decision` lands; REQ-014 changes are uncommitted · med/S
+
 ## Blocked
 _None_
 

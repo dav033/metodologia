@@ -198,3 +198,9 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Consequences:** + the core is testable alone (234 module tests, fuzzed invariants, crash at every commit, real processes); + legacy runs stay byte-identical; − two run models coexist until adoption (P-026); − M2–M5 are only simulated (P-020).
 - **Rollback:** remove the two-line guard in `bt_runentry.supervise` and the adapter; the package is additive and nothing else imports it. Run databases under `.state/scheduler/` can be deleted.
 - **Evidence:** `requirements/REQ-011-*/REPORT.md` (SC-AC01..20 map, three independent reviews A1–A8 fixed); module 234, integration 28, methodology 797, packaging 11 OK.
+
+## D-024 — M3 agent executor: isolated module, shim-owned agents, no model choice (2026-10-14)
+- **Decision:** `bt_scheduler_executor` (stdlib only, own types, five ports) reached only through `bt_scheduler_executor_adapter.py`; each agent runs under a detached double-forked shim so exit status/output survive an executor restart; work is preserved at every end as a snapshot commit under `refs/m3/*`; Gemini = Antigravity `agy`; M3 rejects any route reference it cannot resolve (never defaults a model).
+- **Alternatives:** agents as direct children (lose exit status on restart); reuse `bt_worktree.allocate` (random suffix, not idempotent per attempt); standalone `gemini` CLI (no profile/quota support).
+- **Consequences:** + exactly-once start and recoverable work under crash tests; − POSIX only; events reach M1 through the adapter until M4 exists.
+- **Evidence:** `requirements/REQ-014-*/` SPEC, PLAN, REPORT (pending).

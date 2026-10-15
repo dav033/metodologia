@@ -1,11 +1,12 @@
 # Bitácora — index
 
-_Generated 2026-10-14 21:01. Do not edit by hand. Web: http://127.0.0.1:8765_
+_Generated 2026-10-14 21:35. Do not edit by hand. Web: http://127.0.0.1:8765_
 
 | Project | Repos | Open REQs | Open pending | Last activity | Links |
 |---|---|---|---|---|---|
 | [agentes-de-trabajo](agentes-de-trabajo/INDEX.md) | package | 0 | 1 (0 high) | 2026-10-12 | [summary](agentes-de-trabajo/SUMMARY.md) · [web](http://127.0.0.1:8765/p/agentes-de-trabajo) |
 | [att-real-ec8cd896](att-real-ec8cd896/INDEX.md) | att-real-ec8cd896 | 0 | 0 (0 high) | — | [summary](att-real-ec8cd896/SUMMARY.md) · [web](http://127.0.0.1:8765/p/att-real-ec8cd896) |
+| [att-real-ec8cd8965ad3ff85](att-real-ec8cd8965ad3ff85/INDEX.md) | att-real-ec8cd8965ad3ff85 | 0 | 0 (0 high) | — | [summary](att-real-ec8cd8965ad3ff85/SUMMARY.md) · [web](http://127.0.0.1:8765/p/att-real-ec8cd8965ad3ff85) |
 | [escritorio](escritorio/INDEX.md) | — | 1 | 2 (0 high) | 2026-10-13 | [summary](escritorio/SUMMARY.md) · [web](http://127.0.0.1:8765/p/escritorio) |
 | [eventos](eventos/INDEX.md) | frontend, backend | 0 | 9 (7 high) | 2026-10-08 | [summary](eventos/SUMMARY.md) · [web](http://127.0.0.1:8765/p/eventos) |
 | [lotm](lotm/INDEX.md) | — | 1 | 2 (2 high) | 2026-10-13 | [summary](lotm/SUMMARY.md) · [web](http://127.0.0.1:8765/p/lotm) |
