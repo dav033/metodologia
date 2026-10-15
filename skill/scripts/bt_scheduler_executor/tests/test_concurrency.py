@@ -81,7 +81,9 @@ class Isolation(unittest.TestCase):
             time.sleep(0.01)
         self.assertTrue(w.x.wait_idle(60))
         self.assertLessEqual(peak, 4)
-        self.assertEqual(w.x.ledger.count((m.FINISHED,)), 30)
+        self.assertEqual(w.x.ledger.count((m.FINISHED,)), 30,
+                         [(r["attempt_id"], r["state"], (r.get("outcome") or {}).get("cause"), (r.get("outcome") or {}).get("detail"), (r.get("outcome") or {}).get("exit"))
+                          for r in w.x.ledger.in_states(m.TERMINAL) if r["state"] != m.FINISHED])
         started = [e.attempt_id for e in w.sink.events if e.kind == m.EV_STARTED]
         self.assertEqual(len(started), len(set(started)), "an attempt started twice")
 

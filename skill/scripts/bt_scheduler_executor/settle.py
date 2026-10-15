@@ -65,10 +65,12 @@ class SettleMixin:
         if row is None or row["state"] in m.TERMINAL:
             return
         adir = self.attempts_dir / row["dirname"]
-        if row["state"] != m.SETTLING:
+        first = row["state"] != m.SETTLING
+        if first:
             exit_info = exit_info or {"reason": "lost"}
-            if exit_info.get("adopt_orphan"):
-                self._stop_orphan(adir)          # a vanished shim may have left the agent running: no second writer
+            # whatever the record says, an agent still alive must not keep writing into the tree being preserved: a vanished
+            # shim may have left it, and a well-formed exit.json is something the agent itself could have written
+            self._stop_orphan(adir)
             try:
                 outcome = self._outcome_for(row, exit_info)
             except Exception as error:  # noqa: BLE001 - whatever the files said, the attempt must reach a terminal state
@@ -78,7 +80,9 @@ class SettleMixin:
                 return
             row = self.ledger.get(attempt_id) or row
         outcome = row["outcome"]
-        if row.get("workspace") and self._workspace_exclusive(row):   # nothing of the agent may outlive it and keep writing
+        # nothing of the agent may outlive it and keep writing. Only on the first pass: a settle retried after a git or disk
+        # hiccup must not keep killing whatever (an operator's shell, an editor) has since been opened in the worktree
+        if first and row.get("workspace") and self._workspace_exclusive(row):
             procinfo.kill_in_cwd(row["workspace"]["path"])
         preserved = self._preserve(row, outcome, adir)
         if preserved.get("status") == "failed" and outcome["final"] == m.FINISHED:

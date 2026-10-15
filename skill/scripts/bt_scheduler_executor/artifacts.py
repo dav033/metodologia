@@ -74,9 +74,12 @@ def read_exit(path: Path) -> dict | None:
     """The shim's exit record, shape-checked: the agent can write files next to it, so a record that is not what the shim
     writes is NOT trusted and is treated as a vanished supervisor (`lost`), never allowed to crash the settle."""
     raw = read_json(path)
+    if raw is None and (path.exists() or path.is_symlink()):
+        raw = read_json(path)      # the shim's atomic rename may land between the read and the check: read once more
+        if raw is None:
+            return {"reason": "lost", "error": "exit record unreadable or oversized", "adopt_orphan": True}
     if raw is None:
-        return {"reason": "lost", "error": "exit record unreadable or oversized", "adopt_orphan": True} \
-            if path.exists() or path.is_symlink() else None
+        return None
     reason = raw.get("reason") if isinstance(raw, dict) else None
     rc = raw.get("returncode") if isinstance(raw, dict) else None
     bad = (not isinstance(raw, dict) or reason not in ("exited", "timeout", "cancelled", "spawn_error")

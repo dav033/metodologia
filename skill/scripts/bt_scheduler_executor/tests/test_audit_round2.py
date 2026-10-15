@@ -47,6 +47,19 @@ class ForgedExit(unittest.TestCase):
                          ("exited", 0, 0, 0))
         self.assertNotIn("child_pid", info)
 
+    def test_a_record_that_appears_between_the_read_and_the_existence_check_is_not_lost(self):
+        from unittest.mock import patch
+        (self.dir / "exit.json").write_text('{"reason": "exited", "returncode": 0}')
+        real, calls = artifacts.read_json, []
+
+        def late(path, *args, **kwargs):
+            calls.append(path)
+            return None if len(calls) == 1 else real(path, *args, **kwargs)     # absent at the first read, there afterwards
+
+        with patch.object(artifacts, "read_json", late):
+            info = artifacts.read_exit(self.dir / "exit.json")
+        self.assertEqual((info["reason"], info["returncode"]), ("exited", 0))
+
     def test_an_absent_record_is_none_and_a_present_unreadable_one_is_lost(self):
         self.assertIsNone(artifacts.read_exit(self.dir / "exit.json"))
         os.mkfifo(self.dir / "exit.json")
@@ -64,6 +77,48 @@ class ForgedExit(unittest.TestCase):
         w.x = w.build()
         d = w.finish("att-0001")
         self.assertEqual((d["state"], d["outcome"]["cause"]), ("failed", "lost"))
+
+
+class ForgedExitWhileAlive(unittest.TestCase):
+    def test_a_well_formed_forgery_never_leaves_the_real_agent_running_after_the_attempt_ends(self):
+        from unittest.mock import patch
+        w = World(self)
+        w.x.start(order(1, "sleep:60"))
+        adir, shim = shim_record(w, "att-0001")
+        self.assertTrue(procinfo.alive(shim["child_pid"], shim["child_ident"]))
+        (adir / "exit.json").write_text('{"reason": "exited", "returncode": 0, "output_bytes": 0}')   # the agent forges it
+        with patch.object(procinfo, "kill_in_cwd", lambda *a, **k: 0):   # an agent whose cwd is outside the worktree
+            d = w.finish("att-0001")
+        self.assertIn(d["state"], ("finished", "failed"))
+        self.assertTrue(wait_for(lambda: not procinfo.alive(shim["child_pid"], shim["child_ident"]), 10),
+                        "the agent kept running after its attempt was settled")
+
+
+class SettleRetries(unittest.TestCase):
+    def test_a_retried_settle_does_not_sweep_the_worktree_again(self):
+        from unittest.mock import patch
+        cfg = ex.Config(poll_seconds=0.05, heartbeat_seconds=3600, grace_seconds=1.0, timeout_seconds=60,
+                        settle_retry_seconds=0.2)
+        w = World(self, config=cfg)
+        sweeps, real_sweep, real_preserve, failed = [], procinfo.kill_in_cwd, w.x._preserve, []
+
+        def counting(directory, *args, **kwargs):
+            sweeps.append(directory)
+            return real_sweep(directory, *args, **kwargs)
+
+        def flaky(row, outcome, adir):
+            if not failed:
+                failed.append(1)
+                raise OSError("disk hiccup")                  # the settle fails once after the sweep, then is retried
+            return real_preserve(row, outcome, adir)
+
+        w.x._preserve = flaky
+        with patch.object(procinfo, "kill_in_cwd", counting):
+            w.x.start(order(1, "ok"))
+            d = w.finish("att-0001")
+        self.assertEqual(d["state"], "finished")
+        self.assertEqual(failed, [1], "the settle was never retried")
+        self.assertEqual(len(sweeps), 1, sweeps)
 
 
 class PreparingRedrive(unittest.TestCase):

@@ -104,7 +104,9 @@ class Run(unittest.TestCase):
         while time.monotonic() < deadline and w.x.ledger.count(m.TERMINAL) < 6:
             peak = max(peak, w.x.ledger.count((m.PREPARING, m.RUNNING)))
             time.sleep(0.01)
-        self.assertEqual(w.x.ledger.count((m.FINISHED,)), 6)
+        self.assertEqual(w.x.ledger.count((m.FINISHED,)), 6,
+                         [(r["attempt_id"], r["state"], (r.get("outcome") or {}).get("cause"))
+                          for r in w.x.ledger.in_states(m.TERMINAL) if r["state"] != m.FINISHED])
         self.assertEqual(peak, 2)
 
     def test_tasks_run_in_queue_order(self):
