@@ -1,0 +1,11 @@
+{
+ "schema": 1,
+ "revisions": [
+  {
+   "revision": 1,
+   "sha256": "46f399c6168115e3d8fa242796fd276effa392d20c49e2f9d6b64eebc1d19fe5",
+   "frozen_at": "2026-10-14T20:26:29",
+   "source": "approval"
+  }
+ ]
+}

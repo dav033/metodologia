@@ -1,6 +1,6 @@
 ---
 req: REQ-013
-status: review
+status: approved
 created: 2026-10-14
 ---
 # Plan — REQ-013 — Scheduler M2 Decision Engine with local Laya
@@ -31,11 +31,11 @@ record Laya's measured limitation.
 ## Tasks
 
 ### M1 — Versioned M1 transport and deterministic decision module
-- [ ] T1 — Bump shared M1 contract to v1.1.0; extend AssignmentRequest/TaskView additively with plan hash, dependencies, acceptance, verification and planner classification evidence; verify positional and Event 1.0 compatibility · repo: methodology · verify: `python -m unittest discover -s skill/scripts/bt_scheduler_core/tests && python -m unittest discover -s skill/scripts/bt_planner/tests` · covers: R2, R10, R13
-- [ ] T2 — Freeze M2 public contract, route-reference semantics, idempotency fingerprint, benchmark labels/gates and architecture ruling · repo: methodology · after: T1 · verify: `python -m unittest tests.test_scheduler_decision_contract` · covers: R1, R8, R9, R10, R12, US-1, US-2
-- [ ] T3 — Add isolated module types, input validation, classification/evidence handling and public API · repo: methodology · after: T2 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest discover -s bt_scheduler_decision/tests` · covers: R1, R2, R6, R13
-- [ ] T4 — Build configured candidate enumeration, hard eligibility filters, deterministic reference ranking and sparse-history scoring · repo: methodology · after: T3 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest bt_scheduler_decision.tests.test_candidates bt_scheduler_decision.tests.test_policy bt_scheduler_decision.tests.test_history` · covers: R3, R4, R5, R7
-- [ ] T5 — Add bounded/idempotent decision persistence and stable executor references · repo: methodology · after: T3 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest bt_scheduler_decision.tests.test_recorder bt_scheduler_decision.tests.test_isolation` · covers: R8, R9, R13
+- [x] T1 — Bump shared M1 contract to v1.1.0; extend AssignmentRequest/TaskView additively with plan hash, dependencies, acceptance, verification and planner classification evidence; verify positional and Event 1.0 compatibility · repo: methodology · verify: `python -m unittest discover -s skill/scripts/bt_scheduler_core/tests && python -m unittest discover -s skill/scripts/bt_planner/tests` · covers: R2, R10, R13
+- [x] T2 — Freeze M2 public contract, route-reference semantics, idempotency fingerprint, benchmark labels/gates and architecture ruling · repo: methodology · after: T1 · verify: `python -m unittest tests.test_scheduler_decision_contract` · covers: R1, R8, R9, R10, R12, US-1, US-2
+- [x] T3 — Add isolated module types, input validation, classification/evidence handling and public API · repo: methodology · after: T2 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest discover -s bt_scheduler_decision/tests` · covers: R1, R2, R6, R13
+- [x] T4 — Build configured candidate enumeration, hard eligibility filters, deterministic reference ranking and sparse-history scoring · repo: methodology · after: T3 · verify: `cd skill/scripts && PYTHONPATH=. python -m unittest bt_scheduler_decision.tests.test_candidates bt_scheduler_decision.tests.test_policy bt_scheduler_decision.tests.test_history` · covers: R3, R4, R5, R7
+- [x] T5 — Add bounded/idempotent decision persistence and stable executor references · repo: methodology · after: T3 · verify: `cd skill/scripts && PYTHONPATH=. python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_recorder bt_scheduler_decision.tests.test_boundaries` · covers: R8, R9, R13
 
 ### M2 — Local Laya runtime
 - [ ] T6 — Create reproducible isolated Laya environment, pin package/checkpoint revisions and verify artifact hashes · repo: methodology · after: T2 · verify: `skill/scripts/bt_scheduler_decision/setup_laya.py --check` · covers: R11, R14
@@ -69,4 +69,11 @@ record Laya's measured limitation.
 - T10: Opt-in integration only. M1 continues to validate every proposal and apply its own global free-slot/resource reservation.
 
 ## Progress log
-- 2026-10-14 — Inspected M1, planner, routing/profile/quota/telemetry sources and official Laya repo; hardware is RTX A3000 6 GiB, Python 3.14.7. Spec drafted; no packages/weights installed and no source code changed. Existing Maros `RUN.json` is already being updated by another process and remains out of scope.
+- 2026-10-14 — Initial research recorded M1, planner, routing/profile/quota/telemetry sources and official Laya repo; hardware is RTX A3000 6 GiB, Python 3.14.7. At spec time no packages/weights were installed. Existing Maros `RUN.json` is out of scope.
+- 2026-10-14 — M1 contract v1.1.0 now passes approved plan SHA-256, dependencies, acceptance criteria, verification and opaque `classification_evidence` to AssignmentPort. Positional v1.0 callers retain defaults; Event 1.0 parsing remains covered. Verification: M1 core 239/239, Planner 199/199, M1/Planner integration 74/74. Independent spec and standards audits approved T1. No commit by this session.
+- 2026-10-14 20:14 review comments (owner instruction): Approved by the owner's explicit request to implement M2 and grant technical autonomy; continuation resumes the same goal.
+- 2026-10-14 20:14 plan APPROVED (owner instruction)
+- 2026-10-14 — T2 froze the public API in `skill/scripts/bt_scheduler_decision/README.md` and `api-contract.json`: per-task task identity, ordered READY batching bounded by M1 `free_slots`, opaque account/route hashes, quota freshness deadline, exact idempotency inputs, redacted decision record, selected-route executor reference, and Wilson/paired-bootstrap gates over a hash-frozen independently labeled corpus. Contract tests 5/5; JSON parse and `git diff --check` pass. Independent spec and standards reviewers approved after fixes; no source code exists in M2 yet.
+- 2026-10-14 — T3 added stdlib-only frozen request/decision types, canonical route/account/executor identities, runtime validation, fail-closed quota normalization, bounded shared nested-JSON budgets, classification/evidence redaction and tagged confidence semantics. Validation tests pass 24/24 with `ResourceWarning` treated as errors; contract tests pass 5/5; API JSON parses; `git diff --check` passes. Independent spec and standards audits approved after regressions for raw whitespace limits, NFC expansion, surrogate values, overflow, nested key collisions and shared budget bounds.
+- 2026-10-14 — T4 added validated hard filters, stable route exclusions, router-rank reference selection and conservative history assessment. `capacity_unknown`, `capacity_exhausted` and `cooldown_active` block even when source status contradicts; unknown/estimated history is preserved, only verified outcomes are scored, and duration/token coverage remains separate. T4 tests 10/10; full M2 suite 34/34; contract tests 6/6; JSON parse and `git diff --check` pass. Independent spec and standards audits approved after fixes.
+- 2026-10-14 — T5 added a bounded private SQLite ledger with exact replay, snapshot-linked history, cross-thread idempotency, stable decision IDs and selected-route-only read-only executor resolution. It rejects unowned or empty databases without changing them, accepts only raw revalidated requests, caps records/bytes and stores stable codes without free-text rationale. M2 suite 46/46; recorder/boundary tests 14/14 after digest regressions; contract 7/7; JSON parse and `git diff --check` pass. Independent spec and standards audits approved after corrections.

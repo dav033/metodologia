@@ -1,0 +1,1350 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-014",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Contracts, ledger and idempotent start",
+      "acceptance_criteria": [
+        "Ledger and start semantics pass their tests"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Isolated workspaces and recoverable handoff",
+      "acceptance_criteria": [
+        "Handoff matrix passes with real git"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Process supervision, events and cancellation",
+      "acceptance_criteria": [
+        "Supervised processes, events and cancellation pass"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Reconciliation and resilience",
+      "acceptance_criteria": [
+        "Reconciliation and fault injection pass"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Methodology adapter and M1 integration",
+      "acceptance_criteria": [
+        "Adapter and M1 end to end pass"
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "Audit, real CLIs, documentation and closure",
+      "acceptance_criteria": [
+        "Reviews, docs and regressions complete"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Module skeleton, README stub, own types (`StartRequest`, `Route`, `Receipt`, `AttemptStatus`, `TechnicalEvent`), error codes, `Config` limits, ports (`RouteResolver`, `BriefSource`, `AgentDriver`, `WorkspaceManager`, `EventSink`) and boundary/import/no-AI tests",
+      "objective": "A new isolated package exposes frozen own types, ports and limits, and tests prove it imports only itself",
+      "repository": "skill",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Module convention and the sibling core's layout are known; the work is defining types and boundary tests",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/references/modules.md",
+            "file:skill/scripts/bt_scheduler_core/contracts.py"
+          ],
+          "justification": "Designing types and protocols needs choices about what crosses the boundary, but the pattern exists in the sibling core"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/references/modules.md"
+          ],
+          "justification": "A new package with a handful of small modules and two test files, nothing wired to other code yet"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011",
+            "file:skill/references/modules.md"
+          ],
+          "justification": "The M1 core package was built the same way in one task of REQ-011; this one is smaller since there is no logic yet"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Requirements"
+          ],
+          "justification": "The ports become the contract of every later task, so a wrong shape is expensive to change but nothing runs yet"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "spec:SPEC.md#Requirements"
+          ],
+          "justification": "Later ledger and executor tasks consume these types and ports, so they need to agree on field names"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/references/modules.md",
+            "file:skill/scripts/bt_scheduler_core/contracts.py"
+          ],
+          "justification": "The module convention and the M1 contracts file were read; the sibling core is a direct precedent for layout and tests"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/__init__.py",
+        "skill/scripts/bt_scheduler_executor/errors.py",
+        "skill/scripts/bt_scheduler_executor/config.py",
+        "skill/scripts/bt_scheduler_executor/model.py",
+        "skill/scripts/bt_scheduler_executor/ports.py",
+        "skill/scripts/bt_scheduler_executor/README.md",
+        "skill/scripts/bt_scheduler_executor/tests/test_boundaries.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_contracts.py"
+      ],
+      "shared_resources": [
+        "m3-ports-contract"
+      ],
+      "acceptance_criteria": [
+        "The package imports only the standard library and itself, verified by an AST test",
+        "Own request, receipt, status and event types round-trip through JSON and reject malformed input",
+        "The five ports are structural protocols that a plain test double can implement"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_boundaries bt_scheduler_executor.tests.test_contracts",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "SQLite WAL ledger: attempts keyed by unique attempt id and idempotency key, state machine, write-ahead event outbox, concurrent-writer safety",
+      "objective": "A SQLite WAL ledger stores attempts and a write-ahead event outbox with unique keys and a checked state machine",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Similar to the core's SQLite repository but with two unique keys and an outbox, not yet measured under contention",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/sqlite_repository.py"
+          ],
+          "justification": "Needs choices on schema, state machine and transaction boundaries, with durability and uniqueness subtleties"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#Requirements"
+          ],
+          "justification": "One storage file and its tests; the schema is small but every later task depends on it"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011"
+          ],
+          "justification": "The core's SQLite repository took comparable effort and this adds an outbox plus a second unique key"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Edge cases & errors"
+          ],
+          "justification": "A wrong uniqueness or transition rule would allow two writers for one task, the central safety property of the executor"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1",
+            "task:T3"
+          ],
+          "justification": "T3 and the executor read and write the same tables, so the schema is a shared contract between them"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/sqlite_repository.py"
+          ],
+          "justification": "The core's SQLite repository was read and its pattern fits, but contention behaviour of the outbox is not yet measured"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/ledger.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_ledger.py"
+      ],
+      "shared_resources": [
+        "m3-ledger-schema"
+      ],
+      "acceptance_criteria": [
+        "A second insert with the same attempt id or idempotency key never creates a second row",
+        "Illegal attempt state transitions are refused and leave the stored row unchanged",
+        "Concurrent writers from threads and processes end with exactly one winner per key"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_ledger",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Order validation and idempotent `start`/duplicate/conflict/`queue_full` semantics with persisted rejections before any side effect",
+      "objective": "Orders are validated and persisted before any side effect, and replay, conflict and full queue answers are deterministic",
+      "repository": "skill",
+      "after": [
+        "T2"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 80,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Mostly rule logic over the ledger; the validation list is long but each rule is small",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/dispatch.py"
+          ],
+          "justification": "Many validation rules and replay semantics must agree with how M1 retries and re-asks after a crash"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#Requirements"
+          ],
+          "justification": "Two small source files and a test file focused on the start path only"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011"
+          ],
+          "justification": "Comparable to the core's dispatch write-ahead tests, whose retry protocol was read for this estimate"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Requirements"
+          ],
+          "justification": "Accepting a bad order or launching twice would put two writers on one task, which the whole design exists to prevent"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T7"
+          ],
+          "justification": "T2 supplies the ledger it writes to and T7 consumes the accepted records to run them"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/dispatch.py",
+            "file:skill/scripts/bt_scheduler_core/contracts.py"
+          ],
+          "justification": "The core's dispatch protocol was read so the replay rules match, but the executor side was never exercised yet"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/validation.py",
+        "skill/scripts/bt_scheduler_executor/start.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_start.py"
+      ],
+      "shared_resources": [
+        "m3-ledger-schema",
+        "m3-ports-contract"
+      ],
+      "acceptance_criteria": [
+        "The same idempotency key twice yields one record and a duplicate receipt",
+        "An unresolvable route or invalid model is rejected with a stable code and no side effect",
+        "A full queue returns a queue_full rejection that is persisted"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_start",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "`GitWorkspaces`: per-attempt worktree+branch from a resolved base, per-repository lock, durable journal, concurrency-safe allocation",
+      "objective": "Every attempt gets its own worktree and branch from a resolved base under a per-repository lock with a journal",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Git worktree races and crash points are subtle; the existing bt_worktree gives a precedent but not the lock design",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_worktree.py"
+          ],
+          "justification": "Concurrent git administration, lock choice and crash-recovery of half-made worktrees need design, not a known recipe"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_worktree.py"
+          ],
+          "justification": "One focused module around git worktrees and its tests"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-008"
+          ],
+          "justification": "bt_worktree allocation took shape in REQ-008 with similar crash handling; a per-repository lock is added here"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Edge cases & errors"
+          ],
+          "justification": "A shared checkout or branch collision would corrupt another agent's work or the user's tree, hard to detect afterwards"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "file:skill/scripts/bt_worktree.py"
+          ],
+          "justification": "T5 snapshots the same worktrees and the executor allocates through this API, so semantics must be shared"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_worktree.py"
+          ],
+          "justification": "bt_worktree was read in full and already solves allocation journaling; the added locking is unproven under real races"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/workspace.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_workspace.py"
+      ],
+      "shared_resources": [
+        "m3-git-worktrees"
+      ],
+      "acceptance_criteria": [
+        "Parallel allocations on one repository produce distinct directories, branches and indexes",
+        "An unknown base ref is refused before any directory is created",
+        "A crash between journal write and git worktree add leaves a recoverable journal entry"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_workspace",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Handoff snapshot: commits-only, dirty-only, both, empty, untracked, deleted, binary, spaces; snapshot commit under `refs/m3/`, binary patch, manifest, branch/index untouched, caps",
+      "objective": "A handoff captures committed, uncommitted and untracked work in a private ref and patch without touching the attempt branch",
+      "repository": "skill",
+      "after": [
+        "T4"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 100,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Temporary-index plumbing and binary-safe diffs have many edge cases, each needing a real git test",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_worktree.py"
+          ],
+          "justification": "Git plumbing with a temporary index, binary diffs and caps has non-obvious failure modes that need experiments"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#US-4 (P1, Must) — Preserve the work, whatever happens"
+          ],
+          "justification": "One module and a test file with a matrix of repository states"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-008"
+          ],
+          "justification": "Writing each of eight scenarios with a real git repository is most of the time; the plumbing itself is short"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#US-4 (P1, Must) — Preserve the work, whatever happens"
+          ],
+          "justification": "Losing or corrupting an agent's work is the exact failure this task prevents, and modifying the branch would break integration"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4"
+          ],
+          "justification": "It operates on the worktrees that T4 allocates and shares their layout and journal"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_worktree.py"
+          ],
+          "justification": "The existing worktree candidate commit was read, but the temporary-index approach is new and not yet run against these cases"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/handoff.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_handoff.py"
+      ],
+      "shared_resources": [
+        "m3-git-worktrees"
+      ],
+      "acceptance_criteria": [
+        "Commits only, dirty only, both, empty, deleted, binary and space-in-path cases each yield a correct handoff",
+        "The attempt branch, its index and the base commit are identical before and after the snapshot",
+        "The patch applies cleanly on the base in a fresh worktree and reproduces the work"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_handoff",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M3",
+      "title": "Detached shim: new session, timeout, capped head+tail output, atomic `shim.json`/`exit.json`, signal forwarding, process identity helpers",
+      "objective": "A detached shim owns the agent process group, enforces timeout and caps and writes atomic exit and identity records",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Process-group, signal and atomic-write behaviour are platform sensitive and need careful tests",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "Signal forwarding, session leadership and start-time identity are subtle and OS specific"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "A standalone script plus helpers and tests, independent of the rest of the module"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-007"
+          ],
+          "justification": "The driver already kills process groups on timeout; the shim adds atomic records, caps and identity"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Edge cases & errors"
+          ],
+          "justification": "A shim that leaks processes or mislabels exits would break cancellation and restart reconciliation for every run"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7"
+          ],
+          "justification": "The executor only calls the shim through its spec file and exit record, so interaction is narrow"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "bt_driver's process-group handling was read and works in production, but the detached variant is new"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/shim.py",
+        "skill/scripts/bt_scheduler_executor/procinfo.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_shim.py"
+      ],
+      "shared_resources": [
+        "m3-process-supervision"
+      ],
+      "acceptance_criteria": [
+        "The shim writes shim.json at start and exit.json exactly once at the end",
+        "A timeout kills the whole process group including grandchildren and records reason timeout",
+        "Output beyond the cap is dropped with a counted byte total while the tail window is kept"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_shim",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M3",
+      "title": "`AgentExecutor` run loop: queue + bounded workers, prepare→allocate→spawn, watcher, started/heartbeat/finished/failed events with deterministic ids, outbox delivery and redelivery",
+      "objective": "The executor queues, allocates, spawns and watches attempts and delivers started, heartbeat, finished and failed events idempotently",
+      "repository": "skill",
+      "after": [
+        "T3",
+        "T5",
+        "T6"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 150,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "It integrates ledger, workspaces, shim and ports and carries most concurrency risk in the module",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/dispatch.py",
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "Orchestrates threads, processes and durable state across three components with ordering and restart implications"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#Scope (in)"
+          ],
+          "justification": "The central class with the run loop and outbox delivery plus two test files; it is the largest single piece"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011"
+          ],
+          "justification": "The core's scheduler took the largest share of REQ-011; this executor is smaller but depends on three new parts"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Requirements"
+          ],
+          "justification": "A flaw here can double-start work, lose events or deadlock the pool, affecting every attempt"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3",
+            "task:T5",
+            "task:T6"
+          ],
+          "justification": "It joins ledger, workspace and shim and later classification, cancellation and reconciliation all extend this class"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/dispatch.py"
+          ],
+          "justification": "The M1 dispatch design was read, but this class combines new components that have not run together yet"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/executor.py",
+        "skill/scripts/bt_scheduler_executor/runner.py",
+        "skill/scripts/bt_scheduler_executor/events.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_executor.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_events.py"
+      ],
+      "shared_resources": [
+        "m3-executor-core",
+        "m3-ledger-schema",
+        "m3-process-supervision"
+      ],
+      "acceptance_criteria": [
+        "A fake provider script runs to completion in its own worktree and produces started and finished events",
+        "Event ids are deterministic so redelivery of the outbox never duplicates a fact at the sink",
+        "The number of running attempts never exceeds the configured ceiling and extra orders wait in the queue"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_executor bt_scheduler_executor.tests.test_events",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M3",
+      "title": "Failure classification matrix (clean, quota with/without reset, connection lost, agent error, timeout, killed, incomplete output, start failed) via the driver port and documented patterns",
+      "objective": "Process outcomes are classified into stable cause classes through the driver port with documented connection patterns",
+      "repository": "skill",
+      "after": [
+        "T7"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Rule table plus fixtures of real provider output already captured in the repository",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_runsettle.py"
+          ],
+          "justification": "Needs judgement about patterns and false positives, though the driver already does most of the normalising"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "One small module and a table-driven test file"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-007"
+          ],
+          "justification": "The driver normaliser and its fixtures exist; the new part is the cause-class table and connection patterns"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#US-5 (P1, Must) — Report facts, not verdicts"
+          ],
+          "justification": "A wrong class could make a later module retry something that cannot succeed or hide a quota stop, but nothing is destroyed"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7"
+          ],
+          "justification": "It feeds the terminal events built by the executor and shares the cause vocabulary with the event payloads"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_runsettle.py",
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "The settle module's limit detection and the driver were read and have real provider samples as fixtures"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/classify.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_classification.py"
+      ],
+      "shared_resources": [
+        "m3-executor-core"
+      ],
+      "acceptance_criteria": [
+        "A usage-limit message with a failing exit is reported as quota_exhausted with its reset epoch when one exists",
+        "Connection-error text with exit zero is not reported as a failure",
+        "A clean exit without end-of-turn evidence is incomplete_output and never finished"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_classification",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M3",
+      "title": "Safe cancellation in every state (queued, spawning, running, terminal, wrong token, duplicate, race with exit) with TERM→KILL grace and handoff",
+      "objective": "Cancellation is fenced by token and safe in every state, with TERM then KILL grace and a preserved handoff",
+      "repository": "skill",
+      "after": [
+        "T7"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 85,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "State-race analysis between cancel, spawn and natural exit is the hard part",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/dispatch.py"
+          ],
+          "justification": "Races between cancel, spawn and exit need explicit state reasoning and careful test timing"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#US-6 (P1, Must) — Cancel safely"
+          ],
+          "justification": "One module and a test file covering seven cancellation situations"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011"
+          ],
+          "justification": "Similar to the core's cancellation tests but on real processes, which adds timing work"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#US-6 (P1, Must) — Cancel safely"
+          ],
+          "justification": "Killing the wrong process or losing work on cancel is destructive and irreversible for an agent's uncommitted changes"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7",
+            "task:T6"
+          ],
+          "justification": "It acts on the executor's state and the shim's processes, so it must agree with both"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/dispatch.py"
+          ],
+          "justification": "The core's cancel semantics were read, but the executor-side races have not been exercised"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/cancel.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_cancel.py"
+      ],
+      "shared_resources": [
+        "m3-executor-core",
+        "m3-process-supervision"
+      ],
+      "acceptance_criteria": [
+        "Cancelling a queued attempt guarantees no process is ever spawned for it",
+        "A running attempt is stopped within the grace period and its work is preserved before the cancelled event",
+        "A cancel after the attempt ended changes nothing and a wrong token is rejected"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_cancel",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M4",
+      "title": "Startup reconciliation and `query` from reality: re-attach live shim, finalise from `exit.json`, orphan-agent termination by identity, never-spawned accepted order, unknown id, pid-reuse safety",
+      "objective": "A restarted executor reconciles every unfinished attempt from process reality and query answers match that reality",
+      "repository": "skill",
+      "after": [
+        "T8",
+        "T9"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 110,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Many branches by what survived the restart, each needing a staged process situation in tests",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/dispatch.py"
+          ],
+          "justification": "Combinatorial restart situations and identity checks need systematic design"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#US-7 (P1, Must) — Reconcile after a restart"
+          ],
+          "justification": "One module and test file; touches the ledger and process helpers but changes no other source"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011"
+          ],
+          "justification": "The core's crash-at-every-commit tests are the model; staging real shims for each case adds effort"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#US-7 (P1, Must) — Reconcile after a restart"
+          ],
+          "justification": "Reconciling wrongly could start a second writer or kill an unrelated process, both serious"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T8",
+            "task:T9"
+          ],
+          "justification": "It reads the ledger and shim records and finishes attempts through the same paths as normal exit"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/dispatch.py"
+          ],
+          "justification": "The core's reconcile protocol was read and defines the questions to answer, but real process states are not yet staged"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/reconcile.py",
+        "skill/scripts/bt_scheduler_executor/tests/test_reconcile.py"
+      ],
+      "shared_resources": [
+        "m3-executor-core",
+        "m3-ledger-schema"
+      ],
+      "acceptance_criteria": [
+        "A live shim is re-attached and later produces exactly one terminal event",
+        "A finished shim with exit.json is finalised once and a vanished one is reported lost with work preserved",
+        "A recycled pid with a different start time is never signalled"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_reconcile",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T11",
+      "milestone_id": "M4",
+      "title": "Crash-at-every-step and fault-injection tests (kill executor after ledger/allocation/spawn/terminal, sink failure, disk errors), exactly-one-process and exactly-one-terminal-event invariants",
+      "objective": "Fault injection proves exactly one process and one terminal event per attempt across crashes at every step",
+      "repository": "skill",
+      "after": [
+        "T10"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 100,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "A test harness that kills the executor at named points; the product code mostly exists by then",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/tests/test_restart.py"
+          ],
+          "justification": "Needs a deterministic way to crash a multi-process system at named points"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#Edge cases & errors"
+          ],
+          "justification": "Tests and a small fault helper, no product behaviour added"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011"
+          ],
+          "justification": "The core's crash-at-every-commit suite is a direct template and was read"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Edge cases & errors"
+          ],
+          "justification": "Only tests are added, so the worst outcome is a flaky test, but it guards the central invariants"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T10"
+          ],
+          "justification": "It runs the whole executor but owns only its own test files"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/tests/test_restart.py"
+          ],
+          "justification": "A crash-restart suite for the core exists and shows the technique works in this repository"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/tests/test_resilience.py",
+        "skill/scripts/bt_scheduler_executor/tests/faults.py"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Killing the executor after the ledger write, after allocation, after spawn and after the terminal event leaves one process",
+        "A failing or slow sink never loses an event and redelivery never duplicates a fact",
+        "An unwritable artifact directory ends the attempt as failed with artifact_error"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_resilience",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T12",
+      "milestone_id": "M4",
+      "title": "Concurrency isolation tests: N parallel attempts per repo and across repos, no shared dir/branch/index, lock contention, output isolation, queue bound",
+      "objective": "Parallel attempts on one and several repositories never share a directory, branch, index or output",
+      "repository": "skill",
+      "after": [
+        "T7"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 70,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Thread and process stress tests over code that already exists",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/tests/test_reservation.py"
+          ],
+          "justification": "Straightforward stress tests but timing makes assertions delicate"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#US-3 (P1, Must) — Isolated concurrent worktrees"
+          ],
+          "justification": "One test file that exercises existing behaviour"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011"
+          ],
+          "justification": "The core has a comparable concurrency suite that was read"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#US-3 (P1, Must) — Isolated concurrent worktrees"
+          ],
+          "justification": "Tests only; wrong assertions would hide a real isolation bug, which is why they exist"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7"
+          ],
+          "justification": "It exercises the executor but writes only its own test file"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/tests/test_reservation.py"
+          ],
+          "justification": "A concurrency suite for the core exists in this repository and shows what the assertions look like"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/tests/test_concurrency.py"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Eight parallel attempts on one repository finish with eight distinct worktrees and branches",
+        "Output and handoff of each attempt contain only its own marker text",
+        "More orders than workers wait in the queue and complete without exceeding the ceiling"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest bt_scheduler_executor.tests.test_concurrency",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T13",
+      "milestone_id": "M5",
+      "title": "Adapter: M1 `Ack`/`ExecutionStatus`/`Event` translation, `RouteResolver` (interim `direct:` grammar + optional M2 lookup hook), `AgentDriver` over `bt_driver`/`bt_profiles`/`bt_agents` (authorise, gate_cwd, launchable, model↔provider, env boundary, Gemini=agy), `BriefSource` from the frozen plan, `WorkspaceManager` over `bt_worktree`",
+      "objective": "The adapter wires the module to the real driver, profile, catalogue, worktree and plan code and translates M1 types",
+      "repository": "skill",
+      "after": [
+        "T7"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 160,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Many integrations each with its own policy checks; M2 is absent so the route grammar is interim",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/bt_agents.py",
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "Crosses five existing subsystems and their policy rules, and an interim route grammar must be designed"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py"
+          ],
+          "justification": "One adapter file plus its integration tests, touching no existing source"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011"
+          ],
+          "justification": "The scheduler adapter was comparable in size and the profile and driver APIs are readable"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Requirements"
+          ],
+          "justification": "It enforces account and project policy; a mistake could launch an agent under the wrong account"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T12",
+            "task:T7"
+          ],
+          "justification": "It depends on the module's ports and on M1's contract classes and must track M2's coming contract bump"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/bt_scheduler_adapter.py"
+          ],
+          "justification": "The profile, catalogue, driver and scheduler adapter files were read, but M2's lookup API does not exist yet"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor_adapter.py",
+        "skill/scripts/tests/test_scheduler_executor_adapter.py"
+      ],
+      "shared_resources": [
+        "m3-ports-contract",
+        "m1-contract"
+      ],
+      "acceptance_criteria": [
+        "An order whose model does not belong to its provider is rejected before any process starts",
+        "The child environment contains only the selected profile's variables and none from other profiles",
+        "M1 receives its own Ack, ExecutionStatus and Event classes built from the module's answers"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest tests.test_scheduler_executor_adapter",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T14",
+      "milestone_id": "M5",
+      "title": "End-to-end through the real `SchedulerCore` with fake provider binaries (3 providers, parallel plan, failure/quota/cancel/restart scenarios) and an independent stub verifier; legacy/historical runs byte-identical",
+      "objective": "A whole plan runs through the real scheduler core and the executor with fake providers under failure and restart scenarios",
+      "repository": "skill",
+      "after": [
+        "T13",
+        "T10"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 140,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Scenario scripting over finished components; risk is in unexpected interactions between M1 and M3",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_integration.py"
+          ],
+          "justification": "Needs fake providers that mimic each provider's output and exit behaviour faithfully enough"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#Scope (in)"
+          ],
+          "justification": "Integration tests and fake provider scripts, no product code"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-011"
+          ],
+          "justification": "The existing scheduler integration tests are the template, plus three fake provider scripts"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Requirements"
+          ],
+          "justification": "Tests only, but a false pass here would hide a boundary mistake between M1 and M3"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T13",
+            "task:T10"
+          ],
+          "justification": "It uses the adapter and M1 core together, so any change in either shows here"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_integration.py"
+          ],
+          "justification": "An integration suite for M1 exists in the repository and was read as the pattern"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_scheduler_executor_integration.py",
+        "skill/scripts/tests/fake_providers"
+      ],
+      "shared_resources": [
+        "m1-contract",
+        "m3-executor-core"
+      ],
+      "acceptance_criteria": [
+        "A parallel plan with three providers completes with every task accepted only through the independent verifier",
+        "A quota failure, a cancel and an executor restart each leave M1 and M3 states consistent",
+        "A historical RUN.json fixture is byte identical before and after the suite"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest tests.test_scheduler_executor_integration tests.test_scheduler_integration",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T15",
+      "milestone_id": "M6",
+      "title": "Opt-in bounded real-CLI smoke tests per available provider (`BITACORA_M3_REAL=1`), skipped by default",
+      "objective": "Opt-in smoke tests drive each available real provider command line within a hard spending cap",
+      "repository": "skill",
+      "after": [
+        "T13"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Small tests but dependent on installed binaries and authentication on this machine",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "Argument shapes are known from the driver; the unknown is how each real binary behaves headless here"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_runprompt.py"
+          ],
+          "justification": "One skipped-by-default test file"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-007"
+          ],
+          "justification": "Three short calls plus handling of unavailable providers"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#US-8 (P2, Should) — Real CLIs, opt-in and bounded"
+          ],
+          "justification": "It spends subscription quota, which is bounded by the cap and by the opt-in"
+        },
+        "coupling": {
+          "evidence": [
+            "spec:SPEC.md#US-8 (P2, Should) — Real CLIs, opt-in and bounded"
+          ],
+          "justification": "It consumes real provider quota that other sessions share, so it is the only task with an external resource"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_driver.py"
+          ],
+          "justification": "The driver and prompt builders were read and real provider fixtures exist, but live behaviour was not run for this plan"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_scheduler_executor_real.py"
+      ],
+      "shared_resources": [
+        "provider-quota"
+      ],
+      "acceptance_criteria": [
+        "Without the opt-in variable every real test is skipped",
+        "With it each available provider answers one tiny prompt within the timeout and output cap",
+        "An unavailable provider is reported as skipped with the reason and never as passed"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest tests.test_scheduler_executor_real",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T16",
+      "milestone_id": "M6",
+      "title": "Independent spec/standards/adversarial reviews; fix every verified finding with a regression test",
+      "objective": "Independent reviewers find no unresolved spec, standards or adversarial defect and every verified finding has a regression test",
+      "repository": "skill",
+      "after": [
+        "T11",
+        "T12",
+        "T14",
+        "T15"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "Review effort is unknowable until findings arrive; estimate assumes two rounds",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "assumption:findings are unknown until the reviews run"
+          ],
+          "justification": "Reasoning about unknown defects across the whole module and adapter"
+        },
+        "scope": {
+          "evidence": [
+            "assumption:fix count depends on review output"
+          ],
+          "justification": "Fixes may touch any file of the module, so the scope is bounded only by the findings"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-012"
+          ],
+          "justification": "REQ-012 needed four review rounds with about twenty five findings, so two rounds is a guess"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#Requirements"
+          ],
+          "justification": "Fixes edit working code late, which can introduce regressions that the suites must catch"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T14",
+            "task:T15"
+          ],
+          "justification": "Fixes can land anywhere in the executor and adapter after the integration and smoke tasks"
+        },
+        "confidence": {
+          "evidence": [
+            "assumption:review findings cannot be predicted"
+          ],
+          "justification": "Findings from audits are inherently unpredictable and previous audits found many defects"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/**",
+        "skill/scripts/bt_scheduler_executor_adapter.py",
+        "skill/scripts/tests/test_scheduler_executor_*.py"
+      ],
+      "shared_resources": [
+        "m3-executor-core"
+      ],
+      "acceptance_criteria": [
+        "Every verified finding is fixed with a test that fails without the fix",
+        "A spec reviewer maps each requirement to evidence with no gaps left open",
+        "The module suite passes again from a lone copy after the fixes"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -I -m unittest discover -s bt_scheduler_executor/tests",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T17",
+      "milestone_id": "M6",
+      "title": "README, `modules.md` section, packaging (`pyproject.toml`), decision record, full regression suites, final report with evidence and limitations",
+      "objective": "The module is documented, packaged and decided, and every regression suite passes with a final evidence report",
+      "repository": "skill",
+      "after": [
+        "T16"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Documentation plus running six suites; failures to fix are the unknown",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/references/modules.md"
+          ],
+          "justification": "Writing and consistency checks, with no new design"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/references/modules.md"
+          ],
+          "justification": "Docs for one module, a packaging entry and a README test"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-010"
+          ],
+          "justification": "REQ-010 packaged and documented a comparable module in one task"
+        },
+        "risk": {
+          "evidence": [
+            "file:pyproject.toml"
+          ],
+          "justification": "Packaging mistakes could break installation, but they are caught by the packaging test"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "It follows the review task and must reflect its final fixes"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/references/modules.md"
+          ],
+          "justification": "The module convention page and the earlier packaging precedent were read"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_executor/README.md",
+        "skill/references/modules.md",
+        "pyproject.toml",
+        "skill/scripts/tests/test_scheduler_executor_readme.py"
+      ],
+      "shared_resources": [
+        "m3-ports-contract"
+      ],
+      "acceptance_criteria": [
+        "The README lists every public name, port, error code and limit, and a test keeps it in step with the code",
+        "The package installs with the module and adapter included and its tests excluded",
+        "The final report states each acceptance criterion with its evidence and every limitation observed"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest tests.test_scheduler_executor_integration tests.test_scheduler_integration tests.test_plan_integration tests.migration.test_package_install",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    }
+  ]
+}
