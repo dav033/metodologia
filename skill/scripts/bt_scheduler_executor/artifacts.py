@@ -12,6 +12,7 @@ from .errors import ExecutorError
 
 MARKER = "\n[... {n} bytes of output dropped by the executor's cap ...]\n"
 REPORT_MAX = 64 * 1024
+DESCENDANT_MAX = 4096
 
 
 def atomic_write(path: Path, data: bytes, mode: int = 0o600) -> None:
@@ -114,6 +115,26 @@ def read_shim(path: Path) -> dict:
         out.pop("pid", None)
         out.pop("ident", None)
     return out
+
+
+def read_descendants(path: Path) -> dict[int, str]:
+    """Verified, bounded PID/start identities from the shim; malformed or oversized evidence authorises no sweep."""
+    raw = read_json(path, limit=1 << 20)
+    if not isinstance(raw, dict) or set(raw) != {"version", "truncated", "processes"} \
+            or type(raw.get("version")) is not int or raw["version"] != 1 or type(raw.get("truncated")) is not bool:
+        return {}
+    records = raw.get("processes")
+    if not isinstance(records, list) or len(records) > DESCENDANT_MAX:
+        return {}
+    identities: dict[int, str] = {}
+    for record in records:
+        if not isinstance(record, dict) or set(record) != {"pid", "ident"}:
+            return {}
+        pid, ident = _int(record.get("pid"), 1), record.get("ident")
+        if pid is None or not isinstance(ident, str) or not 0 < len(ident) < 200 or pid in identities:
+            return {}
+        identities[pid] = ident
+    return identities
 
 
 def paths(directory: Path) -> dict[str, str]:

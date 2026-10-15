@@ -70,7 +70,9 @@ An agent is never a direct child of the executor. `shim.py` is double-forked (re
 runs the agent in its own process group, enforces the timeout, keeps the output (head up to a cap in `output.log` + the
 last window in `output.tail`, with a dropped-byte count), and writes `exit.json` atomically as its last act
 (`reason: exited | timeout | cancelled | spawn_error`, `returncode`, bytes). `shim.json` records the shim's and the agent's
-start-time identities. After the agent exits the shim kills whatever is left in its group: nothing outlives it to keep writing.
+start-time identities. While the agent runs, the shim samples Linux `/proc` every 0.1 seconds and atomically records up to
+4,096 observed descendant PID/start identities in `descendants.json`. After the agent exits the shim kills whatever is left
+in its group: nothing outlives it to keep writing.
 Executor restart = re-attach, finalise from `exit.json`, or (shim gone without record) stop the orphan by identity and report `lost`.
 A pid is signalled only if its recorded start-time identity still matches.
 
@@ -102,7 +104,7 @@ agent or a human: **no agent reasoning or conversation is transferred between pr
 
 `<root>/ledger.db`, `<root>/executor.lock`, `<root>/executor.log`, `<root>/ws/` (worktrees, intent manifests, `journal.jsonl`),
 `<root>/attempts/<dirname>/` (0700; files 0600): `order.json`, `route.json`, `brief.json` (the full brief), `prompt.txt` (0600), `output.log`, `output.tail`,
-`shim.json`, `exit.json`, `report.json` (if the agent wrote one), `handoff/`. History is never deleted; worktree cleanup is an
+`shim.json`, `descendants.json`, `exit.json`, `report.json` (if the agent wrote one), `handoff/`. History is never deleted; worktree cleanup is an
 explicit operator action (`GitWorkspaces.release`).
 
 ## Configuration (`Config`, all explicit)
@@ -155,7 +157,7 @@ during/after the handoff, before/after the terminal transaction, between deliver
 | R2 write-ahead idempotent start | `test_ledger.test_processes_racing_to_insert_one_key_produce_one_row`; `test_start.test_the_same_key_with_a_different_order_is_rejected`; `test_start.test_a_replay_is_answered_even_if_the_route_would_no_longer_resolve` |
 | R3 validate before side effects | `test_start.test_invalid_route_policy_denial_unknown_repository_and_bad_base_are_all_refused_up_front`; `test_scheduler_executor_adapter.test_the_work_only_gate_refuses_before_any_worktree_exists`; `test_hardening.test_the_base_is_pinned_when_the_order_is_accepted` |
 | R4 worktree per attempt | `test_workspace.test_allocation_is_idempotent_per_attempt`; `test_workspace.test_two_attempts_never_share_a_directory_branch_or_index`; `test_hardening.test_attempt_ids_with_dots_slashes_and_hostile_characters_get_valid_branch_names` |
-| R5 detached shim | `test_shim.test_a_clean_run_writes_both_records_and_the_output`; `test_shim.test_a_timeout_stops_the_agent_and_its_grandchildren`; `test_shim.test_output_beyond_the_head_cap_is_dropped_with_a_count_and_the_tail_is_kept`; `test_hardening.test_stragglers_that_escaped_the_process_group_are_stopped_before_the_handoff` |
+| R5 detached shim | `test_shim.test_a_clean_run_writes_both_records_and_the_output`; `test_shim.test_the_shim_persists_an_agent_terminal_descendant_after_the_agent_exits`; `test_audit_round2.test_the_real_executor_sweeps_an_agent_terminal_child_after_the_agent_exits`; `test_shim.test_a_timeout_stops_the_agent_and_its_grandchildren`; `test_shim.test_output_beyond_the_head_cap_is_dropped_with_a_count_and_the_tail_is_kept`; `test_hardening.test_stragglers_that_escaped_the_process_group_are_stopped_before_the_handoff` |
 | R6 bounded limits | `test_start.test_the_queue_is_bounded_and_the_refusal_is_a_stable_record`; `test_concurrency.test_a_burst_of_thirty_orders_respects_the_ceiling_and_every_one_finishes_once`; `test_hardening.test_the_log_never_grows_without_bound`; `test_hardening.test_non_finite_timeouts_and_limits_are_refused` |
 | R7 handoff then one terminal event | `test_executor.test_every_attempt_ends_in_exactly_one_terminal_event`; `test_events.test_the_terminal_event_is_persisted_in_the_same_transaction_as_the_terminal_state`; `test_executor.test_a_failing_sink_never_blocks_the_attempt_and_events_are_redelivered_in_order`; `test_hardening.test_one_poisoned_attempt_does_not_block_the_events_of_the_others` |
 | R8 classification | `test_classification.test_quota_exhaustion_carries_the_reset_epoch_the_provider_gave`; `test_classification.test_connection_words_in_the_output_of_a_successful_run_are_not_a_failure`; `test_scheduler_executor_adapter.test_classification_uses_the_real_normalisers`; `test_hardening.test_connection_words_with_a_zero_exit_are_never_a_connection_failure` |
@@ -171,6 +173,9 @@ during/after the handoff, before/after the terminal transaction, between deliver
 ## Known limits (demonstrated or declared, not hidden)
 
 - POSIX only. Process identity needs `/proc` (Linux) or `ps` (fallback); not tested on macOS or Windows.
+- Descendant recording is a best-effort Linux `/proc` sample every 0.1 seconds, capped at 16,384 process entries per scan
+  and 4,096 unique PID identities per attempt. The record marks itself `truncated` if either cap is reached. A process that
+  daemonises and is re-parented between samples may be missed.
 - Quota detection is only as good as the provider's own output and `bt_driver`'s normaliser; a limit message without a reset
   time yields `reset_epoch: null`. Connection-loss detection is a pattern list on failing exits, not a network probe.
 - Codex has no end-of-turn marker: its "clean" means exit 0 with output (M1 still requires an independent verdict).
@@ -181,37 +186,35 @@ during/after the handoff, before/after the terminal transaction, between deliver
 - Stragglers: after an attempt ends the executor kills every process whose working directory is inside the worktree (this catches
   `setsid` escapes), but a descendant that `chdir`s away and escapes the process group is out of reach (no subreaper: the module may not use `ctypes`).
 - Trust boundary: the agent runs as the same user and without a sandbox (the providers are launched in their permission-bypass modes, as the
-  existing supervisor does); it can read or forge files in the attempt directory (`exit.json`) and edit the repository's git configuration. Files
-  are 0600 and directories 0700 (root 0700, `ledger.db` 0600, `executor.log` 0600) against other users only. `exit.json` and `shim.json` are
-  shape-checked on read: a forged or malformed record is treated as a vanished supervisor (cause `lost`), never trusted and never able to crash
-  a settle; a well-formed forgery can at worst settle an attempt early, and the worktree sweep and handoff still run.
+  existing supervisor does); it can read or forge files in the attempt directory (`exit.json`, `descendants.json`) and edit the repository's git configuration. Files
+  are 0600 and directories 0700 (root 0700, `ledger.db` 0600, `executor.log` 0600) against other users only. `exit.json`, `shim.json`
+  and `descendants.json` are shape-checked on read: a forged or malformed `exit.json` is treated as a vanished supervisor (cause `lost`),
+  and invalid descendant evidence identifies no terminal process as agent-owned. A well-formed same-uid forgery remains inside the declared trust boundary.
 - If the handoff cannot be captured (after `handoff_tries`), the attempt ends **failed** with cause `artifact_error` even if the agent exited cleanly
   ("never a silent success"); the worktree still holds the files and the failure is stated in the event.
 - The sink is called from the supervisor thread: a slow `EventSink` delays watching and scheduling (use a fast, non-blocking sink; the adapter's calls the core's `ingest`). A failing
   event holds back only its own attempt's later events.
 - `bind_run`: the first accepted order binds an executor root to its plan/revision; use one root per scheduler run.
 - Events enter the core through the adapter's sink because M4 does not exist yet; the sink is a port so M4 can sit in between.
-- M2's route lookup does not exist yet: `route:<id>` is delegated to a callable the caller supplies; the interim operator-written
-  `direct:<provider>/<model>[@profile][#effort]` grammar lives in the adapter, not in this module.
+- `route:<id>` resolves through M2's persisted selected route. The adapter checks its plan/revision/task binding and rejects a
+  decision superseded for that task. Operator-written `direct:<provider>/<model>[@profile][#effort]` references are refused when
+  an M2 lookup is configured unless `allow_direct=True`; M3 never chooses a default model.
 - The module never integrates prerequisite work: `after` only orders tasks in time and a task starts from `base_ref` (default `HEAD` of its
   repository). The methodology's `wire(..., integrate_predecessors=True)` (`bt_scheduler_integrator`, on by default; `integrate_predecessors=False` turns it off) supplies a `base_ref` that
   merges the accepted same-repository predecessors' handoff snapshots (`git merge-tree`, objects only, kept under `refs/m3/integration/`);
   a conflict or a missing snapshot rejects the order with `INTEGRATION_CONFLICT` / `PREDECESSOR_HANDOFF_MISSING` instead of guessing.
   With the option off a dependent task does not see its predecessors' work.
-- Route binding is partial: M2's public lookup does not yet expose plan, task, revision or validity, so a `route:` reference is bound by
-  `single_use` (a reference may start ONE attempt, ever, recorded in `route_refs`) plus the optional `check_context` the adapter applies when
-  the selector supplies those fields. Superseded decisions cannot be told apart until M2 exposes a most-recent-decision-per-task rule (P-029).
 - Verifier independence compares opaque executor labels (`provider/model@profile`); two labels for the same underlying account are not detected.
 - `Route.account_ref` and `Route.single_use` are part of the route record: the adapter re-checks `account_ref` against M2 at resolve time and again
   at launch (TOCTOU), and refuses `direct:` references when an M2 lookup is configured unless `allow_direct=True`.
 - Branches and handoff refs live in the shared repository, so they are scoped by the executor root (`m3/<attempt>-<root hash>`,
   `refs/m3/handoff/<attempt>-<root hash>`): a second run of the same plan, with its own root, never collides with or overwrites the first run's.
-- The cwd sweep (`spare_interactive=True`, the default) leaves alone a process that has a controlling terminal and is not a descendant of
-  a STILL-LIVING recorded shim or agent, so an operator's shell or editor opened in the worktree survives; a headless straggler is
-  swept. By the time the sweep runs the agent has normally exited and its leftovers are orphaned to init, so ancestry no longer
-  separates them: an agent that daemonised something onto a terminal of its own (`tmux new -d`, `screen -dm`, `script`) leaves
-  processes the sweep spares, and they can keep writing while the handoff is taken. Set `spare_interactive=False` to sweep every
-  process in the worktree regardless (the pre-P-032 rule). A pid is a root only while its recorded start identity still matches.
+- The cwd sweep (`spare_interactive=True`, the default) preserves an operator's terminal and stops an agent-owned terminal process
+  only when it is still a live descendant or its PID/start identity matches `descendants.json`. It rechecks the identity and cwd
+  after opening a Linux pidfd, then signals through that descriptor so PID reuse cannot redirect the signal. If pidfds are unavailable,
+  terminal processes are preserved. A recycled PID never matches.
+  Sampling is best effort: a daemon re-parented between samples, or one that changes its cwd away from the worktree, may remain
+  out of reach. `spare_interactive=False` sweeps every process in the exclusive worktree.
 - The cwd sweep runs only when the worktree path is exclusive to the attempt; a workspace manager that returns a path another live attempt uses
   is refused at start (`WORKSPACE_ERROR`) instead of risking a neighbour's agent.
 - A PREPARING attempt that no job drives (a start job died, a transient settle failure) is reconciled again after `settle_retry_seconds`

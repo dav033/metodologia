@@ -14,7 +14,7 @@ sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve
 import bt_scheduler_executor as ex
 from bt_scheduler_executor import artifacts, procinfo
 from bt_scheduler_executor import model as m
-from support import FakeResolver, World, git, order, wait_for
+from support import FakeDriver, FakeResolver, World, git, order, wait_for
 
 
 def shim_record(w, attempt_id):
@@ -157,6 +157,114 @@ class SweepSparesTheOperator(unittest.TestCase):
         self.assertEqual(procinfo.kill_in_cwd(str(self.dir), 0, spare_interactive=False), 1)      # the old rule would hit it
         self.assertTrue(procinfo.start_ident(pid))
 
+    def test_a_terminal_identity_is_rechecked_after_opening_its_pidfd(self):
+        from unittest.mock import patch
+        pid = self.interactive_in_worktree()
+        ident = procinfo.start_ident(pid)
+        self.assertTrue(ident)
+        real_pidfd_open = os.pidfd_open
+        with patch.object(procinfo.os, "pidfd_open", wraps=real_pidfd_open) as open_pidfd, \
+                patch.object(procinfo, "start_ident", return_value=f"{ident}:recycled") as read_ident, \
+                patch.object(procinfo.signal, "pidfd_send_signal") as send_signal:
+            self.assertEqual(procinfo.kill_in_cwd(str(self.dir), spare_interactive=True,
+                                                   known_descendants={pid: ident}), 0)
+        open_pidfd.assert_called_once_with(pid, 0)
+        read_ident.assert_called_once_with(pid)
+        send_signal.assert_not_called()
+        self.assertTrue(procinfo.alive(pid, ident), "the process must survive a mismatched identity")
+
+    def test_a_terminal_is_preserved_when_pidfds_are_unavailable(self):
+        from unittest.mock import patch
+        pid = self.interactive_in_worktree()
+        with patch.object(procinfo.os, "pidfd_open", None):
+            self.assertEqual(procinfo.kill_in_cwd(str(self.dir), spare_interactive=True,
+                                                  known_descendants={pid: procinfo.start_ident(pid)}), 0)
+        self.assertTrue(procinfo.start_ident(pid), "without pidfd support the sweep must preserve terminal processes")
+
+    def test_the_real_executor_sweeps_an_agent_terminal_child_after_the_agent_exits(self):
+        class TerminalDriver(FakeDriver):
+            def prepare(inner_self, route, prompt, workspace, timeout_seconds):
+                code = (
+                    "import os, pty, signal, sys, time\n"
+                    "pid, master = pty.fork()\n"
+                    "if pid == 0:\n"
+                    "    signal.signal(signal.SIGHUP, signal.SIG_IGN)\n"
+                    "    os.execlp('sleep', 'sleep', '60')\n"
+                    "open(sys.argv[1], 'w').write(str(pid))\n"
+                    "time.sleep(0.6)\n"
+                    "os.close(master)\n"
+                    "print('TERMINAL-EVENT', flush=True)\n"
+                )
+                return ex.Launch(argv=(sys.executable, "-c", code, str(Path(workspace.path) / "terminal.pid")))
+
+        w = World(self, driver=TerminalDriver())
+        w.x.start(order(1, "terminal"))
+        self.assertTrue(wait_for(lambda: (w.x.ledger.get("att-0001") or {}).get("workspace")))
+        wt = Path(w.x.ledger.get("att-0001")["workspace"]["path"])
+        self.assertTrue(wait_for(lambda: (wt / "terminal.pid").exists()
+                                 and (wt / "terminal.pid").read_text().strip().isdigit()))
+        pid = int((wt / "terminal.pid").read_text())
+        ident = procinfo.start_ident(pid)
+        self.assertTrue(ident, "the agent's terminal child must outlive its parent until settle")
+
+        result = w.finish("att-0001")
+
+        self.assertEqual(result["state"], m.FINISHED)
+        self.assertTrue(wait_for(lambda: not procinfo.alive(pid, ident)), "the orphaned terminal child survived settle")
+
+    def test_an_orphaned_agent_terminal_process_is_swept_from_its_recorded_identity(self):
+        from support import World
+        pid = self.interactive_in_worktree()
+        ident = procinfo.start_ident(pid)
+        self.assertTrue(ident)
+        w = World(self, autostart=False)
+        adir = w.x.attempts_dir / "att-orphan"
+        adir.mkdir()
+        (adir / "descendants.json").write_text(json.dumps({"version": 1, "truncated": False,
+                                                            "processes": [{"pid": pid, "ident": ident}]}))
+
+        w.x._sweep({"workspace": {"path": str(self.dir)}}, adir)
+
+        self.assertTrue(wait_for(lambda: not procinfo.alive(pid, ident)))
+
+    def test_an_unmatched_identity_in_the_descendant_record_does_not_kill_an_operator_terminal(self):
+        from support import World
+        pid = self.interactive_in_worktree()
+        ident = procinfo.start_ident(pid)
+        self.assertTrue(ident)
+        w = World(self, autostart=False)
+        adir = w.x.attempts_dir / "att-recycled"
+        adir.mkdir()
+        (adir / "descendants.json").write_text(json.dumps({"version": 1, "truncated": False,
+                                                            "processes": [{"pid": pid, "ident": f"{ident}:old"}]}))
+
+        w.x._sweep({"workspace": {"path": str(self.dir)}}, adir)
+
+        self.assertTrue(procinfo.alive(pid, ident), "a recycled PID must not identify an agent-owned terminal")
+
+    def test_an_invalid_descendant_record_is_ignored(self):
+        from support import World
+        pid = self.interactive_in_worktree()
+        ident = procinfo.start_ident(pid)
+        self.assertTrue(ident)
+        w = World(self, autostart=False)
+        adir = w.x.attempts_dir / "att-invalid"
+        adir.mkdir()
+        (adir / "descendants.json").write_text(json.dumps({"version": True, "truncated": False,
+                                                            "processes": [{"pid": pid, "ident": ident}]}))
+
+        w.x._sweep({"workspace": {"path": str(self.dir)}}, adir)
+
+        self.assertTrue(procinfo.alive(pid, ident), "unvalidated process evidence must not cause a signal")
+
+    def test_an_oversized_descendant_record_is_ignored(self):
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "descendants.json"
+            records = [{"pid": pid, "ident": f"boot:{pid}"} for pid in range(1, 4098)]
+            path.write_text(json.dumps({"version": 1, "truncated": False, "processes": records}))
+            self.assertEqual(artifacts.read_descendants(path), {})
+
     def test_the_agents_pty_child_is_swept_only_while_the_agent_is_alive(self):
         self.interactive_in_worktree()
         # the child's parent is this process: pretend this process is the (live) attempt's agent
@@ -180,9 +288,9 @@ class SweepSparesTheOperator(unittest.TestCase):
         adir.mkdir(parents=True)
         (adir / "shim.json").write_text(json.dumps({"pid": os.getpid(), "ident": "not-this-process",
                                                     "child_pid": 1, "child_ident": "nope"}))
-        self.assertEqual(w.x._sweep_roots(adir), set())
+        self.assertEqual(w.x._sweep_roots(adir), {})
         (adir / "shim.json").write_text(json.dumps({"pid": os.getpid(), "ident": procinfo.start_ident(os.getpid())}))
-        self.assertEqual(w.x._sweep_roots(adir), {os.getpid()})
+        self.assertEqual(w.x._sweep_roots(adir), {os.getpid(): procinfo.start_ident(os.getpid())})
 
     def test_a_headless_straggler_is_swept(self):
         import subprocess

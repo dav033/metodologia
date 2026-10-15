@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import signal
 import subprocess
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from pathlib import Path
 
 from .errors import ExecutorError
@@ -93,12 +93,20 @@ def _stat_tail(pid: int) -> tuple[int, int] | None:
         return None
 
 
-def descends_from(pid: int, roots: Collection[int]) -> bool:
+def descends_from(pid: int, roots: Collection[int] | Mapping[int, str]) -> bool:
     """True when `pid` is one of `roots` or has one of them as an ancestor (bounded walk through the parent links)."""
+    root_ids = roots if isinstance(roots, Mapping) else {}
+    root_pids = root_ids.keys() if root_ids else roots
     current = int(pid)
     for _ in range(64):
-        if current in roots:
-            return True
+        if current in root_pids:
+            expected = root_ids.get(current)
+            if expected is None:
+                return True
+            try:
+                return start_ident(current) == expected
+            except IdentityUnknown:
+                return False
         tail = _stat_tail(current)
         if tail is None or tail[0] <= 1:
             return False
@@ -106,15 +114,57 @@ def descends_from(pid: int, roots: Collection[int]) -> bool:
     return False
 
 
-def kill_in_cwd(directory: str, sig: int = signal.SIGKILL, *, roots: Collection[int] = (),
-                spare_interactive: bool = False) -> int:
+def _signal_interactive(pid: int, directory: str, sig: int, roots: Collection[int] | Mapping[int, str],
+                        known_descendants: Mapping[int, str]) -> bool:
+    """Signal an eligible terminal process through a pidfd bound to the process that was inspected."""
+    pidfd_open = getattr(os, "pidfd_open", None)
+    pidfd_send_signal = getattr(signal, "pidfd_send_signal", None)
+    if not callable(pidfd_open) or not callable(pidfd_send_signal):
+        return False
+    try:
+        pidfd = pidfd_open(pid, 0)
+    except OSError:
+        return False
+    try:
+        try:
+            ident = start_ident(pid)
+        except OSError:
+            return False
+        if not ident:
+            return False
+        try:
+            cwd = os.readlink(Path("/proc") / str(pid) / "cwd")
+        except OSError:
+            return False
+        base = os.path.realpath(directory)
+        if not (cwd == base or cwd.startswith(base + os.sep)):
+            return False
+        tail = _stat_tail(pid)
+        if tail is None or tail[1] == 0:
+            return False
+        recorded_ident = known_descendants.get(pid)
+        recorded_descendant = bool(recorded_ident and ident == recorded_ident)
+        if not recorded_descendant and not descends_from(pid, roots):
+            return False
+        try:
+            pidfd_send_signal(pidfd, sig)
+        except OSError:
+            return False
+        return True
+    finally:
+        os.close(pidfd)
+
+
+def kill_in_cwd(directory: str, sig: int = signal.SIGKILL, *, roots: Collection[int] | Mapping[int, str] = (),
+                spare_interactive: bool = False, known_descendants: Mapping[int, str] | None = None) -> int:
     """Signal every process (but this one) whose working directory is inside `directory`: the stragglers an agent left
     behind, even ones that called setsid and escaped its process group. Linux /proc only; returns how many were signalled.
     A process that moved away from the worktree is out of reach (stated limit).
 
-    With `spare_interactive`, a process that has a controlling terminal and is NOT a descendant of one of `roots` (the
-    attempt's shim and agent) is left alone: it is an operator's shell or editor that happens to be in the worktree, not
-    something the agent started. An agent's own pty children are still swept while they remain its descendants."""
+    With `spare_interactive`, a process that has a controlling terminal and is NOT a live descendant of `roots` or a
+    matching PID/start identity in `known_descendants` is left alone. Eligible terminal processes are signalled through
+    a pidfd after rechecking their current identity and cwd; without pidfd support they are preserved. The identity
+    records cover agent descendants orphaned before settle; a recycled PID never matches its former process identity."""
     proc, base, hit = Path("/proc"), os.path.realpath(directory), 0
     if not proc.exists():
         return 0
@@ -127,8 +177,11 @@ def kill_in_cwd(directory: str, sig: int = signal.SIGKILL, *, roots: Collection[
             continue
         if cwd == base or cwd.startswith(base + os.sep):
             if spare_interactive:
-                tail = _stat_tail(int(entry.name))
-                if tail is not None and tail[1] != 0 and not descends_from(int(entry.name), roots):
+                pid = int(entry.name)
+                tail = _stat_tail(pid)
+                if tail is not None and tail[1] != 0:
+                    if _signal_interactive(pid, str(base), sig, roots, known_descendants or {}):
+                        hit += 1
                     continue
             try:
                 os.kill(int(entry.name), sig)

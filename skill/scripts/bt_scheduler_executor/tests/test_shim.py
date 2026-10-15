@@ -86,6 +86,32 @@ class ShimCase(unittest.TestCase):
         self.assertTrue(wait_for(lambda: json.loads((self.dir / "shim.json").read_text()).get("child_pid")))
         self.assertFalse((self.dir / "exit.json").exists())
 
+    def test_the_shim_persists_an_agent_terminal_descendant_after_the_agent_exits(self):
+        pid_file = self.cwd / "terminal.pid"
+        code = (
+            "import os, pty, signal, sys, time\n"
+            "pid, master = pty.fork()\n"
+            "if pid == 0:\n"
+            "    signal.signal(signal.SIGHUP, signal.SIG_IGN)\n"
+            "    os.execlp('sleep', 'sleep', '60')\n"
+            "open(sys.argv[1], 'w').write(str(pid))\n"
+            "time.sleep(0.6)\n"
+            "os.close(master)\n"
+        )
+        self.spec([sys.executable, "-c", code, str(pid_file)])
+        self.launch()
+        self.assertTrue(wait_for(lambda: pid_file.exists() and pid_file.read_text().strip().isdigit()))
+        pid = int(pid_file.read_text())
+        self.assertTrue(wait_for(lambda: (self.dir / "exit.json").exists(), 10))
+
+        record = json.loads((self.dir / "descendants.json").read_text())
+        identities = {item["pid"]: item["ident"] for item in record["processes"]}
+        self.assertIn(pid, identities)
+        self.assertEqual(identities[pid], procinfo.start_ident(pid))
+        self.assertEqual(procinfo.kill_in_cwd(str(self.cwd), spare_interactive=True,
+                                               known_descendants=identities), 1)
+        self.assertTrue(wait_for(lambda: not procinfo.alive(pid, identities[pid])))
+
     def test_the_exit_code_of_a_failing_agent_is_recorded(self):
         info = self.run_to_end(self.agent("crash"))
         self.assertEqual((info["reason"], info["returncode"]), ("exited", 3))

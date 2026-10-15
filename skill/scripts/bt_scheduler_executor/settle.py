@@ -99,17 +99,18 @@ class SettleMixin:
         self._settle_tried.pop(attempt_id, None)
 
     def _sweep(self, row: dict[str, Any], adir: Path) -> None:
-        """Stop what the agent left in its worktree; with `spare_interactive` an operator's shell or editor opened there
-        (a controlling terminal, not descended from a still-living shim or agent) is left alone."""
+        """Stop agent worktree stragglers while preserving unrelated operator terminals when configured."""
         procinfo.kill_in_cwd(row["workspace"]["path"], roots=self._sweep_roots(adir),
-                             spare_interactive=self.cfg.spare_interactive)
+                             spare_interactive=self.cfg.spare_interactive,
+                             known_descendants=artifacts.read_descendants(adir / "descendants.json"))
 
     @staticmethod
-    def _sweep_roots(adir: Path) -> set[int]:
-        """The recorded shim/agent pids that are still THE SAME processes: a recycled pid is never a root."""
+    def _sweep_roots(adir: Path) -> dict[int, str]:
+        """The recorded shim/agent processes that are still THE SAME processes: a recycled pid is never a root."""
         info = artifacts.read_shim(adir / "shim.json")
-        return {pid for pid, ident in ((info.get("pid"), info.get("ident")), (info.get("child_pid"), info.get("child_ident")))
-                if pid and procinfo.alive(pid, ident)}
+        return {pid: ident for pid, ident in ((info.get("pid"), info.get("ident")),
+                                             (info.get("child_pid"), info.get("child_ident")))
+                if pid and ident and procinfo.alive(pid, ident)}
 
     def _workspace_exclusive(self, row: dict[str, Any]) -> bool:
         """The cwd sweep is only safe when this attempt is the sole user of its worktree path (a shared directory would

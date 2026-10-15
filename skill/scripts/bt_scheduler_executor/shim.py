@@ -19,6 +19,10 @@ import threading
 import time
 from pathlib import Path
 
+DESCENDANT_LIMIT = 4096
+DESCENDANT_SCAN_PROCESS_LIMIT = 16384
+DESCENDANT_SCAN_SECONDS = 0.1
+
 
 def _atomic(path: Path, data: dict) -> None:
     tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
@@ -35,6 +39,90 @@ def _atomic(path: Path, data: dict) -> None:
             os.close(fd)
     except OSError:
         pass
+
+
+def _descendants(root_pid: int, root_ident: str) -> tuple[dict[int, str], bool]:
+    """Snapshot descendant PID/start identities from Linux /proc, bounded to one attempt's configured safety ceiling."""
+    proc = Path("/proc")
+    try:
+        boot_id = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+    except OSError:
+        boot_id = "noboot"
+    children: dict[int, list[int]] = {}
+    identities: dict[int, str] = {}
+    truncated = False
+    scanned = 0
+    try:
+        for entry in proc.iterdir():
+            if not entry.name.isdigit():
+                continue
+            scanned += 1
+            if scanned > DESCENDANT_SCAN_PROCESS_LIMIT:
+                truncated = True
+                break
+            try:
+                raw = (entry / "stat").read_text()
+                fields = raw[raw.rfind(")") + 2:].split()
+                if len(fields) < 20 or fields[0] in ("Z", "X"):
+                    continue
+                pid, parent, start_ticks = int(entry.name), int(fields[1]), fields[19]
+            except (OSError, ValueError, IndexError):
+                continue
+            children.setdefault(parent, []).append(pid)
+            identities[pid] = f"{boot_id}:{start_ticks}"
+    except OSError:
+        truncated = True
+
+    if identities.get(root_pid) != root_ident:
+        return {}, truncated
+
+    found: dict[int, str] = {}
+    queue = [root_pid]
+    while queue and len(found) < DESCENDANT_LIMIT:
+        for pid in children.get(queue.pop(), ()):
+            identity = identities.get(pid)
+            if identity is None or pid in found:
+                continue
+            found[pid] = identity
+            queue.append(pid)
+            if len(found) >= DESCENDANT_LIMIT:
+                break
+    if queue and len(found) >= DESCENDANT_LIMIT:
+        truncated = True
+    return found, truncated
+
+
+class DescendantRecorder:
+    """Persist newly observed descendants so an orphaned terminal process can still be identified at settle time."""
+
+    def __init__(self, directory: Path):
+        self.path = directory / "descendants.json"
+        self.processes: dict[int, str] = {}
+        self.truncated = False
+        self.dirty = False
+
+    def capture(self, root_pid: int, root_ident: str) -> None:
+        found, truncated = _descendants(root_pid, root_ident)
+        if truncated and not self.truncated:
+            self.truncated = True
+            self.dirty = True
+        for pid, ident in found.items():
+            if self.processes.get(pid) == ident:
+                continue
+            if pid not in self.processes and len(self.processes) >= DESCENDANT_LIMIT:
+                if not self.truncated:
+                    self.truncated = True
+                    self.dirty = True
+                continue
+            self.processes[pid] = ident
+            self.dirty = True
+        if self.dirty:
+            try:
+                _atomic(self.path, {"version": 1, "truncated": self.truncated, "processes": [
+                    {"pid": pid, "ident": ident} for pid, ident in sorted(self.processes.items())]})
+                self.dirty = False
+            except OSError:
+                pass
 
 
 def _ident(pid: int) -> str:
@@ -137,6 +225,7 @@ def main(argv: list[str]) -> int:
         if child is not None:
             info.update(child_pid=child.pid, child_pgid=child.pid, child_ident=_ident(child.pid))
             _atomic(directory / "shim.json", info)
+            descendants = DescendantRecorder(directory)
 
             def pump() -> None:
                 while True:
@@ -161,7 +250,14 @@ def main(argv: list[str]) -> int:
                 threading.Thread(target=feed_stdin, daemon=True).start()
             deadline = time.monotonic() + float(spec["timeout_seconds"])
             stopping_since = None
-            while child.poll() is None:
+            next_descendant_scan = 0.0
+            while True:
+                now = time.monotonic()
+                if now >= next_descendant_scan:
+                    descendants.capture(child.pid, info["child_ident"])
+                    next_descendant_scan = now + DESCENDANT_SCAN_SECONDS
+                if child.poll() is not None:
+                    break
                 if stopping_since is None and (state["cancel"] or time.monotonic() > deadline):
                     reason = "cancelled" if state["cancel"] else "timeout"
                     stopping_since = time.monotonic()

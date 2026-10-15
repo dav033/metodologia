@@ -95,7 +95,7 @@ class SpawnMixin:
     def _spawn(self, attempt_id: str, adir: Path, launch, ws: Workspace, timeout: float) -> dict[str, Any]:
         """Start the shim detached and wait for its identity record. Leftovers of a crashed earlier spawn are removed
         first: this point is only reached when recovery found no live process for the attempt."""
-        for leftover in ("exit.json", "shim.json", "output.log", "output.tail", "spec.json", "abort"):
+        for leftover in ("exit.json", "shim.json", "descendants.json", "output.log", "output.tail", "spec.json", "abort"):
             try:
                 (adir / leftover).unlink()
             except FileNotFoundError:

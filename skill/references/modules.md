@@ -71,6 +71,10 @@ stop an orphan by process identity) and never decides: not who runs (M2), not st
 (M4), not whether to retry (M5), not whether work is accepted (the independent verifier). `execution_finished` means "the
 agent stopped"; no private reasoning is claimed to transfer between providers.
 
+The detached shim also samples `/proc` while the agent runs and stores bounded PID/start identities for observed descendants.
+At settle, the worktree sweep can stop the agent's orphaned terminal processes without treating an operator's terminal as agent work.
+Sampling is best effort and identity-checked; see the executor README for caps and limits.
+
 - Ports (own `typing.Protocol`s, own frozen types; no sibling class crosses the boundary): `RouteResolver`, `BriefSource`,
   `AgentDriver`, `WorkspaceManager`, `EventSink`. README: ports, life cycle, artefacts, cause classes, events, limits.
 - Adapter: `skill/scripts/bt_scheduler_executor_adapter.py` (only importer). It validates M2's reference against the one

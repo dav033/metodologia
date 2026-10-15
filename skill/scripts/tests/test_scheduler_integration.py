@@ -78,7 +78,7 @@ class Boundary(unittest.TestCase):
         for path in sorted(REPO.rglob("*.py")):
             rel = path.relative_to(REPO)
             if ".git" in rel.parts or "bt_scheduler_core" in rel.parts or "node_modules" in rel.parts \
-                    or rel.parts[0] == "bitacora" \
+                    or ".venv" in rel.parts or rel.parts[0] == "bitacora" \
                     or path.name in self.ALLOWED_USERS:
                 continue
             try:
