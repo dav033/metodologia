@@ -1,0 +1,277 @@
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+import bt_agents
+import bt_agy
+import bt_events
+import bt_plan_adapter as plan_adapter
+import bt_profiles
+import bt_scheduler_adapter as m1_adapter
+import bt_scheduler_core as core
+import bt_scheduler_decision_adapter as m2_adapter
+import bt_subscriptions
+from bt_scheduler_decision import rank_candidates
+from bt_scheduler_decision.tests.support import (
+    PLAN_HASH,
+    candidate,
+    synthetic_quality_artifacts,
+)
+from bt_scheduler_decision.tests.support import request as m2_request
+
+
+class MethodologyDecisionSourceTests(unittest.TestCase):
+    def test_tier_floor_uses_planner_risk_scope_duration_and_router_ladder(self):
+        self.assertEqual(m2_adapter._tier_for({"risk": "low", "scope": "small_change",
+                                               "estimated_minutes": 30}, "implement"), 0)
+        self.assertEqual(m2_adapter._tier_for({"risk": "medium", "scope": "small_change",
+                                               "estimated_minutes": 30}, "implement"), 1)
+        self.assertEqual(m2_adapter._tier_for({"risk": "high", "scope": "large_change",
+                                               "estimated_minutes": 30}, "implement"), 2)
+        self.assertEqual(m2_adapter._tier_for({"risk": "low", "scope": "full_system",
+                                               "estimated_minutes": 30}, "implement"), 2)
+        self.assertEqual(m2_adapter._tier_for({"risk": "low", "scope": "small_change",
+                                               "estimated_minutes": 120}, "implement"), 1)
+
+    def test_candidate_snapshot_uses_real_router_order_and_fails_closed_on_unknown_quota(self):
+        now = 100.0
+        profiles = {
+            "claude-a": {"provider": "claude", "bin": "claude", "env": {}, "work_only": False},
+            "claude-b": {"provider": "claude", "bin": "claude", "env": {"CLAUDE_CONFIG_DIR": "/fixture/b"},
+                         "work_only": False},
+            "codex-a": {"provider": "codex", "bin": "codex", "env": {}, "work_only": False},
+            "agy-a": {"provider": "antigravity", "bin": "agy", "env": {}, "work_only": False},
+        }
+        keys = {profile: f"{profile}:account" for profile in profiles}
+        usage = {
+            keys["claude-a"]: {"status": "ok", "observed_at": 95.0},
+            keys["claude-b"]: {"status": "network_unavailable", "observed_at": 95.0},
+            keys["codex-a"]: {"status": "network_unavailable", "observed_at": 95.0},
+        }
+        telemetry = [
+            {"agent": "claude", "model": "haiku", "profile": "claude-a", "effort": "", "kind": "implement",
+             "origin": "real", "outcome": "verified", "result": "done", "seconds": 10,
+             "usage": {"total_tokens": 100}},
+            {"agent": "claude", "model": "haiku", "profile": "claude-a", "effort": "", "kind": "implement",
+             "origin": "real", "outcome": "claimed_unverified", "result": "done", "seconds": 20,
+             "usage": {"total_tokens": 200}},
+            {"agent": "claude", "model": "haiku", "profile": "claude-a", "effort": "", "kind": "implement",
+             "origin": "synthetic", "outcome": "verified", "result": "done", "seconds": 1,
+             "usage": {"total_tokens": 1}},
+        ]
+
+        def quota(row, model, instant):
+            if row is usage[keys["claude-b"]]:
+                return None, now + 300
+            if row.get("status") != "ok":
+                return None, None
+            return (35.0, None) if row is usage[keys["claude-a"]] else (None, None)
+
+        routes = [{"profile": profile} for profile in profiles]
+        with patch.object(bt_agents, "pool_for", return_value=list(profiles)), \
+                patch.object(bt_agents, "account_key", side_effect=lambda profile, _provider=None: keys[profile]), \
+                patch.object(bt_agents, "candidates", return_value=(routes, None)), \
+                patch.object(bt_agents, "cooling_until", return_value=None), \
+                patch.object(bt_profiles, "load", return_value=profiles), \
+                patch.object(bt_subscriptions, "load", return_value=usage), \
+                patch.object(bt_subscriptions, "capacity", side_effect=quota), \
+                patch.object(bt_agy, "load_cache", return_value={"status": "ok", "observed_at": 95.0}), \
+                patch.object(bt_agy, "capacity", return_value=(40.0, None)), \
+                patch.object(bt_events, "read_all", return_value=telemetry), \
+                patch.object(m2_adapter.shutil, "which", return_value="/usr/bin/provider"):
+            rows = m2_adapter._candidate_rows("fixture", "implement", {"risk": "low", "scope": "small_change"}, now)
+
+        by_profile = {row.profile: row for row in rows}
+        self.assertEqual(len(rows), 4)
+        self.assertEqual(by_profile["claude-a"].baseline_rank, 0)
+        self.assertEqual(by_profile["claude-a"].quota_status, "available")
+        self.assertEqual(by_profile["claude-a"].history.verified_successes, 1)
+        self.assertEqual(by_profile["claude-a"].history.claimed_unverified, 1)
+        self.assertEqual(by_profile["claude-a"].history.duration_samples, 2)
+        self.assertEqual(by_profile["claude-a"].history.median_duration_seconds, 15)
+        self.assertEqual(by_profile["claude-a"].history.median_total_tokens, 150)
+        self.assertEqual(by_profile["codex-a"].quota_status, "unknown")
+        self.assertEqual(by_profile["codex-a"].auth_status, "unknown")
+        self.assertEqual(by_profile["claude-b"].quota_status, "exhausted")
+        self.assertEqual(by_profile["agy-a"].quota_status, "available")
+        ranked = rank_candidates(m2_request(candidates=rows, requested_at=now))
+        self.assertEqual({row.profile for row in ranked.eligible}, {"claude-a", "agy-a"})
+        self.assertTrue(any("capacity_exhausted" in item.reason_codes for item in ranked.exclusions))
+        self.assertNotEqual(by_profile["claude-a"].account_ref, keys["claude-a"])
+
+    def test_unknown_and_stale_quota_are_not_eligible(self):
+        now = 100.0
+        with patch.object(bt_subscriptions, "capacity", return_value=(None, None)):
+            unknown = m2_adapter._usage_facts("codex", "codex:one", "gpt-6-luna",
+                                              {"codex:one": {"status": "not_sampled"}}, now)
+        self.assertEqual(unknown[0], "unknown")
+        self.assertEqual(unknown[1], "unknown")
+        self.assertIsNone(unknown[4])
+        with patch.object(bt_subscriptions, "capacity", return_value=(None, None)):
+            stale = m2_adapter._usage_facts("claude", "claude:one", "sonnet",
+                                            {"claude:one": {"status": "ok", "observed_at": -8000}}, now)
+        self.assertEqual(stale[0], "stale")
+        self.assertEqual(stale[1], "unknown")
+        with patch.object(bt_subscriptions, "capacity", return_value=(None, None)):
+            invalid = m2_adapter._usage_facts("codex", "codex:one", "gpt-6-luna",
+                                              {"codex:one": {"status": "invalid_credentials", "observed_at": now}}, now)
+        self.assertEqual(invalid[0], "unknown")
+        self.assertEqual(invalid[1], "invalid")
+
+
+class M1DecisionPortTests(unittest.TestCase):
+    def test_assignment_persists_decision_and_returns_only_resolvable_selected_reference(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            claude = candidate(provider="claude", model="sonnet", profile="p1", rank=0)
+            codex = candidate(provider="codex", model="sol", profile="p2", rank=1)
+            view = core.TaskView(
+                "T1", "M1", "metodologia", ("scheduler-core",), ("skill/scripts/bt_scheduler_*/**",), 0,
+                {"title": "Add a verified route adapter", "objective": "Keep M1 as the reservation authority.",
+                 "complexity": "medium", "scope": "large_change", "estimated_minutes": 60, "risk": "medium",
+                 "coupling": "high", "confidence": "high", "classification_evidence": {
+                     name: {"justification": f"Verified {name} from the approved plan.",
+                            "evidence": [f"spec:REQ-013#{name}"]}
+                     for name in ("complexity", "scope", "duration", "risk", "coupling", "confidence")}},
+                dependencies=("T0",), acceptance_criteria=("M1 validates and reserves the route.",),
+                verification=({"type": "command", "value": "python -m unittest"},),
+            )
+            request = core.AssignmentRequest("REQ-013", 1, (view,), 1, 100.0, PLAN_HASH)
+            port = m1_adapter.DecisionAssignmentPort("metodologia", root / "m2.sqlite3", laya_root=root)
+            try:
+                with patch.object(m1_adapter.decision_sources, "_candidate_rows", return_value=(claude, codex)):
+                    first = port.propose(request)
+                    replay = port.propose(request)
+                self.assertEqual(len(first), 1)
+                self.assertEqual(first, replay)
+                self.assertTrue(first[0].executor.startswith("route:m2:v1:"))
+                selected = m1_adapter.resolve_m2_route(root / "m2.sqlite3", first[0].executor)
+                self.assertIsNotNone(selected)
+                self.assertIn((selected["provider"], selected["model"], selected["profile"], selected["effort"]),
+                              {(claude.provider, claude.model, claude.profile, claude.effort or ""),
+                               (codex.provider, codex.model, codex.profile, codex.effort or "")})
+            finally:
+                port.close()
+
+            restarted = m1_adapter.DecisionAssignmentPort("metodologia", root / "m2.sqlite3", laya_root=root)
+            try:
+                with patch.object(m1_adapter.decision_sources, "_candidate_rows", return_value=(claude, codex)):
+                    after_restart = restarted.propose(request)
+                self.assertEqual(after_restart, first)
+            finally:
+                restarted.close()
+
+    def test_port_obeys_ready_limit_and_free_slots(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            port = m1_adapter.DecisionAssignmentPort("metodologia", root / "m2.sqlite3", laya_root=root)
+            try:
+                with patch.object(m1_adapter.decision_sources, "_candidate_rows", return_value=(candidate(),)) as build:
+                    self.assertEqual(port.propose(core.AssignmentRequest("REQ-013", 1, (), 0, 100.0, PLAN_HASH)), ())
+                    self.assertEqual(build.call_count, 0)
+            finally:
+                port.close()
+
+    def test_m1_disables_laya_when_quality_artifacts_are_malformed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            artifacts = synthetic_quality_artifacts(root, "revision-a")
+            calibration = artifacts[0]
+            report = json.loads(calibration.read_text(encoding="utf-8"))
+            report["checkpoint_results"][0]["confidence_gate"] = None
+            calibration.write_text(json.dumps(report), encoding="utf-8")
+            port = m1_adapter.DecisionAssignmentPort(
+                "metodologia", root / "m2.sqlite3", laya_root=root, quality_artifacts=artifacts)
+            try:
+                self.assertFalse(port.quality_gate.enabled)
+                self.assertIsNone(port.chooser)
+            finally:
+                port.close()
+
+    def test_port_only_decides_ready_tasks_within_the_m1_free_slot_limit(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            port = m1_adapter.DecisionAssignmentPort("metodologia", root / "m2.sqlite3", laya_root=root)
+            first_view = core.TaskView("T1", "M1", "repo", (), (), 0, {"title": "First task"})
+            second_view = core.TaskView("T2", "M1", "repo", (), (), 0, {"title": "Second task"})
+            request_value = core.AssignmentRequest("REQ-013", 1, (first_view, second_view), 1, 100.0, PLAN_HASH)
+            try:
+                with patch.object(m1_adapter.decision_sources, "_candidate_rows",
+                                  side_effect=((), (candidate(),))) as build:
+                    assignments = port.propose(request_value)
+                self.assertEqual([item.task_id for item in assignments], ["T2"])
+                self.assertEqual(build.call_count, 2)
+            finally:
+                port.close()
+
+    def test_m1_reserves_the_m2_recommendation_through_its_assignment_contract(self):
+        evidence = {name: {"justification": f"Inspected the quota-aware route task evidence for {name}.",
+                           "evidence": [f"command:python -m unittest -> inspected {name} evidence"]}
+                    for name in ("complexity", "scope", "duration", "risk", "coupling", "confidence")}
+        plan = {
+            "schema_version": "1.1.0", "plan_id": "REQ-013", "revision": 1, "spec_ref": "SPEC.md",
+            "milestones": [{"id": "M1", "title": "Decision Engine",
+                            "acceptance_criteria": ["The route is recommended and reserved by M1."]}],
+            "tasks": [{
+                "id": "T1", "milestone_id": "M1", "title": "Recommend a quota-aware route",
+                "objective": "M2 recommends a route and M1 reserves it.", "repository": "metodologia", "after": [],
+                "shared_resources": ["scheduler-decision"], "expected_paths": ["skill/scripts/bt_scheduler_*/**"],
+                "acceptance_criteria": ["M1 authorizes every route."], "estimate_rationale": "The adapter path is known.",
+                "verification": [{"type": "command", "value": "python -m unittest",
+                                   "purpose": "verify the route contract"}],
+                "complexity": "medium", "scope": "small_change", "estimated_minutes": 30,
+                "risk": "medium", "coupling": "high", "confidence": "high",
+                "classification_evidence": evidence,
+            }],
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            requirement = root / "REQ-013-m2-e2e"
+            requirement.mkdir()
+            (requirement / "SPEC.md").write_text("# Decision Engine test specification\n", encoding="utf-8")
+            (requirement / "PLAN.md").write_text(
+                "---\nstatus: approved\n---\n# Plan\n\n### M1 — Decision Engine\n"
+                "- [ ] T1 — Recommend a quota-aware route · repo: metodologia · "
+                "verify: `python -m unittest` · files: skill/scripts/bt_scheduler_*/** · "
+                "resources: scheduler-decision\n", encoding="utf-8")
+            plan_path = requirement / "PLAN.json"
+            plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+            plan_messages = []
+            self.assertEqual(plan_adapter.run_cli("check", requirement, as_json=True, emit=plan_messages.append), 0,
+                             plan_messages)
+            self.assertEqual(plan_adapter.run_cli("freeze", requirement, emit=plan_messages.append), 0,
+                             plan_messages)
+            approved_plan = m1_adapter.approved_plan(requirement)
+            self.assertEqual((approved_plan.plan_id, approved_plan.revision), ("REQ-013", 1))
+
+            port = m1_adapter.DecisionAssignmentPort("metodologia", root / "m2.sqlite3", laya_root=root)
+            try:
+                with patch.object(m1_adapter.decision_sources, "_candidate_rows",
+                                  return_value=(candidate(rank=0), candidate(provider="codex", model="sol",
+                                                                            profile="work-codex", rank=1))):
+                    scheduler = core.SchedulerCore(
+                        approved_plan, core.InMemoryRepository(),
+                        ports=core.Ports(assignment=port, execution=core.FakeExecutor(),
+                                         verification=core.FakeVerifier()),
+                        config=core.Config(max_parallel_tasks=1), clock=lambda: 100.0,
+                    )
+                    scheduler.start()
+                    scheduler.step()
+                task = scheduler.snapshot().tasks["T1"]
+                self.assertEqual(task["state"], "active")
+                self.assertTrue(task["executor"].startswith("route:m2:v1:"))
+                self.assertEqual(scheduler.read(lambda ctx: len(ctx.state.attempts)), 1)
+                selected_route = m1_adapter.resolve_m2_route(root / "m2.sqlite3", task["executor"])
+                self.assertIsNotNone(selected_route)
+                self.assertIn((selected_route["provider"], selected_route["model"], selected_route["profile"]),
+                              {("claude", "sonnet", "work"), ("codex", "sol", "work-codex")})
+            finally:
+                port.close()
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,306 @@
+{
+  "contract_version": "1.0.0",
+  "module": "bt_scheduler_decision",
+  "decision_request": {
+    "required": [
+      "plan_id",
+      "revision",
+      "plan_sha256",
+      "free_slots",
+      "requested_at",
+      "task",
+      "candidates",
+      "policy_version",
+      "checkpoint_revision"
+    ],
+    "nullable": ["checkpoint_revision"],
+    "plan_sha256_pattern": "^[0-9a-f]{64}$",
+    "revision_minimum": 1,
+    "free_slots_minimum": 1,
+    "max_task_brief_characters": 2048,
+    "max_serialized_request_bytes": 262144,
+    "max_task_nested_json_nodes": 8192,
+    "max_task_nested_json_bytes": 262144,
+    "max_task_json_key_characters": 128,
+    "task_required": [
+      "task_id",
+      "brief",
+      "classifications",
+      "classification_evidence",
+      "dependencies",
+      "acceptance_criteria",
+      "verification",
+      "shared_resources",
+      "expected_paths"
+    ],
+    "validated_task_input_digest_fields": [
+      "task_id",
+      "brief_sha256",
+      "classifications",
+      "classification_warnings",
+      "classification_evidence_sha256",
+      "dependencies",
+      "acceptance_criteria_sha256",
+      "verification_sha256",
+      "shared_resources",
+      "expected_paths"
+    ],
+    "classification_evidence_shape": {
+      "dimensions": ["complexity", "scope", "duration", "risk", "coupling", "confidence"],
+      "entry_required": ["justification", "evidence"],
+      "evidence_reference_kinds": ["file", "command", "precedent", "spec", "task", "assumption"],
+      "stored_summary_fields": ["valid", "reference_kinds", "reference_count"],
+      "never_store": ["justification", "raw_reference_values"]
+    },
+    "classification_dimensions": {
+      "complexity": ["low", "medium", "high", "extreme"],
+      "scope": ["isolated_fix", "small_change", "large_change", "full_feature", "full_system"],
+      "estimated_minutes": "integer|null",
+      "risk": ["low", "medium", "high"],
+      "coupling": ["low", "medium", "high"],
+      "confidence": ["low", "medium", "high"]
+    },
+    "candidate_required": [
+      "route_id",
+      "provider",
+      "model",
+      "profile",
+      "account_ref",
+      "effort",
+      "source_status",
+      "source_reason_codes",
+      "profile_authorized",
+      "auth_status",
+      "runtime_status",
+      "quota_status",
+      "quota_observed_at",
+      "quota_valid_until",
+      "quota_used_percent",
+      "baseline_rank",
+      "history"
+    ],
+    "candidate_states": [
+      "available",
+      "unknown",
+      "quota_exhausted",
+      "temporarily_unavailable",
+      "auth_invalid",
+      "provider_unavailable",
+      "project_denied",
+      "capacity_unknown",
+      "capacity_exhausted"
+    ],
+    "source_reason_codes_values": ["capacity_unknown", "capacity_exhausted", "cooldown_active"],
+    "quota_states": ["available", "unknown", "stale", "exhausted"],
+    "available_quota_invariants": [
+      "quota_observed_at is finite and <= requested_at",
+      "quota_valid_until is finite and > requested_at",
+      "quota_used_percent is finite and in [0,100)",
+      "source_status is available"
+    ],
+    "auth_states": ["valid", "invalid", "unknown"],
+    "runtime_states": ["available", "unavailable", "unknown"],
+    "history_required": [
+      "source_quality",
+      "verified_successes",
+      "verified_failures",
+      "claimed_unverified",
+      "other_failures",
+      "duration_samples",
+      "median_duration_seconds",
+      "token_samples",
+      "median_total_tokens"
+    ],
+    "history_source_quality": ["observed", "sparse", "estimated", "unknown"],
+    "max_history_observations_per_field": 1000000000,
+    "max_median_total_tokens": 1000000000000,
+    "max_baseline_rank": 255
+  },
+  "selection_policy": {
+    "hard_filters": [
+      "profile_authorized is true",
+      "source_status is available",
+      "auth_status is valid",
+      "runtime_status is available",
+      "quota_status is available with a fresh finite observation"
+    ],
+    "capacity_semantics": "source_status=available requires the source router to establish route capacity; capacity_unknown and capacity_exhausted are blocked states; reserved source_reason_codes capacity_unknown, capacity_exhausted and cooldown_active block even when source_status contradicts them; M1 free_slots remains a separate global bound",
+    "reserved_source_reason_codes": ["capacity_unknown", "capacity_exhausted", "cooldown_active"],
+    "reference_order": ["baseline_rank ascending, null last", "route_id ascending"],
+    "provider_inventory_source": "existing bt_agents.candidates; no second provider catalog",
+    "history_scoring": {
+      "verified_outcomes_only": true,
+      "prior": "Beta(2,2)",
+      "minimum_verified_samples": 5,
+      "maximum_observation_counter": 1000000000,
+      "maximum_median_total_tokens": 1000000000000,
+      "shrunk_feature": "(verified_successes + 2) / (verified_successes + verified_failures + 4)",
+      "no_verified_outcomes": null,
+      "does_not_override_baseline_rank": true,
+      "is_future_success_probability": false,
+      "duration_and_tokens_keep_separate_coverage": true
+    }
+  },
+  "route_identity": {
+    "algorithm": "sha256",
+    "canonical_fields": ["provider", "model", "profile", "effort"],
+    "serialization": "utf-8 canonical JSON; NFC strings; sorted keys; compact separators",
+    "account_ref": "acct:<sha256 of existing bt_agents.account_key>; raw account key and profile environment are never persisted"
+  },
+  "idempotency": {
+    "algorithm": "sha256",
+    "canonical_fields": [
+      "contract_version",
+      "plan_id",
+      "revision",
+      "plan_sha256",
+      "validated_task_input_digest",
+      "candidate_quota_telemetry_snapshot",
+      "policy_version",
+      "checkpoint_revision"
+    ],
+    "request_time_included": false,
+    "validated_task_input_digest_fields": "decision_request.task.validated_task_input_digest_fields",
+    "exact_replay": "return original decision and timestamp",
+    "changed_snapshot": "persist a new decision linked by plan_id and task_id"
+  },
+  "decision_ledger": {
+    "write_input": "original DecisionRequest; revalidated on persistence; ValidatedRequest rejected because redacted evidence normalization is not reversible",
+    "storage": "dedicated SQLite file; application_id M2DE; schema version 1; WAL; synchronous FULL",
+    "transaction": "BEGIN IMMEDIATE; unique idempotency key; exact replay returns original record",
+    "previous_link_order": "latest inserted decision for the same plan_id and task_id",
+    "maximum_records": 100000,
+    "maximum_record_bytes": 131072,
+    "file_mode_octal": "0600",
+    "at_capacity": "reject new decisions; never prune history",
+    "rationale": "semicolon-joined values from decision_record.factor_code_values; free text forbidden",
+    "executor_resolution": "only persisted selected route; read-only lookup"
+  },
+  "executor_reference": {
+    "format": "m2:v1:<decision_sha256>:<route_sha256>",
+    "resolve_only_selected_route": true
+  },
+  "decision_record": {
+    "required": [
+      "schema_version",
+      "decision_id",
+      "idempotency_key",
+      "previous_decision_id",
+      "plan_id",
+      "revision",
+      "plan_sha256",
+      "task_id",
+      "created_at",
+      "status",
+      "selected",
+      "alternatives",
+      "exclusions",
+      "baseline_route_id",
+      "method",
+      "fallback_reason",
+      "policy_version",
+      "checkpoint_revision",
+      "candidate_snapshot_sha256",
+      "quota_snapshot_sha256",
+      "confidence",
+      "factor_codes"
+    ],
+    "status_values": ["recommended", "no_eligible_candidate"],
+    "method_values": ["deterministic", "laya", "deterministic_fallback"],
+    "factor_code_values": [
+      "baseline_route", "no_eligible_candidate", "task_ambiguous", "task_unambiguous", "classification_incomplete",
+      "risk_floor_applied", "effort_floor_applied", "quota_headroom", "verified_history", "history_sparse",
+      "history_no_verified_samples", "duration_measured", "tokens_measured", "laya_choice_accepted",
+      "laya_score_below_cutoff", "laya_invalid_choice", "laya_fallback", "candidate_set_small",
+      "candidate_set_large", "resource_pressure", "estimated_duration"
+    ],
+    "fallback_reason_values": [
+      "laya_unavailable", "laya_timeout", "laya_runtime_error", "laya_invalid_output", "laya_low_confidence",
+      "laya_circuit_open", "laya_quality_gate_disabled", "task_not_ambiguous", "insufficient_candidates",
+      "candidate_limit_exceeded"
+    ],
+    "route_fields": ["route_id", "provider", "model", "profile", "account_ref", "effort"],
+    "exclusion_fields": ["route_id", "provider", "model", "profile", "account_ref", "effort", "reason_codes"],
+    "confidence_fields": ["value", "source", "semantics", "calibration_version", "accepted_cutoff"],
+    "persist_free_text_rationale": false
+  },
+  "m1_batch": {
+    "task_order": "AssignmentRequest.ready order",
+    "max_proposals": "AssignmentRequest.free_slots",
+    "per_task_proposals": 1,
+    "continue_after_task_without_eligible_candidate": true,
+    "m1_remains_final_authority": true
+  },
+  "confidence": {
+    "sources": ["laya_answer_confidence", "deterministic_policy_margin", "none"],
+    "semantics_values": ["laya_calibrated_choice_score", "deterministic_policy_margin", "none"],
+    "source_semantics": {
+      "laya_answer_confidence": "laya_calibrated_choice_score",
+      "deterministic_policy_margin": "deterministic_policy_margin",
+      "none": "none"
+    },
+    "laya_invariants": [
+      "value and accepted_cutoff are finite in [0,1]",
+      "value >= accepted_cutoff",
+      "calibration_version is required"
+    ],
+    "deterministic_invariants": [
+      "value is null or finite in [0,1]",
+      "calibration_version and accepted_cutoff are null"
+    ],
+    "semantics": "choice acceptance calibration only; never real-world task-success probability",
+    "persist_arbitrary_model_explanation": false
+  },
+  "privacy": {
+    "persist_task_brief": false,
+    "persist_evidence_justifications": false,
+    "persist_acceptance_or_verification_text": false,
+    "persist_credentials_or_profile_environment": false,
+    "persist_raw_model_output": false,
+    "persist_task_brief_sha256": true
+  },
+  "laya_quality_gate": {
+    "calibration_minimum_cases": 100,
+    "calibration_minimum_retained": 50,
+    "calibration_rule": "lowest answer_confidence cutoff with one-sided 95% Wilson accuracy lower bound >= deterministic calibration accuracy",
+    "wilson_z": 1.6448536269514722,
+    "wilson_minimum_retained": 50,
+    "confidence_cutoff_comparison": "answer_confidence >= cutoff",
+    "held_out_minimum_cases": 100,
+    "held_out_minimum_per_family": 20,
+    "family_minimums": {
+      "quota_capacity": 20,
+      "risk_effort": 20,
+      "history": 20,
+      "resource_dependency": 20,
+      "ambiguous_tradeoff": 20
+    },
+    "held_out_families": [
+      "quota_capacity",
+      "risk_effort",
+      "history",
+      "resource_dependency",
+      "ambiguous_tradeoff"
+    ],
+    "paired_bootstrap_resamples": 10000,
+    "bootstrap_seed": 20261014,
+    "bootstrap_method": "two-sided 95% paired percentile interval; case rows sorted by case_id; sample n paired outcomes with replacement per replicate using Python random.Random(seed).randrange(n); endpoints use nearest-rank ceil(q*B)-1; a zero lower bound does not pass",
+    "fixture_protocol": {
+      "manifest_required_fields": ["dataset_version", "dataset_sha256", "frozen_at", "frozen_before_first_laya_call", "label_protocol", "labeler_independence", "calibration_case_ids", "held_out_case_ids"],
+      "labels_must_be_frozen_before_laya": true,
+      "split_case_ids_must_be_disjoint": true,
+      "duplicate_canonical_task_digests_across_splits": 0,
+      "label_protocol_minimum": "documented rubric and independent adjudication before model output is inspected"
+    },
+    "frozen_dataset": {
+      "dataset_version": "scheduler-m2-synthetic-choice-v1",
+      "dataset_sha256": "b5cbcc43d70b7fbd2a191400cad411ba5e8992d1b49b30d10d406575c2228b2d",
+      "manifest_sha256": "f1644af9e0a53ff392e7520cef08af55934fede6f80510e2349d47ed3f6ee5be"
+    },
+    "approved_evidence_sha256": [],
+    "evidence_authorization": "A benchmark may authorize Laya only after its exact five-artifact digest is independently reviewed and added here; synthetic or locally modified metrics never self-authorize",
+    "required_paired_accuracy_improvement_lower_bound": "positive",
+    "maximum_hard_filter_violations": 0,
+    "failure_policy": "keep deterministic recommendations active"
+  }
+}
