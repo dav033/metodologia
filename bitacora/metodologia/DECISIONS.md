@@ -203,4 +203,4 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Decision:** `bt_scheduler_executor` (stdlib only, own types, five ports) reached only through `bt_scheduler_executor_adapter.py`; each agent runs under a detached double-forked shim so exit status/output survive an executor restart; work is preserved at every end as a snapshot commit under `refs/m3/*`; Gemini = Antigravity `agy`; M3 rejects any route reference it cannot resolve (never defaults a model).
 - **Alternatives:** agents as direct children (lose exit status on restart); reuse `bt_worktree.allocate` (random suffix, not idempotent per attempt); standalone `gemini` CLI (no profile/quota support).
 - **Consequences:** + exactly-once start and recoverable work under crash tests; − POSIX only; events reach M1 through the adapter until M4 exists.
-- **Evidence:** `requirements/REQ-014-*/` SPEC, PLAN, REPORT (pending).
+- **Evidence:** `requirements/REQ-014-*/REPORT.md` (3 independent reviews, ~45 findings fixed; 243 module + 132 integration tests; real CLI run).
