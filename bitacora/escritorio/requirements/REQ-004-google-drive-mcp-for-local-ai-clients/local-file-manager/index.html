@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Información sobre el gestor local de archivos que conecta clientes MCP con Google Drive.">
+    <title>Gestor local de archivos</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #1e1e2e; color: #cdd6f4; }
+      body { margin: 0; line-height: 1.65; }
+      main { box-sizing: border-box; width: min(760px, 100%); margin: 0 auto; padding: 4rem 1.5rem; }
+      header, section, footer { margin-bottom: 2rem; }
+      h1, h2 { color: #b4befe; line-height: 1.2; }
+      h1 { font-size: clamp(2rem, 6vw, 3rem); color: #cba6f7; }
+      a { color: #b4befe; }
+      .card { padding: 1.25rem; border: 1px solid #45475a; border-radius: 1rem; background: #181825; }
+      .eyebrow { color: #a6adc8; letter-spacing: .08em; text-transform: uppercase; font-size: .8rem; }
+      .notice { border-left: 3px solid #cba6f7; padding-left: 1rem; }
+      footer { color: #a6adc8; font-size: .9rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Integración personal · Protocolo MCP</p>
+        <h1>Gestor local de archivos</h1>
+        <p>Conecta clientes MCP instalados en el computador con la cuenta personal de Google Drive de su propietario para buscar, leer, crear, editar, compartir y organizar archivos.</p>
+      </header>
+
+      <section class="card" aria-labelledby="how-it-works">
+        <h2 id="how-it-works">Cómo funciona</h2>
+        <p>El servidor MCP funciona localmente y escucha solo en <code>127.0.0.1</code>. Codex, Gemini CLI, Claude Code y otros clientes locales pueden conectarse a ese servicio. Esta página pública es informativa: no aloja el servidor MCP ni recibe archivos de Drive.</p>
+        <p>La autorización de Google permite leer y modificar los archivos de Drive. La herramienta de eliminación mueve archivos a la papelera recuperable; no ofrece borrado permanente.</p>
+      </section>
+
+      <section class="notice">
+        <h2>Datos y privacidad</h2>
+        <p>Los datos se usan para ejecutar las operaciones que solicita el propietario. Los resultados se devuelven al cliente MCP local elegido por él; ese cliente puede procesarlos según las condiciones de su proveedor.</p>
+        <p><a href="privacy.html">Leer la política de privacidad</a>.</p>
+      </section>
+
+      <section lang="en" class="card" aria-labelledby="english-summary">
+        <p class="eyebrow">English summary</p>
+        <h2 id="english-summary">Local File Manager</h2>
+        <p>A single-user local MCP server that lets installed AI clients work with the owner's Google Drive. It can search, read, create, edit, share, and move files to recoverable trash. The public website only provides information; it does not host the MCP server or receive Drive files.</p>
+        <p><a href="privacy.html#english">Read the English privacy summary</a>.</p>
+      </section>
+
+      <footer>
+        <p>Proyecto personal independiente, no afiliado a Google. Contacto: <a href="mailto:david.theran03@gmail.com">david.theran03@gmail.com</a>.</p>
+      </footer>
+    </main>
+  </body>
+</html>

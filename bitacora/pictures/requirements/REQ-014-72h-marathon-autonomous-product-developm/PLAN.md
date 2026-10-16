@@ -1,6 +1,6 @@
 ---
 req: REQ-014
-status: review
+status: approved
 created: 2026-10-09
 ---
 # Plan — REQ-014 — 72h marathon — autonomous product development
@@ -128,3 +128,5 @@ worktree):
 ## Progress log
 <!-- One line per meaningful step, so work survives a context reset. -->
 - 2026-10-15 — P-092 committed locally as `125548cf`; exact-centimetre ring caps use `floor(max × 1.05)`, sub-1 m rings are unbanded, and measured provenance stays separate from PARIDAD. P-100 is verified and closed locally at the unchanged 1.42 m minimum. P-099 is verified and closed locally: semiarco fill now scales to the contractual quarter-ellipse axis using the constructor's rounded/clamped dimensions while preserving contour, bands and allowed-failure list. Antagonist review SOUND; invariants, matrix 200/200, CI 300/300, seed 2 n=4000 (3,999/4,000; 422/422 semiarcos; sole E-03532 matches baseline), tsc, lint and workspace builds pass. P-099/P-100 remain uncommitted; no push.
+- 2026-10-16 15:46 review comments (terminal): Owner requested continuation on 2026-10-16. Resume REQ-014 W2 work outside the expired 72-hour window; keep existing scope, constraints, and no-push policy.
+- 2026-10-16 15:46 plan APPROVED (terminal)

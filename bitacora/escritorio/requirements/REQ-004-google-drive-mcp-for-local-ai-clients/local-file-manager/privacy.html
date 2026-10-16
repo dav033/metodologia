@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Política de privacidad del gestor local de archivos MCP.">
+    <title>Privacidad · Gestor local de archivos</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #1e1e2e; color: #cdd6f4; }
+      body { margin: 0; line-height: 1.65; }
+      main { box-sizing: border-box; width: min(800px, 100%); margin: 0 auto; padding: 3rem 1.5rem; }
+      h1, h2 { color: #b4befe; line-height: 1.2; }
+      h1 { color: #cba6f7; }
+      a { color: #b4befe; }
+      section { margin: 2rem 0; }
+      .notice { border-left: 3px solid #cba6f7; padding: .25rem 1rem; }
+      footer { margin-top: 3rem; color: #a6adc8; font-size: .9rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p><a href="index.html">← Inicio</a></p>
+      <h1>Política de privacidad</h1>
+      <p>Última actualización: 16 de octubre de 2026</p>
+
+      <section>
+        <h2>1. Servicio</h2>
+        <p>El Gestor local de archivos es una integración personal de un solo usuario. Un servidor MCP se ejecuta en el computador de su propietario y conecta clientes MCP locales con su cuenta de Google Drive. No es un producto de Google ni un servicio público de MCP. Esta página es estática e informativa.</p>
+      </section>
+
+      <section>
+        <h2>2. Datos de Google a los que accede</h2>
+        <p>Cuando el propietario autoriza la integración, su permiso de Drive permite acceso de lectura y escritura a los archivos de su cuenta. Según la operación solicitada, el servidor puede procesar contenido de archivos, nombres, identificadores, tipos, enlaces, metadatos y permisos. El permiso de OAuth es amplio y no se limita a archivos creados por esta integración.</p>
+        <p>Las operaciones disponibles pueden buscar y leer archivos, crear o editar archivos, cambiar permisos, compartirlos y moverlos a la papelera recuperable. La lista de herramientas no ofrece el borrado permanente.</p>
+      </section>
+
+      <section>
+        <h2>3. Uso y circulación de los datos</h2>
+        <p>Los datos de Google se usan únicamente para realizar la operación que solicita el propietario a través de un cliente MCP local. El servidor envía las solicitudes necesarias a las API de Google y devuelve los resultados al cliente local que las pidió. No se venden los datos ni se usan para publicidad o para entrenar modelos de forma independiente.</p>
+        <p>El propietario elige el cliente de IA. Ese cliente puede transmitir la solicitud y los resultados a su proveedor de modelos, sujeto a las condiciones y controles de privacidad de ese proveedor. El servidor MCP no controla las prácticas del cliente ni de su proveedor.</p>
+        <p>Google recibe las solicitudes de API y aplica sus propias condiciones y políticas al servicio de Drive. El contenido creado o modificado permanece en Drive, conforme a las acciones del propietario.</p>
+      </section>
+
+      <section>
+        <h2>4. Almacenamiento y conservación</h2>
+        <p>El servidor procesa las solicitudes en el computador del propietario. Los tokens de OAuth y el archivo de credenciales se guardan allí con permisos de acceso restringidos al usuario del sistema. El sitio público no recibe ni almacena esos tokens ni contenido de Drive.</p>
+        <p>El servidor mantiene registros locales de depuración. Pueden contener marcas de tiempo, nombres de operaciones, dirección de correo de la cuenta, identificadores o nombres de archivos, enlaces, parámetros de operación y detalles de errores. Se guardan en el computador con permisos restringidos; no se ha configurado un plazo automático de eliminación.</p>
+      </section>
+
+      <section>
+        <h2>5. Sitio informativo y DNS</h2>
+        <p>Las páginas informativas se sirven desde Vercel. Como cualquier servicio web, el proveedor de alojamiento puede procesar datos técnicos de las visitas, como dirección IP, navegador y solicitudes, para entregar y proteger el sitio; consulte la <a href="https://vercel.com/legal/privacy-policy">política de privacidad de Vercel</a>. El contenido de Drive y los tokens de OAuth del servidor local no se envían a Vercel.</p>
+        <p>Si se usa DuckDNS para el subdominio, su política indica que puede recibir del proveedor de inicio de sesión el nombre, nombre de usuario, correo electrónico y foto de perfil autorizados; también puede procesar la IP usada para iniciar sesión, el correo, el token propio de acceso a su servicio DNS, la IP de destino y los datos técnicos de navegación. Consulta la <a href="https://www.duckdns.org/pp.jsp">política de privacidad de DuckDNS</a> (actualizada el 28 de enero de 2020). DuckDNS no recibe el contenido de Drive ni los tokens OAuth del servidor local.</p>
+      </section>
+
+      <section>
+        <h2>6. Control y seguridad</h2>
+        <p>El servidor escucha solo en la interfaz local del computador; esta página no publica el servicio MCP. Los permisos de Drive se usan en nombre de la cuenta que autorizó el acceso. El propietario puede revocar el acceso desde su cuenta de Google y borrar los archivos locales de credenciales y registros. La revocación no elimina archivos de Drive.</p>
+      </section>
+
+      <section>
+        <h2>7. Contacto</h2>
+        <p>Para consultas sobre esta integración: <a href="mailto:david.theran03@gmail.com">david.theran03@gmail.com</a>.</p>
+      </section>
+
+      <hr>
+      <section id="english" lang="en">
+        <h1>Privacy policy — English summary</h1>
+        <p>Last updated: October 16, 2026</p>
+        <p><strong>Service.</strong> The Local File Manager is a single-user personal integration. Its MCP server runs on the owner's computer and connects local MCP clients to the owner's Google Drive. It is not a Google product or a public MCP service. This website is static information only.</p>
+        <p><strong>Google data and use.</strong> The OAuth grant allows broad read/write access to Drive files, including content, names, IDs, metadata, links, and permissions as needed for a requested operation. Available operations search, read, create, edit, share, change permissions, and move files to recoverable trash; permanent deletion is not exposed. Data is used only to fulfill the owner's requests, sent to Google's Drive APIs as needed, and returned to the local AI client that requested it. The selected client may send prompts and results to its model provider under that provider's own terms. This integration does not sell Google data, use it for advertising, or independently train models on it.</p>
+        <p><strong>Storage and logs.</strong> OAuth credentials and tokens are stored on the owner's computer with user-restricted file permissions. The public website does not receive them or Drive content. Local debug logs may include timestamps, operation names, account email, file IDs or names, links, operation parameters, and error details. They remain on the computer; no automatic deletion period is configured.</p>
+        <p><strong>Website and DNS providers.</strong> Vercel hosts these static pages and may process ordinary technical visit data; see <a href="https://vercel.com/legal/privacy-policy">Vercel's privacy policy</a>. If DuckDNS is used for the subdomain, its policy says it may receive authorized sign-in profile details (name, username, email, and profile picture), sign-in IP, email, its own DNS-service access token, target IP, and technical browsing data; see its <a href="https://www.duckdns.org/pp.jsp">privacy statement</a> (last updated January 28, 2020). DuckDNS does not receive Drive files or the local MCP's OAuth tokens.</p>
+        <p><strong>Control and contact.</strong> The server listens only on the owner's computer. The owner can revoke Google access and remove local credentials and logs. Questions: <a href="mailto:david.theran03@gmail.com">david.theran03@gmail.com</a>.</p>
+      </section>
+
+      <footer>
+        <p>Proyecto personal independiente, no afiliado a Google.</p>
+      </footer>
+    </main>
+  </body>
+</html>

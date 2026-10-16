@@ -1,15 +1,15 @@
 ---
 id: REQ-004
-status: planned
+status: done
 created: 2026-10-16
 track: deep
 ---
 # REQ-004 — Configure a Google Drive MCP for local AI clients
 
 ## Problem & goal
-David wants the Google Drive account `david.theran03@gmail.com` available to the MCP-capable AI clients on this computer, with read and write operations, without making the service public or giving the MCP access to local files.
+David wants the Google Drive account `david.theran03@gmail.com` available to the MCP-capable AI clients on this computer, with read and write operations, without making the service public or exposing arbitrary local paths to the MCP.
 
-**Success looks like:** one local MCP endpoint is available to the installed local clients; it can search, read, create, edit, share, and move Drive files to the recoverable trash; OAuth is completed for the specified Google account and requests only Drive access; the endpoint listens only on loopback; server-side local-file operations are disabled.
+**Success looks like:** one local MCP endpoint is available to the installed local clients; it can search, read, create, edit, share, and move Drive files to the recoverable trash; OAuth is completed for the specified Google account and requests only Drive access; the endpoint listens only on loopback; direct local path parameters are omitted and `file://` inputs are rejected.
 
 ## Users / actors / stakeholders
 - David, the owner of the Google account and desktop.
@@ -24,7 +24,7 @@ As David, I want local MCP-capable clients to reach one user-level Drive server 
 
 ### US-2 (P1, Must) — Manage Drive files
 As David, I want AI clients to search, read, create, edit, organize, and share my Drive files.
-**Acceptance:** The advertised tools include Drive search/read/create/edit/move/share operations and recoverable trash via `update_drive_file.trashed`; no permanent Drive file-delete tool is advertised. Server-side local filesystem reads and writes are disabled.
+**Acceptance:** The advertised tools include Drive search/read/create/edit/move/share operations and recoverable trash via `update_drive_file.trashed`; no permanent Drive file-delete tool is advertised. Direct `file_path` parameters are omitted, and local `file://` inputs are rejected by the path validator when local file access is disabled.
 
 ### US-3 (P1, Must) — Limit the connection to this account and Drive
 As David, I want this integration to use only `david.theran03@gmail.com` and Google Drive permissions.
@@ -39,7 +39,7 @@ As David, I want this integration to use only `david.theran03@gmail.com` and Goo
 
 ## Requirements
 - R1. When the desktop user session starts, the system shall run a user-level MCP service that listens only on `127.0.0.1` and serves Streamable HTTP at the selected loopback port, preferring port 8000 when available.
-- R2. When a configured local MCP client connects, the server shall expose only Google Drive tools with full Drive read/write permissions and shall disable server-side local-file operations.
+- R2. When a configured local MCP client connects, the server shall expose only Google Drive tools with full Drive read/write permissions, omit direct `file_path` inputs, and reject `file://` inputs.
 - R3. When a client requests deletion of a Drive file, the available operation shall move it to recoverable trash; the tool list shall not expose permanent file deletion.
 - R4. When Google OAuth runs, the user shall authorize `david.theran03@gmail.com`; the OAuth client shall request only the Google Drive scope required by the configured tools, and the integration shall store no other Google account token.
 - R5. When server credentials are stored locally, the OAuth client secret and token store shall be outside repositories and limited to the user by filesystem permissions.
@@ -55,11 +55,11 @@ As David, I want this integration to use only `david.theran03@gmail.com` and Goo
 - Clients may need restart/reconnect after their user MCP settings change.
 - A local server bound to loopback is not reachable by hosted AI services; do not open a public listener or tunnel as a workaround.
 - The legacy Streamable HTTP mode has no MCP-level client authentication; any local process that can reach loopback can call the server. Keep the endpoint local, preserve client confirmation behavior, and do not publish or tunnel it.
-- Disable local file I/O in the MCP server (`WORKSPACE_MCP_DISABLE_LOCAL_FILES=1`) so Drive file tools cannot read or write arbitrary paths on this computer.
+- Set `WORKSPACE_MCP_DISABLE_LOCAL_FILES=true`. This removes direct `file_path` parameters and makes the path validator reject all local paths, including `file://`; leave `ALLOWED_FILE_DIRS` unset. Use inline content or HTTPS URLs for uploads that need content.
 
 ## Constraints
 - Use only user-space installs and a systemd user service; no `sudo`.
-- Use the current `uv` installation and pin the published PyPI package `workspace-mcp==1.29.0` after checking its artifact metadata and source. The registry `manifest.json` version `2.1.0` is not the PyPI package version.
+- Use the current `uv` installation and pin the published PyPI package `workspace-mcp==1.29.0`; the package source directories and entry points were compared with upstream tag `v1.29.0`. Newer releases, including `2.1.0`, exist; keep the exact version from the approved plan.
 - Set the server host explicitly to `127.0.0.1`; do not enable OAuth 2.1 public/multi-user mode for this local-only setup. Configure the default user as `david.theran03@gmail.com` and store only that account's token.
 - Configure `drive:full` only. The server is community-maintained and not affiliated with Google; review its current source/release before installation.
 - Preserve per-client default confirmation behavior; do not configure blanket tool auto-approval.
@@ -68,7 +68,7 @@ As David, I want this integration to use only `david.theran03@gmail.com` and Goo
 
 ## Priorities & phases
 - Must: local shared endpoint, exact Google account, Drive-only full read/write tools, recoverable trash, and user-level client registrations.
-- Must: confirm loopback-only binding, OAuth account, owner-only credential permissions, local-file access disabled, and tool registration without reading or changing a real Drive file as a test.
+- Must: confirm loopback-only binding, OAuth account, owner-only credential permissions, direct local path inputs disabled, and `file://` rejected, without reading or changing a real Drive file as a test.
 - Later only if requested: connect hosted AI products through an independently secured public deployment.
 
 ## Timeline & dependencies
@@ -78,8 +78,8 @@ As David, I want this integration to use only `david.theran03@gmail.com` and Goo
 ## Assumptions
 - “Para cualquier IA” means local applications that implement MCP; the initial clients are Codex CLI, Claude Code, and Gemini CLI. A web AI cannot access this local-only endpoint.
 - “Eliminar” means move to recoverable Drive trash, not permanent deletion; the selected Drive tool set supports moving files to/from trash but does not expose permanent file deletion.
-- Use the independent `taylorwilsdon/google_workspace_mcp` server, pinning the published PyPI artifact at `1.29.0` if its metadata/source review succeeds. The repository's registry manifest says `2.1.0`, which is a different version field. The server supports personal Google accounts, local Streamable HTTP, and full Drive tools; it requires a Google Cloud OAuth client.
-- For a personal app, use External audience in Production without OAuth verification and accept Google's unverified-app screen; do not add other users. Google documents personal-use exceptions under 100 users. If David prefers Testing despite the seven-day refresh-token expiry, revise this choice before execution.
+- Use the independent `taylorwilsdon/google_workspace_mcp` server, pinned to PyPI `1.29.0`, whose key source directories and entry points match upstream tag `v1.29.0`. PyPI also publishes newer releases, including `2.1.0`; the approved plan remains pinned to `1.29.0`. The server supports personal Google accounts, local Streamable HTTP, and full Drive tools; it requires a Google Cloud OAuth client.
+- Google Cloud rejected Production publishing until valid public homepage and privacy-policy URLs on a verified domain were configured. The working installation uses External/Testing with David as the only test user; Google expires Testing refresh tokens after seven days. At David's request, genuine bilingual pages were published at `https://local-file-manager-three.vercel.app/`; this free Vercel hostname does not prove David owns the domain. Move to Production only after Search Console verifies a DNS-controlled domain and both app URLs use that domain.
 - Register one shared loopback service in each installed local client; there is no OS-wide MCP registry that all clients automatically read.
 
 ## Coverage
@@ -100,9 +100,10 @@ As David, I want this integration to use only `david.theran03@gmail.com` and Goo
 - 2026-10-16: David explicitly requested modifying and deleting Drive files. Deletion is interpreted as recoverable Drive trash; this was the recommended option, but permanent deletion was not explicitly requested.
 - 2026-10-16: “Any AI” is interpreted as installed local MCP-capable clients plus other local clients configured with the endpoint. There is no system-wide MCP registry; hosted AI access remains out of scope because it cannot reach loopback.
 - 2026-10-16: A loopback Streamable HTTP endpoint is not authenticated per client. Any local process can reach it; preserve the clients' default tool confirmations and do not expose the port outside this computer.
-- 2026-10-16: Keep local-file operations disabled for this Drive-only integration.
+- 2026-10-16: Disable direct local path parameters with `WORKSPACE_MCP_DISABLE_LOCAL_FILES=true`; this also rejects `file://` paths. Use inline content or HTTPS URLs where upload content is needed.
+- 2026-10-16: Google blocked Production publishing because the consent screen lacked valid public homepage and privacy-policy URLs on a verified domain. OAuth is completed in External/Testing with only David as a test user; the refresh-token lifetime is seven days. At David's request, the real public pages were deployed to Vercel, but `vercel.app` does not establish domain ownership. Moving to Production remains pending a DNS-controlled domain verified in Search Console and URLs on that domain.
 
 ## Research sources
 - [Google Workspace MCP project](https://github.com/taylorwilsdon/google_workspace_mcp), [PyPI package release](https://pypi.org/project/workspace-mcp/1.29.0/), and [Drive tool reference](https://workspacemcp.com/google-drive).
-- [Google personal-use OAuth verification exception](https://support.google.com/cloud/answer/13464323?hl=en) and [OAuth testing token lifetime](https://support.google.com/cloud/answer/15549945?hl=en).
+- [Google personal-use OAuth verification exception](https://support.google.com/cloud/answer/13464323?hl=en), [OAuth testing token lifetime](https://support.google.com/cloud/answer/15549945?hl=en), [OAuth production readiness](https://developers.google.com/identity/protocols/oauth2/production-readiness/policy-compliance?hl=en), and [brand verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/brand-verification).
 - [Google Drive trash and permanent deletion behavior](https://developers.google.com/workspace/drive/api/guides/delete).

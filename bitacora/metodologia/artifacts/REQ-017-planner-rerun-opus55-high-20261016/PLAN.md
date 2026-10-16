@@ -1,7 +1,8 @@
 ---
 req: REQ-017
+status: approved
 created: 2026-10-16
-source: Planner re-run (Opus 5.5 high, read-only) — draft for comparison; not approved
+source: Planner re-run (Opus 5.5 high, read-only); owner approved for isolated M1/M2 experiment on 2026-10-16
 ---
 # Plan — REQ-017 — Activity-aware guided-chat decoration recommendations
 
@@ -84,3 +85,6 @@ q1–q5 (round-01, unanswered), plus A6 (`arco_asimetrico`), A7 («La que tú qu
 
 ## Verification
 Planning only. No command, test or `bt_planner check` was executed.
+
+## Approval record
+- 2026-10-16: The owner approved this isolated Opus draft for the M1/M2 experiment. Frozen as revision 1; this does not authorize M3 implementation.

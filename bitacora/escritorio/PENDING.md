@@ -7,6 +7,8 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
+- P-003 · Move Google Drive MCP OAuth audience from Testing to Production · urgency: high · complexity: M · added 2026-10-16 · REQ-004
+  The genuine homepage and privacy policy are live at https://local-file-manager-three.vercel.app/ and /privacy.html (HTTP 200). Google requires these URLs on a verified domain David controls, so the free `vercel.app` hostname does not finish this requirement. A DuckDNS subdomain is being evaluated because its API supports DNS TXT records; no DuckDNS account or domain has been created. Its GitHub sign-in may disclose name, username, email, profile picture, login IP, and DNS-service data under DuckDNS's privacy policy. Google OAuth remains External/Testing and its refresh token expires after seven days. The isolated Google Cloud sign-in currently returns “This browser or app may not be secure.”
 - P-001 · Confirm Alt+1/Alt+2 tab navigation in Firefox during normal use · urgency: low · complexity: S · added 2026-10-11 · REQ-001
   The Hyprland binds are loaded and inspectable. Temporary Firefox keypress checks did not produce a reliable end-to-end result; verify next time Firefox is used.
 - P-002 · Install the signed grave-key image saver in Firefox · urgency: low · complexity: M · added 2026-10-11 · desktop-shortcuts

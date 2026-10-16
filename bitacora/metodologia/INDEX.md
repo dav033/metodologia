@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-16 12:18 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 15:35 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -66,18 +66,18 @@ _Generated 2026-10-16 12:18 by `bitacora.py index`. Do not edit by hand._
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
+- P-103 · Review and approve REQ-024 Planner V2 quality and benchmark plan · high/L
 - P-003 · Visual review of the local web UI · med/S
 - P-001 · Non-Scheduler follow-ups: Maros REQ-005 E2E and Relay F-23 helper success-path tests · med/M
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T · med/L
-- P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · low/S
 
 ## Recent decisions
 
+- D-055 — Install Planner in every currently configured local AI profile
+- D-054 — Keep Planner invocation independent of local AI provider
 - D-053 — Keep planning aids exclusive to the Planner profile
 - D-052 — Require M4-M6 in every Scheduler-owned run
 - D-051 — Expose a bounded Scheduler lifecycle behind explicit opt-in
-- D-050 — Keep M2 optimization disabled after the failed T24 experiment
-- D-049 — Preserve legacy quota keys while deduplicating effective accounts
 
 ## Artifacts
 

@@ -11,7 +11,7 @@
 - `bt_planner report`: 7 tasks, 4 milestones, 400 estimated minutes, 295-minute critical path, widest level 2; no missing command verification, low-confidence tasks, unordered conflicts, or unconsumed results.
 - `PLAN.mmd` was checked against task IDs and dependency edges by inspection; it was not parsed or rendered.
 
-Aye. Este es el borrador nuevo de REQ-017. Solo usé herramientas de lectura: no cambié archivos, la SPEC, la ronda, el plan anterior ni el checkout de `pictures`. **`bt_planner check` no se ejecutó**, porque en esta corrida no tengo Bash ni escritura, así que el contrato no está verificado. Es un borrador sin aprobar: no autoriza implementar.
+Aye. Este fue el borrador nuevo de REQ-017. La corrida de Opus usó solo herramientas de lectura; no cambió la SPEC, la ronda, el plan anterior ni el checkout de `pictures`. Después, el chequeo externo confirmó que el contrato es publicable con una advertencia de recurso compartido. El propietario aprobó este artefacto para un experimento aislado M1/M2 y se congeló como revisión 1; eso no autoriza implementación por M3.
 
 ## Lo que encontré en el código
 
@@ -86,4 +86,4 @@ Es una revisión del propio planificador, no una auditoría independiente.
 - Si la auditoría debe registrar cada turno con la política activa o solo los ajustes.
 - La cabecera de la SPEC (`status: in-progress`) contradice D-051. Es para que la revises; no la cambié.
 
-Antes de pedir aprobación hay que ejecutar `bitacora.py plan-json check REQ-017` con el repositorio `pictures`.
+El plan quedó aprobado y congelado tras el chequeo externo. Para ejecutarlo en M1 debe consumirse este artefacto aprobado; la advertencia T2.1/T3.1 requiere serialización de `event-structure-policy`.
