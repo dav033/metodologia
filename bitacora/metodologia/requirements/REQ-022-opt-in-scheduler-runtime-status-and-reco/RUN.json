@@ -15,15 +15,13 @@
  "context_run_id": "ad1a313d1c6d44c788558ffa24ea1a9a",
  "control": "stop",
  "heartbeat": {
-  "at": "2026-10-16T06:51:27",
+  "at": "2026-10-16T06:52:16",
   "pid": 1086064,
   "machine": "precision7760",
   "task": "T1",
   "session": 1,
-  "state": "session running 1 min",
-  "session_pids": {
-   "1": 1086612
-  },
+  "state": "failed",
+  "session_pids": {},
   "session_pid": null
  },
  "waiting_until": null,
@@ -50,16 +48,26 @@
    "risk": null,
    "complexity": null,
    "milestone": null,
-   "tier": 0,
-   "status": "in_progress",
-   "attempts": 0,
-   "last_error": null,
-   "error_hashes": [],
+   "tier": 1,
+   "status": "todo",
+   "attempts": 1,
+   "last_error": "session ended without task done/fail (rc=143), provider contract: failed: The implementer agent is still running on T1 (new `bt_scheduler_run.py`, `bt_cli_scheduler_run.py`, and `tests/test_scheduler_runtime.py`, plus a two-line dispatch in `bitacora.py`). I'll verify its r",
+   "error_hashes": [
+    "f469266ec01b"
+   ],
    "evidence": null,
    "pending_id": null,
    "notes": [
     "Worktree compartido: bitacora.py (5 lineas) y bt_scheduler_adapter.py (75) tienen cambios sin commitear de REQ-020/021. No se commitean; el commit de T1 incluye solo archivos nuevos y tests. Hay que decidir al integrar el dispatch de scheduler-run en bitacora.py."
-   ]
+   ],
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "haiku",
+    "effort": null,
+    "result": "failed"
+   }
   },
   {
    "id": "T2",
@@ -155,7 +163,25 @@
    "notes": []
   }
  ],
- "log": [],
+ "log": [
+  {
+   "at": "2026-10-16T06:52:16",
+   "session": 1,
+   "task": "T1",
+   "result": "failed",
+   "summary": "The implementer agent is still running on T1 (new `bt_scheduler_run.py`, `bt_cli_scheduler_run.py`, and `tests/test_scheduler_runtime.py`, plus a two-line dispatch in `bitacora.py`). I'll verify its result, run the antagonist review, and commit only the files that were clean before this task.",
+   "seconds": 109,
+   "model": "haiku",
+   "cost_usd": 0.26259701,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "failed",
+    "terminal": true
+   }
+  }
+ ],
  "pool": [
   "antigravity",
   "claude-personal",
@@ -164,5 +190,6 @@
   "codex-luis"
  ],
  "audit": true,
- "plan_drift": []
+ "plan_drift": [],
+ "wait_step": 0
 }
