@@ -1,6 +1,6 @@
 ---
 req: REQ-017
-status: review
+status: approved
 created: 2026-10-16
 source: D-20261016-090752-bc5d (Claude Work, Opus 5.5 high; read-only)
 ---
@@ -110,3 +110,5 @@ No checks were run. This is the planning-only deliverable from Claude Work / Opu
 - 2026-10-16 09:21 review comments (terminal): Owner's direct implementation request authorizes an isolated draft with Opus 5.5 high's recommended defaults; round-01 stays open for changes before integration.
 - 2026-10-16 09:21 plan APPROVED (terminal)
 - 2026-10-16: post-implementation review found that several recommended IDs had no selectable menu card and the optional persisted widget field could drop saved conversations after rollback. Revised M3 to show exact event structures and derive the event without changing the saved widget schema; implementation remains in the isolated worktree.
+- 2026-10-16 09:32 review comments (terminal): Scope refined during read-only review to make every curated structure selectable and avoid a persisted widget-schema change. The owner's direct implementation request authorizes the isolated draft; round-01 remains open for changes before integration.
+- 2026-10-16 09:32 plan APPROVED (terminal)
