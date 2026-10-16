@@ -1,6 +1,6 @@
 # Index — maros
 
-_Generated 2026-10-15 22:07 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 22:20 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/maros) · [graph](http://127.0.0.1:8765/p/maros/graph)  
@@ -26,15 +26,17 @@ _Generated 2026-10-15 22:07 by `bitacora.py index`. Do not edit by hand._
 - P-010 · Apply `db/add-role-audit-events.sql` to Supabase by hand before the REQ-005 backend is dep · high/S
 - P-012 · Apply `db/add-access-requests.sql` to Supabase by hand before deploying REQ-005 backend · high/S
 - P-011 · Make role write + audit insert atomic (transaction or outbox) once the SQL is applied, so  · med/M
-- P-014 · Prevent duplicate pending access requests for the same user and permission (backend 409 +  · low/S
+- P-014 · Make the duplicate-pending check race-safe for access requests: the backend already refuse · low/S
 - P-015 · Add a server-side test for settings/users and settings/roles gating (null user → dashboard · low/S
 - P-013 · Apply the explanatory no-access state (`NoAccessState`) to the other permission-guarded pa · low/M
 
 ## Recent decisions
 
+- D-006 — The `member` role is resolved in code, and last-admin counts internal users only
+- D-005 — Access requests grant nothing; resolution is single-shot and self-resolution is refused
+- D-004 — Permission model v2 is metadata beside the existing codes, with shared guard rails
 - D-003 — Central MCP simulation and attribution with shared role guard rails
 - D-002 — Explicit MCP capability inventory and system attribution
-- D-001 — Role audit events are recorded best-effort after the role write
 
 ## Timeline
 

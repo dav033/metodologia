@@ -14,12 +14,12 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-15T22:18:40",
+  "at": "2026-10-15T22:20:40",
   "pid": 842,
   "machine": "precision7760",
   "task": "T14",
   "session": 24,
-  "state": "session running 5 min",
+  "state": "session running 7 min",
   "session_pids": {
    "18": 73593,
    "24": 218797
@@ -684,9 +684,14 @@
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "grep -q 'Permission model v2' ~/bitacora/maros/ARCHITECTURE.md passes; docs committed as e8c750c and 4a1248c on wt/T14-4ec8b9d4 (metodologia repo, bitácora files only, no repo code changed); two antagonist passes, all findings fixed, facts checked against wt/REQ-005-integration-86795b50; D-004..D-006 recorded; PENDING P-014 corrected; day log written.",
    "pending_id": null,
-   "notes": []
+   "notes": [
+    "Docs done in bitácora (ARCHITECTURE §Permission model v2, D-004..D-006, PENDING P-014). Two antagonist passes; all findings fixed; no third pass. Code facts were taken from wt/REQ-005-integration-86795b50, not from main. Commit 4a1248c on wt/T14-4ec8b9d4 in the metodologia repo."
+   ],
+   "claimed_done": true,
+   "findings": null,
+   "severity": null
   },
   {
    "id": "M5-audit",
