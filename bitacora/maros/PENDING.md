@@ -13,11 +13,9 @@ month summary._
   Until applied, creating or listing access requests (`/access-requests`) fails because the `access_requests` table is missing (notifications already fail gracefully with error logging).
 - P-011 · Make role write + audit insert atomic (transaction or outbox) once the SQL is applied, so every MCP write is attributable (R10) · urgency: med · complexity: M · added 2026-10-14 · REQ-005/T3 → T8
   D-001 made the audit best-effort; a failed insert today leaves only an error log line with the event.
-
-- P-013 · Apply the explanatory no-access state (`NoAccessState`) to the other permission-guarded pages (finance, tasks, notes…) that still redirect to /dashboard · urgency: low · complexity: M · added 2026-10-15 · REQ-005/T12
-
 - P-014 · Prevent duplicate pending access requests for the same user and permission (backend 409 + show it in NoAccessState; today a reload re-shows the form and each send adds a row) · urgency: low · complexity: S · added 2026-10-15 · REQ-005/T12 (antagonist A5)
 - P-015 · Add a server-side test for settings/users and settings/roles gating (null user → dashboard, missing users:read → NoAccessState) · urgency: low · complexity: S · added 2026-10-15 · REQ-005/T12 (antagonist A7)
+- P-013 · Apply the explanatory no-access state (`NoAccessState`) to the other permission-guarded pages (finance, tasks, notes…) that still redirect to /dashboard · urgency: low · complexity: M · added 2026-10-15 · REQ-005/T12
 
 ## Blocked
 _None_

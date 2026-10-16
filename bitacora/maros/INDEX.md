@@ -1,6 +1,6 @@
 # Index — maros
 
-_Generated 2026-10-15 21:48 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 22:07 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/maros) · [graph](http://127.0.0.1:8765/p/maros/graph)  
@@ -26,6 +26,9 @@ _Generated 2026-10-15 21:48 by `bitacora.py index`. Do not edit by hand._
 - P-010 · Apply `db/add-role-audit-events.sql` to Supabase by hand before the REQ-005 backend is dep · high/S
 - P-012 · Apply `db/add-access-requests.sql` to Supabase by hand before deploying REQ-005 backend · high/S
 - P-011 · Make role write + audit insert atomic (transaction or outbox) once the SQL is applied, so  · med/M
+- P-014 · Prevent duplicate pending access requests for the same user and permission (backend 409 +  · low/S
+- P-015 · Add a server-side test for settings/users and settings/roles gating (null user → dashboard · low/S
+- P-013 · Apply the explanatory no-access state (`NoAccessState`) to the other permission-guarded pa · low/M
 
 ## Recent decisions
 
