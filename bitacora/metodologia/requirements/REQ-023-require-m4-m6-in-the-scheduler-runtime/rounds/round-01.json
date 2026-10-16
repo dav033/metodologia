@@ -1,0 +1,28 @@
+{
+ "title": "Alcance de M4–M6 obligatorios",
+ "intro": "D-051 mantiene Scheduler detrás de una opción explícita y el launcher legacy como predeterminado. David pidió hacer M4–M6 obligatorios en el flujo; esta respuesta define qué lanzamientos cubre.",
+ "coverage": "Scope (1/10)",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "¿El cambio aplica a todas las ejecuciones Scheduler (`scheduler-run` y `launch --scheduler`), dejando intacto el launcher legacy, o también migra el launcher legacy predeterminado a Scheduler?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Todo Scheduler; legacy separado"
+    },
+    {
+     "key": "b",
+     "label": "También migrar el launcher legacy"
+    }
+   ],
+   "recommended": "a",
+   "why": "Hace M4–M6 obligatorios en cada ejecución Scheduler y conserva el aislamiento de runs legacy previsto por D-051."
+  }
+ ],
+ "round": 1,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-16T08:29:26"
+}
