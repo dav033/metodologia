@@ -1,5 +1,11 @@
 # Marathon state (72 h) — rewritten every cycle
 
+## Post-timebox continuation — 2026-10-16
+- Owner resumed REQ-014 development outside the original timebox, retaining its approved scope and hard constraints.
+- T65/P-089 is locally implemented and verified: eligible non-generated one-tramo columns and garlands receive compensated filler on creation and colour/size edits; the measured quick matrix is 200/200 and motor goldens pass at 1.2.7. T11's original fix was already shipped in `53502782`; this continuation adds the CASE-002 two-column per-piece density regression, which passes at 23.3 balloons/m for each column.
+- T1 is reconciled against the Phase 5 squash `d05a52b8`, already present in this branch and `origin/main`; the original WIP commit IDs are unavailable after squash and the scratch file is absent.
+- The worktree is at `75c87497`, five commits behind and one ahead of local `origin/main` (`f8227ca5`). No merge, commit, push or deployment was performed during this continuation.
+
 - Brief: `pictures/PROMPT-MARATHON-3-DAYS.md` · session `83576a42` (https://claude.ai/code/session_012zYrS6wZ3aYt9ga9JeqR2d)
 - **Start: 2026-10-09 16:44 (local)** · end ≈ 2026-10-12 16:44
 - Current cycle: **26** (06:0x: corpus 65edd83b pushed (CI → VPS chain); PM pro + PM customer deltas c26 (haiku; customer writes research/pm/BACKLOG-c26-cliente.md to avoid a race); judge-fix + W4 pass 3 running)

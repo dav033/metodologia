@@ -7,7 +7,8 @@ Edit in place; record the *why* of changes in DECISIONS.md._
 The methodology Scheduler composes the Planner and six isolated modules through methodology adapters. A supervised
 runtime is available only through the explicit `launch --mode marathon --scheduler` option; existing marathon launch
 continues to use the legacy supervisor. The Scheduler owner binds one approved, frozen plan revision, opens durable M1
-state, composes M2/M3, writes an atomic status projection and resumes the same run after restart. Optional capabilities
+state, asks M2 for a non-reserving route recommendation for every task before execution, composes M2/M3, writes an atomic
+status projection and resumes the same run after restart. Optional capabilities
 remain caller-controlled: M4 needs its monitor store and an owner-driven bounded stream drain, M5 needs its recovery
 store, and M6 needs a private quality store path. M4 observes, M5 recommends recovery through M1, and M6 verifies
 captured M3 snapshots; M1 remains the sole owner of task state and verdict acceptance.
@@ -17,7 +18,7 @@ captured M3 snapshots; M1 remains the sole owner of task state and verdict accep
 |---|---|---|
 | Planner | Frozen plan contract and task order | `skill/scripts/bt_planner/` → `bt_plan_adapter.py` |
 | Scheduler owner runtime | Opt-in process lifecycle, M1/M2/M3 composition, heartbeat projection, recovery and notification cadence | `bt_scheduler_run.py` → `scheduler-run` CLI |
-| M1 Scheduler Core | Run authorization, task/attempt state, and projection | `skill/scripts/bt_scheduler_core/` → `bt_scheduler_adapter.py` |
+| M1 Scheduler Core | Run authorization, full-plan route-map gate, task/attempt state, M1 reservations, and projection | `skill/scripts/bt_scheduler_core/` → `bt_scheduler_adapter.py` |
 | M2 Decision | Quota-aware provider/profile/model route selection and route metrics | `skill/scripts/bt_scheduler_decision/` → `bt_scheduler_decision_adapter.py` |
 | M3 Executor | Provider CLI process, isolated worktree, lifecycle, and bounded FIFO stream | `skill/scripts/bt_scheduler_executor/` → `bt_scheduler_executor_adapter.py` |
 | M4 Monitor | Normalized events, gaps, metric history, and audit incident outbox in its own SQLite WAL store | `skill/scripts/bt_scheduler_monitor/` → `bt_scheduler_monitor_adapter.py` |
@@ -26,8 +27,10 @@ captured M3 snapshots; M1 remains the sole owner of task state and verdict accep
 | M6 Quality | Sandboxed checks against the matching captured M3 snapshot; durable evidence and correlated M1 verdict outbox | `skill/scripts/bt_scheduler_quality/` → `bt_scheduler_quality_adapter.py` |
 
 ## Data & integrations
-- The frozen Planner plan is the input to M1; M2 persists route decisions consumed by M3. M1, M2, and M3 retain their
-  own stores and authority.
+- The frozen Planner plan is the input to M1; M2 persists route decisions consumed by M3. On a new run M1 sends the
+  full DAG to M2 and stores the returned non-reserving per-task route metadata in M1 state schema 2. The plan stays
+  immutable; the status projection joins its complexity with the current recommended/revalidated model. M1, M2, and M3
+  retain their own stores and authority.
 - For a Scheduler-owned requirement, the M1 SQLite database is authoritative and `RUN.projection.json` is a read-only
   view containing plan identity, task status and heartbeat. The legacy `RUN.json` remains separate and is never
   rewritten or used as a fallback by Scheduler readers.
@@ -49,7 +52,8 @@ captured M3 snapshots; M1 remains the sole owner of task state and verdict accep
   only when M1's database owns the requirement, reject malformed projections, and report stale active state after two
   minutes with the exact resume command. Pause/resume/stop route to M1; stop maps to cancel. No view reads `RUN.json`
   for a Scheduler authority.
-- Execution: frozen plan → M1 authorization/state → M2 route → M3 provider process. The M1 owner loop explicitly calls
+- Execution: frozen plan → M1 startup sends the full DAG to M2 → M1 stores the route map → READY task gets a fresh M2
+  eligibility/quota decision → M1 reserves capacity/resources → M3 provider process. The M1 owner loop explicitly calls
   `Wiring.drain_stream(attempt_id, run_id)` to move one bounded M3 batch through the stream adapter and M4 bridge.
 - Monitoring: M4 commits normalized events/gaps, exposes read-only metric snapshots to M2, and retains incident delivery
   in a retryable outbox for the owner-controlled M1 cadence. There is no global or automatic poller.
@@ -63,6 +67,8 @@ captured M3 snapshots; M1 remains the sole owner of task state and verdict accep
 ## Conventions & constraints
 - M1 owns run state and verdict acceptance; M2 owns routing; M3 owns child processes/raw capture; M4 is advisory;
   M5 recommends recovery; M6 verifies. Contracts are versioned and package boundaries are checked in isolation.
+- The new M1 routing contract is versioned separately from lifecycle events. State schema 2 reads schema 1 and upgrades
+  on write; older binaries must not open schema-2 run state.
 - The legacy supervisor remains the default. Scheduler startup, its per-user login resume entry, M1 database and
   status projection are opt-in; `--no-autostart` suppresses/removes the per-user entry. Notifications are deduplicated
   against M1's latest state-changing audit sequence and cannot stop the owner loop.

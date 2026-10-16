@@ -1,0 +1,91 @@
+{
+ "title": "M2 routing priorities",
+ "intro": "The code review found three independent causes behind the Claude-heavy map: medium risk forces tier 1, Codex/Gemini quota evidence was stale, and the full-plan route map decides tasks independently. Please settle the policy before I draft the implementation plan. Recommendations are grounded in the current M1/M2 boundary and avoid live model calls.",
+ "coverage": "8/10 clear; routing priorities and quota refresh remain open",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "Should `risk: medium` by itself keep raising every task to tier 1?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Yes; medium risk is a tier-1 floor"
+    },
+    {
+     "key": "b",
+     "label": "No; complexity and task kind set the base, with explicit high-risk/architecture/scope rules for uplift"
+    }
+   ],
+   "recommended": "b",
+   "why": "Six of seven REQ-017 tasks had medium risk, so this single rule raised five routine implementation tasks to Sonnet xhigh."
+  },
+  {
+   "id": "q2",
+   "text": "When multiple routes meet the task floor, how should M2 rank providers and accounts?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Task fit and evidence first, then fresh per-account quota; include Gemini as a normal eligible builder, with measured latency as a ranking factor"
+    },
+    {
+     "key": "b",
+     "label": "Favor measured speed/quality; keep Gemini as audit/reserve and use quota mainly as a tie-break"
+    },
+    {
+     "key": "c",
+     "label": "Maximize quota headroom even when the route is slower or less proven"
+    }
+   ],
+   "recommended": "a",
+   "why": "This lets Codex and Gemini use real headroom without removing task floors or pretending the providers have equal speed/quality."
+  },
+  {
+   "id": "q3",
+   "text": "Should the full DAG receive a joint account-aware recommendation instead of one independent decision per task?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Yes; allocate by task fit, fresh headroom, and known account capacity; no forced equal split; M1 revalidates before dispatch"
+    },
+    {
+     "key": "b",
+     "label": "Keep independent task recommendations, but show the selected profile/account"
+    },
+    {
+     "key": "c",
+     "label": "Spread tasks evenly across eligible accounts, even if headroom differs"
+    }
+   ],
+   "recommended": "a",
+   "why": "Each task already stores its profile/account, but independent recommendations can repeat the same account across the plan."
+  },
+  {
+   "id": "q4",
+   "text": "Should the Scheduler request one bounded quota-only refresh before initial route planning and each READY batch?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Yes; refresh usage once per effective account outside M2 core; no model call; failed sources stay unavailable with a reason"
+    },
+    {
+     "key": "b",
+     "label": "No; use only the existing cache and exclude stale/unknown accounts"
+    },
+    {
+     "key": "c",
+     "label": "Keep refresh manual; require an operator preflight before every run"
+    }
+   ],
+   "recommended": "a",
+   "why": "M2 currently reads cached data, and the direct M1/M2 path bypasses the Antigravity refresh used by the legacy router; the Codex poll is currently failing."
+  }
+ ],
+ "round": 1,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-16T16:21:36"
+}

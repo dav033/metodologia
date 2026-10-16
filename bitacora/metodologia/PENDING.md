@@ -58,6 +58,8 @@ month summary._
 _None_
 
 ## Recently closed
+- P-105 · CLOSED 2026-10-16 — Verify full-plan M1→M2 route planning and projection behavior · urgency: med · complexity: M · added 2026-10-16 · owner implementation
+  - Exact frozen Opus REQ-017 r1 simulated in memory: 7/7 tasks received M2 recommendations; T1.1 was revalidated and M1 retained one undispatched start intent. Projection/view checks passed; 28 focused offline tests and scoped Ruff passed. No live Scheduler owner process, M3 executor, or provider call ran.
 - P-104 · CLOSED 2026-10-16 — Send the updated REQ-024 PLAN.md to WhatsApp group Las máscaras · urgency: med · complexity: S · added 2026-10-16 · user request
   - The owner confirmed no human was present and authorized proceeding past the stale human-control lease for this action. Restarted only the agent desktop path on Xephyr `:20`; left `:21`, personal Firefox, and the separate Playwright Firefox untouched. Sent `requirements/REQ-024-planner-v2-quality-and-benchmark/PLAN.md` (37,987 bytes) through the Xephyr Firefox. The outgoing 37 kB `PLAN.md` is visible in “Las máscaras” at 2:04 p.m.
 - P-102 · CLOSED 2026-10-16 — Select and scope existing skills for the Planner agent · urgency: low · complexity: S · added 2026-10-16 · owner request

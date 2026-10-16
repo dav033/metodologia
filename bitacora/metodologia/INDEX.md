@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-16 15:35 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 16:19 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -60,6 +60,7 @@ _Generated 2026-10-16 15:35 by `bitacora.py index`. Do not edit by hand._
 | [REQ-022](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/SPEC.md) | Opt-in Scheduler runtime, status and recovery | `ready` | [done](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/PLAN.md) | report ✓ |
 | [REQ-023](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/SPEC.md) | Require M4-M6 in the Scheduler runtime | `done` | [done](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/PLAN.md) | report ✓ |
 | [REQ-024](requirements/REQ-024-planner-v2-quality-and-benchmark/SPEC.md) | Planner V2 quality and reproducible benchmark | `ready` | [in-progress](requirements/REQ-024-planner-v2-quality-and-benchmark/PLAN.md) |  |
+| [REQ-025](requirements/REQ-025-m2-quota-aware-provider-and-account-rout/SPEC.md) | M2 quota-aware provider and account routing | `clarifying` | — |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -73,11 +74,11 @@ _Generated 2026-10-16 15:35 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-056 — Route the full approved DAG through M2 at run startup
 - D-055 — Install Planner in every currently configured local AI profile
 - D-054 — Keep Planner invocation independent of local AI provider
 - D-053 — Keep planning aids exclusive to the Planner profile
 - D-052 — Require M4-M6 in every Scheduler-owned run
-- D-051 — Expose a bounded Scheduler lifecycle behind explicit opt-in
 
 ## Artifacts
 
