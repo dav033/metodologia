@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-15 18:37 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 21:52 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -50,7 +50,8 @@ _Generated 2026-10-15 18:37 by `bitacora.py index`. Do not edit by hand._
 | [REQ-016](requirements/REQ-016-train-and-validate-an-english-only-laya/SPEC.md) | Train and validate an English-only Laya Planner complexity classifier | `ready` | [paused](requirements/REQ-016-train-and-validate-an-english-only-laya/PLAN.md) |  |
 | [REQ-017](requirements/REQ-017-scheduler-m4-agent-monitor/SPEC.md) | Scheduler M4 Agent Monitor | `in-progress` | [done](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md) | report ✓ |
 | [REQ-018](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/SPEC.md) | Scheduler M1-M4 integration and offline monitor recovery | `done` | [done](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md) | report ✓ |
-| [REQ-019](requirements/REQ-019-scheduler-m5-recovery-manager/SPEC.md) | Scheduler M5 Recovery Manager | `in-progress` | [approved](requirements/REQ-019-scheduler-m5-recovery-manager/PLAN.md) |  |
+| [REQ-019](requirements/REQ-019-scheduler-m5-recovery-manager/SPEC.md) | Scheduler M5 Recovery Manager | `in-progress` | [approved](requirements/REQ-019-scheduler-m5-recovery-manager/PLAN.md) | report ✓ |
+| [REQ-020](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/SPEC.md) | Scheduler M2 learning and quota optimization | `clarifying` | [in-progress](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 

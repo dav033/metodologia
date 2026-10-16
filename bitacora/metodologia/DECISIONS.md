@@ -379,3 +379,7 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
   supported; no legacy RUN or live configuration is migrated.
 - **Source:** REQ-019 SPEC and `/home/david/PLAN-FASE-5-M5-RECOVERY-MANAGER.md`.
 
+
+## D-042 — Add batch quota learning above the existing M1/M2 boundary
+
+REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cached, account-deduplicated quota windows. Only independent outcomes correlated to the same task attempt may inform learning; missing evidence remains unknown. M1 keeps task, reservation and retry authority; M5 advises only through M1; M2 never calls M5. M4/M6 observations stay optional. Laya remains guarded, and the real-provider experiment requires explicit owner authorization. Full context, alternatives, consequences and rollback: `requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/CONTRACTS.md` and the decision note.

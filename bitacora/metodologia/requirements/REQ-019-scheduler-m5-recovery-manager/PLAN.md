@@ -39,5 +39,9 @@ Original: `/home/david/PLAN-FASE-5-M5-RECOVERY-MANAGER.md`. No acceptance item i
 Rulings: policy metadata is versioned inside M5; M1 contract remains 1.2.0. Only finite validation is tightened
 in M1. No live Scheduler activation. All provider experiments remain disposable and bounded.
 T19 remains open: the required quota preflight found fewer than two eligible providers, so no provider process was
-launched. T20 and closeout remain open until T19 is resolved. Production M6 verification is outside this M5
-implementation and awaits the owner's answer to the pending verifier-boundary question.
+launched. The opt-in harness now injects a no-credential, local CLI-shaped quota failure through M3's real
+classification path, checks M5's bounded reset wait, and leaves the retry to real M2 plus one real provider CLI call;
+it requires two distinct provider/account routes at no more than 50% observed quota use and fails closed if M2 repeats
+the failed provider. Focused harness checks pass, but no live experiment has run. T20 and closeout remain open until
+T19 is resolved. Production M6 verification is outside this M5 implementation and awaits the owner's answer to the
+pending verifier-boundary question.

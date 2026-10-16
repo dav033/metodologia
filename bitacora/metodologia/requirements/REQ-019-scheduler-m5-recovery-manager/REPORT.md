@@ -15,7 +15,8 @@ assignment, and only completes after a later accepted verdict. M4 can be omitted
 coverage verifies durable recovery without duplicating the attempt or decision.
 
 The task is not closed. T19 did not launch because the opt-in preflight could not find two
-fresh, permitted providers from distinct providers; no agent or paid CLI request was started.
+fresh, permitted routes from distinct providers and account references, each with no more than
+50% observed quota use. No provider process or paid CLI request was started.
 The production M6 verifier is also absent: the repository has the M1 `VerificationPort` and
 test verifier doubles, but no production M6 implementation. The M6 boundary question sent to
 the owner is still pending. The end-to-end result therefore proves the M5 contract with a
@@ -35,8 +36,12 @@ test verifier; it does not prove a production M6 integration.
 - Added retry coverage proving M1 obtains a new M2 assignment while M3 resumes from the
   verified snapshot in a new worktree. The existing approved plan document remains unchanged.
 - Added a real-CLI experiment harness gated behind explicit environment flags and a fresh
-  two-provider quota check. It uses a disposable project, injects one controlled rejection,
-  has a 300-second deadline, and writes a private sanitized receipt only if launched.
+  two-provider quota check. The preflight requires distinct provider and account references
+  with at least 50% quota headroom. A no-credential local CLI child emits a quota message with
+  a short reset; M3's real provider classifier parses it, M5 applies its quota wait and retry
+  policy, M2 excludes that provider on reassignment, and the retry delegates to one real provider
+  CLI invocation. The harness has a 300-second deadline, retains its disposable project unless
+  M1 is terminal and M3 is confirmed idle, and writes a private sanitized receipt only if launched.
 
 ## Acceptance matrix
 
@@ -64,7 +69,8 @@ The following recorded commands completed:
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts python -m unittest discover -s skill/scripts/bt_scheduler_executor/tests -q` — 279 passed.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts python -m unittest bt_scheduler_executor.tests.test_contracts bt_scheduler_executor.tests.test_start bt_scheduler_executor.tests.test_ledger -q` — 50 passed.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest discover -s skill/scripts/tests -p 'test_scheduler_*.py' -q` — 258 passed, 4 skipped. This discovery preceded addition of the opt-in T19 harness; that file was run separately.
-- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_m5_live_experiment -v` — skipped by default as designed.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_m5_live_experiment -v` — 7 tests: 6 passed, 1 live CLI experiment skipped by default.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_recovery_adapter test_scheduler_recovery_sources test_scheduler_recovery_failures test_scheduler_recovery_crash test_scheduler_m1_m5_e2e test_scheduler_m5_live_experiment -q` — 26 passed, 1 opt-in live CLI experiment skipped.
 - `BITACORA_LIVE_SCHEDULER_M5_EXPERIMENT=1 BITACORA_LIVE_SCHEDULER_M5_PREFLIGHT_ONLY=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_m5_live_experiment -v` — skipped before launch: two fresh, permitted providers were unavailable. No provider process was started.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest discover -s tests/migration -q` — 204 tests, 1 failure. The unchanged `skill/scripts/tests/test_relay_run.py` collects 48 tests while the existing collection baseline records 52. No migration baseline or test was changed to hide this discrepancy.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests:tests/migration python -m unittest test_package_install -q` — 16 passed.
@@ -76,10 +82,13 @@ M2 decision 65 passed, and M4 monitor 135 passed.
 
 ## Independent review and remaining work
 
-The final spec review inspected this report, execution plan and T19 harness. It confirmed that the
-preflight did not launch an agent, the production M6 gap is explicit, AC07/AC11 are partial, and T19/T20
-remain open. The final standards review of the T19 harness and report is in progress. T20 remains open
-because the plan requires T19 first.
+The independent spec re-review confirmed the controlled quota path and initially reported one low-severity
+documentation finding: the report still described both re-reviews as pending. That status was corrected and the spec
+re-review approved the update. The standards re-review approved the final harness. Earlier standards findings about
+quota headroom and cleanup without confirmed process termination have been fixed: the harness requires two fresh
+distinct provider/account routes at <=50% quota use, rejects a repeated retry provider, and preserves the disposable
+project unless M1 is terminal, every M3 attempt is terminal and M3 confirms idle. The missing `preserve()` method
+was added and regression-tested. T20 remains open because the approved plan requires the T19 live experiment first.
 
 No M5 live CLI experiment ran. No production M6 verifier was implemented or tested. T19 and T20 remain
 unchecked in the execution plan; the user's answer on the production M6 verifier boundary is required

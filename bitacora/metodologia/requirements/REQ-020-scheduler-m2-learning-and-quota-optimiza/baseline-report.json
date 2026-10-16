@@ -1,0 +1,62 @@
+{
+  "by_family": {
+    "ambiguous_tradeoff": {
+      "baseline_matches_oracle": 9,
+      "cases": 40,
+      "excluded_routes": 80
+    },
+    "history": {
+      "baseline_matches_oracle": 11,
+      "cases": 40,
+      "excluded_routes": 80
+    },
+    "quota_capacity": {
+      "baseline_matches_oracle": 7,
+      "cases": 40,
+      "excluded_routes": 80
+    },
+    "resource_dependency": {
+      "baseline_matches_oracle": 5,
+      "cases": 40,
+      "excluded_routes": 80
+    },
+    "risk_effort": {
+      "baseline_matches_oracle": 15,
+      "cases": 40,
+      "excluded_routes": 80
+    }
+  },
+  "fixture": {
+    "cases": 200,
+    "dataset_version": "scheduler-m2-synthetic-choice-v1",
+    "families": {
+      "ambiguous_tradeoff": 40,
+      "history": 40,
+      "quota_capacity": 40,
+      "resource_dependency": 40,
+      "risk_effort": 40
+    },
+    "label_manifest_sha256": "b5cbcc43d70b7fbd2a191400cad411ba5e8992d1b49b30d10d406575c2228b2d",
+    "manifest_sha256": "f1644af9e0a53ff392e7520cef08af55934fede6f80510e2349d47ed3f6ee5be",
+    "sha256": "b5cbcc43d70b7fbd2a191400cad411ba5e8992d1b49b30d10d406575c2228b2d",
+    "splits": {
+      "calibration": 100,
+      "held_out": 100
+    }
+  },
+  "limitations": [
+    "Synthetic rubric labels are not real task acceptance outcomes.",
+    "The fixture accuracy is not a calibrated probability or a quota-efficiency measurement.",
+    "The benchmark does not model provider-side usage changes or concurrent sessions."
+  ],
+  "method": "Validate frozen fixtures with bt_scheduler_benchmark.load_fixtures; select the minimum (baseline_rank, route_id); no inference or network access.",
+  "schema_version": 1,
+  "source_requirement": "REQ-013",
+  "summary": {
+    "baseline_accuracy_fixture_only": 0.235,
+    "baseline_matches_oracle": 47,
+    "excluded_routes": 400,
+    "hard_filter_violations": 0,
+    "selected_output_sha256": "21ce899dcf8c15a42f8851e70eb2f855dc0dc73d96c86311d8c28bb410ed962e"
+  }
+}
