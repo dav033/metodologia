@@ -9,18 +9,19 @@ Authority: the approved, unchanged `/home/david/PLAN-FASE-5-M5-RECOVERY-MANAGER.
 ## Result
 
 M5 implementation and local integration through T18 are complete. The frozen test chain
-Planner → M1 → M2 → M3 → M4 → M5 → M1-authorized retry passes with disposable repositories
-and fake verification. It preserves the rejected attempt's M3 handoff, asks M2 for a fresh
-assignment, and only completes after a later accepted verdict. M4 can be omitted. Restart
-coverage verifies durable recovery without duplicating the attempt or decision.
+Planner → M1 → M2 → M3 → M4 → M5 → M1-authorized retry passes with disposable repositories.
+The separate REQ-021 integration now extends this through production M6 wiring: a real M6 FAIL
+leaves the first M1 attempt rejected, M5 recommends retry, M2 records a new assignment, M3
+continues the preserved handoff, and only a later M6 PASS completes M1. M4 events and source
+checkout preservation are asserted. Restart coverage verifies durable recovery without
+duplicating the attempt or decision.
 
-The task is not closed. T19 did not launch because the opt-in preflight could not find two
-fresh, permitted routes from distinct providers and account references, each with no more than
-50% observed quota use. No provider process or paid CLI request was started.
-The production M6 verifier is also absent: the repository has the M1 `VerificationPort` and
-test verifier doubles, but no production M6 implementation. The M6 boundary question sent to
-the owner is still pending. The end-to-end result therefore proves the M5 contract with a
-test verifier; it does not prove a production M6 integration.
+The task is not closed. The 2026-10-15 fresh T19 preflight again could not find two eligible
+routes from distinct providers and account references, each with no more than 50% observed
+quota use. No provider process or paid CLI request was started. T20 remains open because its
+approved closeout follows the T19 experiment. The M6 implementation and integration are now
+tracked separately in REQ-021; this deterministic local proof does not satisfy T19's live CLI
+experiment requirement.
 
 ## Delivered
 
@@ -54,7 +55,7 @@ test verifier; it does not prove a production M6 integration.
 | AC04: bounded and auditable retries, waits, quotas | PASS | Policy/history tests and read-only metrics. |
 | AC05: no recovery of live, uncertain, stale or cancelled attempts | PASS | Guard and adapter failure tests. |
 | AC06: preserve M3 handoff and data on failure | PASS | Snapshot continuation, failure and restart tests. |
-| AC07: verification rejection cannot become success | PARTIAL | Rejected-verdict simulator and M5 E2E pass; production M6 verifier is not present. |
+| AC07: verification rejection cannot become success | PASS locally | REQ-021 Planner→M6 E2E observes M6 FAIL → M1 rejected → M5 retry → M6 PASS → M1 completed; M6 runs against the captured M3 snapshots. |
 | AC08: crash/restart idempotency | PASS | M5 crash suite and restart-after-recovery E2E. |
 | AC09: port failure isolation | PASS | Conservative adapter failure and independent-task tests. |
 | AC10: no secrets or personal provider data in M5 telemetry | PASS | Opaque evidence refs, redaction regression, scoped standards audit. |
@@ -73,6 +74,13 @@ The following recorded commands completed:
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_m5_live_experiment -v` — 7 tests: 6 passed, 1 live CLI experiment skipped by default.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_recovery_adapter test_scheduler_recovery_sources test_scheduler_recovery_failures test_scheduler_recovery_crash test_scheduler_m1_m5_e2e test_scheduler_m5_live_experiment -q` — 26 passed, 1 opt-in live CLI experiment skipped.
 - `BITACORA_LIVE_SCHEDULER_M5_EXPERIMENT=1 BITACORA_LIVE_SCHEDULER_M5_PREFLIGHT_ONLY=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_m5_live_experiment -v` — current strict preflight skipped before launch: fewer than two fresh routes from distinct providers/accounts had <=50% quota use. No provider process or paid CLI request was started.
+- `BITACORA_LIVE_SCHEDULER_M5_EXPERIMENT=1 BITACORA_LIVE_SCHEDULER_M5_PREFLIGHT_ONLY=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_m5_live_experiment -v` — 7 tests: 6 passed, live experiment skipped before launch because two distinct fresh routes/accounts with <=50% use were unavailable. No provider process or paid CLI request was started.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_m1_m6_e2e -v` — 4 passed, including real Planner/M1/M2/M3/M4/M5/M6 rejection and retry flow.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=. python3 -m unittest discover -s bt_scheduler_quality/tests -q` from `skill/scripts` — 66 passed.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts python3 -m unittest discover -s skill/scripts/tests -p 'test_scheduler_quality_real_integration.py' -v` — 1 passed with real M3 handoffs.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_integration.Boundary -q` — 6 passed.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests:tests/migration python3 -m unittest test_package_install -q` — 17 passed, including installed M6 package and adapter imports.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_recovery_adapter test_scheduler_recovery_sources test_scheduler_recovery_failures test_scheduler_recovery_crash test_scheduler_m1_m5_e2e -q` — 19 passed after lifecycle wiring changes.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest discover -s tests/migration -q` — 204 tests, 1 failure. The unchanged `skill/scripts/tests/test_relay_run.py` collects 48 tests while the existing collection baseline records 52. No migration baseline or test was changed to hide this discrepancy.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests:tests/migration python -m unittest test_package_install -q` — 16 passed.
 - Scoped Ruff checks on M5/new files and focused import/syntax checks on the touched M3 files — passed. Broad default Ruff on legacy M3 files still reports pre-existing style findings outside the scoped checks.
@@ -91,9 +99,8 @@ distinct provider/account routes at <=50% quota use, rejects a repeated retry pr
 project unless M1 is terminal, every M3 attempt is terminal and M3 confirms idle. The missing `preserve()` method
 was added and regression-tested. T20 remains open because the approved plan requires the T19 live experiment first.
 
-No M5 live CLI experiment ran. No production M6 verifier was implemented or tested. T19 and T20 remain
-unchecked in the execution plan; the user's answer on the production M6 verifier boundary is required
-before extending implementation into M6. This REQ-019 turn did not run `git commit`, `push` or `fetch`. During the
+No M5 live CLI experiment ran; T19 and T20 remain unchecked. REQ-021 proves the optional production M6 verifier
+integration locally, but its opt-in wiring is not globally activated. This REQ-019 turn did not run `git commit`, `push` or `fetch`. During the
 work, local commit `570a314` appeared with message `maros: marathon REQ-005 S0021 T11 done`; it includes tracked
 REQ-019 documentation and methodology memory updates. I did not attempt to undo that shared commit. The test harness
 remains untracked. The local `origin/feat/scheduler-m4-agent-monitor` tracking ref points to the same commit, but this

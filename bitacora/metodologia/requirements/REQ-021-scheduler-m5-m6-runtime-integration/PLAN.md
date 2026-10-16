@@ -23,10 +23,10 @@ remains usable otherwise. A deterministic local E2E proves the real M5/M6 chain 
 ## Tasks
 
 - [x] T01 — Audit the isolated M6 source, current contracts, repository import boundaries, and shared worktree state · verify: source M6 package 66/66, real-M3 E2E 1/1, M1 boundary 6/6 · covers: R1, R2, R8
-- [ ] T02 — Copy only M6 source/package/tests into the current checkout; adapt the M1/M3 adapter to established public adapter imports · files: `skill/scripts/bt_scheduler_quality/**`, `bt_scheduler_quality_adapter.py` · verify: `python3 -m unittest discover -s skill/scripts/bt_scheduler_quality/tests -q` · covers: R1, R2, R8
-- [ ] T03 — Add explicit M6 composition and ordered lifecycle cleanup in the existing executor wiring · files: `bt_scheduler_executor_wiring.py`, `bt_scheduler_executor_adapter.py` · verify: composition and lifecycle tests · covers: R3–R6, AC01–AC03, AC06
-- [ ] T04 — Add real Planner/M1/M2/M3/M5/M6 E2E for rejection, recovery, snapshot continuation, and later acceptance · files: `skill/scripts/tests/test_scheduler_m1_m6_e2e.py` · verify: `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_m1_m6_e2e -v` · covers: R7, AC04–AC05
-- [ ] T05 — Reconcile module boundaries, wheel metadata, installed-package checks, and scoped lint · files: `skill/references/modules.md`, `pyproject.toml`, `tests/migration/test_package_install.py`, `skill/scripts/tests/test_scheduler_integration.py` · verify: boundary, package, Ruff, and `git diff --check` · covers: R8, AC01–AC03, AC06, AC08
+- [x] T02 — Copy only M6 source/package/tests into the current checkout; adapt the M1/M3 adapter to established public adapter imports · files: `skill/scripts/bt_scheduler_quality/**`, `bt_scheduler_quality_adapter.py` · verify: M6 package 66/66, real-M3 E2E 1/1, M1 boundary 6/6 · covers: R1, R2, R8
+- [x] T03 — Add explicit M6 composition and ordered lifecycle cleanup in the existing executor wiring · files: `bt_scheduler_executor_wiring.py`, `bt_scheduler_executor_adapter.py` · verify: composition guards and shutdown-order tests · covers: R3–R6, AC01–AC03, AC06
+- [x] T04 — Add real Planner/M1/M2/M3/M5/M6 E2E for rejection, recovery, snapshot continuation, and later acceptance · files: `skill/scripts/tests/test_scheduler_m1_m6_e2e.py` · verify: 4 tests passed, including the full end-to-end chain · covers: R7, AC04–AC05
+- [x] T05 — Reconcile module boundaries, wheel metadata, installed-package checks, and scoped lint · files: `skill/references/modules.md`, `pyproject.toml`, `tests/migration/test_package_install.py`, `skill/scripts/tests/test_scheduler_integration.py` · verify: pending final integrated run · covers: R8, AC01–AC03, AC06, AC08
 - [ ] T06 — Refresh the T19 quota preflight and run the bounded experiment only if two distinct fresh routes meet the approved <=50% use gate · verify: opt-in preflight and T19 receipt · covers: R9, AC07
 - [ ] T07 — Run the relevant integrated suites, audit the exact diff, update REQ-019/REQ-021 reports and project memory · verify: recorded test outputs and final acceptance matrix · covers: AC01–AC08
 
@@ -52,3 +52,7 @@ unchanged. Separately report the T19 live gate and every test not executed.
 - 2026-10-15 — Audited M6 at isolated base `8749e44`; current source tests passed (66 package, 1 real-M3 E2E, 6 M1
   boundary). Found no central runtime wiring, a stale base relative to current M4/M5, and direct M1/M3 imports in the
   M6 adapter that must be reconciled with the current module boundary before integration.
+- 2026-10-15 — Integrated opt-in M6 composition and ordered shutdown. The local Planner/M1/M2/M3/M4/M5/M6 E2E passed:
+  M6 FAIL left the first M1 attempt rejected, M5 recommended retry, M2 emitted a distinct decision, M3 resumed the
+  captured snapshot in a new worktree, and M6 PASS completed the second attempt. M4 stream events and source checkout
+  preservation were asserted. Boundary, wheel, and remaining lint/diff closeout checks are tracked in T05/T07.
