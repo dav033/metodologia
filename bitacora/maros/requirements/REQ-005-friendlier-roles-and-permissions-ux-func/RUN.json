@@ -14,15 +14,14 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-15T22:07:45",
+  "at": "2026-10-15T22:09:08",
   "pid": 842,
   "machine": "precision7760",
   "task": "M4",
   "session": 22,
-  "state": "session running 6 min",
+  "state": "batch settled",
   "session_pids": {
-   "18": 73593,
-   "22": 177780
+   "18": 73593
   },
   "session_pid": null
  },
@@ -571,16 +570,23 @@
    "complexity": null,
    "milestone": "M4",
    "tier": 0,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
    "evidence": "Commit a15a1a6 on wt/M4-387f7bd0. npx vitest run src/features/users src/components: 13 files, 62 tests pass. tsc: 0 errors. eslint on touched files: clean. Antagonist review: first pass CONCERNS (fixed A1-A4, A6, A7; A5 and page-level test deferred to P-014/P-015), re-review SOUND.",
    "pending_id": null,
    "notes": [],
-   "claimed_done": true,
    "findings": null,
-   "severity": null
+   "severity": null,
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "haiku",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "T13",
@@ -598,16 +604,23 @@
    "complexity": null,
    "milestone": "M4",
    "tier": 0,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
    "evidence": "npx vitest run: 83 files, 422 tests pass (exit 0). tsc --noEmit: 0 errors. eslint . : 0 errors, 180 warnings, same as the pre-T12 baseline (no new warnings). No code change in T13; commit a15a1a6 holds T12.",
    "pending_id": null,
    "notes": [],
-   "claimed_done": true,
    "findings": null,
-   "severity": null
+   "severity": null,
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "haiku",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "M4-audit",
@@ -1380,6 +1393,44 @@
    },
    "isolation": "worktree",
    "branch": "wt/T11-0bc5f1c9"
+  },
+  {
+   "at": "2026-10-15T22:08:03",
+   "session": 22,
+   "task": "T12",
+   "result": "integration_pending",
+   "summary": "Commit a15a1a6 on wt/M4-387f7bd0. npx vitest run src/features/users src/components: 13 files, 62 tests pass. tsc: 0 errors. eslint on touched files: clean. Antagonist review: first pass CONCERNS (fixed A1-A4, A6, A7; A5 and page-level test deferred to P-014/P-015), re-review SOUND.",
+   "seconds": 367,
+   "model": "haiku",
+   "cost_usd": 0.5985651300000003,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M4-387f7bd0"
+  },
+  {
+   "at": "2026-10-15T22:08:26",
+   "session": 22,
+   "task": "T13",
+   "result": "integration_pending",
+   "summary": "npx vitest run: 83 files, 422 tests pass (exit 0). tsc --noEmit: 0 errors. eslint . : 0 errors, 180 warnings, same as the pre-T12 baseline (no new warnings). No code change in T13; commit a15a1a6 holds T12.",
+   "seconds": 367,
+   "model": "haiku",
+   "cost_usd": 0.5985651300000003,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/M4-387f7bd0"
   }
  ],
  "pool": [
@@ -1909,7 +1960,7 @@
    "base_sha": "b8efd6aa01f53257d25a4cdd198e94f97a2f6052",
    "repo": "/home/david/dev/maros/maros-next",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "allocated",
+   "state": "accepted",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
@@ -1918,9 +1969,59 @@
     "T12",
     "T13"
    ],
-   "allowed_paths": [],
+   "allowed_paths": [
+    "src/app/settings/roles/page.tsx",
+    "src/app/settings/users/page.tsx",
+    "src/di/factories/usersFactory.ts",
+    "src/features/users/README.md",
+    "src/features/users/application/context.ts",
+    "src/features/users/application/index.ts",
+    "src/features/users/application/keys/usersKeys.ts",
+    "src/features/users/application/usecases/mutations/bulkAssignRole.ts",
+    "src/features/users/application/usecases/mutations/createAccessRequest.ts",
+    "src/features/users/application/usecases/mutations/duplicateRole.ts",
+    "src/features/users/application/usecases/mutations/previewRoleImpact.ts",
+    "src/features/users/application/usecases/mutations/resolveAccessRequest.ts",
+    "src/features/users/application/usecases/queries/explainUserAccess.ts",
+    "src/features/users/application/usecases/queries/listAccessRequests.ts",
+    "src/features/users/application/usecases/queries/listRoleAudit.ts",
+    "src/features/users/application/usecases/usecases.test.ts",
+    "src/features/users/domain/models.ts",
+    "src/features/users/domain/ports.ts",
+    "src/features/users/index.ts",
+    "src/features/users/infra/http/AccessRequestsHttpRepository.ts",
+    "src/features/users/infra/http/RolesHttpRepository.ts",
+    "src/features/users/infra/http/UsersHttpRepository.ts",
+    "src/features/users/infra/http/UsersRepositories.test.ts",
+    "src/features/users/infra/http/endpoints.ts",
+    "src/features/users/infra/http/mappers.test.ts",
+    "src/features/users/infra/http/mappers.ts",
+    "src/features/users/infra/index.ts",
+    "src/features/users/presentation/hooks/data/useAccessRequests.ts",
+    "src/features/users/presentation/hooks/data/useRoleAudit.ts",
+    "src/features/users/presentation/hooks/data/useUserAccessExplanation.ts",
+    "src/features/users/presentation/hooks/mutations/useUsersPermissionsMutations.ts",
+    "src/features/users/presentation/lib/roleEditorModel.test.ts",
+    "src/features/users/presentation/lib/roleEditorModel.ts",
+    "src/features/users/presentation/organisms/AccessRequestsInbox.test.tsx",
+    "src/features/users/presentation/organisms/AccessRequestsInbox.tsx",
+    "src/features/users/presentation/organisms/EffectiveAccessDrawer.tsx",
+    "src/features/users/presentation/organisms/InviteUserDialog.tsx",
+    "src/features/users/presentation/organisms/NoAccessState.test.tsx",
+    "src/features/users/presentation/organisms/NoAccessState.tsx",
+    "src/features/users/presentation/organisms/RoleEditorDialog.test.tsx",
+    "src/features/users/presentation/organisms/RoleEditorDialog.tsx",
+    "src/features/users/presentation/organisms/RolesList.test.ts",
+    "src/features/users/presentation/organisms/RolesList.tsx",
+    "src/features/users/presentation/organisms/UsersTable.test.tsx",
+    "src/features/users/presentation/organisms/UsersTable.tsx",
+    "src/features/users/presentation/pages/UsersSettingsPageView.test.tsx",
+    "src/features/users/presentation/pages/UsersSettingsPageView.tsx"
+   ],
    "resources": [],
-   "repo_role": "frontend"
+   "repo_role": "frontend",
+   "candidate_sha": "a15a1a6a969ea3adf221d43dca8f76ac6b31b9f3",
+   "cleaned": true
   }
  },
  "wait_step": 0
