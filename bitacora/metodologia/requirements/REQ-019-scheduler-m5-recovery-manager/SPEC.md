@@ -14,6 +14,9 @@ including T01–T20, R01–R18 and AC01–AC12; it remains unchanged.
   decision ledger. Only `bt_scheduler_recovery_adapter.py` imports it from methodology production code.
 - The adapter reads an atomic M1 state view through its public read callback and M3's public description.
   It checks active run/plan/hash/revision/task/attempt/token before proposing. It never opens M1's database.
+- The M3 `StartRequest` has an optional, format-validated `plan_sha256`; the Scheduler adapter always supplies the
+  approved hash, which M3 persists and returns through its public description. A hashless pre-field row may answer an
+  idempotent replay only; it is unverified evidence and cannot authorize M5 recovery or snapshot continuation.
 - M3 terminal evidence is required for retry. Missing, uncertain, live, cancelled, stale or cross-boundary
   evidence cannot authorize another writer. Raw error text is never used to infer recoverability.
 - RecoveryCase schema `m5.recovery-case/1` and policy 1.0.0 record only bounded identities, cause enums,

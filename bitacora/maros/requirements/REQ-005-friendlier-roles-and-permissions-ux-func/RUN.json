@@ -14,15 +14,14 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-15T21:41:18",
+  "at": "2026-10-15T21:43:01",
   "pid": 842,
   "machine": "precision7760",
   "task": "T9",
   "session": 19,
-  "state": "session running 14 min",
+  "state": "batch settled",
   "session_pids": {
-   "18": 73593,
-   "19": 5877
+   "18": 73593
   },
   "session_pid": null
  },
@@ -460,20 +459,21 @@
    "complexity": null,
    "milestone": "M4",
    "tier": 2,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 3,
-   "last_error": "integration: combined verification failed: No tests found, exiting with code 1\nRun with `--passWithNoTests` to exit with code 0\nIn /home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/REQ-005-integration-768f8753\n  1290 files checked.\n  testMatch: **/__tests__/**/*.?([mc])[jt]s?(x), **/?(*.)+(spec|test).?([mc])[jt]s?(x) - 76 matches\n  testPathIgnorePatterns: /node_modules/ - 1290 matches\n  testRegex:  - 0 matches\nPattern: src/common/auth - 0 matches",
+   "last_error": null,
    "error_hashes": [
     "c855ac44bd32",
     "101747d8d490",
     "32a050492989"
    ],
-   "evidence": "commit 2e4ca65 on wt/T9-c17cbb32; fixed bt_run_isolated.py multi-repo integration verify task filtering; npx vitest run src/features/users exit 0 (4 suites, 27 tests pass); npx tsc --noEmit and eslint clean; antagonist approved CLEAR",
+   "evidence": "commit 37afd4d on wt/T9-7fc5a55b; npx vitest run src/features/users exit 0 (4 suites, 27 tests pass); npx tsc --noEmit and eslint clean; antagonist review approved CLEAR",
    "pending_id": null,
    "notes": [
     "commit 678b4fa on wt/T9-e2b72801. Data layer in features/users complete with models, ports, HTTP repositories, mappers, usecases, and hooks. 'npx vitest run src/features/users' passed (4 suites, 27 tests). tsc and eslint clean.",
     "commit 420c74f on wt/T9-a1315158. Resolved /bin/sh npx missing and worktree node_modules. Strict typing fixes for repository response generics and catalog models. 'npx vitest run src/features/users' exit 0: 4 suites, 27 tests pass; 'npx tsc --noEmit' and eslint clean. Antagonist approved CLEAR.",
-    "Fixed multi-repo integration verification bug in bt_run_isolated.py where accepted backend tasks were run in frontend integration worktree. Verified T9 data layer in features/users on wt/T9-c17cbb32 with vitest (4 suites, 27 tests), tsc and eslint clean. Antagonist approved CLEAR."
+    "Fixed multi-repo integration verification bug in bt_run_isolated.py where accepted backend tasks were run in frontend integration worktree. Verified T9 data layer in features/users on wt/T9-c17cbb32 with vitest (4 suites, 27 tests), tsc and eslint clean. Antagonist approved CLEAR.",
+    "commit 37afd4d on wt/T9-7fc5a55b. Complete data layer in features/users (models, ports, endpoints, mappers, repositories, usecases, hooks, tests, README). npx vitest run src/features/users exit 0: 4 suites, 27 tests pass; npx tsc --noEmit and eslint clean. Antagonist approved CLEAR."
    ],
    "findings": null,
    "severity": null,
@@ -1296,6 +1296,24 @@
    },
    "isolation": "worktree",
    "branch": "wt/T9-c17cbb32"
+  },
+  {
+   "at": "2026-10-15T21:42:58",
+   "session": 19,
+   "task": "T9",
+   "result": "integration_pending",
+   "summary": "commit 37afd4d on wt/T9-7fc5a55b; npx vitest run src/features/users exit 0 (4 suites, 27 tests pass); npx tsc --noEmit and eslint clean; antagonist review approved CLEAR",
+   "seconds": 936,
+   "model": "gemini-3.8-flash-medium",
+   "agent": "antigravity",
+   "profile": "antigravity",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/T9-7fc5a55b"
   }
  ],
  "pool": [
@@ -1641,7 +1659,7 @@
    "base_sha": "b8efd6aa01f53257d25a4cdd198e94f97a2f6052",
    "repo": "/home/david/dev/maros/maros-next",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "allocated",
+   "state": "accepted",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
@@ -1649,9 +1667,41 @@
    "task_ids": [
     "T9"
    ],
-   "allowed_paths": [],
+   "allowed_paths": [
+    "src/di/factories/usersFactory.ts",
+    "src/features/users/README.md",
+    "src/features/users/application/context.ts",
+    "src/features/users/application/index.ts",
+    "src/features/users/application/keys/usersKeys.ts",
+    "src/features/users/application/usecases/mutations/bulkAssignRole.ts",
+    "src/features/users/application/usecases/mutations/createAccessRequest.ts",
+    "src/features/users/application/usecases/mutations/duplicateRole.ts",
+    "src/features/users/application/usecases/mutations/previewRoleImpact.ts",
+    "src/features/users/application/usecases/mutations/resolveAccessRequest.ts",
+    "src/features/users/application/usecases/queries/explainUserAccess.ts",
+    "src/features/users/application/usecases/queries/listAccessRequests.ts",
+    "src/features/users/application/usecases/queries/listRoleAudit.ts",
+    "src/features/users/application/usecases/usecases.test.ts",
+    "src/features/users/domain/models.ts",
+    "src/features/users/domain/ports.ts",
+    "src/features/users/index.ts",
+    "src/features/users/infra/http/AccessRequestsHttpRepository.ts",
+    "src/features/users/infra/http/RolesHttpRepository.ts",
+    "src/features/users/infra/http/UsersHttpRepository.ts",
+    "src/features/users/infra/http/UsersRepositories.test.ts",
+    "src/features/users/infra/http/endpoints.ts",
+    "src/features/users/infra/http/mappers.test.ts",
+    "src/features/users/infra/http/mappers.ts",
+    "src/features/users/infra/index.ts",
+    "src/features/users/presentation/hooks/data/useAccessRequests.ts",
+    "src/features/users/presentation/hooks/data/useRoleAudit.ts",
+    "src/features/users/presentation/hooks/data/useUserAccessExplanation.ts",
+    "src/features/users/presentation/hooks/mutations/useUsersPermissionsMutations.ts"
+   ],
    "resources": [],
-   "repo_role": "frontend"
+   "repo_role": "frontend",
+   "candidate_sha": "37afd4decb7cd711906f9ce056481faf5d969201",
+   "cleaned": true
   },
   "__integration__:frontend": {
    "task_id": "REQ-005-integration",
