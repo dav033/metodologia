@@ -75,3 +75,59 @@ The updated PLAN.md has not yet been sent. Firefox BiDi timed out; `mcp-control`
 
 - The direct read-only `desktop_windows` call remained pending for more than 200 seconds and was canceled. A separate local `mcp-control` query returned `BLOCKED (human_has_control)` for `desktop_start` and `desktop_windows`; the lease file was still present. No browser interaction or WhatsApp send occurred.
 - An async clarification request is waiting for the owner to release the lease or authorize a Xephyr reconnect/restart. Do not bypass the lease through another browser-control path.
+
+
+## Owner approval (2026-10-16)
+
+- The owner approved REQ-024 plan revision r1. `PLAN.json` froze as `r1@5b9f9f35` after `python3 skill/scripts/bitacora.py --project metodologia plan-json check REQ-024` returned `OK: PLAN.json is publishable`.
+- Approved usage bounds: 30 matched benchmark runs plus one final Claude Opus 5.5 high REQ-017 reference run; 66 blind-review records; two independent reviewers using one hash-pinned rubric, with exact evaluator profiles/models pinned in the benchmark manifest before scoring.
+- Approved T15 cap: one launch-only smoke per effective account, at most five under the current inventory. Refresh the inventory before T15; any newly configured account is outside this cap.
+- Pictures q1–q5 and A6–A8 remain outside scope. No benchmark run or provider call was authorized beyond these stated bounds.
+
+
+## T1 — Diagnostic baseline (2026-10-16)
+
+- Baseline repository HEAD: `196196ef427ab1f066d22faaeece2a40f8aa182c` on `feat/scheduler-m4-agent-monitor`; the worktree was already dirty, so the Planner source snapshot and per-file SHA-256 list are preserved under `artifacts/REQ-024-benchmark/baseline/current-v2-source/`.
+- The snapshot contains the shared Planner profile, its four private skills, `bt_planner` and `bt_plan_adapter.py` (103 files). The baseline is the current V2 at T1, including D-055 and Planner instruction edits made before plan approval; it is not presented as the older pre-edit V2.
+- `python3 skill/scripts/bitacora.py --project metodologia profiles list` exited 0: seven registered profile IDs across Claude, Codex and Antigravity. `bt_agents.pool_for('metodologia')` resolves five effective accounts: `antigravity`, `claude-personal`, `claude-work`, `codex-1`, `codex-luis`. Account directory values are redacted in the artifact.
+- Baseline command `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests` exited 0: 219 tests in 18.663 s. Full output is `artifacts/REQ-024-benchmark/baseline/bt-planner-tests.log`.
+
+
+## T2/T3 — Evidence and consumer diagnosis (2026-10-16)
+
+- `artifacts/REQ-024-benchmark/DIAGNOSIS.md` fingerprints recovered V1 output/prompt/session evidence, the controlled V2 rerun artifacts, Pictures' later-edited live plan, and scenario oracles. It labels V1 retrospective only and separates model output from coordinator edits, implementation and tests. `OUTCOME.json` says `claimed` while `RESULT.json` is `done`; the returned RESULT is the raw plan source, not an execution-success verdict.
+- `artifacts/REQ-024-benchmark/CONSUMER_AUDIT.md` maps `bt_planner` → the sole methodology adapter → M1 → M2 and M6. It confirms M1 does not pass explicit `kind`, M2 infers it from task title, M6's typed verifier hash omits a future evidence category, and 1.1.0 frozen bytes must remain unchanged. It also records provider profiles, installers, general hooks and the missing generic `bt_planner_runtime` invocation adapter.
+- Read-only local telemetry snapshot: 153 cross-project attempts; 153 elapsed-time values, 94 token totals, 80 verified outcomes, 123 unknown origins and 0 reported-model identities. It is not Planner-only evidence; no route-quality or cross-provider estimate is inferred. M4 metric use remains exact-match by provider/profile/model/name/unit/comparability key.
+- `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py` exited 0: 21 tests in 0.321 s. It verifies methodology integration and parser parity, not model or Pictures acceptance. No Pictures product source changed.
+
+## T4 — Golden canonicalization fixtures (2026-10-16)
+
+- Added exact input and canonical-output fixtures for schema 1.0.0, 1.1.0 and a 1.2.0-labelled plan carrying the proposed `requirements`, `covers`, `kind`, `interfaces` and verification `category` keys.
+- The T1 snapshot's `bt_planner/contract.py` SHA-256 is `2ed0e93371ec68dcbe6bed5a3cc90ad49fad971e866a3bf12f1be88bfa80cbe2`; the working file matched and had no Git diff when generated. Provenance is recorded beside the fixtures in `skill/scripts/bt_planner/tests/golden/GENERATION.md`.
+- `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_contract_golden.py` — exit 0; 3 tests passed. Output: `../../artifacts/REQ-024-benchmark/test-contract-golden.log`.
+- No contract or Pictures source changed. The 1.2.0 fixture pins only the old serializer's bytes; it does not claim that the old validator implements 1.2.0 semantics.
+
+## T5 — Contract compatibility record (2026-10-16)
+
+- Added `CONTRACT-1.2.0.md` by comparing the approved additive proposal with every consumer in `../../artifacts/REQ-024-benchmark/CONSUMER_AUDIT.md`. The plan's verification item referred to `CONSUMERS.md`; T3's actual audit file is `CONSUMER_AUDIT.md`, so no duplicate inventory was created.
+- `cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests -p test_plan.py` — exit 0; 23 tests passed. Output: `../../artifacts/REQ-024-benchmark/test-plan-loader.log`.
+- Direct read-only probes: current M1 accepts the 1.2.0 fixture but its metadata allowlist drops `kind`; current M6 rejects a verification `category` with `ORDER_INVALID`. Current M2 therefore still infers kind from title. This confirms T11 must update M1/M2/M6 and add a fail-closed capability gate before any 1.2.0 approval or execution.
+- A source scan found no direct `PLAN.json`/`bt_planner` consumer in Pictures, Maros, LOTM or Training App and no direct review-UI reader in methodology source.
+- T5 disposition: proceed to T6 under the approved migration plan; legacy plans remain supported, and a 1.2.0 plan cannot be approved, handed off, launched or resumed until the updated Planner, M1, M2 and M6 compatibility checks pass. No contract code or Pictures source changed.
+
+## T6 — Version-gated validator extension points (2026-10-16)
+
+- Added `EXTENSIONS_SINCE = (1, 2, 0)` and wired `traceability.check(plan, spec_ids)`, `interfaces.check(plan, ancestors)` and `quality.verification_findings(plan)` only for supported schema-1 documents at 1.2.0 or later. Added the pure module boundaries; T7–T9 implement their semantic checks. `SCHEMA_VERSION` remains 1.1.0 pending T10, and no 1.2.0 rollout is enabled by this task.
+- Before editing `contract.py`, froze exact baseline error/warning reports for the T4 1.0.0/1.1.0 inputs. Their hashes are pinned in `test_extensions.py`; the T1 `contract.py` source hash remained `2ed0e93371ec68dcbe6bed5a3cc90ad49fad971e866a3bf12f1be88bfa80cbe2`.
+- `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests` — exit 0; 225 tests passed. Focused `test_extensions.py` passed 3 tests and `test_contract_golden.py` passed 3 tests. Logs: `../../artifacts/REQ-024-benchmark/test-bt-planner-t6.log`, `test-extensions-t6.log` and `test-contract-golden-t6.log`.
+- `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py` — exit 0; 21 tests passed. `python3 skill/scripts/bitacora.py --project metodologia plan-json check REQ-024` returned `OK: PLAN.json is publishable`. Scoped Ruff, `py_compile` and `git diff --check` passed.
+- The extension hooks are intentionally incomplete until T7–T9. The existing T4 hashes remain unchanged, 1.0.0/1.1.0 reports match their pinned baseline, and no Pictures file changed.
+
+## T7 — Requirement traceability checks (2026-10-16)
+
+- Implemented 1.2.0-only validation for a non-empty unique `requirements` ID list, each task's non-empty `covers` list, invalid/duplicate/unknown IDs, orphan tasks, SPEC/plan ID-set differences and requirements without a covering task. Findings name the requirement or task instead of aggregating IDs.
+- Added a pure SPEC parser for IDs at the start of bullet or ordered list items inside the `Requirements` heading. It stops at the next same-level or higher heading, ignores fenced code, and distinguishes a missing heading from an empty section. `sync.check` passes extracted IDs only for supported schema 1.2.0+ plans; unresolved SPEC context becomes a warning. Legacy versions do not read or validate the new fields.
+- `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_traceability.py` — exit 0; 10 tests passed. Output: `../../artifacts/REQ-024-benchmark/test-traceability-t7.log`.
+- `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests` — exit 0; 235 tests passed. Output: `../../artifacts/REQ-024-benchmark/test-bt-planner-t7.log`.
+- `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py` — exit 0; 21 tests passed. Output: `../../artifacts/REQ-024-benchmark/test-plan-integration-t7.log`.
+- `py_compile`, `plan-json check REQ-024` and scoped `git diff --check` passed. Ruff passed on the touched implementation/test files when excluding the existing `FURB167` and `ISC004` findings in `sync.py`; a plain file-wide Ruff run reports those three pre-existing findings at the module front-matter and freeze error-message strings. No unrelated lint cleanup or Pictures source change was made.

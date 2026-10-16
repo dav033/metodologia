@@ -1,0 +1,12 @@
+{
+ "intent": "investigation",
+ "critical_path": [
+  "T1",
+  "T2",
+  "T3"
+ ],
+ "low_confidence": [
+  "T1",
+  "T2"
+ ]
+}

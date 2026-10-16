@@ -1,0 +1,507 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "TRAIN-6",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Decide and prepare",
+      "acceptance_criteria": [
+        "Storage is behind a port and the migration strategy is decided and written"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Postgres implementation",
+      "acceptance_criteria": [
+        "A PostgreSQL implementation passes the same tests and a verified migration tool exists"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Cutover",
+      "acceptance_criteria": [
+        "Deployment, backup and rollback support the new store and a rehearsal succeeded on a copy"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Write the persistence port and decide the driver and migration strategy",
+      "objective": "Specify the repository port, choose the PostgreSQL driver and decide how data and downtime are handled",
+      "repository": "trainingapp",
+      "after": [],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "Architectural decisions with unknown deployment constraints: the EC2 host and database hosting are not visible from this workspace",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:apps/api/src/repositories/project-repository.ts",
+            "file:apps/api/src/app.ts"
+          ],
+          "justification": "Cross-cutting design: synchronous better-sqlite3 calls become asynchronous across repositories and routes"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/api/src/db/database.ts"
+          ],
+          "justification": "A design record; the code changes are in later tasks"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/api/src/repositories/asset-repository.ts",
+            "file:apps/api/src/services/asset-service.ts"
+          ],
+          "justification": "Reading eleven call sites and drafting the record; owner review time is not included"
+        },
+        "risk": {
+          "evidence": [
+            "file:ops/ec2/compose.yml",
+            "file:apps/api/src/db/database.ts"
+          ],
+          "justification": "Production data and availability depend on this decision"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T3",
+            "task:T4"
+          ],
+          "justification": "Every later task consumes the port and schema decided here"
+        },
+        "confidence": {
+          "evidence": [
+            "file:ops/ec2/compose.yml",
+            "assumption:a managed PostgreSQL is reachable from the EC2 host"
+          ],
+          "justification": "Hosting for PostgreSQL and the downtime budget are unknown"
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/repositories/project-repository.ts",
+        "apps/api/src/repositories/asset-repository.ts",
+        "apps/api/src/db/database.ts"
+      ],
+      "shared_resources": [
+        "persistence-port",
+        "database-schema"
+      ],
+      "acceptance_criteria": [
+        "A decision record names the driver, the port methods and the migration and rollback strategy",
+        "Open questions about hosting and downtime are listed for the owner"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "review the decision record with the owner",
+          "purpose": "validate the strategy",
+          "expected": "the owner accepts or amends the record"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Move repositories behind the port without changing storage",
+      "objective": "Introduce the async port and keep the SQLite implementation passing every existing test",
+      "repository": "trainingapp",
+      "after": [
+        "T1"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Routes in app.ts call repositories synchronously; making the port async touches routes, services and tests together",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:apps/api/src/app.ts",
+            "file:apps/api/src/repositories/project-repository.ts"
+          ],
+          "justification": "A synchronous to asynchronous change across routes, repositories and services that must keep revision conflict semantics"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/api/src/services/asset-service.ts"
+          ],
+          "justification": "Four source files and the route layer, extensive but behaviour preserving"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/api/src/app.ts",
+            "file:apps/api/test/repository.test.ts"
+          ],
+          "justification": "Eleven call sites in four files plus fixing awaits in every route; tests are few"
+        },
+        "risk": {
+          "evidence": [
+            "file:apps/api/test/repository.test.ts",
+            "file:apps/api/src/repositories/project-repository.ts"
+          ],
+          "justification": "Revision conflict and delete cascades are easy to break and only one test covers them"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "T3 implements the same port and both edit the repository layer"
+        },
+        "confidence": {
+          "evidence": [
+            "file:apps/api/test/repository.test.ts",
+            "assumption:no code outside apps/api calls the repositories"
+          ],
+          "justification": "The code was read, but the test suite is thin and there are no route tests"
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/repositories/project-repository.ts",
+        "apps/api/src/repositories/asset-repository.ts",
+        "apps/api/src/services/asset-service.ts",
+        "apps/api/src/app.ts"
+      ],
+      "shared_resources": [
+        "persistence-port"
+      ],
+      "acceptance_criteria": [
+        "All routes use the async port",
+        "The existing API tests pass unchanged against SQLite",
+        "No behaviour change is visible to clients"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/api",
+          "purpose": "existing API tests"
+        },
+        {
+          "type": "command",
+          "value": "npm run typecheck -w @training/api",
+          "purpose": "no type regressions"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Implement the PostgreSQL schema and repositories",
+      "objective": "Provide a PostgreSQL implementation of the port with schema migration and tests equal to the SQLite ones",
+      "repository": "trainingapp",
+      "after": [
+        "T2"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "New schema, driver, migrations and a test harness that needs a database; JSON validity and ON DELETE CASCADE must be reproduced",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:apps/api/src/db/database.ts"
+          ],
+          "justification": "Reproducing SQLite semantics (JSON check, cascade, user_version migrations) in a different engine"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/api/src/db/database.ts"
+          ],
+          "justification": "A complete second storage implementation with its own tests"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/api/package.json"
+          ],
+          "justification": "New driver, schema and test environment; no precedent in this repository"
+        },
+        "risk": {
+          "evidence": [
+            "file:apps/api/src/db/database.ts"
+          ],
+          "justification": "Data integrity: a schema difference corrupts or loses project data"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T4"
+          ],
+          "justification": "Implements the port from T2 and defines the schema that T4 targets"
+        },
+        "confidence": {
+          "evidence": [
+            "file:apps/api/package.json",
+            "assumption:a docker postgres is available for tests"
+          ],
+          "justification": "No PostgreSQL exists in this workspace to try against"
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/db/postgres.ts",
+        "apps/api/test/postgres-repository.test.ts"
+      ],
+      "shared_resources": [
+        "persistence-port",
+        "database-schema"
+      ],
+      "acceptance_criteria": [
+        "The PostgreSQL implementation passes the same repository tests as SQLite",
+        "data_json validity and cascade deletion are enforced in PostgreSQL"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test -w @training/api",
+          "purpose": "repository tests against PostgreSQL",
+          "created_by": "T3"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Build the data migration and verification tool",
+      "objective": "Copy projects and assets from SQLite to PostgreSQL and verify counts and content hashes",
+      "repository": "trainingapp",
+      "after": [
+        "T2"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "One-shot tool with row counts and sha256 comparison; assets also live on the filesystem",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:apps/api/src/backup.ts",
+            "file:apps/api/src/db/database.ts"
+          ],
+          "justification": "Streaming copy with verification across two engines and a filesystem tree of assets"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/api/src/backup.ts"
+          ],
+          "justification": "A new standalone tool and its report format"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/api/src/backup.ts"
+          ],
+          "justification": "backup.ts shows the checksum pattern but the copy and verification logic is new"
+        },
+        "risk": {
+          "evidence": [
+            "file:apps/api/src/backup.ts"
+          ],
+          "justification": "Operates on production data; an unverified copy loses records"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "Targets the schema from T3 and shares only that contract"
+        },
+        "confidence": {
+          "evidence": [
+            "file:apps/api/src/backup.ts",
+            "assumption:the dataset fits in one transaction batch"
+          ],
+          "justification": "Volume and asset size are unknown"
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/migrate-sqlite-to-postgres.ts"
+      ],
+      "shared_resources": [
+        "database-schema"
+      ],
+      "acceptance_criteria": [
+        "The tool reports equal row counts and content hashes for projects and assets on a copy of production data",
+        "The tool is idempotent or refuses to run twice"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "run the tool against a copy of the production backup",
+          "purpose": "rehearse the migration",
+          "expected": "counts and hashes match and the report says so"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M3",
+      "title": "Adapt backup, compose and deployment scripts",
+      "objective": "Back up PostgreSQL, provide its service or connection in compose, and keep rollback instructions valid",
+      "repository": "trainingapp",
+      "after": [
+        "T3"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "Four deployment files; hosting choice from T1 decides compose and backup commands",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:ops/ec2/deploy.ps1",
+            "file:ops/ec2/rollback.ps1"
+          ],
+          "justification": "Deployment, backup and rollback semantics change together and are documented only in PowerShell scripts"
+        },
+        "scope": {
+          "evidence": [
+            "file:ops/ec2/compose.yml"
+          ],
+          "justification": "Five files across application and operations"
+        },
+        "duration": {
+          "evidence": [
+            "file:ops/ec2/deploy.ps1"
+          ],
+          "justification": "Scripts are short but cannot be run locally against the real host"
+        },
+        "risk": {
+          "evidence": [
+            "file:ops/ec2/deploy.ps1",
+            "file:ops/ec2/rollback.ps1"
+          ],
+          "justification": "Production deployment and rollback of a database engine"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "Uses the PostgreSQL implementation from T3 and the deployment files are shared with release flow"
+        },
+        "confidence": {
+          "evidence": [
+            "file:ops/ec2/compose.yml",
+            "assumption:the compose file is the only deployment descriptor"
+          ],
+          "justification": "The EC2 host cannot be inspected from here"
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/backup.ts",
+        "ops/ec2/compose.yml",
+        "ops/ec2/deploy.ps1",
+        "ops/ec2/rollback.ps1",
+        "apps/api/Dockerfile"
+      ],
+      "shared_resources": [
+        "deployment-contract"
+      ],
+      "acceptance_criteria": [
+        "backup.ts produces a restorable PostgreSQL dump plus assets and checksums",
+        "rollback.ps1 states how to restore the previous store"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "run the backup and restore it into an empty database",
+          "purpose": "prove restorability",
+          "expected": "restored row counts equal the source"
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M3",
+      "title": "Rehearse the migration on a copy and write the cutover runbook",
+      "objective": "Run the full migration and rollback on a copy and document the cutover steps with timings",
+      "repository": "trainingapp",
+      "after": [
+        "T4",
+        "T5"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "A rehearsal on real data with timing and a written runbook; duration depends on data volume",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:docs/deployment.md",
+            "task:T4",
+            "task:T5"
+          ],
+          "justification": "Coordinates every earlier task under failure scenarios"
+        },
+        "scope": {
+          "evidence": [
+            "file:docs/deployment.md"
+          ],
+          "justification": "A runbook and a rehearsal; no new production code"
+        },
+        "duration": {
+          "evidence": [
+            "assumption:production data is small enough for a same-day rehearsal"
+          ],
+          "justification": "Depends on a data volume that is not known yet"
+        },
+        "risk": {
+          "evidence": [
+            "file:docs/deployment.md"
+          ],
+          "justification": "Defines the actual production cutover procedure"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4",
+            "task:T5"
+          ],
+          "justification": "Needs the migration tool and the adapted deployment scripts"
+        },
+        "confidence": {
+          "evidence": [
+            "file:docs/deployment.md",
+            "assumption:rehearsal runs on EC2 with the same disk"
+          ],
+          "justification": "Durations are unknown until the first rehearsal"
+        }
+      },
+      "expected_paths": [
+        "docs/deployment.md"
+      ],
+      "shared_resources": [
+        "deployment-contract",
+        "database-schema"
+      ],
+      "acceptance_criteria": [
+        "The runbook lists every cutover and rollback step with a measured duration from the rehearsal",
+        "The rehearsal report shows verified counts and hashes"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "execute the runbook on a copy of production",
+          "purpose": "rehearse cutover and rollback",
+          "expected": "both complete and the verification report is attached"
+        }
+      ]
+    }
+  ]
+}

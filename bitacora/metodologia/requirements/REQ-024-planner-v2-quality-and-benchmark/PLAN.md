@@ -5,7 +5,7 @@ created: 2026-10-16
 ---
 # Plan — REQ-024 — Planner V2 quality, provider-neutral launch and reproducible benchmark
 
-Planner-generated draft revised by the coordinator after the owner clarified the provider-neutral launch requirement. It is not approved, frozen or launched. The latest structural check and report are recorded in RUN.md.
+Planner-generated plan revised by the coordinator after the owner clarified the provider-neutral launch requirement. The owner approved revision r1 on 2026-10-16; the matching PLAN.json is frozen. Implementation has not yet launched. The latest structural check and report are recorded in RUN.md.
 
 ## Approach
 Evolve the existing V2 Planner instead of restoring V1, and make the same Planner role invocable through each locally configured AI runtime/account. The work proceeds in these steps:
@@ -161,17 +161,17 @@ Rollback selects the last compatible approved 1.1.0 revision and restores the ma
 ## Tasks
 
 ### M1 — Diagnostic baseline and evidence classification
-- [ ] T1 — Record the pre-change baseline and inventory local AI profiles · repo: skill · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests` · resources: req024-baseline-record · covers: R1, R2, R13, R15
-- [ ] T2 — Classify Planner sources and REQ-017 artifacts by evidence type · repo: skill · after: T1 · resources: req024-diagnosis-record · covers: R1, R2, R11
-- [ ] T3 — Audit PLAN.json consumers, planning telemetry and local Planner launch interfaces · repo: skill · after: T1 · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py` · resources: req024-consumer-audit · covers: R2, R8, R9, R15
+- [x] T1 — Record the pre-change baseline and inventory local AI profiles · repo: skill · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests` · resources: req024-baseline-record · covers: R1, R2, R13, R15
+- [x] T2 — Classify Planner sources and REQ-017 artifacts by evidence type · repo: skill · after: T1 · resources: req024-diagnosis-record · covers: R1, R2, R11
+- [x] T3 — Audit PLAN.json consumers, planning telemetry and local Planner launch interfaces · repo: skill · after: T1 · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py` · resources: req024-consumer-audit · covers: R2, R8, R9, R15
 
 ### M2 — Versioned contract decision and compatibility fixtures
-- [ ] T4 — Freeze golden canonical serialisation fixtures before contract edits · repo: skill · after: T1 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_contract_golden.py` · files: skill/scripts/bt_planner/tests/test_contract_golden.py, skill/scripts/bt_planner/tests/golden · resources: plan-canonical-serialisation · covers: R8, R13
-- [ ] T5 — Confirm the versioned 1.2.0 contract change record against the audit · repo: skill · after: T2, T3 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests -p test_plan.py` · resources: plan-json-contract · covers: R8
+- [x] T4 — Freeze golden canonical serialisation fixtures before contract edits · repo: skill · after: T1 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_contract_golden.py` · files: skill/scripts/bt_planner/tests/test_contract_golden.py, skill/scripts/bt_planner/tests/golden · resources: plan-canonical-serialisation · covers: R8, R13
+- [x] T5 — Confirm the versioned 1.2.0 contract change record against the audit · repo: skill · after: T2, T3 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests -p test_plan.py` · resources: plan-json-contract · covers: R8
 
 ### M3 — Deterministic plan-quality gate (schema 1.2.0)
-- [ ] T6 — Add version-gated 1.2.0 validator extension points for traceability, interfaces and evidence labels · repo: skill · after: T4, T5 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests` · files: skill/scripts/bt_planner/contract.py, skill/scripts/bt_planner/traceability.py, skill/scripts/bt_planner/interfaces.py · resources: plan-json-contract, plan-canonical-serialisation · covers: R3, R7, R8, R9, R10
-- [ ] T7 — Implement requirement traceability checks for schema 1.2.0 · repo: skill · after: T6 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_traceability.py` · files: skill/scripts/bt_planner/traceability.py, skill/scripts/bt_planner/sync.py · covers: R3, R6
+- [x] T6 — Add version-gated 1.2.0 validator extension points for traceability, interfaces and evidence labels · repo: skill · after: T4, T5 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests` · files: skill/scripts/bt_planner/contract.py, skill/scripts/bt_planner/traceability.py, skill/scripts/bt_planner/interfaces.py · resources: plan-json-contract, plan-canonical-serialisation · covers: R3, R7, R8, R9, R10
+- [x] T7 — Implement requirement traceability checks for schema 1.2.0 · repo: skill · after: T6 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_traceability.py` · files: skill/scripts/bt_planner/traceability.py, skill/scripts/bt_planner/sync.py · covers: R3, R6
 - [ ] T8 — Implement interface contract checks for schema 1.2.0 · repo: skill · after: T6 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_interfaces.py` · files: skill/scripts/bt_planner/interfaces.py · covers: R6, R7
 - [ ] T9 — Add verification-category, honesty and M6 criterion-coverage findings · repo: skill · after: T6 · verify: `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_verification_quality.py` · files: skill/scripts/bt_planner/quality.py · covers: R5, R6, R10
 - [ ] T10 — Integrate 1.2.0 fields into schema, example, report, PLAN.md sync and docs · repo: skill · after: T7, T8, T9 · verify: `cd skill/scripts && python3 -I -m unittest discover -s bt_planner/tests` · files: skill/scripts/bt_planner/data/plan.schema.json, skill/scripts/bt_planner/markdown.py, skill/references/plan-contract.md · resources: plan-json-contract, plan-md-grammar · covers: R3, R5, R7, R8, R9
@@ -375,11 +375,11 @@ PLAN.json 1.1.0 cannot encode this table; the `covers:` fields above are prose t
 - Assumption: estimates come from inspected code size and the 7-minute observed rerun. No comparable verified planning-history samples were available while planning.
 - Cost: T15 launch-only smokes, T18/T19 benchmark runs and T21's Opus reference run consume provider usage. Plan approval authorises only the explicitly stated caps.
 
-## Owner decisions open
-1. Reviewer identities for the two blind reviews (human and/or an independent model review).
-2. Whether T15 may write marker-protected Planner files to every configured native provider/account directory discovered by T1, and the call cap for one launch-only smoke per effective account. The current inventory has five effective accounts after alias deduplication; refresh it before execution.
-3. Confirmation that the benchmark cap (30 + 1 runs, 66 reviews) is acceptable.
-4. Pictures REQ-017 q1–q5 and A6–A8 stay unanswered; they are not product decisions of this requirement.
+## Owner decisions resolved by approval
+1. Use two independent reviewers under one hash-pinned rubric; pin their exact profiles/models in T17 before scoring.
+2. Permit one launch-only smoke per effective account, with a current hard cap of five; refresh inventory before T15 and do not add newly configured accounts.
+3. Cap the benchmark at 30 matched runs plus one final Opus 5.5 high reference run and 66 blind-review records.
+4. Pictures REQ-017 q1–q5 and A6–A8 remain unanswered and outside this requirement.
 
 ## Verification
 End to end, the requirement is met when all of the following hold:
@@ -395,3 +395,12 @@ Product-level acceptance of REQ-017 is explicitly not part of this requirement.
 
 ## Progress log
 - 2026-10-16: Planner draft written from read-only inspection. Post-draft `bt_planner check` passed; awaiting owner review.
+- 2026-10-16 17:38 review comments (owner via Codex conversation): Owner approved the REQ-024 plan as presented, including the cap of 30 matched benchmark runs plus one final Opus 5.5 high reference run, 66 blind-review records, and two independent reviewers under the same rubric. Pictures q1–q5 and A6–A8 remain outside scope.
+- 2026-10-16 17:38 plan APPROVED (owner via Codex conversation)
+
+- 2026-10-16: T1 complete. Captured current-V2 source snapshot and hashes, seven registered profiles/five effective accounts, and the baseline Planner suite result (219 tests, 18.663 s, exit 0); see `../../artifacts/REQ-024-benchmark/baseline/`. This baseline includes the D-055 rollout and Planner instruction edits made before approval; it is not the historical pre-edit V2 state.
+- 2026-10-16: T2/T3 complete. `DIAGNOSIS.md` classifies implementation, instructions, raw V1/V2 output, coordinator edits, product implementation, deterministic tests, synthetic oracles and owner decisions. `CONSUMER_AUDIT.md` records M1/M2/M6 compatibility and telemetry boundaries; the integration suite passed 21 tests. No code or Pictures file changed.
+- 2026-10-16: T4 complete. Pinned exact input and canonical bytes/hashes for 1.0.0, 1.1.0 and a proposed-key 1.2.0 plan. The fixtures were generated against the T1 snapshot's unchanged `contract.py` SHA-256 `2ed0e93371ec68dcbe6bed5a3cc90ad49fad971e866a3bf12f1be88bfa80cbe2`; the focused suite passed 3 tests. See `skill/scripts/bt_planner/tests/golden/GENERATION.md` and `../../artifacts/REQ-024-benchmark/test-contract-golden.log`.
+- 2026-10-16: T5 complete. `CONTRACT-1.2.0.md` maps every audited consumer, migration gate and rollback; M1 plan-loader tests passed 23/23. Direct probes confirm current M1 drops `kind` and current M6 rejects `category`, so T11 must implement the planned fail-closed upgrade before any 1.2.0 approval or launch. No contract code changed.
+- 2026-10-16: T6 complete. Added the `(1, 2, 0)` extension gate and pure traceability/interface/verification hooks; 1.0.0 and 1.1.0 validation reports are pinned to pre-change bytes. Planner suite: 225 passed; `test_plan_integration.py`: 21 passed; scoped Ruff, `py_compile`, golden hashes and `plan-json check REQ-024` passed. No Pictures files changed.
+- 2026-10-16: T7 complete. Schema 1.2.0 now validates unique requirement IDs, per-task `covers`, SPEC/plan set equality, orphan tasks and uncovered requirements. `sync.check` reads IDs only from an in-directory SPEC `Requirements` section for schema 1.2.0+. Traceability tests: 10 passed; full Planner suite: 235 passed; M1 integration: 21 passed. `py_compile`, scoped Ruff, `git diff --check` and `plan-json check REQ-024` passed; no Pictures source changed.

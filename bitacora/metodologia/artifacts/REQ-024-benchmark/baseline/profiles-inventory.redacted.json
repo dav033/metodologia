@@ -1,0 +1,25 @@
+{
+  "registered_profile_ids": [
+    "antigravity",
+    "claude",
+    "claude-personal",
+    "claude-work",
+    "codex",
+    "codex-1",
+    "codex-luis"
+  ],
+  "registered_profile_count": 7,
+  "effective_account_profile_ids_for_methodologia": [
+    "antigravity",
+    "claude-personal",
+    "claude-work",
+    "codex-1",
+    "codex-luis"
+  ],
+  "effective_account_count": 5,
+  "providers": [
+    "antigravity",
+    "claude",
+    "codex"
+  ]
+}

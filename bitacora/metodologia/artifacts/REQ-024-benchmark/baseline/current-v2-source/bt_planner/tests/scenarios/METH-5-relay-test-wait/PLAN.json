@@ -1,0 +1,246 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "METH-5",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Find the cause",
+      "acceptance_criteria": [
+        "The call that blocks for ten seconds is identified with evidence"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Remove the host dependence",
+      "acceptance_criteria": [
+        "The suite behaves the same with and without zellij on PATH"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Identify which test calls the real multiplexer and why it blocks",
+      "objective": "Name the test, the call site and the reason for the ten second timeout, with a reproduction",
+      "repository": "metodologia",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "low",
+      "estimate_rationale": "Symptom known, cause unknown: two modules run zellij with timeout=10, and the isolated file does not reproduce it",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_relay_launch.py",
+            "file:skill/scripts/tests/test_relay.py"
+          ],
+          "justification": "Unknown cause across relay modules and tests; needs bisecting a 100 second suite"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_relay_client.py"
+          ],
+          "justification": "A diagnosis note; code changes belong to T2"
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 -m unittest tests.test_relay -> 7.5 s",
+            "assumption:three to five bisecting runs are enough"
+          ],
+          "justification": "One full suite run is 100 s and bisecting takes several runs; the number is a guess"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/tests/test_relay.py"
+          ],
+          "justification": "Read and run only, nothing is modified"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2"
+          ],
+          "justification": "Findings decide T2 and no file is edited here"
+        },
+        "confidence": {
+          "evidence": [
+            "command:python3 -m unittest tests.test_relay -> 7.5 s",
+            "assumption:the call comes from a test that does not stub the runner"
+          ],
+          "justification": "The symptom was seen but the cause was not located; the estimate is preliminary"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_relay_launch.py",
+        "skill/scripts/bt_relay_client.py",
+        "skill/scripts/tests/test_relay.py"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "A written note names the test and the production function that spawns zellij",
+        "The note states why the call blocks and how to reproduce it"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "run python3 -m unittest discover -s tests with a timing flag and bisect by file",
+          "purpose": "locate the blocking test",
+          "expected": "the offending test and call are named in the note"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M2",
+      "title": "Isolate the offending test from the host multiplexer",
+      "objective": "Make the identified test use an injected runner so it never starts the host's zellij",
+      "repository": "metodologia",
+      "after": [
+        "T1"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 30,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "low",
+      "estimate_rationale": "Likely a missing runner stub, but the fix depends on T1's finding",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/tests/test_relay.py"
+          ],
+          "justification": "Expected to be an injected runner like the other preflight tests already use"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/tests/test_relay.py"
+          ],
+          "justification": "One test in one file"
+        },
+        "duration": {
+          "evidence": [
+            "assumption:the blocking test lacks a runner stub"
+          ],
+          "justification": "Small edit if the guess holds; unknown if T1 finds a production-level cause"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/tests/test_relay.py"
+          ],
+          "justification": "Test-only change that cannot alter production relay behaviour"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1"
+          ],
+          "justification": "Depends on T1's finding and nothing else edits this file"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/tests/test_relay.py",
+            "assumption:no production change is required"
+          ],
+          "justification": "The fix shape is guessed before the cause is known"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_relay.py"
+      ],
+      "shared_resources": [
+        "relay-test-fixtures"
+      ],
+      "acceptance_criteria": [
+        "The test passes with zellij absent from PATH and with it present",
+        "No production file under skill/scripts changed"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 -m unittest tests.test_relay",
+          "purpose": "the relay tests still pass and no longer wait on zellij"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Prove the suite is independent of the host terminal",
+      "objective": "Run the whole suite with and without zellij on PATH and record that both pass in similar time",
+      "repository": "metodologia",
+      "after": [
+        "T2"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 20,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Two full suite runs of about 100 s each plus recording the result",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/tests/test_relay.py"
+          ],
+          "justification": "Running a suite twice and comparing the output"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/tests/test_relay.py"
+          ],
+          "justification": "No files change, this is a verification run"
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 -m unittest discover -s tests -> 103 s"
+          ],
+          "justification": "Two runs of roughly 100 s observed earlier plus notes"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/tests/test_relay.py"
+          ],
+          "justification": "Read and run only"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2"
+          ],
+          "justification": "Follows T2 and edits nothing"
+        },
+        "confidence": {
+          "evidence": [
+            "command:python3 -m unittest discover -s tests -> 103 s"
+          ],
+          "justification": "The full suite duration was measured in this session"
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The suite passes with zellij hidden from PATH",
+        "The suite passes with the host PATH",
+        "No ten second timeout message is printed"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 -m unittest discover -s tests",
+          "purpose": "full methodology suite"
+        },
+        {
+          "type": "manual",
+          "value": "repeat the run with PATH set to exclude the directory containing zellij",
+          "purpose": "prove independence",
+          "expected": "same result and no timeout message"
+        }
+      ]
+    }
+  ]
+}

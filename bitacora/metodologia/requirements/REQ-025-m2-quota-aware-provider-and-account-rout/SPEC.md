@@ -1,6 +1,6 @@
 ---
 id: REQ-025
-status: planned
+status: in-progress
 created: 2026-10-16
 track: standard
 ---

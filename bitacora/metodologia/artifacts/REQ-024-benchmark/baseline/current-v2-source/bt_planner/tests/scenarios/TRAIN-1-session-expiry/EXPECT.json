@@ -1,0 +1,15 @@
+{
+ "intent": "sensitive-small-fix",
+ "classify": {
+  "T2": {
+   "complexity": "low",
+   "risk": "high",
+   "scope": "isolated_fix"
+  }
+ },
+ "critical_path": [
+  "T1",
+  "T2",
+  "T3"
+ ]
+}

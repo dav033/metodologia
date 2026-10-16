@@ -1,0 +1,19 @@
+{
+ "intent": "cross-contract",
+ "critical_path": [
+  "T1",
+  "T2",
+  "T3",
+  "T4"
+ ],
+ "low_confidence": [
+  "T1"
+ ],
+ "classify": {
+  "T3": {
+   "complexity": "high",
+   "risk": "high",
+   "coupling": "high"
+  }
+ }
+}

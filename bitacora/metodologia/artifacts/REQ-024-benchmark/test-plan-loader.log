@@ -1,0 +1,6 @@
+$ python3 -m unittest discover -s bt_scheduler_core/tests -p test_plan.py
+.......................
+----------------------------------------------------------------------
+Ran 23 tests in 0.102s
+
+OK

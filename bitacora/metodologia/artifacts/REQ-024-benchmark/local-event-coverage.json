@@ -1,0 +1,27 @@
+{
+  "attempt_rows": 153,
+  "outcomes": {
+    "unknown": 31,
+    "verified": 80,
+    "claimed_unverified": 12,
+    "verify_failed": 7,
+    "usage_limit": 7,
+    "failed": 1,
+    "escalated_by_agent": 2,
+    "stopped_by_user": 2,
+    "timeout": 1,
+    "agent_reported_failure": 2,
+    "partial": 3,
+    "no_verdict": 2,
+    "integration_failed": 3
+  },
+  "duration_present": 153,
+  "token_totals_present": 94,
+  "reported_model_present": 0,
+  "origin_categories": {
+    "unknown": 123,
+    "real": 30
+  },
+  "invalid_row_warnings_present": false,
+  "raw_event_text_saved": false
+}

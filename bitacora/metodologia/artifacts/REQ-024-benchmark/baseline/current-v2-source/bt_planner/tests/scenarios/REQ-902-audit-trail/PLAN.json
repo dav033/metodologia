@@ -1,0 +1,590 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-902",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Read API and delete guarantee",
+      "acceptance_criteria": [
+        "The history endpoint respects permission and lead type scope",
+        "The database cascade removes status events when a lead is deleted"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "History panel",
+      "acceptance_criteria": [
+        "The lead page shows the status history with empty and error states"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Close",
+      "acceptance_criteria": [
+        "The web verify chain passes"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Lead status history service method gated by canSeeLeadNumber, creating the new lead-status-event.dto.ts",
+      "objective": "LeadsService returns the ordered status events of a lead with the actor name, reading them through this.dataSource.getRepository(LeadStatusEvent) with a left join to users on changedById (no new constructor argument and no module change); like getLeadById it loads the lead and checks canSeeLeadNumber(lead.leadNumber) in the service, answering not found for unknown or out-of-scope leads; the task creates the new response DTO file dto/lead-status-event.dto.ts",
+      "repository": "maros-nest",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 50,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "One service method that reads events through the injected DataSource (precedent: dataSource.getRepository(Company) in deleteLead) so the positional constructor and leads.module.ts stay unchanged, one DTO and cases in the existing spec whose mocked DataSource gains getRepository",
+      "expected_paths": [
+        "src/modules/leads/lead-management/leads.service.ts",
+        "src/modules/leads/lead-management/leads.service.spec.ts",
+        "src/modules/leads/lead-management/dto/lead-status-event.dto.ts"
+      ],
+      "shared_resources": [
+        "lead-status-history-contract",
+        "leads-service"
+      ],
+      "acceptance_criteria": [
+        "An in-scope lead returns its events ordered by changedAt then id with fromStatus, toStatus, changedAt and changedBy",
+        "A lead for which canSeeLeadNumber is false or an unknown id raises LeadNotFoundException",
+        "A move with no signed-in user returns changedBy null",
+        "The new file dto/lead-status-event.dto.ts is created and defines the response item shape",
+        "LeadsService constructor and leads.module.ts are unchanged; the spec mock DataSource provides getRepository for LeadStatusEvent"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx jest src/modules/leads/lead-management/leads.service.spec.ts",
+          "purpose": "history ordering, scope and null actor cases"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Must load the lead, apply canSeeLeadNumber in the service like getLeadById, and join users while keeping unattributed events, which needs some design decisions",
+          "evidence": [
+            "file:src/modules/leads/lead-management/leads.service.ts",
+            "file:src/common/auth/request-scope.ts"
+          ]
+        },
+        "scope": {
+          "justification": "A single read method, one DTO and test cases; the entity has only a scalar changedById so the user join lives in the query and no module wiring changes",
+          "evidence": [
+            "file:src/entities/lead-status-event.entity.ts",
+            "file:src/modules/leads/lead-management/leads.service.spec.ts",
+            "file:src/modules/leads/leads.module.ts"
+          ]
+        },
+        "duration": {
+          "justification": "The write half took one commit; reading the same rows with an existing scope helper is a smaller change",
+          "evidence": [
+            "command:grep -rn LeadStatusEvent src db -l -> only the entity, leads.service.ts, the lead mapper comment, the service spec and the SQL file: no controller or read path",
+            "precedent:1381e08"
+          ]
+        },
+        "risk": {
+          "justification": "A mistake would expose the history of leads that a restricted user may not see, which is a permissions leak",
+          "evidence": [
+            "file:src/common/auth/request-scope.ts",
+            "precedent:83bd71e"
+          ]
+        },
+        "coupling": {
+          "justification": "The controller and the web contract task both depend on this response shape, so the method and its DTO act as a contract",
+          "evidence": [
+            "task:T2",
+            "task:T4"
+          ]
+        },
+        "confidence": {
+          "justification": "The scope pattern for reads by id is already in getLeadById and the service spec runs green, so the work is well understood",
+          "evidence": [
+            "command:npx jest src/modules/leads/lead-management/leads.service.spec.ts -> 1 suite and 15 tests passed, including the status event insert cases",
+            "file:src/common/auth/request-scope.ts",
+            "precedent:83bd71e"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "GET :leadId/status-history route guarded by leads:read",
+      "objective": "The leads controller exposes GET /leads/:leadId/status-history that inherits the leads:read permission and delegates to the service",
+      "repository": "maros-nest",
+      "after": [
+        "T1"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 35,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "A thin route plus controller spec cases; the class-level permission already covers it and the spec harness exists",
+      "expected_paths": [
+        "src/modules/leads/lead-management/leads.controller.ts",
+        "src/modules/leads/lead-management/leads.controller.spec.ts"
+      ],
+      "shared_resources": [
+        "lead-status-history-contract"
+      ],
+      "acceptance_criteria": [
+        "The route answers 200 with the service result and 404 for a missing lead",
+        "The route carries no write or delete permission override so the class-level leads:read applies"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx jest src/modules/leads/lead-management",
+          "purpose": "controller and service specs together"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Known pattern: one more read route next to getLeadById using the same decorators",
+          "evidence": [
+            "file:src/modules/leads/lead-management/leads.controller.ts"
+          ]
+        },
+        "scope": {
+          "justification": "One route and its spec cases, nothing else in the controller changes",
+          "evidence": [
+            "file:src/modules/leads/lead-management/leads.controller.spec.ts"
+          ]
+        },
+        "duration": {
+          "justification": "Comparable to the other read routes already tested with supertest in the same spec file",
+          "evidence": [
+            "file:src/modules/leads/lead-management/leads.controller.spec.ts"
+          ]
+        },
+        "risk": {
+          "justification": "A missing or wrong permission decorator would let a user without leads:read see audit data",
+          "evidence": [
+            "file:src/modules/leads/lead-management/leads.controller.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "Defines the HTTP contract the web client consumes in the next milestone",
+          "evidence": [
+            "task:T1",
+            "task:T4"
+          ]
+        },
+        "confidence": {
+          "justification": "Controller and spec harness were read and the class-level permission default is explicit in the file",
+          "evidence": [
+            "file:src/modules/leads/lead-management/leads.controller.ts",
+            "file:src/modules/leads/lead-management/leads.controller.spec.ts"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Verify the delete cascade guarantee on lead_status_events: SQL declaration by command, live delete as an optional owner-gated step",
+      "objective": "The repository SQL provably declares lead_status_events.lead_id REFERENCES leads(id) ON DELETE CASCADE, so no explicit deletion code is added; an owner-gated live delete in a non-production database is optional and not run by a scheduler; whether the migration was applied to production is an owner-gated question this plan does not resolve",
+      "repository": "maros-nest",
+      "after": [],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 10,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "The grep is seconds; the optional live delete needs a non-production database and the owner, so it is outside the unattended estimate",
+      "expected_paths": [
+        "db/add-lead-sales-fields.sql"
+      ],
+      "shared_resources": [
+        "lead_status_events-table"
+      ],
+      "acceptance_criteria": [
+        "The grep finds the REFERENCES leads(id) ON DELETE CASCADE declaration for lead_id",
+        "No explicit deletion code is added to deleteLead",
+        "Optional owner-gated step: after deleting a throwaway lead in a non-production database its event count is zero",
+        "The recorded result states that production application of the migration is not proven by this task and stays with the owner"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "grep -n 'REFERENCES leads(id) ON DELETE CASCADE' db/add-lead-sales-fields.sql",
+          "purpose": "the migration declares the cascade on the lead_id foreign key"
+        },
+        {
+          "type": "manual",
+          "value": "OPTIONAL, owner-gated: in a non-production database delete a throwaway lead and count its lead_status_events rows",
+          "purpose": "prove the live database, not the SQL file, removes the audit rows",
+          "expected": "the event count for the deleted lead is 0"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The code already answers the design question with ON DELETE CASCADE, leaving only a mechanical confirmation query",
+          "evidence": [
+            "file:db/add-lead-sales-fields.sql"
+          ]
+        },
+        "scope": {
+          "justification": "No repository file changes; the output is a recorded check of one table constraint",
+          "evidence": [
+            "file:db/add-lead-sales-fields.sql"
+          ]
+        },
+        "duration": {
+          "justification": "A single grep on one file; the optional live delete is owner gated and excluded from the estimate",
+          "evidence": [
+            "command:grep -n 'REFERENCES leads(id) ON DELETE CASCADE' db/add-lead-sales-fields.sql -> line 69: lead_id INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE"
+          ]
+        },
+        "risk": {
+          "justification": "Only a read only grep is required; the optional live delete targets a throwaway row outside production",
+          "evidence": [
+            "file:db/add-lead-sales-fields.sql"
+          ]
+        },
+        "coupling": {
+          "justification": "Looks at the same table the history method reads, but changes no shared code and needs no ordering",
+          "evidence": [
+            "task:T1"
+          ]
+        },
+        "confidence": {
+          "justification": "The cascade declaration was found by grep and read in the SQL file, but production application of the migration is an owner-gated question this plan does not resolve, hence medium",
+          "evidence": [
+            "command:grep -n 'REFERENCES leads(id) ON DELETE CASCADE' db/add-lead-sales-fields.sql -> line 69: lead_id INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE",
+            "file:db/add-lead-sales-fields.sql",
+            "assumption:the migration was applied to production as written"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Web contract: endpoint, domain model, repository method and query key, creating the statusHistory repository test",
+      "objective": "The leads repository port exposes getStatusHistory(leadId) backed by the new endpoint, with a mapped model, a query key and a new repository test that proves the request and the mapping",
+      "repository": "maros-next",
+      "after": [
+        "T2"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Follows the converted leads precedent: endpoint, port method, HTTP repository method, mapper and one test with a mocked client",
+      "expected_paths": [
+        "src/features/leads/infra/http/endpoints.ts",
+        "src/features/leads/infra/http/LeadHttpRepository.ts",
+        "src/features/leads/domain/ports.ts",
+        "src/features/leads/application/keys/leadsKeys.ts",
+        "src/features/leads/infra/http/LeadHttpRepository.statusHistory.test.ts"
+      ],
+      "shared_resources": [
+        "lead-status-history-contract",
+        "lead-repository-port"
+      ],
+      "acceptance_criteria": [
+        "getStatusHistory requests /leads/:id/status-history and maps events to domain objects",
+        "A null fromStatus and null changedBy are preserved",
+        "The new test file LeadHttpRepository.statusHistory.test.ts is created and passes"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx vitest run src/features/leads/infra/http/LeadHttpRepository.statusHistory.test.ts",
+          "purpose": "repository request and mapping test created by this task",
+          "created_by": "T4"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Mechanical extension of an existing hexagonal repository with the same mapping style",
+          "evidence": [
+            "file:src/features/leads/infra/http/LeadHttpRepository.ts"
+          ]
+        },
+        "scope": {
+          "justification": "Four small files gain one entry each and one new repository test file is created",
+          "evidence": [
+            "file:src/features/leads/domain/ports.ts",
+            "file:src/features/leads/infra/http/endpoints.ts"
+          ]
+        },
+        "duration": {
+          "justification": "The converted leads view added the same kind of repository method and test in one commit",
+          "evidence": [
+            "command:npx vitest run src/features/leads/infra/http/LeadHttpRepository.converted.test.ts -> 1 test passed with a mocked HttpClientLike",
+            "precedent:6704d72"
+          ]
+        },
+        "risk": {
+          "justification": "A wrong mapping only affects a read only panel and is caught by the repository test",
+          "evidence": [
+            "file:src/features/leads/infra/http/LeadHttpRepository.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "Consumes the HTTP contract from the API and is consumed by the hook and component that follow",
+          "evidence": [
+            "task:T2",
+            "task:T5"
+          ]
+        },
+        "confidence": {
+          "justification": "Precedent and test pattern exist and the files were read",
+          "evidence": [
+            "command:npx vitest run src/features/leads/infra/http/LeadHttpRepository.converted.test.ts -> 1 test passed with a mocked HttpClientLike",
+            "precedent:6704d72",
+            "file:src/features/leads/application/keys/leadsKeys.ts"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Status history hook and section component with empty and error states, creating its component test",
+      "objective": "A LeadStatusHistorySection lists who changed the status, when and from which value to which, with loading, empty and error states",
+      "repository": "maros-next",
+      "after": [
+        "T4"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 55,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "A react-query hook following useLeadByNumber and a presentational section with component tests; the visual details need some decisions",
+      "expected_paths": [
+        "src/features/leads/presentation/hooks/data/useLeadStatusHistory.ts",
+        "src/features/leads/presentation/pages/sections/LeadStatusHistorySection.tsx",
+        "src/features/leads/presentation/pages/sections/LeadStatusHistorySection.test.tsx"
+      ],
+      "shared_resources": [
+        "lead-repository-port"
+      ],
+      "acceptance_criteria": [
+        "The section renders one row per event with actor, date, previous and new status",
+        "An empty list shows an explicit empty message",
+        "A failed request shows an error message instead of a blank panel",
+        "The new test file LeadStatusHistorySection.test.tsx is created and passes"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx vitest run src/features/leads/presentation/pages/sections/LeadStatusHistorySection.test.tsx",
+          "purpose": "component states test",
+          "created_by": "T5"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Needs layout and state decisions in a Radix and shadcn UI but follows an existing hook and test style",
+          "evidence": [
+            "file:src/features/leads/presentation/hooks/data/useLeadByNumber.ts",
+            "file:src/features/leads/presentation/pages/sections/LeadInfoSection.test.tsx"
+          ]
+        },
+        "scope": {
+          "justification": "Three new files, no change to existing components",
+          "evidence": [
+            "file:src/features/leads/presentation/hooks/data/useLeadByNumber.ts"
+          ]
+        },
+        "duration": {
+          "justification": "The lead detail sections added for owner and follow up fields give a size reference of a similar UI change",
+          "evidence": [
+            "precedent:311d43d"
+          ]
+        },
+        "risk": {
+          "justification": "Display only and a bug is cosmetic or caught by the component test",
+          "evidence": [
+            "file:src/features/leads/presentation/pages/sections/LeadInfoSection.test.tsx"
+          ]
+        },
+        "coupling": {
+          "justification": "Uses the repository method from the previous task and is mounted by the tab task",
+          "evidence": [
+            "task:T4",
+            "task:T6"
+          ]
+        },
+        "confidence": {
+          "justification": "Patterns were read but the visual design of the panel is not yet fixed and mocks of the DI context need care",
+          "evidence": [
+            "file:src/features/leads/presentation/hooks/data/useLeadByNumber.ts",
+            "precedent:311d43d"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M2",
+      "title": "Add the Historial tab to the lead detail page, creating a page test for the tab",
+      "objective": "The lead detail page has a Historial tab, selectable through the URL tab state, that mounts the history section for the open lead, proven by a new page test",
+      "repository": "maros-next",
+      "after": [
+        "T5"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "One tab entry and one content block plus a new page test that must mock the many hooks of the details page",
+      "expected_paths": [
+        "src/features/leads/presentation/pages/LeadDetailsPage.tsx",
+        "src/features/leads/presentation/pages/LeadDetailsPage.historyTab.test.tsx"
+      ],
+      "shared_resources": [
+        "lead-details-page"
+      ],
+      "acceptance_criteria": [
+        "A Historial tab appears in the lead tabs bar",
+        "Selecting it renders the status history for the lead id of the page",
+        "The new test file LeadDetailsPage.historyTab.test.tsx is created and passes"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx vitest run src/features/leads/presentation/pages/LeadDetailsPage.historyTab.test.tsx",
+          "purpose": "the tab renders the history section for the page lead",
+          "created_by": "T6"
+        },
+        {
+          "type": "command",
+          "value": "npm run typecheck",
+          "purpose": "the wired page compiles against the new section and hook"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Declarative addition to a tab list that already has four tabs and the same content pattern",
+          "evidence": [
+            "file:src/features/leads/presentation/pages/LeadDetailsPage.tsx"
+          ]
+        },
+        "scope": {
+          "justification": "One page file gains an import, a tab entry and a content block, and one page test file is created",
+          "evidence": [
+            "file:src/features/leads/presentation/pages/LeadDetailsPage.tsx"
+          ]
+        },
+        "duration": {
+          "justification": "The tabbed detail pages were introduced the same way and adding one is a few lines",
+          "evidence": [
+            "precedent:19fbb4d"
+          ]
+        },
+        "risk": {
+          "justification": "A broken tab would at worst hide the history and the other tabs keep working",
+          "evidence": [
+            "file:src/features/leads/presentation/pages/LeadDetailsPage.tsx"
+          ]
+        },
+        "coupling": {
+          "justification": "Only consumes the section created before it and is ordered after it",
+          "evidence": [
+            "task:T5"
+          ]
+        },
+        "confidence": {
+          "justification": "Tab list and rendering code were read, but the new page test must mock many hooks and has no precedent for this page, hence medium",
+          "evidence": [
+            "file:src/features/leads/presentation/pages/LeadDetailsPage.tsx",
+            "precedent:19fbb4d"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M3",
+      "title": "Full web verification after the panel is wired",
+      "objective": "The whole maros-next verify chain passes with the history panel merged: lint, typecheck, tests and build",
+      "repository": "maros-next",
+      "after": [
+        "T3",
+        "T6"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 25,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Run the existing verify script and fix only what the new code broke; build time is the main cost",
+      "expected_paths": [],
+      "shared_resources": [
+        "lead-details-page"
+      ],
+      "acceptance_criteria": [
+        "Lint, typecheck, vitest and next build exit with code 0",
+        "No unrelated test is modified to make the chain pass",
+        "The T3 cascade check has been recorded before the plan is closed"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run verify",
+          "purpose": "lint, typecheck, test and build in one chain"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "No design work, only running the existing chain and reading failures it reports",
+          "evidence": [
+            "file:package.json"
+          ]
+        },
+        "scope": {
+          "justification": "No planned file changes; the chain covers the whole web repository",
+          "evidence": [
+            "file:package.json"
+          ]
+        },
+        "duration": {
+          "justification": "The unit suite runs in seconds and the build is the long step in the chain",
+          "evidence": [
+            "command:npx vitest run src/features/leads/infra/http/LeadHttpRepository.converted.test.ts -> 1 test passed with a mocked HttpClientLike"
+          ]
+        },
+        "risk": {
+          "justification": "A verification step changes nothing in production and failures only block the plan",
+          "evidence": [
+            "file:package.json"
+          ]
+        },
+        "coupling": {
+          "justification": "Runs after the page wiring and the cascade check, consuming their outputs without editing them, and shares only the details page resource",
+          "evidence": [
+            "task:T6",
+            "task:T3"
+          ]
+        },
+        "confidence": {
+          "justification": "The verify script exists but the full chain was not run in this planning session, so only partial evidence",
+          "evidence": [
+            "command:npx vitest run src/features/leads/infra/http/LeadHttpRepository.converted.test.ts -> 1 test passed with a mocked HttpClientLike",
+            "file:package.json"
+          ]
+        }
+      }
+    }
+  ]
+}

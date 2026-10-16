@@ -1,0 +1,565 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-903",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Measure where the first response time goes",
+      "acceptance_criteria": [
+        "Measured per-stage p50 and p95 exist for the first assistant response",
+        "A recorded decision links one lever and a budget to those numbers"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Reduce the latency with behaviour pinned",
+      "acceptance_criteria": [
+        "The first-turn behaviour is covered by a no-network test before the change",
+        "The reduction meets the budget in a before and after measurement with the suites passing"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Build the first-turn latency harness",
+      "objective": "A repeatable command sends scripted first-turn conversations to /api/asistente-guiado, joins each request by id with the per-model-round and per-tool ms of the audit log, writes a JSON summary of per-stage p50 and p95 with the flags in force, and offers three checkers (summary-check, decision-check, budget-check) that exit non-zero when a file does not meet its rule",
+      "repository": "pictures",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "SSE reading and the audit-log schema both exist; the open parts are joining log lines by request id on the real files and defining the three checker rules, which T2, T3 and T6 rely on",
+      "expected_paths": [
+        "scripts/eval/medir-latencia-asistente.ts",
+        "scripts/test/test-medir-latencia-asistente.ts",
+        "package.json"
+      ],
+      "shared_resources": [
+        "package.json-scripts"
+      ],
+      "acceptance_criteria": [
+        "The harness prints one timeline per request with first texto and fin offsets in milliseconds",
+        "The audit-log join matches model rounds and tools to the request by its id",
+        "A recorded SSE transcript parses into the same timeline in a test that needs no network",
+        "summary-check fails below the minimum run count, decision-check fails without one allowed lever, a budget strictly below the baseline p50 (equal fails) and a numeric p95 tolerance in percent, and budget-check fails when p50 misses the budget or any stage p95 exceeds its baseline value times one plus that tolerance, each covered by the test"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-medir-latencia-asistente.ts",
+          "purpose": "parse a recorded SSE transcript and a sample audit log into a stage timeline and exercise the three checkers with passing and failing fixtures",
+          "created_by": "T1"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Known pieces to assemble: an SSE reader already exists and the log record shape is documented, so the reasoning is bounded to the join",
+          "evidence": [
+            "file:scripts/test/smoke-api-guiado-local.ts",
+            "file:src/lib/registro/tipos.ts"
+          ]
+        },
+        "scope": {
+          "justification": "One new script, its pure-parser test and one npm script entry; no application behaviour is touched",
+          "evidence": [
+            "file:scripts/ops/ver-registros.ts",
+            "file:package.json"
+          ]
+        },
+        "duration": {
+          "justification": "Comparable to the earlier latency-summary work, plus a small parser test and the log join on real files",
+          "evidence": [
+            "precedent:0ffe9fe0",
+            "command:git -C /home/david/dev/pictures log --oneline -1 0ffe9fe0 -> feat(a0.3) resumen run.json con latencias, formato, flip rate y costo"
+          ]
+        },
+        "risk": {
+          "justification": "Read-only tooling that only issues requests and reads logs; a defect would give a wrong number, not a wrong answer for customers",
+          "evidence": [
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Only an npm script entry and new files are added, and later tasks consume the command after this one is done",
+          "evidence": [
+            "file:package.json",
+            "task:T4"
+          ]
+        },
+        "confidence": {
+          "justification": "The SSE reader and the log schema were read; the join against real log lines is not yet exercised",
+          "evidence": [
+            "file:scripts/test/smoke-api-guiado-local.ts",
+            "file:src/lib/registro/tipos.ts"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Measure the baseline first-turn latency by stage",
+      "objective": "The file eval/latencia-asistente/baseline.json holds p50 and p95 milliseconds for each stage of the first assistant response (rules before the model, each model round, each tool, first streamed text) over at least 10 live runs per scenario, with the thinking level and Python flag in force recorded in it",
+      "repository": "pictures",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "Live paid model calls: the task depends on available Gemini quota and a running local dev server, and effort is mostly waiting on them; whether the key, the local services and the production logs are reachable and representative is unknown",
+      "expected_paths": [
+        "eval/latencia-asistente/baseline.json"
+      ],
+      "shared_resources": [
+        "gemini-api-quota",
+        "local-next-dev-server"
+      ],
+      "acceptance_criteria": [
+        "Each scenario has at least 10 recorded runs with per-stage p50 and p95 in the baseline file",
+        "The baseline file states which model path and thinking level were in force for the runs",
+        "The stage with the largest share of time to first useful response is named with its number"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx scripts/eval/medir-latencia-asistente.ts summary-check eval/latencia-asistente/baseline.json --min-runs 10",
+          "purpose": "the baseline file exists, covers three scenarios and has at least 10 runs each",
+          "created_by": "T1"
+        },
+        {
+          "type": "manual",
+          "value": "with the owner's approval read the VPS audit log with npm run registros -- conversaciones --origen vps --desde 24h and compare its flags with the local run",
+          "purpose": "learn whether production uses the same path and thinking level",
+          "expected": "a note of the production path and thinking level, or that the log was not reachable"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Reading timings across the route, the agent loop and the provider hop to attribute time needs judgement but no new design",
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:packages/agente-core/src/ejecutar.ts"
+          ]
+        },
+        "scope": {
+          "justification": "Produces a measurement and a table; no repository file changes beyond runtime logs that are not tracked",
+          "evidence": [
+            "file:scripts/ops/ver-registros.ts",
+            "file:src/lib/registro/tipos.ts"
+          ]
+        },
+        "duration": {
+          "justification": "Local logs hold no assistant turn today, so the baseline must be generated and its duration depends on real model latency",
+          "evidence": [
+            "command:python3 (inline aggregate of data/registros events) -> 4 happie requests and no asistente-guiado turn locally",
+            "assumption:the dev server, key and quota are available during the run"
+          ]
+        },
+        "risk": {
+          "justification": "A wrong or unrepresentative baseline would misdirect every later task, and the run spends paid calls and may read production logs",
+          "evidence": [
+            "file:src/lib/ia/nucleo/registro.ts",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "The run consumes the paid provider quota and a local server that T6 reuses, and it needs the harness from T1 finished first",
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "confidence": {
+          "justification": "Production path and thinking level cannot be read from the repository, and network variance of real calls is unknown",
+          "evidence": [
+            "assumption:production flags equal the local ones",
+            "file:src/lib/ia/nucleo/registro.ts"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Choose the reduction lever and budget from the baseline",
+      "objective": "The file eval/latencia-asistente/decision.json names the stage that dominates time to first useful response, the single lever chosen among those the code allows, the rejected levers with their measured reason, a latency budget in milliseconds strictly below the baseline p50, and a p95 tolerance in percent taken from the observed run-to-run spread of the baseline",
+      "repository": "pictures",
+      "after": [
+        "T2"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "low",
+      "estimate_rationale": "The decision depends entirely on numbers that do not exist yet; the reasoning spans the route, the agent loop, the Python hop and the prompt",
+      "expected_paths": [
+        "eval/latencia-asistente/decision.json"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The decision file cites the baseline stage numbers it ranks",
+        "Exactly one primary lever is chosen and each rejected lever has a measured reason",
+        "The budget is a number strictly below the measured p50 and not a guess",
+        "The p95 tolerance is a percentage justified by the run-to-run spread seen in the baseline file",
+        "The decision file is committed in the tracked eval folder so it survives branch and worktree isolation"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx scripts/eval/medir-latencia-asistente.ts decision-check eval/latencia-asistente/decision.json --baseline eval/latencia-asistente/baseline.json",
+          "purpose": "one allowed lever, rejected levers with reasons, budget strictly below the baseline p50 and an explicit p95 tolerance",
+          "created_by": "T1"
+        },
+        {
+          "type": "manual",
+          "value": "read the decision file against the baseline stage table and the bitácora entry",
+          "purpose": "confirm the choice follows the numbers",
+          "expected": "the chosen lever targets the stage with the largest measured share"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The prompt asks for three sequential tool rounds while the loop, the sanitising filter and the Python hop each add a different cost, so it is cross-component",
+          "evidence": [
+            "file:src/lib/ia/guiado/prompt-guiado.ts",
+            "file:packages/agente-core/src/ejecutar.ts"
+          ]
+        },
+        "scope": {
+          "justification": "The output is one decision entry and a number; nothing in the repository changes",
+          "evidence": [
+            "spec:SPEC.md#decision-rule"
+          ]
+        },
+        "duration": {
+          "justification": "A short ranking and write-up once the table exists, but the table itself is not available to size it against",
+          "evidence": [
+            "task:T2",
+            "assumption:the baseline shows one clearly dominant stage"
+          ]
+        },
+        "risk": {
+          "justification": "Choosing the wrong lever wastes the implementation task and risks touching answer quality for no gain",
+          "evidence": [
+            "file:scripts/eval/eval-chat-thinking.ts",
+            "file:AGENTS.md"
+          ]
+        },
+        "coupling": {
+          "justification": "The decision only reads the T2 output and is ordered after it, with no shared files or resources",
+          "evidence": [
+            "task:T2"
+          ]
+        },
+        "confidence": {
+          "justification": "Its content depends on measurements that do not exist, so only the candidate list can be vouched for",
+          "evidence": [
+            "assumption:the measured stage matches one of the candidate levers",
+            "spec:SPEC.md#decision-rule"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Pin the first-turn behaviour with a scripted model",
+      "objective": "A no-network test drives the guided turn with a scripted model through the first-turn scenarios and asserts the tool trace, the sanitised reply invariants and the shape of the final fin event, so a latency change that alters behaviour fails",
+      "repository": "pictures",
+      "after": [
+        "T2"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "Ordered after the baseline run so the measured server runs the unmodified route. The route imports its chat factory directly and no route-level scripted-model test exists, so a narrow injection seam may be needed first",
+      "expected_paths": [
+        "scripts/test/test-turno-inicial-guiado.ts",
+        "src/app/api/asistente-guiado/route.ts",
+        "package.json"
+      ],
+      "shared_resources": [
+        "asistente-guiado-route",
+        "package.json-scripts",
+        "local-next-dev-server"
+      ],
+      "acceptance_criteria": [
+        "The test passes against the unmodified behaviour with a scripted model and no network",
+        "A scripted turn that skips the brief tool or alters the reply fails the test",
+        "The existing guided suite still passes after any seam added to the route"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/test/test-turno-inicial-guiado.ts",
+          "purpose": "first-turn tool trace and reply invariants with a scripted model",
+          "created_by": "T4"
+        },
+        {
+          "type": "command",
+          "value": "npm run guiada:test",
+          "purpose": "existing guided suite unchanged by any seam"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "A scripted chat port precedent exists for the loop, but wiring it into the route needs a seam that is not yet designed",
+          "evidence": [
+            "file:packages/agente-core/test/ejecutar.test.ts",
+            "file:src/app/api/asistente-guiado/route.ts"
+          ]
+        },
+        "scope": {
+          "justification": "One new test file plus at most a small injection seam and an npm script entry",
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:package.json"
+          ]
+        },
+        "duration": {
+          "justification": "The loop test took a third of a second to run, but the route fixtures and the seam make this longer than a plain unit test",
+          "evidence": [
+            "command:npx tsx --test packages/agente-core/test/ejecutar.test.ts -> 4 tests passed in 0.3 s",
+            "file:scripts/test/test-accion-idea-guiada.ts"
+          ]
+        },
+        "risk": {
+          "justification": "The seam sits in the production route that shapes customer answers, although the change itself only adds testability",
+          "evidence": [
+            "file:AGENTS.md",
+            "file:src/app/api/asistente-guiado/route.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "The route file is later edited by the reduction task and the test is its safety net, and it must not change under the baseline measurement of the previous task",
+          "evidence": [
+            "task:T5",
+            "task:T2",
+            "file:src/app/api/asistente-guiado/route.ts"
+          ]
+        },
+        "confidence": {
+          "justification": "Whether the route can be driven without changing it was not verified and may force a seam",
+          "evidence": [
+            "assumption:the chat factory can be replaced from a test without editing the route",
+            "file:scripts/test/test-accion-idea-guiada.ts"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Apply the chosen latency reduction",
+      "objective": "The single lever recorded in the decision file is applied to the first-turn path, with the prompt rules, tools and sanitising that shape the answer functionally intact and the new behaviour covered by tests; the speed-up itself is not claimed here and is measured only by T6",
+      "repository": "pictures",
+      "after": [
+        "T3",
+        "T4"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "The lever is unknown until T3: it may be a one-line environment default or a change across the round loop, the route and the Python hop; expected_paths is the candidate set of files, not a prediction. The 120 minutes derive from comparable commits c125be56 (4 files, 243 lines of which 144 are tests) and 62e48657 (3 files, 30 lines), landed within a day of each other; about three of those covers a Python-side change, its own test and five suites. Confidence stays low because the lever is unknown until T3",
+      "expected_paths": [
+        "src/app/api/asistente-guiado/route.ts",
+        "packages/agente-core/src/ejecutar.ts",
+        "src/lib/ia/nucleo/registro.ts",
+        "src/lib/ia/omoikane/chat-python.ts",
+        "services/ai-api/app/omoikane/turno_stream.py",
+        "services/ai-api/tests/test_omoikane_turno_stream.py"
+      ],
+      "shared_resources": [
+        "asistente-guiado-route",
+        "chat-sse-contract"
+      ],
+      "acceptance_criteria": [
+        "The change applies only the lever recorded in the decision file",
+        "Whether the budget is met is explicitly left to the T6 measurement and is not asserted at this task",
+        "The first-turn test from T4 and the guided suite pass unchanged",
+        "The behaviour added or altered by the lever has its own test that fails without it"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run guiada:test",
+          "purpose": "guided flows keep behaving the same"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/test/test-turno-inicial-guiado.ts",
+          "purpose": "first-turn tool trace and reply invariants",
+          "created_by": "T4"
+        },
+        {
+          "type": "command",
+          "value": "npm run agente-core:test-gemini-chat",
+          "purpose": "agent-core Gemini chat adapter"
+        },
+        {
+          "type": "command",
+          "value": "npm run ia:test-omoikane-chat-python",
+          "purpose": "TypeScript side of the Python chat hop"
+        },
+        {
+          "type": "command",
+          "value": "cd services/ai-api && .venv/bin/pytest tests/test_omoikane_turno_stream.py -q",
+          "purpose": "Python streamed turn module"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Any candidate lever crosses the route, the round loop or the provider hop, and which one applies is not known yet",
+          "evidence": [
+            "file:packages/agente-core/src/ejecutar.ts",
+            "file:services/ai-api/app/omoikane/turno_stream.py"
+          ]
+        },
+        "scope": {
+          "justification": "Classed large because the candidate levers can span TypeScript and Python layers; the final size depends on the lever",
+          "evidence": [
+            "spec:SPEC.md#decision-rule",
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:services/ai-api/app/omoikane/turno_stream.py"
+          ]
+        },
+        "duration": {
+          "justification": "Earlier performance changes in this codebase were commits of a single mechanism each, three to four files with their test, which bounds the figure",
+          "evidence": [
+            "precedent:c125be56",
+            "precedent:62e48657",
+            "command:git -C /home/david/dev/pictures show --stat c125be56 -> 4 files changed, 243 insertions(+), 12 deletions(-) including 144 test lines"
+          ]
+        },
+        "risk": {
+          "justification": "It changes the production path that writes customer-facing answers, and a previous thinking-level change was classed high risk",
+          "evidence": [
+            "file:scripts/eval/eval-chat-thinking.ts",
+            "file:src/lib/ia/guiado/prompt-guiado.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "The route, the loop and the SSE contract are shared with the pinned test and every guided flow, so edits there interact tightly",
+          "evidence": [
+            "task:T4",
+            "file:src/app/api/asistente-guiado/route.ts"
+          ]
+        },
+        "confidence": {
+          "justification": "The lever is unknown until the decision exists, so the figure rests on comparable commits and the real effort may sit outside that range",
+          "evidence": [
+            "assumption:T3 picks one lever that fits one working session",
+            "task:T3"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M2",
+      "title": "Re-measure and confirm the gain with quality intact",
+      "objective": "The file eval/latencia-asistente/after.json is produced by the same harness and scenarios as the baseline and passes budget-check: p50 time to first useful response within the T3 budget and no stage with a worse p95",
+      "repository": "pictures",
+      "after": [
+        "T5"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 45,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "The run is the same procedure as T2 against the changed code and again needs live paid calls and available quota; whether the budget is met is unknown, the effort of checking is not",
+      "expected_paths": [
+        "eval/latencia-asistente/after.json"
+      ],
+      "shared_resources": [
+        "gemini-api-quota",
+        "local-next-dev-server"
+      ],
+      "acceptance_criteria": [
+        "The after file uses the same scenarios, run count and flags as the baseline file",
+        "The p50 of time to first useful response meets the decision budget",
+        "No stage shows a worse p95 than the baseline"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx scripts/eval/medir-latencia-asistente.ts budget-check eval/latencia-asistente/after.json --decision eval/latencia-asistente/decision.json --baseline eval/latencia-asistente/baseline.json",
+          "purpose": "measured p50 within budget, no stage p95 worse, same scenarios and flags",
+          "created_by": "T1"
+        },
+        {
+          "type": "command",
+          "value": "npm run guiada:test",
+          "purpose": "guided flows still pass after the change"
+        },
+        {
+          "type": "command",
+          "value": "npm run ia:test-omoikane-chat-python",
+          "purpose": "Python hop contract holds after the change"
+        }
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Repeats a procedure already defined and automated by the harness, then compares two tables",
+          "evidence": [
+            "task:T1",
+            "task:T2"
+          ]
+        },
+        "scope": {
+          "justification": "Produces a table only and changes no repository file",
+          "evidence": [
+            "task:T5"
+          ]
+        },
+        "duration": {
+          "justification": "Same effort as the baseline run, shortened by the harness and the saved scenario list",
+          "evidence": [
+            "task:T2",
+            "command:cd /home/david/dev/pictures/services/ai-api && .venv/bin/pytest tests/test_omoikane_turno_stream.py tests/test_reranker.py -q -> 20 passed in 0.81 s"
+          ]
+        },
+        "risk": {
+          "justification": "Only measures and compares; a mistake is caught by reading the two tables side by side",
+          "evidence": [
+            "file:AGENTS.md"
+          ]
+        },
+        "coupling": {
+          "justification": "It reuses the quota and server used by the baseline run and consumes the change from the previous task",
+          "evidence": [
+            "task:T5"
+          ]
+        },
+        "confidence": {
+          "justification": "The procedure is known and repeatable, the unknown is the outcome and not the work of checking it",
+          "evidence": [
+            "task:T1",
+            "file:src/lib/ia/nucleo/registro.ts"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,408 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "TRAIN-2",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Rename",
+      "acceptance_criteria": [
+        "No source, manifest or deployment file references the old scope"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Verify",
+      "acceptance_criteria": [
+        "The workspace installs, builds, type-checks and tests with the new scope"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Inventory every reference of the old scope",
+      "objective": "List every file that mentions the old scope so the rename tasks cover all of them",
+      "repository": "trainingapp",
+      "after": [],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 15,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "A grep over the repository, excluding node_modules and the lockfile, already returned 17 matches in 9 files",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:grep -rn '@training/' . -> 17 lines in 9 files"
+          ],
+          "justification": "A search with a known pattern; no design choice involved"
+        },
+        "scope": {
+          "evidence": [
+            "file:package.json"
+          ],
+          "justification": "Read-only inventory, nothing in the repository changes"
+        },
+        "duration": {
+          "evidence": [
+            "command:grep -rn '@training/' . -> 17 lines in 9 files"
+          ],
+          "justification": "One grep and a review of 17 lines"
+        },
+        "risk": {
+          "evidence": [
+            "file:package.json"
+          ],
+          "justification": "Read-only task with no side effects"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T3",
+            "task:T4"
+          ],
+          "justification": "Feeds T2 to T4 but changes nothing they touch"
+        },
+        "confidence": {
+          "evidence": [
+            "command:grep -rn '@training/' . -> 17 lines in 9 files",
+            "file:apps/api/Dockerfile"
+          ],
+          "justification": "The grep was already run and listed manifests, sources, Dockerfile and netlify.toml"
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Every file that references @training/ outside node_modules is listed in the task notes",
+        "Dockerfile and deployment files are included, not only package manifests"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "grep -rn \"@training/\" . --exclude-dir=node_modules --exclude-dir=.next --exclude=package-lock.json",
+          "purpose": "the inventory itself"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Rename the contracts package and its API consumers",
+      "objective": "Make the contracts package and every API file use the new scope while keeping the API buildable",
+      "repository": "trainingapp",
+      "after": [
+        "T1"
+      ],
+      "complexity": "low",
+      "scope": "large_change",
+      "estimated_minutes": 30,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "high",
+      "estimate_rationale": "Four manifests/sources plus the API Dockerfile; mechanical, but the package name is a contract of the workspace",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:packages/contracts/package.json",
+            "file:apps/api/src/app.ts"
+          ],
+          "justification": "Find and replace of a known string in known files with no semantic decisions"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/api/Dockerfile",
+            "file:apps/api/package.json"
+          ],
+          "justification": "Five files across two workspaces, extensive but uniform"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/api/package.json"
+          ],
+          "justification": "Five small edits plus a lockless typecheck of one workspace"
+        },
+        "risk": {
+          "evidence": [
+            "file:apps/api/Dockerfile"
+          ],
+          "justification": "A missed reference breaks installs or the Docker build, found by the build in T5"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3",
+            "task:T4"
+          ],
+          "justification": "Web, root scripts and Netlify all resolve the same package names, so the three rename tasks must be sequenced"
+        },
+        "confidence": {
+          "evidence": [
+            "command:grep -rn '@training/' . -> 17 lines in 9 files",
+            "file:apps/api/src/repositories/project-repository.ts"
+          ],
+          "justification": "All references in these files came from the grep inventory"
+        }
+      },
+      "expected_paths": [
+        "packages/contracts/package.json",
+        "apps/api/package.json",
+        "apps/api/src/app.ts",
+        "apps/api/src/repositories/project-repository.ts",
+        "apps/api/Dockerfile"
+      ],
+      "shared_resources": [
+        "workspace-package-scope"
+      ],
+      "acceptance_criteria": [
+        "packages/contracts/package.json is named @trainingapp/contracts",
+        "API imports and Dockerfile build steps use the new scope"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run typecheck -w @trainingapp/api",
+          "purpose": "the API compiles against the renamed contracts package"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Rename the web package and its imports",
+      "objective": "Make the web workspace and its type imports use the new contracts scope",
+      "repository": "trainingapp",
+      "after": [
+        "T2"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 20,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "high",
+      "estimate_rationale": "Two files in apps/web; it only compiles once T2 has renamed the package it imports",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:apps/web/package.json",
+            "file:apps/web/lib/types.ts"
+          ],
+          "justification": "Replace a known string in two files"
+        },
+        "scope": {
+          "evidence": [
+            "file:apps/web/package.json"
+          ],
+          "justification": "Two files of one workspace"
+        },
+        "duration": {
+          "evidence": [
+            "file:apps/web/package.json"
+          ],
+          "justification": "Two edits and a type check of the web workspace"
+        },
+        "risk": {
+          "evidence": [
+            "file:apps/web/lib/types.ts"
+          ],
+          "justification": "A wrong import name fails the type check immediately"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T4"
+          ],
+          "justification": "It imports the package T2 renames and shares the workspace scope with T4"
+        },
+        "confidence": {
+          "evidence": [
+            "command:grep -rn '@training/' . -> 17 lines in 9 files"
+          ],
+          "justification": "Both files are listed in the inventory and are small"
+        }
+      },
+      "expected_paths": [
+        "apps/web/package.json",
+        "apps/web/lib/types.ts"
+      ],
+      "shared_resources": [
+        "workspace-package-scope"
+      ],
+      "acceptance_criteria": [
+        "apps/web/package.json is named @trainingapp/web and depends on @trainingapp/contracts",
+        "apps/web/lib/types.ts imports from @trainingapp/contracts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run typecheck -w @trainingapp/web",
+          "purpose": "web compiles against the renamed contracts package"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M1",
+      "title": "Rename root scripts and the Netlify build command",
+      "objective": "Update the root npm scripts and the Netlify build command to the new workspace names",
+      "repository": "trainingapp",
+      "after": [
+        "T3"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 15,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "high",
+      "estimate_rationale": "Seven script lines in package.json and one command in netlify.toml",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:package.json",
+            "file:netlify.toml"
+          ],
+          "justification": "Eight literal replacements in two files"
+        },
+        "scope": {
+          "evidence": [
+            "file:netlify.toml"
+          ],
+          "justification": "Two configuration files in the repository root"
+        },
+        "duration": {
+          "evidence": [
+            "file:package.json"
+          ],
+          "justification": "Eight single-line edits and one grep"
+        },
+        "risk": {
+          "evidence": [
+            "file:netlify.toml"
+          ],
+          "justification": "Netlify build breaks silently if a name is wrong, so T5 builds the whole workspace"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T3"
+          ],
+          "justification": "The scripts call the workspaces that T2 and T3 renamed"
+        },
+        "confidence": {
+          "evidence": [
+            "file:package.json",
+            "file:netlify.toml"
+          ],
+          "justification": "Both files were read and every occurrence was in the inventory"
+        }
+      },
+      "expected_paths": [
+        "package.json",
+        "netlify.toml"
+      ],
+      "shared_resources": [
+        "workspace-package-scope"
+      ],
+      "acceptance_criteria": [
+        "Every -w argument in package.json scripts names a renamed workspace",
+        "netlify.toml builds @trainingapp/web"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "grep -c \"@training/\" package.json netlify.toml",
+          "purpose": "no old scope remains in these two files (count 0 per file)"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Regenerate the lockfile and verify the whole build",
+      "objective": "Refresh package-lock.json for the new names and prove the workspace builds and tests",
+      "repository": "trainingapp",
+      "after": [
+        "T4"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "npm install rewrites the lockfile for renamed workspaces; the build and test run dominate the time",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:package-lock.json",
+            "file:package.json"
+          ],
+          "justification": "Needs a judgement on how npm rewrites the lockfile for renamed workspaces and what to do if it hoists differently"
+        },
+        "scope": {
+          "evidence": [
+            "file:package-lock.json"
+          ],
+          "justification": "One generated file changes, validated by the whole build"
+        },
+        "duration": {
+          "evidence": [
+            "file:package.json"
+          ],
+          "justification": "An install, a three workspace build and the tests; a Next build is the slow part"
+        },
+        "risk": {
+          "evidence": [
+            "file:package-lock.json"
+          ],
+          "justification": "A lockfile rewrite can change resolved versions unnoticed, so the diff must be reviewed"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4"
+          ],
+          "justification": "Runs after every rename task and nothing else edits the lockfile"
+        },
+        "confidence": {
+          "evidence": [
+            "file:package.json",
+            "assumption:npm updates workspace names in the lockfile without version drift"
+          ],
+          "justification": "The scripts exist but the install behaviour with renamed workspaces was not tried"
+        }
+      },
+      "expected_paths": [
+        "package-lock.json"
+      ],
+      "shared_resources": [
+        "package-lock.json"
+      ],
+      "acceptance_criteria": [
+        "package-lock.json contains no @training/ names",
+        "npm run build, npm run typecheck and npm test succeed from the root"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "contracts, api and web build in order"
+        },
+        {
+          "type": "command",
+          "value": "npm run typecheck",
+          "purpose": "all workspaces type-check"
+        },
+        {
+          "type": "command",
+          "value": "npm test",
+          "purpose": "all workspace tests pass"
+        }
+      ]
+    }
+  ]
+}

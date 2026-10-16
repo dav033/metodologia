@@ -3,6 +3,8 @@
 ## Post-timebox continuation — 2026-10-16
 - Owner resumed REQ-014 development outside the original timebox, retaining its approved scope and hard constraints.
 - T65/P-089 is locally implemented and verified: eligible non-generated one-tramo columns and garlands receive compensated filler on creation and colour/size edits; the measured quick matrix is 200/200 and motor goldens pass at 1.2.7. T11's original fix was already shipped in `53502782`; this continuation adds the CASE-002 two-column per-piece density regression, which passes at 23.3 balloons/m for each column.
+- T66/PRO-04 adds the Taller-to-professional-quote handoff; T67/PRO-06 adds local PNG/GLB scene export; T68/PRO-08 adds default-off signed approval links with immutable server-recalculated quote snapshots, customer decisions and token-redacted logs. All three are locally verified and both review axes approve T68.
+- Marathon progress is 50/70 tasks (71.4%). T69/PRO-07 remains an architecture decision on stock ownership/persistence/idempotent deduction; T70 is Ship #4. The broad cotización suite still stops on the pre-existing T65 engine golden mismatch (1.2.6 stored vs 1.2.7 local). Migration 036 was not applied; no commit, push or deployment occurred.
 - T1 is reconciled against the Phase 5 squash `d05a52b8`, already present in this branch and `origin/main`; the original WIP commit IDs are unavailable after squash and the scratch file is absent.
 - The worktree is at `75c87497`, five commits behind and one ahead of local `origin/main` (`f8227ca5`). No merge, commit, push or deployment was performed during this continuation.
 

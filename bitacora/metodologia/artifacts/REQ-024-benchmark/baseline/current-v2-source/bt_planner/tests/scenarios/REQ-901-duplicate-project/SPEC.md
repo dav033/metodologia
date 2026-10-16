@@ -1,0 +1,66 @@
+# REQ-901 — Duplicate a project from the web workspace
+
+## Goal
+
+Users of the Training workspace can duplicate an existing project from the project list. The copy is an independent
+project: new external key, name suffixed ` (copia)`, same data, its own copies of the uploaded images, revision 1.
+
+## Context (inspected in /home/david/dev/trainingapp)
+
+- `apps/api/src/app.ts` exposes `POST/GET/PUT/DELETE /v1/projects...`; mutations go through `requireMutation`
+  (session + CSRF, or MCP bearer) and publish a `project.revision` / `project.deleted` event on the hub.
+- `apps/api/src/repositories/project-repository.ts`: `create()` -> private `mutate()` inserts the row with
+  `revision = 1` inside `BEGIN IMMEDIATE`; `external_key` is `UNIQUE`; the id is `randomUUID()` unless passed.
+- Images are `AssetRef {id, url, mimeType, byteSize}` in `data.fotoFrontal|fotoLateral|fotoPosterior`. The bytes live
+  in `<assetDir>/<uuid>.<ext>`; the `assets` table has `project_id REFERENCES projects(id) ON DELETE CASCADE`,
+  `relative_path UNIQUE`. `AssetRef.url` embeds the asset id (`<publicBaseUrl>/v1/assets/<id>`).
+- `AssetService.deleteProjectAssets` removes the files of every asset row of a project. Therefore a copy that
+  re-used the original's asset ids or files would break when either project is deleted (the bug to avoid).
+- Precedent: commit 01861ad added project deletion end to end (endpoint, asset cleanup, list button, tab sync).
+- Tests today: one API test (`apps/api/test/repository.test.ts`); the web workspace has no test files.
+- `npm run contracts:check` needs the sibling `../trainingApp-mcp` checkout, which is absent on this machine.
+
+## Behaviour
+
+1. `POST /v1/projects/:projectId/duplicate` (mutation auth, no body) responds `201` with the new `ProjectSnapshot`;
+   `404 NOT_FOUND` when the source does not exist.
+2. The copy has: a new `id`; a new unique `externalKey` derived from the source key with a random suffix, valid for
+   the existing key rules (max 120 chars); `name = source.name + " (copia)"` (max 200, suffix always kept);
+   the same `description` and `data`; `revision = 1`; fresh `createdAt`/`updatedAt`.
+   Ownership: the route handler (T4) generates key and name; the repository (T3) inserts them, rewrites the photo
+   refs in `data` with the refs returned by the asset clone (T2) and sets `revision = 1`.
+3. Every photo referenced by the source data is cloned: a new file on disk, a new `assets` row owned by the copy, and
+   the copy's `AssetRef` points to the new id/url. Deleting either project never removes the other's files.
+4. All-or-nothing: if anything fails, no project row, asset row or stray file is left behind.
+5. The hub publishes `project.revision` for the new project, like `create`.
+6. The web project list shows a "Duplicar" button per project card that calls the endpoint, shows a busy state and
+   an error message on failure, refreshes the list and dispatches `PROJECTS_CHANGED_EVENT` so the tabs bar stays in
+   sync. It does not navigate to the copy.
+
+## Out of scope
+
+Renaming UI, duplicating from the editor view, changing the import contract or `contracts/*.schema.json`, any change
+in the MCP adapter repository (not present on this machine), a WebSocket event for list changes.
+
+## Decisions to make first (T1)
+
+- Atomicity: asset rows reference the project by FK, so project row and asset rows must be created in one
+  transaction; files are copied before and removed on failure.
+- Dangling photo refs in the source (ref without an `assets` row or file): copy as `null` vs. fail the request.
+- Key generation: `<sanitised source key, truncated>-copia-<8 hex>` and collision handling.
+
+## Acceptance
+
+- API tests prove revision 1, key/name rules, rewritten asset refs, independent files after deleting the original,
+  and rollback on failure.
+- `npm run test -w @training/api`, `npm run typecheck`, `npm run lint` pass; the web button works against a local API.
+
+## Security
+
+The endpoint is a mutation: it must reuse `requireMutation` (CSRF + origin) and never accept client-supplied paths or
+ids. Copied file paths are resolved under the asset root like `AssetService.save`.
+
+## Contract
+
+No change to `@training/contracts`; the response is the existing `ProjectSnapshot`. `docs/api-contract.md` documents
+the endpoint.

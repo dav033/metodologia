@@ -1,0 +1,6 @@
+$ python3 -m unittest discover -s bt_planner/tests -p test_extensions.py
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.013s
+
+OK

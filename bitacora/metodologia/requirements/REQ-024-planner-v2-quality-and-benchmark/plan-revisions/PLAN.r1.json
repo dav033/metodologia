@@ -1,0 +1,2088 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-024",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Diagnostic baseline and evidence classification",
+      "acceptance_criteria": [
+        "The pre-change commit and real results of the existing suites are recorded",
+        "Every inspected source and REQ-017 artifact carries one evidence-type label",
+        "Every PLAN.json consumer is listed with kind/category handling and each telemetry source with fields, sample count, comparability and source quality"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Versioned contract decision and compatibility fixtures",
+      "acceptance_criteria": [
+        "Golden canonical bytes and hashes from the unmodified implementation are pinned by a passing test",
+        "The 1.2.0 change record names every consumer, compatibility outcome, migration and rollback"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Deterministic plan-quality gate (schema 1.2.0)",
+      "acceptance_criteria": [
+        "Schema 1.2.0 plans report uncovered requirements, orphan tasks, invalid interfaces and verification evidence categories",
+        "Schema 1.0.0 and 1.1.0 plans produce unchanged results and canonical bytes",
+        "M1 passes explicit task kind to the existing M2 kind input and M6 accepts verification categories without changing execution verdicts"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Provider-neutral Planner invocation, history and installation",
+      "acceptance_criteria": [
+        "The Planner profile and skills require coverage, interface contracts, explicit supported work kinds, verification categories and labelled review findings",
+        "Planning history exposes verified quality, duration and unit-preserving consumption read-only, with per-metric coverage and unknown results when data is sparse or incomparable",
+        "The same Planner instructions can be invoked through every locally configured provider and account profile inventoried in M1, with the caller selecting the provider, account and model",
+        "Runtime smoke checks prove launch and response only; they do not compare or score model quality"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Reproducible planning benchmark",
+      "acceptance_criteria": [
+        "The benchmark manifest is hash-frozen before the first model call",
+        "Every executed cell has raw output, metadata and two blind reviews or is marked incomplete",
+        "The report separates measured values from judgements and obeys the no-superiority rule"
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "Final REQ-017 draft and closure",
+      "acceptance_criteria": [
+        "A fresh REQ-017 draft exists with its real bt_planner check result and no Pictures change",
+        "Closing suite results and remaining limitations are recorded next to the baseline"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Record the pre-change baseline and inventory local AI profiles",
+      "objective": "Pin the methodology commit that defines current V2, capture the real exit status and totals of the Planner module and methodology suites, and inventory every provider runtime and account profile configured in the local launcher before any edit.",
+      "repository": "skill",
+      "after": [],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Two documented suites, one git query and one read-only profiles/agents inventory; most of the time is waiting for the methodology suite and recording the profile-to-provider mapping.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/README.md",
+            "file:skill/references/plan-contract.md"
+          ],
+          "justification": "Running documented unittest commands and transcribing their totals needs no design decisions."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#priorities-phases"
+          ],
+          "justification": "Only a baseline record in the requirement folder is written; no source file changes."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/tests/test_agents.py",
+            "assumption:the full methodology suite finishes in about thirty minutes here"
+          ],
+          "justification": "The methodology suite spans many test modules under skill/scripts/tests, so suite runtime dominates this estimate."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "Read-only test commands cannot damage source; the failure mode is a misreported baseline."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4",
+            "task:T17"
+          ],
+          "justification": "Later golden fixtures and benchmark arms read this pinned commit, but nothing else writes the baseline record."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/README.md",
+            "assumption:no suite is currently flaky"
+          ],
+          "justification": "The commands are documented, but their runtime and current pass state were not measured during planning."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "req024-baseline-record"
+      ],
+      "acceptance_criteria": [
+        "The bt_planner module suite runs from skill/scripts and its real exit status is recorded",
+        "The methodology suite runs from skill/scripts and its real totals are recorded",
+        "The pre-change commit hash of the methodology repository is recorded as the current-V2 arm",
+        "Every locally launchable provider and configured account profile is recorded with its CLI, account selector, model-selection input and native-agent or prompt-injection mechanism; credentials are not read or recorded"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests",
+          "purpose": "The bt_planner module suite runs from skill/scripts and its real exit status is recorded"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests",
+          "purpose": "The methodology suite runs from skill/scripts and its real totals are recorded"
+        },
+        {
+          "type": "command",
+          "value": "git rev-parse HEAD",
+          "purpose": "The pre-change commit hash of the methodology repository is recorded as the current-V2 arm"
+        },
+        {
+          "type": "manual",
+          "value": "Run `python3 skill/scripts/bitacora.py profiles list` and `python3 skill/scripts/bitacora.py agents`; compare the results with bt_profiles.LAUNCHABLE, bt_agents.PROVIDERS and bt_launch.AGENTS",
+          "purpose": "Every locally launchable provider and configured account profile is recorded with its CLI, account selector, model-selection input and native-agent or prompt-injection mechanism; credentials are not read or recorded",
+          "expected": "The diagnostic lists every provider and profile ID, records duplicate effective-account aliases, and stores no credentials"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Classify Planner sources and REQ-017 artifacts by evidence type",
+      "objective": "Write DIAGNOSIS.md in the requirement folder labelling each inspected source and REQ-017 artifact as executable code, configured instructions, observed plan behaviour, later coordinator or reviewer edit, implementation activity or proposed improvement.",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "About twenty artifacts to label, including reading the raw V1 RESULT.json and session log that were only grepped during planning.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors",
+            "file:skill/agents/planner.md"
+          ],
+          "justification": "Separating raw V1 output from later coordinator edits needs careful reading of logs, records and edited plans."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "One diagnosis document in the requirement folder; no code or instruction changes."
+        },
+        "duration": {
+          "evidence": [
+            "assumption:RESULT.json holds the full V1 plan as the grep counts suggest"
+          ],
+          "justification": "Labelling roughly twenty artifacts and confirming the V1 M3 and widget claims inside RESULT.json takes about two hours."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#assumptions",
+            "spec:SPEC.md#out-of-scope"
+          ],
+          "justification": "Misattributing an edited artifact to a model would corrupt every later benchmark claim about V1 or V2."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5"
+          ],
+          "justification": "The contract decision consumes the diagnosis, which no other task writes."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/agents/planner/skills/adversarial-plan-review/SKILL.md",
+            "assumption:the delegation prompt matches its TASK.json text"
+          ],
+          "justification": "Most artifacts were read during planning, but the V1 prompt and session log were not opened."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "req024-diagnosis-record"
+      ],
+      "acceptance_criteria": [
+        "Every inspected artifact carries exactly one evidence-type label with its path",
+        "The raw V1 delegation output is separated from the edited Pictures PLAN.md",
+        "Claims about V1 cite only recovered files such as the delegation TASK and RESULT records"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "Review DIAGNOSIS.md against the inspected-file list in PLAN.md and the delegation records",
+          "purpose": "Every inspected artifact carries exactly one evidence-type label with its path",
+          "expected": "Each artifact has one label; no V1 claim lacks a recovered source; the edited PLAN.md is never labelled raw model output"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Audit PLAN.json consumers, planning telemetry and local Planner launch interfaces",
+      "objective": "Write CONSUMERS.md listing each reader of PLAN.json and PLAN.md fields, with exact handling of task kind and verification category; each verified planning-history source; and each locally configured AI provider/account profile, its model/account selection path and native agent or prompt-injection mechanism.",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 180,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Six module boundaries plus web review and run-state readers must be traced; telemetry stores are read-only, and three provider launch/profile paths need inspection.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/plan.py",
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "file:skill/scripts/bt_scheduler_quality/README.md"
+          ],
+          "justification": "The audit reasons across M1 plan loading, M2 history rules, M4 metrics and M6 verification contracts at once."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#timeline-dependencies"
+          ],
+          "justification": "Produces one audit document and touches no consumer code."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_monitor/README.md",
+            "file:skill/scripts/bt_plan_adapter.py"
+          ],
+          "justification": "Tracing seven consumers and counting telemetry samples read-only fits about two hours."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "A missed consumer would let the 1.2.0 migration break approval, launch or scheduling paths."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "task:T13"
+          ],
+          "justification": "The contract record and the history projection consume this audit; nothing else edits it."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "assumption:no unlisted PLAN.json reader exists outside skill/scripts"
+          ],
+          "justification": "Main consumers were read, but the web review UI reader and telemetry stores were not opened."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "req024-consumer-audit"
+      ],
+      "acceptance_criteria": [
+        "Each PLAN.json consumer is listed with the exact fields it reads and its 1.0/1.1/1.2 compatibility behavior",
+        "The adapter-only import boundary test still passes before any change",
+        "Each telemetry source is marked observed, sparse, synthetic or unavailable with per-metric sample counts, units, quality fields, comparability and source quality",
+        "Every provider/account profile inventoried in T1 maps to its runtime command, model/account selector, and native Planner file or required invocation adapter; no credential material is read or recorded"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py",
+          "purpose": "The adapter-only import boundary test still passes before any change"
+        },
+        {
+          "type": "manual",
+          "value": "Compare CONSUMERS.md with a grep for PLAN.json and plan loaders under skill/scripts",
+          "purpose": "Each PLAN.json consumer is listed with the exact fields it reads",
+          "expected": "Every grep hit outside tests maps to a listed consumer with its fields"
+        },
+        {
+          "type": "manual",
+          "value": "Compare the provider/profile matrix in CONSUMERS.md with `profiles list`, bt_profiles.LAUNCHABLE, bt_agents.PROVIDERS, bt_launch.AGENTS and install_agents.py",
+          "purpose": "Every provider/account profile inventoried in T1 maps to its runtime command, model/account selector, and native Planner file or required invocation adapter; no credential material is read or recorded",
+          "expected": "Every configured profile maps to one provider path, and missing native Planner formats are listed as adapter work"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Freeze golden canonical serialisation fixtures before contract edits",
+      "objective": "Add golden fixtures and a test pinning the canonical text and sha256 produced by the unmodified implementation for 1.0.0 and 1.1.0 documents and for a 1.2.0-labelled document carrying the proposed keys.",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Three fixture documents, one generation pass on the baseline commit and one comparison test.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/contract.py"
+          ],
+          "justification": "Fixtures must exercise the legacy and deep-sorted canonicalisation branches without touching their code."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/README.md"
+          ],
+          "justification": "Adds one test file and a golden fixture directory inside the module tests."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/tests/test_scenarios.py"
+          ],
+          "justification": "Generating three canonical texts and asserting them is about an hour of work."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "A golden generated after any edit would hide a hash change in frozen revisions."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "task:T11"
+          ],
+          "justification": "The extension points and compatibility proof both assert against these canonical serialisation fixtures."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/contract.py",
+            "assumption:pre-change bytes can be generated from the T1 commit"
+          ],
+          "justification": "The canonicalisation code was read, but the fixture shapes have not been tried yet."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_planner/tests/test_contract_golden.py",
+        "skill/scripts/bt_planner/tests/golden"
+      ],
+      "shared_resources": [
+        "plan-canonical-serialisation"
+      ],
+      "acceptance_criteria": [
+        "Golden canonical text and sha256 values are generated from the unmodified implementation",
+        "The golden test passes against the pre-change commit recorded by T1",
+        "A 1.2.0-labelled document with the proposed keys has its pre-change hash pinned"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_contract_golden.py",
+          "purpose": "The golden test passes against the pre-change commit recorded by T1",
+          "created_by": "T4"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_contract_golden.py",
+          "purpose": "A 1.2.0-labelled document with the proposed keys has its pre-change hash pinned",
+          "created_by": "T4"
+        },
+        {
+          "type": "manual",
+          "value": "Confirm the fixtures were produced on the T1 commit before contract.py changed",
+          "purpose": "Golden canonical text and sha256 values are generated from the unmodified implementation",
+          "expected": "The generation note names the T1 commit and the git diff of contract.py is empty at that time"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Confirm the versioned 1.2.0 contract change record against the audit",
+      "objective": "Write CONTRACT-1.2.0.md confirming or amending the plan proposal for requirements, task kind and verification category against the consumer audit, with compatibility, migration and rollback; stop before T6 if any consumer cannot safely support the versioned contract.",
+      "repository": "skill",
+      "after": [
+        "T2",
+        "T3"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "The proposal is already drafted in PLAN.md; the task reconciles it with audit findings and records the version decision.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/plan.py",
+            "file:skill/scripts/bt_scheduler_quality/README.md"
+          ],
+          "justification": "Compatibility must hold across the planner gate, the M1 loader, M2 metadata, M6 orders and frozen hashes simultaneously."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "A single contract record document; implementation happens in later tasks."
+        },
+        "duration": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "Reconciling a drafted proposal with one audit document is roughly an hour."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors",
+            "file:skill/references/plan-contract.md"
+          ],
+          "justification": "A wrong compatibility claim on the plan contract could block approvals or launches of existing plans."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6"
+          ],
+          "justification": "The record governs the shared plan-json contract that every later contract task changes."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_plan_adapter.py",
+            "assumption:the audit finds no consumer that rejects unknown keys"
+          ],
+          "justification": "Core consumer code was read, but the audit may reveal readers not inspected during planning."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "plan-json-contract"
+      ],
+      "acceptance_criteria": [
+        "Every consumer from the audit has a stated compatibility outcome for 1.2.0 kind and verification category fields",
+        "Rollback selects a compatible approved 1.1.0 revision instead of sending a 1.2.0 plan to an older M2/M6 adapter",
+        "The M1 plan loader suite passes and retains unchanged behavior for existing 1.x plans",
+        "Any consumer that would break is reported to the owner before T6 starts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests -p test_plan.py",
+          "purpose": "The M1 plan loader suite passes and still accepts any 1.x schema"
+        },
+        {
+          "type": "manual",
+          "value": "Compare CONTRACT-1.2.0.md with CONSUMERS.md line by line",
+          "purpose": "Every consumer from the audit has a stated compatibility outcome for 1.2.0",
+          "expected": "No audited consumer lacks an outcome; any breaking outcome has an owner decision recorded before T6"
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M3",
+      "title": "Add version-gated 1.2.0 validator extension points for traceability, interfaces and evidence labels",
+      "objective": "Introduce EXTENSIONS_SINCE (1, 2, 0) and version-gated validation for requirements, task kind, interface contracts and verification categories, calling traceability.check, interfaces.check and quality.verification_findings only for 1.2.0 documents while preserving 1.0.0/1.1.0 results and canonical bytes.",
+      "repository": "skill",
+      "after": [
+        "T4",
+        "T5"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Small edits in contract.py, two stub modules, one stub function and a regression test comparing old and new reports.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/contract.py"
+          ],
+          "justification": "Version gating must avoid touching canonical key order while adding new validator calls."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/quality.py"
+          ],
+          "justification": "Changes contract.py and adds two stub modules plus one stub function in quality.py."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/tests/test_scenarios.py"
+          ],
+          "justification": "Stub wiring and one comparison test fit in an hour and a half."
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/references/plan-contract.md"
+          ],
+          "justification": "contract.validate runs on every approval, handoff and launch path, so a regression blocks all plan work."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7",
+            "task:T8",
+            "task:T9"
+          ],
+          "justification": "It produces the extension interface consumed by the traceability, interface and verification tasks."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/contract.py",
+            "task:T4"
+          ],
+          "justification": "The validator structure is understood, but no stub has been tried against the golden fixtures yet."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_planner/contract.py",
+        "skill/scripts/bt_planner/traceability.py",
+        "skill/scripts/bt_planner/interfaces.py",
+        "skill/scripts/bt_planner/quality.py",
+        "skill/scripts/bt_planner/tests/test_extensions.py"
+      ],
+      "shared_resources": [
+        "plan-json-contract",
+        "plan-canonical-serialisation"
+      ],
+      "acceptance_criteria": [
+        "The full bt_planner module suite passes with versioned extension points for task kind and verification category",
+        "The golden canonical bytes and hashes from T4 are unchanged",
+        "A 1.1.0 document produces exactly the same errors and warnings as before"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests",
+          "purpose": "The full bt_planner module suite passes with the extension points in place"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_contract_golden.py",
+          "purpose": "The golden canonical bytes and hashes from T4 are unchanged",
+          "created_by": "T4"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_extensions.py",
+          "purpose": "A 1.1.0 document produces exactly the same errors and warnings as before",
+          "created_by": "T6"
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M3",
+      "title": "Implement requirement traceability checks for schema 1.2.0",
+      "objective": "Make 1.2.0 plans declare requirement ids and per-task covers, and report uncovered requirements, tasks covering nothing, unknown ids and a SPEC Requirements list that disagrees with the plan.",
+      "repository": "skill",
+      "after": [
+        "T6"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 150,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "One pure module, a SPEC heading parser in sync.py and focused tests for each rule and the version gate.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/sync.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "SPEC requirement extraction must be deterministic across heading levels and list styles without false ids."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/README.md"
+          ],
+          "justification": "A self-contained traceability capability with its own module and tests, verifiable end to end through check."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/evidence.py"
+          ],
+          "justification": "Parser, four rules and their tests take about two and a half hours."
+        },
+        "risk": {
+          "evidence": [
+            "task:T6"
+          ],
+          "justification": "False positives would block publication of 1.2.0 plans, but older versions are unaffected."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "file:skill/scripts/bt_planner/quality.py"
+          ],
+          "justification": "It works in its own module through the frozen extension interface and shares no path with the interface or verification tasks."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/sync.py",
+            "assumption:SPEC requirement items start with an id followed by a period or colon"
+          ],
+          "justification": "The heading-anchor logic in sync.py was read, but SPEC list styles across projects were not surveyed."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_planner/traceability.py",
+        "skill/scripts/bt_planner/sync.py",
+        "skill/scripts/bt_planner/tests/test_traceability.py"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "A requirement id with no covering task is reported as an error naming the id",
+        "A task whose covers list is empty is reported as orphan work",
+        "Requirement ids missing from or extra to the SPEC Requirements section are reported",
+        "Documents below 1.2.0 receive no new errors from traceability"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_traceability.py",
+          "purpose": "A requirement id with no covering task is reported as an error naming the id",
+          "created_by": "T7"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_traceability.py",
+          "purpose": "A task whose covers list is empty is reported as orphan work",
+          "created_by": "T7"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_traceability.py",
+          "purpose": "Requirement ids missing from or extra to the SPEC Requirements section are reported",
+          "created_by": "T7"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_traceability.py",
+          "purpose": "Documents below 1.2.0 receive no new errors from traceability",
+          "created_by": "T7"
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M3",
+      "title": "Implement interface contract checks for schema 1.2.0",
+      "objective": "Validate the 1.2.0 interfaces list so producer and consumer tasks exist and differ, each consumer depends on its producer or names an integration task depending on both, and each interface states owner, inputs, outputs, invariants and integration criteria.",
+      "repository": "skill",
+      "after": [
+        "T6"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 150,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Graph rules reuse quality.ancestors; most time goes to negative tests for each interface rule.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/quality.py"
+          ],
+          "justification": "Ordering rules between producer, consumers and integration task need transitive ancestor reasoning over the task graph."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "A new interface-validation capability in its own module with end-to-end check coverage."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/tests/test_scenarios.py"
+          ],
+          "justification": "Five rules with positive and negative cases take about two and a half hours."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "A rule that is too lax lets the Scheduler start a consumer before its interface exists."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "file:skill/scripts/bt_planner/contract.py"
+          ],
+          "justification": "It consumes the frozen extension interface only and edits no file shared with the traceability or verification tasks."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/contract.py",
+            "assumption:interface key names pass the scheduling-token scan"
+          ],
+          "justification": "Ancestor computation exists and was read, but key-name scanning interactions were not tried."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_planner/interfaces.py",
+        "skill/scripts/bt_planner/tests/test_interfaces.py"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "An interface naming an unknown producer or consumer task is rejected",
+        "A consumer unordered with its producer and lacking an integration task is rejected",
+        "An interface missing owner, inputs, outputs, invariants or integration criteria is rejected",
+        "Interface text cannot carry scheduling keys or concurrency promises"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_interfaces.py",
+          "purpose": "An interface naming an unknown producer or consumer task is rejected",
+          "created_by": "T8"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_interfaces.py",
+          "purpose": "A consumer unordered with its producer and lacking an integration task is rejected",
+          "created_by": "T8"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_interfaces.py",
+          "purpose": "An interface missing owner, inputs, outputs, invariants or integration criteria is rejected",
+          "created_by": "T8"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_interfaces.py",
+          "purpose": "Interface text cannot carry scheduling keys or concurrency promises",
+          "created_by": "T8"
+        }
+      ]
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M3",
+      "title": "Add verification-category, honesty and M6 criterion-coverage findings",
+      "objective": "Validate required 1.2.0 evidence categories, report category coverage by requirement, warn on criteria without matching verification evidence, and keep planned verifications labelled as work; a test result alone must never imply product acceptance.",
+      "repository": "skill",
+      "after": [
+        "T6"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "The existing criterion-to-command check gains versioned category validation, category coverage reporting and regressions for product claims supported only by lower-level evidence.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_quality/README.md"
+          ],
+          "justification": "Matching criteria to command purposes is simple string logic once the M6 rule is stated."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/quality.py"
+          ],
+          "justification": "Fills the quality.py stub and adds one test file."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/evidence.py"
+          ],
+          "justification": "A single function with warning tests is about ninety minutes."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Findings are warnings at every schema version, so publication behaviour cannot regress."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6"
+          ],
+          "justification": "It edits only quality.py under the frozen extension interface and no path of the traceability or interface tasks."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_quality/README.md",
+            "assumption:M6 compares purpose and criterion after whitespace trim"
+          ],
+          "justification": "The M6 exact-purpose rule was read in its README, but not in its implementation."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_planner/quality.py",
+        "skill/scripts/bt_planner/tests/test_verification_quality.py"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Every 1.2.0 verification has exactly one allowed evidence category independent of command/manual type",
+        "A criterion without matching verification purpose produces a warning naming the criterion and M6 NEEDS_REVIEW",
+        "Verifications with created_by are listed as planned work, never as existing evidence",
+        "Product-level claims without product-level evidence are flagged for Planner review; tests alone are not acceptance",
+        "No new finding is an error for 1.0.0 or 1.1.0 documents"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_verification_quality.py",
+          "purpose": "A criterion without an exactly matching command purpose produces a warning naming the criterion",
+          "created_by": "T9"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_verification_quality.py",
+          "purpose": "Verifications with created_by are listed as planned work, never as existing evidence",
+          "created_by": "T9"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_verification_quality.py",
+          "purpose": "No new finding is an error for 1.0.0 or 1.1.0 documents",
+          "created_by": "T9"
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M3",
+      "title": "Integrate 1.2.0 fields into schema, example, report, PLAN.md sync and docs",
+      "objective": "Publish the 1.2.0 contract by updating schema/example and PLAN.md sync for requirements, task kind, interfaces and verification.category; report coverage, interface and evidence-category results; make init emit SPEC-derived requirements and docs explain migration.",
+      "repository": "skill",
+      "after": [
+        "T7",
+        "T8",
+        "T9"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Schema, example, Markdown parity, report fields and migration documentation now cover two versioned task/verification fields as well as traceability and interfaces.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/markdown.py"
+          ],
+          "justification": "Mostly declarative integration, but the PLAN.md grammar must keep parity with the supervisor parser."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/data/plan.schema.json",
+            "file:skill/references/plan-contract.md"
+          ],
+          "justification": "Touches schema, example, report, grammar, sync, CLI and two documentation files across the module."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/README.md"
+          ],
+          "justification": "Eight files with existing tests to extend take about two and a half hours."
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_plan_adapter.py",
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "The publication gate used by approval, handoff and launch changes, and the published schema is a contract."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7",
+            "task:T8",
+            "task:T9"
+          ],
+          "justification": "It integrates three task outputs and edits the shared contract and PLAN.md grammar."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/sync.py",
+            "assumption:the parity test compares only grammar fields both parsers already share"
+          ],
+          "justification": "All touched files were read except the CLI and parity test bodies."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_planner/data/plan.schema.json",
+        "skill/scripts/bt_planner/data/plan.example.json",
+        "skill/scripts/bt_planner/quality.py",
+        "skill/scripts/bt_planner/markdown.py",
+        "skill/scripts/bt_planner/sync.py",
+        "skill/scripts/bt_planner/cli.py",
+        "skill/scripts/bt_planner/README.md",
+        "skill/references/plan-contract.md",
+        "skill/scripts/bt_planner/tests/test_md_sync.py"
+      ],
+      "shared_resources": [
+        "plan-json-contract",
+        "plan-md-grammar"
+      ],
+      "acceptance_criteria": [
+        "The isolated-interpreter module suite passes with schema 1.2.0 fields published",
+        "The published schema and validator constants stay in step",
+        "The supervisor and module PLAN.md parsers still agree on every real plan",
+        "Every existing scenario plan still publishes without new errors",
+        "A covers or kind value in PLAN.md that contradicts PLAN.json is reported",
+        "Schema 1.2.0 reports verification categories without changing 1.0.0/1.1.0 results"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -I -m unittest discover -s bt_planner/tests",
+          "purpose": "The isolated-interpreter module suite passes with schema 1.2.0 published"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_contract.py",
+          "purpose": "The published schema and validator constants stay in step"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_isolation_plan_parse.py",
+          "purpose": "The supervisor and module PLAN.md parsers still agree on every real plan"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_scenarios.py",
+          "purpose": "Every existing scenario plan still publishes without new errors"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests -p test_md_sync.py",
+          "purpose": "A covers value in PLAN.md that contradicts PLAN.json is reported"
+        }
+      ]
+    },
+    {
+      "id": "T11",
+      "milestone_id": "M3",
+      "title": "Integrate 1.2.0 task kinds and verification categories across M1/M2/M6",
+      "objective": "Pass the validated task kind from M1 through the methodology adapter as the existing M2 work-kind input, preserving title inference when absent; extend the strict M6 verification contract and README to validate and preserve the evidence category in its typed request and input hash, while leaving command execution and verdict rules unchanged; prove rollback and compatibility.",
+      "repository": "skill",
+      "after": [
+        "T10"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 240,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "A four-hour provisional estimate covers one M1 metadata field, the M2 adapter fallback, the strict M6 contract and integrated compatibility/rollback fixtures across three consumers.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/plan.py",
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "file:skill/scripts/bt_scheduler_quality/contracts.py"
+          ],
+          "justification": "The change crosses M1 metadata projection, M2 task-kind interpretation and M6 verification parsing, with one coordinated contract test."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:skill/scripts/bt_plan_adapter.py"
+          ],
+          "justification": "Four bounded Scheduler files are changed to add two metadata fields and their compatibility test."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/plan.py",
+            "file:skill/scripts/bt_scheduler_quality/contracts.py"
+          ],
+          "justification": "The provisional four hours cover the M1 projection, M2 fallback, strict M6 acceptance and cross-module rollback fixtures."
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "file:skill/scripts/bt_scheduler_quality/contracts.py",
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "A lost task kind can route work incorrectly, while an M6 rejection can stall every new 1.2.0 verification."
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/plan.py",
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "file:skill/scripts/bt_scheduler_quality/contracts.py"
+          ],
+          "justification": "Planner output, M1 metadata, M2 routing input and M6 verification validation share this versioned contract."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3",
+            "task:T5",
+            "assumption:the existing public adapter can pass kind without widening the M2 contract"
+          ],
+          "justification": "The consumer audit has not yet confirmed every call path or whether a narrower adapter is needed."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_core/plan.py",
+        "skill/scripts/bt_plan_adapter.py",
+        "skill/scripts/bt_scheduler_decision_adapter.py",
+        "skill/scripts/bt_scheduler_quality/contracts.py",
+        "skill/scripts/bt_scheduler_quality/README.md",
+        "skill/scripts/tests/test_plan_contract_compat.py",
+        "skill/scripts/bt_scheduler_quality/tests/test_contracts.py"
+      ],
+      "shared_resources": [
+        "plan-json-contract"
+      ],
+      "acceptance_criteria": [
+        "A valid explicit task kind survives the M1 plan loader and reaches M2 using the existing kind enum",
+        "A legacy task without kind retains existing title-based M2 inference",
+        "M6 validates and preserves verification.category in the typed request and input hash; command execution and verdict remain unchanged",
+        "An older M2/M6 consumer cannot launch a 1.2.0 revision; rollback selects the last compatible approved 1.1.0 revision",
+        "Existing frozen 1.0.0/1.1.0 revision bytes and hashes remain unchanged",
+        "Existing launch-path, Scheduler integration and M1-to-M6 end-to-end tests still pass"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_contract_compat.py",
+          "purpose": "The compatibility gate refuses to approve or launch a 1.2.0 plan when the Scheduler/M6 consumers lack 1.2 support",
+          "created_by": "T11"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_contract_compat.py",
+          "purpose": "Explicit kind reaches the existing M2 kind input, legacy title inference remains, and M6 accepts categories without changing runner verdicts",
+          "created_by": "T11"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_contract_compat.py",
+          "purpose": "Existing frozen 1.0.0/1.1.0 plan bytes and hashes remain unchanged",
+          "created_by": "T11"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_launch_paths.py",
+          "purpose": "Existing launch-path tests still pass with schema 1.2.0 available"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_scheduler_integration.py",
+          "purpose": "The scheduler integration suite still passes on historical fixtures"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_scheduler_m1_m6_e2e.py",
+          "purpose": "The M1 to M6 end-to-end chain still passes"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_quality/tests -p test_contracts.py",
+          "purpose": "M6 validates and preserves a valid category in the typed request hash, while still rejecting malformed or unauthorized metadata",
+          "created_by": "T11"
+        }
+      ]
+    },
+    {
+      "id": "T12",
+      "milestone_id": "M4",
+      "title": "Update the Planner profile and private skills for the new gates and provider neutrality",
+      "objective": "Revise planner.md and its four skills so plans carry requirement coverage and interface contracts, declare only model-agnostic kinds supported by M2, label each verification with its evidence category, state non-trivial behavior precisely, separate review findings, never treat tests alone as product acceptance, and leave provider/account/model/effort selection to the caller.",
+      "repository": "skill",
+      "after": [
+        "T10",
+        "T13"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Five concise instruction files plus a structural test; remove the fixed Opus/high defaults while preserving the four private skills and the existing module boundary.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/agents/planner.md",
+            "precedent:D-053"
+          ],
+          "justification": "Instruction changes must add rules without contradicting D-053 exclusivity or the contract wording."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/agents/planner/skills/wbs-dag-decomposition/SKILL.md",
+            "file:skill/agents/planner/skills/adversarial-plan-review/SKILL.md"
+          ],
+          "justification": "Edits the profile and four private skill files and adds one profile test."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/agents/planner/skills/socratic-elicitation/SKILL.md"
+          ],
+          "justification": "Five concise instruction files and a structural test take about two and a half hours."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#problem-goal"
+          ],
+          "justification": "The profile shapes every future plan, so a wrong rule degrades all Planner output."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T10",
+            "task:T13"
+          ],
+          "justification": "It must name the published 1.2.0 fields and the history command produced by earlier tasks."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/agents/planner/skills/plan-mermaid-view/SKILL.md",
+            "assumption:a structural test is enough to guard the instruction rules"
+          ],
+          "justification": "All five files were read, but no test currently constrains their content."
+        }
+      },
+      "expected_paths": [
+        "skill/agents/planner.md",
+        "skill/agents/planner/skills",
+        "skill/scripts/tests/test_planner_profile.py"
+      ],
+      "shared_resources": [
+        "planner-profile",
+        "planning-history-projection"
+      ],
+      "acceptance_criteria": [
+        "The profile still references exactly the four private skills and no other role references them",
+        "The shared profile has no fixed provider, model, account or effort; the caller or local launcher supplies those choices",
+        "The profile and skills forbid Planner itself from choosing provider, model, account, effort, worker count or quota",
+        "The review skill requires findings labelled as demonstrated defect, plausible risk, fact or product decision with provenance",
+        "The profile names 1.2.0 covers, interfaces, kind and verification.category fields and the history projection command"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_planner_profile.py",
+          "purpose": "The profile still references exactly the four private skills and no other role references them",
+          "created_by": "T12"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_planner_profile.py",
+          "purpose": "The shared profile has no fixed provider, model, account or effort; the caller or local launcher supplies those choices",
+          "created_by": "T12"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_planner_profile.py",
+          "purpose": "The review skill requires findings labelled as defect, risk, fact or product decision with provenance",
+          "created_by": "T12"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_planner_profile.py",
+          "purpose": "The profile names the 1.2.0 covers and interfaces fields and the history projection command",
+          "created_by": "T12"
+        }
+      ]
+    },
+    {
+      "id": "T13",
+      "milestone_id": "M4",
+      "title": "Add a read-only planning-history projection that keeps sparse data unknown",
+      "objective": "Add bt_plan_history.py and a plan-history command that report route-agnostic quality, duration, correlated retries and observed token consumption for comparable task-kind/context buckets, with per-metric sample counts, source quality and native units; expose ranges only when the source provides them, and return unknown when pooling/comparability cannot be supported.",
+      "repository": "skill",
+      "after": [
+        "T3"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 240,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "The projection must normalize several verified outcome dimensions and comparability fields, keep retry identity separate from attempt count, and test sparse/unknown behavior without copying M2 routing rules.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md"
+          ],
+          "justification": "Comparability, verified-only filtering and sample thresholds must follow M2's published rules without duplicating its routing logic."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "A new read-only module, one CLI entry and its fixture tests form a complete feature."
+        },
+        "duration": {
+          "evidence": [
+            "assumption:the audit finds one public read-only telemetry source"
+          ],
+          "justification": "Three hours assumes one usable public source; a missing source shrinks the work to the unknown path."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "Misleading history would bias every estimate the Planner publishes."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T12",
+            "file:skill/scripts/bt_scheduler_decision_adapter.py"
+          ],
+          "justification": "The revised profile cites this projection command, and the projection reads another module's public data."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3",
+            "file:skill/scripts/bt_scheduler_monitor/README.md"
+          ],
+          "justification": "Whether verified comparable planning history exists at all is unknown until the audit counts it."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_plan_history.py",
+        "skill/scripts/bt_cli_plan.py",
+        "skill/scripts/tests/test_plan_history.py"
+      ],
+      "shared_resources": [
+        "planning-history-projection"
+      ],
+      "acceptance_criteria": [
+        "Fewer verified comparable samples than the source minimum yields unknown, not a number",
+        "Verified success/failure counts, observed rate, descriptive uncertainty and source quality are exposed only from the public quality assessment",
+        "Duration, retry and token-consumption metrics carry separate sample counts, source quality and native units; ranges/uncertainty are reported only when supported by the source",
+        "Route-agnostic pooling is used only if the audited source proves cross-route comparability; otherwise return unknown",
+        "Retries require correlated retry identity; attempt counts alone are not reported as retries",
+        "Synthetic, claimed-only, cancelled, infrastructure and incomparable records remain unknown or separately counted",
+        "Output contains no route, model, account, effort or quota field and performs no unit conversion",
+        "Only the plan adapter imports bt_planner after the change"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_history.py",
+          "purpose": "Fewer verified comparable samples than the existing minimum yields unknown, not a number",
+          "created_by": "T13"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_history.py",
+          "purpose": "Synthetic, claimed-only and incomparable records are excluded and counted separately",
+          "created_by": "T13"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_history.py",
+          "purpose": "Output contains no route, model, account, effort or quota field",
+          "created_by": "T13"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py",
+          "purpose": "Only the plan adapter imports bt_planner after the change"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_history.py",
+          "purpose": "Duration, retry and token-consumption metrics use separate sample counts and native units",
+          "created_by": "T13"
+        }
+      ]
+    },
+    {
+      "id": "T14",
+      "milestone_id": "M4",
+      "title": "Add a provider-neutral Planner invocation adapter",
+      "objective": "Expose one canonical Planner role through each provider runtime registered by the local launcher. Reuse the caller-selected account profile, model and effort; adapt the shared instructions to each native agent format or inject them at invocation when no native format exists. Never choose or silently substitute a provider, model or account.",
+      "repository": "skill",
+      "after": [
+        "T12"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 240,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "The launcher currently supports Claude, Codex and Antigravity with different CLI/profile surfaces. Four hours includes a narrow adapter, fake-runtime coverage and explicit error handling; T1 refreshes the provider inventory before implementation.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/bt_launch.py",
+            "file:skill/scripts/install_agents.py"
+          ],
+          "justification": "Three provider CLIs require one shared role source with runtime-specific invocation wiring and no duplicated policy."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#scope-in",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "The task adds a provider boundary and deterministic tests for the selected provider/account/model path."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/tests/test_agents.py"
+          ],
+          "justification": "A narrow adapter plus a fake-runtime matrix for the current providers is estimated at four hours."
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_profiles.py",
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "A routing mistake could ignore the caller selection or use another account; no fallback is allowed."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T12",
+            "task:T15"
+          ],
+          "justification": "The adapter consumes the canonical Planner source and precedes account installation and smoke checks."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/install_agents.py",
+            "assumption:T1 confirms native capabilities for all available runtimes"
+          ],
+          "justification": "The launcher supports three providers, but only Claude and Codex currently have generated Planner agent formats."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_planner_runtime.py",
+        "skill/scripts/tests/test_planner_runtime.py"
+      ],
+      "shared_resources": [
+        "planner-profile",
+        "planner-runtime"
+      ],
+      "acceptance_criteria": [
+        "One canonical Planner instruction source and its four private resources are used by every provider registered in bt_profiles.LAUNCHABLE",
+        "The caller-selected provider, account profile, model and effort are passed through unchanged; the Planner role contains no fixed model/account default",
+        "Native agent-file formats and prompt-injected runtimes reach the same Planner rules without provider-specific copies of the policy",
+        "A fake-runtime test covers every registered provider and proves missing or unsupported selections fail explicitly without fallback",
+        "The adapter exposes invocation only; it does not rank models or assess cross-model plan quality"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_planner_runtime.py",
+          "purpose": "The caller-selected provider, account profile, model and effort are passed through unchanged; the Planner role contains no fixed model/account default",
+          "created_by": "T14"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_planner_runtime.py",
+          "purpose": "A fake-runtime test covers every registered provider and proves missing or unsupported selections fail explicitly without fallback",
+          "created_by": "T14"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_planner_profile.py",
+          "purpose": "One canonical Planner instruction source and its four private resources are used by every provider registered in bt_profiles.LAUNCHABLE",
+          "created_by": "T14"
+        }
+      ]
+    },
+    {
+      "id": "T15",
+      "milestone_id": "M4",
+      "title": "Install and smoke-test Planner across configured local AI profiles",
+      "objective": "Install the generated Planner profile in every configured account directory that supports native agent files, and invoke the shared Planner through each distinct effective local account profile using its existing provider/model selection. Include prompt injection for configured runtimes without native agent files. Smoke checks prove invocation and response only; do not score planning quality or compare models.",
+      "repository": "skill",
+      "after": [
+        "T14"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "The current profile inventory has seven profile IDs and five distinct effective account identities after alias deduplication. One marker-protected install pass plus one short launch-only call per distinct account is estimated at two hours; refresh this estimate after T1 and require an approved usage cap.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/install_agents.py",
+            "file:skill/scripts/bt_profiles.py"
+          ],
+          "justification": "The native install surfaces differ by provider, while some runtimes receive the shared Planner instructions at invocation time."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#scope-in",
+            "task:T14"
+          ],
+          "justification": "The task installs or exposes the role through every configured local provider/account profile and records a launch smoke result."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_profiles.py",
+            "assumption:the current five effective account identities remain configured at execution time"
+          ],
+          "justification": "The estimate covers five current effective accounts after alias deduplication and one short invocation each; T1 refreshes the inventory."
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/install_agents.py",
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "Profile installation writes outside the repository and live invocations consume provider usage; only marker-owned files and an approved call cap are allowed."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T12",
+            "task:T14"
+          ],
+          "justification": "Installation and smoke calls require the provider-neutral runtime adapter and the canonical profile."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/install_agents.py",
+            "file:skill/scripts/bt_profiles.py",
+            "assumption:T1 confirms the active local runtime inventory"
+          ],
+          "justification": "Claude and Codex have generated profile formats, while Antigravity currently has no Planner agent file in the installer."
+        }
+      },
+      "expected_paths": [
+        "~/.claude/agents/planner.md",
+        "~/.claude-work/agents/planner.md",
+        "~/.codex/agents/planner.toml",
+        "~/.codex-luis/agents/planner.toml"
+      ],
+      "shared_resources": [
+        "planner-profile",
+        "planner-runtime",
+        "configured-ai-accounts"
+      ],
+      "acceptance_criteria": [
+        "Every configured account profile inventoried in T1 can select and launch the Planner through its local provider runtime",
+        "The selected account and model reach the provider unchanged; no silent provider/model fallback occurs",
+        "Runtimes with native agent files receive marker-protected generated copies; other runtimes receive the same canonical instructions through their invocation adapter",
+        "One launch-only smoke result is recorded per distinct effective account; it asserts process success and a response, not plan quality or model ranking",
+        "Hand-made agent files and credentials are not overwritten, copied or recorded"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/bitacora.py profiles list",
+          "purpose": "Every configured account profile inventoried in T1 can select and launch the Planner through its local provider runtime",
+          "expected": "Each listed profile maps to the expected provider and account selector; aliases are deduplicated only for live smoke count"
+        },
+        {
+          "type": "manual",
+          "value": "Run one short launch-only Planner smoke through each distinct effective account inventoried in T1; record provider, profile, selected model, exit status and whether a response arrived",
+          "purpose": "One launch-only smoke result is recorded per distinct effective account; it asserts process success and a response, not plan quality or model ranking",
+          "expected": "Each approved profile starts its configured provider and returns a response without falling back to another provider or account"
+        },
+        {
+          "type": "manual",
+          "value": "Inspect generated native agent files and the account profile mapping after installation",
+          "purpose": "Runtimes with native agent files receive marker-protected generated copies; other runtimes receive the same canonical instructions through their invocation adapter",
+          "expected": "Generated files carry the methodology marker; non-native runtimes use the shared instruction source; hand-made files are unchanged"
+        }
+      ]
+    },
+    {
+      "id": "T16",
+      "milestone_id": "M5",
+      "title": "Build the planning benchmark harness and pinned rubric",
+      "objective": "Add bt_plan_bench.py with verify, score and report actions over a benchmark directory, a hash-checked manifest frozen before the first model call, raw per-run records, deterministic observed metrics, separate judged records and a report refusing unsupported aggregates.",
+      "repository": "skill",
+      "after": [
+        "T11"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 240,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Follows the existing frozen-corpus pattern; three actions, a rubric file and tests for freezing, separation and the claim rule.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_bench_quality.py"
+          ],
+          "justification": "The harness must keep observed metrics, judged scores and retrospective evidence separate and enforce the pre-registered claim rule."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py"
+          ],
+          "justification": "A new harness module, rubric file and test suite verifiable end to end on fixtures."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py"
+          ],
+          "justification": "Reusing the hash-checked manifest pattern, four hours covers three actions and their tests."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#out-of-scope"
+          ],
+          "justification": "A harness that mixes measured and judged values would produce misleading benchmark claims."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T17",
+            "task:T20"
+          ],
+          "justification": "It defines the benchmark-store record schema used by every later benchmark task."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "assumption:bt_planner report json exposes every structural metric needed"
+          ],
+          "justification": "A comparable harness exists, but the planner-specific metrics have no precedent implementation."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_plan_bench.py",
+        "skill/scripts/plan_bench",
+        "skill/scripts/tests/test_plan_bench.py"
+      ],
+      "shared_resources": [
+        "benchmark-store"
+      ],
+      "acceptance_criteria": [
+        "A manifest whose case inputs or rubric hash changed after freezing is rejected",
+        "Observed metrics and judged scores are stored and reported in separate records",
+        "The report omits an overall score and blocks superiority claims that fail the pre-registered rule",
+        "A run cell without raw output or metadata is reported as incomplete",
+        "Stored records contain no raw prompt text or credentials"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_bench.py",
+          "purpose": "A manifest whose case inputs or rubric hash changed after freezing is rejected",
+          "created_by": "T16"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_bench.py",
+          "purpose": "Observed metrics and judged scores are stored and reported in separate records",
+          "created_by": "T16"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_bench.py",
+          "purpose": "The report omits an overall score and blocks superiority claims that fail the pre-registered rule",
+          "created_by": "T16"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_bench.py",
+          "purpose": "A run cell without raw output or metadata is reported as incomplete",
+          "created_by": "T16"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_bench.py",
+          "purpose": "Stored records contain no raw prompt text or credentials",
+          "created_by": "T16"
+        }
+      ]
+    },
+    {
+      "id": "T17",
+      "milestone_id": "M5",
+      "title": "Freeze the benchmark corpus, oracles and matched run configurations",
+      "objective": "Create the REQ-024 benchmark directory with five pinned cases, repository commit SHAs, SPEC hashes, pre-registered defect oracles, rubric version, seeded run order and isolated configurations for the current-V2 and improved-V2 arms.",
+      "repository": "skill",
+      "after": [
+        "T15",
+        "T16"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "Five cases across several repositories, oracle writing and two isolated configurations; repository availability is unverified.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_hooks.py",
+            "file:skill/scripts/bt_planner/tests/test_scenarios.py"
+          ],
+          "justification": "Arms must be equal in inputs and tools while preventing access to prior plans, scenario fixtures and hook context."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Sets up data and isolated configurations spanning the methodology, Pictures and scenario repositories."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/tests/scenarios/REQ-902-audit-trail/EXPECT.json"
+          ],
+          "justification": "Pinning five cases, writing oracles and building two configurations takes about three hours."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "Contamination or unequal configurations would void the controlled comparison."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T18"
+          ],
+          "justification": "It writes the frozen benchmark-store manifest that execution, review and reporting read."
+        },
+        "confidence": {
+          "evidence": [
+            "assumption:scenario repositories are cloned locally at recoverable commits",
+            "task:T1"
+          ],
+          "justification": "Checkout availability for the trainingapp scenario repositories at usable commits is unknown."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "benchmark-store"
+      ],
+      "acceptance_criteria": [
+        "The frozen manifest verifies before the first model call",
+        "Each arm's configuration exposes no prior plan, scenario fixture or bitácora file to the Planner",
+        "Both arms use the same model identifier, effort, tool set, timeout and hook-free configuration",
+        "Cases whose repository snapshot is unavailable are marked excluded with the reason"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/bt_plan_bench.py verify /home/david/bitacora/metodologia/artifacts/REQ-024-benchmark",
+          "purpose": "The frozen manifest verifies before the first model call",
+          "created_by": "T16"
+        },
+        {
+          "type": "manual",
+          "value": "List files readable from each arm configuration and compare arm metadata side by side",
+          "purpose": "Each arm's configuration exposes no prior plan, scenario fixture or bitácora file to the Planner",
+          "expected": "No PLAN.md, PLAN.json, EXPECT.json or bitácora path is reachable; arm metadata differs only in profile commit"
+        }
+      ]
+    },
+    {
+      "id": "T18",
+      "milestone_id": "M5",
+      "title": "Execute the matched benchmark runs within the resource cap",
+      "objective": "Run three fresh sessions per arm per case in the seeded order, store each output, exit status, wall time and any reported usage, apply identical post-run checks, and stop at the cap without substituting model, effort, tools or review count.",
+      "repository": "skill",
+      "after": [
+        "T17"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 300,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "Thirty runs at roughly seven observed minutes each plus harness scoring; quota availability can stop it early.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "Execution is procedural, but every deviation must be recorded rather than silently corrected."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Thirty model runs and their raw records across five cases and two arms."
+        },
+        "duration": {
+          "evidence": [
+            "assumption:the 2026-10-16 rerun duration is representative for these cases"
+          ],
+          "justification": "The single observed rerun took about seven minutes, so thirty runs need roughly three and a half hours plus scoring."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "Paid quota is consumed irreversibly, and partial runs must not be mistaken for complete cells."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T17",
+            "task:T19"
+          ],
+          "justification": "It appends raw records to the shared benchmark store frozen by the previous task."
+        },
+        "confidence": {
+          "evidence": [
+            "assumption:the owner's quota covers thirty planning runs",
+            "task:T16"
+          ],
+          "justification": "Quota headroom and per-case runtime for non-Pictures scenarios are unknown."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "benchmark-store"
+      ],
+      "acceptance_criteria": [
+        "Each executed cell has raw output, run metadata and identical post-run checks",
+        "No more than thirty model runs are executed",
+        "Unexecuted cells are recorded as incomplete with the reason"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/bt_plan_bench.py score /home/david/bitacora/metodologia/artifacts/REQ-024-benchmark",
+          "purpose": "Each executed cell has raw output, run metadata and identical post-run checks",
+          "created_by": "T16"
+        },
+        {
+          "type": "manual",
+          "value": "Count run directories against the manifest cap and incomplete markers",
+          "purpose": "No more than thirty model runs are executed",
+          "expected": "Run count is thirty or fewer and every missing cell has an incomplete marker with its reason"
+        }
+      ]
+    },
+    {
+      "id": "T19",
+      "milestone_id": "M5",
+      "title": "Collect blind reviews and score historical REQ-017 outputs retrospectively",
+      "objective": "Collect two independent blind rubric reviews per output with quoted evidence, adjudicate disagreements above one point identically for both arms, and score the raw V1 output, the edited Pictures plan and the 2026-10-16 rerun as retrospective evidence.",
+      "repository": "skill",
+      "after": [
+        "T18"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 300,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "Sixty-six review records with quotes; reviewer availability is the main uncertainty.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Blind reviews need stripped metadata, anchored rubric scores and quoted locations for every oracle item."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Sixty benchmark reviews plus six retrospective reviews across five cases."
+        },
+        "duration": {
+          "evidence": [
+            "assumption:a reviewer needs about five minutes per plan with the rubric"
+          ],
+          "justification": "About four to five minutes per review record over sixty-six records fills five hours."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#out-of-scope"
+          ],
+          "justification": "Unblinded or uneven reviews would bias the judged metrics toward one arm."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T20"
+          ],
+          "justification": "Reviews are stored in the shared benchmark store and feed the report."
+        },
+        "confidence": {
+          "evidence": [
+            "assumption:two reviewers are available for every output",
+            "task:T16"
+          ],
+          "justification": "Reviewer identities and availability are an open owner decision."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "benchmark-store"
+      ],
+      "acceptance_criteria": [
+        "Every benchmark output has exactly two blind reviews with evidence quotes",
+        "Historical V1 and V2 artifacts are labelled retrospective and excluded from controlled comparisons",
+        "Reviewers record whether each oracle defect was detected with a quoted location"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/bt_plan_bench.py verify --reviews /home/david/bitacora/metodologia/artifacts/REQ-024-benchmark",
+          "purpose": "Every benchmark output has exactly two blind reviews with evidence quotes",
+          "created_by": "T16"
+        },
+        {
+          "type": "manual",
+          "value": "Inspect the retrospective review records and their labels",
+          "purpose": "Historical V1 and V2 artifacts are labelled retrospective and excluded from controlled comparisons",
+          "expected": "Raw V1, edited Pictures plan and 2026-10-16 rerun carry the retrospective label and appear in no arm comparison"
+        }
+      ]
+    },
+    {
+      "id": "T20",
+      "milestone_id": "M5",
+      "title": "Publish the benchmark report under the no-superiority rule",
+      "objective": "Write BENCHMARK.md and raw-result links reporting coverage, technical precision, verifiability, architecture, parallelism, risk detection, ambiguity, efficiency, between-run stability and execution or rework per case and arm, with findings that require correction.",
+      "repository": "skill",
+      "after": [
+        "T19"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "The harness computes values; writing interpretation limited by the claim rule takes about two hours.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Interpretation must stay within the pre-registered claim rule and name unmeasured metrics explicitly."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#problem-goal"
+          ],
+          "justification": "One report document with links to raw results in the benchmark store."
+        },
+        "duration": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "With computed metrics, writing and checking the report takes about two hours."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#out-of-scope"
+          ],
+          "justification": "Overclaiming from three runs per arm would misinform decisions about the Planner."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T21"
+          ],
+          "justification": "It reads every record of the shared benchmark store and gates the final draft run."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T19",
+            "assumption:most cells complete within the cap"
+          ],
+          "justification": "The report shape is defined by the harness, but its content depends on incomplete cells."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "benchmark-store"
+      ],
+      "acceptance_criteria": [
+        "The report lists each metric per case and arm with raw values and run counts",
+        "No overall score or superiority statement appears unless the pre-registered rule is met",
+        "Measured values and human judgements appear in separate sections"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/bt_plan_bench.py report /home/david/bitacora/metodologia/artifacts/REQ-024-benchmark",
+          "purpose": "No overall score or superiority statement appears unless the pre-registered rule is met",
+          "created_by": "T16"
+        },
+        {
+          "type": "manual",
+          "value": "Read BENCHMARK.md against report.json and the rubric",
+          "purpose": "Measured values and human judgements appear in separate sections",
+          "expected": "Every number matches report.json; judged scores sit in their own section with reviewer counts"
+        }
+      ]
+    },
+    {
+      "id": "T21",
+      "milestone_id": "M6",
+      "title": "Generate the fresh Pictures REQ-017 draft with the improved Planner",
+      "objective": "Run the revised Planner once with Claude Opus 5.5 at high effort as the fixed reference case in SPEC R14, and keep SPEC, PLAN.md, PLAN.json and RUN.md as an unapproved draft artifact with the real check result. This does not limit the Planner runtime to Claude or Opus.",
+      "repository": "skill",
+      "after": [
+        "T20"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "One planning run of about seven minutes plus check, report and run-record writing.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/agents/planner.md"
+          ],
+          "justification": "Repeats a documented invocation with the revised profile and records the result."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#out-of-scope"
+          ],
+          "justification": "Produces one artifact directory in the bitácora and nothing in Pictures."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/README.md"
+          ],
+          "justification": "A seven-minute run plus check and record writing fits within an hour."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "An accidental approval or edit in Pictures would violate the explicit REQ-017 exclusion."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T20"
+          ],
+          "justification": "It writes only its own draft directory after the benchmark report is published."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/agents/planner.md",
+            "assumption:the pictures checkout is available read-only"
+          ],
+          "justification": "The invocation worked before, but the revised profile adds checks whose runtime is unmeasured."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "pictures-req017-draft"
+      ],
+      "acceptance_criteria": [
+        "The draft artifact passes or fails bt_planner check with the pictures repository mapped and the result is recorded",
+        "No Pictures source file, canonical REQ-017 file, approval state or revision store changes",
+        "The run record states the reference model, effort, tools, timeout and elapsed time; the profile itself does not require this model for other invocations"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m bt_planner check /home/david/bitacora/metodologia/artifacts/REQ-017-planner-v2-final-opus55-high --repo pictures=/home/david/dev/pictures",
+          "purpose": "The draft artifact passes or fails bt_planner check with the pictures repository mapped and the result is recorded"
+        },
+        {
+          "type": "manual",
+          "value": "Run git status in the pictures checkout and list the REQ-017 requirement folder before and after the run",
+          "purpose": "No Pictures source file, canonical REQ-017 file, approval state or revision store changes",
+          "expected": "No new changes in pictures and identical REQ-017 folder contents with no plan-revisions directory created"
+        }
+      ]
+    },
+    {
+      "id": "T22",
+      "milestone_id": "M6",
+      "title": "Run closing regression gates and record limitations",
+      "objective": "Re-run the module and methodology suites after all edits, compare totals with the T1 baseline, and record real results, remaining limitations and follow-up proposals in the requirement and bitácora.",
+      "repository": "skill",
+      "after": [
+        "T21"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Same suites as the baseline plus writing the closing record.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/references/plan-contract.md"
+          ],
+          "justification": "Repeating documented suites and comparing totals with the baseline is mechanical."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#priorities-phases"
+          ],
+          "justification": "Writes closing notes only; any failure becomes a new revision rather than an edit here."
+        },
+        "duration": {
+          "evidence": [
+            "task:T1"
+          ],
+          "justification": "Suite runtime from the baseline plus record writing gives about ninety minutes."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Running tests is read-only; the risk is reporting results that were not obtained."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T21"
+          ],
+          "justification": "It closes the requirement after the final draft and edits nothing another task owns."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/README.md",
+            "assumption:the new test modules add only minutes"
+          ],
+          "justification": "Commands are known from the baseline, but suite runtime after the changes is unmeasured."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The methodology suite result after the change is recorded next to the baseline",
+        "The bt_planner suite passes in an isolated interpreter after all edits",
+        "Remaining limitations and unmeasured metrics are listed explicitly"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests",
+          "purpose": "The methodology suite result after the change is recorded next to the baseline"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -I -m unittest discover -s bt_planner/tests",
+          "purpose": "The bt_planner suite passes in an isolated interpreter after all edits"
+        },
+        {
+          "type": "manual",
+          "value": "Read the closing section of the requirement and the session log",
+          "purpose": "Remaining limitations and unmeasured metrics are listed explicitly",
+          "expected": "Unmeasured metrics, excluded cases, incomplete cells and the V1 retrospective limitation are named"
+        }
+      ]
+    }
+  ]
+}

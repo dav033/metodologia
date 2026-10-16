@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-16 16:32 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 18:00 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -31,7 +31,6 @@ _Generated 2026-10-16 16:32 by `bitacora.py index`. Do not edit by hand._
 - REQ-021: executor finished — review & merge
 - REQ-022: executor finished — review & merge
 - REQ-023: executor finished — review & merge
-- REQ-025: plan waiting for approval
 
 ## Requirements
 
@@ -61,25 +60,25 @@ _Generated 2026-10-16 16:32 by `bitacora.py index`. Do not edit by hand._
 | [REQ-022](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/SPEC.md) | Opt-in Scheduler runtime, status and recovery | `ready` | [done](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/PLAN.md) | report ✓ |
 | [REQ-023](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/SPEC.md) | Require M4-M6 in the Scheduler runtime | `done` | [done](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/PLAN.md) | report ✓ |
 | [REQ-024](requirements/REQ-024-planner-v2-quality-and-benchmark/SPEC.md) | Planner V2 quality and reproducible benchmark | `ready` | [in-progress](requirements/REQ-024-planner-v2-quality-and-benchmark/PLAN.md) |  |
-| [REQ-025](requirements/REQ-025-m2-quota-aware-provider-and-account-rout/SPEC.md) | M2 quota-aware provider and account routing | `planned` | [review](requirements/REQ-025-m2-quota-aware-provider-and-account-rout/PLAN.md) |  |
+| [REQ-025](requirements/REQ-025-m2-quota-aware-provider-and-account-rout/SPEC.md) | M2 quota-aware provider and account routing | `in-progress` | [approved](requirements/REQ-025-m2-quota-aware-provider-and-account-rout/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
-- P-103 · Review and approve REQ-024 Planner V2 quality and benchmark plan · high/L
-- P-106 · Review and approve REQ-025 M2 quota-aware provider and account routing plan · high/L
 - P-003 · Visual review of the local web UI · med/S
 - P-001 · Non-Scheduler follow-ups: Maros REQ-005 E2E and Relay F-23 helper success-path tests · med/M
+- P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T · med/L
+- P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · low/S
 
 ## Recent decisions
 
+- D-059 — Approve and bound the REQ-024 Planner V2 benchmark
+- D-058 — Persist allowlisted quota telemetry in M2 batch records
 - D-057 — Assign Scheduler M2 routes by task fit and effective-account quota
 - D-056 — Route the full approved DAG through M2 at run startup
 - D-055 — Install Planner in every currently configured local AI profile
-- D-054 — Keep Planner invocation independent of local AI provider
-- D-053 — Keep planning aids exclusive to the Planner profile
 
 ## Artifacts
 

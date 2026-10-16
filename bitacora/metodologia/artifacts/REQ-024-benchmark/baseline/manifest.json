@@ -1,0 +1,687 @@
+{
+  "captured_at": "2026-10-16T17:41:09.493947-05:00",
+  "repository_head": "196196ef427ab1f066d22faaeece2a40f8aa182c",
+  "branch": "feat/scheduler-m4-agent-monitor",
+  "worktree": "dirty; pre-existing Scheduler and Planner changes retained",
+  "baseline_definition": "Current Planner V2 source at REQ-024 T1, including the already-approved D-055 profile rollout and the Planner role/skill edits made before this plan approval; not a reconstruction of the historical pre-edit V2 state.",
+  "planner_source_files": [
+    {
+      "path": "skill/agents/planner/skills/adversarial-plan-review/SKILL.md",
+      "sha256": "c084bcf9e9df52ec116ce84c240f343e7d38cd3eec7e61e92b85e82e9dc44ba3",
+      "bytes": 2514
+    },
+    {
+      "path": "skill/agents/planner/skills/plan-mermaid-view/SKILL.md",
+      "sha256": "3edc5c2fe464694cc20c99e40b15fba191361ed109a6939384b46f5731fb3705",
+      "bytes": 1081
+    },
+    {
+      "path": "skill/agents/planner/skills/socratic-elicitation/SKILL.md",
+      "sha256": "1d6415f0b5aa11da7f4ed91f30558201b02a930c770b71cfa59e5a3b9ff567eb",
+      "bytes": 1813
+    },
+    {
+      "path": "skill/agents/planner/skills/wbs-dag-decomposition/SKILL.md",
+      "sha256": "82561b67f3d192be09bc2405325b6154e77b02d49d380b939c9478839f7b839b",
+      "bytes": 3545
+    },
+    {
+      "path": "skill/agents/planner.md",
+      "sha256": "07024910720a6f9dd757ce2469d685310d364e810d431af02a4514767f8bcde1",
+      "bytes": 5199
+    },
+    {
+      "path": "skill/references/plan-contract.md",
+      "sha256": "54f28022ff7ad4577e5fc960c00ff4f1babe68aaed9a04767076503c970cab79",
+      "bytes": 6547
+    },
+    {
+      "path": "skill/scripts/bt_plan_adapter.py",
+      "sha256": "b9d3d40c83bb104d4525df63881b77b47281d5d900035e6a3feac1f0ada9577e",
+      "bytes": 12029
+    },
+    {
+      "path": "skill/scripts/bt_planner/README.md",
+      "sha256": "50da44eb9d9d889eb292bd5ffe05e2f34752c417736c8f20056cb99177706f26",
+      "bytes": 17577
+    },
+    {
+      "path": "skill/scripts/bt_planner/__init__.py",
+      "sha256": "e5bba21a890eaf33295592edca7a5e92e286e3787c931f472afd569af7a77db1",
+      "bytes": 1394
+    },
+    {
+      "path": "skill/scripts/bt_planner/__main__.py",
+      "sha256": "13a1a5b340cdcfc1902b62be90e508c7c71886000d5bf087e7854aadf09fb35e",
+      "bytes": 52
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/__init__.cpython-313.pyc",
+      "sha256": "193e1d71477e6f9146192bc76d81237730b20232c459a48b42d19226dfb2ab2a",
+      "bytes": 1534
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/__init__.cpython-314.pyc",
+      "sha256": "30a1f5fc72544c5e6dcb97e3adf96b3460d5a15f4931d162282b2323db70d72e",
+      "bytes": 1943
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/__main__.cpython-314.pyc",
+      "sha256": "285bcfe912dc7b73e90a91ff2e9616e2195031522ccaa95bde61a736908b9f17",
+      "bytes": 280
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/_lock.cpython-313.pyc",
+      "sha256": "cc3c28c745f307efff56a216fac2b1d95957ee71484f25cd17511d6381ac33a2",
+      "bytes": 4327
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/_lock.cpython-314.pyc",
+      "sha256": "e9c0696146fb7be0b120363336736f330f17a16835293a2990650d1eddfb1ed8",
+      "bytes": 4656
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/cli.cpython-313.pyc",
+      "sha256": "9b58f021a6c730b5ba2a25a6a946a649563696af3a88f8ed2d2e65c23d4ce158",
+      "bytes": 11853
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/cli.cpython-314.pyc",
+      "sha256": "f5265109b0c3ce2ebdd62eeaddfa44f6c40bfddcb0231be5368cb5407519f35c",
+      "bytes": 12939
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/contract.cpython-313.pyc",
+      "sha256": "96b5325d7aca41eb37eaa66d137aab9626c9ae4f731df914a96c065bd0d68dbf",
+      "bytes": 38725
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/contract.cpython-314.pyc",
+      "sha256": "480a5b09bb7f7fb8d932af64e9807a8d5cd1185f05de0ac84773cd6705289281",
+      "bytes": 43730
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/evidence.cpython-313.pyc",
+      "sha256": "b46d089f5ad2540a0eeb75978c6e461482d4646d98844fbf6dd3c8ecafa27f00",
+      "bytes": 25436
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/evidence.cpython-314.pyc",
+      "sha256": "f63f062fb6d4a1a34c1dcc0df1fb465bafc910119cdf3c2ca056daced650f3a2",
+      "bytes": 27725
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/markdown.cpython-313.pyc",
+      "sha256": "4cc9346c8b23650e6b7669c3a4a8c18590bbfc1d6d0dd3494ac1e2b4afb214c4",
+      "bytes": 13935
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/markdown.cpython-314.pyc",
+      "sha256": "0092519df7c7b2a4ac9508ebffe896159d9e97e51dab1de579553f0d76f81a2f",
+      "bytes": 15901
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/quality.cpython-313.pyc",
+      "sha256": "ee556e26e1321e5312813fd6db64ed2c3565d7e207ea87545a2c0f1a2f209246",
+      "bytes": 17962
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/quality.cpython-314.pyc",
+      "sha256": "231a7215101f81afd342283899bfa2b58e5beb5e0d3f3a33a4efc6646e37fb15",
+      "bytes": 21067
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/resources.cpython-313.pyc",
+      "sha256": "8607afb583b93e928d66d3a172ed00cbea0ca957b45cb03a693de6cf21d87045",
+      "bytes": 927
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/resources.cpython-314.pyc",
+      "sha256": "535033bb4346d34c5af9f317ebb1989c581c2efca4c4bf66f9a1a801c7cfb711",
+      "bytes": 1230
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/revisions.cpython-313.pyc",
+      "sha256": "61504f42562944e647b5e54991120854eb806ce68a18426de94114d69d5b7142",
+      "bytes": 19546
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/revisions.cpython-314.pyc",
+      "sha256": "86d4ff7625b9e2f85988e7ecf8cb114b83a08c47a9df2f5526caa49610ed24c1",
+      "bytes": 22325
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/sync.cpython-313.pyc",
+      "sha256": "d19f44549bd60578c7247e6244d2d3ba1eefb7c9c1484d145de75efc6f42ce75",
+      "bytes": 38489
+    },
+    {
+      "path": "skill/scripts/bt_planner/__pycache__/sync.cpython-314.pyc",
+      "sha256": "d3357771db5b68e563d4b5ab53717eea40493839ec75bb02f72a7402705fa711",
+      "bytes": 42861
+    },
+    {
+      "path": "skill/scripts/bt_planner/_lock.py",
+      "sha256": "2832a2b3de5b235cb659bd48a849e93572cf12716c82b38930381a378f7e6eb4",
+      "bytes": 2499
+    },
+    {
+      "path": "skill/scripts/bt_planner/cli.py",
+      "sha256": "253e85fd30988f68cd5f8b1a84eb73e878fa6fb9b2248b4c5dd2afa2b90e07a4",
+      "bytes": 7972
+    },
+    {
+      "path": "skill/scripts/bt_planner/contract.py",
+      "sha256": "2ed0e93371ec68dcbe6bed5a3cc90ad49fad971e866a3bf12f1be88bfa80cbe2",
+      "bytes": 24945
+    },
+    {
+      "path": "skill/scripts/bt_planner/data/plan.example.json",
+      "sha256": "b4cacab3825005aa42af7d922b23cfc56368de0d28be507fc6adeee156f482f3",
+      "bytes": 5081
+    },
+    {
+      "path": "skill/scripts/bt_planner/data/plan.schema.json",
+      "sha256": "8679ee13c2fc17b038fe56f88d732e3f49aebe161345b45641418ccbc6f7d8f9",
+      "bytes": 5679
+    },
+    {
+      "path": "skill/scripts/bt_planner/evidence.py",
+      "sha256": "997ec69cdfff14c6eb54931d35f39ee2ce98af9f19dedd9516c359fc1646f8c6",
+      "bytes": 18479
+    },
+    {
+      "path": "skill/scripts/bt_planner/markdown.py",
+      "sha256": "a4c363555186d9b37a10cf3bdd65d26ead4626d21f0f27a77cce27fec09a227a",
+      "bytes": 8983
+    },
+    {
+      "path": "skill/scripts/bt_planner/quality.py",
+      "sha256": "af2be17c28a4fc862e2873f83d8b458e87ec3576accae40316cf705e8093a996",
+      "bytes": 10196
+    },
+    {
+      "path": "skill/scripts/bt_planner/resources.py",
+      "sha256": "1cd8eefa82a58a4cec6f6fae1d871ce86a829ccd86a997e7eb5314d9c7e69586",
+      "bytes": 385
+    },
+    {
+      "path": "skill/scripts/bt_planner/revisions.py",
+      "sha256": "cb560ef3ef918be5824fcb2d066477a6551b580f83a218bd5abaace2656fe08a",
+      "bytes": 12750
+    },
+    {
+      "path": "skill/scripts/bt_planner/sync.py",
+      "sha256": "1c2091677206806b726cfdd762d5add66a1b95194f8b3f200cfde9a5c89e80ab",
+      "bytes": 26102
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/support.cpython-314.pyc",
+      "sha256": "3ea41f0e3f0b22a8b64d6f02459c512ebc0853acf6a9fb99260a6a7ea10f3637",
+      "bytes": 7374
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_audit_regressions.cpython-314.pyc",
+      "sha256": "97711f51969939de74b6efc53b81a5228cf60f6df029f32f53a76142a03e3519",
+      "bytes": 14681
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_boundaries.cpython-314.pyc",
+      "sha256": "5091c41b7620e812aecdcb213092131e44d3785d41dcdbe087ebf2c077508280",
+      "bytes": 14659
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_contract.cpython-314.pyc",
+      "sha256": "17e51fd4276c331e3581d973e67f6482f8faf032919e79ca1a9a8458577517e5",
+      "bytes": 39145
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_e2e_cli.cpython-314.pyc",
+      "sha256": "e517873e06166995dab08a128be63cf1b182437d61e0814efc9d12019ea572dc",
+      "bytes": 11019
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_evidence.cpython-314.pyc",
+      "sha256": "cfdb51a1ce46e894efa4e38d0cdc4f0b3f55bb999b39adbd07b173e3f243cd87",
+      "bytes": 72648
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_flow.cpython-314.pyc",
+      "sha256": "8d28877203cc2ac4629570b5cbc6f909b2fa5af34ceddbfc2e5a41363d3da6a6",
+      "bytes": 8954
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_isolation.cpython-314.pyc",
+      "sha256": "d5b9a470029e2db0097b47c6b28d31bd143833e178bab2bd872030d910f0f785",
+      "bytes": 4651
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_lock.cpython-314.pyc",
+      "sha256": "b97c02025ed69e4f9b9fa685dc8cb976d125fcae3df66c1808f9ea90229d462a",
+      "bytes": 9911
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_markdown.cpython-314.pyc",
+      "sha256": "34b8e41579896edca9e33032237eabc044ffc80de4954406b1c22ce5310a8a90",
+      "bytes": 4992
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_md_sync.cpython-314.pyc",
+      "sha256": "3effddbd538d57ff0502bd7eb28aa7da2c1aa83e0cc7b2eaa9b34d5da5016e2d",
+      "bytes": 22845
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_scenarios.cpython-314.pyc",
+      "sha256": "50dd42c5cf50cff1e4f25bea78b7feb36d8f1143328e6c4b945ea5177d4647b0",
+      "bytes": 21233
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/__pycache__/test_sync.cpython-314.pyc",
+      "sha256": "3fc6161e3610f5ece0e691b94269863ca071faf63c028fcd7af7a9efd36ff48d",
+      "bytes": 50370
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/METH-4-plan-quality-in-review/EXPECT.json",
+      "sha256": "d9891538cbb55c7a963baac2f4ce188f046afe6b191b9fc8cb7beedcb23f0dc9",
+      "bytes": 76
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/METH-4-plan-quality-in-review/PLAN.json",
+      "sha256": "f6dd1ca066a201221aea1c80460c16e5fa6938694687b377c7b5ebe1fb30ea17",
+      "bytes": 8101
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/METH-4-plan-quality-in-review/PLAN.md",
+      "sha256": "36ec88632154dec6e4eeb9e980e5bf4ae71504643caf8e755d200ee0e47dbf4a",
+      "bytes": 775
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/METH-4-plan-quality-in-review/SPEC.md",
+      "sha256": "6f87c6ab9661e33f1427d8d2aab4da8df2df6ff9652cddaa55e23be55bd04a14",
+      "bytes": 570
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/METH-5-relay-test-wait/EXPECT.json",
+      "sha256": "ba12981337ecf802272e4cf1cd5ea4e9355b21e931ccda329ec2beaebb1b2484",
+      "bytes": 118
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/METH-5-relay-test-wait/PLAN.json",
+      "sha256": "1ab4cb343faa46d878fc4a91da0bbbfb8676cb542a98746699b92bfe802fe1a9",
+      "bytes": 8250
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/METH-5-relay-test-wait/PLAN.md",
+      "sha256": "f5c94f0814b289678b55344b78ff364f1e689f59c68505c48b158f1461eacd25",
+      "bytes": 698
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/METH-5-relay-test-wait/SPEC.md",
+      "sha256": "839657b1af56afdf9914c938da9fc244a9312009b75fd5f30f0fee24ae995809",
+      "bytes": 633
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-901-duplicate-project/EXPECT.json",
+      "sha256": "3fede21b028d4dccb4b9bbb805fd1dc5ff609bf1a3921381ebdab1a6ec17886a",
+      "bytes": 338
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-901-duplicate-project/PLAN.json",
+      "sha256": "dc82f106eaa4f6e714bbde4dcc8934096c619846454c4ecc9c416610ee108026",
+      "bytes": 32774
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-901-duplicate-project/PLAN.md",
+      "sha256": "9e67c0a5e72da981464db1ac5a3adcde8a7710ffaebed71cc95eed788e76f5e8",
+      "bytes": 2701
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-901-duplicate-project/SPEC.md",
+      "sha256": "051ce9ee60102f37dfad52c22b6e965b1b2e933d33b300c361ae80dbb04f83ff",
+      "bytes": 4296
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-902-audit-trail/EXPECT.json",
+      "sha256": "35185d712299a7cac19c1b6fd854be51edf723fb61a8d2274f6b41050e8c5764",
+      "bytes": 337
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-902-audit-trail/PLAN.json",
+      "sha256": "c5356f728de7cc87c80a881bdae8fc5e0d53f3ddcca448fe628d457fda698240",
+      "bytes": 25649
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-902-audit-trail/PLAN.md",
+      "sha256": "13b6c515d8eedf5130e4922f9128e54aa913f0ad18aa92e1e5fd5375bcd53f47",
+      "bytes": 3442
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-902-audit-trail/SPEC.md",
+      "sha256": "fc23328af00db9cc40fa3ee60b685fb4959e5fd57fd53f186031a30359bec88a",
+      "bytes": 3386
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-903-assistant-latency/EXPECT.json",
+      "sha256": "bf7127c8c3d58cf49eb9d4c1e96a7003273dfa9b077f48b34c659ef253ff064a",
+      "bytes": 364
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-903-assistant-latency/PLAN.json",
+      "sha256": "aafde41c1f3124bf9ade198f4435ea8e3e83ca6ecde714988da64de3687e0ae3",
+      "bytes": 25887
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-903-assistant-latency/PLAN.md",
+      "sha256": "62c695f9d8126fd34fb757c3443763a0706141e96c18c3d16d952558a374670d",
+      "bytes": 3265
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/REQ-903-assistant-latency/SPEC.md",
+      "sha256": "98fec5c89104d394ac032cde00e3eeb44882e60a82a2714fc6116d6194e0ead7",
+      "bytes": 5303
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-1-session-expiry/EXPECT.json",
+      "sha256": "c5e778c913a77c44ff0715fdb5f0bbaa09aa8bcc250e568508dcff69fbcf16dc",
+      "bytes": 187
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-1-session-expiry/PLAN.json",
+      "sha256": "50e717f305b37b0a1233912c547ef19efed51df413767a2cb66947011e6a2582",
+      "bytes": 8198
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-1-session-expiry/PLAN.md",
+      "sha256": "530bb11b5eb3d5cc3a1d390421edf16d44ce8f71670653e6dc970d4313f4fd18",
+      "bytes": 488
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-1-session-expiry/SPEC.md",
+      "sha256": "6e1f889fe9db766033ad38aaaf3c11c4abfcce70b60195c94e5e526349f8eb06",
+      "bytes": 594
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-2-package-scope/EXPECT.json",
+      "sha256": "e0901d03ee692a9187392b2833fff8900d569fee3a5e230b63dffcb71dae3967",
+      "bytes": 104
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-2-package-scope/PLAN.json",
+      "sha256": "7790951dc2bbad339bed8d7c29a7a9a9e82456a2b59f6836fa014eca53e9bce0",
+      "bytes": 13319
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-2-package-scope/PLAN.md",
+      "sha256": "60dedf32e21050580a9ce12dfc0a5a421753a0182b06caf82aaba2544da6ab1c",
+      "bytes": 1067
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-2-package-scope/SPEC.md",
+      "sha256": "07558bd3f828a3c454e1b2bd03875769d395d98e33e33ab2f3f3f12b8372e9aa",
+      "bytes": 548
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-3-project-list-contract/EXPECT.json",
+      "sha256": "3ba13adcf13038b9b0d2df800aa8726e059db3b2c20381da2211f19eb27e2557",
+      "bytes": 218
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-3-project-list-contract/PLAN.json",
+      "sha256": "59d0f8218a69c6c14b915effe2e2146834383d548176ce2b33e489e6fd88e877",
+      "bytes": 14146
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-3-project-list-contract/PLAN.md",
+      "sha256": "17698cae37d4d96a5aca8e0e611e90429ec207ca0d9cfb3646777d65ad905203",
+      "bytes": 1186
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-3-project-list-contract/SPEC.md",
+      "sha256": "351acf4f0b07834bfe7ad6ce2d220eb11e690cc735b59b90ff2d05cd211d9902",
+      "bytes": 614
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-6-postgres-migration/EXPECT.json",
+      "sha256": "aeda98bc0f200a193592ff8617060a63bb2cded05539c80483b484e7a3b1fe95",
+      "bytes": 170
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-6-postgres-migration/PLAN.json",
+      "sha256": "7d499b80576d7512e44530a235503376c5c1f31d617e227630bacf31b9dbef6d",
+      "bytes": 17451
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-6-postgres-migration/PLAN.md",
+      "sha256": "7ba01ed8df69e5c0f51703b2af0576610b523f6de791b9d564281918120e4fe7",
+      "bytes": 1579
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/scenarios/TRAIN-6-postgres-migration/SPEC.md",
+      "sha256": "f8b69be8f02e1b73cbef73e4cac291c5456257c25abfc561b3c5f5fb3ce3bc51",
+      "bytes": 646
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/support.py",
+      "sha256": "660521144f12088245598f41fa77dbb7e98c3f51f026976917fd8b95a89a5710",
+      "bytes": 4226
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_audit_regressions.py",
+      "sha256": "6d95ec73bc23938767b89ac02631da769c32dd7d0af72bbf92f20455076da631",
+      "bytes": 4124
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_boundaries.py",
+      "sha256": "d73cc4e3107051e7a523fc754b03d97e8e30f200a797a4f84b08beef126b8da2",
+      "bytes": 7556
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_contract.py",
+      "sha256": "1486f584671d9d9f7086541c769e23e1d911d28adc1aea1d0992e063e79efa55",
+      "bytes": 19504
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_e2e_cli.py",
+      "sha256": "e2a89b68b9039f23808363ed645474033df9679c7fb8f169fce009241e9d99f1",
+      "bytes": 5670
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_evidence.py",
+      "sha256": "e95fd31f770128690788b9143a511ef4cc1573768fd3632e6ff94999fc363e0d",
+      "bytes": 35830
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_flow.py",
+      "sha256": "8fc0fa173bb4c82b2fa5bc338810f7403b512d612de4aabcb103776e12a78d67",
+      "bytes": 4359
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_isolation.py",
+      "sha256": "eaef1d727e387521714f4bd87196a1fa1d6d0493c9a2b373dc68945ef3d9230c",
+      "bytes": 2537
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_lock.py",
+      "sha256": "e3a7cd3a7352ed3ea2c6dbd1e2c67fefe91e3eabf39d707669353482da2b069f",
+      "bytes": 4359
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_markdown.py",
+      "sha256": "b4e23f1a7f7f4ac916e5a6b4a4d613e6792d1ec1daa82cfa88044e15457eb0f3",
+      "bytes": 2317
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_md_sync.py",
+      "sha256": "fa7e65b7ee1a39cd2078d2635b577481e8803b64b8ebedcfe65cc1ea3dbff819",
+      "bytes": 10486
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_scenarios.py",
+      "sha256": "7d8720096cc5b466ff4f656ec82ac669fe5ebac0c75baad330347e8be00a170b",
+      "bytes": 10850
+    },
+    {
+      "path": "skill/scripts/bt_planner/tests/test_sync.py",
+      "sha256": "1c2c5ea8ebf32d54ce52dcdf907c872e091b89926aad5cb71a4e57e2c4c85db3",
+      "bytes": 21532
+    }
+  ],
+  "profiles_command": {
+    "argv": [
+      "python3",
+      "skill/scripts/bitacora.py",
+      "--project",
+      "metodologia",
+      "profiles",
+      "list"
+    ],
+    "exit_code": 0,
+    "redacted_inventory": "profiles-inventory.redacted.json"
+  },
+  "planner_tests": {
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "bt_planner/tests"
+    ],
+    "cwd": "skill/scripts",
+    "exit_code": 0,
+    "status": "passed",
+    "output": "bt-planner-tests.log"
+  },
+  "profile_inventory": {
+    "registered_profile_ids": [
+      "antigravity",
+      "claude",
+      "claude-personal",
+      "claude-work",
+      "codex",
+      "codex-1",
+      "codex-luis"
+    ],
+    "registered_profile_count": 7,
+    "effective_account_profile_ids_for_methodologia": [
+      "antigravity",
+      "claude-personal",
+      "claude-work",
+      "codex-1",
+      "codex-luis"
+    ],
+    "effective_account_count": 5,
+    "providers": [
+      "antigravity",
+      "claude",
+      "codex"
+    ],
+    "identifying_account_paths_redacted": true
+  },
+  "source_snapshot": "current-v2-source/",
+  "source_snapshot_sha256": {
+    "bt_plan_adapter.py": "b9d3d40c83bb104d4525df63881b77b47281d5d900035e6a3feac1f0ada9577e",
+    "bt_planner/README.md": "50da44eb9d9d889eb292bd5ffe05e2f34752c417736c8f20056cb99177706f26",
+    "bt_planner/__init__.py": "e5bba21a890eaf33295592edca7a5e92e286e3787c931f472afd569af7a77db1",
+    "bt_planner/__main__.py": "13a1a5b340cdcfc1902b62be90e508c7c71886000d5bf087e7854aadf09fb35e",
+    "bt_planner/__pycache__/__init__.cpython-313.pyc": "193e1d71477e6f9146192bc76d81237730b20232c459a48b42d19226dfb2ab2a",
+    "bt_planner/__pycache__/__init__.cpython-314.pyc": "30a1f5fc72544c5e6dcb97e3adf96b3460d5a15f4931d162282b2323db70d72e",
+    "bt_planner/__pycache__/__main__.cpython-314.pyc": "285bcfe912dc7b73e90a91ff2e9616e2195031522ccaa95bde61a736908b9f17",
+    "bt_planner/__pycache__/_lock.cpython-313.pyc": "cc3c28c745f307efff56a216fac2b1d95957ee71484f25cd17511d6381ac33a2",
+    "bt_planner/__pycache__/_lock.cpython-314.pyc": "e9c0696146fb7be0b120363336736f330f17a16835293a2990650d1eddfb1ed8",
+    "bt_planner/__pycache__/cli.cpython-313.pyc": "9b58f021a6c730b5ba2a25a6a946a649563696af3a88f8ed2d2e65c23d4ce158",
+    "bt_planner/__pycache__/cli.cpython-314.pyc": "f5265109b0c3ce2ebdd62eeaddfa44f6c40bfddcb0231be5368cb5407519f35c",
+    "bt_planner/__pycache__/contract.cpython-313.pyc": "96b5325d7aca41eb37eaa66d137aab9626c9ae4f731df914a96c065bd0d68dbf",
+    "bt_planner/__pycache__/contract.cpython-314.pyc": "480a5b09bb7f7fb8d932af64e9807a8d5cd1185f05de0ac84773cd6705289281",
+    "bt_planner/__pycache__/evidence.cpython-313.pyc": "b46d089f5ad2540a0eeb75978c6e461482d4646d98844fbf6dd3c8ecafa27f00",
+    "bt_planner/__pycache__/evidence.cpython-314.pyc": "f63f062fb6d4a1a34c1dcc0df1fb465bafc910119cdf3c2ca056daced650f3a2",
+    "bt_planner/__pycache__/markdown.cpython-313.pyc": "4cc9346c8b23650e6b7669c3a4a8c18590bbfc1d6d0dd3494ac1e2b4afb214c4",
+    "bt_planner/__pycache__/markdown.cpython-314.pyc": "0092519df7c7b2a4ac9508ebffe896159d9e97e51dab1de579553f0d76f81a2f",
+    "bt_planner/__pycache__/quality.cpython-313.pyc": "ee556e26e1321e5312813fd6db64ed2c3565d7e207ea87545a2c0f1a2f209246",
+    "bt_planner/__pycache__/quality.cpython-314.pyc": "231a7215101f81afd342283899bfa2b58e5beb5e0d3f3a33a4efc6646e37fb15",
+    "bt_planner/__pycache__/resources.cpython-313.pyc": "8607afb583b93e928d66d3a172ed00cbea0ca957b45cb03a693de6cf21d87045",
+    "bt_planner/__pycache__/resources.cpython-314.pyc": "535033bb4346d34c5af9f317ebb1989c581c2efca4c4bf66f9a1a801c7cfb711",
+    "bt_planner/__pycache__/revisions.cpython-313.pyc": "61504f42562944e647b5e54991120854eb806ce68a18426de94114d69d5b7142",
+    "bt_planner/__pycache__/revisions.cpython-314.pyc": "86d4ff7625b9e2f85988e7ecf8cb114b83a08c47a9df2f5526caa49610ed24c1",
+    "bt_planner/__pycache__/sync.cpython-313.pyc": "d19f44549bd60578c7247e6244d2d3ba1eefb7c9c1484d145de75efc6f42ce75",
+    "bt_planner/__pycache__/sync.cpython-314.pyc": "d3357771db5b68e563d4b5ab53717eea40493839ec75bb02f72a7402705fa711",
+    "bt_planner/_lock.py": "2832a2b3de5b235cb659bd48a849e93572cf12716c82b38930381a378f7e6eb4",
+    "bt_planner/cli.py": "253e85fd30988f68cd5f8b1a84eb73e878fa6fb9b2248b4c5dd2afa2b90e07a4",
+    "bt_planner/contract.py": "2ed0e93371ec68dcbe6bed5a3cc90ad49fad971e866a3bf12f1be88bfa80cbe2",
+    "bt_planner/data/plan.example.json": "b4cacab3825005aa42af7d922b23cfc56368de0d28be507fc6adeee156f482f3",
+    "bt_planner/data/plan.schema.json": "8679ee13c2fc17b038fe56f88d732e3f49aebe161345b45641418ccbc6f7d8f9",
+    "bt_planner/evidence.py": "997ec69cdfff14c6eb54931d35f39ee2ce98af9f19dedd9516c359fc1646f8c6",
+    "bt_planner/markdown.py": "a4c363555186d9b37a10cf3bdd65d26ead4626d21f0f27a77cce27fec09a227a",
+    "bt_planner/quality.py": "af2be17c28a4fc862e2873f83d8b458e87ec3576accae40316cf705e8093a996",
+    "bt_planner/resources.py": "1cd8eefa82a58a4cec6f6fae1d871ce86a829ccd86a997e7eb5314d9c7e69586",
+    "bt_planner/revisions.py": "cb560ef3ef918be5824fcb2d066477a6551b580f83a218bd5abaace2656fe08a",
+    "bt_planner/sync.py": "1c2091677206806b726cfdd762d5add66a1b95194f8b3f200cfde9a5c89e80ab",
+    "bt_planner/tests/__pycache__/support.cpython-314.pyc": "3ea41f0e3f0b22a8b64d6f02459c512ebc0853acf6a9fb99260a6a7ea10f3637",
+    "bt_planner/tests/__pycache__/test_audit_regressions.cpython-314.pyc": "97711f51969939de74b6efc53b81a5228cf60f6df029f32f53a76142a03e3519",
+    "bt_planner/tests/__pycache__/test_boundaries.cpython-314.pyc": "5091c41b7620e812aecdcb213092131e44d3785d41dcdbe087ebf2c077508280",
+    "bt_planner/tests/__pycache__/test_contract.cpython-314.pyc": "17e51fd4276c331e3581d973e67f6482f8faf032919e79ca1a9a8458577517e5",
+    "bt_planner/tests/__pycache__/test_e2e_cli.cpython-314.pyc": "e517873e06166995dab08a128be63cf1b182437d61e0814efc9d12019ea572dc",
+    "bt_planner/tests/__pycache__/test_evidence.cpython-314.pyc": "cfdb51a1ce46e894efa4e38d0cdc4f0b3f55bb999b39adbd07b173e3f243cd87",
+    "bt_planner/tests/__pycache__/test_flow.cpython-314.pyc": "8d28877203cc2ac4629570b5cbc6f909b2fa5af34ceddbfc2e5a41363d3da6a6",
+    "bt_planner/tests/__pycache__/test_isolation.cpython-314.pyc": "d5b9a470029e2db0097b47c6b28d31bd143833e178bab2bd872030d910f0f785",
+    "bt_planner/tests/__pycache__/test_lock.cpython-314.pyc": "b97c02025ed69e4f9b9fa685dc8cb976d125fcae3df66c1808f9ea90229d462a",
+    "bt_planner/tests/__pycache__/test_markdown.cpython-314.pyc": "34b8e41579896edca9e33032237eabc044ffc80de4954406b1c22ce5310a8a90",
+    "bt_planner/tests/__pycache__/test_md_sync.cpython-314.pyc": "3effddbd538d57ff0502bd7eb28aa7da2c1aa83e0cc7b2eaa9b34d5da5016e2d",
+    "bt_planner/tests/__pycache__/test_scenarios.cpython-314.pyc": "50dd42c5cf50cff1e4f25bea78b7feb36d8f1143328e6c4b945ea5177d4647b0",
+    "bt_planner/tests/__pycache__/test_sync.cpython-314.pyc": "3fc6161e3610f5ece0e691b94269863ca071faf63c028fcd7af7a9efd36ff48d",
+    "bt_planner/tests/scenarios/METH-4-plan-quality-in-review/EXPECT.json": "d9891538cbb55c7a963baac2f4ce188f046afe6b191b9fc8cb7beedcb23f0dc9",
+    "bt_planner/tests/scenarios/METH-4-plan-quality-in-review/PLAN.json": "f6dd1ca066a201221aea1c80460c16e5fa6938694687b377c7b5ebe1fb30ea17",
+    "bt_planner/tests/scenarios/METH-4-plan-quality-in-review/PLAN.md": "36ec88632154dec6e4eeb9e980e5bf4ae71504643caf8e755d200ee0e47dbf4a",
+    "bt_planner/tests/scenarios/METH-4-plan-quality-in-review/SPEC.md": "6f87c6ab9661e33f1427d8d2aab4da8df2df6ff9652cddaa55e23be55bd04a14",
+    "bt_planner/tests/scenarios/METH-5-relay-test-wait/EXPECT.json": "ba12981337ecf802272e4cf1cd5ea4e9355b21e931ccda329ec2beaebb1b2484",
+    "bt_planner/tests/scenarios/METH-5-relay-test-wait/PLAN.json": "1ab4cb343faa46d878fc4a91da0bbbfb8676cb542a98746699b92bfe802fe1a9",
+    "bt_planner/tests/scenarios/METH-5-relay-test-wait/PLAN.md": "f5c94f0814b289678b55344b78ff364f1e689f59c68505c48b158f1461eacd25",
+    "bt_planner/tests/scenarios/METH-5-relay-test-wait/SPEC.md": "839657b1af56afdf9914c938da9fc244a9312009b75fd5f30f0fee24ae995809",
+    "bt_planner/tests/scenarios/REQ-901-duplicate-project/EXPECT.json": "3fede21b028d4dccb4b9bbb805fd1dc5ff609bf1a3921381ebdab1a6ec17886a",
+    "bt_planner/tests/scenarios/REQ-901-duplicate-project/PLAN.json": "dc82f106eaa4f6e714bbde4dcc8934096c619846454c4ecc9c416610ee108026",
+    "bt_planner/tests/scenarios/REQ-901-duplicate-project/PLAN.md": "9e67c0a5e72da981464db1ac5a3adcde8a7710ffaebed71cc95eed788e76f5e8",
+    "bt_planner/tests/scenarios/REQ-901-duplicate-project/SPEC.md": "051ce9ee60102f37dfad52c22b6e965b1b2e933d33b300c361ae80dbb04f83ff",
+    "bt_planner/tests/scenarios/REQ-902-audit-trail/EXPECT.json": "35185d712299a7cac19c1b6fd854be51edf723fb61a8d2274f6b41050e8c5764",
+    "bt_planner/tests/scenarios/REQ-902-audit-trail/PLAN.json": "c5356f728de7cc87c80a881bdae8fc5e0d53f3ddcca448fe628d457fda698240",
+    "bt_planner/tests/scenarios/REQ-902-audit-trail/PLAN.md": "13b6c515d8eedf5130e4922f9128e54aa913f0ad18aa92e1e5fd5375bcd53f47",
+    "bt_planner/tests/scenarios/REQ-902-audit-trail/SPEC.md": "fc23328af00db9cc40fa3ee60b685fb4959e5fd57fd53f186031a30359bec88a",
+    "bt_planner/tests/scenarios/REQ-903-assistant-latency/EXPECT.json": "bf7127c8c3d58cf49eb9d4c1e96a7003273dfa9b077f48b34c659ef253ff064a",
+    "bt_planner/tests/scenarios/REQ-903-assistant-latency/PLAN.json": "aafde41c1f3124bf9ade198f4435ea8e3e83ca6ecde714988da64de3687e0ae3",
+    "bt_planner/tests/scenarios/REQ-903-assistant-latency/PLAN.md": "62c695f9d8126fd34fb757c3443763a0706141e96c18c3d16d952558a374670d",
+    "bt_planner/tests/scenarios/REQ-903-assistant-latency/SPEC.md": "98fec5c89104d394ac032cde00e3eeb44882e60a82a2714fc6116d6194e0ead7",
+    "bt_planner/tests/scenarios/TRAIN-1-session-expiry/EXPECT.json": "c5e778c913a77c44ff0715fdb5f0bbaa09aa8bcc250e568508dcff69fbcf16dc",
+    "bt_planner/tests/scenarios/TRAIN-1-session-expiry/PLAN.json": "50e717f305b37b0a1233912c547ef19efed51df413767a2cb66947011e6a2582",
+    "bt_planner/tests/scenarios/TRAIN-1-session-expiry/PLAN.md": "530bb11b5eb3d5cc3a1d390421edf16d44ce8f71670653e6dc970d4313f4fd18",
+    "bt_planner/tests/scenarios/TRAIN-1-session-expiry/SPEC.md": "6e1f889fe9db766033ad38aaaf3c11c4abfcce70b60195c94e5e526349f8eb06",
+    "bt_planner/tests/scenarios/TRAIN-2-package-scope/EXPECT.json": "e0901d03ee692a9187392b2833fff8900d569fee3a5e230b63dffcb71dae3967",
+    "bt_planner/tests/scenarios/TRAIN-2-package-scope/PLAN.json": "7790951dc2bbad339bed8d7c29a7a9a9e82456a2b59f6836fa014eca53e9bce0",
+    "bt_planner/tests/scenarios/TRAIN-2-package-scope/PLAN.md": "60dedf32e21050580a9ce12dfc0a5a421753a0182b06caf82aaba2544da6ab1c",
+    "bt_planner/tests/scenarios/TRAIN-2-package-scope/SPEC.md": "07558bd3f828a3c454e1b2bd03875769d395d98e33e33ab2f3f3f12b8372e9aa",
+    "bt_planner/tests/scenarios/TRAIN-3-project-list-contract/EXPECT.json": "3ba13adcf13038b9b0d2df800aa8726e059db3b2c20381da2211f19eb27e2557",
+    "bt_planner/tests/scenarios/TRAIN-3-project-list-contract/PLAN.json": "59d0f8218a69c6c14b915effe2e2146834383d548176ce2b33e489e6fd88e877",
+    "bt_planner/tests/scenarios/TRAIN-3-project-list-contract/PLAN.md": "17698cae37d4d96a5aca8e0e611e90429ec207ca0d9cfb3646777d65ad905203",
+    "bt_planner/tests/scenarios/TRAIN-3-project-list-contract/SPEC.md": "351acf4f0b07834bfe7ad6ce2d220eb11e690cc735b59b90ff2d05cd211d9902",
+    "bt_planner/tests/scenarios/TRAIN-6-postgres-migration/EXPECT.json": "aeda98bc0f200a193592ff8617060a63bb2cded05539c80483b484e7a3b1fe95",
+    "bt_planner/tests/scenarios/TRAIN-6-postgres-migration/PLAN.json": "7d499b80576d7512e44530a235503376c5c1f31d617e227630bacf31b9dbef6d",
+    "bt_planner/tests/scenarios/TRAIN-6-postgres-migration/PLAN.md": "7ba01ed8df69e5c0f51703b2af0576610b523f6de791b9d564281918120e4fe7",
+    "bt_planner/tests/scenarios/TRAIN-6-postgres-migration/SPEC.md": "f8b69be8f02e1b73cbef73e4cac291c5456257c25abfc561b3c5f5fb3ce3bc51",
+    "bt_planner/tests/support.py": "660521144f12088245598f41fa77dbb7e98c3f51f026976917fd8b95a89a5710",
+    "bt_planner/tests/test_audit_regressions.py": "6d95ec73bc23938767b89ac02631da769c32dd7d0af72bbf92f20455076da631",
+    "bt_planner/tests/test_boundaries.py": "d73cc4e3107051e7a523fc754b03d97e8e30f200a797a4f84b08beef126b8da2",
+    "bt_planner/tests/test_contract.py": "1486f584671d9d9f7086541c769e23e1d911d28adc1aea1d0992e063e79efa55",
+    "bt_planner/tests/test_e2e_cli.py": "e2a89b68b9039f23808363ed645474033df9679c7fb8f169fce009241e9d99f1",
+    "bt_planner/tests/test_evidence.py": "e95fd31f770128690788b9143a511ef4cc1573768fd3632e6ff94999fc363e0d",
+    "bt_planner/tests/test_flow.py": "8fc0fa173bb4c82b2fa5bc338810f7403b512d612de4aabcb103776e12a78d67",
+    "bt_planner/tests/test_isolation.py": "eaef1d727e387521714f4bd87196a1fa1d6d0493c9a2b373dc68945ef3d9230c",
+    "bt_planner/tests/test_lock.py": "e3a7cd3a7352ed3ea2c6dbd1e2c67fefe91e3eabf39d707669353482da2b069f",
+    "bt_planner/tests/test_markdown.py": "b4e23f1a7f7f4ac916e5a6b4a4d613e6792d1ec1daa82cfa88044e15457eb0f3",
+    "bt_planner/tests/test_md_sync.py": "fa7e65b7ee1a39cd2078d2635b577481e8803b64b8ebedcfe65cc1ea3dbff819",
+    "bt_planner/tests/test_scenarios.py": "7d8720096cc5b466ff4f656ec82ac669fe5ebac0c75baad330347e8be00a170b",
+    "bt_planner/tests/test_sync.py": "1c2c5ea8ebf32d54ce52dcdf907c872e091b89926aad5cb71a4e57e2c4c85db3",
+    "planner.md": "07024910720a6f9dd757ce2469d685310d364e810d431af02a4514767f8bcde1",
+    "skills/skills/adversarial-plan-review/SKILL.md": "c084bcf9e9df52ec116ce84c240f343e7d38cd3eec7e61e92b85e82e9dc44ba3",
+    "skills/skills/plan-mermaid-view/SKILL.md": "3edc5c2fe464694cc20c99e40b15fba191361ed109a6939384b46f5731fb3705",
+    "skills/skills/socratic-elicitation/SKILL.md": "1d6415f0b5aa11da7f4ed91f30558201b02a930c770b71cfa59e5a3b9ff567eb",
+    "skills/skills/wbs-dag-decomposition/SKILL.md": "82561b67f3d192be09bc2405325b6154e77b02d49d380b939c9478839f7b839b"
+  }
+}

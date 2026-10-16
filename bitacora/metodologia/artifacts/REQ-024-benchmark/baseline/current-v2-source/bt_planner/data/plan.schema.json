@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bitacora/plan.schema.json",
+  "title": "Planner contract PLAN.json",
+  "description": "Structured work plan published by the planner for a deterministic scheduler. Classification fields are mandatory and never defaulted; from schema 1.1.0 every classification is also argued in classification_evidence. Cross-field rules (unique ids, existing references, acyclic after, milestone order, full_system exception, evidence strength, unordered tasks that share a path, PLAN.md agreement) are enforced by the validator of this package (contract.validate / sync.check) and are not expressible here.",
+  "type": "object",
+  "required": ["schema_version", "plan_id", "revision", "spec_ref", "milestones", "tasks"],
+  "properties": {
+    "schema_version": {"type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$"},
+    "plan_id": {"type": "string", "minLength": 1},
+    "revision": {"type": "integer", "minimum": 1, "maximum": 1000000},
+    "spec_ref": {"type": "string", "minLength": 1, "description": "relative path inside the requirement folder"},
+    "milestones": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/milestone"}},
+    "tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/task"}}
+  },
+  "allOf": [{"if": {"properties": {"schema_version": {"pattern": "^1\\.([1-9][0-9]*)\\."}}},
+             "then": {"properties": {"tasks": {"items": {"required": ["classification_evidence"]}}}}}],
+  "$defs": {
+    "text": {"type": "string", "pattern": "\\S"},
+    "texts": {"type": "array", "items": {"$ref": "#/$defs/text"}},
+    "level": {"enum": ["low", "medium", "high"]},
+    "dimension_evidence": {
+      "type": "object",
+      "required": ["justification", "evidence"],
+      "properties": {
+        "justification": {"$ref": "#/$defs/text", "description": "why this value and not the neighbouring one; at least 4 words, never a placeholder"},
+        "evidence": {"type": "array", "minItems": 1,
+                     "items": {"type": "string", "pattern": "^(file|command|precedent|spec|task|assumption):\\S"},
+                     "description": "kind:value references; assumption: is allowed but never counts as support"}
+      }
+    },
+    "classification_evidence": {
+      "type": "object",
+      "required": ["complexity", "scope", "duration", "risk", "coupling", "confidence"],
+      "properties": {
+        "complexity": {"$ref": "#/$defs/dimension_evidence"}, "scope": {"$ref": "#/$defs/dimension_evidence"},
+        "duration": {"$ref": "#/$defs/dimension_evidence"}, "risk": {"$ref": "#/$defs/dimension_evidence"},
+        "coupling": {"$ref": "#/$defs/dimension_evidence"}, "confidence": {"$ref": "#/$defs/dimension_evidence"}
+      },
+      "additionalProperties": false
+    },
+    "milestone": {
+      "type": "object",
+      "required": ["id", "title", "acceptance_criteria"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^M[0-9]+$"},
+        "title": {"$ref": "#/$defs/text"},
+        "acceptance_criteria": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}}
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["type", "value", "purpose"],
+      "properties": {
+        "type": {"enum": ["command", "manual"]},
+        "value": {"$ref": "#/$defs/text"},
+        "purpose": {"$ref": "#/$defs/text"},
+        "expected": {"$ref": "#/$defs/text", "description": "required when type is manual"},
+        "created_by": {"type": "string", "pattern": "^T[0-9]+(\\.[0-9]+)?[a-z]?$", "description": "task that creates a test that does not exist yet"}
+      }
+    },
+    "task": {
+      "type": "object",
+      "required": ["id", "milestone_id", "title", "objective", "repository", "after", "complexity", "scope",
+                   "estimated_minutes", "risk", "coupling", "confidence", "estimate_rationale", "expected_paths",
+                   "shared_resources", "acceptance_criteria", "verification"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^T[0-9]+(\\.[0-9]+)?[a-z]?$"},
+        "milestone_id": {"type": "string", "pattern": "^M[0-9]+$"},
+        "title": {"$ref": "#/$defs/text"},
+        "objective": {"$ref": "#/$defs/text"},
+        "repository": {"$ref": "#/$defs/text"},
+        "after": {"type": "array", "items": {"type": "string", "pattern": "^T[0-9]+(\\.[0-9]+)?[a-z]?$"}},
+        "complexity": {"enum": ["low", "medium", "high", "extreme"]},
+        "scope": {"enum": ["isolated_fix", "small_change", "large_change", "full_feature", "full_system"]},
+        "estimated_minutes": {"type": "integer", "minimum": 1, "maximum": 100000},
+        "risk": {"$ref": "#/$defs/level"},
+        "coupling": {"$ref": "#/$defs/level"},
+        "confidence": {"$ref": "#/$defs/level"},
+        "estimate_rationale": {"$ref": "#/$defs/text"},
+        "classification_evidence": {"$ref": "#/$defs/classification_evidence"},
+        "expected_paths": {"$ref": "#/$defs/texts"},
+        "shared_resources": {"$ref": "#/$defs/texts"},
+        "acceptance_criteria": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}},
+        "verification": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/verification"}},
+        "scope_exception": {"type": "object", "required": ["reason"], "properties": {"reason": {"$ref": "#/$defs/text"}},
+                            "description": "only with scope=full_system, for explicit review"}
+      },
+      "not": {"anyOf": [{"required": ["model"]}, {"required": ["agent"]}, {"required": ["account"]},
+                        {"required": ["workers"]}, {"required": ["status"]}, {"required": ["attempts"]}]}
+    }
+  }
+}

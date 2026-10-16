@@ -308,3 +308,20 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Alternatives:** Continue read-only review — superseded by the new request. Pause for five separate choices — unnecessary because the owner explicitly asked to continue and the methodology permits assumptions when advancing.
 - **Consequences and rollback:** The mapping and UI/server behavior can be revised before publication. No push, deployment, merge or commit is authorized.
 - **Source:** Owner request on 2026-10-16; REQ-017 `SPEC.md`, `PLAN.md`, and `rounds/round-01.json`.
++
+
+## D-053 — Persist shareable Taller quote snapshots outside customer sessions
+- **Date:** 2026-10-16 · **Status:** Accepted · **Scope:** REQ-014 T68
+- **Context:** The professional quote draft exists only in browser session storage, and vigencia.ts indicates calculation freshness rather than a validity date. Public share links need durable quote and response state without adding fields to strict customer session/widget schemas protected by D-035. This checkout already has migrations through 035 although the original marathon plan says 033 is next.
+- **Decision:** Store an immutable, versioned quote snapshot and bounded compressed still in a new PostgreSQL table using migration 036. Recompute the price on the server and expose only the customer total. The decorator explicitly chooses the valid-through date; links expire at the next America/Bogota calendar day. Sign a random record id and date with a dedicated HMAC secret. Keep public read and write gates separate and default both off; writes require the reader gate. Only exact public routes bypass the shared-password proxy. Public decision input cannot alter price and each quote accepts one response.
+- **Alternatives:** Browser-only draft cannot be shared; embedding the snapshot in a URL cannot retain responses; an inferred 15/30-day validity invents policy; exposing the calculator breakdown leaks decorator costs; adding fields to saved sessions triggers D-035 compatibility risk.
+- **Consequences and rollback:** Configure the signing secret and apply migration 036 before enabling the reader; deploy the reader before enabling writes. Expired links return 404 while owner history remains. Disable writes, then reads, and retain the additive table; deletion is separate.
+- **Source:** REQ-014 T68, PRO-08 acceptance, D-035, migration inventory through 035; [architecture record](../../dev/cerebro/pictures/decisiones/20261016-cotizacion-compartida.md).
+
+## D-054 — Preserve the existing Happie v1 contract while adding opt-in services
+- **Date:** 2026-10-16 · **Status:** Accepted · **Scope:** Happie services/packages release
+- **Context:** An external integration consumes an existing strict Happie endpoint; the customer-facing chat also needs catalogue-backed individual services, packages, or both. Returning service records in the existing strict v1 shape could break that reader.
+- **Decision:** Keep the v1 request/response field schemas, default package-only behavior, and endpoint authentication unchanged. Add the richer results only when a caller explicitly sends `schema_version: happie.v2`; the `/happie` UI opts in. No database migration is required.
+- **Alternatives:** Add fields or services to v1 — rejected due to strict readers; create separate services/mixed endpoints — rejected because they duplicate existing auth, state and idempotency boundaries.
+- **Consequences and rollback:** Maintain independent v1/v2 contract and behavior tests. Roll back to the prior checked release; no persisted schema migration is needed and existing v1 callers require no request change.
+- **Source:** Owner request on 2026-10-16 and `docs/happie-external-integration.md`; [brain decision](../../dev/cerebro/pictures/decisiones/20261016-happie-v2-compatible-services.md).
