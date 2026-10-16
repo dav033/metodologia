@@ -1,6 +1,6 @@
 ---
 req: REQ-017
-status: approved
+status: done
 created: 2026-10-16
 source: D-20261016-090752-bc5d (Claude Work, Opus 5.5 high; read-only)
 ---
@@ -53,7 +53,7 @@ Depends on: approval of the mapping and no-3D policy.
 - [x] T1.2 — Add pure curated mapping and accessors for selectable event structures · file: `src/lib/plan/estructuras-por-evento.ts` · after: T1.1 · verify: `npx tsc --noEmit` · covers: R1, R2, R4, R5
   - Export an exhaustive `Readonly<Record<EventoCanonico, readonly EstructuraOficialId[]>>`, `recomendadasParaEvento(evento)`, and `opcionesPiezaParaEvento(evento)`.
   - Acceptance: all IDs are official and unique; each recognized event has at least three; no unsupported 3D IDs occur; unknown events return no mapping; each returned card retains the exact official ID.
-- [ ] T1.3 — Add mapping behavior and coverage-report checks · file: `scripts/test/test-estructuras-por-evento.ts` · after: T1.2 · verify: `npx tsx --conditions=react-server scripts/test/test-estructuras-por-evento.ts` · covers: R1, R4, R5
+- [x] T1.3 — Add mapping behavior and coverage-report checks · file: `scripts/test/test-estructuras-por-evento.ts` · after: T1.2 · verify: `npx tsx --conditions=react-server scripts/test/test-estructuras-por-evento.ts` · covers: R1, R4, R5
   - Check canonicalization, table invariants, menu ordering, and print (without failing on) library support for each curated ID.
   - Acceptance: the check passes and reports thin support (including bautizo → `aro_circular`) as information.
 
@@ -62,11 +62,11 @@ Depends on: M1.
 
 - [x] T2.1 — Resolve the event and recommended IDs once per turn · file: `src/app/api/asistente-guiado/route.ts` · after: T1.2 · verify: `npx tsc --noEmit` · covers: R2, R3, R5
   - Prefer the normalized confirmed brief event, then the event inferred from customer facts. Compute the recommended IDs only for the “Propónme algo” choice.
-- [ ] T2.2 — Narrow and enforce the proposal schema · files: `src/lib/ia/guiado/esquema-herramienta-propuesta.ts`, `src/lib/ia/guiado/propuesta-composicion.ts`, `src/app/api/asistente-guiado/route.ts` · after: T2.1 · verify: `npm run test-propiedades-herramientas` · covers: R2, R3, R5
+- [x] T2.2 — Narrow and enforce the proposal schema · files: `src/lib/ia/guiado/esquema-herramienta-propuesta.ts`, `src/lib/ia/guiado/propuesta-composicion.ts`, `src/lib/ia/guiado/politica-propuesta-evento.ts`, `src/app/api/asistente-guiado/route.ts` · after: T2.1 · verify: `npm run test-propiedades-herramientas` · covers: R2, R3, R5
   - Restrict the schema enum to the event list for free composition. Do not narrow plan edits, customer-named structures, or unknown activities.
   - Enforce the same rule server-side for provider outputs outside the list: prefer a recommended structure of the same base type when available, else the first unused recommended structure; keep quantities unchanged and avoid duplicates.
   - Explicit customer wording takes precedence. Record an audit decision only if the server adjusts model output.
-- [ ] T2.3 — Add server rule regressions · file: `scripts/test/test-propuesta-por-evento.ts` · after: T2.2 · verify: `npx tsx --conditions=react-server scripts/test/test-propuesta-por-evento.ts` · covers: R2, R3, R5, R6
+- [x] T2.3 — Add server rule regressions · file: `scripts/test/test-propuesta-por-evento.ts` · after: T2.2 · verify: `npx tsx --conditions=react-server scripts/test/test-propuesta-por-evento.ts` · covers: R2, R3, R5, R6
   - Acceptance: recognized event narrows the tool enum; invalid provider structures are replaced with distinct allowed IDs and audited; explicit customer requests and existing-plan edits remain unchanged; unknown event leaves all 18 IDs and emits no event-policy decision.
 
 ### M3 — Activity-specific selectable structures in the individual-piece menu
@@ -77,7 +77,7 @@ Depends on: M1; independent of M2 after M1.
 - [x] T3.2 — Show exact event structures as selectable cards · files: `src/components/guiado/PreguntaPropuesta.tsx`, `src/components/guiado/VistaGuiada.tsx` · after: T1.2, T3.1 · verify: `npx tsc --noEmit` · covers: R1, R5
   - For known events, show cards built from the event's exact official IDs and official names, plus «La que tú quieras»; ensure selection sends that exact structure ID. For unknown events, retain the current menu unchanged.
   - Record activity and displayed position with the existing `propuesta.pieza` action for later analysis.
-- [ ] T3.3 — Verify exact selectable structures and saved-session compatibility · files: `scripts/test/test-estructuras-por-evento.ts`, `scripts/test/test-propuesta-por-evento.ts` · after: T3.2 · verify: `npm run guiada:test` · covers: R1, R5
+- [x] T3.3 — Verify exact selectable structures and saved-session compatibility · files: `scripts/test/test-estructuras-por-evento.ts`, `scripts/test/test-propuesta-por-evento.ts`, `scripts/test/test-menu-pieza-evento.ts` · after: T3.2 · verify: `npm run guiada:test` · covers: R1, R5
   - Acceptance: every event card sends the exact official ID in its mapping; «La que tú quieras» remains available; an unknown event shows the exact current menu; saved widgets retain their existing schema.
 
 ## End-to-end acceptance
@@ -102,13 +102,21 @@ The owner requested continuing development on 2026-10-16. The following Opus rec
 4. Exclude structures without 3D support from recommendations; preserve explicit customer requests and current unknown-event behavior.
 5. Show exact event-specific structure IDs as selectable cards for known activities, with «La que tú quieras» retained; no additional chat turn or persisted widget field.
 
+## Rulings
+- The owner's request to continue authorizes implementation using the proposed defaults as revisable assumptions; it does not answer the five product questions individually (D-052). Cost if wrong: the owner may revise the mapping or recommendation surface before integration.
+- Event enforcement is limited to free proposals without an existing plan or explicit customer-named structure. This preserves existing-plan edits and explicit choices; customer requests remain authoritative even when their structure is outside the curated list.
+- A provider structure outside the event list is replaced by an unused recommendation of the same base type where possible, otherwise by the first unused recommendation. When the list is exhausted, the excess piece is omitted; quantities and the remaining piece attributes are retained.
+
 ## Verification
-- `npm run lint`: exit 0, 0 errors and 50 warnings.
-- `npx tsc --noEmit`: exit 0 after the failed Next build attempt generated `.next/types/routes.d.ts`, including the global `LayoutProps` declaration.
+- `npm run guiada:test`: exit 0, including the event mapping, server enforcement/audit, menu selection and saved-schema regressions.
+- `npm run test-propiedades-herramientas`: exit 0; 45 tools checked and 1,720 invalid calls rejected.
+- `npx tsc --noEmit`: exit 0.
+- `npm run lint`: exit 0, 0 errors and 50 warnings, matching the existing warning count.
 - `npm run build --workspaces --if-present`: exit 0; `@sempertex/agente-core` and `@sempertex/happie-package-ia` built.
+- `npm run build -- --webpack`: exit 0; Next compiled successfully, completed TypeScript validation and generated all 83 static pages. The default Turbopack attempt failed before compilation because the worktree's `node_modules` symlink points outside its filesystem root. The successful standalone trace left 27 untracked generated files under `pictures/node_modules/**`; these remain outside the source changes and were preserved.
 - `git diff --check`: exit 0.
-- `npm run build`: failed before compilation because Turbopack rejects the isolated worktree's `node_modules` symlink to a directory outside its filesystem root.
-- Automated tests were neither added nor run in this session; T1.3, T2.2 verification, T2.3 and T3.3 remain pending.
+- Independent spec and standards reviews: both approved. The spec reviewer withdrew the generated-artifact finding after confirming the files remain excluded from the change.
+- `python /home/david/dev/metodologia/skill/scripts/bitacora.py --project pictures trace --node REQ-017`: exit 0; no uncovered, unknown-ref or dangling references.
 
 ## Progress log
 - 2026-10-16: Opus completed read-only analysis and drafted this plan in delegation `D-20261016-090752-bc5d`. David's direct implementation request authorizes an isolated draft using these defaults; owner review remains open before integration.
@@ -121,3 +129,4 @@ The owner requested continuing development on 2026-10-16. The following Opus rec
 - 2026-10-16 owner requested continuing development: use the recommended defaults above as revisable assumptions. The five individual product choices remain open for correction; approval to proceed is not logged as item-by-item answers.
 - 2026-10-16 implementation continued in isolated worktree `req-017-v2`. Extracted the client-safe event vocabulary and search normalizer, added the exhaustive curated map, narrowed and deterministically enforced free proposals with audit, and added exact-ID event cards without changing saved widget schema. `planActual` bypasses event policy to preserve existing-plan behavior (spec review finding fixed).
 - 2026-10-16 independent spec and standards reviews: spec finding about existing-plan edits fixed and rechecked; standards review found automated regression coverage still pending. No code was committed or integrated.
+- 2026-10-16: Added and passed mapping, proposal-policy/audit and menu/session regression tests; `guiada:test`, tool property tests, lint, TypeScript, workspace builds and the Webpack app build all passed. Both independent review axes approved. The app build left 27 untracked standalone trace files under `pictures/node_modules`; they are excluded from the source change and preserved. No integration, commit, push or deployment occurred. P-101 remains open for owner review of the provisional mapping and assumptions.

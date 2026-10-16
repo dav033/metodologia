@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-16 09:45 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 11:06 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -72,11 +72,11 @@ _Generated 2026-10-16 09:45 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-053 — Keep planning aids exclusive to the Planner profile
 - D-052 — Require M4-M6 in every Scheduler-owned run
 - D-051 — Expose a bounded Scheduler lifecycle behind explicit opt-in
 - D-050 — Keep M2 optimization disabled after the failed T24 experiment
 - D-049 — Preserve legacy quota keys while deduplicating effective accounts
-- D-048 — Keep M2 shadow comparisons opt-in and side-effect-free
 
 ## Artifacts
 

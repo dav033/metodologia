@@ -32,8 +32,6 @@ month summary._
 - P-010 · Marathon autostart .cmd: escape % and keep non-ANSI characters in BITACORA_ROOT · urgency: low · complexity: S · added 2026-10-09 · ladder review
   - ✓ P-011 · `task done/fail/escalate` ownership checks the REQ · closed 2026-10-15 · already implemented (`bt_runtask._own_task` checks BITACORA_RUN/PROJECT/TASK; tests/test_task_ownership.py); the entry was stale
 - P-012 · Split tests/test_marathon.py (396 lines, over the 300-line target) · urgency: low · complexity: S · added 2026-10-09 · ladder review
-- P-102 · Choose the shortlist and agent ownership for reviewed Planner skill candidates before any integration · urgency: low · complexity: S · added 2026-10-16 · user request: review GitHub skills
-  - No skill was installed or approved. Keep the Planner's `PLAN.json` contract authoritative; any access change needs an explicit follow-up plan.
 - P-004 · Concurrent edits to central files (PENDING/DECISIONS) from several sessions/machines · urgency: low · complexity: M · added 2026-10-08 · review
 - P-014 · Prune closed items older than 14 days into the month summary: the rule is written in the file header, but normalize never applies it, so Recently closed only grows · urgency: low · complexity: M · added 2026-10-13 · antagonist review of the pending fix
 - P-021 · Optional: show PLAN.json classification in the web UI plan review and `bitacora.py run` status; enrich REQ-013/015/016 only if the owner wants them in the contract · urgency: low · complexity: M · added 2026-10-14 · REQ-009 proposal
@@ -54,6 +52,8 @@ month summary._
 _None_
 
 ## Recently closed
+- P-102 · CLOSED 2026-10-16 — Select and scope existing skills for the Planner agent · urgency: low · complexity: S · added 2026-10-16 · owner request
+  - Added four Planner-only resources and installed the Planner profile for Claude Code and Codex. The Opus 5.5 high REQ-017 rerun is preserved as a draft; `bt_planner check` passed with one shared-resource ordering warning. D-053 records scope and contract boundaries.
 - P-043 · CLOSED 2026-10-16 — Require M4–M6 in every Scheduler owner run · urgency: high · complexity: M · added 2026-10-16 · owner request / REQ-023
   - `scheduler-run` and `launch --scheduler` now initialize separate durable M4/M5/M6 stores before dispatch; the M1 owner drains M3 output and M4 incidents, routes M5/M6 through existing M1 ports, and preserves deterministic M2 and the legacy launcher. Full Scheduler discovery passed 350 tests (6 skipped); independent spec and standards reviews passed. See REQ-023 REPORT.
 - P-042 · CLOSED 2026-10-16 — Fix Scheduler package coverage and M3→M4 FIFO path escape · urgency: med · complexity: M · added 2026-10-16 · local integration audit

@@ -34,10 +34,11 @@ owner of quantities for the guided assistant. The 3D workshop lives entirely in 
 ## Key flows
 - Idea lot: agent digitizes 15 ideas → `lote-NN.ts` + test → verified in clean worktree `Downloads/e3-verif` → push.
 - Edit: pick piece → inspector / context menu → solo editor → Listo applies as one undo step.
+- Guided-chat event recommendations (REQ-017): `VistaGuiada` derives the event from the brief/messages → `eventos-conocidos.ts` canonicalizes it → `estructuras-por-evento.ts` returns the shared ordered official-ID map. The individual-piece menu renders those exact IDs and preserves free choice. For free complete proposals, the API narrows the tool schema and `politica-propuesta-evento.ts` enforces the same list, respecting explicit customer requests and existing plans and auditing only actual changes. No event field is persisted; unknown events keep the previous behavior. The mapping is provisional pending P-101.
 
 ## Conventions & constraints
 - Never print `.env*`; no client data in repo; paid runs declare a cap; Gemini never generates images.
-- Do not restart :3010 / :8000 unless asked; no `next build` (15.7 GB RAM PC).
+- Do not restart :3010 / :8000 unless asked. In the isolated REQ-017 worktree, Turbopack rejected the external `node_modules` symlink before compilation; `npm run build -- --webpack` passed but emitted 27 standalone trace files below the repo's `pictures/node_modules`. Keep those generated files out of source changes.
 - Tests gate pushes: `npx tsc --noEmit` + relevant `scripts/test/*.ts`; `test-carga-3d` keeps imports < 500 ms.
 
-_Last updated: 2026-10-08_
+_Last updated: 2026-10-16_

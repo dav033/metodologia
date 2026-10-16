@@ -1,0 +1,292 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-017",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Client-safe activity resolution and curated policy",
+      "acceptance_criteria": [
+        "Browser code can resolve the canonical activity and its recommended structures without importing biblioteca.ts or decoraciones.json.",
+        "Every recognised activity maps to at least three unique official IDs, none in ESTRUCTURAS_SIN_VISTA_3D, enforced by a test.",
+        "Existing event and library-search consumers compile with unchanged imports and synonyms."
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Server enforcement and audit for complete proposals",
+      "acceptance_criteria": [
+        "For a recognised activity, a free complete proposal only contains recommended or customer-named structures.",
+        "Out-of-policy provider output is corrected deterministically and recorded as a regla:estructuras_por_evento decision.",
+        "Unknown activities, individual-piece turns and plan edits keep the current tool schema and proposal handling."
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Activity-aware individual-piece menu",
+      "acceptance_criteria": [
+        "For a recognised activity the piece menu shows the recommended structures in mapping order, then «La que tú quieras».",
+        "For an unknown activity the menu equals the current PIEZAS_INDIVIDUALES list.",
+        "The widget schema and saved-session shape are unchanged."
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Integration gate",
+      "acceptance_criteria": [
+        "guiada:test runs the three new regression scripts.",
+        "Lint, workspace builds, application type check, guiada:test and the Next.js build results are reported with their real exit status."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1.1",
+      "milestone_id": "M1",
+      "title": "Extract client-safe text normalizer and canonical event parser",
+      "objective": "The canonical event parser becomes importable from browser code without loading the decoration catalogue, while existing server consumers keep identical behaviour.",
+      "repository": "pictures",
+      "after": [],
+      "acceptance_criteria": [
+        "normalizarBusqueda lives in src/lib/texto/normalizar-busqueda.ts and biblioteca.ts re-exports it unchanged.",
+        "eventos-conocidos.ts exports EVENTOS_CONOCIDOS as a const tuple, an EventoCanonico union, eventoDeTexto and eventoDeMensajes, importing only the normalizer.",
+        "ideas-guiadas.ts re-exports eventoDeTexto and eventoDeMensajes so respuesta-guiada, pedido-ideas, hechos-cliente and route keep their imports.",
+        "Canonical names, synonyms and their order are byte-identical to the current list."
+      ],
+      "verification": [
+        {"type": "command", "value": "npx tsc --noEmit", "purpose": "type-checks every consumer of the re-exported functions"},
+        {"type": "command", "value": "npx tsx --conditions=react-server scripts/test/test-busqueda-biblioteca-sempertex.ts", "purpose": "existing library-search regression after moving the normalizer"}
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Pure functions move behind re-exports; consumers were located by search and need no edits.",
+      "classification_evidence": {
+        "complexity": {"justification": "Moving two pure functions behind re-exports is a known localized refactor with no new logic.", "evidence": ["file:src/lib/ia/guiado/ideas-guiadas.ts", "file:src/lib/biblioteca-sempertex/biblioteca.ts"]},
+        "scope": {"justification": "Two new small modules plus re-export edits in two existing files, with no consumer edits.", "evidence": ["file:src/lib/ia/guiado/hechos-cliente.ts", "file:src/lib/ia/guiado/pedido-ideas.ts"]},
+        "duration": {"justification": "Forty-five minutes covers the move, re-exports, type check and the existing library search test.", "evidence": ["file:scripts/test/test-busqueda-biblioteca-sempertex.ts", "file:package.json"]},
+        "risk": {"justification": "Eight modules import normalizarBusqueda and several import eventoDeTexto, so a changed synonym order silently alters search and event detection.", "evidence": ["file:src/app/api/asistente-guiado/route.ts", "file:src/lib/ia/guiado/respuesta-guiada.ts"]},
+        "coupling": {"justification": "Every later task consumes the extracted event vocabulary, making its export names a shared contract.", "evidence": ["task:T1.2", "file:src/lib/ia/guiado/ideas-guiadas.ts"]},
+        "confidence": {"justification": "All consumers were found by search and both functions were read in full; no product decision is involved.", "evidence": ["file:src/lib/ia/guiado/ideas-guiadas.ts", "file:src/lib/biblioteca-sempertex/biblioteca.ts", "precedent:REQ-017/T1.1"]}
+      },
+      "expected_paths": ["src/lib/texto/normalizar-busqueda.ts", "src/lib/biblioteca-sempertex/biblioteca.ts", "src/lib/ia/guiado/eventos-conocidos.ts", "src/lib/ia/guiado/ideas-guiadas.ts"],
+      "shared_resources": ["guided-event-vocabulary"]
+    },
+    {
+      "id": "T1.2",
+      "milestone_id": "M1",
+      "title": "Add the curated activity-to-structure policy module",
+      "objective": "A single client-safe module owns the ordered recommended structures per canonical activity and the resolver of the current turn's activity.",
+      "repository": "pictures",
+      "after": ["T1.1"],
+      "acceptance_criteria": [
+        "ESTRUCTURAS_POR_EVENTO is typed Readonly<Record<EventoCanonico, readonly EstructuraOficialId[]>> and holds the PLAN.md working table.",
+        "recomendadasParaEvento returns the ordered list for a canonical activity and null for an undefined or unrecognised one.",
+        "eventoCanonicoDelTurno canonicalises the brief event with eventoDeTexto first and falls back to eventoDeMensajes over customer messages.",
+        "The test asserts each list has at least three unique official IDs, none in ESTRUCTURAS_SIN_VISTA_3D, and that the module source imports no catalogue or server-only module."
+      ],
+      "verification": [
+        {"type": "command", "value": "npx tsx scripts/test/test-estructuras-por-evento.ts", "purpose": "table invariants, resolver behaviour and client-safety import check", "created_by": "T1.2"},
+        {"type": "command", "value": "npx tsc --noEmit", "purpose": "exhaustive record over EventoCanonico type-checks"}
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Small pure module and test; content depends on an unanswered owner table, which may cause rework.",
+      "classification_evidence": {
+        "complexity": {"justification": "The table is simple, but a typed EventoCanonico union and a resolver shared by client and server need design choices.", "evidence": ["file:src/lib/ia/guiado/ideas-guiadas.ts", "file:src/lib/plan/estructuras-oficiales.ts"]},
+        "scope": {"justification": "One new pure module and one new test file, leaving existing behaviour untouched.", "evidence": ["spec:SPEC.md#requirements", "file:src/lib/guiada-motor/sin-vista-3d.ts"]},
+        "duration": {"justification": "Sixty minutes for the typed table, resolver, invariant test and the import-safety assertion.", "evidence": ["file:src/lib/guiada-motor/sin-vista-3d.ts", "assumption:table from the prior REQ-017 plan with arco replacing arco_asimetrico"]},
+        "risk": {"justification": "A wrong list shows unsuitable structures to every customer of that activity, and the table is unapproved owner policy.", "evidence": ["spec:SPEC.md#assumptions", "assumption:round-01 q1 has no owner answer"]},
+        "coupling": {"justification": "Server enforcement and the client menu both consume these signatures, so they form a shared contract.", "evidence": ["task:T2.1", "task:T3.1"]},
+        "confidence": {"justification": "The code shape is clear, yet the table content and the arco substitution remain open owner questions.", "evidence": ["file:src/components/guiado/PreguntaPropuesta.tsx", "assumption:owner may edit the mapping before implementation"]}
+      },
+      "expected_paths": ["src/lib/ia/guiado/estructuras-por-evento.ts", "scripts/test/test-estructuras-por-evento.ts"],
+      "shared_resources": ["event-structure-policy"]
+    },
+    {
+      "id": "T2.1",
+      "milestone_id": "M2",
+      "title": "Add pure event-policy enforcement and schema narrowing",
+      "objective": "A complete-composition proposal can be constrained and deterministically corrected to the allowed structures without touching protected customer-named pieces.",
+      "repository": "pictures",
+      "after": ["T1.2"],
+      "acceptance_criteria": [
+        "esquemaHerramientaPropuesta accepts an optional allowed list and narrows the estructura enum only for completa without piezaPedida; without the list the output is unchanged.",
+        "ajustarPropuestaAlEvento keeps allowed or protected pieces and replaces others with an unused allowed structure of the same tipoBase, else the first unused allowed one.",
+        "Replacements keep cantidad, drop the replaced piece's medidas, never create duplicate structures and return one change line each.",
+        "The test covers narrowing, replacement, duplicates, protected pieces and the unknown-activity path without network or model calls."
+      ],
+      "verification": [
+        {"type": "command", "value": "npx tsx --conditions=react-server scripts/test/test-propuesta-por-evento.ts", "purpose": "pure enforcement and schema narrowing cases", "created_by": "T2.1"},
+        {"type": "command", "value": "npx tsx scripts/test/test-guiado-plan-pasos.ts", "purpose": "existing esquemaHerramientaPropuesta assertions still hold"}
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Pure logic with table-driven tests; replacement order is a planner assumption that may change.",
+      "classification_evidence": {
+        "complexity": {"justification": "Replacement must respect tipoBase families, protected pieces, distinctness and medidas, mirroring propuestaConLoPedido without duplicating it.", "evidence": ["file:src/lib/ia/guiado/hechos-cliente.ts", "file:src/lib/ia/guiado/esquema-herramienta-propuesta.ts"]},
+        "scope": {"justification": "A new pure enforcement module, one optional schema-helper parameter and a focused test file.", "evidence": ["file:src/lib/ia/guiado/esquema-herramienta-propuesta.ts", "file:scripts/test/test-guiado-plan-pasos.ts"]},
+        "duration": {"justification": "Seventy-five minutes covers the function, the parameter and cases for each SPEC edge case.", "evidence": ["spec:SPEC.md#requirements", "file:src/lib/ia/guiado/propuesta-composicion.ts"]},
+        "risk": {"justification": "A faulty replacement could drop a requested piece or duplicate structures in proposals priced by the single quote engine.", "evidence": ["file:src/app/api/asistente-guiado/route.ts", "spec:SPEC.md#constraints"]},
+        "coupling": {"justification": "Consumes the T1.2 policy and defines the function that T2.2 wires into the shared route.", "evidence": ["task:T1.2", "task:T2.2"]},
+        "confidence": {"justification": "Proposal flow and schema helper were read, but the replacement order rule is the planner's own assumption.", "evidence": ["file:src/app/api/asistente-guiado/route.ts", "assumption:same-family replacement then first unused allowed structure"]}
+      },
+      "expected_paths": ["src/lib/ia/guiado/propuesta-por-evento.ts", "src/lib/ia/guiado/esquema-herramienta-propuesta.ts", "scripts/test/test-propuesta-por-evento.ts"],
+      "shared_resources": ["event-structure-policy", "proposal-tool-schema"]
+    },
+    {
+      "id": "T2.2",
+      "milestone_id": "M2",
+      "title": "Apply the event policy in the guided-assistant route and audit it",
+      "objective": "The server narrows and enforces the event policy on free complete proposals and records each active policy turn in the existing decision trail.",
+      "repository": "pictures",
+      "after": ["T2.1"],
+      "acceptance_criteria": [
+        "The policy is active only when alcancePropuesta is completa, planActual is absent and eventoCanonicoDelTurno resolves a recognised activity.",
+        "Customer-named structures from hechos.estructura and piezasNombradas over non-interface customer messages are protected and added to the narrowed enum.",
+        "The policy runs before propuestaConLoPedido inside proponer_composicion, so customer-named pieces keep precedence.",
+        "An active turn emits one regla:estructuras_por_evento decision with activity, allowed list, protected list and replacements; inactive turns emit none.",
+        "The test asserts the wiring order in route.ts source, as test-pulido-presentacion-guiada already does for other rules."
+      ],
+      "verification": [
+        {"type": "command", "value": "npx tsx --conditions=react-server scripts/test/test-propuesta-por-evento.ts", "purpose": "route wiring, precedence and audit assertions", "created_by": "T2.1"},
+        {"type": "command", "value": "npx tsx scripts/test/test-pulido-presentacion-guiada.ts", "purpose": "existing route source assertions for the organic button still hold"}
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Insertion points are known, but the handler is long and its precedences must be preserved.",
+      "classification_evidence": {
+        "complexity": {"justification": "The handler interleaves scope, customer facts, plan edits and organic-button rules, so the policy must slot in without reordering them.", "evidence": ["file:src/app/api/asistente-guiado/route.ts", "file:src/lib/ia/guiado/hechos-cliente.ts"]},
+        "scope": {"justification": "Edits stay inside the alcance block, tool-schema construction and the proponer_composicion handler of one route.", "evidence": ["file:src/app/api/asistente-guiado/route.ts"]},
+        "duration": {"justification": "Seventy-five minutes for wiring, the audit decision and source-level assertions in the existing test style.", "evidence": ["file:scripts/test/test-pulido-presentacion-guiada.ts"]},
+        "risk": {"justification": "The route serves every guided-chat customer in the beta, so a precedence mistake regresses live proposals until reverted.", "evidence": ["file:src/app/api/asistente-guiado/route.ts", "precedent:D-039"]},
+        "coupling": {"justification": "route.ts is a hotspot shared with other guided-chat requirements and depends on T2.1 helpers.", "evidence": ["task:T2.1", "file:src/app/api/asistente-guiado/route.ts"]},
+        "confidence": {"justification": "Insertion points were read line by line, but protected-piece detection across history is an assumption.", "evidence": ["file:src/lib/ia/guiado/contexto-cliente.ts", "assumption:customer-named pieces exclude interface button texts"]}
+      },
+      "expected_paths": ["src/app/api/asistente-guiado/route.ts", "scripts/test/test-propuesta-por-evento.ts"],
+      "shared_resources": ["asistente-guiado-route", "guided-decision-audit"]
+    },
+    {
+      "id": "T3.1",
+      "milestone_id": "M3",
+      "title": "Build activity-aware piece menu options",
+      "objective": "The piece menu can render the recommended official structures for a recognised activity, with the free-choice card last and today's menu for unknown activities.",
+      "repository": "pictures",
+      "after": ["T1.2"],
+      "acceptance_criteria": [
+        "piezasDelMenu returns PIEZAS_INDIVIDUALES unchanged for an undefined or unrecognised activity.",
+        "For a recognised activity it returns one card per recommended ID in mapping order, each with that exact ID, then «La que tú quieras» with estructura null.",
+        "No event card reuses a generic-menu label for a different ID, and arco keeps the «Arco orgánico» label so piezaOrganicaDelBoton still applies.",
+        "PreguntaPropuesta accepts the card list as an optional prop that defaults to the generic list."
+      ],
+      "verification": [
+        {"type": "command", "value": "npx tsx scripts/test/test-menu-pieza-por-evento.ts", "purpose": "card order, exact IDs, labels and unknown-activity fallback", "created_by": "T3.1"},
+        {"type": "command", "value": "npx tsx scripts/test/test-pulido-presentacion-guiada.ts", "purpose": "existing «Arco orgánico» button guarantees still hold"}
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Reuses the existing card component and exhaustive icons; label rules add a little reasoning.",
+      "classification_evidence": {
+        "complexity": {"justification": "Card labels must avoid the known Arco orgánico collision while keeping the organic-button rule intact.", "evidence": ["file:src/components/guiado/PreguntaPropuesta.tsx", "file:src/lib/ia/guiado/hechos-cliente.ts"]},
+        "scope": {"justification": "One exported pure helper and an optional prop in a single presentational component, plus its test.", "evidence": ["file:src/components/guiado/PreguntaPropuesta.tsx"]},
+        "duration": {"justification": "Forty-five minutes because icons already cover every official ID and the card component is reused.", "evidence": ["file:src/components/plan/IconoEstructura.tsx"]},
+        "risk": {"justification": "A label pointing at another structure would recreate the rejected arco_asimetrico behaviour for customers.", "evidence": ["file:scripts/test/test-pulido-presentacion-guiada.ts"]},
+        "coupling": {"justification": "Shares the policy contract with server enforcement and feeds T3.2, so the card shape must stay stable.", "evidence": ["task:T1.2", "task:T3.2"]},
+        "confidence": {"justification": "Component and existing tests were read; the presentation choice of round-01 q5 is still unanswered.", "evidence": ["file:src/components/guiado/PreguntaPropuesta.tsx", "assumption:round-01 q5 option b"]}
+      },
+      "expected_paths": ["src/components/guiado/PreguntaPropuesta.tsx", "scripts/test/test-menu-pieza-por-evento.ts"],
+      "shared_resources": ["event-structure-policy", "piece-menu-cards"]
+    },
+    {
+      "id": "T3.2",
+      "milestone_id": "M3",
+      "title": "Wire the activity menu into the guided view without changing saved widgets",
+      "objective": "The live guided chat shows activity-specific piece cards while saved widget data and older deployments stay compatible.",
+      "repository": "pictures",
+      "after": ["T3.1"],
+      "acceptance_criteria": [
+        "VistaGuiada derives the activity at render time with eventoCanonicoDelTurno(brief.evento, customer message texts) and passes piezasDelMenu to the active piece widget.",
+        "WidgetGuiadoSchema, the saved-session shape and pregunta-propuesta widget fields are unchanged.",
+        "The existing propuesta.pieza action also records the resolved activity or null and the card's 1-based position.",
+        "Selecting an event card sends the existing piece text with alcance individual and the card's exact pieza ID.",
+        "VistaGuiada adds no import of ideas-guiadas.ts or biblioteca.ts."
+      ],
+      "verification": [
+        {"type": "command", "value": "npx tsc --noEmit", "purpose": "type-checks the new prop and derived value"},
+        {"type": "command", "value": "npx tsx scripts/test/test-asistente-guiado-contrato.ts", "purpose": "request contract still accepts every official piezaPedida"}
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Small edit in a very large component; state ownership must be read before changing the render site.",
+      "classification_evidence": {
+        "complexity": {"justification": "VistaGuiada owns brief, messages and widget persistence in one large component, so state ownership must be respected.", "evidence": ["file:src/components/guiado/VistaGuiada.tsx", "file:src/lib/ia/guiado/widgets.ts"]},
+        "scope": {"justification": "A derived value, one prop at the widget render site and two analytics fields, with no schema edits.", "evidence": ["file:src/components/guiado/VistaGuiada.tsx"]},
+        "duration": {"justification": "Sixty minutes including reading the render path and running the type and contract checks.", "evidence": ["file:scripts/test/test-asistente-guiado-contrato.ts"]},
+        "risk": {"justification": "Persisting a new widget field would break saved sessions under the strict schema on rollback.", "evidence": ["file:src/lib/ia/guiado/widgets.ts", "precedent:REQ-017/T3.1"]},
+        "coupling": {"justification": "VistaGuiada is a hotspot for many guided-chat changes and consumes the T3.1 helper.", "evidence": ["task:T3.1", "file:src/components/guiado/VistaGuiada.tsx"]},
+        "confidence": {"justification": "Render and send paths were inspected, but no manual UI check is possible without paid model turns.", "evidence": ["file:src/components/guiado/VistaGuiada.tsx", "spec:SPEC.md#constraints"]}
+      },
+      "expected_paths": ["src/components/guiado/VistaGuiada.tsx"],
+      "shared_resources": ["guided-widget-persistence", "piece-menu-cards"]
+    },
+    {
+      "id": "T4.1",
+      "milestone_id": "M4",
+      "title": "Register new regressions in guiada:test and run the full gate",
+      "objective": "The three new regression scripts run as part of guiada:test, and the repository gate result for the whole change is reported truthfully.",
+      "repository": "pictures",
+      "after": ["T2.2", "T3.2"],
+      "acceptance_criteria": [
+        "guiada:test also runs test-estructuras-por-evento.ts, test-propuesta-por-evento.ts and test-menu-pieza-por-evento.ts.",
+        "npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run guiada:test and npm run build are run and each exit status is reported.",
+        "Any failure is classified as pre-existing or introduced, with the decisive error text.",
+        "No check makes a paid model or provider call."
+      ],
+      "verification": [
+        {"type": "command", "value": "npm run guiada:test", "purpose": "guided regression chain including the new scripts"},
+        {"type": "command", "value": "npm run lint && npm run build --workspaces --if-present && npx tsc --noEmit && npm run build", "purpose": "repository gate required by AGENTS.md"}
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "One script-line edit; time is dominated by the build and the existing test chain.",
+      "classification_evidence": {
+        "complexity": {"justification": "Appending three test commands and running established project checks needs no design work.", "evidence": ["file:package.json"]},
+        "scope": {"justification": "Only the guiada:test script line in package.json changes.", "evidence": ["file:package.json"]},
+        "duration": {"justification": "Forty minutes is dominated by the Next.js build and the existing guided test chain.", "evidence": ["file:package.json", "file:AGENTS.md"]},
+        "risk": {"justification": "A script-line edit is trivially reverted and cannot alter runtime behaviour.", "evidence": ["file:package.json"]},
+        "coupling": {"justification": "package.json is shared with other requirement branches, so this script line can conflict on merge.", "evidence": ["task:T2.2", "task:T3.2"]},
+        "confidence": {"justification": "The commands exist in package.json, but their current baseline was not executed during planning.", "evidence": ["file:package.json", "assumption:existing gate status unknown"]}
+      },
+      "expected_paths": ["package.json"],
+      "shared_resources": ["package-scripts"]
+    }
+  ]
+}

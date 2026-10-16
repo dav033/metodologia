@@ -1,0 +1,18 @@
+%% PLAN.mmd — derived projection of PLAN.json (REQ-017 r1 draft); not parsed or rendered
+flowchart LR
+  subgraph M1[M1 Client-safe policy]
+    T1.1 --> T1.2
+  end
+  subgraph M2[M2 Server enforcement]
+    T2.1 --> T2.2
+  end
+  subgraph M3[M3 Piece menu]
+    T3.1 --> T3.2
+  end
+  subgraph M4[M4 Integration gate]
+    T4.1
+  end
+  T1.2 --> T2.1
+  T1.2 --> T3.1
+  T2.2 --> T4.1
+  T3.2 --> T4.1
