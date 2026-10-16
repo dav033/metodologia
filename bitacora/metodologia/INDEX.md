@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-16 11:45 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 12:18 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -59,6 +59,7 @@ _Generated 2026-10-16 11:45 by `bitacora.py index`. Do not edit by hand._
 | [REQ-021](requirements/REQ-021-scheduler-m5-m6-runtime-integration/SPEC.md) | Scheduler M5/M6 runtime integration | `approved` | [done](requirements/REQ-021-scheduler-m5-m6-runtime-integration/PLAN.md) | report ✓ |
 | [REQ-022](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/SPEC.md) | Opt-in Scheduler runtime, status and recovery | `ready` | [done](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/PLAN.md) | report ✓ |
 | [REQ-023](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/SPEC.md) | Require M4-M6 in the Scheduler runtime | `done` | [done](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/PLAN.md) | report ✓ |
+| [REQ-024](requirements/REQ-024-planner-v2-quality-and-benchmark/SPEC.md) | Planner V2 quality and reproducible benchmark | `ready` | [in-progress](requirements/REQ-024-planner-v2-quality-and-benchmark/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
