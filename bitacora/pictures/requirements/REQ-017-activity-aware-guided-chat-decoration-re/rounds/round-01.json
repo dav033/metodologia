@@ -1,0 +1,116 @@
+{
+ "title": "Plan review — activity-aware guided-chat recommendations",
+ "intro": "Opus 5.5 high inspected the guided-chat code and prepared the detailed temporary plan in PLAN.md. No Pictures code or tests were changed or run. These answers confirm or adjust the product choices before implementation; use the recommended option where you want Opus's proposal.",
+ "coverage": "7/10 topics clear; remaining product choices in this round",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "What should define the event-to-structure recommendations? Choosing the curated option accepts or lets you edit the complete table in PLAN.md.",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Use Opus's curated table; library coverage is evidence only"
+    },
+    {
+     "key": "b",
+     "label": "Derive recommendations only from existing visible library ideas"
+    },
+    {
+     "key": "c",
+     "label": "Use a custom mapping; describe edits in the note"
+    }
+   ],
+   "recommended": "a",
+   "why": "The 31 visible ideas cover only 10 of 18 official structures, with especially thin coverage for bautizo, Navidad, and empresa."
+  },
+  {
+   "id": "q2",
+   "text": "Where should recommendations appear?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Only on the existing Propónme algo path; no new chat step"
+    },
+    {
+     "key": "b",
+     "label": "Add a proactive recommendation step after the event is known"
+    },
+    {
+     "key": "c",
+     "label": "Both the existing path and a new proactive step"
+    }
+   ],
+   "recommended": "a",
+   "why": "This adds activity relevance to the current flow without inserting a new turn that competes with the idea carousel."
+  },
+  {
+   "id": "q3",
+   "text": "What counts as an independent part of a decoration?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "One official structure chosen through the existing individual-piece path"
+    },
+    {
+     "key": "b",
+     "label": "A component extracted from an existing library decoration"
+    },
+    {
+     "key": "c",
+     "label": "Both, as separate recommendation paths"
+    }
+   ],
+   "recommended": "a",
+   "why": "The existing individual path already supports official structures; library ideas do not carry per-piece material breakdowns."
+  },
+  {
+   "id": "q4",
+   "text": "How should unsupported 3D structures and unknown activities behave?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Never recommend no-3D structures; keep explicit requests and current unknown-event behavior"
+    },
+    {
+     "key": "b",
+     "label": "Exclude no-3D structures from every free recommendation, including unknown events; keep explicit requests"
+    },
+    {
+     "key": "c",
+     "label": "Allow no-3D structures when they fit the activity and keep current fallback handling"
+    }
+   ],
+   "recommended": "a",
+   "why": "Customers can still request a structure explicitly; unsupported structures should not be proactively recommended, and unknown activities should not regress."
+  },
+  {
+   "id": "q5",
+   "text": "How should the individual-piece menu present event recommendations?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Reorder existing cards only; no badge or new cards"
+    },
+    {
+     "key": "b",
+     "label": "Add event-specific cards for every structure in the mapping"
+    },
+    {
+     "key": "c",
+     "label": "Reorder existing cards and mark recommended ones"
+    }
+   ],
+   "recommended": "a",
+   "why": "This keeps button-to-structure mappings stable and makes the smallest UI change."
+  }
+ ],
+ "round": 1,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-16T09:14:59"
+}
