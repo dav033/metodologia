@@ -28,7 +28,7 @@ Extend the existing M2 package and its methodology adapter. Keep provider catalo
 ### M1 — Observable, conservative quota inputs
 - [x] T5 — Inventory account aliases, all provider/model windows, reset semantics and attribution gaps · repo: methodology · after: T4 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_subscription_usage test_agy` · risk: medium
 - [x] T6 — Normalize versioned `QuotaObservation` records from cached sources only · repo: methodology · after: T5 · verify: `PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_windows` · risk: high
-- [ ] T7 — Add a bounded demand/usage estimator with explicit observed, estimated and unknown provenance · repo: methodology · after: T6 · verify: `PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_demand` · risk: high
+- [x] T7 — Add a bounded demand/usage estimator with explicit observed, estimated and unknown provenance · repo: methodology · after: T6 · verify: `PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_demand` · risk: high
 - [ ] T8 — Model account-level pressure across every relevant window and shared profile · repo: methodology · after: T7 · verify: `PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_windows bt_scheduler_decision.tests.test_batch` · risk: high
 
 ### M2 — Verified performance learning
@@ -71,3 +71,4 @@ Extend the existing M2 package and its methodology adapter. Keep provider catalo
 ## Progress log
 - 2026-10-15 22:04: T1–T5 complete: T2 passed 26 contract tests; T3 reproduced its frozen baseline; T4 froze PLAN.json revision 2; T5 documented provider windows and attribution limits and passed 55 source tests. M5 remains isolated in its own worktree; primary M4/M5 changes remain untouched.
 - 2026-10-15 22:10: T6 complete: M2 API 1.2.0 keeps 1.0.0/1.1.0 records readable; cache-only windows reject stale, future, auth-error, mismatched-source and disallowed-null-reset evidence. Tests: windows 12, ledger 13, contract 8; Ruff, JSON and diff checks passed.
+- 2026-10-15 22:17: T7 complete: provider tokens and quota percentage points remain separate; contaminated account-window deltas are unknown; exact-context estimates expose empirical min/median/max, sample count and bounded TTL. Demand tests 10/10, full M2 package 88/88, contract 9/9, Ruff/JSON/diff checks passed.

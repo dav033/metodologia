@@ -14,19 +14,20 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-15T22:13:39",
+  "at": "2026-10-15T22:18:40",
   "pid": 842,
   "machine": "precision7760",
-  "task": "M4-audit",
-  "session": 23,
-  "state": "batch settled",
+  "task": "T14",
+  "session": 24,
+  "state": "session running 5 min",
   "session_pids": {
-   "18": 73593
+   "18": 73593,
+   "24": 218797
   },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 23,
+ "sessions": 24,
  "tasks": [
   {
    "id": "T1",
@@ -679,7 +680,7 @@
    "complexity": null,
    "milestone": "M5",
    "tier": 0,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
@@ -2053,6 +2054,25 @@
    "repo_role": "frontend",
    "candidate_sha": "a15a1a6a969ea3adf221d43dca8f76ac6b31b9f3",
    "cleaned": true
+  },
+  "T14": {
+   "task_id": "T14",
+   "branch": "wt/T14-4ec8b9d4",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T14-4ec8b9d4",
+   "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
+   "repo": "/home/david/dev/maros/maros-nest",
+   "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
+   "state": "allocated",
+   "allowed_roots": [
+    "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
+   ],
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T14-4ec8b9d4.json",
+   "task_ids": [
+    "T14"
+   ],
+   "allowed_paths": [],
+   "resources": [],
+   "repo_role": "backend"
   }
  },
  "wait_step": 0

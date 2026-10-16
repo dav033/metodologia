@@ -32,6 +32,12 @@ Inspected 2026-10-15. M2 worktree starts at commit `27ba48f2cb1e8e6d262a9eeb9b9d
 - M2 currently receives only aggregate `quota_status`, one pressure percentage, `observed_at` and `valid_until`. Window identities and per-window status are discarded before `Candidate` construction.
 - `propose()` reads current caches only. Polling/network refresh remains owned by the subscription supervisor; a source error, stale row, future observation, reset without a post-reset sample or missing required window must remain unknown in strict mode.
 
+## T6–T7 implementation boundary
+
+- The isolated M2 package now exposes `QuotaObservation` cache normalization with API/schema 1.2.0 and `DemandEstimate` with separate provider-token and quota-percentage-point units. Both helpers are pure and bounded; M2 still does not collect quota or refresh a provider.
+- Delta attribution requires the same effective account/provider/model/window, overlapping reads, one active task, an unchanged reported reset and explicit absence of external usage. Parallel work, reset crossing, unknown reset or possible outside use returns `attribution_unknown`.
+- Exact-context estimates expose empirical min/median/max, source, sample count and a maximum one-day TTL; this is not a calibrated prediction. The existing methodology adapter still consumes its current aggregate quota/history inputs; wiring per-window demand into batch decisions remains future work under T13–T18.
+
 ## M1/M5 and concurrent primary work
 
 - Clean M2 base has M1 contract 1.1.0 with approved plan hash and READY/free-slot request. The existing M5 approval (REQ-019/D-041) targets shared M1 contract 1.2.0 with `RecoveryPort` signatures unchanged. M2 will not edit the shared M1 contract; its adapter must remain compatible with the additive 1.2.0 integration.

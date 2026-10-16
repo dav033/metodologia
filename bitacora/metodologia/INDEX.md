@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-15 22:11 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-15 22:17 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -52,12 +52,12 @@ _Generated 2026-10-15 22:11 by `bitacora.py index`. Do not edit by hand._
 | [REQ-018](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/SPEC.md) | Scheduler M1-M4 integration and offline monitor recovery | `done` | [done](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md) | report ✓ |
 | [REQ-019](requirements/REQ-019-scheduler-m5-recovery-manager/SPEC.md) | Scheduler M5 Recovery Manager | `in-progress` | [approved](requirements/REQ-019-scheduler-m5-recovery-manager/PLAN.md) | report ✓ |
 | [REQ-020](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/SPEC.md) | Scheduler M2 learning and quota optimization | `in-progress` | [approved](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/PLAN.md) |  |
-| [REQ-021](requirements/REQ-021-scheduler-m5-m6-runtime-integration/SPEC.md) | Scheduler M5-M6 runtime integration | `clarifying` | [in-progress](requirements/REQ-021-scheduler-m5-m6-runtime-integration/PLAN.md) |  |
+| [REQ-021](requirements/REQ-021-scheduler-m5-m6-runtime-integration/SPEC.md) | Scheduler M5/M6 runtime integration | `approved` | [approved](requirements/REQ-021-scheduler-m5-m6-runtime-integration/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
-- P-040 · Complete Scheduler M5 T19/T20 and decide the production M6 verifier boundary · high/M
+- P-040 · Complete Scheduler M5 T19/T20 and wire M6 into the shared runtime · high/M
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
 - P-003 · Visual review of the local web UI · med/S
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · med/M
@@ -66,11 +66,11 @@ _Generated 2026-10-15 22:11 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-043 — Integrate M6 through the existing opt-in VerificationPort
 - D-042 — Add batch quota learning above the existing M1/M2 boundary
 - D-041 — M5 advises through the unchanged RecoveryPort and preserves same-task snapshots
 - D-040 — Recover M4 only through a verified offline candidate
 - D-039 — Keep M1–M4 ingestion caller-driven at the M1 ownership boundary
-- D-038 — Correct the T12 fixture sample count; retain D-037 budgets
 
 ## Artifacts
 

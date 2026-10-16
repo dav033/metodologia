@@ -21,6 +21,9 @@ _None._
 - **L-005 · tooling** Supervised worktrees have no node_modules; link the main checkout's (ln -s .../maros-next/node_modules) instead of installing, and check fnm PATH for npx.
   - 2026-10-15T22:07:46.942103-05:00 · REQ-005/T12: vitest failed with 'Cannot find package vitest' in the M4 worktree until the symlink was added
 
+- **L-006 · pitfall** The owner-facing maros API docs must be checked route by route against the REQ branch: two reviewer passes found wrong status codes (422 vs 400/409) and a breaking GET /permissions shape change that the spec called additive.
+  - 2026-10-15T22:19:16.684864-05:00 · REQ-005/T14: Antagonist review of T14 docs: UnknownPermissionException and RoleInUseException extend BusinessException (422); GET /permissions permissions field became metadata objects (users.controller.ts:198).
+
 ## Rejected
 
 _None._
