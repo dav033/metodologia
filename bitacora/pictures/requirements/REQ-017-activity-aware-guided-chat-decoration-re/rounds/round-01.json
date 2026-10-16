@@ -89,24 +89,24 @@
   },
   {
    "id": "q5",
-   "text": "How should the individual-piece menu present event recommendations?",
+      "text": "How should the individual-piece menu present event recommendations?",
    "type": "choice",
    "options": [
     {
      "key": "a",
-     "label": "Reorder existing cards only; no badge or new cards"
+          "label": "Keep the existing cards and only reorder matching exact IDs; no badge or new cards"
     },
     {
-     "key": "b",
-     "label": "Add event-specific cards for every structure in the mapping"
+          "key": "b",
+          "label": "Show the exact event-specific official structures as selectable cards, plus «La que tú quieras»"
     },
     {
      "key": "c",
      "label": "Reorder existing cards and mark recommended ones"
     }
    ],
-   "recommended": "a",
-   "why": "This keeps button-to-structure mappings stable and makes the smallest UI change."
+      "recommended": "b",
+      "why": "Some IDs at the top of Opus's mapping have no current menu card; displaying their exact IDs lets the customer select the actual recommendation."
   }
  ],
  "round": 1,

@@ -18,7 +18,7 @@ The guided chat should help a customer choose suitable decorations or individual
 - David as product owner of the recommendation policy and event-to-structure mapping.
 
 ## Scope (in)
-- Activity-aware ordering for the existing individual-piece menu.
+- Activity-specific, selectable official-structure options in the existing individual-piece flow; unknown activities keep the existing menu.
 - Activity-aware restriction and server-side enforcement for free complete-composition proposals.
 - Auditable record of event-based adjustments.
 
@@ -27,6 +27,7 @@ The guided chat should help a customer choose suitable decorations or individual
 - Changes to event-aware library search or carousel.
 - New event vocabulary, catalogue ideas, materials, pricing, 3D generation, or database changes.
 - An additional proactive chat turn after the activity is identified.
+- Persisting a new widget field when the activity can be derived from the current brief and customer messages.
 
 ## Requirements
 - R1. For a recognized activity, the individual-piece choices shall place the approved recommended structures first and keep the free-choice option last.
@@ -41,7 +42,7 @@ The guided chat should help a customer choose suitable decorations or individual
 - Too few recommended structures to compose multiple distinct pieces.
 - Provider returns a structure outside the event's allowed set despite a narrowed tool schema.
 - Customer explicitly asks for a structure outside the event's recommendations.
-- A stored client widget predates the optional event field.
+- A saved conversation is reopened by an older deployment.
 
 ## Constraints
 - Reuse the canonical `eventoDeTexto` event vocabulary; do not add a fourth vocabulary.
@@ -50,7 +51,7 @@ The guided chat should help a customer choose suitable decorations or individual
 - No paid model calls.
 
 ## Priorities & phases
-- MVP: curated event-to-structure policy; server enforcement and audit; event-ordered existing piece menu.
+- MVP: curated event-to-structure policy; server enforcement and audit; exact event-specific structures selectable in the individual-piece flow.
 - Deferred: unify event vocabularies and expand thin library coverage.
 
 ## Timeline & dependencies

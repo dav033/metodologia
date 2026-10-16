@@ -1,19 +1,19 @@
 ---
 req: REQ-017
-status: approved
+status: review
 created: 2026-10-16
 source: D-20261016-090752-bc5d (Claude Work, Opus 5.5 high; read-only)
 ---
 # Plan — REQ-017 — Activity-aware guided-chat decoration recommendations
 
 ## Approach
-Use one curated, client-safe mapping from canonical activity names to supported official structures. Reuse `eventoDeTexto`; narrow and enforce the server's free-composition choice, record any adjustment in the existing decision trail, and order the existing individual-piece menu by the same mapping. Unknown activities and explicit customer choices retain current behavior.
+Use one curated, client-safe mapping from canonical activity names to supported official structures. Reuse `eventoDeTexto`; narrow and enforce the server's free-composition choice, record any adjustment in the existing decision trail, and show the exact recommended official structures as selectable options in the existing individual-piece flow. Unknown activities and explicit customer choices retain current behavior.
 
 ## Scope and decisions proposed by Opus
 - Apply recommendations only in the existing “Propónme algo” flow: complete composition and the existing individual-piece menu. Do not add a proactive chat turn.
 - “Independent part” means one official structure in the existing individual-piece path, not extracting a component from a library idea.
 - Exclude structures without 3D support from recommendation lists, but preserve explicit customer requests for them.
-- Keep current behavior for unknown activities. Keep the existing menu cards and order the matching cards; no event badge by default.
+- Keep current behavior for unknown activities. For known activities, show the event's exact official structure IDs as selectable cards and keep «La que tú quieras» available; do not add a chat turn.
 - Q1 (requires David's approval): use a curated event-to-structure table; use library coverage as an informational report, not as its source of truth.
 
 Draft mapping (all entries must be confirmed or edited before implementation):
@@ -38,6 +38,7 @@ Every table must contain at least three distinct official IDs and exclude `figur
 - Do not add a new event vocabulary or import `decoraciones.json` into the client bundle.
 - `/happie` and `recomendarPaquetes` remain out of scope.
 - Existing explicit customer choices and edits to an existing plan keep precedence.
+- Do not add a new persisted widget field when the event can be derived from the current brief and customer messages; preserve compatibility with saved conversations on rollback.
 - Verification commands below are proposed for a later approved implementation; none were run during planning.
 
 ## Milestones and tasks
@@ -49,9 +50,9 @@ Depends on: approval of the mapping and no-3D policy.
   - Move the pure `normalizarBusqueda` implementation out of `biblioteca.ts` and re-export it to preserve the current API.
   - Move `EVENTOS_CONOCIDOS`, `eventoDeTexto`, and `eventoDeMensajes` to a client-safe module; re-export the functions from `ideas-guiadas.ts` for existing consumers.
   - Acceptance: `eventos-conocidos.ts` imports no catalogue, React, provider, environment, or server-only modules; existing event consumers keep their imports; `eventoDeTexto("es para la boda de mi hermana")` returns `boda`.
-- [ ] T1.2 — Add pure curated mapping and menu ordering helpers · file: `src/lib/plan/estructuras-por-evento.ts` · after: T1.1 · verify: `npx tsc --noEmit` · covers: R1, R2, R4, R5
-  - Export an exhaustive `Readonly<Record<EventoCanonico, readonly EstructuraOficialId[]>>`, `recomendadasParaEvento(evento)`, and `ordenarPiezasIndividuales(piezas, recomendadas)`.
-  - Acceptance: all IDs are official and unique; each recognized event has at least three; no unsupported 3D IDs occur; unknown events return no mapping; “La que tú quieras” stays last; unknown events preserve current menu order.
+- [ ] T1.2 — Add pure curated mapping and accessors for selectable event structures · file: `src/lib/plan/estructuras-por-evento.ts` · after: T1.1 · verify: `npx tsc --noEmit` · covers: R1, R2, R4, R5
+  - Export an exhaustive `Readonly<Record<EventoCanonico, readonly EstructuraOficialId[]>>`, `recomendadasParaEvento(evento)`, and `opcionesPiezaParaEvento(evento)`.
+  - Acceptance: all IDs are official and unique; each recognized event has at least three; no unsupported 3D IDs occur; unknown events return no mapping; each returned card retains the exact official ID.
 - [ ] T1.3 — Add mapping behavior and coverage-report checks · file: `scripts/test/test-estructuras-por-evento.ts` · after: T1.2 · verify: `npx tsx --conditions=react-server scripts/test/test-estructuras-por-evento.ts` · covers: R1, R4, R5
   - Check canonicalization, table invariants, menu ordering, and print (without failing on) library support for each curated ID.
   - Acceptance: the check passes and reports thin support (including bautizo → `aro_circular`) as information.
@@ -68,16 +69,16 @@ Depends on: M1.
 - [ ] T2.3 — Add server rule regressions · file: `scripts/test/test-propuesta-por-evento.ts` · after: T2.2 · verify: `npx tsx --conditions=react-server scripts/test/test-propuesta-por-evento.ts` · covers: R2, R3, R5, R6
   - Acceptance: recognized event narrows the tool enum; invalid provider structures are replaced with distinct allowed IDs and audited; explicit customer requests and existing-plan edits remain unchanged; unknown event leaves all 18 IDs and emits no event-policy decision.
 
-### M3 — Event-ordered individual-piece menu
+### M3 — Activity-specific selectable structures in the individual-piece menu
 Depends on: M1; independent of M2 after M1.
 
-- [ ] T3.1 — Carry the optional event in the proposal widget · files: `src/lib/ia/guiado/widgets.ts`, `src/components/guiado/VistaGuiada.tsx` · after: T1.1 · verify: `npx tsc --noEmit` · covers: R1, R5
-  - Add an optional bounded event field to the strict widget schema; derive it from the confirmed brief or customer messages. Old stored widgets without the field remain valid.
-- [ ] T3.2 — Order existing menu cards by the shared mapping · files: `src/components/guiado/PreguntaPropuesta.tsx`, `src/components/guiado/VistaGuiada.tsx` · after: T1.2, T3.1 · verify: `npx tsc --noEmit` · covers: R1, R5
-  - Order only the existing cards, keep the free-choice card last, and retain the current order for unknown events. Do not add a badge or new cards unless David approves them.
+- [ ] T3.1 — Derive the menu event without changing the persisted widget schema · file: `src/components/guiado/VistaGuiada.tsx` · after: T1.1 · verify: `npx tsc --noEmit` · covers: R1, R5
+  - Derive the event from the confirmed brief or the customer's messages at render time; do not add a field to `WidgetGuiadoSchema` or saved conversations.
+- [ ] T3.2 — Show exact event structures as selectable cards · files: `src/components/guiado/PreguntaPropuesta.tsx`, `src/components/guiado/VistaGuiada.tsx` · after: T1.2, T3.1 · verify: `npx tsc --noEmit` · covers: R1, R5
+  - For known events, show cards built from the event's exact official IDs and official names, plus «La que tú quieras»; ensure selection sends that exact structure ID. For unknown events, retain the current menu unchanged.
   - Record activity and displayed position with the existing `propuesta.pieza` action for later analysis.
-- [ ] T3.3 — Verify menu ordering and compatibility · files: `scripts/test/test-estructuras-por-evento.ts`, `src/lib/ia/guiado/widgets.ts` · after: T3.2 · verify: `npm run guiada:test` · covers: R1, R5
-  - Acceptance: baby shower shows Semiarco and Guirnalda first; an unknown event shows the exact current order; an old widget without `evento` parses.
+- [ ] T3.3 — Verify exact selectable structures and saved-session compatibility · files: `scripts/test/test-estructuras-por-evento.ts`, `scripts/test/test-propuesta-por-evento.ts` · after: T3.2 · verify: `npm run guiada:test` · covers: R1, R5
+  - Acceptance: every event card sends the exact official ID in its mapping; «La que tú quieras» remains available; an unknown event shows the exact current menu; saved widgets retain their existing schema.
 
 ## End-to-end acceptance
 - For a recognized activity, complete proposals and individual-piece choices use the same approved ordered mapping.
@@ -99,7 +100,7 @@ David explicitly asked Claude Work to implement this feature and specified Opus 
 2. Recommend only through the existing “Propónme algo” flow; do not add a proactive chat turn.
 3. Define an independent part as one official structure in the existing individual-piece path.
 4. Exclude structures without 3D support from recommendations; preserve explicit customer requests and current unknown-event behavior.
-5. Reorder existing menu cards only, without badges or new event-specific cards.
+5. Show exact event-specific structure IDs as selectable cards for known activities, with «La que tú quieras» retained; no additional chat turn or persisted widget field.
 
 ## Verification
 No checks were run. This is the planning-only deliverable from Claude Work / Opus 5.5 high. The commands above define proposed verification for an approved implementation.
@@ -108,3 +109,4 @@ No checks were run. This is the planning-only deliverable from Claude Work / Opu
 - 2026-10-16: Opus completed read-only analysis and drafted this plan in delegation `D-20261016-090752-bc5d`. David's direct implementation request authorizes an isolated draft using these defaults; owner review remains open before integration.
 - 2026-10-16 09:21 review comments (terminal): Owner's direct implementation request authorizes an isolated draft with Opus 5.5 high's recommended defaults; round-01 stays open for changes before integration.
 - 2026-10-16 09:21 plan APPROVED (terminal)
+- 2026-10-16: post-implementation review found that several recommended IDs had no selectable menu card and the optional persisted widget field could drop saved conversations after rollback. Revised M3 to show exact event structures and derive the event without changing the saved widget schema; implementation remains in the isolated worktree.
