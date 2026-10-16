@@ -1,6 +1,6 @@
 ---
 req: REQ-017
-status: draft
+status: review
 created: 2026-10-16
 source: D-20261016-090752-bc5d (Claude Work, Opus 5.5 high; read-only)
 ---
