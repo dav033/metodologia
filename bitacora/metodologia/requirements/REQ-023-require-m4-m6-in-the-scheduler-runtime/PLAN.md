@@ -28,8 +28,9 @@ Supersede D-043/D-051 activation clauses with a new D-052, without changing M1 p
   `PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_runtime -v` · covers: R1, R2, R4, R5, R10
 - [ ] T2 — Drive M4 stream ingestion and incident delivery from M1; reject intermediate-symlink FIFO escape · after: T1 · files:
   `skill/scripts/bt_scheduler_run.py`, `skill/scripts/bt_scheduler_executor_adapter.py`,
-  `skill/scripts/bt_scheduler_stream_adapter.py`, `skill/scripts/tests/test_scheduler_stream_adapter.py`,
-  `skill/scripts/tests/test_scheduler_runtime.py` · verify:
+  `skill/scripts/bt_scheduler_m4_wiring.py`, `skill/scripts/bt_scheduler_stream_adapter.py`,
+  `skill/scripts/bt_scheduler_executor/shim.py`, `skill/scripts/tests/test_scheduler_stream_adapter.py`,
+  `skill/scripts/tests/test_scheduler_m3_stream_wire.py`, `skill/scripts/tests/test_scheduler_runtime.py` · verify:
   `PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_stream_adapter test_scheduler_runtime -v` · covers: R3, R7
 - [ ] T3 — Prove the standard runtime's M1→M6 rejection/recovery/pass flow; repair package coverage and update contracts/docs · after: T2 · files:
   `skill/scripts/tests/test_scheduler_m1_m6_e2e.py`, `skill/scripts/tests/test_scheduler_runtime.py`, `skill/scripts/bt_cli_scheduler_run.py`,
