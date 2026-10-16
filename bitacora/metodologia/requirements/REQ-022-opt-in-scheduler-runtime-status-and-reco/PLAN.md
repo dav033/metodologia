@@ -1,6 +1,6 @@
 ---
 req: REQ-022
-status: approved
+status: launched
 created: 2026-10-16
 ---
 # Plan — REQ-022 — Opt-in Scheduler runtime, status and recovery
@@ -38,3 +38,4 @@ Keep the existing launcher and supervisor as the default. Add an explicit Schedu
 - 2026-10-16: inspected current P-001/P-026 records, launcher, watcher, web controls, M1/M2/M3 contracts, existing notification/autostart paths and resume guard. Drafted SPEC/PLAN; no source code or tests changed/run.
 - 2026-10-16 06:50 review comments (terminal): Owner approved in chat on 2026-10-16.
 - 2026-10-16 06:50 plan APPROVED (terminal)
+- 2026-10-16 06:50 launched marathon supervisor (pool auto, haiku) from HQ in `/`
