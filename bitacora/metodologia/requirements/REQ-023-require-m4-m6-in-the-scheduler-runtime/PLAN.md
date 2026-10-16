@@ -18,7 +18,7 @@ Supersede D-043/D-051 activation clauses with a new D-052, without changing M1 p
 - Keep M2 deterministic routing unchanged; do not feed experimental M4 metrics into route ranking.
 - Fail closed on missing/unwritable required stores; M6 never runs commands outside bubblewrap and `NEEDS_REVIEW`
   stays operator-owned.
-- Preserve legacy `RUN.json` bytes and default launch behavior unless scope round 1 selects legacy migration.
+- Preserve legacy `RUN.json` bytes and default launch behavior; round 1 choice A keeps the legacy launcher separate.
 - All module stores remain private, durable, separate and stable for resume.
 
 ## Tasks

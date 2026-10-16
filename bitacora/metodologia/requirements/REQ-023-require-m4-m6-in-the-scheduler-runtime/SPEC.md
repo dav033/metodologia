@@ -1,6 +1,6 @@
 ---
 id: REQ-023
-status: ready
+status: planned
 created: 2026-10-16
 track: deep
 ---
@@ -66,7 +66,7 @@ policy and legacy state files remain unchanged.
 
 ## Out of scope
 - Enabling Scheduler as the default for legacy `launch --mode marathon`, or migrating historical `RUN.json` state;
-  scope round 1 is still open.
+  round 1 choice A confirms the legacy launcher stays separate.
 - Changing M1 contracts, M2 route ranking/learning policy, provider profiles, or live provider behavior.
 - Automatically resolving `NEEDS_REVIEW`, running a real task/provider, installing autostart configuration, or
   starting a web server.
@@ -142,8 +142,8 @@ policy and legacy state files remain unchanged.
 |---|---|
 | Goal & problem | Clear |
 | Users / actors | Clear |
-| Scope | Deferred — assumption A; confirmed at plan approval |
-| Out of scope | Clear — legacy default migration excluded under assumption A |
+| Scope | Clear — owner confirmed Scheduler-only scope in round 1 via plan approval |
+| Out of scope | Clear — legacy default migration excluded by owner decision |
 | Flows & behavior | Clear |
 | Edge cases | Clear |
 | Acceptance criteria | Clear |
@@ -152,6 +152,5 @@ policy and legacy state files remain unchanged.
 | Timeline | Clear |
 
 ## Clarifications
-- Round 1 (`rounds/round-01.json`) asks whether to preserve the legacy launcher. No answer has been recorded.
-- Planning uses assumption A: require M4–M6 in every Scheduler-owned launch while leaving the legacy launcher separate.
-  This is an explicit working assumption, not a recorded owner answer; the plan approval gate can confirm or change it.
+- Round 1 (`rounds/round-01.json`) was answered via chat plan approval on 2026-10-16: choice A, all Scheduler-owned launches require M4–M6; legacy stays separate.
+- The owner-approved plan confirms scope A and the assumptions on private per-run stores, fail-closed sandboxed M6, deterministic M2 routing, and the low-level composition seam for tests.

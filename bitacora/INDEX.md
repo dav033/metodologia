@@ -1,6 +1,6 @@
 # Bitácora — index
 
-_Generated 2026-10-16 08:35. Do not edit by hand. Web: http://127.0.0.1:8765_
+_Generated 2026-10-16 09:01. Do not edit by hand. Web: http://127.0.0.1:8765_
 
 | Project | Repos | Open REQs | Open pending | Last activity | Links |
 |---|---|---|---|---|---|
@@ -39,8 +39,6 @@ _Generated 2026-10-16 08:35. Do not edit by hand. Web: http://127.0.0.1:8765_
 - **metodologia** — REQ-019: executor finished — review & merge
 - **metodologia** — REQ-021: executor finished — review & merge
 - **metodologia** — REQ-022: executor finished — review & merge
-- **metodologia** — REQ-023: question round waiting for answers
-- **metodologia** — REQ-023: plan waiting for approval
 - **pictures** — REQ-014: plan waiting for approval
 - **pictures** — REQ-015: executor finished — review & merge
 - **pictures** — REQ-016: executor finished — review & merge
