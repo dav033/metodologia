@@ -1,6 +1,6 @@
 ---
 req: REQ-005
-status: launched
+status: done
 created: 2026-10-14
 ---
 # Plan — REQ-005 Friendlier roles and permissions and full-power admin MCP

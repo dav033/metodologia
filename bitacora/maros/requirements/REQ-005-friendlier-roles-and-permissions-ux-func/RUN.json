@@ -1,7 +1,7 @@
 {
  "req": "REQ-005",
  "project": "maros",
- "status": "running",
+ "status": "done",
  "agent": "antigravity",
  "model": "haiku",
  "ultracode": true,
@@ -17,7 +17,7 @@
   "at": "2026-10-15T22:29:37",
   "pid": 842,
   "machine": "precision7760",
-  "task": "FINAL",
+  "task": null,
   "session": 26,
   "state": "done",
   "session_pids": {
