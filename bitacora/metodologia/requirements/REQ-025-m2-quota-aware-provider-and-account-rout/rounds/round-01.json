@@ -85,7 +85,26 @@
   }
  ],
  "round": 1,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-16T16:21:36"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "b",
+   "note": "Inferred from the owner's instruction to use real complexity and multiple levels; medium risk alone should not promote every task."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "Owner explicitly wants quota and capable OpenAI/Codex and Gemini/Antigravity accounts considered; measured latency remains a ranking factor."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Inferred from the earlier full-DAG request plus the current requirement to select a specific account per task."
+  },
+  "q4": {
+   "choice": "a",
+   "note": "Implementation assumption for plan review, not a direct answer: refresh due quota once per effective account outside M2 core, with no model call."
+  }
+ },
+ "created_at": "2026-10-16T16:21:36",
+ "answered_at": "2026-10-16T16:29:29",
+ "answered_via": "terminal"
 }

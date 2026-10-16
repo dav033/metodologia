@@ -1,0 +1,44 @@
+---
+req: REQ-025
+status: in-progress
+created: 2026-10-16
+---
+# Plan — REQ-025 — M2 quota-aware provider and account routing
+
+## Approach
+Treat each task's validated PLAN classification as a minimum model/effort floor, then compare every capable, authorized effective account using fresh quota and D-045's evidence-backed lexicographic policy. `risk: medium` alone will not raise the floor; Gemini's latency remains a ranking input but its reserve-only builder restriction is removed for Scheduler M2.
+Refresh due quota data at the Scheduler adapter boundary, not inside deterministic M2. Send the full approved DAG through one bounded, non-reserving account-aware allocation; M1 refreshes eligibility and reserves again at dispatch. Record this M2-specific refinement of D-004 as D-057 after approval.
+
+## Global constraints
+- Preserve the existing dirty Scheduler/M2 worktree; make only REQ-025-scoped changes and never revert other sessions' edits.
+- Keep M2 deterministic and cache-only. Quota refresh is a bounded read through existing sources at the Scheduler boundary; it never starts a model turn. Failed, stale or malformed reads remain unavailable with explicit reasons.
+- Preserve D-045's lexicographic evidence policy, D-049 account-alias and cache-key behavior, D-050's no-live-experiment restriction, and D-056's non-reserving full-DAG map plus M1 dispatch revalidation.
+- Keep M1 as the only task-state, reservation and dispatch authority. A route recommendation cannot authorize execution.
+- Do not invent cross-provider token/cost conversions, numeric quality floors or equal account splits. Use only comparable, observed evidence; unknown remains unknown.
+- Do not change Planner's PLAN.json contract, add credentials/accounts, launch tasks, call a model, or modify standalone/pinned legacy routing outside Scheduler M1/M2.
+
+## Tasks
+### M1 — Calibrate task floors and provider eligibility
+- [ ] T1 — Derive tier floors from kind, complexity, scope, coupling and duration; stop promoting on medium risk alone · repo: skill · files: `skill/scripts/bt_scheduler_decision_adapter.py`, `skill/scripts/tests/test_scheduler_decision_sources.py` · level: architecture · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_sources` · covers: R2, US-1
+- [ ] T2 — Make every capable configured provider/account a normal M2 candidate and rank quota/verified evidence before provider baseline; keep measured latency and audit routing rules · repo: skill · files: `skill/scripts/bt_scheduler_decision_adapter.py`, `skill/scripts/bt_scheduler_decision/policy.py`, `skill/scripts/tests/test_scheduler_decision_sources.py`, `skill/scripts/bt_scheduler_decision/tests/test_policy.py` · after: T1 · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_sources bt_scheduler_decision.tests.test_policy` · covers: R1, R3, US-2
+
+### M2 — Refresh quota and allocate the full DAG by effective account
+- [ ] T3 — Add a bounded, due-only quota preflight for authorized effective accounts at the Scheduler boundary · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/tests/test_scheduler_quota_preflight.py`, `skill/scripts/tests/test_subscription_usage.py`, `skill/scripts/tests/test_agy.py` · level: architecture · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_quota_preflight test_subscription_usage test_agy` · covers: R1, R6, R8, US-2, US-4
+- [ ] T4 — Replace independent full-plan M2 decisions with one bounded joint account-aware route map and stable no-route reasons · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/bt_scheduler_decision/batch.py`, `skill/scripts/bt_scheduler_decision/batch_ledger.py`, `skill/scripts/tests/test_scheduler_decision_integration.py`, `skill/scripts/tests/test_scheduler_decision_contract.py` · after: T2, T3 · level: architecture · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_contract test_scheduler_decision_integration bt_scheduler_decision.tests.test_batch` · covers: R4, R5, R7, US-3
+- [ ] T5 — Refresh and revalidate each READY batch while retaining M1's account/route reservation authority · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/bt_scheduler_core/contracts.py`, `skill/scripts/bt_scheduler_core/scheduler.py`, `skill/scripts/tests/test_scheduler_integration.py` · after: T4 · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_integration test_scheduler_decision_integration` · covers: R4, R6, US-4
+
+### M3 — Explain and verify assignment outcomes
+- [ ] T6 — Project the selected model, effort, profile/effective account, quota freshness and stable reasons; document the M2-specific routing ruling · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/bt_page_run.py`, `skill/scripts/bt_page_req.py`, `bitacora/metodologia/DECISIONS.md` · after: T5 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_integration` · covers: R5, US-2, US-3
+- [ ] T7 — Replay the frozen seven-task REQ-017 map with synthetic fresh/stale quotas and run offline M2/Scheduler acceptance · repo: skill · files: `skill/scripts/tests/test_scheduler_decision_integration.py`, `skill/scripts/tests/test_scheduler_decision_adversarial.py`, `skill/scripts/bt_scheduler_decision/tests/test_batch.py`, `bitacora/metodologia/SUMMARY.md`, `bitacora/metodologia/PENDING.md` · after: T6 · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_integration test_scheduler_decision_adversarial test_scheduler_integration test_scheduler_decision_contract bt_scheduler_decision.tests.test_batch bt_scheduler_decision.tests.test_policy bt_scheduler_decision.tests.test_quota_windows` · covers: R1-R8, US-1, US-2, US-3, US-4
+
+## Verification
+Using only fake providers and injected quota snapshots, route every task from the frozen REQ-017 r1 DAG through M2; prove task floors vary with classification, Claude/Codex/Gemini accounts are eligible when capable and fresh, stale/unavailable accounts are excluded with reasons, each recommendation names model/effort/profile/account, and full-plan allocation creates no M1 reservation. Then request one READY batch with changed quota facts and verify M1 receives a new M2 route and keeps the only reservation. Run the focused offline test list from T7, scoped Ruff, Python compilation and `git diff --check`. Do not start the live Scheduler owner, M3, a provider model call, a server or an autostart entry.
+
+## Rulings
+<!-- Judgment calls made during execution without asking:
+- T3: <what I decided> — <why> — cost if wrong: <low/med/high> -->
+- Use existing quota-source refresh cadence and cache validators; due-only refresh means no extra provider poll when the source already has a recent attempt. The visible tier and quota evidence must explain the selected route.
+- Per-account concurrency stays unknown unless M1 supplies explicit capacity facts; do not infer limits from subscription percentages or profile count.
+
+## Progress log
+<!-- One line per meaningful step, so work survives a context reset. -->

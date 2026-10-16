@@ -1,6 +1,6 @@
 ---
 id: REQ-025
-status: clarifying
+status: ready
 created: 2026-10-16
 track: standard
 ---
@@ -15,9 +15,9 @@ The local quota cache showed why Codex and Gemini could not be considered: both 
 
 M2 already records the selected `profile` and opaque `account_ref`, but the full-DAG path makes per-task decisions and does not jointly balance recommendations across effective accounts. The account-specific recommendation is present in route metadata; the routing policy and its explanation need to make account headroom and task fit useful across the whole plan.
 
-**Goal:** revise Scheduler route assignment so each task gets a justified provider, model, effort, and effective account based on its validated task requirements and fresh account quota, with a transparent reason when other accounts cannot be selected. Preserve M1's dispatch-time revalidation and reservation authority.
+**Goal:** revise Scheduler route assignment so each task gets a justified provider, model, effort, and effective account based on its validated task requirements and fresh account quota. Claude, OpenAI/Codex and Gemini/Antigravity profiles are normal candidates when their configured model meets the task floor. Preserve M1's dispatch-time revalidation and reservation authority.
 
-**Success looks like:** offline cases with fresh quota for Claude, Codex and Antigravity demonstrate that route choice follows task-tier requirements and account headroom rather than a fixed Claude preference; the frozen seven-task artifact no longer maps medium-risk labels alone to five Sonnet xhigh routes; every recommendation names its profile/account and records why it won, while stale/unavailable alternatives show explicit exclusion reasons. No live model turn is needed to verify this behavior.
+**Success looks like:** offline cases with fresh quota for Claude, Codex and Antigravity demonstrate that route choice follows task-tier requirements and per-account headroom rather than a fixed provider preference; the frozen seven-task artifact no longer maps medium-risk labels alone to five Sonnet xhigh routes; every recommendation names its profile/account and records why it won, while stale/unavailable alternatives show explicit exclusion reasons. No live model turn is needed to verify this behavior.
 
 ## Users / actors / stakeholders
 - David: owns routing priorities, scope and approval.
@@ -55,6 +55,7 @@ As M1, I want dispatch-time eligibility and reservation checks to remain authori
 - Enabling Laya or any learned/LLM-based route chooser; M2 stays deterministic.
 - Changing credentials, adding provider accounts, or changing the frozen Planner `PLAN.json` contract.
 - Forced round-robin distribution or inferred cross-provider token/dollar conversions without evidence.
+- Changing provider choice in standalone or pinned legacy launches outside the Scheduler M1/M2 route map and READY assignment path.
 - Changes to Planner V2 benchmark requirements gated by P-103, except additive M1/M2 compatibility needed by this routing change.
 
 ## Requirements
@@ -79,7 +80,7 @@ As M1, I want dispatch-time eligibility and reservation checks to remain authori
 Keep M1 authoritative for state and reservations. Preserve D-045's evidence-backed lexicographic policy and do not invent cross-provider token/dollar equivalence or numeric quality floors. Preserve D-049 effective-account deduplication and persisted quota-cache keys. M2's core remains deterministic and does not perform provider model calls. D-050 still prohibits live task/provider experiments under the failed T24 registration. The current worktree contains broad uncommitted Scheduler/M2 changes; implementation must preserve them and edit only files assigned to the approved requirement.
 
 ## Priorities & phases
-- Must: resolve the policy questions below; make full-plan account allocation deterministic, quota-aware and explainable; preserve READY-time revalidation; offline regression coverage.
+- Must: use real task classification to set model floors; rank configured capable providers using fresh effective-account quota and existing verified evidence; make full-plan account assignment deterministic and explainable; preserve READY-time revalidation; offline regression coverage.
 - Should: expose the selected profile and stale/eligibility explanations through the Scheduler projection/view.
 - Could: report empirical route comparison/quality once sufficiently correlated real attempt data exists.
 - Won't: run a live provider experiment or activate Laya as part of this requirement.
@@ -89,24 +90,28 @@ Depends on the current M1/M2 contract in the dirty methodology worktree and REQ-
 
 ## Assumptions
 - Codex/Gemini's displayed lower percentages were stale observations and therefore cannot establish current headroom; M2's fail-closed exclusion was correct for those snapshots.
-- The owner wants all configured providers, including Gemini, reconsidered as normal task candidates when their declared capability/tier and quota evidence permit; Gemini's measured latency remains an explicit selection factor, not a silent hard exclusion. Confirm against D-004 in the decision round.
+- The owner wants configured Claude, OpenAI/Codex and Gemini/Antigravity profiles reconsidered as normal task candidates when their declared capability/tier and quota evidence permit. Gemini's measured latency remains a ranking factor, not a hard exclusion. This refines D-004 only for Scheduler M2 task assignment; audit independence and the default audit provider remain unchanged.
 - Initial assignment should remain deterministic and non-reserving; actual dispatch always uses current eligibility and M1's reservation path.
 - Quota demand estimates remain unused for cross-provider balancing until there is real, attributable sample coverage; percentage headroom and source freshness are available now.
+- The owner asked that actual task complexity and multiple assignment levels matter. Interpret this to mean `risk: medium` alone does not raise the task floor; validated task kind, complexity, scope, coupling and duration set the minimum, while explicit high-risk/architecture rules may raise it.
+- The owner asked that available quota be considered but did not specify the refresh boundary. Assume the Scheduler performs one bounded, due-only quota refresh before initial mapping and each READY batch, through existing quota readers outside M2 core; failed reads stay unavailable/unknown with a reason and never invoke a model. No live refresh is performed while implementing this requirement.
 
 ## Coverage
 | Topic | State |
 |---|---|
 | Goal & problem | Clear |
 | Users / actors | Clear |
-| Scope | Partial — route trade-off decisions pending |
+| Scope | Clear — provider set, task tiers, effective-account assignment and Scheduler boundary specified |
 | Out of scope | Clear |
-| Flows & behavior | Partial — quota-refresh boundary pending |
+| Flows & behavior | Clear — due-only quota refresh is an implementation assumption outside M2 core |
 | Edge cases | Clear |
-| Acceptance criteria | Partial — policy thresholds pending |
+| Acceptance criteria | Clear — retain D-045 evidence-backed ordering; do not invent quality floors or cross-provider cost conversion |
 | Constraints | Clear |
-| Priorities & phases | Partial — agreed after round |
+| Priorities & phases | Clear — fresh quota, task fit and per-account routing; no forced equal split |
 | Timeline | Clear — no fixed date |
 
 ## Clarifications
-<!-- ### Round N — YYYY-MM-DD
-- Q: … → A: … -->
+### Owner direction — 2026-10-16
+- Q: What should the task router consider? → A: The owner directed that available quota, real task complexity, multiple model tiers and the specific account/profile all affect assignment; OpenAI/Codex and Gemini/Antigravity should be used when their configured models fit the task. Interpreted `risk: medium` alone as insufficient to promote every task to tier 1.
+- Q: How should quota be refreshed? → A: Not specified. Assumption: one bounded, due-only refresh before initial planning and each READY batch, outside M2 core, with no model call; included for review in PLAN.md.
+- Q: Should account assignment be joint across the full approved DAG? → A: Inferred from the earlier direction to send all tasks and milestones to M2 up front and the current request for specific account assignment; allocate deterministically without reservations or forced equal distribution.
