@@ -1,6 +1,6 @@
 ---
 req: REQ-025
-status: in-progress
+status: review
 created: 2026-10-16
 ---
 # Plan — REQ-025 — M2 quota-aware provider and account routing
