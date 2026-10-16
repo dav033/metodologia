@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 # REQ-019 — Scheduler M5 Recovery Manager report
 
@@ -8,7 +8,7 @@ Authority: the approved, unchanged `/home/david/PLAN-FASE-5-M5-RECOVERY-MANAGER.
 
 ## Result
 
-M5 implementation and local integration through T18 are complete. The frozen test chain
+M5 implementation and local integration through T19 are complete. The frozen test chain
 Planner → M1 → M2 → M3 → M4 → M5 → M1-authorized retry passes with disposable repositories.
 The separate REQ-021 integration now extends this through production M6 wiring: a real M6 FAIL
 leaves the first M1 attempt rejected, M5 recommends retry, M2 records a new assignment, M3
@@ -16,12 +16,17 @@ continues the preserved handoff, and only a later M6 PASS completes M1. M4 event
 checkout preservation are asserted. Restart coverage verifies durable recovery without
 duplicating the attempt or decision.
 
-The task is not closed. The 2026-10-15 fresh T19 preflight again could not find two eligible
-routes from distinct providers and account references, each with no more than 50% observed
-quota use. No provider process or paid CLI request was started. T20 remains open because its
-approved closeout follows the T19 experiment. The M6 implementation and integration are now
-tracked separately in REQ-021; this deterministic local proof does not satisfy T19's live CLI
-experiment requirement.
+T19 has now completed under its two-route <=50% quota gate. The private receipt at
+`~/.local/share/bt-scheduler-m5-experiment/run-1wzkoyj6/result.json` records a 74.351-second run, two attempts,
+two distinct providers, one controlled quota failure, two M5 decisions, one real provider CLI invocation, successful
+M2 reassignment, continued M3 snapshot, independent acceptance, unchanged disposable source, and M1 completion.
+The earlier preflight did not pass; a later fresh preflight passed, and the live harness rechecked the gate before
+launch. One quota source returned HTTP 401 and was not admitted as quota evidence; the two eligible M2 candidates had
+valid headroom evidence. The receipt contains no account references or credentials and is mode 0600 under a mode-0700
+directory. The disposable project was cleaned after M3 quiescence. The fresh spec-axis audit approved T01–T19 and
+AC01–AC12 without actionable findings. The independent T20 standards-axis audit also approved with no actionable
+findings. The acceptance matrix and measured evidence below are the final handoff; REQ-019 T01–T20 is complete.
+M6 integration remains separate in REQ-021 and opt-in under D-043.
 
 ## Delivered
 
@@ -59,7 +64,7 @@ experiment requirement.
 | AC08: crash/restart idempotency | PASS | M5 crash suite and restart-after-recovery E2E. |
 | AC09: port failure isolation | PASS | Conservative adapter failure and independent-task tests. |
 | AC10: no secrets or personal provider data in M5 telemetry | PASS | Opaque evidence refs, redaction regression, scoped standards audit. |
-| AC11: E2E and measured report | PARTIAL | Local fake-verifier E2E is reproducible. T19 real CLI metrics were not collected because its preflight did not pass. |
+| AC11: E2E and measured report | PASS | T19 receipt records 74.351 s, two attempts, two M5 decisions, one real CLI invocation, snapshot continuation, source unchanged and M1 completion. |
 | AC12: legacy and approved plan preserved | PASS | Original plan unchanged; legacy replay regression; disposable E2E checks source checkout and RUN fixture unchanged. |
 
 ## Verification run
@@ -75,8 +80,11 @@ The following recorded commands completed:
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_recovery_adapter test_scheduler_recovery_sources test_scheduler_recovery_failures test_scheduler_recovery_crash test_scheduler_m1_m5_e2e test_scheduler_m5_live_experiment -q` — 26 passed, 1 opt-in live CLI experiment skipped.
 - `BITACORA_LIVE_SCHEDULER_M5_EXPERIMENT=1 BITACORA_LIVE_SCHEDULER_M5_PREFLIGHT_ONLY=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_m5_live_experiment -v` — current strict preflight skipped before launch: fewer than two fresh routes from distinct providers/accounts had <=50% quota use. No provider process or paid CLI request was started.
 - `BITACORA_LIVE_SCHEDULER_M5_EXPERIMENT=1 BITACORA_LIVE_SCHEDULER_M5_PREFLIGHT_ONLY=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_m5_live_experiment -v` — 7 tests: 6 passed, live experiment skipped before launch because two distinct fresh routes/accounts with <=50% use were unavailable. No provider process or paid CLI request was started.
-- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_m1_m6_e2e -v` — 4 passed, including real Planner/M1/M2/M3/M4/M5/M6 rejection and retry flow.
-- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=. python3 -m unittest discover -s bt_scheduler_quality/tests -q` from `skill/scripts` — 66 passed.
+- Fresh quota preflight rerun with `BITACORA_LIVE_SCHEDULER_M5_PREFLIGHT_ONLY=1` — 7 tests: 6 passed; preflight passed with two eligible distinct provider/account routes and skipped before agent launch. One non-eligible quota source returned HTTP 401; M2 did not treat it as valid quota evidence.
+- `BITACORA_LIVE_SCHEDULER_M5_EXPERIMENT=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_m5_live_experiment -v` — 7 tests passed in 74.427 s. The live test's private receipt records 74.351 s and confirms two attempts, one real CLI invocation, two M5 decisions, distinct providers, final M1 completion, snapshot continuation and unchanged source. Receipt permissions: directory 0700, file 0600; the disposable project was cleaned after quiescence.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:tests python3 -m unittest test_scheduler_m1_m6_e2e test_scheduler_quality_real_integration -v` from `skill/scripts` — 6 passed: five integrated composition/full-chain tests and one real-M3 handoff test.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=. python3 -m unittest discover -s bt_scheduler_quality/tests -q` from `skill/scripts` — 67 passed, including the slow-dispatcher lifecycle regression.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest discover -s skill/scripts/tests -p 'test_scheduler_*.py' -q` — 271 tests run, 5 expected opt-in skips, all other tests passed.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts python3 -m unittest discover -s skill/scripts/tests -p 'test_scheduler_quality_real_integration.py' -v` — 1 passed with real M3 handoffs.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python3 -m unittest test_scheduler_integration.Boundary -q` — 6 passed.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests:tests/migration python3 -m unittest test_package_install -q` — 17 passed, including installed M6 package and adapter imports.
@@ -89,18 +97,16 @@ The following recorded commands completed:
 Supporting upstream suites recorded during this task: M1 core 250 passed / 2 skipped, Planner 219 passed,
 M2 decision 65 passed, and M4 monitor 135 passed.
 
-## Independent review and remaining work
+## Independent review and closeout
 
-The independent spec re-review confirmed the controlled quota path and initially reported one low-severity
-documentation finding: the report still described both re-reviews as pending. That status was corrected and the spec
-re-review approved the update. The standards re-review approved the final harness. Earlier standards findings about
-quota headroom and cleanup without confirmed process termination have been fixed: the harness requires two fresh
+The independent spec re-review confirmed the controlled quota path and approved T01–T19 and AC01–AC12 without
+actionable findings. The fresh T20 standards-axis audit approved with no actionable findings. Earlier standards findings
+about quota headroom and cleanup without confirmed process termination have been fixed: the harness requires two fresh
 distinct provider/account routes at <=50% quota use, rejects a repeated retry provider, and preserves the disposable
 project unless M1 is terminal, every M3 attempt is terminal and M3 confirms idle. The missing `preserve()` method
-was added and regression-tested. T20 remains open because the approved plan requires the T19 live experiment first.
-
-No M5 live CLI experiment ran; T19 and T20 remain unchecked. REQ-021 proves the optional production M6 verifier
-integration locally, but its opt-in wiring is not globally activated. This REQ-019 turn did not run `git commit`, `push` or `fetch`. During the
+was added and regression-tested. T19 and T20 are complete, with the measured result and acceptance matrix recorded
+above. REQ-021 proves the optional M6 verifier integration locally, but its opt-in wiring is not globally activated.
+This REQ-019 turn did not run `git commit`, `push` or `fetch`. During the
 work, local commit `570a314` appeared with message `maros: marathon REQ-005 S0021 T11 done`; it includes tracked
 REQ-019 documentation and methodology memory updates. I did not attempt to undo that shared commit. The test harness
 remains untracked. The local `origin/feat/scheduler-m4-agent-monitor` tracking ref points to the same commit, but this

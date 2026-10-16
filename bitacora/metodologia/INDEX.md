@@ -1,10 +1,10 @@
 # Index — metodologia
 
-_Generated 2026-10-15 22:21 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 06:36 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
-**Last activity:** 2026-10-15
+**Last activity:** 2026-10-16
 
 ## Workspace
 
@@ -27,6 +27,8 @@ _Generated 2026-10-15 22:21 by `bitacora.py index`. Do not edit by hand._
 - REQ-015: plan waiting for approval
 - REQ-017: executor finished — review & merge
 - REQ-018: executor finished — review & merge
+- REQ-019: executor finished — review & merge
+- REQ-021: executor finished — review & merge
 
 ## Requirements
 
@@ -50,27 +52,28 @@ _Generated 2026-10-15 22:21 by `bitacora.py index`. Do not edit by hand._
 | [REQ-016](requirements/REQ-016-train-and-validate-an-english-only-laya/SPEC.md) | Train and validate an English-only Laya Planner complexity classifier | `ready` | [paused](requirements/REQ-016-train-and-validate-an-english-only-laya/PLAN.md) |  |
 | [REQ-017](requirements/REQ-017-scheduler-m4-agent-monitor/SPEC.md) | Scheduler M4 Agent Monitor | `in-progress` | [done](requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md) | report ✓ |
 | [REQ-018](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/SPEC.md) | Scheduler M1-M4 integration and offline monitor recovery | `done` | [done](requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md) | report ✓ |
-| [REQ-019](requirements/REQ-019-scheduler-m5-recovery-manager/SPEC.md) | Scheduler M5 Recovery Manager | `in-progress` | [approved](requirements/REQ-019-scheduler-m5-recovery-manager/PLAN.md) | report ✓ |
+| [REQ-019](requirements/REQ-019-scheduler-m5-recovery-manager/SPEC.md) | Scheduler M5 Recovery Manager | `in-progress` | [done](requirements/REQ-019-scheduler-m5-recovery-manager/PLAN.md) | report ✓ |
 | [REQ-020](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/SPEC.md) | Scheduler M2 learning and quota optimization | `in-progress` | [approved](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/PLAN.md) |  |
-| [REQ-021](requirements/REQ-021-scheduler-m5-m6-runtime-integration/SPEC.md) | Scheduler M5/M6 runtime integration | `approved` | [approved](requirements/REQ-021-scheduler-m5-m6-runtime-integration/PLAN.md) |  |
+| [REQ-021](requirements/REQ-021-scheduler-m5-m6-runtime-integration/SPEC.md) | Scheduler M5/M6 runtime integration | `approved` | [done](requirements/REQ-021-scheduler-m5-m6-runtime-integration/PLAN.md) | report ✓ |
+| [REQ-022](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/SPEC.md) | Opt-in Scheduler runtime, status and recovery | `clarifying` | [in-progress](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
-- P-040 · Complete Scheduler M5 T19/T20 and wire M6 into the shared runtime · high/M
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
 - P-003 · Visual review of the local web UI · med/S
 - P-001 · Executor status/heartbeat + notifications (toast/ntfy) + resume of crashed executors · med/M
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T · med/L
 - P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · low/S
+- P-006 · Marathon: pass the claude prompt via stdin instead of argv (cmd-shim 8191-char / newline r · low/S
 
 ## Recent decisions
 
-- D-043 — Integrate M6 through the existing opt-in VerificationPort
-- D-042 — Add batch quota learning above the existing M1/M2 boundary
-- D-041 — M5 advises through the unchanged RecoveryPort and preserves same-task snapshots
-- D-040 — Recover M4 only through a verified offline candidate
-- D-039 — Keep M1–M4 ingestion caller-driven at the M1 ownership boundary
+- D-049 — Preserve legacy quota keys while deduplicating effective accounts
+- D-048 — Keep M2 shadow comparisons opt-in and side-effect-free
+- D-047 — Persist redacted M2 batch decisions in ledger schema 3
+- D-046 — Select bounded READY batches with effective-account capacity matching
+- D-045 — Keep M2 route quality floors explicit and evidence-backed
 
 ## Artifacts
 
@@ -87,5 +90,5 @@ _Generated 2026-10-15 22:21 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W3](2026-10/W3/WEEK.md): [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
+  - [W3](2026-10/W3/WEEK.md): [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
   - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

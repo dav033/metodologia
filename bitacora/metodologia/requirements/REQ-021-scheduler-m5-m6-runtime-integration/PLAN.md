@@ -1,6 +1,6 @@
 ---
 req: REQ-021
-status: approved
+status: done
 created: 2026-10-15
 ---
 # Plan — Scheduler M5/M6 runtime integration
@@ -23,12 +23,12 @@ remains usable otherwise. A deterministic local E2E proves the real M5/M6 chain 
 ## Tasks
 
 - [x] T01 — Audit the isolated M6 source, current contracts, repository import boundaries, and shared worktree state · verify: source M6 package 66/66, real-M3 E2E 1/1, M1 boundary 6/6 · covers: R1, R2, R8
-- [x] T02 — Copy only M6 source/package/tests into the current checkout; adapt the M1/M3 adapter to established public adapter imports · files: `skill/scripts/bt_scheduler_quality/**`, `bt_scheduler_quality_adapter.py` · verify: M6 package 66/66, real-M3 E2E 1/1, M1 boundary 6/6 · covers: R1, R2, R8
+- [x] T02 — Copy only M6 source/package/tests into the current checkout; adapt the M1/M3 adapter to established public adapter imports · files: `skill/scripts/bt_scheduler_quality/**`, `bt_scheduler_quality_adapter.py` · verify: M6 package 67/67, real-M3 E2E 1/1, M1 boundary 6/6 · covers: R1, R2, R8
 - [x] T03 — Add explicit M6 composition and ordered lifecycle cleanup in the existing executor wiring · files: `bt_scheduler_executor_wiring.py`, `bt_scheduler_executor_adapter.py` · verify: composition guards and shutdown-order tests · covers: R3–R6, AC01–AC03, AC06
-- [x] T04 — Add real Planner/M1/M2/M3/M5/M6 E2E for rejection, recovery, snapshot continuation, and later acceptance · files: `skill/scripts/tests/test_scheduler_m1_m6_e2e.py` · verify: 4 tests passed, including the full end-to-end chain · covers: R7, AC04–AC05
+- [x] T04 — Add real Planner/M1/M2/M3/M5/M6 E2E for rejection, recovery, snapshot continuation, and later acceptance · files: `skill/scripts/tests/test_scheduler_m1_m6_e2e.py` · verify: 5 tests passed, including the full end-to-end chain · covers: R7, AC04–AC05
 - [x] T05 — Reconcile module boundaries, wheel metadata, installed-package checks, and scoped lint · files: `skill/references/modules.md`, `pyproject.toml`, `tests/migration/test_package_install.py`, `skill/scripts/tests/test_scheduler_integration.py` · verify: M1 boundary 6/6, wheel installation 17/17, scoped Ruff and `git diff --check` clean · covers: R8, AC01–AC03, AC06, AC08
-- [x] T06 — Refresh the T19 quota preflight and run the bounded experiment only if two distinct fresh routes meet the approved <=50% use gate · verify: fresh preflight found fewer than two eligible routes; no provider process launched, so T19 stays open · covers: R9, AC07
-- [ ] T07 — Run the relevant integrated suites, audit the exact diff, update REQ-019/REQ-021 reports and project memory · verify: recorded test outputs and final acceptance matrix · covers: AC01–AC08
+- [x] T06 — Refresh the T19 quota preflight and run the bounded experiment only if two distinct fresh routes meet the approved <=50% use gate · verify: later fresh preflight passed; REQ-019 T19 completed in 74.351 s with one real alternate-provider CLI invocation, two M5 decisions, continued snapshot, accepted verification and M1 completion · covers: R9, AC07
+- [x] T07 — Run the relevant integrated suites, audit the exact diff, update REQ-019/REQ-021 reports and project memory · verify: 271 Scheduler tests ran with 5 expected opt-in skips and all others passing; Planner 219, M1 250, M2 65, M3 279, M4 135, M5 33, and M6 67; integrated Planner→M6 and real-M3 tests 6; wheel 17; scoped Ruff and `git diff --check` clean; fresh spec and standards audits approved · covers: AC01–AC08
 
 ## Verification
 
@@ -56,3 +56,11 @@ unchanged. Separately report the T19 live gate and every test not executed.
   M6 FAIL left the first M1 attempt rejected, M5 recommended retry, M2 emitted a distinct decision, M3 resumed the
   captured snapshot in a new worktree, and M6 PASS completed the second attempt. M4 stream events and source checkout
   preservation were asserted. Boundary, wheel, and remaining lint/diff closeout checks are tracked in T05/T07.
+- 2026-10-15 — Fixed the M6 shutdown race found by the spec audit: `close(wait=True)` now waits for dispatcher
+  termination before `Wiring.close()` closes the M6 store. A focused slow-dispatcher lifecycle regression verifies
+  the store stays open until the dispatcher exits. M6 package suite is now 67/67; the integrated E2E plus real-M3
+  test is 6/6; the full Scheduler wildcard ran 271 tests with 5 opt-in skips and all others passing. The fresh T19
+  gate remains unavailable.
+- 2026-10-15 — Fresh spec and standards re-reviews approved the corrected shutdown path, implementation, report, and
+  acceptance matrix. T07 is complete. The later fresh quota gate and bounded live T19 experiment are recorded in
+  REQ-019; its separate T20 audit and closeout are complete.

@@ -1,5 +1,5 @@
 ---
-status: approved
+status: done
 ---
 # REQ-019 execution plan
 
@@ -33,15 +33,19 @@ Original: `/home/david/PLAN-FASE-5-M5-RECOVERY-MANAGER.md`. No acceptance item i
 ## M5-H4 — Proof
 - [x] T17 — Failure matrix and complete frozen Planner→M1→M2→M3→M4→M5→retry chain.
 - [x] T18 — Crash checkpoints from receive to next attempt; no duplicate writer/decision.
-- [ ] T19 — Bounded opt-in real CLI experiment in a disposable project with controlled failure.
-- [ ] T20 — Independent spec/standards audit, acceptance matrix, measured report and handoff.
+- [x] T19 — Bounded opt-in real CLI experiment in a disposable project with controlled failure.
+- [x] T20 — Independent spec/standards audit, acceptance matrix, measured report and handoff.
 
 Rulings: policy metadata is versioned inside M5; M1 contract remains 1.2.0. Only finite validation is tightened
 in M1. No live Scheduler activation. All provider experiments remain disposable and bounded.
-T19 remains open: the 2026-10-15 fresh quota preflight found fewer than two eligible providers/accounts, so no provider
-process was launched. The opt-in harness now injects a no-credential, local CLI-shaped quota failure through M3's real
-classification path, checks M5's bounded reset wait, and leaves the retry to real M2 plus one real provider CLI call;
-it requires two distinct provider/account routes at no more than 50% observed quota use and fails closed if M2 repeats
-the failed provider. Focused harness checks pass, but no live experiment has run. T20 and closeout remain open until
-T19 is resolved. The opt-in production M6 integration is recorded separately in REQ-021/D-043; its local full-chain
-proof does not replace this live provider gate.
+T19 completed on 2026-10-15 after a fresh quota preflight admitted two distinct provider/account routes at no more
+than 50% observed use. The bounded harness injected a local CLI-shaped quota failure through M3's real classification
+path, applied M5's quota-reset retry policy, excluded the first provider through M2, then made exactly one real provider
+CLI invocation on the alternate route. Both attempts used the same task's captured snapshot; M1 completed only after
+the independent verifier accepted the second attempt. The private receipt records 74.351 seconds, two attempts
+(`codex` injected `quota_exhausted`, `antigravity` real CLI `clean`), two M5 decisions, successful snapshot continuation,
+source checkout unchanged, and no timeout. The opt-in M6 integration is recorded separately in REQ-021/D-043; its
+local full-chain proof complements, but does not replace, this measured live M5 experiment.
+
+Fresh independent T20 spec and standards audits approved T01–T19 and AC01–AC12 with no actionable findings. The
+acceptance matrix and measured report are reconciled below; this report is the final handoff. REQ-019 T01–T20 is done.
