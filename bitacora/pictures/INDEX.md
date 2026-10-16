@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-16 09:17 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 09:28 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -21,7 +21,6 @@ _Generated 2026-10-16 09:17 by `bitacora.py index`. Do not edit by hand._
 - REQ-015: executor finished — review & merge
 - REQ-016: executor finished — review & merge
 - REQ-017: question round waiting for answers
-- REQ-017: plan waiting for approval
 
 ## Requirements
 
@@ -43,7 +42,7 @@ _Generated 2026-10-16 09:17 by `bitacora.py index`. Do not edit by hand._
 | [REQ-014](requirements/REQ-014-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `stopped 2026-10-11 06:14 at cycle 26 (planned end 2026-10-12 16:44); not resumed` | [review](requirements/REQ-014-72h-marathon-autonomous-product-developm/PLAN.md) |  |
 | [REQ-015](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/SPEC.md) | judge-fix: guided chat honesty and count/price parity (D1-D5, D8) | `done (local branch awaiting owner review)` | [done](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/PLAN.md) | report ✓ |
 | [REQ-016](requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/SPEC.md) | Guided 3D edit leftovers: exact undo and colour resolver (P-042, P-058) | `ready` | [done](requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/PLAN.md) | report ✓ |
-| [REQ-017](requirements/REQ-017-activity-aware-guided-chat-decoration-re/SPEC.md) | Activity-aware guided-chat decoration recommendations | `clarifying` | [review](requirements/REQ-017-activity-aware-guided-chat-decoration-re/PLAN.md) | round open |
+| [REQ-017](requirements/REQ-017-activity-aware-guided-chat-decoration-re/SPEC.md) | Activity-aware guided-chat decoration recommendations | `in-progress` | [approved](requirements/REQ-017-activity-aware-guided-chat-decoration-re/PLAN.md) | round open |
 
 ## Top pending (urgency, then complexity)
 
