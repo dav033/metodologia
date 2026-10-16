@@ -1,7 +1,7 @@
 {
  "req": "REQ-022",
  "project": "metodologia",
- "status": "running",
+ "status": "stopped",
  "agent": "claude",
  "model": "haiku",
  "ultracode": true,
@@ -13,14 +13,14 @@
   "isolation": "off"
  },
  "context_run_id": "ad1a313d1c6d44c788558ffa24ea1a9a",
- "control": "stop",
+ "control": null,
  "heartbeat": {
   "at": "2026-10-16T06:52:16",
   "pid": 1086064,
   "machine": "precision7760",
-  "task": "T1",
+  "task": null,
   "session": 1,
-  "state": "failed",
+  "state": "stopped",
   "session_pids": {},
   "session_pid": null
  },
