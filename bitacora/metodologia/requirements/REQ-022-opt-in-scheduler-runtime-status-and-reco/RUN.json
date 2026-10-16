@@ -1,0 +1,168 @@
+{
+ "req": "REQ-022",
+ "project": "metodologia",
+ "status": "running",
+ "agent": "claude",
+ "model": "haiku",
+ "ultracode": true,
+ "limits": {
+  "max_attempts": 4,
+  "session_timeout_min": 60,
+  "max_sessions": 300,
+  "workers": 1,
+  "isolation": "off"
+ },
+ "context_run_id": "ad1a313d1c6d44c788558ffa24ea1a9a",
+ "control": "stop",
+ "heartbeat": {
+  "at": "2026-10-16T06:51:27",
+  "pid": 1086064,
+  "machine": "precision7760",
+  "task": "T1",
+  "session": 1,
+  "state": "session running 1 min",
+  "session_pids": {
+   "1": 1086612
+  },
+  "session_pid": null
+ },
+ "waiting_until": null,
+ "sessions": 1,
+ "tasks": [
+  {
+   "id": "T1",
+   "title": "Add the Scheduler owner process, `scheduler-run` CLI and durable M2/M3 composition",
+   "repo": null,
+   "after": [],
+   "verify": "PYTHONPATH=skill/scripts python -m unittest discover -s skill/scripts/tests -p 'test_scheduler_runtime.py'",
+   "files": [
+    "skill/scripts/bitacora.py",
+    "skill/scripts/bt_cli_scheduler_run.py",
+    "skill/scripts/bt_scheduler_run.py",
+    "skill/scripts/bt_scheduler_adapter.py",
+    "skill/scripts/bt_notify.py",
+    "skill/scripts/bt_autostart.py",
+    "skill/scripts/tests/test_scheduler_runtime.py"
+   ],
+   "resources": null,
+   "level": null,
+   "kind": "implement",
+   "risk": null,
+   "complexity": null,
+   "milestone": null,
+   "tier": 0,
+   "status": "in_progress",
+   "attempts": 0,
+   "last_error": null,
+   "error_hashes": [],
+   "evidence": null,
+   "pending_id": null,
+   "notes": [
+    "Worktree compartido: bitacora.py (5 lineas) y bt_scheduler_adapter.py (75) tienen cambios sin commitear de REQ-020/021. No se commitean; el commit de T1 incluye solo archivos nuevos y tests. Hay que decidir al integrar el dispatch de scheduler-run en bitacora.py."
+   ]
+  },
+  {
+   "id": "T2",
+   "title": "Add the explicit launch option and preserve legacy launch behavior",
+   "repo": null,
+   "after": [
+    "T1"
+   ],
+   "verify": "PYTHONPATH=skill/scripts python -m unittest discover -s skill/scripts/tests -p 'test_scheduler_launch.py'",
+   "files": [
+    "skill/scripts/bitacora.py",
+    "skill/scripts/bt_launch.py",
+    "skill/scripts/tests/test_scheduler_launch.py"
+   ],
+   "resources": null,
+   "level": null,
+   "kind": "implement",
+   "risk": null,
+   "complexity": null,
+   "milestone": null,
+   "tier": 0,
+   "status": "todo",
+   "attempts": 0,
+   "last_error": null,
+   "error_hashes": [],
+   "evidence": null,
+   "pending_id": null,
+   "notes": []
+  },
+  {
+   "id": "T3",
+   "title": "Make CLI watcher, dashboard and web run controls authority-aware",
+   "repo": null,
+   "after": [
+    "T1",
+    "T2"
+   ],
+   "verify": "PYTHONPATH=skill/scripts python -m unittest discover -s skill/scripts/tests -p 'test_scheduler_run_*.py'",
+   "files": [
+    "skill/scripts/bt_watch.py",
+    "skill/scripts/bt_page_run.py",
+    "skill/scripts/bt_page_req.py",
+    "skill/scripts/bt_pages.py",
+    "skill/scripts/bt_server.py",
+    "skill/scripts/tests/test_scheduler_run_views.py",
+    "skill/scripts/tests/test_scheduler_run_controls.py"
+   ],
+   "resources": null,
+   "level": null,
+   "kind": "implement",
+   "risk": null,
+   "complexity": null,
+   "milestone": null,
+   "tier": 0,
+   "status": "todo",
+   "attempts": 0,
+   "last_error": null,
+   "error_hashes": [],
+   "evidence": null,
+   "pending_id": null,
+   "notes": []
+  },
+  {
+   "id": "T4",
+   "title": "Reconcile the P-026 resume evidence, document the supported lifecycle and update P-001 without losing its separate Maros E2E follow-up",
+   "repo": null,
+   "after": [
+    "T1",
+    "T2",
+    "T3"
+   ],
+   "verify": "python skill/scripts/bitacora.py --project metodologia trace --node REQ-022",
+   "files": [
+    "skill/references/modules.md",
+    "bitacora/metodologia/PENDING.md",
+    "bitacora/metodologia/DECISIONS.md",
+    "bitacora/metodologia/SUMMARY.md",
+    "bitacora/metodologia/requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/REPORT.md"
+   ],
+   "resources": null,
+   "level": null,
+   "kind": "docs",
+   "risk": null,
+   "complexity": null,
+   "milestone": null,
+   "tier": 0,
+   "status": "todo",
+   "attempts": 0,
+   "last_error": null,
+   "error_hashes": [],
+   "evidence": null,
+   "pending_id": null,
+   "notes": []
+  }
+ ],
+ "log": [],
+ "pool": [
+  "antigravity",
+  "claude-personal",
+  "claude-work",
+  "codex-1",
+  "codex-luis"
+ ],
+ "audit": true,
+ "plan_drift": []
+}

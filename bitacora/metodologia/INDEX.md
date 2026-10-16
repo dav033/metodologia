@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-16 06:36 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 06:52 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -55,7 +55,7 @@ _Generated 2026-10-16 06:36 by `bitacora.py index`. Do not edit by hand._
 | [REQ-019](requirements/REQ-019-scheduler-m5-recovery-manager/SPEC.md) | Scheduler M5 Recovery Manager | `in-progress` | [done](requirements/REQ-019-scheduler-m5-recovery-manager/PLAN.md) | report ✓ |
 | [REQ-020](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/SPEC.md) | Scheduler M2 learning and quota optimization | `in-progress` | [approved](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/PLAN.md) |  |
 | [REQ-021](requirements/REQ-021-scheduler-m5-m6-runtime-integration/SPEC.md) | Scheduler M5/M6 runtime integration | `approved` | [done](requirements/REQ-021-scheduler-m5-m6-runtime-integration/PLAN.md) | report ✓ |
-| [REQ-022](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/SPEC.md) | Opt-in Scheduler runtime, status and recovery | `clarifying` | [in-progress](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/PLAN.md) |  |
+| [REQ-022](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/SPEC.md) | Opt-in Scheduler runtime, status and recovery | `ready` | [launched](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
