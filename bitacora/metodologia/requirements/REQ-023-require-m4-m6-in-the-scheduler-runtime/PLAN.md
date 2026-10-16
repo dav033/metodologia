@@ -1,6 +1,6 @@
 ---
 req: REQ-023
-status: review
+status: approved
 created: 2026-10-16
 ---
 # Plan — REQ-023 — Require M4-M6 in the Scheduler runtime
@@ -55,3 +55,4 @@ Do not start a provider, task, web server or autostart entry.
 
 ## Progress log
 <!-- One line per meaningful step, so work survives a context reset. -->
+- 2026-10-16 08:39 plan APPROVED (terminal)

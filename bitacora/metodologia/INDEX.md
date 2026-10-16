@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-16 08:29 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 08:35 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -30,6 +30,8 @@ _Generated 2026-10-16 08:29 by `bitacora.py index`. Do not edit by hand._
 - REQ-019: executor finished — review & merge
 - REQ-021: executor finished — review & merge
 - REQ-022: executor finished — review & merge
+- REQ-023: question round waiting for answers
+- REQ-023: plan waiting for approval
 
 ## Requirements
 
@@ -57,17 +59,17 @@ _Generated 2026-10-16 08:29 by `bitacora.py index`. Do not edit by hand._
 | [REQ-020](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/SPEC.md) | Scheduler M2 learning and quota optimization | `in-progress` | [approved](requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/PLAN.md) | report ✓ |
 | [REQ-021](requirements/REQ-021-scheduler-m5-m6-runtime-integration/SPEC.md) | Scheduler M5/M6 runtime integration | `approved` | [done](requirements/REQ-021-scheduler-m5-m6-runtime-integration/PLAN.md) | report ✓ |
 | [REQ-022](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/SPEC.md) | Opt-in Scheduler runtime, status and recovery | `ready` | [done](requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/PLAN.md) | report ✓ |
-| [REQ-023](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/SPEC.md) | Require M4-M6 in the Scheduler runtime | `clarifying` | [in-progress](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/PLAN.md) |  |
+| [REQ-023](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/SPEC.md) | Require M4-M6 in the Scheduler runtime | `ready` | [review](requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/PLAN.md) | round open |
 
 ## Top pending (urgency, then complexity)
 
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
+- P-043 · Approve REQ-023 plan to make M4–M6 mandatory in the Scheduler runtime · high/M
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
 - P-003 · Visual review of the local web UI · med/S
 - P-001 · Non-Scheduler follow-ups: Maros REQ-005 E2E and Relay F-23 helper success-path tests · med/M
 - P-042 · Fix Scheduler package coverage and M3→M4 FIFO path escape · med/M
-- P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T · med/L
 
 ## Recent decisions
 
