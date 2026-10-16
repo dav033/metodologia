@@ -14,15 +14,14 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-15T21:48:05",
+  "at": "2026-10-15T21:48:49",
   "pid": 842,
   "machine": "precision7760",
   "task": "T10",
   "session": 20,
-  "state": "session running 5 min",
+  "state": "batch settled",
   "session_pids": {
-   "18": 73593,
-   "20": 111684
+   "18": 73593
   },
   "session_pid": null
  },
@@ -503,16 +502,23 @@
    "complexity": null,
    "milestone": "M4",
    "tier": 1,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
    "evidence": "commit on wt/T10-e4c1a2c4; npx vitest run src/features/users: 7 files, 40 tests pass; tsc and eslint clean; antagonist findings fixed except A5 (deferred)",
    "pending_id": null,
    "notes": [],
-   "claimed_done": true,
    "findings": null,
-   "severity": null
+   "severity": null,
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "sonnet",
+    "effort": "medium",
+    "result": "done"
+   }
   },
   {
    "id": "T11",
@@ -1318,6 +1324,27 @@
    },
    "isolation": "worktree",
    "branch": "wt/T9-7fc5a55b"
+  },
+  {
+   "at": "2026-10-15T21:48:40",
+   "session": 20,
+   "task": "T10",
+   "result": "integration_pending",
+   "summary": "commit on wt/T10-e4c1a2c4; npx vitest run src/features/users: 7 files, 40 tests pass; tsc and eslint clean; antagonist findings fixed except A5 (deferred)",
+   "seconds": 326,
+   "model": "sonnet",
+   "effort": "medium",
+   "cost_usd": 0.7729733000000001,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "early_exit": true,
+   "contract": {
+    "v": 1,
+    "status": "failed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/T10-e4c1a2c4"
   }
  ],
  "pool": [
@@ -1729,7 +1756,7 @@
    "base_sha": "b8efd6aa01f53257d25a4cdd198e94f97a2f6052",
    "repo": "/home/david/dev/maros/maros-next",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "allocated",
+   "state": "accepted",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
@@ -1737,9 +1764,47 @@
    "task_ids": [
     "T10"
    ],
-   "allowed_paths": [],
+   "allowed_paths": [
+    "src/di/factories/usersFactory.ts",
+    "src/features/users/README.md",
+    "src/features/users/application/context.ts",
+    "src/features/users/application/index.ts",
+    "src/features/users/application/keys/usersKeys.ts",
+    "src/features/users/application/usecases/mutations/bulkAssignRole.ts",
+    "src/features/users/application/usecases/mutations/createAccessRequest.ts",
+    "src/features/users/application/usecases/mutations/duplicateRole.ts",
+    "src/features/users/application/usecases/mutations/previewRoleImpact.ts",
+    "src/features/users/application/usecases/mutations/resolveAccessRequest.ts",
+    "src/features/users/application/usecases/queries/explainUserAccess.ts",
+    "src/features/users/application/usecases/queries/listAccessRequests.ts",
+    "src/features/users/application/usecases/queries/listRoleAudit.ts",
+    "src/features/users/application/usecases/usecases.test.ts",
+    "src/features/users/domain/models.ts",
+    "src/features/users/domain/ports.ts",
+    "src/features/users/index.ts",
+    "src/features/users/infra/http/AccessRequestsHttpRepository.ts",
+    "src/features/users/infra/http/RolesHttpRepository.ts",
+    "src/features/users/infra/http/UsersHttpRepository.ts",
+    "src/features/users/infra/http/UsersRepositories.test.ts",
+    "src/features/users/infra/http/endpoints.ts",
+    "src/features/users/infra/http/mappers.test.ts",
+    "src/features/users/infra/http/mappers.ts",
+    "src/features/users/infra/index.ts",
+    "src/features/users/presentation/hooks/data/useAccessRequests.ts",
+    "src/features/users/presentation/hooks/data/useRoleAudit.ts",
+    "src/features/users/presentation/hooks/data/useUserAccessExplanation.ts",
+    "src/features/users/presentation/hooks/mutations/useUsersPermissionsMutations.ts",
+    "src/features/users/presentation/lib/roleEditorModel.test.ts",
+    "src/features/users/presentation/lib/roleEditorModel.ts",
+    "src/features/users/presentation/organisms/RoleEditorDialog.test.tsx",
+    "src/features/users/presentation/organisms/RoleEditorDialog.tsx",
+    "src/features/users/presentation/organisms/RolesList.test.ts",
+    "src/features/users/presentation/organisms/RolesList.tsx"
+   ],
    "resources": [],
-   "repo_role": "frontend"
+   "repo_role": "frontend",
+   "candidate_sha": "72a68a05408b2092e398260bd8f168de11009ac6",
+   "cleaned": true
   }
  },
  "wait_step": 0

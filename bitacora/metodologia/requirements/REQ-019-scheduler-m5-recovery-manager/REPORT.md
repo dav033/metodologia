@@ -76,9 +76,10 @@ M2 decision 65 passed, and M4 monitor 135 passed.
 
 ## Independent review and remaining work
 
-The spec review confirmed the plan-hash propagation and legacy replay compatibility fixes. The standards
-review approved those fixes with no actionable findings. A final review of the T19 harness and this
-acceptance report is still required before T20 can be closed.
+The final spec review inspected this report, execution plan and T19 harness. It confirmed that the
+preflight did not launch an agent, the production M6 gap is explicit, AC07/AC11 are partial, and T19/T20
+remain open. The final standards review of the T19 harness and report is in progress. T20 remains open
+because the plan requires T19 first.
 
 No M5 live CLI experiment ran. No production M6 verifier was implemented or tested. T19 and T20 remain
 unchecked in the execution plan; the user's answer on the production M6 verifier boundary is required
