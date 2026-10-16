@@ -1,7 +1,7 @@
 {
  "title": "Plan review — activity-aware guided-chat recommendations",
- "intro": "Opus 5.5 high inspected the guided-chat code and prepared the detailed temporary plan in PLAN.md. No Pictures code or tests were changed or run. These answers confirm or adjust the product choices before implementation; use the recommended option where you want Opus's proposal.",
- "coverage": "7/10 topics clear; remaining product choices in this round",
+ "intro": "Opus 5.5 high inspected the guided-chat code and prepared the detailed temporary plan in PLAN.md. The owner later requested that development continue. Implementation now uses the recommended choices as revisable assumptions; no item-by-item owner answers have been recorded. Keep this round open for corrections.",
+ "coverage": "10/10 topics explicit; product choices are revisable assumptions",
  "questions": [
   {
    "id": "q1",

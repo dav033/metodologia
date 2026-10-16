@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-16 09:39 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 10:31 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -56,11 +56,11 @@ _Generated 2026-10-16 09:39 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-052 — Resume REQ-017 with revisable Planner defaults
+- D-051 — Keep REQ-017 limited to reviewing the Planner output
 - D-050 — Bound semiarco fill calibration by the verified price and count corpus
 - D-049 — Calibrate semiarco fill to the contractual quarter-ellipse axis
 - D-048 — 2026-10-13 · REQ-016 M2: retain requested untouched colour resolutions in versioned signed history
-- D-047 — 2026-10-13 · REQ-016 T3 (P-058 A2–A4): sumar una idea conserva el origen; «rosa → rosado» con el rosado ya puesto no pregunta; `origen.tipo` se declara como `resolutor`
-- D-046 — 2026-10-13 · REQ-016 T2 design: signed last-colour-order context replaces the origin heuristic for known history
 
 ## Timeline
 

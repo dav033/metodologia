@@ -33,8 +33,8 @@ The guided chat should help a customer choose suitable decorations or individual
 - R1. For a recognized activity, the individual-piece choices shall place the approved recommended structures first and keep the free-choice option last.
 - R2. For a recognized activity, a free complete-composition proposal shall use only the approved structures for that activity.
 - R3. An explicit customer-named structure or an edit to an existing plan shall retain current precedence over recommendations.
-- R4. Structures unsupported by the 3D flow shall not be recommended, while explicit customer requests for them keep current handling.
-- R5. An unrecognized activity shall retain current recommendation and proposal behavior.
+- R4. Structures unsupported by the 3D flow shall not appear in the curated recommendations for recognized activities, while explicit customer requests keep current handling.
+- R5. An unrecognized activity shall retain current recommendation and proposal behavior, including the existing structure choices.
 - R6. Any server-side adjustment made to enforce the event policy shall be recorded in the existing audit trail.
 
 ## Edge cases & errors
@@ -55,27 +55,35 @@ The guided chat should help a customer choose suitable decorations or individual
 - Deferred: unify event vocabularies and expand thin library coverage.
 
 ## Timeline & dependencies
-- Temporary planning exercise. David explicitly requested implementation through Claude Work; the five Opus recommendations are provisional defaults. Keep the implementation isolated and reviewable so David can revise them before integration.
-- M1 begins with the Opus-proposed mapping as a provisional implementation default. M2 server and M3 client depend on M1 and can then proceed independently.
+- On 2026-10-16 the owner requested that development continue. The implementation uses the five Opus recommendations as revisable assumptions; no item-by-item product approval is recorded.
+- M1 begins with the proposed mapping. M2 server and M3 client depend on M1 and can then proceed independently.
 
 ## Assumptions
-- Draft product choices and event mapping are proposed by Opus 5.5 high in delegation `D-20261016-090752-bc5d`; use them provisionally under David's direct implementation request, and keep them open for his review before integration.
+- The proposed mapping and behavior from Opus 5.5 high in delegation `D-20261016-090752-bc5d` are implementation assumptions, not permanent owner-approved policy; revise them if the owner corrects the scope.
 - Independent part means one official structure selected through the existing individual-piece path.
 - The free-choice event constraint applies only on the “Propónme algo” path.
+- Use the full curated event-to-structure table in PLAN.md; library coverage is informational only.
+- Show exact event structures as selectable cards and keep «La que tú quieras» last; do not add a proactive chat turn or a persisted widget field.
+- Exclude structures without 3D support from recommendations, while preserving explicit customer requests and existing behavior for unknown events.
 
 ## Coverage
 | Topic | State |
 |---|---|
 | Goal & problem | Clear |
 | Users / actors | Clear |
-| Scope | Partial — Opus recommendations are provisional defaults |
+| Scope | Clear — implementation assumptions are explicit and revisable |
 | Out of scope | Clear |
-| Flows & behavior | Partial — provisional surface and part definition from Opus |
-| Edge cases | Partial — proposed fallback rules are reviewable |
+| Flows & behavior | Clear — implementation assumptions define the surface and part definition |
+| Edge cases | Clear — unknown events, unsupported structures and explicit requests have defined behavior |
 | Acceptance criteria | Clear — detailed in plan; product mapping remains reviewable |
 | Constraints | Clear |
 | Priorities & phases | Clear |
-| Timeline | Clear — no date; implementation awaits approval |
+| Timeline | Clear — implementation is in progress under revisable assumptions |
 
 ## Clarifications
-<!-- Answers are recorded after the owner review. -->
+- 2026-10-16 — Owner requested continuing development. Use the plan's recommended choices as revisable assumptions; this instruction is not recorded as five explicit product answers.
+- Q1 assumption: use the full curated event-to-structure table in PLAN.md; catalogue coverage is evidence only.
+- Q2 assumption: apply recommendations only within the existing “Propónme algo” flow.
+- Q3 assumption: an independent part is one official structure in the existing individual-piece path.
+- Q4 assumption: exclude structures without 3D support from recognized-event mappings; preserve explicit requests and all current unknown-event behavior.
+- Q5 assumption: show exact recommended official structure IDs as selectable cards, keep «La que tú quieras», add no proactive turn and persist no new widget field.

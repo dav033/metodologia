@@ -292,3 +292,19 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Alternatives:** Keep the unbounded ratio — rejected because it exceeds the current quote tolerance. Reshape the contour — rejected because tested variants either missed existing minima or visibly widened/angularized the requested form. Weaken bands or permit failures — rejected because that would conceal under-counts.
 - **Consequences and rollback:** Motor version is 1.2.6 and BOM, price and assistant-scene goldens must identify it. P-092 ring caps and its `sin_banda`/provenance acceptance are independent and unchanged. Rollback this bounded cap together with the motor version and regenerated goldens as one change, then restore D-049 as the current calibration rule.
 - **Source:** [2026-10-15 day log](2026-10/W3/2026-10-15.md) · P-099/P-092
+
+## D-051 — Keep REQ-017 limited to reviewing the Planner output
+- **Date:** 2026-10-16 · **Status:** Active scope
+- **Context:** Opus 5.5 high completed read-only analysis and a temporary plan for activity-aware guided-chat recommendations. The owner clarified that the current task is to review that Planner output only. A separate implementation delegation had already started in an isolated worktree.
+- **Decision:** Stop the implementation delegation and keep its partial source changes isolated and unreviewed. Continue only with a read-only review of the Planner's analysis, scope, risks, milestones and open questions. Product choices and implementation remain unapproved while REQ-017 round-01 is open.
+- **Alternatives:** Continue implementing — not authorized by the owner's clarified scope. Delete or clean the partial worktree — not requested; preserve it for a later owner decision.
+- **Consequences and rollback:** No code is integrated or verified. If implementation is requested later, review the preserved worktree first and follow the owner's updated scope.
+- **Source:** Owner clarification on 2026-10-16; REQ-017 `PLAN.md`, `SPEC.md`, and `rounds/round-01.json`.
+
+## D-052 — Resume REQ-017 with revisable Planner defaults
+- **Date:** 2026-10-16 · **Status:** Active scope; supersedes D-051
+- **Context:** The owner changed the scope from read-only Planner review by asking to continue development. The five individual product choices from round-01 remain unanswered.
+- **Decision:** Implement REQ-017 using Opus's recommended mapping and behavior as explicit, revisable assumptions. Do not describe them as item-by-item owner-approved policy. Preserve round-01 for corrections and keep all changes isolated from the root worktree.
+- **Alternatives:** Continue read-only review — superseded by the new request. Pause for five separate choices — unnecessary because the owner explicitly asked to continue and the methodology permits assumptions when advancing.
+- **Consequences and rollback:** The mapping and UI/server behavior can be revised before publication. No push, deployment, merge or commit is authorized.
+- **Source:** Owner request on 2026-10-16; REQ-017 `SPEC.md`, `PLAN.md`, and `rounds/round-01.json`.

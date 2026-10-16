@@ -12,8 +12,6 @@ month summary._
   - Options: (1) a private remote for `~/bitacora` with `push_async` plus a push-failure log (`.state/push.log`, warning at SessionStart), the approved fix; (2) local git plus a scheduled backup; (3) no sync, single machine. The session-end commit creates a local git repo in `~/bitacora` (`ensure_repo`).
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · urgency: high · complexity: M · added 2026-10-16 · REQ-020 T24 closeout
   - The authorized run stopped after T2 hit the 300-second timeout: T1 alone received a verifier PASS, T3/T4 were not verified and T5–T8 were not dispatched. The historical receipt cannot support full attribution or declared-path acceptance. Do not repeat provider calls under this registration. If David wants more live evidence, prepare a new bounded plan, recheck fresh quota and obtain a separate explicit authorization; keep M2 on deterministic routing until then.
-- P-043 · Implement and verify mandatory M4–M6 in the Scheduler runtime · urgency: high · complexity: M · added 2026-10-16 · owner request / REQ-023
-  - Owner approved the plan and confirmed round 1 choice A: require M4–M6 for `scheduler-run` and `launch --scheduler`; keep the legacy launcher separate. Implement runtime wiring, FIFO path confinement and package coverage, then run offline acceptance.
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remaining: Windows/macOS matrix (deferred by the owner), src/ move (deferred by D-014), commits (owner decision) · urgency: high · complexity: L · added 2026-10-13 · independent spec review
   - Context: see migracion/CONTINUE.md and the PLAN progress log. Committed locally 2026-10-14 (cdf9ea7, b3954d1, 89f2021); push is the owner's call.
 - P-003 · Visual review of the local web UI · urgency: med · complexity: S · added 2026-10-08 · session
@@ -25,8 +23,6 @@ month summary._
   - ✓ P-029 · M2 exposes plan/revision/task and supersession in its public lookup · closed 2026-10-15 · `resolve_executor_binding`/`RouteBinding`; the adapter refuses a decision made for another plan/revision/task or already replaced by a later decision for the task (M2 65 + adapter 56 tests)
   - ✓ P-031 · M3 hand-over of accepted prerequisite work to dependent tasks · closed 2026-10-15 · `bt_scheduler_integrator` + `wire(integrate_predecessors=True)` (default on since 2026-10-15); conflict/missing snapshot rejects the order with its cause, transient git failures are retried; antagonist A1–A7 fixed
   - ✓ P-032 · M3 cwd sweep spares interactive processes · closed 2026-10-15 · a process with a controlling terminal that does not descend from the attempt's shim/agent is left alone; headless stragglers and the agent's own pty children are still swept; residual: a pty child orphaned to init
-- P-042 · Fix Scheduler package coverage and M3→M4 FIFO path escape · urgency: med · complexity: M · added 2026-10-16 · local integration audit
-  - Add `bt_scheduler_decision_benchmark.py` to `py-modules` (or explicitly classify it outside runtime), and constrain the stream bridge to the attempt directory; add a regression test with an intermediate symlink to an external FIFO. Verified by package migration failure and a temporary-directory reproduction. No source changes made in the audit.
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T5–T8 remain; resume only on explicit request · urgency: med · complexity: L · added 2026-10-14 · owner pause; requirements/REQ-008-fresh-milestone-orchestration-and-bounde/REPORT.md
 - P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · urgency: low · complexity: S · added 2026-10-08 · research
 - P-006 · Marathon: pass the claude prompt via stdin instead of argv (cmd-shim 8191-char / newline risk) · urgency: low · complexity: S · added 2026-10-09 · marathon review
@@ -36,6 +32,8 @@ month summary._
 - P-010 · Marathon autostart .cmd: escape % and keep non-ANSI characters in BITACORA_ROOT · urgency: low · complexity: S · added 2026-10-09 · ladder review
   - ✓ P-011 · `task done/fail/escalate` ownership checks the REQ · closed 2026-10-15 · already implemented (`bt_runtask._own_task` checks BITACORA_RUN/PROJECT/TASK; tests/test_task_ownership.py); the entry was stale
 - P-012 · Split tests/test_marathon.py (396 lines, over the 300-line target) · urgency: low · complexity: S · added 2026-10-09 · ladder review
+- P-102 · Choose the shortlist and agent ownership for reviewed Planner skill candidates before any integration · urgency: low · complexity: S · added 2026-10-16 · user request: review GitHub skills
+  - No skill was installed or approved. Keep the Planner's `PLAN.json` contract authoritative; any access change needs an explicit follow-up plan.
 - P-004 · Concurrent edits to central files (PENDING/DECISIONS) from several sessions/machines · urgency: low · complexity: M · added 2026-10-08 · review
 - P-014 · Prune closed items older than 14 days into the month summary: the rule is written in the file header, but normalize never applies it, so Recently closed only grows · urgency: low · complexity: M · added 2026-10-13 · antagonist review of the pending fix
 - P-021 · Optional: show PLAN.json classification in the web UI plan review and `bitacora.py run` status; enrich REQ-013/015/016 only if the owner wants them in the contract · urgency: low · complexity: M · added 2026-10-14 · REQ-009 proposal
@@ -56,6 +54,10 @@ month summary._
 _None_
 
 ## Recently closed
+- P-043 · CLOSED 2026-10-16 — Require M4–M6 in every Scheduler owner run · urgency: high · complexity: M · added 2026-10-16 · owner request / REQ-023
+  - `scheduler-run` and `launch --scheduler` now initialize separate durable M4/M5/M6 stores before dispatch; the M1 owner drains M3 output and M4 incidents, routes M5/M6 through existing M1 ports, and preserves deterministic M2 and the legacy launcher. Full Scheduler discovery passed 350 tests (6 skipped); independent spec and standards reviews passed. See REQ-023 REPORT.
+- P-042 · CLOSED 2026-10-16 — Fix Scheduler package coverage and M3→M4 FIFO path escape · urgency: med · complexity: M · added 2026-10-16 · local integration audit
+  - Declared required Scheduler runtime modules in wheel metadata; the installed-wheel suite passed 19/19. The FIFO bridge rejects intermediate symlinks using descriptor-relative `O_NOFOLLOW` traversal; stream/FIFO regressions passed 34/34. See REQ-023 REPORT.
 - P-026 · CLOSED 2026-10-16 — Add opt-in Scheduler launch, projection-aware status/recovery and frozen-revision resume enforcement · urgency: low · complexity: M · added 2026-10-14 · REQ-011 proposal
   - REQ-022 implements the explicit `launch --mode marathon --scheduler` path, M1-owned `scheduler-run --resume`, heartbeat projection, watcher/dashboard/requirement views and M1 controls; legacy launch remains default. Focused T1–T3 checks and independent spec/standards reviews passed.
   - Historical 2026-10-15 audit reported that resume accepted r2 while retaining r1 values. Its referenced scratch receipt is no longer present; the current `test_a_run_started_under_r1_does_not_resume_when_r2_is_approved` passes, and an independent temporary reproduction now returns `PLAN_REF_STALE` with an exact-revision explanation. No legacy `RUN.json` was changed.
