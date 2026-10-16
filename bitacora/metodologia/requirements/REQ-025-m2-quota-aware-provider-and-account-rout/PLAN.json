@@ -189,11 +189,12 @@
     {
       "id": "T3",
       "milestone_id": "M2",
-      "title": "Add a bounded, due-only quota preflight for authorized effective accounts at the Scheduler boundary",
+      "title": "Add a bounded, due-only quota preflight scoped to authorized effective accounts at the Scheduler boundary",
       "repository": "skill",
       "after": [],
       "expected_paths": [
         "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/bt_subscriptions.py",
         "skill/scripts/tests/test_scheduler_quota_preflight.py",
         "skill/scripts/tests/test_subscription_usage.py",
         "skill/scripts/tests/test_agy.py"
@@ -205,7 +206,7 @@
           "purpose": "verify command declared in PLAN.md"
         }
       ],
-      "objective": "Request one bounded quota-only refresh at Scheduler planning and READY boundaries while keeping M2 itself cache-only.",
+      "objective": "Refresh quota only for the project's authorized effective-account pool before M2 reads the cache, while keeping M2 cache-only.",
       "complexity": "medium",
       "scope": "small_change",
       "estimated_minutes": 90,
@@ -218,9 +219,10 @@
         "scheduler-route-preflight"
       ],
       "acceptance_criteria": [
-        "Quota refresh runs at most once per due effective account through existing readers and their timeouts.",
+        "Quota refresh runs at most once per due authorized effective account through existing source readers and their timeouts.",
+        "Profiles outside the project's authorized pool are not polled; aliases are deduplicated without changing persisted quota keys.",
         "Refresh failure preserves an unavailable/unknown result and never promotes an older percentage to fresh.",
-        "Tests inject source readers and assert no model command or network call is made."
+        "Tests inject source readers and assert no model command or provider model call is made."
       ],
       "classification_evidence": {
         "complexity": {
@@ -231,9 +233,10 @@
           ]
         },
         "scope": {
-          "justification": "The refresh hook belongs at the M1/M2 adapter boundary, outside the deterministic decision package.",
+          "justification": "The refresh hook is scoped to the authorized project pool at M1/M2 boundary and leaves M2 core cache-only.",
           "evidence": [
             "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_subscriptions.py",
             "spec:SPEC.md#constraints"
           ]
         },
@@ -245,9 +248,10 @@
           ]
         },
         "risk": {
-          "justification": "A stale or failed read must not turn unknown capacity into available quota.",
+          "justification": "A failed read or an unauthorized profile poll could expose account usage or misstate quota availability.",
           "evidence": [
-            "spec:SPEC.md#edge-cases-errors"
+            "spec:SPEC.md#edge-cases-errors",
+            "file:skill/scripts/bt_subscriptions.py"
           ]
         },
         "coupling": {
@@ -447,6 +451,7 @@
         "skill/scripts/bt_scheduler_adapter.py",
         "skill/scripts/bt_page_run.py",
         "skill/scripts/bt_page_req.py",
+        "skill/references/agents.md",
         "bitacora/metodologia/DECISIONS.md"
       ],
       "verification": [

@@ -1,6 +1,6 @@
 ---
 id: REQ-025
-status: ready
+status: planned
 created: 2026-10-16
 track: standard
 ---

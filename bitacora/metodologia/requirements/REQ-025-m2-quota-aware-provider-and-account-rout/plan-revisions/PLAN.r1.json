@@ -1,0 +1,609 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-025",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Calibrate task floors and provider eligibility",
+      "acceptance_criteria": [
+        "Medium risk alone does not promote every task; task kind and validated complexity/scope/coupling/duration explain the minimum tier.",
+        "Every authorized configured Claude, Codex and Antigravity account with a capable model appears as an M2 candidate; Gemini is not reserve-only for Scheduler builds."
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Refresh quota and allocate the full DAG by effective account",
+      "acceptance_criteria": [
+        "One bounded full-DAG allocation returns one model/profile/effective-account recommendation or stable reason per task without reserving M1 capacity.",
+        "Initial planning and READY assignment use due-only quota refresh evidence; stale or failed sources remain unavailable and M1 revalidates before dispatch."
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Explain and verify assignment outcomes",
+      "acceptance_criteria": [
+        "Route projections expose model, effort, profile/account, quota freshness and stable selection/exclusion reasons.",
+        "The frozen seven-task fixture proves routing behavior using only injected quota snapshots; no provider model call or task execution occurs."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Derive tier floors from kind, complexity, scope, coupling and duration; stop promoting on medium risk alone",
+      "objective": "Set the minimum provider tier from the task's validated PLAN classification and preserve explicit high-risk/architecture uplifts.",
+      "repository": "skill",
+      "after": [],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "A cross-cutting policy edit plus focused regression cases, comparable to REQ-020 T14's 120-minute policy-and-tests slice.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Tier derivation already centralizes in one adapter and consumes validated PLAN fields."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py"
+          ],
+          "justification": "The change is confined to M2's classification-to-tier adapter and its regression cases."
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-020/T14"
+          ],
+          "justification": "One policy function and focused cases match an existing M2 policy task."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "task:T4"
+          ],
+          "justification": "A wrong tier can waste subscription quota or under-provision a high-risk task."
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "task:T2"
+          ],
+          "justification": "Candidate construction consumes this tier, so its consumer must remain synchronized."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "file:skill/scripts/tests/test_scheduler_decision_sources.py"
+          ],
+          "justification": "The current tier rule and its Scheduler tests were inspected directly."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision_adapter.py",
+        "skill/scripts/tests/test_scheduler_decision_sources.py"
+      ],
+      "shared_resources": [
+        "m2-task-tier-policy"
+      ],
+      "acceptance_criteria": [
+        "A low-complexity medium-risk task stays at the task-kind floor.",
+        "High-risk, architecture/full-system and explicitly large tasks retain their approved uplift.",
+        "The decision evidence records which classification fields established the tier."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_sources",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Make every capable configured provider/account a normal M2 candidate and rank quota/verified evidence before provider baseline; keep measured latency and audit routing rules",
+      "objective": "Enumerate capable routes per authorized effective account and remove the M2-only static builder preference while retaining evidence-backed ranking and audit independence.",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provider-specific candidate ranking and focused route-matrix tests are comparable to REQ-020 T14's M2 policy slice.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "file:skill/scripts/bt_scheduler_decision/policy.py"
+          ],
+          "justification": "Candidate ranking spans model ladders, quota, evidence and account identity."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Only Scheduler M2 candidate generation and ordering are changed; legacy pinned launch policy stays out of scope."
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-020/T14"
+          ],
+          "justification": "The existing M2 policy slice includes ranking changes and focused regressions."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "A provider ranking change can concentrate or waste limited subscription capacity."
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "file:skill/scripts/bt_scheduler_decision/policy.py"
+          ],
+          "justification": "The adapter depends on shared provider catalogs and D-045 route policy."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_agents.py",
+            "file:skill/scripts/bt_scheduler_decision/policy.py"
+          ],
+          "justification": "The current provider ladder, candidate list and ranking contract were inspected."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision_adapter.py",
+        "skill/scripts/bt_scheduler_decision/policy.py",
+        "skill/scripts/tests/test_scheduler_decision_sources.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_policy.py"
+      ],
+      "shared_resources": [
+        "m2-route-policy",
+        "effective-account-identity"
+      ],
+      "acceptance_criteria": [
+        "Claude, Codex and Antigravity profiles are candidates when model capability, project authorization, runtime and fresh quota meet the task floor.",
+        "Gemini latency influences route ordering as measured evidence but does not hard-exclude it from Scheduler build tasks.",
+        "Aliases for the same effective account are counted once, and audit-provider independence remains intact."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_sources bt_scheduler_decision.tests.test_policy",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Add a bounded, due-only quota preflight scoped to authorized effective accounts at the Scheduler boundary",
+      "objective": "Refresh quota only for the project's authorized effective-account pool before M2 reads the cache, while keeping M2 cache-only.",
+      "repository": "skill",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "A narrow Scheduler boundary wrapper and fake-source cases, smaller than REQ-020's M2 quota policy implementation.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_subscriptions.py",
+            "file:skill/scripts/bt_agy.py"
+          ],
+          "justification": "Existing source readers already cache usage and enforce per-source polling cadence."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_subscriptions.py",
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "The refresh hook is scoped to the authorized project pool at M1/M2 boundary and leaves M2 core cache-only."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "precedent:REQ-020/T6"
+          ],
+          "justification": "Only one adapter boundary and fake-source regressions are added."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors",
+            "file:skill/scripts/bt_subscriptions.py"
+          ],
+          "justification": "A failed read or an unauthorized profile poll could expose account usage or misstate quota availability."
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_subscriptions.py",
+            "file:skill/scripts/bt_agy.py"
+          ],
+          "justification": "The Scheduler adapter invokes shared subscription and Antigravity quota readers."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_subscriptions.py",
+            "file:skill/scripts/bt_agy.py",
+            "file:skill/scripts/bt_scheduler_adapter.py"
+          ],
+          "justification": "Both source refresh entry points and the Scheduler adapter were inspected."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/bt_subscriptions.py",
+        "skill/scripts/tests/test_scheduler_quota_preflight.py",
+        "skill/scripts/tests/test_subscription_usage.py",
+        "skill/scripts/tests/test_agy.py"
+      ],
+      "shared_resources": [
+        "subscription-quota-cache",
+        "scheduler-route-preflight"
+      ],
+      "acceptance_criteria": [
+        "Quota refresh runs at most once per due authorized effective account through existing source readers and their timeouts.",
+        "Profiles outside the project's authorized pool are not polled; aliases are deduplicated without changing persisted quota keys.",
+        "Refresh failure preserves an unavailable/unknown result and never promotes an older percentage to fresh.",
+        "Tests inject source readers and assert no model command or provider model call is made."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_quota_preflight test_subscription_usage test_agy",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Replace independent full-plan M2 decisions with one bounded joint account-aware route map and stable no-route reasons",
+      "objective": "Use one bounded M2 batch allocation for the complete approved DAG and retain route identity, account identity and stable no-route reasons.",
+      "repository": "skill",
+      "after": [
+        "T2",
+        "T3"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "A full-plan adapter integration with matching and regression cases is comparable to REQ-020 T15/T18 at 180 minutes each.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_decision/batch.py"
+          ],
+          "justification": "The current path loops tasks independently while M2 batch matching is bounded and account-aware."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:skill/scripts/bt_scheduler_core/contracts.py"
+          ],
+          "justification": "This changes the route-map allocation boundary across all tasks in one approved DAG."
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-020/T15",
+            "precedent:REQ-020/T18"
+          ],
+          "justification": "Comparable adapter and bounded-matching work took two 180-minute REQ-020 tasks."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "A partial or over-capacity map could mislead M1 about a route that will not be used."
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_decision/batch_ledger.py"
+          ],
+          "justification": "The adapter must preserve batch-ledger identity and M1's routing contract."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_decision/batch.py",
+            "file:skill/scripts/bt_scheduler_core/contracts.py"
+          ],
+          "justification": "The full-plan adapter, batch planner and M1 route-map contract are present in the worktree."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/bt_scheduler_decision/batch.py",
+        "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+        "skill/scripts/tests/test_scheduler_decision_integration.py",
+        "skill/scripts/tests/test_scheduler_decision_contract.py"
+      ],
+      "shared_resources": [
+        "m2-batch-contract",
+        "scheduler-full-plan-route-map"
+      ],
+      "acceptance_criteria": [
+        "All tasks within the declared batch bound are represented exactly once in a deterministic route map.",
+        "Selection uses one shared quota/policy snapshot and effective account identity without writing M1 reservations.",
+        "Plans over the supported bound receive an explicit stable outcome rather than a partial route map."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_contract test_scheduler_decision_integration bt_scheduler_decision.tests.test_batch",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Refresh and revalidate each READY batch while retaining M1's account/route reservation authority",
+      "objective": "Refresh route eligibility for each READY batch and keep M1 as the only authority that reserves and dispatches a selected route.",
+      "repository": "skill",
+      "after": [
+        "T4"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "READY-batch adapter integration and regression coverage match the 120–180-minute M2/M1 integration tasks in REQ-020.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_decision/batch.py"
+          ],
+          "justification": "The READY path batches tasks and then records individual route decisions for M1."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:skill/scripts/bt_scheduler_core/scheduler.py"
+          ],
+          "justification": "The change remains in the existing M1 assignment boundary and does not move reservation ownership."
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-020/T18",
+            "precedent:REQ-020/T19"
+          ],
+          "justification": "M1/M2 adapter and retry integration has 120–180-minute prior task estimates."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "Dispatch must fail closed when the fresh route or M1 reservation is unavailable."
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "file:skill/scripts/bt_scheduler_adapter.py"
+          ],
+          "justification": "M1 contracts, M2 batch decisions and route metadata are shared across the dispatch boundary."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/scheduler.py"
+          ],
+          "justification": "READY routing and M1's reservation point were inspected in the current source."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/bt_scheduler_core/contracts.py",
+        "skill/scripts/bt_scheduler_core/scheduler.py",
+        "skill/scripts/tests/test_scheduler_integration.py"
+      ],
+      "shared_resources": [
+        "m1-reservation-authority",
+        "m2-ready-batch"
+      ],
+      "acceptance_criteria": [
+        "A quota/profile change after initial mapping causes a fresh M2 decision for a READY task.",
+        "The exact selected profile/account is passed to M1 and M1's existing atomic reservation remains authoritative.",
+        "A failed refresh or absent route cannot start a model process."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_integration test_scheduler_decision_integration",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M3",
+      "title": "Project the selected model, effort, profile/effective account, quota freshness and stable reasons; document the M2-specific routing ruling",
+      "objective": "Expose enough route evidence to explain selected and excluded provider/model/account options to the operator.",
+      "repository": "skill",
+      "after": [
+        "T5"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Projection and documentation changes are smaller than prior M2 policy or full scheduler integration tasks.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_page_run.py"
+          ],
+          "justification": "The existing projection already carries model and profile metadata but needs account evidence and status."
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "The UI change is a small read-only projection over M1's existing route data."
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_page_run.py",
+            "file:skill/scripts/bt_page_req.py"
+          ],
+          "justification": "The work is limited to a projection, one view and a decision record."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "Showing quota must omit credentials and raw provider responses."
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_decision_adapter.py"
+          ],
+          "justification": "The view consumes M1's route projection and stable M2 decision metadata."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_page_run.py"
+          ],
+          "justification": "The current route projection and task view renderer were inspected."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/bt_page_run.py",
+        "skill/scripts/bt_page_req.py",
+        "skill/references/agents.md",
+        "bitacora/metodologia/DECISIONS.md"
+      ],
+      "shared_resources": [
+        "scheduler-route-projection",
+        "m2-routing-decision"
+      ],
+      "acceptance_criteria": [
+        "The Scheduler view identifies model, effort, human-readable profile and opaque effective-account reference for each route.",
+        "The view distinguishes fresh quota, stale/unknown quota and stable exclusion/selection reasons.",
+        "No credentials, task prose or raw quota payload are exposed in durable logs."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_integration",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M3",
+      "title": "Replay the frozen seven-task REQ-017 map with synthetic fresh/stale quotas and run offline M2/Scheduler acceptance",
+      "objective": "Prove routing behavior against the frozen REQ-017 artifact with deterministic synthetic quota facts and close the requirement documentation.",
+      "repository": "skill",
+      "after": [
+        "T6"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "A frozen-snapshot integration/adversarial pass is comparable to REQ-020 T22's 180-minute test slice and narrows it to routing.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_decision_integration.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "The acceptance fixture crosses tier rules, quota freshness and batch routing boundaries."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#out-of-scope",
+            "file:skill/scripts/tests/test_scheduler_decision_integration.py"
+          ],
+          "justification": "Only offline routing cases and project handoff records are updated; no live task runs."
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-020/T22"
+          ],
+          "justification": "The existing M2 adversarial test slice estimated 180 minutes and this reuses its fixture boundary."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "False confidence from stale quota or a synthetic run would violate the routing acceptance."
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_decision_integration.py",
+            "file:skill/scripts/bt_scheduler_decision/batch.py"
+          ],
+          "justification": "Acceptance joins M1 route-map contracts, M2 batch choices and quota snapshots."
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_decision_integration.py",
+            "file:skill/scripts/tests/test_scheduler_integration.py"
+          ],
+          "justification": "The frozen plan and relevant offline integration suites exist and were previously inspected."
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_scheduler_decision_integration.py",
+        "skill/scripts/tests/test_scheduler_decision_adversarial.py",
+        "skill/scripts/tests/test_scheduler_integration.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_batch.py",
+        "bitacora/metodologia/SUMMARY.md",
+        "bitacora/metodologia/PENDING.md"
+      ],
+      "shared_resources": [
+        "scheduler-route-regressions",
+        "methodology-bitacora"
+      ],
+      "acceptance_criteria": [
+        "The frozen seven-task map exercises multiple model tiers and assigns capable fresh accounts according to the approved policy.",
+        "Stale/unavailable Codex or Gemini evidence is excluded with a stable reason, while fresh evidence makes those accounts eligible.",
+        "All targeted offline M2/Scheduler suites, scoped Ruff, compilation and diff checks complete with no new failures."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_integration test_scheduler_decision_adversarial test_scheduler_integration test_scheduler_decision_contract bt_scheduler_decision.tests.test_batch bt_scheduler_decision.tests.test_policy bt_scheduler_decision.tests.test_quota_windows",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ]
+    }
+  ]
+}

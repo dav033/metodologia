@@ -1,0 +1,12 @@
+{
+ "schema": 1,
+ "revisions": [
+  {
+   "revision": 1,
+   "sha256": "99617f5f076822e037da7aa59fd85a9191343d1a96a53ea60eb0f00e636d6489",
+   "frozen_at": "2026-10-16T16:33:24",
+   "source": "approval",
+   "plan_md_sha256": "5a443bcd72bd5ef8694b76649858c2479cde43d743eacf17f32db91f9c5be415"
+  }
+ ]
+}

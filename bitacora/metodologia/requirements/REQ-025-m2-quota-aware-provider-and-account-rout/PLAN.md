@@ -1,6 +1,6 @@
 ---
 req: REQ-025
-status: review
+status: approved
 created: 2026-10-16
 ---
 # Plan — REQ-025 — M2 quota-aware provider and account routing
@@ -23,12 +23,12 @@ Refresh due quota data at the Scheduler adapter boundary, not inside determinist
 - [ ] T2 — Make every capable configured provider/account a normal M2 candidate and rank quota/verified evidence before provider baseline; keep measured latency and audit routing rules · repo: skill · files: `skill/scripts/bt_scheduler_decision_adapter.py`, `skill/scripts/bt_scheduler_decision/policy.py`, `skill/scripts/tests/test_scheduler_decision_sources.py`, `skill/scripts/bt_scheduler_decision/tests/test_policy.py` · after: T1 · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_sources bt_scheduler_decision.tests.test_policy` · covers: R1, R3, US-2
 
 ### M2 — Refresh quota and allocate the full DAG by effective account
-- [ ] T3 — Add a bounded, due-only quota preflight for authorized effective accounts at the Scheduler boundary · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/tests/test_scheduler_quota_preflight.py`, `skill/scripts/tests/test_subscription_usage.py`, `skill/scripts/tests/test_agy.py` · level: architecture · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_quota_preflight test_subscription_usage test_agy` · covers: R1, R6, R8, US-2, US-4
+- [ ] T3 — Add a bounded, due-only quota preflight scoped to authorized effective accounts at the Scheduler boundary · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/bt_subscriptions.py`, `skill/scripts/tests/test_scheduler_quota_preflight.py`, `skill/scripts/tests/test_subscription_usage.py`, `skill/scripts/tests/test_agy.py` · level: architecture · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_quota_preflight test_subscription_usage test_agy` · covers: R1, R6, R8, US-2, US-4
 - [ ] T4 — Replace independent full-plan M2 decisions with one bounded joint account-aware route map and stable no-route reasons · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/bt_scheduler_decision/batch.py`, `skill/scripts/bt_scheduler_decision/batch_ledger.py`, `skill/scripts/tests/test_scheduler_decision_integration.py`, `skill/scripts/tests/test_scheduler_decision_contract.py` · after: T2, T3 · level: architecture · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_contract test_scheduler_decision_integration bt_scheduler_decision.tests.test_batch` · covers: R4, R5, R7, US-3
 - [ ] T5 — Refresh and revalidate each READY batch while retaining M1's account/route reservation authority · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/bt_scheduler_core/contracts.py`, `skill/scripts/bt_scheduler_core/scheduler.py`, `skill/scripts/tests/test_scheduler_integration.py` · after: T4 · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_integration test_scheduler_decision_integration` · covers: R4, R6, US-4
 
 ### M3 — Explain and verify assignment outcomes
-- [ ] T6 — Project the selected model, effort, profile/effective account, quota freshness and stable reasons; document the M2-specific routing ruling · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/bt_page_run.py`, `skill/scripts/bt_page_req.py`, `bitacora/metodologia/DECISIONS.md` · after: T5 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_integration` · covers: R5, US-2, US-3
+- [ ] T6 — Project the selected model, effort, profile/effective account, quota freshness and stable reasons; document the M2-specific routing ruling · repo: skill · files: `skill/scripts/bt_scheduler_adapter.py`, `skill/scripts/bt_page_run.py`, `skill/scripts/bt_page_req.py`, `skill/references/agents.md`, `bitacora/metodologia/DECISIONS.md` · after: T5 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_integration` · covers: R5, US-2, US-3
 - [ ] T7 — Replay the frozen seven-task REQ-017 map with synthetic fresh/stale quotas and run offline M2/Scheduler acceptance · repo: skill · files: `skill/scripts/tests/test_scheduler_decision_integration.py`, `skill/scripts/tests/test_scheduler_decision_adversarial.py`, `skill/scripts/bt_scheduler_decision/tests/test_batch.py`, `bitacora/metodologia/SUMMARY.md`, `bitacora/metodologia/PENDING.md` · after: T6 · risk: high · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_integration test_scheduler_decision_adversarial test_scheduler_integration test_scheduler_decision_contract bt_scheduler_decision.tests.test_batch bt_scheduler_decision.tests.test_policy bt_scheduler_decision.tests.test_quota_windows` · covers: R1-R8, US-1, US-2, US-3, US-4
 
 ## Verification
@@ -42,3 +42,4 @@ Using only fake providers and injected quota snapshots, route every task from th
 
 ## Progress log
 <!-- One line per meaningful step, so work survives a context reset. -->
+- 2026-10-16 16:33 plan APPROVED (terminal)
