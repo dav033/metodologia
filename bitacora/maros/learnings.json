@@ -72,6 +72,24 @@
       "created": "2026-10-14T20:10:14.814056-05:00",
       "updated": "2026-10-14T20:10:14.814056-05:00",
       "promoted_by": null
+    },
+    {
+      "id": "L-005",
+      "scope": "project",
+      "kind": "tooling",
+      "text": "Supervised worktrees have no node_modules; link the main checkout's (ln -s .../maros-next/node_modules) instead of installing, and check fnm PATH for npx.",
+      "status": "candidate",
+      "sightings": 1,
+      "evidence": [
+        {
+          "at": "2026-10-15T22:07:46.942103-05:00",
+          "source": "REQ-005/T12",
+          "note": "vitest failed with 'Cannot find package vitest' in the M4 worktree until the symlink was added"
+        }
+      ],
+      "created": "2026-10-15T22:07:46.942103-05:00",
+      "updated": "2026-10-15T22:07:46.942103-05:00",
+      "promoted_by": null
     }
   ]
 }

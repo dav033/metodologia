@@ -17,10 +17,25 @@ Inspected 2026-10-15. M2 worktree starts at commit `27ba48f2cb1e8e6d262a9eeb9b9d
 - `bt_subscription_sources` parses subscription cache inputs; `bt_subscriptions.capacity(row, model, now)` currently reduces several windows to aggregate pressure/exhaustion. Current dirty-primary parser changes for Codex model buckets, Claude null reset and strict Antigravity numbers were copied selectively and verified here.
 - `bt_agy.capacity()` remains read-only in M2. No M2 selection path refreshes OAuth or makes provider network calls.
 
+## Provider windows, reset rules and attribution gaps (T5)
+
+| Cached source | Effective account | Windows exposed | Reset and freshness behavior | Strict-selection gap |
+|---|---|---|---|---|
+| `bt_subscriptions` / Claude OAuth usage | `bt_agents.account_key(profile)`; environment-equivalent profiles share a key; M2 persists only `account_reference(key)` | `five_hour`, `seven_day`, optional `seven_day_sonnet`, optional `seven_day_opus` | Absolute timezone-aware reset is parsed when present. Claude explicitly permits `resets_at: null`; a fresh null-reset observation remains active with unknown reset confidence. Cache TTL is 7,200 s; poll target is hourly. | `capacity()` requires fresh base 5-hour and 7-day windows for pressure but skips absent model windows, so a missing Sonnet/Opus limit can currently be mistaken for no extra limit. |
+| `bt_subscriptions` / Codex rate limits | Same effective-account key and opaque M2 hash | Base `five_hour`, `seven_day`; zero or more `_model_buckets` keyed by provider `normalModelSlug`, each with 5-hour/7-day limits | Reset timestamps are required and numeric; unsupported durations and malformed/denied controls fail to unknown. TTL is 7,200 s. | The parser retains model buckets, but aggregate `capacity()` only checks a model bucket when one is present. There is no explicit inventory proving that every configured route model has a corresponding provider slug. |
+| `bt_agy` / Antigravity usage report | Existing configured account identity via `bt_agents.account_key(profile, provider)` | Gemini pool `five_hour` and `seven_day`; Claude/GPT pool windows are parsed separately as informational `*_claude_gpt` values | Absolute ISO resets are required. Malformed/unknown pools are ignored; the cache TTL is 7,200 s. A known exhausted Gemini window remains exhausted until its reported reset even if the cache later becomes stale. | `capacity()` only evaluates both Gemini windows; it does not expose window records or map Claude/GPT pool limits to specific models. |
+
+### Attribution and provenance
+
+- Subscription polling stores account-level percentages and reset times, not task or attempt IDs. Multiple concurrent tasks, external provider usage, account aliases and a reset can all change a percentage between polls; no per-task quota delta can be inferred from the current cache.
+- `bt_events.extract_usage()` records provider-reported token fields separately. Missing token fields stay `null`; token counts, quota percentages, subscription capacity and reported cost are different units and are never converted into one another.
+- M2 currently receives only aggregate `quota_status`, one pressure percentage, `observed_at` and `valid_until`. Window identities and per-window status are discarded before `Candidate` construction.
+- `propose()` reads current caches only. Polling/network refresh remains owned by the subscription supervisor; a source error, stale row, future observation, reset without a post-reset sample or missing required window must remain unknown in strict mode.
+
 ## M1/M5 and concurrent primary work
 
 - Clean M2 base has M1 contract 1.1.0 with approved plan hash and READY/free-slot request. The existing M5 approval (REQ-019/D-041) targets shared M1 contract 1.2.0 with `RecoveryPort` signatures unchanged. M2 will not edit the shared M1 contract; its adapter must remain compatible with the additive 1.2.0 integration.
-- Current primary worktree contains substantial uncommitted M4/M5 work, including a v1.2.0 M1 contract, M4 wiring and an untracked M5 module. It is preserved and outside this branch. M5 recovery unit tests in that tree passed 33/33, but there is no M5 `RUN.json`, no live subagent, and the listed `/tmp/metodologia-m5-module` worktree is absent. Therefore M5 integration is not yet proven.
+- Current primary worktree contains substantial uncommitted M4/M5 work, including a v1.2.0 M1 contract and M4 wiring; it remains preserved outside the M2 branch. M5 code is implemented in `/home/david/dev/metodologia-m5` (`feat/scheduler-m5-recovery-manager`): its isolated package suite passes 37/37 and its current delta stays within `skill/scripts/bt_scheduler_recovery/**`. Shared M1/M4 wiring and M1→M5 integration remain unproven.
 - REQ-013 is already complete. Its Laya gate stays disabled: the measured held-out hybrid did not beat the deterministic reference (14/100 raw Laya vs 21/100 deterministic); no new inference is authorized by this plan.
 
 ## Baseline verification

@@ -1,0 +1,2137 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-020",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Inventory, contract and baseline",
+      "acceptance_criteria": [
+        "INVENTORY.md records the checked revision, consumers, quota sources, telemetry and preserved dirty worktree ownership",
+        "CONTRACTS.md names interface versions, compatibility guarantees and exclusive file owners",
+        "The frozen fixture baseline reproduces route choices, hashes, quota facts and exclusions",
+        "PLAN.json passes consistency checks and has an immutable approved revision"
+      ]
+    },
+    {
+      "id": "M1",
+      "title": "Observable, conservative quota inputs",
+      "acceptance_criteria": [
+        "Cached quota inputs preserve effective account identity and every known provider/model window",
+        "Demand values carry observed, estimated or unknown provenance with bounded validity",
+        "Strict selection rejects stale, unknown, malformed, exhausted or invalid-auth windows"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Verified performance learning",
+      "acceptance_criteria": [
+        "Verified learning includes only independently accepted outcomes correlated to the exact attempt and route",
+        "Context summaries expose sample counts, coverage, uncertainty and conservative fallback",
+        "Immutable snapshots and prequential evaluation prevent duplicate ingestion and temporal leakage"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Deterministic batch quota optimizer",
+      "acceptance_criteria": [
+        "Candidates come from existing authorized catalogs and pass hard filters before ranking",
+        "Batch plans are bounded by READY tasks, free slots, shared accounts and declared concurrency",
+        "Replayable decisions record stable reasons, exclusions, batch identity and shadow comparisons"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "M1/M3/M5 and telemetry integration",
+      "acceptance_criteria": [
+        "M1 remains the sole owner of assignments, reservations, retry approval and scheduler state",
+        "M5 affects M2 only through an M1-approved fresh assignment request",
+        "Optional M4/M6 facts validate at the boundary and deterministic operation survives their absence"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Adversarial validation and honest offline comparison",
+      "acceptance_criteria": [
+        "Adversarial tests cover unknown windows, resets, shared accounts, auth, retry and external use",
+        "Offline comparisons use identical frozen inputs and report quality, quota and attribution coverage separately",
+        "A live provider experiment remains pending until separate explicit authorization and bounded execution"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M0",
+      "title": "Audit the live HEAD, M2 consumers, quota sources, telemetry, M1/M5 boundaries and dirty primary work",
+      "objective": "Deliver workspace inventory support within the M0 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "120 minutes cover inspection of workspace inventory, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "workspace inventory combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "workspace inventory stays inside its M0 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "workspace inventory needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "workspace inventory can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#requirements",
+            "task:T2"
+          ],
+          "justification": "workspace inventory shares req020-inventory with T2 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/README.md to confirm the current baseline relevant to workspace inventory"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/**",
+        "skill/scripts/bt_scheduler_core/**",
+        "skill/scripts/bt_scheduler_recovery/**"
+      ],
+      "shared_resources": [
+        "req020-inventory"
+      ],
+      "acceptance_criteria": [
+        "INVENTORY.md records HEAD, M2 consumers and preserved dirty paths"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "Review INVENTORY.md against the current worktrees and inspected sources",
+          "purpose": "Confirm the inventory reflects live repository state",
+          "expected": "HEAD, consumers, quota sources, M1/M5 boundaries and preserved dirty work are supported by inspected evidence"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M0",
+      "title": "Freeze versioned M1/M2/M5 interfaces and file ownership in `CONTRACTS.md`",
+      "objective": "Deliver versioned M1 M2 M5 interfaces support within the M0 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T1"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "90 minutes cover inspection of versioned M1 M2 M5 interfaces, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "versioned M1 M2 M5 interfaces combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "versioned M1 M2 M5 interfaces stays inside its M0 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "versioned M1 M2 M5 interfaces needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "versioned M1 M2 M5 interfaces can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#requirements",
+            "task:T4"
+          ],
+          "justification": "versioned M1 M2 M5 interfaces shares scheduler-contracts with T4 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_core/contracts.py to confirm the current baseline relevant to versioned M1 M2 M5 interfaces"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_scheduler_decision_contract.py",
+        "skill/scripts/bt_scheduler_core/contracts.py",
+        "skill/scripts/bt_scheduler_recovery/contracts.py"
+      ],
+      "shared_resources": [
+        "scheduler-contracts"
+      ],
+      "acceptance_criteria": [
+        "CONTRACTS.md names sole owners and all versioned compatibility guarantees"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest bt_scheduler_core.tests.test_ports test_scheduler_decision_contract",
+          "purpose": "Verify versioned M1 M2 M5 interfaces behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M0",
+      "title": "Capture the deterministic fixture baseline, hashes, selected routes, quota facts and exclusions",
+      "objective": "Deliver frozen fixture baseline support within the M0 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "60 minutes cover inspection of frozen fixture baseline, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "frozen fixture baseline combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "frozen fixture baseline stays inside its M0 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "frozen fixture baseline needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "frozen fixture baseline can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#requirements",
+            "task:T4"
+          ],
+          "justification": "frozen fixture baseline shares frozen-fixture-manifest with T4 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_benchmark.py to confirm the current baseline relevant to frozen fixture baseline"
+        }
+      },
+      "expected_paths": [
+        "bitacora/metodologia/requirements/REQ-020-*/baseline.py",
+        "bitacora/metodologia/requirements/REQ-020-*/baseline-report.json"
+      ],
+      "shared_resources": [
+        "frozen-fixture-manifest"
+      ],
+      "acceptance_criteria": [
+        "Baseline report reproduces fixture hashes, route choices and quota exclusions"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python /home/david/bitacora/metodologia/requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/baseline.py --verify",
+          "purpose": "Verify frozen fixture baseline behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M0",
+      "title": "Create and validate this REQ SPEC/PLAN/PLAN.json with task coverage and a frozen revision",
+      "objective": "Deliver REQ-020 publication plan support within the M0 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T2",
+        "T3"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "120 minutes cover inspection of REQ-020 publication plan, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/sync.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "REQ-020 publication plan combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/sync.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "REQ-020 publication plan stays inside its M0 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/sync.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "REQ-020 publication plan needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/sync.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "REQ-020 publication plan can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/sync.py",
+            "spec:SPEC.md#requirements",
+            "task:T3"
+          ],
+          "justification": "REQ-020 publication plan shares req020-plan-revision with T3 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/sync.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_planner/sync.py to confirm the current baseline relevant to REQ-020 publication plan"
+        }
+      },
+      "expected_paths": [
+        "bitacora/metodologia/requirements/REQ-020-*/SPEC.md",
+        "bitacora/metodologia/requirements/REQ-020-*/PLAN.md",
+        "bitacora/metodologia/requirements/REQ-020-*/PLAN.json",
+        "bitacora/metodologia/requirements/REQ-020-*/plan-revisions/**"
+      ],
+      "shared_resources": [
+        "req020-plan-revision"
+      ],
+      "acceptance_criteria": [
+        "PLAN.json passes consistency checks and has an immutable frozen revision"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python skill/scripts/bitacora.py --project metodologia plan-json check REQ-020",
+          "purpose": "Verify REQ-020 publication plan behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M1",
+      "title": "Inventory account aliases, all provider/model windows, reset semantics and attribution gaps",
+      "objective": "Deliver quota source inventory support within the M1 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T4"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "120 minutes cover inspection of quota source inventory, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_subscription_sources.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "quota source inventory combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_subscription_sources.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "quota source inventory stays inside its M1 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_subscription_sources.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "quota source inventory needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_subscription_sources.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "quota source inventory can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_subscription_sources.py",
+            "spec:SPEC.md#requirements",
+            "task:T6"
+          ],
+          "justification": "quota source inventory shares cached-quota-source with T6 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_subscription_sources.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_subscription_sources.py to confirm the current baseline relevant to quota source inventory"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_subscription_sources.py",
+        "skill/scripts/bt_subscriptions.py",
+        "skill/scripts/tests/test_subscription_usage.py",
+        "skill/scripts/tests/test_agy.py"
+      ],
+      "shared_resources": [
+        "cached-quota-source"
+      ],
+      "acceptance_criteria": [
+        "Source inventory lists account aliases, provider/model windows and reset semantics"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_subscription_usage test_agy",
+          "purpose": "Verify quota source inventory behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M1",
+      "title": "Normalize versioned `QuotaObservation` records from cached sources only",
+      "objective": "Deliver quota observation normalization support within the M1 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T5"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of quota observation normalization, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "quota observation normalization combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "quota observation normalization stays inside its M1 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "quota observation normalization needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "quota observation normalization can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#requirements",
+            "task:T7"
+          ],
+          "justification": "quota observation normalization shares quota-observation-contract with T7 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/contracts.py to confirm the current baseline relevant to quota observation normalization"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/quota.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_quota_windows.py"
+      ],
+      "shared_resources": [
+        "quota-observation-contract"
+      ],
+      "acceptance_criteria": [
+        "Every quota observation carries account, window, source, age, reset and validity"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_windows",
+          "purpose": "Verify quota observation normalization behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M1",
+      "title": "Add a bounded demand/usage estimator with explicit observed, estimated and unknown provenance",
+      "objective": "Deliver bounded demand estimator support within the M1 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T6"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 150,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "150 minutes cover inspection of bounded demand estimator, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "bounded demand estimator combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "bounded demand estimator stays inside its M1 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "bounded demand estimator needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "bounded demand estimator can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#requirements",
+            "task:T8"
+          ],
+          "justification": "bounded demand estimator shares quota-demand-model with T8 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/engine.py to confirm the current baseline relevant to bounded demand estimator"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/quota_demand.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_quota_demand.py"
+      ],
+      "shared_resources": [
+        "quota-demand-model"
+      ],
+      "acceptance_criteria": [
+        "Demand outputs separate observed, estimated and unknown provenance with bounded TTL"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_demand",
+          "purpose": "Verify bounded demand estimator behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M1",
+      "title": "Model account-level pressure across every relevant window and shared profile",
+      "objective": "Deliver account window pressure support within the M1 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T7"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of account window pressure, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "account window pressure combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "account window pressure stays inside its M1 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "account window pressure needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "account window pressure can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#requirements",
+            "task:T15"
+          ],
+          "justification": "account window pressure shares shared-window-state with T15 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/policy.py to confirm the current baseline relevant to account window pressure"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/quota.py",
+        "skill/scripts/bt_scheduler_decision/batch.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_batch.py"
+      ],
+      "shared_resources": [
+        "shared-window-state"
+      ],
+      "acceptance_criteria": [
+        "A batch is excluded when any required shared-account window is stale, unknown or exhausted"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_windows bt_scheduler_decision.tests.test_batch",
+          "purpose": "Verify account window pressure behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M2",
+      "title": "Normalize attempt evidence with plan/revision/task/attempt/decision/route identities and independent outcome state",
+      "objective": "Deliver correlated attempt evidence support within the M2 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T8"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of correlated attempt evidence, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "correlated attempt evidence combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "correlated attempt evidence stays inside its M2 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "correlated attempt evidence needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "correlated attempt evidence can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#requirements",
+            "task:T10"
+          ],
+          "justification": "correlated attempt evidence shares attempt-verdict-identity with T10 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/contracts.py to confirm the current baseline relevant to correlated attempt evidence"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/performance_events.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_performance_events.py"
+      ],
+      "shared_resources": [
+        "attempt-verdict-identity"
+      ],
+      "acceptance_criteria": [
+        "Only matching independent PASS/FAIL attempt evidence enters verified history"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_performance_events",
+          "purpose": "Verify correlated attempt evidence behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M2",
+      "title": "Compute contextual aggregates, coverage and conservative fallback for sparse samples",
+      "objective": "Deliver contextual performance history support within the M2 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T9"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 150,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "150 minutes cover inspection of contextual performance history, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/history.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "contextual performance history combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/history.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "contextual performance history stays inside its M2 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/history.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "contextual performance history needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/history.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "contextual performance history can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/history.py",
+            "spec:SPEC.md#requirements",
+            "task:T11"
+          ],
+          "justification": "contextual performance history shares contextual-history-snapshot with T11 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/history.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/history.py to confirm the current baseline relevant to contextual performance history"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/history.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_performance_history.py"
+      ],
+      "shared_resources": [
+        "contextual-history-snapshot"
+      ],
+      "acceptance_criteria": [
+        "Aggregates report sample counts, coverage, uncertainty and conservative fallback"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_performance_history",
+          "purpose": "Verify contextual performance history behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T11",
+      "milestone_id": "M2",
+      "title": "Persist immutable, bounded learning snapshots and idempotent source fingerprints with the existing decision ledger",
+      "objective": "Deliver immutable learning snapshots support within the M2 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T10"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of immutable learning snapshots, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "immutable learning snapshots combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "immutable learning snapshots stays inside its M2 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "immutable learning snapshots needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "immutable learning snapshots can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#requirements",
+            "task:T16"
+          ],
+          "justification": "immutable learning snapshots shares decision-ledger with T16 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/recorder.py to confirm the current baseline relevant to immutable learning snapshots"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/recorder.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_recorder.py"
+      ],
+      "shared_resources": [
+        "decision-ledger"
+      ],
+      "acceptance_criteria": [
+        "Repeated source fingerprints produce one bounded immutable learning snapshot"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_recorder",
+          "purpose": "Verify immutable learning snapshots behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T12",
+      "milestone_id": "M2",
+      "title": "Add prequential/temporal evaluation without data leakage or probability claims",
+      "objective": "Deliver temporal evaluation support within the M2 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T11"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "120 minutes cover inspection of temporal evaluation, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/quality_evidence.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "temporal evaluation combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/quality_evidence.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "temporal evaluation stays inside its M2 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/quality_evidence.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "temporal evaluation needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/quality_evidence.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "temporal evaluation can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/quality_evidence.py",
+            "spec:SPEC.md#requirements",
+            "task:T23"
+          ],
+          "justification": "temporal evaluation shares temporal-evaluation-cutoff with T23 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/quality_evidence.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/quality_evidence.py to confirm the current baseline relevant to temporal evaluation"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/temporal.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_performance_temporal.py"
+      ],
+      "shared_resources": [
+        "temporal-evaluation-cutoff"
+      ],
+      "acceptance_criteria": [
+        "Temporal evaluation uses only outcomes available at each historical cutoff"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_performance_temporal",
+          "purpose": "Verify temporal evaluation behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T13",
+      "milestone_id": "M3",
+      "title": "Enumerate real configured provider/model/profile/effort candidates and deduplicate effective accounts",
+      "objective": "Deliver configured route enumeration support within the M3 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T12"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "120 minutes cover inspection of configured route enumeration, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "configured route enumeration combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "configured route enumeration stays inside its M3 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "configured route enumeration needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "configured route enumeration can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "spec:SPEC.md#requirements",
+            "task:T14"
+          ],
+          "justification": "configured route enumeration shares configured-route-catalog with T14 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision_adapter.py to confirm the current baseline relevant to configured route enumeration"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision_adapter.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_candidates.py"
+      ],
+      "shared_resources": [
+        "configured-route-catalog"
+      ],
+      "acceptance_criteria": [
+        "Route candidates use configured catalogs and deduplicate effective account identity"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_sources",
+          "purpose": "Verify configured route enumeration behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T14",
+      "milestone_id": "M3",
+      "title": "Declare quality floors and lexicographic multi-objective policy after hard eligibility filters",
+      "objective": "Deliver multi-objective route policy support within the M3 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T13"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "120 minutes cover inspection of multi-objective route policy, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "multi-objective route policy combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "multi-objective route policy stays inside its M3 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "multi-objective route policy needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "multi-objective route policy can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#requirements",
+            "task:T15"
+          ],
+          "justification": "multi-objective route policy shares eligibility-ranking-policy with T15 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/policy.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/policy.py to confirm the current baseline relevant to multi-objective route policy"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/policy.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_policy.py"
+      ],
+      "shared_resources": [
+        "eligibility-ranking-policy"
+      ],
+      "acceptance_criteria": [
+        "Ineligible routes are filtered before quality and cost tie-break objectives"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_policy",
+          "purpose": "Verify multi-objective route policy behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T15",
+      "milestone_id": "M3",
+      "title": "Select a bounded READY batch deterministically against slots, shared accounts and known concurrency constraints",
+      "objective": "Deliver bounded READY batch selection support within the M3 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T14"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of bounded READY batch selection, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "bounded READY batch selection combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "bounded READY batch selection stays inside its M3 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "bounded READY batch selection needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "bounded READY batch selection can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#requirements",
+            "task:T16"
+          ],
+          "justification": "bounded READY batch selection shares bounded-batch-plan with T16 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/engine.py to confirm the current baseline relevant to bounded READY batch selection"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/batch.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_batch.py"
+      ],
+      "shared_resources": [
+        "bounded-batch-plan"
+      ],
+      "acceptance_criteria": [
+        "Distinct READY assignments never exceed free slots or account concurrency"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_batch",
+          "purpose": "Verify bounded READY batch selection behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T16",
+      "milestone_id": "M3",
+      "title": "Extend the idempotent decision ledger with batch fingerprints, selected reasons, exclusions and no-assignment evidence",
+      "objective": "Deliver batch decision ledger support within the M3 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T15"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "120 minutes cover inspection of batch decision ledger, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "batch decision ledger combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "batch decision ledger stays inside its M3 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "batch decision ledger needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "batch decision ledger can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#requirements",
+            "task:T17"
+          ],
+          "justification": "batch decision ledger shares batch-decision-ledger with T17 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/recorder.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/recorder.py to confirm the current baseline relevant to batch decision ledger"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/recorder.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_recorder.py"
+      ],
+      "shared_resources": [
+        "batch-decision-ledger"
+      ],
+      "acceptance_criteria": [
+        "Batch replay records selected reasons, exclusions and stable no-assignment evidence"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_recorder",
+          "purpose": "Verify batch decision ledger behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T17",
+      "milestone_id": "M3",
+      "title": "Add an opt-in shadow policy that records comparisons without dispatch side effects",
+      "objective": "Deliver side-effect-free shadow policy support within the M3 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T16"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "120 minutes cover inspection of side-effect-free shadow policy, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "side-effect-free shadow policy combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "side-effect-free shadow policy stays inside its M3 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "side-effect-free shadow policy needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "side-effect-free shadow policy can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#requirements",
+            "task:T18"
+          ],
+          "justification": "side-effect-free shadow policy shares shadow-comparison-boundary with T18 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/engine.py to confirm the current baseline relevant to side-effect-free shadow policy"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/shadow.py",
+        "skill/scripts/bt_scheduler_decision/tests/test_shadow.py"
+      ],
+      "shared_resources": [
+        "shadow-comparison-boundary"
+      ],
+      "acceptance_criteria": [
+        "Shadow comparison writes no reservations, dispatches or task-state changes"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_shadow",
+          "purpose": "Verify side-effect-free shadow policy behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T18",
+      "milestone_id": "M4",
+      "title": "Adapt the existing AssignmentPort/M3 route boundary without taking authority; preserve quota revalidation and hash binding",
+      "objective": "Deliver M1 assignment adapter support within the M4 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T17"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of M1 assignment adapter, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "M1 assignment adapter combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "M1 assignment adapter stays inside its M4 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "M1 assignment adapter needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "M1 assignment adapter can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#requirements",
+            "task:T19"
+          ],
+          "justification": "M1 assignment adapter shares assignment-port-route-hash with T19 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_core/contracts.py to confirm the current baseline relevant to M1 assignment adapter"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision_adapter.py",
+        "skill/scripts/tests/test_scheduler_decision_integration.py",
+        "skill/scripts/tests/test_scheduler_route_resolution.py"
+      ],
+      "shared_resources": [
+        "assignment-port-route-hash"
+      ],
+      "acceptance_criteria": [
+        "M1 validates proposals and rechecks quota plus executor hash before launch"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_integration test_scheduler_route_resolution bt_scheduler_core.tests.test_ports",
+          "purpose": "Verify M1 assignment adapter behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T19",
+      "milestone_id": "M4",
+      "title": "Verify retry-approved reevaluation through M1/M5; exhausted account A may route to eligible B, and wait/block never loops",
+      "objective": "Deliver M1 M5 retry integration support within the M4 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T18"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of M1 M5 retry integration, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "M1 M5 retry integration combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "M1 M5 retry integration stays inside its M4 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "M1 M5 retry integration needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "M1 M5 retry integration can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "spec:SPEC.md#requirements",
+            "task:T21"
+          ],
+          "justification": "M1 M5 retry integration shares m1-m5-recovery-boundary with T21 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_core/recovery.py to confirm the current baseline relevant to M1 M5 retry integration"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_scheduler_m1_m5_e2e.py",
+        "skill/scripts/bt_scheduler_recovery/**"
+      ],
+      "shared_resources": [
+        "m1-m5-recovery-boundary"
+      ],
+      "acceptance_criteria": [
+        "Approved retry reevaluates routes while wait and block never start another attempt"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_m1_m5_e2e",
+          "purpose": "Verify M1 M5 retry integration behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T20",
+      "milestone_id": "M4",
+      "title": "Consume validated M4/M6 evidence when present while preserving deterministic operation when absent",
+      "objective": "Deliver optional M4 M6 evidence support within the M4 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T19"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 150,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "150 minutes cover inspection of optional M4 M6 evidence, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "optional M4 M6 evidence combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "optional M4 M6 evidence stays inside its M4 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "optional M4 M6 evidence needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "optional M4 M6 evidence can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#requirements",
+            "task:T21"
+          ],
+          "justification": "optional M4 M6 evidence shares metric-history-input-contract with T21 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/engine.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/engine.py to confirm the current baseline relevant to optional M4 M6 evidence"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision_adapter.py",
+        "skill/scripts/tests/test_scheduler_decision_metric_history.py"
+      ],
+      "shared_resources": [
+        "metric-history-input-contract"
+      ],
+      "acceptance_criteria": [
+        "Absent or invalid M4/M6 facts preserve deterministic routing and reproducibility"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_metric_history",
+          "purpose": "Verify optional M4 M6 evidence behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T21",
+      "milestone_id": "M4",
+      "title": "Integrate once through the sole owner of shared core/wiring/package files and run M1/M2/M3/M5 contracts",
+      "objective": "Deliver shared scheduler integration support within the M4 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T20"
+      ],
+      "complexity": "extreme",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of shared scheduler integration, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "shared scheduler integration combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "shared scheduler integration stays inside its M4 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "shared scheduler integration needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "shared scheduler integration can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "spec:SPEC.md#requirements",
+            "task:T22"
+          ],
+          "justification": "shared scheduler integration shares shared-scheduler-integration with T22 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_adapter.py to confirm the current baseline relevant to shared scheduler integration"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_core/**",
+        "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/bt_scheduler_decision_adapter.py",
+        "skill/scripts/pyproject.toml"
+      ],
+      "shared_resources": [
+        "shared-scheduler-integration"
+      ],
+      "acceptance_criteria": [
+        "Shared integration preserves M1 ownership and isolated M2/M5 contracts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_m1_m5_e2e test_scheduler_m1_m4_e2e",
+          "purpose": "Verify shared scheduler integration behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T22",
+      "milestone_id": "M5",
+      "title": "Add deterministic adversarial/property cases for windows, shared accounts, resets, unknowns, auth, retries and external use",
+      "objective": "Deliver adversarial scheduler cases support within the M5 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T19"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of adversarial scheduler cases, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "adversarial scheduler cases combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "adversarial scheduler cases stays inside its M5 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "adversarial scheduler cases needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "adversarial scheduler cases can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#requirements",
+            "task:T23"
+          ],
+          "justification": "adversarial scheduler cases shares adversarial-fixtures with T23 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_recovery/contracts.py to confirm the current baseline relevant to adversarial scheduler cases"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_scheduler_decision_adversarial.py",
+        "skill/scripts/bt_scheduler_decision/tests/**"
+      ],
+      "shared_resources": [
+        "adversarial-fixtures"
+      ],
+      "acceptance_criteria": [
+        "Adversarial tests make unknown, external-use, reset, auth and retry cases fail closed"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_scheduler_decision_adversarial",
+          "purpose": "Verify adversarial scheduler cases behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T23",
+      "milestone_id": "M5",
+      "title": "Compare FIFO, eligible round-robin, legacy router, deterministic M2 and contextual M2 on identical frozen snapshots",
+      "objective": "Deliver frozen offline benchmark support within the M5 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T22"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of frozen offline benchmark, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "frozen offline benchmark combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "frozen offline benchmark stays inside its M5 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "frozen offline benchmark needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "frozen offline benchmark can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#requirements",
+            "task:T24"
+          ],
+          "justification": "frozen offline benchmark shares offline-benchmark-snapshots with T24 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_benchmark.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_benchmark.py to confirm the current baseline relevant to frozen offline benchmark"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision_benchmark.py"
+      ],
+      "shared_resources": [
+        "offline-benchmark-snapshots"
+      ],
+      "acceptance_criteria": [
+        "Benchmark reports identical frozen inputs and separate quality and quota coverage metrics"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python skill/scripts/bt_scheduler_decision_benchmark.py --mode offline --json /tmp/req020-offline-benchmark.json",
+          "purpose": "Verify frozen offline benchmark behavior and preserve the declared contract"
+        }
+      ]
+    },
+    {
+      "id": "T24",
+      "milestone_id": "M5",
+      "title": "Run the bounded real-provider experiment only after separate explicit owner authorization",
+      "objective": "Deliver bounded provider experiment support within the M5 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T21",
+        "T23"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "180 minutes cover inspection of bounded provider experiment, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "bounded provider experiment combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "bounded provider experiment stays inside its M5 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "bounded provider experiment needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "bounded provider experiment can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#requirements",
+            "task:T25"
+          ],
+          "justification": "bounded provider experiment shares provider-quota-budget with T25 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/README.md to confirm the current baseline relevant to bounded provider experiment"
+        }
+      },
+      "expected_paths": [
+        "bitacora/metodologia/requirements/REQ-020-*/provider-experiment/**"
+      ],
+      "shared_resources": [
+        "provider-quota-budget"
+      ],
+      "acceptance_criteria": [
+        "No provider starts before authorization and the bounded report records actual usage"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "Check the owner authorization record before any provider process starts",
+          "purpose": "Enforce the explicit live quota experiment gate",
+          "expected": "Without separate explicit authorization, no provider is started and T24 remains pending; after authorization, record the bounded task/agent/time limits and observed quota use"
+        }
+      ]
+    },
+    {
+      "id": "T25",
+      "milestone_id": "M5",
+      "title": "Complete independent spec/standards/security audit and fix verified findings with regressions",
+      "objective": "Deliver independent security audit support within the M5 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T24"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "180 minutes cover inspection of independent security audit, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "independent security audit combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "independent security audit stays inside its M5 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "independent security audit needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "independent security audit can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#requirements",
+            "task:T26"
+          ],
+          "justification": "independent security audit shares independent-audit-findings with T26 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_recovery/contracts.py to confirm the current baseline relevant to independent security audit"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/**",
+        "skill/scripts/bt_scheduler_recovery/**",
+        "skill/scripts/tests/test_scheduler_m1_m5_e2e.py"
+      ],
+      "shared_resources": [
+        "independent-audit-findings"
+      ],
+      "acceptance_criteria": [
+        "Independent spec, standards and security findings have regression evidence or disposition"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "git diff --check",
+          "purpose": "Reject whitespace errors in the audited implementation"
+        },
+        {
+          "type": "manual",
+          "value": "Review the completed spec, standards and security audit reports",
+          "purpose": "Confirm independent findings have regressions or documented dispositions",
+          "expected": "Each claimed defect has a reproduced finding, corrective change and regression; unresolved items are explicit"
+        }
+      ]
+    },
+    {
+      "id": "T26",
+      "milestone_id": "M5",
+      "title": "Deliver README, configuration/rollback, limits, metrics, HANDOFF and final evidence report",
+      "objective": "Deliver operational handoff evidence support within the M5 boundary, preserving M1 authority and producing replayable evidence.",
+      "repository": "methodology",
+      "after": [
+        "T25"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "120 minutes cover inspection of operational handoff evidence, implementation, focused regression cases and a review of the resulting evidence; the work stays within the existing scheduler packages and this task's acceptance criteria.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "operational handoff evidence combines contract validation, source evidence and deterministic failure handling"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#scope"
+          ],
+          "justification": "operational handoff evidence stays inside its M5 boundary and preserves the existing authority"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#acceptance"
+          ],
+          "justification": "operational handoff evidence needs source review, implementation, regression cases and replay evidence"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "operational handoff evidence can misroute READY work if unknown evidence is promoted into usable capacity"
+        },
+        "coupling": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#requirements",
+            "task:T25"
+          ],
+          "justification": "operational handoff evidence shares req020-final-evidence with T25 and must preserve the versioned interface"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision/README.md",
+            "spec:SPEC.md#constraints-and-compatibility"
+          ],
+          "justification": "Inspected skill/scripts/bt_scheduler_decision/README.md to confirm the current baseline relevant to operational handoff evidence"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_decision/README.md",
+        "bitacora/metodologia/requirements/REQ-020-*/HANDOFF.md",
+        "bitacora/metodologia/requirements/REQ-020-*/FINAL-REPORT.md"
+      ],
+      "shared_resources": [
+        "req020-final-evidence"
+      ],
+      "acceptance_criteria": [
+        "README, rollback controls, limitations, HANDOFF and final report agree with measurements"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python skill/scripts/bitacora.py --project metodologia trace --node REQ-020",
+          "purpose": "Verify operational handoff evidence behavior and preserve the declared contract"
+        }
+      ]
+    }
+  ]
+}

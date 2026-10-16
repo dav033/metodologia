@@ -21,12 +21,12 @@ Extend the existing M2 package and its methodology adapter. Keep provider catalo
 
 ### M0 — Inventory, contract and baseline
 - [x] T1 — Audit the live HEAD, M2 consumers, quota sources, telemetry, M1/M5 boundaries and dirty primary work · repo: methodology · risk: high
-- [ ] T2 — Freeze versioned M1/M2/M5 interfaces and file ownership in `CONTRACTS.md` · repo: methodology · after: T1 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest bt_scheduler_core.tests.test_ports test_scheduler_decision_contract` · risk: high
+- [x] T2 — Freeze versioned M1/M2/M5 interfaces and file ownership in `CONTRACTS.md` · repo: methodology · after: T1 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest bt_scheduler_core.tests.test_ports test_scheduler_decision_contract` · risk: high
 - [x] T3 — Capture the deterministic fixture baseline, hashes, selected routes, quota facts and exclusions · repo: methodology · after: T1 · verify: `python /home/david/bitacora/metodologia/requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/baseline.py --verify` · risk: medium
-- [ ] T4 — Create and validate this REQ SPEC/PLAN/PLAN.json with task coverage and a frozen revision · repo: methodology · after: T2, T3 · verify: `python skill/scripts/bitacora.py --project metodologia plan-json check REQ-020` · risk: high
+- [x] T4 — Create and validate this REQ SPEC/PLAN/PLAN.json with task coverage and a frozen revision · repo: methodology · after: T2, T3 · verify: `python skill/scripts/bitacora.py --project metodologia plan-json check REQ-020` · risk: high
 
 ### M1 — Observable, conservative quota inputs
-- [ ] T5 — Inventory account aliases, all provider/model windows, reset semantics and attribution gaps · repo: methodology · after: T4 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_subscription_usage test_agy` · risk: medium
+- [x] T5 — Inventory account aliases, all provider/model windows, reset semantics and attribution gaps · repo: methodology · after: T4 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_subscription_usage test_agy` · risk: medium
 - [ ] T6 — Normalize versioned `QuotaObservation` records from cached sources only · repo: methodology · after: T5 · verify: `PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_windows` · risk: high
 - [ ] T7 — Add a bounded demand/usage estimator with explicit observed, estimated and unknown provenance · repo: methodology · after: T6 · verify: `PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_demand` · risk: high
 - [ ] T8 — Model account-level pressure across every relevant window and shared profile · repo: methodology · after: T7 · verify: `PYTHONPATH=skill/scripts python -W error::ResourceWarning -m unittest bt_scheduler_decision.tests.test_quota_windows bt_scheduler_decision.tests.test_batch` · risk: high
@@ -69,4 +69,4 @@ Extend the existing M2 package and its methodology adapter. Keep provider catalo
 - T24 is an explicit authorization gate; "execute this plan" does not remove the plan's own conditional operator-authorization requirement.
 
 ## Progress log
-- 2026-10-15: T1 and T3 inspected and verified; see `INVENTORY.md` and `baseline-report.json`. Worktree created at current HEAD; primary M4/M5 changes remain untouched. T4 formal plan validation and contract freeze are in progress.
+- 2026-10-15 22:04: T1–T5 complete: T2 passed 26 contract tests; T3 reproduced its frozen baseline; T4 froze PLAN.json revision 2; T5 documented provider windows and attribution limits and passed 55 source tests. M5 remains isolated in its own worktree; primary M4/M5 changes remain untouched.

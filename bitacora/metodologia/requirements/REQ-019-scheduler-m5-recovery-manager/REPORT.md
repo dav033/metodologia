@@ -37,11 +37,12 @@ test verifier; it does not prove a production M6 integration.
   verified snapshot in a new worktree. The existing approved plan document remains unchanged.
 - Added a real-CLI experiment harness gated behind explicit environment flags and a fresh
   two-provider quota check. The preflight requires distinct provider and account references
-  with at least 50% quota headroom. A no-credential local CLI child emits a quota message with
-  a short reset; M3's real provider classifier parses it, M5 applies its quota wait and retry
-  policy, M2 excludes that provider on reassignment, and the retry delegates to one real provider
-  CLI invocation. The harness has a 300-second deadline, retains its disposable project unless
-  M1 is terminal and M3 is confirmed idle, and writes a private sanitized receipt only if launched.
+  with at least 50% quota headroom. When launched, it is configured to run a no-credential local
+  CLI child that emits a quota message with a short reset; M3's real provider classifier should
+  report it, M5 should apply its quota wait and retry policy, and M2 should exclude that provider
+  on reassignment before the authorized retry delegates to one real provider CLI invocation.
+  The harness has a 300-second deadline, retains its disposable project unless M1 is terminal
+  and M3 is confirmed idle, and writes a private sanitized receipt only if launched.
 
 ## Acceptance matrix
 
@@ -71,7 +72,7 @@ The following recorded commands completed:
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest discover -s skill/scripts/tests -p 'test_scheduler_*.py' -q` — 258 passed, 4 skipped. This discovery preceded addition of the opt-in T19 harness; that file was run separately.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_m5_live_experiment -v` — 7 tests: 6 passed, 1 live CLI experiment skipped by default.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_recovery_adapter test_scheduler_recovery_sources test_scheduler_recovery_failures test_scheduler_recovery_crash test_scheduler_m1_m5_e2e test_scheduler_m5_live_experiment -q` — 26 passed, 1 opt-in live CLI experiment skipped.
-- `BITACORA_LIVE_SCHEDULER_M5_EXPERIMENT=1 BITACORA_LIVE_SCHEDULER_M5_PREFLIGHT_ONLY=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_m5_live_experiment -v` — skipped before launch: two fresh, permitted providers were unavailable. No provider process was started.
+- `BITACORA_LIVE_SCHEDULER_M5_EXPERIMENT=1 BITACORA_LIVE_SCHEDULER_M5_PREFLIGHT_ONLY=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_scheduler_m5_live_experiment -v` — current strict preflight skipped before launch: fewer than two fresh routes from distinct providers/accounts had <=50% quota use. No provider process or paid CLI request was started.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest discover -s tests/migration -q` — 204 tests, 1 failure. The unchanged `skill/scripts/tests/test_relay_run.py` collects 48 tests while the existing collection baseline records 52. No migration baseline or test was changed to hide this discrepancy.
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=skill/scripts:skill/scripts/tests:tests/migration python -m unittest test_package_install -q` — 16 passed.
 - Scoped Ruff checks on M5/new files and focused import/syntax checks on the touched M3 files — passed. Broad default Ruff on legacy M3 files still reports pre-existing style findings outside the scoped checks.
@@ -92,5 +93,8 @@ was added and regression-tested. T20 remains open because the approved plan requ
 
 No M5 live CLI experiment ran. No production M6 verifier was implemented or tested. T19 and T20 remain
 unchecked in the execution plan; the user's answer on the production M6 verifier boundary is required
-before extending implementation into M6. No commit, push or merge was made. Existing unrelated dirty
-worktree changes were preserved.
+before extending implementation into M6. This REQ-019 turn did not run `git commit`, `push` or `fetch`. During the
+work, local commit `570a314` appeared with message `maros: marathon REQ-005 S0021 T11 done`; it includes tracked
+REQ-019 documentation and methodology memory updates. I did not attempt to undo that shared commit. The test harness
+remains untracked. The local `origin/feat/scheduler-m4-agent-monitor` tracking ref points to the same commit, but this
+turn did not verify the remote's current state. Existing unrelated dirty worktree changes were preserved.

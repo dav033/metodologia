@@ -14,19 +14,20 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-15T22:01:44",
+  "at": "2026-10-15T22:07:45",
   "pid": 842,
   "machine": "precision7760",
-  "task": "T11",
-  "session": 21,
-  "state": "batch settled",
+  "task": "M4",
+  "session": 22,
+  "state": "session running 6 min",
   "session_pids": {
-   "18": 73593
+   "18": 73593,
+   "22": 177780
   },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 21,
+ "sessions": 22,
  "tasks": [
   {
    "id": "T1",
@@ -570,13 +571,16 @@
    "complexity": null,
    "milestone": "M4",
    "tier": 0,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "Commit a15a1a6 on wt/M4-387f7bd0. npx vitest run src/features/users src/components: 13 files, 62 tests pass. tsc: 0 errors. eslint on touched files: clean. Antagonist review: first pass CONCERNS (fixed A1-A4, A6, A7; A5 and page-level test deferred to P-014/P-015), re-review SOUND.",
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "claimed_done": true,
+   "findings": null,
+   "severity": null
   },
   {
    "id": "T13",
@@ -594,13 +598,16 @@
    "complexity": null,
    "milestone": "M4",
    "tier": 0,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "npx vitest run: 83 files, 422 tests pass (exit 0). tsc --noEmit: 0 errors. eslint . : 0 errors, 180 warnings, same as the pre-T12 baseline (no new warnings). No code change in T13; commit a15a1a6 holds T12.",
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "claimed_done": true,
+   "findings": null,
+   "severity": null
   },
   {
    "id": "M4-audit",
@@ -1894,6 +1901,26 @@
    "repo_role": "frontend",
    "candidate_sha": "b0070bec9f2d7c713b5b617f74b10fd6f74db0a4",
    "cleaned": true
+  },
+  "M4": {
+   "task_id": "M4",
+   "branch": "wt/M4-387f7bd0",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M4-387f7bd0",
+   "base_sha": "b8efd6aa01f53257d25a4cdd198e94f97a2f6052",
+   "repo": "/home/david/dev/maros/maros-next",
+   "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
+   "state": "allocated",
+   "allowed_roots": [
+    "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
+   ],
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/M4-387f7bd0.json",
+   "task_ids": [
+    "T12",
+    "T13"
+   ],
+   "allowed_paths": [],
+   "resources": [],
+   "repo_role": "frontend"
   }
  },
  "wait_step": 0
