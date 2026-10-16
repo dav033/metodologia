@@ -14,11 +14,11 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-15T22:09:08",
+  "at": "2026-10-15T22:13:39",
   "pid": 842,
   "machine": "precision7760",
-  "task": "M4",
-  "session": 22,
+  "task": "M4-audit",
+  "session": 23,
   "state": "batch settled",
   "session_pids": {
    "18": 73593
@@ -26,7 +26,7 @@
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 22,
+ "sessions": 23,
  "tasks": [
   {
    "id": "T1",
@@ -640,13 +640,27 @@
    "milestone": "M4",
    "synthetic": true,
    "tier": 1,
-   "status": "todo",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "pass: verified R5, R6, R7, R8, R11 on wt/REQ-005-integration-768f8753 (commit 8ccc2fa); npx vitest run src/features/users src/components (13 suites, 62 tests pass); full npx vitest run (83 suites, 422 tests pass); tsc --noEmit and eslint clean; AUDIT-M4.md written",
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "findings": 0,
+   "severity": {
+    "high": 0,
+    "med": 0,
+    "low": 0
+   },
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "antigravity",
+    "profile": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "T14",
@@ -1431,6 +1445,23 @@
    },
    "isolation": "worktree",
    "branch": "wt/M4-387f7bd0"
+  },
+  {
+   "at": "2026-10-15T22:13:39",
+   "session": 23,
+   "task": "M4-audit",
+   "result": "done",
+   "summary": "pass: verified R5, R6, R7, R8, R11 on wt/REQ-005-integration-768f8753 (commit 8ccc2fa); npx vitest run src/features/users src/components (13 suites, 62 tests pass); full npx vitest run (83 suites, 422 tests pass); tsc --noEmit and eslint clean; AUDIT-M4.md written",
+   "seconds": 228,
+   "model": "gemini-3.8-flash-low",
+   "agent": "antigravity",
+   "profile": "antigravity",
+   "contract": {
+    "v": 1,
+    "status": "completed",
+    "terminal": true
+   },
+   "isolation": "worktree"
   }
  ],
  "pool": [

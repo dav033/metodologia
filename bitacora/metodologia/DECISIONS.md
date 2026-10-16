@@ -383,3 +383,21 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 ## D-042 — Add batch quota learning above the existing M1/M2 boundary
 
 REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cached, account-deduplicated quota windows. Only independent outcomes correlated to the same task attempt may inform learning; missing evidence remains unknown. M1 keeps task, reservation and retry authority; M5 advises only through M1; M2 never calls M5. M4/M6 observations stay optional. Laya remains guarded, and the real-provider experiment requires explicit owner authorization. Full context, alternatives, consequences and rollback: `requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/CONTRACTS.md` and the decision note.
+
+## D-043 — Integrate M6 through the existing opt-in VerificationPort
+- **Date:** 2026-10-15 · **Status:** Accepted by David's explicit request to wire all Scheduler phases through M6.
+- **Context:** The isolated M6 package verifies M3 snapshots and returns correlated M1 verdicts, but the current shared
+  M4/M5 checkout has no central runtime wiring. M6 was built on an older base; current M1 is contract 1.2.0 and its
+  verification signatures remain compatible. The M6 worktree's REQ-020/D-042 identifiers conflict with current M2 work.
+- **Decision:** Integrate only M6 code into the current tree and compose it through the existing `VerificationPort` when
+  the caller explicitly supplies `quality_store_path`; otherwise keep the existing injected verifier. Use the public
+  M1/M3 adapters, preserve M1 as the only state/verdict owner, and keep `NEEDS_REVIEW` in `VERIFYING` until an explicit
+  operator resolution. Do not change M1 contracts or enable M6 globally.
+- **Alternatives:** Leave M6 separately bindable (does not satisfy the owner's full-chain request); place verification
+  inside M1/M5 (duplicates ownership); add a third M1 verdict state (unneeded contract migration).
+- **Consequences:** + A full deterministic M3→M6→M1→M5→M2 retry loop can be exercised; + current caller-selected
+  verification remains compatible. − Each M6-enabled caller must configure a private store path and bubblewrap; pending
+  manual checks stay verifying and require operator action. The M5 live T19 provider gate remains separate.
+- **Rollback:** Omit `quality_store_path` to restore caller-controlled verification; no schema or production-data
+  migration is required. Preserve M6 evidence if any runtime has used the store.
+- **Source:** David's active full-chain request; [REQ-021 SPEC](requirements/REQ-021-scheduler-m5-m6-runtime-integration/SPEC.md); M6 isolated SPEC at `/home/david/dev/metodologia-m6-quality/bitacora/metodologia/requirements/REQ-020-scheduler-m6-quality-integration/SPEC.md`.
