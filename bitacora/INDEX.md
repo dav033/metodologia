@@ -1,6 +1,6 @@
 # Bitácora — index
 
-_Generated 2026-10-16 09:11. Do not edit by hand. Web: http://127.0.0.1:8765_
+_Generated 2026-10-16 09:17. Do not edit by hand. Web: http://127.0.0.1:8765_
 
 | Project | Repos | Open REQs | Open pending | Last activity | Links |
 |---|---|---|---|---|---|
@@ -12,7 +12,7 @@ _Generated 2026-10-16 09:11. Do not edit by hand. Web: http://127.0.0.1:8765_
 | [maros](maros/INDEX.md) | frontend, backend | 3 | 6 (2 high) | 2026-10-15 | [summary](maros/SUMMARY.md) · [web](http://127.0.0.1:8765/p/maros) |
 | [maros-lab](maros-lab/INDEX.md) | frontend | 1 | 9 (0 high) | 2026-10-13 | [summary](maros-lab/SUMMARY.md) · [web](http://127.0.0.1:8765/p/maros-lab) |
 | [metodologia](metodologia/INDEX.md) | skill, ops-matrix-cujggjqq, ops-matrix-gwx4a4rl, ops-matrix-pduh5t5x | 21 | 22 (4 high) | 2026-10-16 | [summary](metodologia/SUMMARY.md) · [web](http://127.0.0.1:8765/p/metodologia) |
-| [pictures](pictures/INDEX.md) | demo-decoracion, t7, audit, t12, ops-matrix-jxjn7vd9, pictures | 16 | 48 (3 high) | 2026-10-15 | [summary](pictures/SUMMARY.md) · [web](http://127.0.0.1:8765/p/pictures) |
+| [pictures](pictures/INDEX.md) | demo-decoracion, t7, audit, t12, ops-matrix-jxjn7vd9, pictures | 17 | 49 (3 high) | 2026-10-16 | [summary](pictures/SUMMARY.md) · [web](http://127.0.0.1:8765/p/pictures) |
 | [proposal-studio](proposal-studio/INDEX.md) | app | 4 | 6 (3 high) | 2026-10-13 | [summary](proposal-studio/SUMMARY.md) · [web](http://127.0.0.1:8765/p/proposal-studio) |
 | [signature-extraction](signature-extraction/INDEX.md) | — | 0 | 0 (0 high) | 2026-10-09 | [summary](signature-extraction/SUMMARY.md) · [web](http://127.0.0.1:8765/p/signature-extraction) |
 
@@ -42,6 +42,8 @@ _Generated 2026-10-16 09:11. Do not edit by hand. Web: http://127.0.0.1:8765_
 - **pictures** — REQ-014: plan waiting for approval
 - **pictures** — REQ-015: executor finished — review & merge
 - **pictures** — REQ-016: executor finished — review & merge
+- **pictures** — REQ-017: question round waiting for answers
+- **pictures** — REQ-017: plan waiting for approval
 - **proposal-studio** — REQ-001: executor finished — review & merge
 
 ## Shared

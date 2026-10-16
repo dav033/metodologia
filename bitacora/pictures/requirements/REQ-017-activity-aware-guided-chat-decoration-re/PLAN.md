@@ -1,6 +1,6 @@
 ---
 req: REQ-017
-status: review
+status: approved
 created: 2026-10-16
 source: D-20261016-090752-bc5d (Claude Work, Opus 5.5 high; read-only)
 ---
@@ -93,15 +93,18 @@ Depends on: M1; independent of M2 after M1.
 - The event vocabulary is reused, not unified; a later requirement may consolidate the three existing event vocabularies.
 - Each milestone is reversible by reverting its own changes; no database or external state changes are planned.
 
-## Rulings requested from David
-1. Approve or edit the curated mapping above; alternative: derive from existing ideas, which supports only 10 of 18 structures and has thin event coverage.
-2. Confirm recommendations occur only in “Propónme algo”; alternative: add a proactive chat step after the event.
-3. Confirm an independent part is one official structure; alternative: split a library decoration into components (requires per-piece materials not present in current ideas).
-4. Confirm no-3D structures are excluded from recommendations while explicit requests remain allowed; confirm unknown events keep current behavior.
-5. Confirm existing menu cards are only reordered, with no badge or extra event-specific cards.
+## Provisional defaults for the isolated implementation
+David explicitly asked Claude Work to implement this feature and specified Opus 5.5 high. Use the recommendations below as the implementation defaults in the isolated worktree; the REQ-017 round remains open for David to revise them before integration.
+1. Use the curated mapping above; the library provides informational support evidence only.
+2. Recommend only through the existing “Propónme algo” flow; do not add a proactive chat turn.
+3. Define an independent part as one official structure in the existing individual-piece path.
+4. Exclude structures without 3D support from recommendations; preserve explicit customer requests and current unknown-event behavior.
+5. Reorder existing menu cards only, without badges or new event-specific cards.
 
 ## Verification
 No checks were run. This is the planning-only deliverable from Claude Work / Opus 5.5 high. The commands above define proposed verification for an approved implementation.
 
 ## Progress log
-- 2026-10-16: Opus completed read-only analysis and drafted this plan in delegation `D-20261016-090752-bc5d`; no repository files changed.
+- 2026-10-16: Opus completed read-only analysis and drafted this plan in delegation `D-20261016-090752-bc5d`. David's direct implementation request authorizes an isolated draft using these defaults; owner review remains open before integration.
+- 2026-10-16 09:21 review comments (terminal): Owner's direct implementation request authorizes an isolated draft with Opus 5.5 high's recommended defaults; round-01 stays open for changes before integration.
+- 2026-10-16 09:21 plan APPROVED (terminal)

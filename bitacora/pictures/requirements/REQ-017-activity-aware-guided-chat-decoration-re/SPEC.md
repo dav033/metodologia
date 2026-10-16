@@ -1,6 +1,6 @@
 ---
 id: REQ-017
-status: clarifying
+status: in-progress
 created: 2026-10-16
 track: standard
 ---
@@ -54,11 +54,11 @@ The guided chat should help a customer choose suitable decorations or individual
 - Deferred: unify event vocabularies and expand thin library coverage.
 
 ## Timeline & dependencies
-- Temporary planning exercise. Implementation is not authorized until product choices and the plan are approved.
-- M1 policy/data depends on approval of the event mapping. M2 server and M3 client depend on M1 and can then proceed independently.
+- Temporary planning exercise. David explicitly requested implementation through Claude Work; the five Opus recommendations are provisional defaults. Keep the implementation isolated and reviewable so David can revise them before integration.
+- M1 begins with the Opus-proposed mapping as a provisional implementation default. M2 server and M3 client depend on M1 and can then proceed independently.
 
 ## Assumptions
-- Draft product choices and event mapping are proposed by Opus 5.5 high in delegation `D-20261016-090752-bc5d`; David has not approved them.
+- Draft product choices and event mapping are proposed by Opus 5.5 high in delegation `D-20261016-090752-bc5d`; use them provisionally under David's direct implementation request, and keep them open for his review before integration.
 - Independent part means one official structure selected through the existing individual-piece path.
 - The free-choice event constraint applies only on the “Propónme algo” path.
 
@@ -67,11 +67,11 @@ The guided chat should help a customer choose suitable decorations or individual
 |---|---|
 | Goal & problem | Clear |
 | Users / actors | Clear |
-| Scope | Partial — awaiting product choices |
+| Scope | Partial — Opus recommendations are provisional defaults |
 | Out of scope | Clear |
-| Flows & behavior | Partial — awaiting surface and part-definition choices |
-| Edge cases | Partial — fallback rules proposed, awaiting approval |
-| Acceptance criteria | Partial — detailed in draft plan, awaiting approval |
+| Flows & behavior | Partial — provisional surface and part definition from Opus |
+| Edge cases | Partial — proposed fallback rules are reviewable |
+| Acceptance criteria | Clear — detailed in plan; product mapping remains reviewable |
 | Constraints | Clear |
 | Priorities & phases | Clear |
 | Timeline | Clear — no date; implementation awaits approval |
