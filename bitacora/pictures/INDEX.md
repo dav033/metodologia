@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-16 11:16 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 18:04 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -17,7 +17,6 @@ _Generated 2026-10-16 11:16 by `bitacora.py index`. Do not edit by hand._
 
 ## Needs attention
 
-- REQ-014: plan waiting for approval
 - REQ-015: executor finished — review & merge
 - REQ-016: executor finished — review & merge
 - REQ-017: question round waiting for answers
@@ -40,7 +39,7 @@ _Generated 2026-10-16 11:16 by `bitacora.py index`. Do not edit by hand._
 | [REQ-011](requirements/REQ-011-module-studio-with-cached-ai-renders/SPEC.md) | Module studio with cached AI renders | `done 2026-10-11 (merged 03049ca7)` | — |  |
 | [REQ-012](requirements/REQ-012-furniture-freedom-tables-and-chairs-deco/SPEC.md) | Furniture freedom: tables and chairs decoupled | `merged to main 2026-10-10 (78638080, 386b0cdc)` | — |  |
 | [REQ-013](requirements/REQ-013-catalogue-repositories/SPEC.md) | Catalogue repositories (ADR) | `done 2026-10-11 (phases 1-5 merged, migration 034)` | [in-progress (phases 1-5 built, 6-7 pending)](requirements/REQ-013-catalogue-repositories/PLAN.md) |  |
-| [REQ-014](requirements/REQ-014-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `stopped 2026-10-11 06:14 at cycle 26 (planned end 2026-10-12 16:44); not resumed` | [review](requirements/REQ-014-72h-marathon-autonomous-product-developm/PLAN.md) |  |
+| [REQ-014](requirements/REQ-014-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `in-progress` | [in-progress](requirements/REQ-014-72h-marathon-autonomous-product-developm/PLAN.md) |  |
 | [REQ-015](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/SPEC.md) | judge-fix: guided chat honesty and count/price parity (D1-D5, D8) | `done (local branch awaiting owner review)` | [done](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/PLAN.md) | report ✓ |
 | [REQ-016](requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/SPEC.md) | Guided 3D edit leftovers: exact undo and colour resolver (P-042, P-058) | `ready` | [done](requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/PLAN.md) | report ✓ |
 | [REQ-017](requirements/REQ-017-activity-aware-guided-chat-decoration-re/SPEC.md) | Activity-aware guided-chat decoration recommendations | `in-progress` | [done](requirements/REQ-017-activity-aware-guided-chat-decoration-re/PLAN.md) | report ✓ · round open |
@@ -57,11 +56,11 @@ _Generated 2026-10-16 11:16 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-054 — Preserve the existing Happie v1 contract while adding opt-in services
+- D-053 — Persist shareable Taller quote snapshots outside customer sessions
 - D-052 — Resume REQ-017 with revisable Planner defaults
 - D-051 — Keep REQ-017 limited to reviewing the Planner output
 - D-050 — Bound semiarco fill calibration by the verified price and count corpus
-- D-049 — Calibrate semiarco fill to the contractual quarter-ellipse axis
-- D-048 — 2026-10-13 · REQ-016 M2: retain requested untouched colour resolutions in versioned signed history
 
 ## Timeline
 
