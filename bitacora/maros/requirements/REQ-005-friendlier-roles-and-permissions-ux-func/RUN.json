@@ -14,19 +14,20 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-15T21:43:01",
+  "at": "2026-10-15T21:48:05",
   "pid": 842,
   "machine": "precision7760",
-  "task": "T9",
-  "session": 19,
-  "state": "batch settled",
+  "task": "T10",
+  "session": 20,
+  "state": "session running 5 min",
   "session_pids": {
-   "18": 73593
+   "18": 73593,
+   "20": 111684
   },
   "session_pid": null
  },
  "waiting_until": null,
- "sessions": 19,
+ "sessions": 20,
  "tasks": [
   {
    "id": "T1",
@@ -502,13 +503,16 @@
    "complexity": null,
    "milestone": "M4",
    "tier": 1,
-   "status": "todo",
+   "status": "in_progress",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
-   "evidence": null,
+   "evidence": "commit on wt/T10-e4c1a2c4; npx vitest run src/features/users: 7 files, 40 tests pass; tsc and eslint clean; antagonist findings fixed except A5 (deferred)",
    "pending_id": null,
-   "notes": []
+   "notes": [],
+   "claimed_done": true,
+   "findings": null,
+   "severity": null
   },
   {
    "id": "T11",
@@ -1716,6 +1720,25 @@
    ],
    "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/REQ-005-integration-768f8753.json",
    "integration": true,
+   "repo_role": "frontend"
+  },
+  "T10": {
+   "task_id": "T10",
+   "branch": "wt/T10-e4c1a2c4",
+   "worktree": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T10-e4c1a2c4",
+   "base_sha": "b8efd6aa01f53257d25a4cdd198e94f97a2f6052",
+   "repo": "/home/david/dev/maros/maros-next",
+   "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
+   "state": "allocated",
+   "allowed_roots": [
+    "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
+   ],
+   "manifest": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/T10-e4c1a2c4.json",
+   "task_ids": [
+    "T10"
+   ],
+   "allowed_paths": [],
+   "resources": [],
    "repo_role": "frontend"
   }
  },
