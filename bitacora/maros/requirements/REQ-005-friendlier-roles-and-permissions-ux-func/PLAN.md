@@ -43,7 +43,7 @@ row-level security) were rejected as out of scope.
 - [x] T13 — Frontend consistency pass: run typecheck and lint, compare with the baseline errors of the base commit, fix only what this requirement introduced, and run the whole vitest suite · repo: frontend · after: T12 · covers: R11 · verify: `npx vitest run`
 
 ### M5 — Documentation
-- [ ] T14 — Document permission model v2, the API contract and the MCP tool list in the maros bitácora (ARCHITECTURE.md, DECISIONS.md) and the cerebro note, nothing new in the repos · repo: backend · after: T8, T13 · kind: docs · covers: R12 · verify: `grep -q "Permission model v2" "$BITACORA_ROOT/maros/ARCHITECTURE.md" || grep -q "Permission model v2" ~/bitacora/maros/ARCHITECTURE.md`
+- [x] T14 — Document permission model v2, the API contract and the MCP tool list in the maros bitácora (ARCHITECTURE.md, DECISIONS.md) and the cerebro note, nothing new in the repos · repo: backend · after: T8, T13 · kind: docs · covers: R12 · verify: `grep -q "Permission model v2" "$BITACORA_ROOT/maros/ARCHITECTURE.md" || grep -q "Permission model v2" ~/bitacora/maros/ARCHITECTURE.md`
 
 ## Verification
 Backend `npx jest` for the touched modules and frontend `npx vitest run` pass; no file under `db/` was executed; the
@@ -101,3 +101,4 @@ MCP capability report lists no administrative route without a tool; each accepta
 - 2026-10-15 22:09 T12 done (isolated integration) — Commit a15a1a6 on wt/M4-387f7bd0. npx vitest run src/features/users src/components: 13 files, 62 tests pass. tsc: 0 errors. eslint on touched files: clean. Antagonist review: first pass CONCERNS (fixed A1-A4, A6, A7; A5 and page-level test deferred to P-014/P-015), re-review SOUND.
 - 2026-10-15 22:09 T13 done (isolated integration) — npx vitest run: 83 files, 422 tests pass (exit 0). tsc --noEmit: 0 errors. eslint . : 0 errors, 180 warnings, same as the pre-T12 baseline (no new warnings). No code change in T13; commit a15a1a6 holds T12.
 - 2026-10-15 22:13 M4-audit done (marathon) — pass: verified R5, R6, R7, R8, R11 on wt/REQ-005-integration-768f8753 (commit 8ccc2fa); npx vitest run src/features/users src/components (13 suites, 62 tests pass); full npx vitest run (83 suites, 422
+- 2026-10-15 22:21 T14 done (isolated integration) — grep -q 'Permission model v2' ~/bitacora/maros/ARCHITECTURE.md passes; docs committed as e8c750c and 4a1248c on wt/T14-4ec8b9d4 (metodologia repo, bitácora files only, no repo code changed); two antagonist passes, all findings fixed, facts checked against wt/REQ-005-integration-86795b50; D-004..D-006 recorded; PENDING P-014 corrected; day log written.

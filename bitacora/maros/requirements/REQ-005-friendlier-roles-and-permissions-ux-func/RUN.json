@@ -14,15 +14,14 @@
  },
  "control": null,
  "heartbeat": {
-  "at": "2026-10-15T22:20:40",
+  "at": "2026-10-15T22:21:18",
   "pid": 842,
   "machine": "precision7760",
   "task": "T14",
   "session": 24,
-  "state": "session running 7 min",
+  "state": "batch settled",
   "session_pids": {
-   "18": 73593,
-   "24": 218797
+   "18": 73593
   },
   "session_pid": null
  },
@@ -680,7 +679,7 @@
    "complexity": null,
    "milestone": "M5",
    "tier": 0,
-   "status": "in_progress",
+   "status": "done",
    "attempts": 0,
    "last_error": null,
    "error_hashes": [],
@@ -689,9 +688,16 @@
    "notes": [
     "Docs done in bitácora (ARCHITECTURE §Permission model v2, D-004..D-006, PENDING P-014). Two antagonist passes; all findings fixed; no third pass. Code facts were taken from wt/REQ-005-integration-86795b50, not from main. Commit 4a1248c on wt/T14-4ec8b9d4 in the metodologia repo."
    ],
-   "claimed_done": true,
    "findings": null,
-   "severity": null
+   "severity": null,
+   "limit_streak": 0,
+   "last_route": {
+    "agent": "claude",
+    "profile": "claude-personal",
+    "model": "haiku",
+    "effort": null,
+    "result": "done"
+   }
   },
   {
    "id": "M5-audit",
@@ -1468,6 +1474,26 @@
     "terminal": true
    },
    "isolation": "worktree"
+  },
+  {
+   "at": "2026-10-15T22:20:51",
+   "session": 24,
+   "task": "T14",
+   "result": "integration_pending",
+   "summary": "grep -q 'Permission model v2' ~/bitacora/maros/ARCHITECTURE.md passes; docs committed as e8c750c and 4a1248c on wt/T14-4ec8b9d4 (metodologia repo, bitácora files only, no repo code changed); two antagonist passes, all findings fixed, facts checked against wt/REQ-005-integration-86795b50; D-004..D-00",
+   "seconds": 431,
+   "model": "haiku",
+   "cost_usd": 1.3536961999999997,
+   "agent": "claude",
+   "profile": "claude-personal",
+   "early_exit": true,
+   "contract": {
+    "v": 1,
+    "status": "failed",
+    "terminal": true
+   },
+   "isolation": "worktree",
+   "branch": "wt/T14-4ec8b9d4"
   }
  ],
  "pool": [
@@ -2067,7 +2093,7 @@
    "base_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
    "repo": "/home/david/dev/maros/maros-nest",
    "journal": "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees/integration.jsonl",
-   "state": "allocated",
+   "state": "accepted",
    "allowed_roots": [
     "/home/david/dev/metodologia/bitacora/.state/runs/maros-REQ-005/worktrees"
    ],
@@ -2075,9 +2101,13 @@
    "task_ids": [
     "T14"
    ],
-   "allowed_paths": [],
+   "allowed_paths": [
+    "__no_changes__"
+   ],
    "resources": [],
-   "repo_role": "backend"
+   "repo_role": "backend",
+   "candidate_sha": "3a4ce7b118dec4148a88c9731e4a798020b3b5bc",
+   "cleaned": true
   }
  },
  "wait_step": 0
