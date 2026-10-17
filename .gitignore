@@ -2,6 +2,8 @@
 bitacora/.state/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
 *.tmp
 evals/results/
 # build output of `uv tool install --editable`
