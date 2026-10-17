@@ -40,8 +40,24 @@
       "model": "haiku",
       "effort": null,
       "attempt_count": 1,
-      "status": "started",
+      "status": "responded",
       "started_at_utc": "2026-10-17T00:17:59.936746+00:00",
+      "timeout_seconds": 120,
+      "exit_status": 0,
+      "response_received": true,
+      "response_characters": 17,
+      "provider_stderr_received": false,
+      "elapsed_seconds": 7.823,
+      "finished_at_utc": "2026-10-17T00:18:07.760104+00:00"
+    },
+    {
+      "profile": "codex-1",
+      "provider": "codex",
+      "model": "gpt-6-luna",
+      "effort": "medium",
+      "attempt_count": 1,
+      "status": "started",
+      "started_at_utc": "2026-10-17T00:18:13.857633+00:00",
       "timeout_seconds": 120
     }
   ]
