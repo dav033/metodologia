@@ -1,0 +1,265 @@
+{
+ "fixture": "15 tasks, 3 milestones, audit per milestone",
+ "caveat": "relative estimates from model cost x effort weight; not measured quota or tokens",
+ "before": {
+  "sessions": 6,
+  "builder_sessions": 3,
+  "audit_sessions": 3,
+  "xhigh_sessions": 2,
+  "overprovisioned_tasks": 9,
+  "antagonist_passes_per_commit": 15,
+  "relative_cost_estimate": 71.0,
+  "relative_cost_estimate_common_weights": 129.0,
+  "log": [
+   {
+    "tasks": [
+     "T1",
+     "T2",
+     "T3",
+     "T4",
+     "T5"
+    ],
+    "tier": 2,
+    "model": "opus",
+    "effort": "xhigh",
+    "overprovisioned": [
+     "T1",
+     "T2",
+     "T3",
+     "T5"
+    ],
+    "relative_cost": 40.0,
+    "relative_cost_common_weights": 80.0
+   },
+   {
+    "tasks": [
+     "T6",
+     "T7",
+     "T8",
+     "T9",
+     "T10",
+     "T11"
+    ],
+    "tier": 1,
+    "model": "sonnet",
+    "effort": "xhigh",
+    "overprovisioned": [
+     "T6",
+     "T7",
+     "T8",
+     "T10",
+     "T11"
+    ],
+    "relative_cost": 18.0,
+    "relative_cost_common_weights": 36.0
+   },
+   {
+    "tasks": [
+     "T12",
+     "T13",
+     "T14",
+     "T15"
+    ],
+    "tier": 0,
+    "model": "haiku",
+    "effort": null,
+    "overprovisioned": [],
+    "relative_cost": 4.0,
+    "relative_cost_common_weights": 4.0
+   },
+   {
+    "tasks": [
+     "M1-audit"
+    ],
+    "tier": 1,
+    "model": "sonnet",
+    "effort": "medium",
+    "overprovisioned": [],
+    "relative_cost": 3.0,
+    "relative_cost_common_weights": 3.0
+   },
+   {
+    "tasks": [
+     "M2-audit"
+    ],
+    "tier": 1,
+    "model": "sonnet",
+    "effort": "medium",
+    "overprovisioned": [],
+    "relative_cost": 3.0,
+    "relative_cost_common_weights": 3.0
+   },
+   {
+    "tasks": [
+     "M3-audit"
+    ],
+    "tier": 1,
+    "model": "sonnet",
+    "effort": "medium",
+    "overprovisioned": [],
+    "relative_cost": 3.0,
+    "relative_cost_common_weights": 3.0
+   }
+  ]
+ },
+ "after": {
+  "sessions": 13,
+  "builder_sessions": 10,
+  "audit_sessions": 3,
+  "xhigh_sessions": 0,
+  "overprovisioned_tasks": 0,
+  "antagonist_passes_per_commit": 1,
+  "relative_cost_estimate": 37.0,
+  "relative_cost_estimate_common_weights": 37.0,
+  "log": [
+   {
+    "tasks": [
+     "T1",
+     "T5"
+    ],
+    "tier": 0,
+    "model": "haiku",
+    "effort": null,
+    "overprovisioned": [],
+    "relative_cost": 2.0,
+    "relative_cost_common_weights": 2.0
+   },
+   {
+    "tasks": [
+     "T2"
+    ],
+    "tier": 0,
+    "model": "haiku",
+    "effort": null,
+    "overprovisioned": [],
+    "relative_cost": 1.0,
+    "relative_cost_common_weights": 1.0
+   },
+   {
+    "tasks": [
+     "T3"
+    ],
+    "tier": 0,
+    "model": "haiku",
+    "effort": null,
+    "overprovisioned": [],
+    "relative_cost": 1.0,
+    "relative_cost_common_weights": 1.0
+   },
+   {
+    "tasks": [
+     "T4"
+    ],
+    "tier": 2,
+    "model": "opus",
+    "effort": "high",
+    "overprovisioned": [],
+    "relative_cost": 12.0,
+    "relative_cost_common_weights": 12.0
+   },
+   {
+    "tasks": [
+     "T6"
+    ],
+    "tier": 0,
+    "model": "haiku",
+    "effort": null,
+    "overprovisioned": [],
+    "relative_cost": 1.0,
+    "relative_cost_common_weights": 1.0
+   },
+   {
+    "tasks": [
+     "T7",
+     "T8",
+     "T11"
+    ],
+    "tier": 0,
+    "model": "haiku",
+    "effort": null,
+    "overprovisioned": [],
+    "relative_cost": 3.0,
+    "relative_cost_common_weights": 3.0
+   },
+   {
+    "tasks": [
+     "T9"
+    ],
+    "tier": 1,
+    "model": "sonnet",
+    "effort": "medium",
+    "overprovisioned": [],
+    "relative_cost": 3.0,
+    "relative_cost_common_weights": 3.0
+   },
+   {
+    "tasks": [
+     "T10"
+    ],
+    "tier": 0,
+    "model": "haiku",
+    "effort": null,
+    "overprovisioned": [],
+    "relative_cost": 1.0,
+    "relative_cost_common_weights": 1.0
+   },
+   {
+    "tasks": [
+     "T12",
+     "T13",
+     "T14"
+    ],
+    "tier": 0,
+    "model": "haiku",
+    "effort": null,
+    "overprovisioned": [],
+    "relative_cost": 3.0,
+    "relative_cost_common_weights": 3.0
+   },
+   {
+    "tasks": [
+     "T15"
+    ],
+    "tier": 0,
+    "model": "haiku",
+    "effort": null,
+    "overprovisioned": [],
+    "relative_cost": 1.0,
+    "relative_cost_common_weights": 1.0
+   },
+   {
+    "tasks": [
+     "M1-audit"
+    ],
+    "tier": 1,
+    "model": "sonnet",
+    "effort": "medium",
+    "overprovisioned": [],
+    "relative_cost": 3.0,
+    "relative_cost_common_weights": 3.0
+   },
+   {
+    "tasks": [
+     "M2-audit"
+    ],
+    "tier": 1,
+    "model": "sonnet",
+    "effort": "medium",
+    "overprovisioned": [],
+    "relative_cost": 3.0,
+    "relative_cost_common_weights": 3.0
+   },
+   {
+    "tasks": [
+     "M3-audit"
+    ],
+    "tier": 1,
+    "model": "sonnet",
+    "effort": "medium",
+    "overprovisioned": [],
+    "relative_cost": 3.0,
+    "relative_cost_common_weights": 3.0
+   }
+  ]
+ }
+}

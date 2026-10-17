@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-17 11:01 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-17 12:51 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -9,9 +9,6 @@ _Generated 2026-10-17 11:01 by `bitacora.py index`. Do not edit by hand._
 ## Workspace
 
 - **skill** → `/home/david/dev/metodologia`
-- **ops-matrix-cujggjqq** → `/tmp/ops-matrix-cujggjqq` (not cloned here)
-- **ops-matrix-gwx4a4rl** → `/tmp/ops-matrix-gwx4a4rl` (not cloned here)
-- **ops-matrix-pduh5t5x** → `/tmp/ops-matrix-pduh5t5x` (not cloned here)
 
 ## Needs attention
 
@@ -74,11 +71,11 @@ _Generated 2026-10-17 11:01 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-066 — Harness quota optimisation: ladder without automatic xhigh, bounded exploration, tier-homogeneous sessions
 - D-065 — Select Luna high Explorer, with Sol/Sonnet medium for complicated exploration
 - D-064 — Planner default Astra high, fallback Opus xhigh (2026-10-17)
 - D-063 — Select Sol and Sonnet medium reviewers, with high for harder reviews
 - D-062 — Authorize necessary Antigravity T15 launch revalidation
-- D-061 — Pin the configured profile and runtime in matched benchmark records
 
 ## Artifacts
 

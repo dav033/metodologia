@@ -38,6 +38,8 @@ month summary._
   - ✓ P-032 · M3 cwd sweep spares interactive processes · closed 2026-10-15 · a process with a controlling terminal that does not descend from the attempt's shim/agent is left alone; headless stragglers and the agent's own pty children are still swept; residual: a pty child orphaned to init
 - P-110 · Complete the authorized Explorer ladder after quota handoff · urgency: med · complexity: M · added 2026-10-17 · session 01a1457f
   - Resume `relay/RELAY-20261017-095008.md` Next. Automatic relay was not scheduled (PID 2308 is not a terminal client); saved status now shows no active native calls: 23/24 measured cells returned, Gemini E6 unlaunched after E5 strict-contract failure. Finish semantic grading, closing quota and final report; any authorized continuation of Gemini E6 must preserve the declared stop and failure evidence, without repeating completed cells. Preserve nine excluded attempts and unknown repaired-Gemini per-cell quota; Explorer selection is now resolved by D-065; experimental closure remains open.
+- P-112 · Record later rework/regression and the verification mode (command / none / audit) in attempt telemetry so quality can penalise models that need follow-up repairs · urgency: med · complexity: M · added 2026-10-17 · session 2d72194c
+- P-113 · Measure on real marathon runs whether 3-task tier-0 groups beat single-task sessions (the replay does not model session start cost) · urgency: med · complexity: M · added 2026-10-17 · session 2d72194c
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T5–T8 remain; resume only on explicit request · urgency: med · complexity: L · added 2026-10-14 · owner pause; requirements/REQ-008-fresh-milestone-orchestration-and-bounde/REPORT.md
 - P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · urgency: low · complexity: S · added 2026-10-08 · research
 - P-006 · Marathon: pass the claude prompt via stdin instead of argv (cmd-shim 8191-char / newline risk) · urgency: low · complexity: S · added 2026-10-09 · marathon review
@@ -62,6 +64,7 @@ month summary._
   - Context: explicitly out of scope of REQ-009; `references/plan-contract.md` §Consuming a plan lists the stable error codes.
 - P-022 · Split further parts of the methodology into modules following `references/modules.md` (candidates to evaluate: requirements gate, marathon supervisor state/run, bitácora documents/index, agent routing) · urgency: low · complexity: L · added 2026-10-14 · REQ-010 proposal
   - Context: `bt_planner` is the first module and the template (boundary + isolation + adapter tests). Do one at a time, each with its own requirement and review; the owner picks the order.
+- P-111 · Reserve quota for priority work and plan the week's capacity (router only paces; no reservation) · urgency: low · complexity: L · added 2026-10-17 · session 2d72194c
 
 ## Blocked
 _None_
