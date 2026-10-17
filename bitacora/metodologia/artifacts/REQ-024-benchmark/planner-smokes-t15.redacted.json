@@ -56,8 +56,24 @@
       "model": "gpt-6-luna",
       "effort": "medium",
       "attempt_count": 1,
-      "status": "started",
+      "status": "responded",
       "started_at_utc": "2026-10-17T00:18:13.857633+00:00",
+      "timeout_seconds": 120,
+      "exit_status": 0,
+      "response_received": true,
+      "response_characters": 17,
+      "provider_stderr_received": true,
+      "elapsed_seconds": 7.977,
+      "finished_at_utc": "2026-10-17T00:18:21.835311+00:00"
+    },
+    {
+      "profile": "codex-luis",
+      "provider": "codex",
+      "model": "gpt-6-luna",
+      "effort": "medium",
+      "attempt_count": 1,
+      "status": "started",
+      "started_at_utc": "2026-10-17T00:18:27.176833+00:00",
       "timeout_seconds": 120
     }
   ]
