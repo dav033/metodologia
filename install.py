@@ -11,7 +11,7 @@ What it does, with this machine's paths:
   3. Always-on loading: @import of SKILL.md in <claude dir>/CLAUDE.md, pointer in <codex dir>/AGENTS.md
   <claude dir>/<codex dir> are ~/.claude and ~/.codex plus every existing CLAUDE_CONFIG_DIR / CODEX_HOME of the
   account profiles (bitacora.py profiles list), so each account gets the same skill, hooks and subagents.
-  4. Subagent roles for both (skill/scripts/install_agents.py)
+  4. Subagent roles for Claude Code, Codex and Antigravity (skill/scripts/install_agents.py)
   5. Rebuilds the local workspace index (where each project's repos are cloned on this machine)
 """
 from __future__ import annotations

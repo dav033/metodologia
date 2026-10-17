@@ -173,7 +173,7 @@ class Ledger:
             same_key = con.execute("SELECT * FROM attempts WHERE idem_key=?", (request.idempotency_key,)).fetchone()
             if same_key is not None:
                 row = self._row(same_key)
-                if row["request"] != json.loads(_dump(request.to_dict())):
+                if not request.matches_record(row["request"]):
                     raise ExecutorError("KEY_CONFLICT", "the idempotency key was used with a different order")
                 return row, False
             if con.execute("SELECT 1 FROM attempts WHERE attempt_id=?", (request.attempt_id,)).fetchone():
@@ -215,6 +215,15 @@ class Ledger:
         sql = f"SELECT * FROM attempts WHERE state IN ({marks}) ORDER BY seq" + (f" LIMIT {int(limit)}" if limit else "")
         with self._tx(write=False) as con:
             return [self._row(r) for r in con.execute(sql, states).fetchall()]
+
+    def ids_in_states(self, states: tuple[str, ...]) -> list[str]:
+        """Read only the identities for a state-filtered owner poll, without decoding attempt payloads."""
+        if not states:
+            return []
+        marks = ",".join("?" * len(states))
+        with self._tx(write=False) as con:
+            rows = con.execute(f"SELECT attempt_id FROM attempts WHERE state IN ({marks}) ORDER BY seq", states)
+            return [row[0] for row in rows]
 
     def count(self, states: tuple[str, ...]) -> int:
         marks = ",".join("?" * len(states))
@@ -323,4 +332,4 @@ class Ledger:
             return con.execute("SELECT COUNT(*) FROM events WHERE delivered=0").fetchone()[0]
 
 
-__all__ = ["Ledger", "LIVE", "TERMINAL"]
+__all__ = ["LIVE", "TERMINAL", "Ledger"]

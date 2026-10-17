@@ -8,9 +8,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from .contracts import route_metadata_valid
 from .errors import SchedulerError
 
-STATE_SCHEMA = 1
+STATE_SCHEMA = 2
 SEEN_LIMIT = 5000       # applied ids remembered; older ones are still refused by the attempt/token/state guards
 REJECTED_LIMIT = 200
 OUTBOX_LIMIT = 1000     # above this, settled orders of closed attempts are dropped (the audit log keeps the story)
@@ -25,6 +26,9 @@ class TaskRec:
     reason: str = ""           # why blocked / cancelled
     hold_until: float = 0.0    # recovery asked to wait until this time (epoch seconds)
     waits: int = 0             # how many times recovery asked to wait since the last reopen
+    route_metadata: dict[str, str] = field(default_factory=dict)
+    route_status: str = "unplanned"  # unplanned | recommended | unavailable | assigned
+    route_reason: str = ""
 
 
 @dataclass
@@ -72,6 +76,7 @@ class RunState:
     counters: dict[str, int] = field(default_factory=lambda: {"attempt": 0, "token": 0, "outbox": 0, "audit": 0})
     paused: bool = False
     cancel_requested: bool = False
+    routing_complete: bool = False
     schema: int = STATE_SCHEMA
 
     def has_seen(self, message_id: str) -> bool:
@@ -89,6 +94,7 @@ class RunState:
         return {
             "schema": self.schema, "plan_id": self.plan_id, "revision": self.revision, "plan_sha256": self.plan_sha256,
             "created_at": self.created_at, "paused": self.paused, "cancel_requested": self.cancel_requested,
+            "routing_complete": self.routing_complete,
             "counters": dict(self.counters), "seen_events": list(self.seen_events),
             "rejected_recent": list(self.rejected_recent),
             "tasks": {k: vars(v).copy() for k, v in self.tasks.items()},
@@ -100,13 +106,30 @@ class RunState:
     @classmethod
     def from_dict(cls, data: Any) -> RunState:
         try:
-            if not isinstance(data, dict) or data.get("schema") != STATE_SCHEMA:
+            if not isinstance(data, dict) or data.get("schema") not in {1, STATE_SCHEMA}:
                 raise ValueError("unsupported or missing schema")
+            routing_complete = data.get("routing_complete", False)
+            if not isinstance(routing_complete, bool):
+                raise ValueError("routing_complete must be boolean")
             state = cls(plan_id=data["plan_id"], revision=data["revision"], plan_sha256=data["plan_sha256"],
                         created_at=data["created_at"], paused=bool(data["paused"]),
-                        cancel_requested=bool(data["cancel_requested"]), counters=dict(data["counters"]),
+                        cancel_requested=bool(data["cancel_requested"]), routing_complete=routing_complete,
+                        counters=dict(data["counters"]), schema=STATE_SCHEMA,
                         seen_events=list(data["seen_events"]), rejected_recent=list(data.get("rejected_recent", [])))
-            state.tasks = {k: TaskRec(**v) for k, v in data["tasks"].items()}
+            state.tasks = {}
+            for task_id, value in data["tasks"].items():
+                if not isinstance(value, dict):
+                    raise ValueError("task record must be an object")
+                route_metadata = value.get("route_metadata", {})
+                route_status = value.get("route_status", "unplanned")
+                route_reason = value.get("route_reason", "")
+                if (not isinstance(route_metadata, dict) or not route_metadata_valid(route_metadata) or
+                        not isinstance(route_status, str) or
+                        route_status not in {"unplanned", "recommended", "unavailable", "assigned"} or
+                        not isinstance(route_reason, str) or len(route_reason) > 160 or
+                        any(ord(char) < 32 for char in route_reason)):
+                    raise ValueError("task route record is invalid")
+                state.tasks[task_id] = TaskRec(**value)
             state.attempts = {k: AttemptRec(**v) for k, v in data["attempts"].items()}
             state.holds = {k: [list(c) for c in v] for k, v in data["holds"].items()}
             state.outbox = [OutboxItem(**o) for o in data["outbox"]]

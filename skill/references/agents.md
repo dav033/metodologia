@@ -3,6 +3,22 @@
 Which agent does what, on which account, with how much effort — and how the system gets better at deciding. Any agent
 can print the live version of this page for a project with `bitacora.py --project P context`.
 
+## Documented owner Planner policy (2026-10-17; D-064)
+
+The default Planner is GPT-6 Astra (`gpt-6-astra`) **high**; its fallback is Claude Opus 5.5 (`claude-opus-5-5`) **xhigh**. Astra high was measured in the native Planner pilot; Opus xhigh was not. This documents the selected policy without changing runtime configuration. Account profiles and fallback activation conditions are not yet pinned. Preserve D-054's explicit caller selection and prohibition of silent substitution within a pinned request.
+
+## Documented owner reviewer policy (2026-10-17; D-063)
+
+The selected review pair is GPT-6.1 Sol (`gpt-6.1-sol`) **medium** and Claude Sonnet 5.5 (`claude-sonnet-5-5`) **medium**. For more difficult reviews, use the respective model's **high** variant. The owner has not specified a numerical difficulty threshold. This supersedes earlier reviewer-model proposals as the desired policy.
+
+This decision is documented only, at the owner's request. The runtime routing/catalog descriptions below have not been changed to implement it. Formal REQ-024 account profiles still require explicit pinning; the experiment's accounts are not automatically the formal reviewer identities.
+
+## Documented owner Explorer policy (2026-10-17; D-065)
+
+Default: GPT-6 Luna (`gpt-6-luna`) **high**. For complicated exploration, use GPT-6.1 Sol (`gpt-6.1-sol`) **medium**; Claude Sonnet 5.5 (`claude-sonnet-5-5`) **medium** is an alternative to Sol medium. Haiku is not selected. No numerical complexity threshold or production account is specified; future Sol comparisons use `codex-2` by owner instruction.
+
+This is the selected policy, not a runtime rollout. The source Explorer still declares Claude `haiku` and Codex `low` effort; checked installations retain those values, and generated Codex roles inherit the model unless otherwise selected. P-110's experiment closure remains pending independently of this decision. See `artifacts/explorer-ladder-20261017/matched-comparison.json` for the bounded quality and format evidence.
+
 ## The catalog
 
 | Model | Provider (CLI) | Tiers | Use it for |
@@ -91,6 +107,14 @@ session with requirements, diff and relevant consumers; another provider is opti
 budget. Review corrections and affected paths on follow-up instead of repeating unaffected investigation.
 The final review consolidates milestone evidence and remaining cross-milestone risks, rather than restarting every
 completed audit. No xhigh/max by default; escalate for recorded risk or demonstrated difficulty, not file count.
+
+## Scheduler M2 route recommendations (D-057)
+
+D-057 applies only when the Scheduler routes an approved task DAG through M2. That path uses the validated task
+floor and fresh effective-account quota to recommend a provider, model, effort, profile and account reference. Its
+projection reports the quota observation, validity, usage and stable selection or unavailable reason. M1 still
+revalidates READY work and owns reservations and dispatch. This policy does not change standalone or pinned legacy
+routing, and D-004's independent audit routing and default auditor remain in force.
 
 ## Quotas
 

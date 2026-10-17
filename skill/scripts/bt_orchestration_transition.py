@@ -70,7 +70,11 @@ def launch(project: str, req: str, *, dry_run: bool = False, profile: str | None
     workdir = core.ws.workdir(core.ROOT, project)
     if not workdir or not workdir.is_dir():
         raise terminal.TerminalError('FOREGROUND_WORKSPACE_REQUIRED')
-    problem = plan_adapter.launch_problem(rdir, freeze=not dry_run)  # same gate as every other launch path
+    import bt_scheduler_adapter
+    problem = plan_adapter.launch_problem(
+        rdir, freeze=not dry_run,
+        compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir),
+    )  # same gate as every other launch path
     if problem:
         raise terminal.TerminalError('FOREGROUND_PLAN_REFUSED: ' + problem)
     argv = successor_argv(project, req, profile=profile, pool=pool, model=model)
@@ -120,7 +124,11 @@ def main() -> int:
         rdir = core.find_req(core.ROOT / data['project'], data['req'])
         if gate.require_ready(rdir)['status'] != 'ready' or core._front(rdir / 'PLAN.md', 'status') != 'approved':
             raise terminal.TerminalError('FOREGROUND_APPROVAL_REQUIRED: authority changed before transition')
-        problem = plan_adapter.launch_problem(rdir, freeze=False)  # the plan must still be the approved revision
+        import bt_scheduler_adapter
+        problem = plan_adapter.launch_problem(
+            rdir, freeze=False,
+            compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir),
+        )  # the plan must still be the approved revision
         if problem:
             raise terminal.TerminalError('FOREGROUND_PLAN_REFUSED: ' + problem)
         prefix = successor_argv(data['project'], data['req'])

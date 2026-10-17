@@ -5,25 +5,33 @@ the methodology-specific meaning (where a requirement keeps its frozen plan and 
 `RUN.json` looks like, who is the authority of a requirement's run) lives here. No other file may import the core
 (tests/test_scheduler_integration.py enforces it).
 
+M4's read-only/operator and stream bridges live in `bt_scheduler_monitor_adapter`; this adapter keeps M1 as the sole
+owner of scheduler state and does not import monitor internals.
+
 Opt-in and non-destructive: a requirement is run either by the legacy supervisor (`RUN.json`) or by the scheduler core
 (its run database), never both. Nothing here writes into a legacy `RUN.json`, and `PLAN.json` is only read.
 """
 from __future__ import annotations
 
+import contextlib
 import datetime as dt
 import json
 import os
 import re
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 import bt_plan_adapter as plan_adapter
 import bt_scheduler_core as core
+import bt_scheduler_core.plan as m1_plan
 import bt_scheduler_decision_adapter as decision_sources
+import bt_scheduler_plan_compat as plan_compat
 from bt_scheduler_decision import (
     DecisionEngine,
+    DecisionInputError,
     DecisionLedger,
     DecisionRequest,
     QualityGate,
@@ -43,6 +51,70 @@ REVISIONS = "plan-revisions"          # the planner's documented layout: PLAN.r<
 RUN_STATUS = {"running": "running", "paused": "paused", "completed": "done", "blocked": "blocked", "cancelled": "stopped"}
 TASK_STATUS = {"pending": "todo", "ready": "todo", "active": "in_progress", "recovering": "in_progress",
                "completed": "done", "blocked": "blocked", "cancelled": "blocked"}
+SCHEDULER_STALE_MINUTES = 2
+M1_INCIDENT_CONTRACT = "1.2.0"
+_PLAN_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+DOWNSTREAM_PLAN_SCHEMA_VERSION = plan_compat.DEFAULT_PLAN_SCHEMA_VERSION
+DOWNSTREAM_PLAN_SCHEMA_SINCE = plan_compat.PLAN_SCHEMA_CAPABILITY_SINCE
+_M2_MAX_BATCH_TASKS = 128  # Frozen batch_decision.maximum_tasks; this bound survives record version 1.3.0.
+_QUOTA_PREFLIGHT_MAX_ACCOUNTS = 32
+
+
+def refresh_quota_preflight(project: str) -> dict[str, dict[str, object]]:
+    """Refresh due quota sources for this project's authorized, effective account pool only."""
+    from bt_scheduler_quota_preflight import refresh
+    return refresh(project, _QUOTA_PREFLIGHT_MAX_ACCOUNTS)
+
+
+def supports_incident_observed(scheduler: object) -> bool:
+    """Check the installed M1 capability before the M4 adapter claims any incident reference."""
+    version = getattr(scheduler, "contract_version", None)
+    if not isinstance(version, str):
+        return False
+    try:
+        major, minor, _patch = (int(part) for part in version.split("."))
+    except ValueError:
+        return False
+    return major == 1 and minor >= 2
+
+
+def downstream_compatibility(schema_version: str = DOWNSTREAM_PLAN_SCHEMA_VERSION) -> dict[str, object]:
+    """Report Planner and M1/M2/M6 schema capabilities; missing or malformed markers stay unknown."""
+    planner_version = getattr(plan_adapter.planner, "SCHEMA_VERSION", None)
+    return plan_compat.downstream_compatibility(
+        schema_version, planner_version=planner_version,
+        m1_capabilities=getattr(m1_plan, "PLAN_SCHEMA_CAPABILITIES", None),
+    )
+
+
+def plan_compatibility_report(rdir: Path, *, plan_path: Path | None = None) -> dict[str, object]:
+    """Build a fresh report for the schema version in this working or frozen PLAN.json."""
+    path = Path(plan_path) if plan_path is not None else Path(rdir) / plan_adapter.planner.PLAN_JSON
+    return plan_compat.compatibility_report(
+        path, planner_version=getattr(plan_adapter.planner, "SCHEMA_VERSION", None),
+        m1_capabilities=getattr(m1_plan, "PLAN_SCHEMA_CAPABILITIES", None),
+    )
+
+
+def plan_consumer_problem(rdir: Path, *, plan_path: Path | None = None) -> str | None:
+    """Reject schema 1.2.0+ when Planner, M1, M2 or M6 does not declare exact support."""
+    path = Path(plan_path) if plan_path is not None else Path(rdir) / plan_adapter.planner.PLAN_JSON
+    return plan_compat.consumer_problem(
+        rdir, plan_path=path, planner_version=getattr(plan_adapter.planner, "SCHEMA_VERSION", None),
+        m1_capabilities=getattr(m1_plan, "PLAN_SCHEMA_CAPABILITIES", None),
+    )
+
+
+def build_incident_observed_event(scheduler: core.SchedulerCore, reference: dict[str, object], *,
+                                  confidence: str, idempotency_key: str, observed_at: str) -> dict[str, object]:
+    """Translate a validated M4 reference into M1's versioned event envelope."""
+    payload = {**reference, "confidence": confidence, "observed_at": observed_at,
+               "idempotency_key": idempotency_key}
+    plan = scheduler.plan
+    return {"event_id": idempotency_key, "plan_id": plan.plan_id, "revision": plan.revision,
+            "task_id": reference.get("task_id"), "attempt_id": reference.get("attempt_id"), "source": "m4",
+            "kind": "incident_observed", "occurred_at": observed_at, "payload": payload,
+            "contract_version": M1_INCIDENT_CONTRACT}
 
 
 def run_db_path(rdir: Path) -> Path:
@@ -57,6 +129,41 @@ def run_db_path(rdir: Path) -> Path:
     return rdir / RUN_DB
 
 
+@contextlib.contextmanager
+def owner_lock(rdir: Path) -> Iterator[None]:
+    """Serialize legacy-run initialization with the Scheduler owner for this requirement."""
+    lock_path = run_db_path(rdir).with_suffix(".owner.lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    handle = lock_path.open("a+b")
+    try:
+        if os.name == "nt":
+            import msvcrt
+            try:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            except OSError as exc:
+                raise core.SchedulerError("OWNER_ACTIVE", "another Scheduler or legacy owner is starting") from exc
+        else:
+            import fcntl
+            try:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError as exc:
+                raise core.SchedulerError("OWNER_ACTIVE", "another Scheduler or legacy owner is starting") from exc
+        yield
+    finally:
+        if os.name == "nt":
+            import msvcrt
+            try:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            except OSError:
+                pass
+        else:
+            import fcntl
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        handle.close()
+
+
 def authority(rdir: Path) -> str:
     """Who runs this requirement: 'scheduler' (its run database exists), 'legacy' (a RUN.json of the old supervisor
     exists) or 'none'. Decided by the database only: the projection is a different file and proves nothing."""
@@ -64,6 +171,87 @@ def authority(rdir: Path) -> str:
     if run_db_path(rdir).exists():
         return "scheduler"
     return "legacy" if (rdir / RUN_JSON).exists() else "none"
+
+
+def scheduler_authority(rdir: Path) -> bool:
+    """Whether the durable M1 database, rather than a projection, owns this requirement."""
+    return authority(rdir) == AUTHORITY
+
+
+def read_projection(rdir: Path) -> dict[str, Any] | None:
+    """Read only the projection belonging to an existing Scheduler database; never fall back to RUN.json."""
+    if not scheduler_authority(rdir):
+        return None
+    try:
+        data = json.loads((Path(rdir) / PROJECTION).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    plan_ref = data.get("plan_ref") if isinstance(data, dict) else None
+    if (not isinstance(data, dict) or data.get("authority") != AUTHORITY or data.get("projection") is not True
+            or data.get("status") not in RUN_STATUS.values() or not isinstance(data.get("tasks"), list)
+            or not isinstance(plan_ref, dict) or not isinstance(plan_ref.get("plan_id"), str)
+            or not plan_ref["plan_id"].strip() or type(plan_ref.get("revision")) is not int
+            or plan_ref["revision"] < 1 or not isinstance(plan_ref.get("sha256"), str)
+            or not _PLAN_SHA256.fullmatch(plan_ref["sha256"])
+            or not isinstance(data.get("attention", []), list)):
+        return None
+    for task in data["tasks"]:
+        if (not isinstance(task, dict) or not isinstance(task.get("id"), str)
+                or not isinstance(task.get("title"), str) or task.get("status") not in TASK_STATUS.values()
+                or type(task.get("attempts")) is not int or task["attempts"] < 0):
+            return None
+        for key in ("complexity", "provider", "model", "effort", "profile", "account_ref", "route_status",
+                    "route_reason", "selection_reason", "quota_state", "quota_reason", "quota_observed_at",
+                    "quota_valid_until", "quota_used_percent"):
+            if key in task and not isinstance(task[key], str):
+                return None
+        if task.get("quota_state", "") not in {"", "fresh", "stale", "missing", "malformed", "refresh_failed",
+                                                 "exhausted"}:
+            return None
+        if task.get("route_status", "unplanned") not in {"unplanned", "recommended", "unavailable", "assigned"}:
+            return None
+    heartbeat = data.get("heartbeat_at")
+    if heartbeat is not None and not isinstance(heartbeat, str):
+        return None
+    data["heartbeat"] = {"at": heartbeat} if heartbeat else {}
+    return data
+
+
+def projection_is_stale(data: dict[str, Any]) -> bool:
+    if data.get("status") not in ("running", "waiting", "paused"):
+        return False
+    heartbeat = data.get("heartbeat_at")
+    if not isinstance(heartbeat, str) or not heartbeat:
+        return True
+    try:
+        at = dt.datetime.fromisoformat(heartbeat)
+    except ValueError:
+        return True
+    if at.tzinfo is None:
+        at = at.replace(tzinfo=dt.UTC)
+    age = (dt.datetime.now(dt.UTC) - at.astimezone(dt.UTC)).total_seconds() / 60
+    return age > SCHEDULER_STALE_MINUTES
+
+
+def apply_control(rdir: Path, action: str, *, by: str = "web") -> None:
+    """Route operator controls to M1 without starting/reconciling the Scheduler runtime."""
+    methods = {"pause": "pause", "resume": "resume", "stop": "cancel"}
+    method = methods.get(action)
+    if method is None:
+        raise SystemExit(f"Acción desconocida: {action}")
+    if not scheduler_authority(rdir):
+        raise SystemExit("Este requerimiento no tiene autoridad Scheduler.")
+    db = run_db_path(rdir)
+    if not db.is_file():
+        raise SystemExit("La base Scheduler no está disponible; no se cambió el control.")
+    try:
+        plan = approved_plan(rdir)
+        repository = core.SqliteRepository(db, create=False)
+        scheduler = core.SchedulerCore(plan, repository)
+        scheduler.inspect()
+        getattr(scheduler, method)(by)
+    except core.SchedulerError as exc:
+        raise SystemExit(f"Control Scheduler rechazado [{exc.code}]: {exc}") from exc
 
 
 def refuse_legacy_run(rdir: Path) -> None:
@@ -85,6 +273,8 @@ def approved_plan(rdir: Path) -> core.Plan:
         problem = fields.get("plan_ref_error", "no frozen PLAN.json revision")
         raise core.SchedulerError("PLAN_NOT_APPROVED", f"{rdir.name}: {problem}")
     path = rdir / REVISIONS / f"PLAN.r{ref['revision']}.json"
+    if problem := plan_consumer_problem(rdir, plan_path=path):
+        raise core.SchedulerError("PLAN_CONSUMER_INCOMPATIBLE", problem)
     return core.load_plan_file(path, approved_sha256=ref["sha256"], plan_id=ref["plan_id"], revision=ref["revision"])
 
 
@@ -135,31 +325,100 @@ class DecisionAssignmentPort:
             if quality_gate.enabled else None
         self.engine = DecisionEngine(self.ledger, chooser=self.chooser, quality_gate=quality_gate)
 
+    @staticmethod
+    def _route_metadata(decision_id: str, route, candidate) -> dict[str, str]:
+        return {"schema_version": core.ROUTING_CONTRACT_VERSION, "decision_id": decision_id,
+                "route_id": route.route_id, "provider": route.provider,
+                "model": route.model, "profile": route.profile, "effort": route.effort or "",
+                "account_ref": route.account_ref, "selection_reason": ";".join(route.factor_codes),
+                "quota_state": "fresh" if candidate.quota_status == "available" else candidate.quota_status,
+                "quota_reason": ";".join(candidate.source_reason_codes),
+                "quota_observed_at": "" if candidate.quota_observed_at is None else str(candidate.quota_observed_at),
+                "quota_valid_until": "" if candidate.quota_valid_until is None else str(candidate.quota_valid_until),
+                "quota_used_percent": "" if candidate.quota_used_percent is None else str(candidate.quota_used_percent)}
+
+    def plan(self, request: core.PlanRoutingRequest) -> tuple[core.PlannedRoute, ...]:
+        """Map every task in the approved DAG to a current M2 recommendation without reserving capacity."""
+        if not isinstance(request, core.PlanRoutingRequest):
+            return ()
+        from bt_scheduler_plan_routing import plan_full_dag
+        return plan_full_dag(core, self, request, refresh_quota_preflight)
+
     def propose(self, request: core.AssignmentRequest) -> tuple[core.Assignment, ...]:
         if not isinstance(request, core.AssignmentRequest) or not request.ready or request.free_slots < 1:
             return ()
-        if not isinstance(request.plan_sha256, str) or len(request.plan_sha256) != 64:
+        if not isinstance(request.plan_sha256, str) or not _PLAN_SHA256.fullmatch(request.plan_sha256):
             return ()
         checkpoint_revision = CHECKPOINTS[self.checkpoint][1]
-        output = []
-        for view in request.ready:
-            if len(output) >= request.free_slots:
-                break
+        if len(request.ready) > _M2_MAX_BATCH_TASKS:
+            raise DecisionInputError(["ready_batch:task_limit_exceeded"])
+        views = request.ready
+        try:
+            quota_preflight = refresh_quota_preflight(self.project)
+        except Exception:  # noqa: BLE001 - an unavailable refresh must not reuse cached quota as current.
+            quota_preflight = {"*": {"status": "unavailable", "reason": "quota_refresh_failed"}}
+        from bt_scheduler_plan_routing import _quota_evidence, persist_dispatch_batch, quota_aware_requested_at
+        requested_at = quota_aware_requested_at(request.now, quota_preflight)
+        decision_requests = []
+        candidates_by_task = {}
+        preserve_baseline_by_task = {}
+        quota_evidence_by_task = {}
+        for view in views:
             task, kind, classifications = decision_sources.task_facts(
                 view.id, view.meta, view.dependencies, view.acceptance_criteria, view.verification,
                 view.shared_resources, view.expected_paths,
             )
+            candidates = decision_sources._candidate_rows(self.project, kind, classifications, requested_at)
+            candidates = tuple(
+                replace(candidate, quota_status="unknown")
+                if candidate.provider in {"claude", "codex", "antigravity"} and
+                (not isinstance(quota_preflight, dict) or
+                 not isinstance(quota_preflight.get(candidate.profile), dict) or
+                 quota_preflight[candidate.profile].get("status") != "available")
+                else candidate
+                for candidate in candidates
+            )
             decision_request = DecisionRequest(
-                request.plan_id, request.revision, request.plan_sha256, request.free_slots, request.now, task,
-                decision_sources._candidate_rows(self.project, kind, classifications, request.now),
+                request.plan_id, request.revision, request.plan_sha256, request.free_slots, requested_at, task,
+                candidates,
                 decision_sources.POLICY_VERSION, checkpoint_revision,
             )
-            decision = self.engine.decide(decision_request)
-            if decision.selected is None:
+            decision_requests.append(decision_request)
+            preserve_baseline_by_task[view.id] = kind == "audit"
+            quota_evidence_by_task[view.id] = _quota_evidence(view.id, candidates, quota_preflight)
+            candidates_by_task[view.id] = {
+                (candidate.route_id, candidate.account_ref): candidate
+                for candidate in decision_request.candidates
+            }
+        if not decision_requests:
+            return ()
+
+        batch = persist_dispatch_batch(
+            self.ledger, tuple(decision_requests), preserve_baseline_by_task=preserve_baseline_by_task,
+            quota_evidence_by_task=quota_evidence_by_task,
+        )
+        requests_by_task = {item.task.task_id: item for item in decision_requests}
+        view_order = {view.id: index for index, view in enumerate(views)}
+        output = []
+        for assignment in sorted(batch.assignments, key=lambda item: view_order[item.task_id]):
+            decision_request = requests_by_task.get(assignment.task_id)
+            candidate = candidates_by_task.get(assignment.task_id, {}).get(
+                (assignment.route_id, assignment.account_ref)
+            )
+            if decision_request is None or candidate is None:
                 continue
-            stable_reference = executor_reference(decision.decision_id, decision.selected.route_id)
-            # M3's current resolver accepts route:<opaque M2 ref>; it receives details via its injected lookup seam.
-            output.append(core.Assignment(view.id, f"route:{stable_reference}", f"decision:{decision.decision_id}"))
+            decision = self.engine.decide(replace(decision_request, candidates=(candidate,)))
+            selected = decision.selected
+            if selected is None or (selected.route_id, selected.account_ref) != (
+                    assignment.route_id, assignment.account_ref):
+                continue
+            stable_reference = executor_reference(decision.decision_id, selected.route_id)
+            output.append(core.Assignment(
+                assignment.task_id, f"route:{stable_reference}", f"decision:{decision.decision_id}",
+                self._route_metadata(decision.decision_id, selected, candidate),
+            ))
+            if len(output) >= request.free_slots:
+                break
         return tuple(output)
 
     def close(self) -> None:
@@ -187,17 +446,32 @@ def project(snapshot: core.Snapshot, plan: core.Plan) -> dict[str, Any]:
     tasks = []
     for spec in plan.tasks:
         view = snapshot.tasks[spec.id]
+        route = view.get("route_metadata", {})
+        if not isinstance(route, dict):
+            route = {}
+        complexity = spec.meta.get("complexity")
         tasks.append({"id": spec.id, "title": spec.meta.get("title", spec.id), "repo": spec.repository or None,
                       "after": list(spec.after), "milestone": spec.milestone_id or None,
                       "status": TASK_STATUS[view["state"]], "scheduler_state": view["state"],
                       "unreachable": view["unreachable"], "attempts": view["attempts"],
-                      "evidence": view["evidence"], "executor": view["executor"]})
+                      "evidence": view["evidence"], "executor": view["executor"],
+                      "complexity": complexity if isinstance(complexity, str) else "",
+                      "provider": route.get("provider", ""), "model": route.get("model", ""),
+                      "effort": route.get("effort", ""),
+                      "profile": route.get("profile", ""), "account_ref": route.get("account_ref", ""),
+                      "selection_reason": route.get("assignment_reason", route.get("selection_reason", "")),
+                      "quota_state": route.get("quota_state", ""), "quota_reason": route.get("quota_reason", ""),
+                      "quota_observed_at": route.get("quota_observed_at", ""),
+                      "quota_valid_until": route.get("quota_valid_until", ""),
+                      "quota_used_percent": route.get("quota_used_percent", ""),
+                      "route_status": view.get("route_status", "unplanned"),
+                      "route_reason": view.get("route_reason", "")})
+    heartbeat = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
     return {"req": snapshot.plan_id, "authority": AUTHORITY, "projection": True,
             "status": RUN_STATUS[snapshot.status], "scheduler_status": snapshot.status,
             "plan_ref": {"plan_id": snapshot.plan_id, "revision": snapshot.revision, "sha256": snapshot.plan_sha256},
             "sessions": sum(v["attempts"] for v in snapshot.tasks.values()), "tasks": tasks,
-            "attention": list(snapshot.attention),
-            "projected_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds")}
+            "attention": list(snapshot.attention), "heartbeat_at": heartbeat, "projected_at": heartbeat}
 
 
 def write_projection(rdir: Path, scheduler: core.SchedulerCore) -> Path:
@@ -218,3 +492,8 @@ def write_projection(rdir: Path, scheduler: core.SchedulerCore) -> Path:
         Path(tmp).unlink(missing_ok=True)
         raise
     return target
+
+
+def is_stalled(scheduler: core.SchedulerCore, snapshot: core.Snapshot | None = None) -> bool:
+    """Expose M1's idle-stop decision to the owner without duplicating its state rules."""
+    return scheduler._stalled(snapshot or scheduler.snapshot())

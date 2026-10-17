@@ -58,6 +58,20 @@ def _int(value: object, name: str) -> int:
     return value
 
 
+def _optional_epoch(value: object, name: str) -> float | None:
+    if value is None:
+        return None
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise ExecutorError("ROUTE_INVALID", f"{name} must be a finite epoch")
+    try:
+        result = float(value)
+    except OverflowError as exc:
+        raise ExecutorError("ROUTE_INVALID", f"{name} must be a finite epoch") from exc
+    if not math.isfinite(result) or result < 0:
+        raise ExecutorError("ROUTE_INVALID", f"{name} must be a finite epoch")
+    return result
+
+
 @dataclass(frozen=True)
 class Route:
     """What M2 selected, resolved to launchable parts. The executor never fills a missing part with a default."""
@@ -68,10 +82,12 @@ class Route:
     reference: str = ""        # the opaque reference the order carried (kept for audit)
     account_ref: str = ""      # the account identity the selector evaluated (re-checked at launch when present)
     single_use: bool = False   # a selector's reference may start ONE attempt, ever (replay/slot-bypass guard)
+    quota_valid_until: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {"provider": self.provider, "model": self.model, "profile": self.profile, "effort": self.effort,
-                "reference": self.reference, "account_ref": self.account_ref, "single_use": self.single_use}
+                "reference": self.reference, "account_ref": self.account_ref, "single_use": self.single_use,
+                "quota_valid_until": self.quota_valid_until}
 
     @classmethod
     def from_dict(cls, data: Any) -> Route:
@@ -81,13 +97,15 @@ class Route:
         model = _text(data.get("model"), "route.model")
         profile = _text(data.get("profile", ""), "route.profile", empty=True)
         effort = _text(data.get("effort", ""), "route.effort", empty=True)
+        valid_until = _optional_epoch(data.get("quota_valid_until"), "route quota_valid_until")
         return cls(provider, model, profile, effort, str(data.get("reference", "")),
-                   str(data.get("account_ref", ""))[:200], bool(data.get("single_use", False)))
+                   str(data.get("account_ref", ""))[:200], bool(data.get("single_use", False)),
+                   valid_until)
 
 
 @dataclass(frozen=True)
 class StartRequest:
-    """One authorised order (M1) enriched with what only the plan knows: the repository role."""
+    """One authorised order (M1) enriched with approved plan identity and its repository role."""
     idempotency_key: str
     plan_id: str
     revision: int
@@ -101,6 +119,7 @@ class StartRequest:
     timeout_seconds: float | None = None
     acceptance_criteria: tuple[str, ...] = ()
     verification: tuple[Mapping[str, Any], ...] = ()
+    plan_sha256: str = ""
 
     def validate(self) -> StartRequest:
         for name in ("idempotency_key", "plan_id", "task_id", "attempt_id", "executor", "repository", "base_ref"):
@@ -108,6 +127,8 @@ class StartRequest:
         _text(self.project, "project", empty=True)
         _int(self.revision, "revision")
         _int(self.token, "token")
+        if not isinstance(self.plan_sha256, str) or (self.plan_sha256 and not re.fullmatch(r"[0-9a-f]{64}", self.plan_sha256)):
+            raise ExecutorError("ORDER_INVALID", "plan_sha256 must be a lowercase SHA256 digest when present")
         if self.timeout_seconds is not None and (isinstance(self.timeout_seconds, bool)
                                                  or not isinstance(self.timeout_seconds, (int, float))
                                                  or not math.isfinite(self.timeout_seconds)
@@ -125,7 +146,16 @@ class StartRequest:
                 "executor": self.executor, "repository": self.repository, "project": self.project,
                 "base_ref": self.base_ref, "timeout_seconds": self.timeout_seconds,
                 "acceptance_criteria": list(self.acceptance_criteria),
-                "verification": [dict(v) for v in self.verification]}
+                "verification": [dict(v) for v in self.verification], "plan_sha256": self.plan_sha256}
+
+    def matches_record(self, record: object) -> bool:
+        """Match a durable order, allowing only the pre-hash schema on an idempotent replay."""
+        if not isinstance(record, Mapping):
+            return False
+        expected = self.to_dict()
+        if "plan_sha256" not in record:
+            expected.pop("plan_sha256")
+        return dict(record) == expected
 
     @classmethod
     def from_dict(cls, data: Any) -> StartRequest:
@@ -137,7 +167,7 @@ class StartRequest:
                        executor=data["executor"], repository=data["repository"], project=data.get("project", ""),
                        base_ref=data.get("base_ref", "HEAD"), timeout_seconds=data.get("timeout_seconds"),
                        acceptance_criteria=tuple(data.get("acceptance_criteria", ())),
-                       verification=tuple(data.get("verification", ()))).validate()
+                       verification=tuple(data.get("verification", ())), plan_sha256=data.get("plan_sha256", "")).validate()
         except KeyError as missing:
             raise ExecutorError("ORDER_INVALID", f"missing field {missing.args[0]}") from None
         except TypeError as bad:

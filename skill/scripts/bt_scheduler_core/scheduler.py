@@ -15,16 +15,22 @@ from typing import Any, TypeVar
 from . import events, operations, recovery, reservation
 from .config import Config
 from .contracts import (
+    CONTRACT_VERSION,
+    ROUTING_CONTRACT_VERSION,
     Assignment,
     AssignmentPort,
     AssignmentRequest,
     Event,
     ExecutionPort,
     IngestResult,
+    PlannedRoute,
+    PlanRoutingPort,
+    PlanRoutingRequest,
     RecoveryPort,
     TaskView,
     Verdict,
     VerificationPort,
+    route_metadata_valid,
 )
 from .dispatch import Dispatcher
 from .errors import SchedulerError
@@ -49,6 +55,7 @@ class Ports:
     execution: ExecutionPort | None = None
     verification: VerificationPort | None = None
     recovery: RecoveryPort | None = None
+    routing: PlanRoutingPort | None = None
 
 
 @dataclass
@@ -65,12 +72,15 @@ class StepReport:
 
 
 class SchedulerCore:
+    contract_version = CONTRACT_VERSION
+
     def __init__(self, plan: Plan, repository: StateRepository, *, ports: Ports | None = None,
                  config: Config | None = None, clock: Callable[[], float] = time.time):
         self.plan, self.repository, self.config, self.clock = plan, repository, config or Config(), clock
         self.ports = ports or Ports()
         if self.ports.assignment is None:
-            self.ports = Ports(FifoAssignment(), self.ports.execution, self.ports.verification, self.ports.recovery)
+            self.ports = Ports(FifoAssignment(), self.ports.execution, self.ports.verification, self.ports.recovery,
+                               self.ports.routing)
         self._wake, self._step_lock = threading.Event(), threading.RLock()
         self._dispatcher = Dispatcher(self)
 
@@ -107,8 +117,71 @@ class SchedulerCore:
             else:
                 self._check_binding(tx.state)
                 ctx.audit("run_resumed_by_process")
+        self._plan_all_routes()
         self._dispatcher.reconcile(everything=True)
         return self.snapshot()
+
+    def _plan_all_routes(self) -> None:
+        """Ask M2 for a non-reserving route map of the full DAG before reconciliation or dispatch."""
+        port = self.ports.routing
+        if port is None or self.read(lambda ctx: ctx.state.routing_complete):
+            return
+
+        def request(ctx: Ctx) -> PlanRoutingRequest:
+            tasks = tuple(TaskView(
+                spec.id, spec.milestone_id, spec.repository, spec.shared_resources,
+                spec.expected_paths, len(ctx.state.tasks[spec.id].attempts), dict(spec.meta),
+                dependencies=spec.after, acceptance_criteria=spec.acceptance_criteria,
+                verification=spec.verification,
+            ) for spec in self.plan.tasks)
+            return PlanRoutingRequest(ctx.state.plan_id, ctx.state.revision, ctx.state.plan_sha256, tasks, ctx.now)
+
+        route_request = self.read(request)
+        try:
+            proposals = port.plan(route_request)
+        except Exception as exc:
+            self.record("port_error", port="routing", error=type(exc).__name__)
+            raise SchedulerError("ROUTING_UNAVAILABLE", "M2 could not produce the initial route map; resume to retry") from exc
+        if (not isinstance(proposals, Sequence) or isinstance(proposals, (str, bytes)) or
+                len(proposals) != len(route_request.tasks) or
+                not all(self._valid_planned_route(item) for item in proposals)):
+            self.record("port_invalid", port="routing", contract_version=ROUTING_CONTRACT_VERSION)
+            raise SchedulerError("ROUTING_INVALID", "M2 must return exactly one valid route result per plan task")
+        expected = {task.id for task in route_request.tasks}
+        ids = [item.task_id for item in proposals]
+        if len(set(ids)) != len(ids) or set(ids) != expected:
+            self.record("port_invalid", port="routing", reason="task_coverage")
+            raise SchedulerError("ROUTING_INVALID", "M2 route results do not cover the approved plan exactly once")
+
+        def persist(ctx: Ctx) -> None:
+            if ctx.state.routing_complete:
+                return
+            planned = recommended = 0
+            for item in proposals:
+                rec = ctx.state.tasks[item.task_id]
+                if rec.attempts:
+                    continue  # an older run may predate route maps; never replace a route after work has started
+                planned += 1
+                rec.route_metadata = dict(item.route_metadata)
+                rec.route_status = "recommended" if item.route_metadata else "unavailable"
+                rec.route_reason = item.reason
+                recommended += bool(item.route_metadata)
+            ctx.state.routing_complete = True
+            ctx.audit("plan_routes_received", tasks=planned, recommended=recommended,
+                      unavailable=planned - recommended, contract_version=ROUTING_CONTRACT_VERSION)
+
+        self.write(persist)
+
+    @staticmethod
+    def _valid_planned_route(value: object) -> bool:
+        if not isinstance(value, PlannedRoute) or value.contract_version != ROUTING_CONTRACT_VERSION:
+            return False
+        if (not isinstance(value.task_id, str) or not value.task_id.strip() or
+                not route_metadata_valid(value.route_metadata) or
+                not isinstance(value.reason, str) or len(value.reason) > 160 or
+                any(ord(char) < 32 for char in value.reason)):
+            return False
+        return bool(value.route_metadata) != bool(value.reason)
 
     def _check_binding(self, s: RunState) -> None:
         plan = self.plan
@@ -239,7 +312,7 @@ class SchedulerCore:
         try:
             proposals = self.ports.assignment.propose(request)
             if not isinstance(proposals, Sequence) or isinstance(proposals, (str, bytes)) \
-                    or not all(isinstance(p, Assignment) for p in proposals):
+                    or not all(isinstance(p, Assignment) and route_metadata_valid(p.route_metadata) for p in proposals):
                 raise TypeError("invalid assignment proposal")
         except Exception as exc:  # noqa: BLE001 - a dead or buggy adapter must not stop the core
             self.record("port_error" if not isinstance(exc, TypeError) else "port_invalid", port="assignment",

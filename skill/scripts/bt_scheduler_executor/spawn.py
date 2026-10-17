@@ -95,14 +95,17 @@ class SpawnMixin:
     def _spawn(self, attempt_id: str, adir: Path, launch, ws: Workspace, timeout: float) -> dict[str, Any]:
         """Start the shim detached and wait for its identity record. Leftovers of a crashed earlier spawn are removed
         first: this point is only reached when recovery found no live process for the attempt."""
-        for leftover in ("exit.json", "shim.json", "descendants.json", "output.log", "output.tail", "spec.json", "abort"):
+        for leftover in ("exit.json", "shim.json", "descendants.json", "output.log", "output.tail", "spec.json", "abort",
+                         "stream.json", "stream.fifo"):
             try:
                 (adir / leftover).unlink()
             except FileNotFoundError:
                 pass
+        os.mkfifo(adir / "stream.fifo", 0o600)
         spec = {"attempt_id": attempt_id, "argv": list(launch.argv), "stdin": launch.stdin, "cwd": ws.path,
                 "timeout_seconds": timeout, "grace_seconds": self.cfg.grace_seconds,
-                "head_bytes": self.cfg.output_head_bytes, "tail_bytes": self.cfg.output_tail_bytes}
+                "head_bytes": self.cfg.output_head_bytes, "tail_bytes": self.cfg.output_tail_bytes,
+                "stream_ref": "stream.fifo"}
         artifacts.atomic_write(adir / "spec.json", json.dumps(spec).encode("utf-8"), 0o600)
         try:
             proc = subprocess.Popen([self.python, str(self.shim_path), str(adir)], cwd=str(adir), env=self._child_env(launch),

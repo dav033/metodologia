@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "bitacora/plan.schema.json",
   "title": "Planner contract PLAN.json",
-  "description": "Structured work plan published by the planner for a deterministic scheduler. Classification fields are mandatory and never defaulted; from schema 1.1.0 every classification is also argued in classification_evidence. Cross-field rules (unique ids, existing references, acyclic after, milestone order, full_system exception, evidence strength, unordered tasks that share a path, PLAN.md agreement) are enforced by the validator of this package (contract.validate / sync.check) and are not expressible here.",
+  "description": "Structured work plan published by the planner for a deterministic scheduler. Classification fields are mandatory and never defaulted; from schema 1.1.0 every classification is also argued in classification_evidence. Schema 1.2.0 adds requirement coverage, task kind, interface contracts and verification categories. Cross-field rules (unique ids, existing references, acyclic after, milestone order, traceability, interfaces, evidence strength, unordered tasks that share a path, PLAN.md agreement) are enforced by the validator of this package (contract.validate / sync.check) and are not expressible here.",
   "type": "object",
   "required": ["schema_version", "plan_id", "revision", "spec_ref", "milestones", "tasks"],
   "properties": {
@@ -11,13 +11,26 @@
     "revision": {"type": "integer", "minimum": 1, "maximum": 1000000},
     "spec_ref": {"type": "string", "minLength": 1, "description": "relative path inside the requirement folder"},
     "milestones": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/milestone"}},
-    "tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/task"}}
+    "tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/task"}},
+    "requirements": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/requirement_id"}},
+    "interfaces": {"type": "array", "items": {"$ref": "#/$defs/interface"}}
   },
-  "allOf": [{"if": {"properties": {"schema_version": {"pattern": "^1\\.([1-9][0-9]*)\\."}}},
-             "then": {"properties": {"tasks": {"items": {"required": ["classification_evidence"]}}}}}],
+  "allOf": [
+    {"if": {"properties": {"schema_version": {"pattern": "^1\\.([1-9][0-9]*)\\."}}, "required": ["schema_version"]},
+     "then": {"properties": {"tasks": {"items": {"required": ["classification_evidence"]}}}}},
+    {"if": {"properties": {"schema_version": {"pattern": "^1\\.([2-9]|[1-9][0-9]+)\\."}}, "required": ["schema_version"]},
+     "then": {
+       "required": ["requirements"],
+       "properties": {
+         "tasks": {"items": {"required": ["covers", "kind"],
+                               "properties": {"verification": {"items": {"required": ["category"]}}}}}
+       }
+     }}
+  ],
   "$defs": {
     "text": {"type": "string", "pattern": "\\S"},
     "texts": {"type": "array", "items": {"$ref": "#/$defs/text"}},
+    "requirement_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9]{0,7}-?[0-9]{1,4}$"},
     "level": {"enum": ["low", "medium", "high"]},
     "dimension_evidence": {
       "type": "object",
@@ -56,7 +69,9 @@
         "value": {"$ref": "#/$defs/text"},
         "purpose": {"$ref": "#/$defs/text"},
         "expected": {"$ref": "#/$defs/text", "description": "required when type is manual"},
-        "created_by": {"type": "string", "pattern": "^T[0-9]+(\\.[0-9]+)?[a-z]?$", "description": "task that creates a test that does not exist yet"}
+        "created_by": {"type": "string", "pattern": "^T[0-9]+(\\.[0-9]+)?[a-z]?$", "description": "task that creates a test that does not exist yet"},
+        "category": {"enum": ["static", "functional", "integration", "regression", "product"],
+                     "description": "what this verification demonstrates, independent of command/manual execution type"}
       }
     },
     "task": {
@@ -83,11 +98,32 @@
         "shared_resources": {"$ref": "#/$defs/texts"},
         "acceptance_criteria": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}},
         "verification": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/verification"}},
+        "covers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/requirement_id"}},
+        "kind": {"enum": ["implement", "test", "docs", "audit", "research"],
+                 "description": "model-agnostic kind from the Scheduler-supported vocabulary"},
         "scope_exception": {"type": "object", "required": ["reason"], "properties": {"reason": {"$ref": "#/$defs/text"}},
                             "description": "only with scope=full_system, for explicit review"}
       },
       "not": {"anyOf": [{"required": ["model"]}, {"required": ["agent"]}, {"required": ["account"]},
                         {"required": ["workers"]}, {"required": ["status"]}, {"required": ["attempts"]}]}
+    },
+    "interface": {
+      "type": "object",
+      "required": ["id", "title", "owner", "producer_task", "consumer_tasks", "inputs", "outputs", "invariants",
+                   "integration_criteria"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^IF-[1-9][0-9]*$"},
+        "title": {"$ref": "#/$defs/text"},
+        "owner": {"$ref": "#/$defs/text"},
+        "producer_task": {"type": "string", "pattern": "^T[0-9]+(\\.[0-9]+)?[a-z]?$"},
+        "consumer_tasks": {"type": "array", "minItems": 1,
+                           "items": {"type": "string", "pattern": "^T[0-9]+(\\.[0-9]+)?[a-z]?$"}},
+        "integration_task": {"type": "string", "pattern": "^T[0-9]+(\\.[0-9]+)?[a-z]?$"},
+        "inputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}},
+        "outputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}},
+        "invariants": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}},
+        "integration_criteria": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}}
+      }
     }
   }
 }

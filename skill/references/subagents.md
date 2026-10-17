@@ -4,14 +4,16 @@ Subagents are for **context control**, not role-play. Use one when its work woul
 only need the conclusion of (searching, reading docs, noisy test output), or when you need eyes without your bias
 (review). Everything else stays in the main session.
 
-## The five roles
+## The seven roles
 
-Installed for Claude Code (`~/.claude/agents/`) and Codex (`~/.codex/agents/`) from the skill's `agents/` folder
-(source of truth; after editing run `python <skill>/scripts/install_agents.py`). Tool limits are enforced by the
+Defined in the skill's `agents/` folder (source of truth; after editing run `python <skill>/scripts/install_agents.py`).
+The six helper roles install for Claude Code and Codex. Planner installs for Claude Code, Codex, and Antigravity;
+Claude and Codex account profiles registered on this machine receive their own copy. Tool limits are enforced by the
 definition, not by asking nicely.
 
 | Role | Use for | Writes? | Model |
 |---|---|---|---|
+| `planner` | Inspecting a requirement and codebase, then drafting a scoped milestone/task plan under `PLAN.json` | Requirement documents only | caller-selected |
 | `explorer` | Where is X, what calls Y, how is Z done here, find similar examples | No | haiku |
 | `researcher` | External docs, library comparisons, API/version checks, web research | Notes file only | sonnet |
 | `implementer` | One plan task in a fresh context | Yes | sonnet (pass `opus` for hard tasks) |
@@ -19,16 +21,16 @@ definition, not by asking nicely.
 | `runner` | Test suites, builds, lint/typecheck, logs, server status — returns only failures | No | haiku |
 | `antagonist` | **Before every commit:** attacks the staged change (architecture, correctness, security, tests) | No | opus |
 
-In Codex refer to them by name ("have explorer map…"). If the roles aren't installed, use the harness's built-ins
-(Claude Code: Explore / general-purpose; Codex: explorer / worker) with the same briefs and contracts.
+Only `planner` loads the private resources in `agents/planner/skills/`. They are not registered as generally discoverable skills. The role may write requirement documents but never product code, approve or freeze a plan, or launch execution.
+
+In Claude Code and Codex, invoke installed roles by name. In Antigravity, select Planner from the agent picker. If a role is not installed, use the harness's built-ins with the same briefs and contracts.
 
 ## Agents of another provider
 
-The five roles above are subagents of the CLI you run in. For work that deserves **another model or another
-subscription** — an independent audit, a cheap fast worker for a well-specified module, a stronger model for one hard
-piece, or simply because your account is near its limit — use `bitacora.py delegate` (`agents.md`): it works the same
-from Claude Code and from Codex, picks the account by quota and measured results unless you pin one, and returns a
-compact verified result.
+For work that deserves **another model or another subscription** — an independent audit, a cheap fast worker for a
+well-specified module, a stronger model for one hard piece, or simply because your account is near its limit — use
+`bitacora.py delegate` (`agents.md`): it routes across eligible registered accounts by quota and measured results
+unless you pin one, and returns a compact result.
 
 ## Normal sessions
 

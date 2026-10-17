@@ -6,14 +6,17 @@ a test double or a real module only needs the methods, no inheritance from this 
 """
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Protocol, runtime_checkable
 
 from .errors import SchedulerError
 from .states import EventKind
 
-CONTRACT_VERSION = "1.1.0"
+CONTRACT_VERSION = "1.2.0"
+ROUTING_CONTRACT_VERSION = "1.0.0"
 
 ACK = ("accepted", "duplicate", "rejected")
 EXEC_STATES = ("running", "finished", "failed", "cancelled", "not_found", "unknown")
@@ -23,6 +26,53 @@ FAIL_CAUSES = ("execution_failed", "verification_rejected", "lost")
 
 def _text(value: object) -> bool:
     return isinstance(value, str) and bool(value.strip())
+
+
+def route_metadata_valid(value: object) -> bool:
+    """Bound opaque route labels before M1 stores or projects them."""
+    try:
+        if not isinstance(value, Mapping) or len(value) > 16:
+            return False
+        if value and value.get("schema_version") != ROUTING_CONTRACT_VERSION:
+            return False
+        items = tuple(value.items())
+        if any(not isinstance(key, str) or not key.strip() or len(key) > 64 or
+               any(ord(char) < 32 for char in key) or not isinstance(item, str) or len(item) > 256 or
+               any(ord(char) < 32 for char in item) for key, item in items):
+            return False
+        size = sum(len(key.encode("utf-8", errors="strict")) + len(item.encode("utf-8", errors="strict"))
+                   for key, item in items)
+    except Exception:  # noqa: BLE001 - an untrusted mapping must not escape the M1 boundary
+        return False
+    return size <= 4096
+
+
+def _incident_reference_valid(payload: Mapping[str, Any], data: Mapping[str, Any]) -> bool:
+    required = {"schema_version", "incident_id", "run_id", "task_id", "attempt_id", "execution_id",
+                "detector_id", "type", "severity", "confidence", "observed_at", "idempotency_key"}
+    if set(payload) != required or any(not _text(payload.get(key)) for key in required):
+        return False
+    if (data.get("source") != "m4" or data.get("contract_version") != "1.2.0" or
+            payload.get("task_id") != data["task_id"] or
+            payload.get("attempt_id") != data["attempt_id"] or
+            payload.get("idempotency_key") != data["event_id"] or payload.get("schema_version") != "1.0.0" or
+            payload.get("type") not in {"unexpected_exit", "quota_error", "auth_error", "connection_error", "timeout",
+                                         "missed_heartbeat", "silent_but_alive", "repetitive_activity", "oversized_output",
+                                         "provider_stream_silence", "pid_reuse", "stale_post_cancel", "source_disagreement", "stream_gap"} or
+            payload.get("severity") not in {"info", "low", "medium", "high", "critical"} or
+            payload.get("confidence") not in {"high", "medium", "low"}):
+        return False
+    for key in ("incident_id", "run_id", "task_id", "attempt_id", "execution_id", "idempotency_key"):
+        value = payload[key]
+        if len(value.encode("utf-8")) > 256 or any(ord(char) < 32 for char in value):
+            return False
+    if not re.fullmatch(r"[a-z][a-z0-9_]{0,63}", payload["detector_id"]):
+        return False
+    try:
+        observed_at = datetime.fromisoformat(payload["observed_at"])
+    except ValueError:
+        return False
+    return observed_at.tzinfo is not None
 
 
 @dataclass(frozen=True)
@@ -56,6 +106,10 @@ class Event:
             raise SchedulerError("CONTRACT_VIOLATION", [f"event field invalid or missing: {', '.join(sorted(set(bad)))}"])
         if data["kind"] not in {k.value for k in EventKind}:
             raise SchedulerError("CONTRACT_VIOLATION", [f"unknown event kind {data['kind']!r}"])
+        if data["kind"] == EventKind.INCIDENT_OBSERVED.value:
+            payload = data.get("payload", {})
+            if not isinstance(payload, Mapping) or not _incident_reference_valid(payload, data):
+                raise SchedulerError("CONTRACT_VIOLATION", ["incident reference violates the v1.2.0 allowlist"])
         return cls(event_id=data["event_id"], plan_id=data["plan_id"], revision=rev, task_id=data["task_id"],
                    attempt_id=data["attempt_id"], source=data["source"], kind=data["kind"],
                    occurred_at=str(data.get("occurred_at", "")), payload=dict(data.get("payload", {})), token=token,
@@ -132,10 +186,31 @@ class AssignmentRequest:
 
 
 @dataclass(frozen=True)
+class PlanRoutingRequest:
+    """Every task in the approved DAG, including tasks blocked on prerequisites, for initial route recommendations."""
+    plan_id: str
+    revision: int
+    plan_sha256: str
+    tasks: tuple[TaskView, ...]
+    now: float
+    contract_version: str = ROUTING_CONTRACT_VERSION
+
+
+@dataclass(frozen=True)
+class PlannedRoute:
+    """A non-reserving route recommendation; empty metadata plus reason means M2 found no eligible route."""
+    task_id: str
+    route_metadata: Mapping[str, str] = field(default_factory=dict)
+    reason: str = ""
+    contract_version: str = ROUTING_CONTRACT_VERSION
+
+
+@dataclass(frozen=True)
 class Assignment:
     task_id: str
     executor: str                   # opaque label; the core never interprets it
     note: str = ""
+    route_metadata: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -205,6 +280,12 @@ class RecoveryProposal:
 class AssignmentPort(Protocol):
     """M1 <-> M2. Proposes who runs which eligible task; M1 validates and may refuse any proposal."""
     def propose(self, request: AssignmentRequest) -> Sequence[Assignment]: ...
+
+
+@runtime_checkable
+class PlanRoutingPort(Protocol):
+    """M1 ↔ M2. Produces one non-reserving recommendation for every approved-plan task."""
+    def plan(self, request: PlanRoutingRequest) -> Sequence[PlannedRoute]: ...
 
 
 @runtime_checkable

@@ -32,9 +32,15 @@ def classify(skeleton: dict) -> dict:
                   "classification_evidence": evidence_for(t["id"]),
                   "expected_paths": t.get("expected_paths", [f"src/{t['id'].lower()}/**"]), "shared_resources": [],
                   "acceptance_criteria": [f"{t['title']} works as described"]})
+        if plan.get("schema_version") == "1.2.0":
+            t["covers"] = list(plan["requirements"][:1])
+            t["kind"] = "implement"
         if not t.get("verification"):
             t["verification"] = [{"type": "manual", "value": "read the diff", "purpose": "review",
                                   "expected": "change matches the objective"}]
+        if plan.get("schema_version") == "1.2.0":
+            for verification in t["verification"]:
+                verification.setdefault("category", "functional")
     return plan
 
 
@@ -69,7 +75,8 @@ class PlanDir(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.rdir = self.root / "REQ-042-demo"
         self.rdir.mkdir()
-        (self.rdir / "SPEC.md").write_text("# spec\n## security\n## contract\n", encoding="utf-8")
+        (self.rdir / "SPEC.md").write_text("# spec\n## security\n## contract\n## Requirements\n- R1. Demo\n",
+                                           encoding="utf-8")
         self.md("approved")
 
     def md(self, status: str = "approved", text: str | None = None) -> None:

@@ -8,13 +8,12 @@ from __future__ import annotations
 
 import configparser
 import json
+import re
 import subprocess
 import sys
 import unittest
 import zipfile
 from pathlib import Path
-
-import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # also collected as tests.migration.*
 
@@ -161,6 +160,13 @@ class EntrypointParityTests(unittest.TestCase):
         self.assertEqual(written[0], written[1])
         self.assertTrue(any(name.startswith(".claude/agents/") for name in written[0][1]))
         self.assertTrue(any(name.startswith(".codex/agents/") for name in written[0][1]))
+        antigravity_path = ".gemini/config/agents/planner/agent.md"
+        self.assertIn(antigravity_path, written[0][1])
+        antigravity_agent = written[0][1][antigravity_path]
+        antigravity_tool_lines = antigravity_agent.split("mainAgent:", 1)[0]
+        antigravity_tools = re.findall(r'^  - "([^\"]+)"$', antigravity_tool_lines, re.MULTILINE)
+        self.assertEqual(antigravity_tools, ["view_file", "grep_search", "find_by_name", "run_command",
+                                             "write_to_file", "replace_file_content"])
 
     def test_codex_and_antigravity_hook_payloads_match(self) -> None:
         setup = (("--project", "demo", "init"), ("bind", SESSION, "demo"))

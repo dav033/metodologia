@@ -6,7 +6,7 @@ from html import escape as e
 import bt_rounds as rounds
 from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _front
-from bt_page_run import ACTIVE, load_run, run_panel
+from bt_page_run import ACTIVE, has_run, load_run, run_panel
 from bt_pages import badge, layout, md, purl, read
 
 REQ_TABS = [("rounds", "Preguntas"), ("spec", "Spec"), ("plan", "Plan"), ("trace", "Trazabilidad"), ("review", "Revisar"), ("handoff", "Handoff")]
@@ -19,12 +19,13 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> 
     plan_status = _front(plan, "status") if plan.exists() else None
     open_round = rounds.open_round(rdir) if rounds.rounds_dir(rdir).exists() else None
     run = load_run(rdir)
+    run_available = has_run(rdir)
     live = bool(run) and run.get("status") in ACTIVE
     if not tab:
         tab = "rounds" if open_round else ("plan" if plan_status == "review" else
-                                           ("run" if live else
+                                           ("run" if live or (run_available and run is None) else
                                             ("review" if plan_status in ("done", "launched") else "spec")))
-    tab_list = REQ_TABS + ([("run", "Maratón")] if run else [])
+    tab_list = REQ_TABS + ([("run", "Maratón")] if run_available else [])
     tabs = "".join(
         f'<a class="{"on" if k == tab else ""}" href="{purl(project, "req", rid)}?tab={k}">{v}'
         f'{" ●" if (k == "rounds" and open_round) or (k == "plan" and plan_status == "review") or (k == "run" and live) else ""}</a>'

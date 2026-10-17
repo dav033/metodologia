@@ -18,6 +18,7 @@ from . import contract as pc
 from . import evidence as ev
 from . import markdown as md
 from . import revisions as rev
+from . import traceability
 
 PLAN_MD = "PLAN.md"
 PLAN_JSON = "PLAN.json"
@@ -68,8 +69,7 @@ def _same_text(a: object, b: object) -> bool:
 
 
 def skeleton(directory: Path, plan_id: str | None = None) -> dict:
-    """Everything PLAN.md already states, in contract shape. Classification, objective, criteria and rationale are NOT
-    invented: they stay absent so `check` lists them as missing."""
+    """Derive declared requirements and task metadata; classification and verification categories are never guessed."""
     parsed, stones = md.read(Path(directory) / PLAN_MD)
     titles = {m["id"]: m["title"] for m in stones}
     tasks = []
@@ -83,15 +83,20 @@ def skeleton(directory: Path, plan_id: str | None = None) -> dict:
             entry["expected_paths"] = list(item["files"])
         if item.get("resources"):
             entry["shared_resources"] = list(item["resources"])
+        entry["covers"] = list(item.get("covers") or [])
+        if item.get("kind"):
+            entry["kind"] = item["kind"]
         if item.get("verify"):
             entry["verification"] = [{"type": "command", "value": item["verify"],
                                       "purpose": "verify command declared in PLAN.md"}]
         tasks.append(entry)
     seen = list(dict.fromkeys(t["milestone_id"] for t in tasks if "milestone_id" in t))
     last = rev.latest(directory)
+    spec_ids = traceability.read_spec_ids(directory, DEFAULT_SPEC_REF) or set()
     return {"schema_version": pc.SCHEMA_VERSION, "plan_id": plan_id or default_plan_id(directory), "revision": (last["revision"] + 1) if last else 1,
             "spec_ref": DEFAULT_SPEC_REF,
-            "milestones": [{"id": mid, "title": titles.get(mid, "")} for mid in seen], "tasks": tasks}
+            "milestones": [{"id": mid, "title": titles.get(mid, "")} for mid in seen], "tasks": tasks,
+            "requirements": sorted(spec_ids)}
 
 
 def write_skeleton(directory: Path, force: bool = False, plan_id: str | None = None) -> Path:
@@ -121,7 +126,8 @@ def md_problems(directory: Path) -> list[str]:
 
 def consistency(directory: Path, plan: dict, plan_id: str | None = None) -> list[str]:
     """Differences between PLAN.md and PLAN.json (empty list = consistent): ids defined once on each side, milestone
-    membership and titles, task titles, repo, `after`, stated verify command, and a legacy risk on the same scale."""
+    membership and titles, task titles, repo, `after`, stated verify command, and a legacy risk on the same scale.
+    Schema 1.2.0 also compares explicitly stated `covers` and `kind`; legacy plans keep their prior interpretation."""
     doc = md.read_document(Path(directory) / PLAN_MD)
     parsed, stones = doc["tasks"], doc["milestones"]
     problems: list[str] = list(doc["problems"])
@@ -140,6 +146,7 @@ def consistency(directory: Path, plan: dict, plan_id: str | None = None) -> list
         problems.append(f"plan.spec_ref: {plan.get('spec_ref')!r} does not exist in the plan directory")
     json_list = [t for t in _dicts(plan.get("tasks")) if isinstance(t.get("id"), str)]
     json_tasks = {t["id"]: t for t in json_list}
+    schema_12 = pc.schema_tuple(plan) >= pc.EXTENSIONS_SINCE
     for tid in sorted({t["id"] for t in json_list if sum(1 for o in json_list if o["id"] == t["id"]) > 1}):
         problems.append(f"{tid}: defined more than once in PLAN.json")
     for tid in sorted(md_tasks.keys() - json_tasks.keys()):
@@ -177,6 +184,17 @@ def consistency(directory: Path, plan: dict, plan_id: str | None = None) -> list
                                 "(PLAN.json may add more, never drop what PLAN.md states)")
         if doc_t.get("risk") in pc.LEVELS and doc_t["risk"] != js.get("risk"):
             problems.append(f"{tid}.risk: PLAN.md says risk: {doc_t['risk']}, PLAN.json says {js.get('risk')}")
+        if schema_12:
+            stated_covers = doc_t.get("covers")
+            if stated_covers is not None:
+                raw_covers = js.get("covers")
+                json_covers = [value for value in raw_covers if isinstance(value, str)] \
+                    if isinstance(raw_covers, list) else []
+                if set(stated_covers) != set(json_covers):
+                    problems.append(f"{tid}.covers: PLAN.md has {sorted(stated_covers)}, PLAN.json has "
+                                    f"{sorted(json_covers)}")
+            if doc_t.get("kind") is not None and doc_t["kind"] != js.get("kind"):
+                problems.append(f"{tid}.kind: PLAN.md says {doc_t['kind']!r}, PLAN.json says {js.get('kind')!r}")
     md_milestones = {m["id"]: m for m in stones}
     json_milestones = {m["id"]: m for m in _dicts(plan.get("milestones")) if isinstance(m.get("id"), str)}
     for mid in sorted(md_milestones.keys() - json_milestones.keys()):
@@ -298,7 +316,13 @@ def check(directory: Path, plan: object | None = None, plan_id: str | None = Non
         if plan is None:
             return report
     report = pc.Report()
-    inner = pc.validate(plan, _file_resolver(repo_roots) if repo_roots is not None else None, ref_exists)
+    spec_ids = None
+    if isinstance(plan, dict):
+        version = pc.schema_tuple(plan)
+        if version[0] == pc.SUPPORTED_MAJOR and version >= pc.EXTENSIONS_SINCE:
+            spec_ids = traceability.read_spec_ids(directory, plan.get("spec_ref") or DEFAULT_SPEC_REF)
+    inner = pc.validate(plan, _file_resolver(repo_roots) if repo_roots is not None else None, ref_exists,
+                        spec_ids=spec_ids)
     report.errors += inner.errors
     report.warnings += inner.warnings
     if isinstance(plan, dict):

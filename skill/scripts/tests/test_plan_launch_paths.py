@@ -86,7 +86,11 @@ class LaunchPaths(Isolated):
         (broken / "PLAN.md").write_text(PLAN_MD.format(status="review"), encoding="utf-8")
         planner.write_skeleton(broken)
         with self.assertRaises(SystemExit) as ctx:
-            adapter.freeze_on_launch(broken, forced=True)
+            import bt_scheduler_adapter
+            adapter.freeze_on_launch(
+                broken, forced=True,
+                compatibility_report=bt_scheduler_adapter.plan_compatibility_report(broken),
+            )
         self.assertIn("PLAN_INVALID", str(ctx.exception))
         self.assertFalse((broken / "plan-revisions").exists())
 
@@ -135,7 +139,9 @@ class LaunchPaths(Isolated):
 
     def test_successor_helper_rechecks_the_revision_before_replacing_the_session(self):
         import bt_orchestration_transition as transition
-        self.assertIn("launch_problem(rdir, freeze=False)", Path(transition.__file__).read_text(encoding="utf-8"))
+        source = Path(transition.__file__).read_text(encoding="utf-8")
+        self.assertIn("plan_adapter.launch_problem(", source)
+        self.assertIn("compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir)", source)
 
     # -- the run itself ------------------------------------------------------------------------------------------
     def test_a_new_run_binds_the_frozen_revision_and_refuses_drift(self):
@@ -201,8 +207,11 @@ class LaunchPaths(Isolated):
         existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
                     "plan_ref": {"plan_id": "REQ-001", "revision": 1,
                                  "sha256": planner.list_revisions(self.rdir)[0]["sha256"]}}
-        self.assertIsNone(adapter.resume_problem(self.rdir, existing))
-        self.assertIsNotNone(adapter.launch_problem(self.rdir, freeze=False))  # a NEW run still demands the evidence
+        report = self.compatibility_report()
+        self.assertIsNone(adapter.resume_problem(self.rdir, existing, compatibility_report=report))
+        self.assertIsNotNone(adapter.launch_problem(
+            self.rdir, freeze=False, compatibility_report=report
+        ))  # a NEW run still demands the evidence
 
     def test_foreground_freezes_nothing_when_the_workspace_is_unusable(self):
         import bt_orchestration_terminal as terminal
@@ -221,15 +230,17 @@ class LaunchPaths(Isolated):
         self.open_run()
         existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
                     "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": planner.list_revisions(self.rdir)[0]["sha256"]}}
-        self.assertIsNone(adapter.resume_problem(self.rdir, existing))
+        report = self.compatibility_report()
+        self.assertIsNone(adapter.resume_problem(self.rdir, existing, compatibility_report=report))
         self.revise(plan, 90)
         self.set_status("review")
         import bt_rounds
         bt_rounds.plan_decide(self.rdir, True, "", "test")  # approve r2
-        problem = adapter.resume_problem(self.rdir, existing)
+        problem = adapter.resume_problem(self.rdir, existing, compatibility_report=report)
         self.assertIn("PLAN_REF_STALE", problem or "")
         self.assertIsNone(adapter.resume_problem(self.rdir, {**existing, "plan_ref": {"plan_id": "REQ-001",
-                          "revision": 2, "sha256": planner.list_revisions(self.rdir)[-1]["sha256"]}}))
+                          "revision": 2, "sha256": planner.list_revisions(self.rdir)[-1]["sha256"]}},
+                          compatibility_report=self.compatibility_report()))
 
     def test_prose_added_to_plan_md_after_approval_blocks_the_launch(self):
         self.approved()
@@ -280,7 +291,7 @@ class LaunchPaths(Isolated):
         callers = {path.name for path in SCRIPTS.glob("*.py")
                    if "init_state(" in path.read_text(encoding="utf-8") and path.name != "bt_runstate.py"}
         self.assertEqual(callers, {"bt_run.py"}, "a new module creates run state: route it through the launch gate")
-        gated = {"bt_run.py": "launch_problem(", "bt_launch.py": "freeze_on_launch(",
+        gated = {"bt_run.py": "validate_run_plan(", "bt_launch.py": "freeze_on_launch(",
                  "bt_orchestration_transition.py": "launch_problem("}
         for name, call in gated.items():
             self.assertIn(call, (SCRIPTS / name).read_text(encoding="utf-8"), name)

@@ -40,10 +40,11 @@ output (M4) and retry strategy (M5) live in sibling modules that implement the p
 | `simulators.py`, `simulation.py` | deterministic doubles of M2–M5 and a scripted "world" |
 | `cli.py`, `__main__.py` | command line |
 
-## Contracts (version `1.1.0`, `CONTRACT_VERSION`)
+## Contracts (event and assignment version `1.2.0`; full-plan routing contract `1.0.0`)
 
 | Port | Direction | Methods |
 |---|---|---|
+| `PlanRoutingPort` | M1 ↔ M2 | `plan(PlanRoutingRequest) -> [PlannedRoute]` — all approved-plan tasks, including dependency-blocked tasks; one route result per task, no reservation |
 | `AssignmentPort` | M1 ↔ M2 | `propose(AssignmentRequest) -> [Assignment]` — request includes the approved plan SHA-256, READY tasks, dependencies, acceptance criteria, verification and opaque classification metadata; M1 validates every proposal |
 | `ExecutionPort` | M1 → M3 | `start(StartOrder)`, `cancel(CancelOrder)`, `query(attempt_id)`; every order has an idempotency key |
 | `EventPort` | M4 → M1 | `SchedulerCore.ingest(Event)` and `.submit_verdict(Verdict)` |
@@ -51,14 +52,24 @@ output (M4) and retry strategy (M5) live in sibling modules that implement the p
 | `VerificationPort` | validator → M1 | `request(VerifyOrder)` out; the verdict returns through `submit_verdict` |
 | `StateRepository` | M1 ↔ store | `transaction()` (atomic read-modify-write incl. audit rows), `audit_log(since)` |
 
-Rules: no sibling can mark a task completed or write state; ports are called **outside** transactions; whatever a
-port returns is validated (wrong shape → `port_invalid` in the audit trail and a deterministic fallback); a port that
-raises → `port_error` and the intent stays. `Event`: `event_id, plan_id, revision, task_id, attempt_id, source, kind,
+Rules: no sibling can mark a task completed or write state; ports are called **outside** transactions; assignment
+advice is validated and invalid proposals are audited before M1 skips them. The initial route port must return a
+complete, valid map; otherwise startup is refused before dispatch. A port that raises during later assignment is
+audited and leaves the task ready. `Event`: `event_id, plan_id, revision, task_id, attempt_id, source, kind,
 occurred_at, payload, token, contract_version`; kinds `execution_started | execution_finished | execution_failed |
-execution_cancelled | heartbeat`. Events are not exactly-once: duplicates, late and reordered ones are expected.
-Contract 1.1.0 appends optional, defaulted fields to `TaskView` and `AssignmentRequest`, preserving old positional calls.
-The scheduler emits 1.1.0 events by default; M1 continues to accept events explicitly tagged 1.0.0, whose shape is
-unchanged.
+execution_cancelled | heartbeat | incident_observed`. Events are not exactly-once: duplicates, late and reordered ones
+are expected. `incident_observed` is an M4 audit reference with a strict v1.2.0 allowlist and idempotency key; it may
+append an audit row but cannot change task, attempt or lease state, including for a matching terminal attempt.
+Contract 1.1.0 appended optional, defaulted fields to `TaskView` and `AssignmentRequest`, preserving old positional
+calls. The scheduler emits 1.2.0 events by default; it continues to accept lifecycle events explicitly tagged 1.0.0,
+whose shape is unchanged.
+
+The additive `PlanRoutingPort` contract is versioned independently as `1.0.0`. At run creation M1 sends the complete
+DAG to M2 and persists one non-reserving route recommendation per task in its run state. An incomplete or malformed
+route map blocks run startup before executor reconciliation or dispatch. M2's READY assignment request still runs
+when a task becomes dispatchable, so the current route is re-evaluated against current local eligibility and quota
+facts. `RUN.projection.json` joins the frozen task classification with the current recommendation for operator review;
+the approved `PLAN.json` remains immutable.
 
 Absent ports: no assignment port → plan-order FIFO with the label `local`; no execution port → orders wait in the
 outbox (`pending_orders()` for pull-style adapters); no recovery port → "retry while the attempt budget lasts, then
@@ -86,6 +97,10 @@ concurrent threads and processes queue on the database lock. The in-memory repos
 event sourcing for simplicity at plan scale (hundreds of tasks); the audit log is the history. Historical files of the
 methodology are never read or written by this module; a `RUN.json`-style projection is the adapter's job.
 
+Run-state schema 2 adds the durable per-task route recommendation map and the completed-map marker. The loader upgrades
+schema-1 state in memory and writes schema 2 on the next state change; older M1 versions reject schema 2 rather than
+silently dropping route decisions.
+
 ## Dispatch and restart
 
 Reserve + dispatch intent are one transaction; `deliveries` is incremented **before** the port call; the call is made with
@@ -110,7 +125,7 @@ never a verdict of death. Attempts carry a fencing `token`; events with another 
 import bt_scheduler_core as sc
 plan = sc.load_plan(text, approved_sha256=approved_hash)            # raises SchedulerError; creates nothing
 core = sc.SchedulerCore(plan, sc.SqliteRepository("run.db"), config=sc.Config(max_parallel_tasks=3),
-                        ports=sc.Ports(execution=m3, verification=validator, recovery=m5))
+                        ports=sc.Ports(assignment=m2, routing=m2, execution=m3, verification=validator, recovery=m5))
 core.start()                                                        # create the run or verify it is this plan
 core.run()                                                          # event-driven; or call core.step() yourself
 core.ingest(event); core.submit_verdict(verdict); core.snapshot(); core.audit_log()
@@ -121,7 +136,7 @@ core.pause(by) / resume / cancel / reopen(task_id, by) / resolve_attempt(attempt
 
 `PLAN_UNREADABLE`, `PLAN_NOT_APPROVED`, `PLAN_INVALID`, `PLAN_SCHEMA_UNSUPPORTED`, `PLAN_MISMATCH`, `STATE_UNREADABLE`,
 `STATE_MISSING`, `STATE_UNAVAILABLE`, `ILLEGAL_TRANSITION`, `CONFIG_INVALID`, `UNKNOWN_TASK`, `UNKNOWN_ATTEMPT`,
-`NOT_ALLOWED`, `CONTRACT_VIOLATION`.
+`NOT_ALLOWED`, `CONTRACT_VIOLATION`, `ROUTING_UNAVAILABLE`, `ROUTING_INVALID`.
 
 ## Acceptance evidence (plan SC-AC01..20 → tests; `tests/test_readme.py` checks every name exists)
 

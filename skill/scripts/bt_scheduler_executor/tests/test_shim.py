@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import signal
+import struct
 import subprocess
 import sys
 import tempfile
@@ -168,6 +169,27 @@ class ShimCase(unittest.TestCase):
     def test_output_that_fits_has_no_dropped_bytes(self):
         info = self.run_to_end(self.agent("ok"))
         self.assertEqual(info["dropped_bytes"], 0)
+
+    def test_stream_fifo_preserves_stdout_and_stderr_labels(self):
+        fifo = self.dir / "stream.fifo"
+        os.mkfifo(fifo, 0o600)
+        reader = os.open(fifo, os.O_RDWR | os.O_NONBLOCK)
+        self.addCleanup(os.close, reader)
+        code = "import sys; sys.stdout.buffer.write(b'OUT'); sys.stderr.buffer.write(b'ERR')"
+        info = self.run_to_end([sys.executable, "-c", code])
+        self.assertEqual(info["returncode"], 0)
+        raw = os.read(reader, 4096)
+        header = struct.Struct("!4sBBHQQ")
+        found = []
+        while len(raw) >= header.size:
+            magic, version, stream_id, size, sequence, offset = header.unpack(raw[:header.size])
+            self.assertEqual((magic, version), (b"BTM4", 1))
+            frame_size = header.size + size
+            if len(raw) < frame_size:
+                break
+            found.append((stream_id, sequence, offset, raw[header.size:frame_size]))
+            raw = raw[frame_size:]
+        self.assertEqual(sorted((item[0], item[3]) for item in found), [(1, b"OUT"), (2, b"ERR")])
 
     def test_the_exit_record_is_never_half_written(self):
         # exit.json appears only through an atomic rename: any reader sees complete JSON or nothing

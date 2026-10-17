@@ -1,0 +1,244 @@
+{
+  "schema_version": "1.2.0",
+  "plan_id": "REQ-GOLDEN",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "extension": {
+    "alpha": 1,
+    "zeta": {
+      "first": 1,
+      "second": 2
+    }
+  },
+  "interfaces": [
+    {
+      "consumer_tasks": [
+        "T2"
+      ],
+      "id": "IF-1",
+      "inputs": [
+        "approved requirements"
+      ],
+      "integration_criteria": [
+        "T2 validates the T1 output"
+      ],
+      "invariants": [
+        "canonical bytes remain stable"
+      ],
+      "outputs": [
+        "canonical plan"
+      ],
+      "owner": "T1",
+      "producer_task": "T1",
+      "title": "Plan output handoff"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Authentication",
+      "acceptance_criteria": [
+        "The auth contract is preserved"
+      ]
+    }
+  ],
+  "requirements": [
+    "R1"
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Fix session validation",
+      "objective": "Reject expired sessions while preserving valid sessions",
+      "repository": "backend",
+      "after": [],
+      "complexity": "medium",
+      "scope": "full_system",
+      "estimated_minutes": 25,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Local change with an established contract",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: the change follows a pattern already present in the module so little reasoning is needed"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: one small localized change confined to a single component of the repository"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: comparable to similar edits in this module including running its local tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: a mistake is local reversible and caught by the task verification command"
+        },
+        "coupling": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: no other task edits the same files or depends on a shared contract"
+        },
+        "confidence": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: the affected code was read and a precedent for this exact change exists"
+        }
+      },
+      "expected_paths": [
+        "src/auth/**",
+        "tests/auth/**"
+      ],
+      "shared_resources": [
+        "session-contract"
+      ],
+      "acceptance_criteria": [
+        "Expired sessions are rejected"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 -m unittest",
+          "purpose": "reject expired sessions",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1"
+      ],
+      "kind": "implement",
+      "legacy_extension": {
+        "alpha": [
+          "stable",
+          "order"
+        ],
+        "zeta": {
+          "first": 1,
+          "second": 2
+        }
+      },
+      "scope_exception": {
+        "approved_by": "reviewer",
+        "owner": "security",
+        "reason": "The migration is bounded"
+      }
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Verify canonical plan output",
+      "objective": "Verify that the canonical plan output remains stable",
+      "repository": "backend",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "full_system",
+      "estimated_minutes": 25,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Local change with an established contract",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: the change follows a pattern already present in the module so little reasoning is needed"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: one small localized change confined to a single component of the repository"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: comparable to similar edits in this module including running its local tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: a mistake is local reversible and caught by the task verification command"
+        },
+        "coupling": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: no other task edits the same files or depends on a shared contract"
+        },
+        "confidence": {
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ],
+          "justification": "T1: the affected code was read and a precedent for this exact change exists"
+        }
+      },
+      "expected_paths": [
+        "src/auth/**",
+        "tests/auth/**"
+      ],
+      "shared_resources": [
+        "session-contract"
+      ],
+      "acceptance_criteria": [
+        "Expired sessions are rejected"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 -m unittest",
+          "purpose": "reject expired sessions",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1"
+      ],
+      "kind": "test",
+      "legacy_extension": {
+        "alpha": [
+          "stable",
+          "order"
+        ],
+        "zeta": {
+          "first": 1,
+          "second": 2
+        }
+      },
+      "scope_exception": {
+        "approved_by": "reviewer",
+        "owner": "security",
+        "reason": "The migration is bounded"
+      }
+    }
+  ]
+}

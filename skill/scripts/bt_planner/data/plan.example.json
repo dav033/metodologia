@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "plan_id": "REQ-EXAMPLE",
   "revision": 1,
   "spec_ref": "SPEC.md",
@@ -49,9 +49,12 @@
         {
           "type": "command",
           "value": "pytest tests/auth -q",
-          "purpose": "reject/accept sessions"
+          "purpose": "reject/accept sessions",
+          "category": "functional"
         }
       ],
+      "covers": ["AUTH-1"],
+      "kind": "implement",
       "classification_evidence": {
         "complexity": {
           "justification": "Short pure function change with a clear failing case, no design choices to make",
@@ -123,9 +126,12 @@
           "type": "manual",
           "value": "read docs/auth.md",
           "purpose": "check the contract is described",
-          "expected": "expiry behaviour is stated"
+          "expected": "expiry behaviour is stated",
+          "category": "product"
         }
       ],
+      "covers": ["AUTH-2"],
+      "kind": "docs",
       "classification_evidence": {
         "complexity": {
           "justification": "Prose only; the behaviour it describes is already fixed by the previous task",
@@ -165,6 +171,20 @@
           ]
         }
       }
+    }
+  ],
+  "requirements": ["AUTH-1", "AUTH-2"],
+  "interfaces": [
+    {
+      "id": "IF-1",
+      "title": "Session expiry documentation",
+      "owner": "backend session contract",
+      "producer_task": "T1",
+      "consumer_tasks": ["T2"],
+      "inputs": ["validated session expiry behavior"],
+      "outputs": ["documented expiry contract"],
+      "invariants": ["valid sessions remain accepted"],
+      "integration_criteria": ["docs describe the behavior implemented by T1"]
     }
   ]
 }

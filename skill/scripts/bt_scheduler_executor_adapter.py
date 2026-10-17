@@ -19,12 +19,13 @@ What lives here, and what does not:
 """
 from __future__ import annotations
 
+import math
 import os
 import re
 import shutil
 import time
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +38,14 @@ import bt_scheduler_adapter as sched
 import bt_scheduler_executor as m3
 import bt_scheduler_integrator as integrator
 import bt_workspace
+from bt_scheduler_m4_wiring import (  # noqa: F401 - exported to the composition module
+    M3StreamCandidates,
+    MonitorRuntime,
+    create_monitor_runtime,
+    seed_terminal_streams,
+)
+from bt_scheduler_m4_wiring import drain_stream as drain_m3_stream
+from bt_scheduler_stream_adapter import M3StreamAdapter
 
 core = sched.core                      # the core's classes, through the one adapter that imports it
 SOURCE = "executor"
@@ -44,6 +53,7 @@ PROVIDER_ALIASES = {"gemini": "antigravity", "agy": "antigravity"}   # Gemini = 
 BINARIES = {"claude": "claude", "codex": "codex", "antigravity": bt_agy.BIN}
 DIRECT = re.compile(r"^direct:(?P<provider>[a-z]+)/(?P<model>[A-Za-z0-9._:-]+)(?:@(?P<profile>[A-Za-z0-9._-]+))?"
                     r"(?:#(?P<effort>[a-z]+))?$")
+_PLAN_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 # efforts each provider accepts: Claude takes the catalogue ladder; Codex has no "max"; an Antigravity effort is part of the model id
 EFFORTS_OF = {"claude": tuple(bt_agents.EFFORTS), "codex": tuple(e for e in bt_agents.EFFORTS if e != "max"), "antigravity": ()}
 # Parent-session state is never handed down to an agent (the profile layer already does this for Antigravity), and a route
@@ -67,11 +77,22 @@ def _policy(call: Callable[[], Any]) -> Any:
         raise m3.ExecutorError("POLICY_DENIED", str(refusal.code or refusal)[:300]) from None
 
 
+def _quota_deadline_is_fresh(value: object, now: float) -> bool:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(float(value)) and value > now
+    except OverflowError:
+        return False
+
+
 # ------------------------------------------------------------------------------------------------------ route
 def validate_route(route: m3.Route, project: str) -> None:
     """Is this route launchable under the catalogue and the profile policy? Run at start() AND again at launch: a route can
     wait in the queue or survive a restart while profiles change underneath it."""
     provider = PROVIDER_ALIASES.get(route.provider, route.provider)
+    if route.single_use and not _quota_deadline_is_fresh(route.quota_valid_until, time.time()):
+        raise m3.ExecutorError("ROUTE_INVALID", "the selected route has missing or expired quota evidence")
     if provider not in bt_profiles.LAUNCHABLE:
         raise m3.ExecutorError("ROUTE_INVALID", f"provider {route.provider!r} is not launchable "
                                f"({', '.join(bt_profiles.LAUNCHABLE)})")
@@ -141,7 +162,7 @@ class RouteResolver:
         validate_route(route, self.project)
         self.gate_repository(route, request)
         return m3.Route(PROVIDER_ALIASES.get(route.provider, route.provider), route.model, route.profile, route.effort,
-                        route.reference, route.account_ref, route.single_use)
+                        route.reference, route.account_ref, route.single_use, route.quota_valid_until)
 
     @staticmethod
     def check_context(found: Mapping[str, Any], request: m3.StartRequest) -> None:
@@ -149,9 +170,13 @@ class RouteResolver:
         for key, wanted in (("plan_id", request.plan_id), ("revision", request.revision), ("task_id", request.task_id)):
             if key in found and found[key] != wanted:
                 raise m3.ExecutorError("ROUTE_INVALID", f"the route was selected for another {key} ({found[key]!r})")
+        if (not _PLAN_SHA256.fullmatch(request.plan_sha256 or "") or
+                found.get("plan_sha256") != request.plan_sha256):
+            raise m3.ExecutorError("ROUTE_INVALID", "the route was selected for another plan_sha256")
         if found.get("superseded_by"):                   # only the most recent decision for a task may launch an attempt
             raise m3.ExecutorError("ROUTE_INVALID", f"the decision was replaced by {str(found['superseded_by'])[:16]}")
-        if "valid_until" in found and isinstance(found["valid_until"], (int, float)) and found["valid_until"] < time.time():
+        valid_until = found.get("quota_valid_until")
+        if not _quota_deadline_is_fresh(valid_until, time.time()):
             raise m3.ExecutorError("ROUTE_INVALID", "the selector's quota evidence for this route has expired")
 
     def gate_repository(self, route: m3.Route, request: m3.StartRequest) -> None:
@@ -178,7 +203,7 @@ def m2_ledger_lookup(ledger_path: Path | str) -> M2_LOOKUP:
     (not a sticky "unknown"). The answer carries the decision's plan/revision/task and, when a later decision for that task exists, `superseded_by`."""
     def lookup(reference: str, request: m3.StartRequest | None = None) -> Mapping[str, Any] | None:
         import bt_scheduler_decision as m2
-        raw = reference[len("route:"):] if reference.startswith("route:") else reference
+        raw = reference.removeprefix("route:")
         try:
             bound = m2.resolve_executor_binding(ledger_path, raw)
         except m2.DecisionLedgerError:
@@ -188,7 +213,9 @@ def m2_ledger_lookup(ledger_path: Path | str) -> M2_LOOKUP:
         found = bound.route
         out = {"provider": found.provider, "model": found.model, "profile": found.profile or "",
                "effort": found.effort or "", "account_ref": found.account_ref or "",
-               "plan_id": bound.plan_id, "revision": bound.revision, "task_id": bound.task_id}
+               "quota_valid_until": found.quota_valid_until,
+               "plan_id": bound.plan_id, "revision": bound.revision, "plan_sha256": bound.plan_sha256,
+               "task_id": bound.task_id}
         if bound.superseded_by:
             out["superseded_by"] = bound.superseded_by
         return out
@@ -242,18 +269,19 @@ class MethodologyDriver:
 class PlanBriefs:
     """The task of the frozen plan, as the agent's brief."""
 
-    def __init__(self, plan):
+    def __init__(self, plan, notes=None):
         self.plan = plan
+        self.notes = notes
 
     def brief(self, request: m3.StartRequest) -> m3.Brief:
         try:
             spec = self.plan.task(request.task_id)
-        except Exception:
+        except core.SchedulerError:
             raise m3.ExecutorError("ORDER_INVALID", f"{request.task_id} is not a task of the approved plan") from None
         checks = tuple(f"{v.get('purpose') or v.get('type', 'check')}: {v.get('value', '')}" for v in spec.verification)
         return m3.Brief(title=str(spec.meta.get("title", spec.id)), objective=str(spec.meta.get("objective", "")),
                         acceptance_criteria=tuple(spec.acceptance_criteria), verification=checks,
-                        expected_paths=tuple(spec.expected_paths))
+                        expected_paths=tuple(spec.expected_paths), notes=self.notes(request) if self.notes else "")
 
 
 # ------------------------------------------------------------------------------------------------------ core ports
@@ -270,6 +298,7 @@ class CoreExecutionPort:
                  base_ref: str | Callable[[str], str] = "HEAD", default_repository: str = ""):
         self.executor, self.plan, self.project = executor, plan, project
         self.base_ref, self.default_repository = base_ref, default_repository
+        self.on_accepted_attempt: Callable[[str], None] | None = None
 
     def start(self, order):
         if (order.plan_id, order.revision) != (self.plan.plan_id, self.plan.revision):
@@ -290,10 +319,12 @@ class CoreExecutionPort:
             idempotency_key=order.idempotency_key, plan_id=order.plan_id, revision=order.revision, task_id=order.task_id,
             attempt_id=order.attempt_id, token=order.token, executor=order.executor, repository=repo,
             project=self.project, base_ref=base, acceptance_criteria=tuple(order.acceptance_criteria),
-            verification=tuple(order.verification))
+            verification=tuple(order.verification), plan_sha256=self.plan.sha256)
         receipt = self.executor.start(request)
         if receipt.status == "rejected" and receipt.code in TRANSIENT:
             raise RuntimeError(f"{receipt.code}: {receipt.detail}")
+        if receipt.status in {"accepted", "duplicate"} and self.on_accepted_attempt is not None:
+            self.on_accepted_attempt(order.attempt_id)
         return core.Ack(receipt.status, f"{receipt.code}: {receipt.detail}".strip(": ")[:300])
 
     def cancel(self, order):
@@ -385,9 +416,21 @@ class Wiring:
     executor: m3.AgentExecutor
     port: CoreExecutionPort
     sink: CoreEventSink
+    stream_adapter: M3StreamAdapter
+    monitor: MonitorRuntime | None = None
+    recovery: Any = None
+    verification_runtime: Any = None
+    verification_store: Any = None
+    stream_candidates: M3StreamCandidates = field(default_factory=M3StreamCandidates)
+
+    def drain_stream(self, attempt_id: str, run_id: str, *, description: Mapping[str, Any] | None = None) -> int:
+        """Drain one bounded M3 batch through the M4-owned FIFO bridge."""
+        return drain_m3_stream(self, attempt_id, run_id, description=description)
 
     def close(self) -> None:
-        self.executor.close()
+        from bt_scheduler_executor_wiring import close
+
+        close(self)
 
 
 def _accepted_attempts(scheduler) -> dict[str, str]:
@@ -403,47 +446,10 @@ def _snapshot_sha(executor, attempt_id: str) -> str | None:
     return handoff.get("snapshot_sha") if handoff.get("status") == "captured" else None
 
 
-def wire(rdir: Path, *, project: str, assignment=None, verification=None, recovery=None, config=None,
-         executor_config: m3.Config | None = None, resolver: m3.RouteResolver | None = None,
-         m2_lookup: M2_LOOKUP | None = None, m2_ledger: Path | str | None = None, allow_direct: bool | None = None,
-         repos: Mapping[str, Path | str] | None = None, base_ref: str | Callable[[str], str] = "HEAD",
-         default_repository: str = "", clock: Callable[[], float] | None = None, driver: m3.AgentDriver | None = None,
-         autostart: bool = True, integrate_predecessors: bool = True) -> Wiring:
-    """A scheduler core for this requirement whose ExecutionPort is a real agent executor.
+def wire(rdir: Path, **options) -> Wiring:
+    """Compose optional M2/M4/M5 ports; see bt_scheduler_executor_wiring.wire for keyword options.
 
-    Opt-in and non-destructive: refuses a requirement already run by the legacy supervisor (the core's own rule). The
-    executor's local state lives in `executor_root(rdir, run_identity)`: one root per core RUN and plan revision.
-    `verification` is the caller's independent verifier. With an M2 ledger/lookup `direct:` references are refused unless
-    `allow_direct=True`. `base_ref` (a ref or `task_id -> ref`) is where each task's worktree starts. The executor does
-    not integrate accepted prerequisite work; by default (`integrate_predecessors=True`) a task starts from a commit that
-    merges its accepted same-repository predecessors' handoff snapshots (`bt_scheduler_integrator`; `base_ref` stays the
-    fallback for tasks with nothing to integrate), and a conflict or missing snapshot rejects the order with its cause.
-    Pass `integrate_predecessors=False` to start every task from `base_ref` alone."""
-    rdir = Path(rdir)
-    if m2_ledger is not None and m2_lookup is None:
-        m2_lookup = m2_ledger_lookup(m2_ledger)
-    port = CoreExecutionPort(None, sched.approved_plan(rdir), project=project, base_ref=base_ref,
-                             default_repository=default_repository)
-    sink = CoreEventSink()
-    scheduler = sched.open_scheduler(rdir, ports=core.Ports(assignment=assignment, execution=port,
-                                                            verification=verification, recovery=recovery),
-                                     config=config, clock=clock)
-    port.plan = scheduler.plan                         # one plan object for the core, the brief and the repository roles
-    root = executor_root(rdir, run_identity(scheduler))
-    repo_of = repositories(project, repos)
-    executor = m3.AgentExecutor(
-        root, resolver=resolver or RouteResolver(project, m2_lookup=m2_lookup, repos=repo_of, allow_direct=allow_direct),
-        briefs=PlanBriefs(scheduler.plan), driver=driver or MethodologyDriver(project),
-        workspaces=m3.GitWorkspaces(root / "ws", repo_of), sink=sink, config=executor_config, autostart=False)
-    port.executor = executor
-    if integrate_predecessors:
-        integrate = integrator.PredecessorIntegrator(fallback=base_ref)
-        integrate.bind(plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
-                       identity=run_identity(scheduler),
-                       accepted=lambda: _accepted_attempts(scheduler),
-                       snapshot_of=lambda attempt: _snapshot_sha(executor, attempt))
-        port.base_ref = integrate.base_ref
-    sink.bind(scheduler)
-    if autostart:
-        executor.start_loop()
-    return Wiring(scheduler, executor, port, sink)
+    Existing recovery= callers remain valid. recovery_store_path opts into durable M5 advice and snapshot continuation.
+    """
+    from bt_scheduler_executor_wiring import wire as compose
+    return compose(rdir, **options)

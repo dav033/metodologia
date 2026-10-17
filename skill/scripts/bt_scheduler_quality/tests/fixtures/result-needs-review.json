@@ -1,0 +1,45 @@
+{
+  "schema_version": "m6.verify-result/1",
+  "identity": {
+    "plan_id": "PLAN-TEST",
+    "revision": 1,
+    "task_id": "T-003",
+    "attempt_id": "att-003",
+    "token": 1
+  },
+  "input": {
+    "snapshot_sha": "2222222222222222222222222222222222222222",
+    "base_sha": "1111111111111111111111111111111111111111",
+    "criteria_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "order_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "checks_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "verifier": {
+    "kind": "deterministic",
+    "identity": "m6-quality/checker-v1",
+    "independent": true,
+    "policy_version": "m6-policy/1"
+  },
+  "criteria": [
+    {"criterion": "visual result matches the approved photo", "status": "unknown", "evidence": []}
+  ],
+  "checks": [
+    {
+      "id": "CHECK-1",
+      "command": "manual: visual result matches the approved photo",
+      "argv": [],
+      "status": "unknown",
+      "exit_code": null,
+      "duration_ms": 0,
+      "issue_code": "CHECK_MANUAL",
+      "stdout_ref": "m6://artifact/0000000000000000000000000000000000000000000000000000000000000000",
+      "stderr_ref": "m6://artifact/0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "status": "NEEDS_REVIEW",
+  "issues": [
+    {"code": "CRITERION_UNVERIFIABLE", "detail": "criterion has no deterministic evidence"}
+  ],
+  "evidence_manifest": "m6://result/2222222222222222222222222222222222222222222222222222222222222222",
+  "finished_at": "2026-10-15T00:00:00Z"
+}

@@ -26,4 +26,6 @@ CODES = (
     "UNKNOWN_ATTEMPT",         # attempt id not in the run
     "NOT_ALLOWED",             # operation refused by the current state (e.g. reopen a task that is not blocked)
     "CONTRACT_VIOLATION",      # a message that does not satisfy the versioned contract
+    "ROUTING_UNAVAILABLE",     # M2 did not produce the required initial route map
+    "ROUTING_INVALID",         # M2 returned an incomplete or malformed initial route map
 )

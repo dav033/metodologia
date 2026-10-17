@@ -330,15 +330,27 @@ class PublishedSchema(unittest.TestCase):
     def test_enums_match(self):
         self.assertEqual(tuple(self.task["complexity"]["enum"]), pc.COMPLEXITY)
         self.assertEqual(tuple(self.task["scope"]["enum"]), pc.SCOPE)
+        self.assertEqual(tuple(self.task["kind"]["enum"]), pc.TASK_KINDS)
         self.assertEqual(tuple(self.schema["$defs"]["level"]["enum"]), pc.LEVELS)
         self.assertEqual(tuple(self.schema["$defs"]["verification"]["properties"]["type"]["enum"]),
                          pc.VERIFICATION_TYPES)
+        self.assertEqual(tuple(self.schema["$defs"]["verification"]["properties"]["category"]["enum"]),
+                         pc.VERIFICATION_CATEGORIES)
 
     def test_required_lists_match(self):
         self.assertEqual(tuple(self.schema["required"]), pc.TOP_REQUIRED)
         self.assertEqual(tuple(self.schema["$defs"]["task"]["required"]), pc.REQUIRED_TASK_KEYS)
         self.assertEqual(tuple(self.schema["$defs"]["milestone"]["required"]), pc.MILESTONE_KEYS)
         self.assertEqual(tuple(self.schema["$defs"]["verification"]["required"]), ("type", "value", "purpose"))
+
+    def test_schema_1_2_required_fields_are_version_gated(self):
+        extension = self.schema["allOf"][1]
+        self.assertIn("^1\\.([2-9]|[1-9][0-9]+)\\.",
+                      extension["if"]["properties"]["schema_version"]["pattern"])
+        self.assertIn("requirements", extension["then"]["required"])
+        task = extension["then"]["properties"]["tasks"]["items"]
+        self.assertEqual(set(task["required"]), {"covers", "kind"})
+        self.assertEqual(task["properties"]["verification"]["items"]["required"], ["category"])
 
     def test_forbidden_keys_listed_in_schema_are_forbidden_in_code(self):
         listed = {next(iter(item["required"])) for item in self.task and self.schema["$defs"]["task"]["not"]["anyOf"]}

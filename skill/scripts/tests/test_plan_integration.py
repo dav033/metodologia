@@ -53,9 +53,13 @@ def classified(rdir: Path) -> dict:
                                                  for d, sentence in why.items()},
                      "expected_paths": task.get("expected_paths", [f"src/{task['id'].lower()}/**"]),
                      "shared_resources": [], "acceptance_criteria": [f"{task['title']} works as described"]})
+        task["covers"] = list(plan["requirements"][:1])
+        task["kind"] = "implement"
         if not task.get("verification"):
             task["verification"] = [{"type": "manual", "value": "read the diff", "purpose": "review",
                                      "expected": "matches the objective"}]
+        for verification in task["verification"]:
+            verification.setdefault("category", "functional")
     return plan
 
 
@@ -77,7 +81,7 @@ class Isolated(unittest.TestCase):
         self.root = Path(self._tmp.name) / "bitacora"
         self.rdir = self.root / "sample" / "requirements" / "REQ-001-demo"
         self.rdir.mkdir(parents=True)
-        (self.rdir / "SPEC.md").write_text("# Spec\n", encoding="utf-8")
+        (self.rdir / "SPEC.md").write_text("# Spec\n## Requirements\n- R1. Demo requirement\n", encoding="utf-8")
         self.set_status("draft")
         for target, value in (("bt_handoff.ROOT", self.root), ("bt_launch.ROOT", self.root)):
             patcher = patch(target, value)
@@ -97,6 +101,10 @@ class Isolated(unittest.TestCase):
         plan = classified(self.rdir)
         (self.rdir / "PLAN.json").write_text(planner.dumps(plan), encoding="utf-8")
         return plan
+
+    def compatibility_report(self) -> dict[str, object]:
+        import bt_scheduler_adapter
+        return bt_scheduler_adapter.plan_compatibility_report(self.rdir)
 
 
 class Handoff(Isolated):
@@ -185,10 +193,11 @@ class RunState(Isolated):
         planner.write_skeleton(self.rdir)
         self.good_plan()
         adapter.run_cli("check", self.rdir, emit=lambda _: None)
-        adapter.run_cli("freeze", self.rdir, emit=lambda _: None)
-        adapter.run_cli("compat", self.rdir, emit=lambda _: None)
-        adapter.freeze_on_launch(self.rdir)
-        adapter.handoff_problems(self.rdir)
+        report = self.compatibility_report()
+        adapter.run_cli("freeze", self.rdir, emit=lambda _: None, compatibility_report=report)
+        adapter.run_cli("compat", self.rdir, emit=lambda _: None, compatibility_report=report)
+        adapter.freeze_on_launch(self.rdir, compatibility_report=report)
+        adapter.handoff_problems(self.rdir, compatibility_report=report)
         self.assertEqual(run.read_bytes(), before)
 
     def test_a_damaged_store_leaves_a_trace_and_does_not_stop_the_run(self):

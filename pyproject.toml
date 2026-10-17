@@ -12,6 +12,10 @@ dependencies = []  # stdlib only; optional Node is a separate capability (REQ-00
 [project.scripts]
 bitacora = "bitacora:main"
 bt = "bitacora:main"
+bt-plan-bench = "bt_plan_bench:main"
+bt-scheduler-monitor = "bt_cli_scheduler_monitor:main"
+bt-scheduler-monitor-recovery = "bt_scheduler_monitor_recovery:main"
+bt-scheduler-recovery = "bt_cli_scheduler_recovery:main"
 globalusage = "bt_entrypoints:globalusage"
 relay-run = "relay_run:main"
 file-guard = "file_guard:main"
@@ -21,7 +25,7 @@ bitacora-inventory = "migration_inventory:main"
 
 [tool.setuptools]
 package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
-packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor"]
+packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "plan_bench", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor", "bt_scheduler_monitor", "bt_scheduler_monitor.providers", "bt_scheduler_recovery", "bt_scheduler_quality"]
 py-modules = [
   "bitacora",
   "bt_agents",
@@ -31,6 +35,8 @@ py-modules = [
   "bt_cli_accounts",
   "bt_cli_diagram",
   "bt_cli_docs",
+  "bt_cli_launch",
+  "bt_cli_run_control",
   "bt_cli_delegate",
   "bt_cli_learn",
   "bt_cli_review",
@@ -54,18 +60,39 @@ py-modules = [
   "bt_requirements_gate",
   "bt_plan_adapter",
   "bt_plan_adapter_evidence",
+  "bt_plan_history",
+  "bt_plan_bench",
+  "bt_planner_runtime",
   "bt_scheduler_adapter",
+  "bt_scheduler_plan_compat",
+  "bt_scheduler_plan_routing",
+  "bt_scheduler_quota_preflight",
+  "bt_scheduler_run",
   "bt_scheduler_executor_adapter",
+  "bt_scheduler_quality_adapter",
+  "bt_scheduler_executor_wiring",
+  "bt_scheduler_recovery_adapter",
+  "bt_scheduler_retry",
+  "bt_cli_scheduler_recovery",
+  "bt_cli_scheduler_run",
+  "bt_scheduler_monitor_adapter",
+  "bt_scheduler_monitor_recovery",
+  "bt_scheduler_stream_adapter",
+  "bt_scheduler_m4_stream_bridge",
+  "bt_scheduler_m4_wiring",
   "bt_scheduler_integrator",
   # Scheduler module adapters and local M2 runtime modules.
   "bt_scheduler_decision_adapter",
+  "bt_scheduler_decision_benchmark",
   "bt_scheduler_laya",
   "bt_scheduler_laya_worker",
   "bt_scheduler_benchmark",
   "bt_scheduler_bench_local",
   "bt_scheduler_bench_quality",
   "bt_cli_plan",
+  "bt_cli_planner",
   "bt_cli_requirements_gate",
+  "bt_cli_scheduler_monitor",
   "bt_core",
   "bt_delegate",
   "bt_delegate_modes",
@@ -107,6 +134,7 @@ py-modules = [
   "bt_review",
   "bt_rounds",
   "bt_run",
+  "bt_run_plan_gate",
   "bt_runentry",
   "bt_runloop",
   "bt_run_isolated",
@@ -140,10 +168,15 @@ py-modules = [
 # test_package_install.py keeps py-modules complete against skill/scripts.
 [tool.setuptools.package-data]
 bt_planner = ["data/*.json", "README.md"]
+plan_bench = ["data/*.json", "README.md"]
 bt_scheduler_core = ["README.md"]
 bt_scheduler_decision = ["api-contract.json", "README.md", "laya-requirements.in", "laya-requirements.lock"]
 bt_scheduler_executor = ["README.md"]
+bt_scheduler_monitor = ["README.md"]
+bt_scheduler_recovery = ["README.md"]
+bt_scheduler_quality = ["api-contract.json", "README.md"]
 bitacora_resources = [
-  "SKILL.md", "templates/*", "templates/**/*", "assets/*", "agents/*", "githooks/*",
+  "SKILL.md", "templates/*", "templates/**/*", "assets/*", "agents/*", "agents/**/*",
+  "agents/*/skills/*/SKILL.md", "githooks/*",
   "references/*.md", "references/stacks/*", "vendor/archify/**/*",
 ]

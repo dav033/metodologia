@@ -1,0 +1,26 @@
+{
+  "request_ack": {
+    "accepted": {"status": "accepted", "detail": "request persisted"},
+    "duplicate": {"status": "duplicate", "detail": "same idempotent request"},
+    "rejected": {"status": "rejected", "detail": "idempotency key reused with different input"}
+  },
+  "internal_status_mapping": {
+    "PASS": "submit Verdict(accepted=true, evidence=m6://result/<sha256>)",
+    "FAIL": "submit Verdict(accepted=false, evidence=m6://result/<sha256>)",
+    "NEEDS_REVIEW": "no Verdict; retain M1 VERIFYING",
+    "STALE": "no Verdict for a replacement attempt"
+  },
+  "stable_error_codes": [
+    "ORDER_INVALID",
+    "IDEMPOTENCY_CONFLICT",
+    "HANDOFF_MISSING",
+    "SNAPSHOT_INVALID",
+    "SANDBOX_UNAVAILABLE",
+    "CHECK_TIMEOUT",
+    "OUTPUT_LIMIT",
+    "CHECK_PRODUCTION_ACTION",
+    "EVIDENCE_UNAVAILABLE",
+    "M1_SUBMIT_FAILED",
+    "STALE_ORDER"
+  ]
+}

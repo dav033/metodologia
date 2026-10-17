@@ -46,6 +46,16 @@ class Grammar(unittest.TestCase):
     def test_clean_plan_has_no_problems(self):
         self.assertEqual(self.problems(PLAN_MD.format(status="approved")), [])
 
+    def test_covers_and_kind_fields_are_parsed_and_invalid_values_reported(self):
+        document = md.parse_document("### M1 — Base\n- [ ] T1 — Work · covers: R1, R2 · kind: test\n")
+        self.assertEqual(document["tasks"][0]["covers"], ["R1", "R2"])
+        self.assertEqual(document["tasks"][0]["kind"], "test")
+        bad = self.problems("### M1 — Base\n- [ ] T1 — Work · covers: R1,,R2 · kind: \n")
+        self.assertTrue(any("covers: needs a non-empty" in issue for issue in bad), bad)
+        self.assertTrue(any("kind: needs a non-empty" in issue for issue in bad), bad)
+        repeated = self.problems("### M1 — Base\n- [ ] T1 — Work · covers: R1, R1\n")
+        self.assertTrue(any("covers: lists the same requirement" in issue for issue in repeated), repeated)
+
 
 class Contradictions(PlanDir):
     def setUp(self):
@@ -59,6 +69,32 @@ class Contradictions(PlanDir):
 
     def test_baseline_is_consistent(self):
         self.assertEqual(self.errors(), "")
+
+    def test_schema_1_2_reports_declared_covers_and_kind_contradictions(self):
+        text = PLAN_MD.format(status="approved").replace(
+            "verify: `pytest tests/auth -q`",
+            "verify: `pytest tests/auth -q` · covers: R2 · kind: audit",
+        )
+        self.md(text=text)
+        out = self.errors()
+        self.assertIn("T1.covers: PLAN.md has ['R2'], PLAN.json has ['R1']", out)
+        self.assertIn("T1.kind: PLAN.md says 'audit', PLAN.json says 'implement'", out)
+
+    def test_legacy_schema_does_not_compare_new_markdown_fields(self):
+        self.plan["schema_version"] = "1.1.0"
+        self.write(self.plan)
+        self.md(text=PLAN_MD.format(status="approved").replace(
+            "verify: `pytest tests/auth -q`",
+            "verify: `pytest tests/auth -q` · covers: R2 · kind: audit",
+        ))
+        self.assertEqual(self.errors(), "")
+
+    def test_skeleton_derives_spec_requirements_and_leaves_covers_empty(self):
+        skeleton = self.sync.skeleton(self.rdir)
+        self.assertEqual(skeleton["schema_version"], "1.2.0")
+        self.assertEqual(skeleton["requirements"], ["R1"])
+        self.assertTrue(all(task["covers"] == [] for task in skeleton["tasks"]))
+        self.assertTrue(all("kind" not in task for task in skeleton["tasks"]))
 
     def test_duplicate_id_in_plan_md_is_rejected_even_if_json_looks_fine(self):
         self.md(text=PLAN_MD.format(status="approved") + "- [ ] T2 — Another second task · repo: backend\n")
@@ -122,7 +158,7 @@ class Contradictions(PlanDir):
 
     def test_extra_json_verifications_are_not_a_contradiction(self):
         out = self.edit(lambda p: p["tasks"][0]["verification"].append(
-            {"type": "command", "value": "ruff check", "purpose": "lint"}))
+            {"type": "command", "value": "ruff check", "purpose": "lint", "category": "static"}))
         self.assertEqual(out, "")
 
     def test_legacy_risk_on_the_same_scale_must_agree(self):

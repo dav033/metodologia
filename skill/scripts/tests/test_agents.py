@@ -170,6 +170,25 @@ class PoolAndRouteTests(AgentTests):
             self.assertEqual(bt_agents.pool_for("personal-project", ["claude", "claude-alias"]), ["claude"])
             self.assertEqual(bt_agents.pool_for("personal-project", ["claude-alias", "claude"]), ["claude-alias"])
 
+    def test_pool_deduplicates_normalized_account_paths_without_changing_quota_keys(self):
+        home = self.base / "account-home"
+        with patch.dict("os.environ", {"HOME": str(home)}):
+            for provider, selector, directory in (("claude", "CLAUDE_CONFIG_DIR", ".claude"),
+                                                  ("codex", "CODEX_HOME", ".codex")):
+                account_dir = home / directory
+                account_dir.mkdir(parents=True)
+                tilde_profile = f"{provider}-tilde-alias"
+                absolute_profile = f"{provider}-absolute-alias"
+                bt_profiles.add(tilde_profile, provider, {selector: f"~/{directory}"})
+                bt_profiles.add(absolute_profile, provider, {selector: str(account_dir)})
+                self.assertNotEqual(bt_agents.account_key(tilde_profile), bt_agents.account_key(absolute_profile))
+                with self._all_clis():
+                    self.assertEqual(bt_agents.pool_for("personal-project", [tilde_profile, absolute_profile]),
+                                     [tilde_profile])
+                    self.assertEqual(bt_agents.pool_for("personal-project", [absolute_profile, tilde_profile]),
+                                     [absolute_profile])
+                    self.assertEqual(bt_agents.pool_for("personal-project", [provider, tilde_profile]), [provider])
+
     def test_pool_rejects_unknown_requested_profile(self):
         with self._all_clis(), self.assertRaises(bt_profiles.ProfileError):
             bt_agents.pool_for("personal-project", ["absent"])

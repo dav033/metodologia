@@ -1,0 +1,4 @@
+{"event":"init","init":{"model":"gemini-flash"}}
+{"event":"step_update","event_id":"a-1","step_update":{"step_index":1,"state":"ACTIVE","step_type":"agent_response","text_delta":"private answer","provider_extra":"nested step metadata"}}
+{"event":"step_update","event_id":"a-2","step_update":{"step_index":1,"state":"DONE","step_type":"agent_response","usage":{"input_tokens":9,"output_tokens":2,"total_tokens":11}}}
+{"event":"result","event_id":"a-3","result":{"status":"FAILURE","error_code":"RESOURCE_EXHAUSTED","error":"private quota details","provider_extra":"nested result metadata"}}

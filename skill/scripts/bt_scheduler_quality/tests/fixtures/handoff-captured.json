@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "attempt_id": "att-001",
+  "repository": "/trusted/project/repository",
+  "base_sha": "1111111111111111111111111111111111111111",
+  "snapshot_sha": "2222222222222222222222222222222222222222",
+  "status": "captured",
+  "dirty": true,
+  "untracked_count": 1
+}

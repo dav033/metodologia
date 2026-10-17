@@ -1,8 +1,10 @@
 # Modules: how the methodology is divided
 
 The methodology is one product split into modules. A module is a package `skill/scripts/bt_<name>/` that can be
-understood, run and verified **without the rest**. Modules so far: `bt_planner` (plans), `bt_scheduler_core` (runs an approved plan) and `bt_scheduler_executor` (launches and supervises the agents). Use this page when you extract,
-add or review a module.
+understood, run and verified **without the rest**. Modules include `bt_planner` (plans), `bt_scheduler_core` (runs an
+approved plan), `bt_scheduler_decision` (M2 route decisions), `bt_scheduler_executor` (M3 agent execution),
+`bt_scheduler_monitor` (M4 stream observations), `bt_scheduler_recovery` (M5 retry recommendations), and
+`bt_scheduler_quality` (M6 verification). Use this page when you extract, add or review a module.
 
 ## Rules (each one is enforced by a test, not by good intentions)
 
@@ -43,7 +45,7 @@ The second module, built under the same five rules. It is the deterministic hear
 M1 core, M2 decision, M3 executor, M4 monitor, M5 recovery): it loads a hash-approved `PLAN.json`, resolves the DAG, runs the
 task/attempt state machine on a transactional store (SQLite WAL), reserves capacity/resources atomically, dispatches through
 ports, ingests events idempotently and reconciles after a restart. **No AI inside**: sibling modules implement the ports
-(`AssignmentPort`, `ExecutionPort`, `RecoveryPort`, `VerificationPort`, `StateRepository`; contract in its README) and may
+(`PlanRoutingPort`, `AssignmentPort`, `ExecutionPort`, `RecoveryPort`, `VerificationPort`, `StateRepository`; contract in its README) and may
 be simulated with `bt_scheduler_core.simulators`.
 
 - Adapter: `skill/scripts/bt_scheduler_adapter.py` (only file that imports it). It hands the core the latest frozen plan
@@ -59,6 +61,32 @@ be simulated with `bt_scheduler_core.simulators`.
 - Tests: module suite `bt_scheduler_core/tests/` (boundaries, lone-copy isolation, CLI end to end, fuzzed invariants,
   crash-at-every-commit restarts) and `tests/test_scheduler_integration.py` (boundary from outside, frozen-plan hand-over,
   authority rules, historical `RUN.json` byte-identical).
+
+### Scheduler owner runtime (REQ-022)
+
+- Start a supervised run only with `bitacora.py --project <project> launch <REQ> --mode marathon --scheduler`; the
+  legacy marathon path remains the default. The launcher requires the normal project readiness gate and an already
+  approved, frozen `PLAN.json` revision. `--force` cannot bypass this gate.
+- `bt_scheduler_run.py` composes one durable M1 owner with the existing M2 decision and M3 executor adapters.
+  `bitacora.py --project <project> scheduler-run <REQ> --resume` reopens the same M1 run identity and lets M3
+  reconcile its captured process state;
+  it does not approve a plan or silently create a replacement run.
+- On a new Scheduler run, M1 sends the full frozen DAG to M2 through `PlanRoutingPort` before executor reconciliation
+  or dispatch. M2 records a non-reserving route recommendation for every task; the owner projection joins that map
+  with the plan's complexity. Each READY task is routed again against current eligibility when it is dispatched.
+- M1's SQLite database is the run authority. The owner writes an atomic `RUN.projection.json` with the frozen plan
+  identity and heartbeat. `watch`, dashboard and requirement views read that projection only for Scheduler-owned
+  requirements, validate it, and report unavailable or stale state with the exact resume command. They never fall back
+  to legacy `RUN.json`.
+- CLI and web pause/resume/stop controls route to M1 (stop means cancel). Notifications are deduplicated by the latest
+  state-changing M1 audit sequence; unreadable local claim state skips delivery rather than interrupting execution.
+  `scheduler-run` installs the matching per-user login resume entry unless `--no-autostart` is passed; this is not a
+  global service.
+- REQ-022 originally left M4/M5/M6 inactive. REQ-023 supersedes that activation boundary: both supported owner
+  commands (`scheduler-run` and `launch --scheduler`) now compose all three with separate private per-run stores.
+  The owner loop drains M3 output into M4 and delivers its audit-only incidents through M1; M5 and M6 use M1's
+  existing recovery and verification ports. The legacy launcher stays separate, and low-level compositions retain
+  their optional port seam. `NEEDS_REVIEW` remains operator-owned.
 
 ## Agent executor (`bt_scheduler_executor`, REQ-014)
 
@@ -94,3 +122,25 @@ Sampling is best effort and identity-checked; see the executor README for caps a
   cancel/reconcile/classification matrices, real git handoff cases) and, in the methodology suite, `tests/test_scheduler_executor_adapter.py`,
   `tests/test_scheduler_executor_integration.py` (the real core + executor + fake provider binaries; boundary from outside;
   historical `RUN.json` byte-identical) and the opt-in `tests/test_scheduler_executor_real.py` (`BITACORA_M3_REAL=1`, bounded spend).
+
+## Quality verifier (`bt_scheduler_quality`, M6)
+
+M6 checks the exact approved M1 `VerifyOrder` against the matching, validated M3 handoff snapshot. Its standard-library-only
+package stores private durable evidence, runs commands in the required bubblewrap sandbox, and sends correlated PASS/FAIL
+verdicts through M1. `NEEDS_REVIEW` creates a durable review item and leaves M1 in `VERIFYING`; an Ack means admission,
+not acceptance. The M6 package imports no methodology module.
+
+- Adapter: `skill/scripts/bt_scheduler_quality_adapter.py` reaches M1 and M3 public types only through
+  `bt_scheduler_adapter` and `bt_scheduler_executor_adapter`. It admits work to M6, validates the exact approved plan
+  and M3 handoff, and delivers the versioned verdict through M1's existing port.
+- Composition: `skill/scripts/bt_scheduler_executor_wiring.py` accepts `quality_store_path` as an explicit opt-in for
+  low-level isolated/custom compositions and optionally a `quality_policy` mapping. The supported Scheduler owner
+  always passes the distinct private M6 path and does not fall back to a caller verifier. The durable store must be
+  separate from M1, M4 and M5. Shutdown drains and closes M6 before its store, the M5 store, the M3 stream bridge and
+  executor.
+- Full local proof: `tests/test_scheduler_m1_m6_e2e.py` freezes a real Planner plan, routes through M2, launches local M3
+  children, records M4 stream events, observes M6 FAIL → M1 rejection → M5 retry → fresh M2 decision → continued M3
+  snapshot → M6 PASS → M1 completion. It uses no provider CLI or credentials.
+- Package: `bt_scheduler_quality` and its JSON fixtures/contracts are declared in `pyproject.toml`; the methodology
+  adapter and runtime composition are shipped as modules. M6 is mandatory for the supported Scheduler owner commands;
+  the low-level composition seam stays opt-in.

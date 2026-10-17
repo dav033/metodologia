@@ -83,9 +83,14 @@ def linea(nombre, w, extra=""):
     def f(x):
         if not x:
             return "sin datos".ljust(28)
-        if x["resets_at"] < dt.datetime.now().timestamp():  # la medición es de antes de que la ventana se renovara
+        usado, reset = x.get("used_percent"), x.get("resets_at")
+        if usado is None:
+            return "sin datos".ljust(28)
+        if reset is None:  # la API no informó cuándo se renueva la ventana
+            return f"{barra(usado)} ↺{'?':<9}"
+        if reset < dt.datetime.now().timestamp():  # la medición es de antes de que la ventana se renovara
             return f"\033[2m{'ventana renovada (dato viejo)':<28}\033[0m"
-        return f"{barra(x['used_percent'])} ↺{cuando(x['resets_at']):<9}"
+        return f"{barra(usado)} ↺{cuando(reset):<9}"
     marca = nombre == ACTUAL
     etiqueta = f"\033[1;7m▶ {nombre:<14}\033[0m" if marca else f"  {nombre:<14}"
     print(f"{etiqueta} 5h {f(h)} 7d {f(s)} {extra}{'  ◀ esta sesión' if marca else ''}")

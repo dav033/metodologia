@@ -1,11 +1,14 @@
 """T2: durable ledger — unique keys, checked transitions, atomic terminal event, concurrency from threads and processes."""
 from __future__ import annotations
 
+import json
 import multiprocessing
+import sqlite3
 import sys
 import tempfile
 import threading
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[2])]
@@ -16,7 +19,7 @@ from bt_scheduler_executor.ledger import Ledger
 
 
 def _insert(args):
-    path, n = args
+    path, _n = args
     led = Ledger(path)
     req = support.order(1, key="same-key", attempt_id="att-0001")
     try:
@@ -43,6 +46,26 @@ class LedgerTests(unittest.TestCase):
         self.assertTrue(created)
         self.assertFalse(created2)
         self.assertEqual(row["attempt_id"], again["attempt_id"])
+        self.assertEqual(self.led.count((m.QUEUED,)), 1)
+
+    def test_ids_in_states_reads_only_matching_attempts_in_sequence_order(self):
+        self.add(1)
+        self.add(2, state=m.REJECTED)
+
+        self.assertEqual(self.led.ids_in_states((m.QUEUED, m.RUNNING)), ["att-0001"])
+        self.assertEqual(self.led.ids_in_states(()), [])
+
+    def test_an_older_request_record_replays_after_plan_hash_is_added(self):
+        row, _ = self.add()
+        stored = row["request"].copy()
+        stored.pop("plan_sha256")
+        with sqlite3.connect(self.path) as connection:
+            connection.execute("UPDATE attempts SET request=? WHERE attempt_id=?",
+                               (json.dumps(stored, sort_keys=True, separators=(",", ":")), row["attempt_id"]))
+        replay, created = self.led.insert(replace(support.order(1), plan_sha256="a" * 64), dirname="d1",
+                                          state=m.QUEUED)
+        self.assertFalse(created)
+        self.assertEqual(replay["attempt_id"], row["attempt_id"])
         self.assertEqual(self.led.count((m.QUEUED,)), 1)
 
     def test_the_same_key_with_another_order_is_a_conflict(self):

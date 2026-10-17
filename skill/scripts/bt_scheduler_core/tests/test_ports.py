@@ -91,8 +91,14 @@ class RecoveryAdvice(unittest.TestCase):
         self.assertLessEqual(h.core.read(lambda c: c.state.tasks["T1"].hold_until) - h.clock(), 100)
 
     def test_invalid_advice_falls_back_to_the_deterministic_policy_and_is_noted(self):
+        class MaliciousAction:
+            def __eq__(self, other):
+                raise RuntimeError("untrusted comparison must not run")
+
         bad = [None, "retry", {"action": "retry"}, sc.RecoveryProposal("complete"), sc.RecoveryProposal("wait", "", -5),
-               sc.RecoveryProposal("retry", 5), sc.RecoveryProposal("wait", "", True)]
+               sc.RecoveryProposal("retry", 5), sc.RecoveryProposal("wait", "", True),
+               sc.RecoveryProposal("wait", "", float("inf")), sc.RecoveryProposal("wait", "", float("nan")),
+               sc.RecoveryProposal(MaliciousAction()), sc.RecoveryProposal("wait", "", 10 ** 999)]
         for advice in bad:
             with self.subTest(advice=advice):
                 h = Harness([indep("T1")], max_attempts=2, recovery=sc.ScriptedRecovery(lambda ctx, a=advice: a))

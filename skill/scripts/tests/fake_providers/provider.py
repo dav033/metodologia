@@ -35,6 +35,8 @@ def git(*a):
 
 def success():
     if name == "claude":
+        if scenario == "monitor":
+            print('{"type":}', flush=True)  # Invalid provider JSON must become a digest-only M4 gap.
         print(json.dumps({"type": "system", "subtype": "init"}), flush=True)
         print(json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "done",
                           "total_cost_usd": 0.0123, "usage": {"input_tokens": 10, "output_tokens": 5}}), flush=True)
@@ -64,7 +66,7 @@ def failure(kind):
     sys.exit(3)
 
 
-if scenario in ("ok", "commit", "dirty"):
+if scenario in ("ok", "commit", "dirty", "monitor"):
     Path(f"{name}-made.txt").write_text(f"made by {name}\n")
     if scenario == "commit":
         git("add", "-A")
@@ -72,6 +74,15 @@ if scenario in ("ok", "commit", "dirty"):
     elif scenario == "dirty":
         Path("README.md").write_text("changed by agent\n")
     time.sleep(float(os.environ.get("FAKE_DELAY", "0.1")))
+    success()
+elif scenario == "recover":
+    marker = Path("partial-progress.txt")
+    if not marker.exists():
+        marker.write_text("preserved partial work\n")
+        failure("net")
+    if marker.read_text() != "preserved partial work\n":
+        raise SystemExit("partial work was corrupted")
+    Path("recovered.txt").write_text("continued from preserved snapshot\n")
     success()
 elif scenario in ("quota", "net", "crash"):
     Path(f"{name}-half.txt").write_text("half\n")

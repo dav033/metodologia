@@ -77,7 +77,9 @@ def snapshot(plan: Plan, state: RunState) -> Snapshot:
         tasks[spec.id] = {"state": rec.state, "unreachable": spec.id in dead, "attempts": len(rec.attempts),
                           "reason": rec.reason, "attempt": last.id if last else "", "attempt_state": last.state if last else "",
                           "executor": last.executor if last else "", "verifier": last.verifier if last else "",
-                          "evidence": last.evidence if last else ""}
+                          "evidence": last.evidence if last else "", "route_metadata": dict(rec.route_metadata),
+                          "route_status": rec.route_status,
+                          "route_reason": rec.route_reason}
     counts: dict[str, int] = {}
     for rec in state.tasks.values():
         counts[rec.state] = counts.get(rec.state, 0) + 1

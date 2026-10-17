@@ -114,7 +114,13 @@ class Invalid(unittest.TestCase):
         self.assertEqual(self.code(json.dumps({**base, "schema_version": "2.0.0"})), "PLAN_SCHEMA_UNSUPPORTED")
         for bad in ("1", "one", None, 1):
             self.assertEqual(self.code(json.dumps({**base, "schema_version": bad})), "PLAN_INVALID")
-        ok = json.dumps({**base, "schema_version": "1.7.3"})
+        extended = json.loads(json.dumps(base))
+        extended["schema_version"] = "1.7.3"
+        for item in extended["tasks"]:
+            item["kind"] = "implement"
+            for check in item.get("verification", []):
+                check["category"] = "functional"
+        ok = json.dumps(extended)
         self.assertEqual(sc.load_plan(ok, approved_sha256=digest(ok)).schema_version, "1.7.3")
 
     def test_identity_fields(self):

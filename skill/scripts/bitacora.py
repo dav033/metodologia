@@ -30,11 +30,15 @@ from bt_hooks import hook_end, hook_start, hook_stop
 import bt_cli_accounts
 import bt_cli_diagram
 import bt_cli_docs
+import bt_cli_launch
+import bt_cli_scheduler_recovery
+import bt_cli_scheduler_run
 import bt_cli_delegate
 import bt_cli_learn
 import bt_cli_review
 import bt_cli_requirements_gate
 import bt_cli_plan
+import bt_cli_planner
 
 # ---------------------------------------------------------------- CLI
 
@@ -55,20 +59,7 @@ def main() -> None:
     p_bind = sub.add_parser("bind", help="bind a session to a project (for non-repo folders)")
     p_bind.add_argument("session_id")
     p_bind.add_argument("project")
-    p_launch = sub.add_parser("launch", help="HQ: open a new executor session for an approved plan")
-    p_launch.add_argument("req", help="REQ-NNN")
-    p_launch.add_argument("--agent", choices=["claude", "codex", "antigravity"], default="claude")
-    p_launch.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
-    p_launch.add_argument("--mode", choices=["loop", "goal", "marathon"], default="loop",
-                          help="loop/goal: one long session (codex always /goal); marathon: supervisor, a fresh session per task or milestone")
-    p_launch.add_argument("--model", help="marathon: model alias for the sessions (default haiku)")
-    p_launch.add_argument("--repo", help="repo path (remembered for next time)")
-    p_launch.add_argument("--pool", help="marathon: accounts the router may use: auto, or profile ids a,b")
-    p_launch.add_argument("--background", action="store_true", help="no window: detached tmux session / systemd unit")
-    p_launch.add_argument("--force", action="store_true", help="launch even if PLAN.md is not 'approved'")
-    p_launch.add_argument("--dry-run", action="store_true")
-    p_launch.add_argument("--foreground", action="store_true", help="replace a verified planning child in the same terminal (bounded runtime required)")
-    p_launch.add_argument("--planning-session", help="provider session id for verified end-of-turn handoff")
+    bt_cli_launch.register(sub)
     p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task or per milestone (days)")
     p_run.add_argument("req", help="REQ-NNN")
     p_run.add_argument("--agent", choices=["claude", "codex", "antigravity"])
@@ -143,11 +134,14 @@ def main() -> None:
     p_work.add_argument("value", nargs="?", choices=["true", "false"])
     bt_cli_requirements_gate.add_parser(sub)
     bt_cli_plan.add_parser(sub)
+    bt_cli_planner.register(sub)
     bt_cli_delegate.register(sub)
     bt_cli_review.register(sub)
     bt_cli_accounts.register(sub)
     bt_cli_diagram.register(sub)
     bt_cli_docs.register(sub)
+    bt_cli_scheduler_recovery.register(sub)
+    bt_cli_scheduler_run.register(sub)
     bt_cli_learn.register(sub)
     p_ho = sub.add_parser("handoff", help="validate a plan, approve it when safe and start it in the background")
     p_ho.add_argument("req", help="REQ-NNN")
@@ -266,6 +260,9 @@ def main() -> None:
             project = bt_audit.project_for_cwd(ROOT, Path(a.cwd))
         bt_cli_review.dispatch(a, project)
         return
+
+    if a.cmd == "recovery":
+        sys.exit(bt_cli_scheduler_recovery.dispatch(a))
 
     if a.cmd == "glossary":
         project = slugify(a.project, 60) if a.project else (
@@ -395,19 +392,10 @@ def main() -> None:
         sys.exit(bt_cli_requirements_gate.dispatch(a, ROOT, project))
     elif a.cmd == "plan-json":
         sys.exit(bt_cli_plan.dispatch(a, ROOT, project))
+    elif a.cmd == "planner":
+        sys.exit(bt_cli_planner.dispatch(a, project, cwd, ROOT))
     elif a.cmd == "launch":
-        from bt_launch import launch
-        extra = {"model": a.model or "haiku"} if a.mode == "marathon" or a.model else {}
-        if a.profile:
-            extra["profile"] = a.profile
-        if a.pool:
-            extra["pool"] = a.pool
-        if a.background:
-            extra["background"] = True
-        if a.foreground:
-            extra.update(foreground=True, planning_session=a.planning_session)
-        print(json.dumps(launch(project, a.req, a.agent, a.mode, a.repo, a.force, a.dry_run, **extra), indent=1,
-                         ensure_ascii=False))
+        bt_cli_launch.dispatch(a, project)
     elif a.cmd == "run":
         from bt_run import supervise
         sys.exit(supervise(project, a.req, agent=a.agent, model=a.model, ultracode=False if a.no_ultracode else None,
@@ -416,6 +404,8 @@ def main() -> None:
                            no_autostart=a.no_autostart, profile=a.profile,
                            workers=a.workers, pool=a.pool, audit=a.audit, isolation=a.isolation,
                            foreground=a.foreground))
+    elif a.cmd == "scheduler-run":
+        sys.exit(bt_cli_scheduler_run.dispatch(a, project, pdir))
     elif a.cmd == "handoff":
         import bt_handoff
         extra = {"foreground": True, "planning_session": a.planning_session} if a.foreground else {}
@@ -430,11 +420,12 @@ def main() -> None:
         from bt_monitor import open_monitor
         print(json.dumps(open_monitor(project, a.req, a.model, a.dry_run), indent=1, ensure_ascii=False))
     elif a.cmd in ("task", "run-control"):
-        import bt_runtask as rt
         rdir = find_req(pdir, a.req)
         if a.cmd == "run-control":
-            print(rt.run_control(rdir, a.action))
+            import bt_cli_run_control
+            print(bt_cli_run_control.dispatch(rdir, a.action))
         else:
+            import bt_runtask as rt
             print({"done": lambda: rt.task_done(rdir, a.task, a.evidence, a.findings, a.severity),
                    "fail": lambda: rt.task_fail(rdir, a.task, a.reason, a.blocked),
                    "note": lambda: rt.task_note(rdir, a.task, a.text),

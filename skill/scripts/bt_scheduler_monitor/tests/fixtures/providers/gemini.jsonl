@@ -1,0 +1,4 @@
+{"type":"init","model":"gemini-2.5-pro"}
+{"type":"message","id":"g-1","role":"assistant","content":"fixture only private answer"}
+{"type":"tool_use","id":"g-2","tool_name":"read_file","tool_input":{"path":"/private/file"}}
+{"type":"result","id":"g-3","status":"success","stats":{"total_tokens":17,"provider_extra":"nested stats metadata"}}

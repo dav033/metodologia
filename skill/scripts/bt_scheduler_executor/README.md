@@ -46,9 +46,12 @@ A clean exit is the event `execution_finished` = "the agent stopped". There is n
 | `EventSink` | `deliver(TechnicalEvent)` | at-least-once; raising = "not delivered, keep it" |
 
 `Launch.env_remove`/`env_set` build the child environment (removals first, then sets); the values may be secrets and are
-never persisted. Own types: `StartRequest` (idempotency key, plan/revision, task, attempt, fencing token, route reference,
-repository role, base ref, optional timeout), `Route`, `Receipt` (`accepted | duplicate | rejected` + code),
+never persisted. Own types: `StartRequest` (idempotency key, plan/revision and optional approved SHA-256, task, attempt,
+fencing token, route reference, repository role, base ref, optional timeout), `Route`, `Receipt` (`accepted | duplicate | rejected` + code),
 `AttemptStatus`, `TechnicalEvent`, `Brief`, `Workspace`, `Launch`, `Classification`.
+
+The Scheduler adapter always supplies the frozen plan hash. Older direct callers may omit it; a row written before the
+field existed is accepted only as an idempotent replay and does not authorize M5 recovery evidence.
 
 ## Attempt life cycle
 
@@ -75,6 +78,20 @@ start-time identities. While the agent runs, the shim samples Linux `/proc` ever
 in its group: nothing outlives it to keep writing.
 Executor restart = re-attach, finalise from `exit.json`, or (shim gone without record) stop the orphan by identity and report `lost`.
 A pid is signalled only if its recorded start-time identity still matches.
+
+The shim also drains stdout and stderr separately with one selector while continuing to build the existing combined
+`output.log`/`output.tail` artifacts. A private `stream.fifo` carries versioned binary frames: the 24-byte header and up to
+3,840 payload bytes stay below Linux `PIPE_BUF` (4,096 bytes). Writes use `O_NONBLOCK`; during startup the shim retries
+an unavailable FIFO reader for at most 0.5 seconds so the Scheduler owner can attach after M3 creates the endpoint.
+After that bounded grace, no reader or a full FIFO drops the whole frame and records bounded per-stream sequence/offset
+ranges in `stream.json`. After the range cap, the final entry
+is inferred as coalesced by the M4 adapter when its sequence span exceeds its exact dropped-frame count; it carries true
+first/last sequence and offset bounds plus exact lost byte/frame totals,
+even when healthy frames fall inside its bounding span. When delivery resumes, a compact gap frame precedes the next payload.
+The shim's summary writer runs separately from pipe draining, so filesystem latency in
+the status snapshot cannot hold the provider's stdout/stderr pipes open. `describe()` exposes this additive M3 summary;
+`bt_scheduler_executor_adapter.M3StreamAdapter` validates and drains the private FIFO into the monitor's bounded in-memory
+queue (10,000 frames / 16 MiB). The M1 lifecycle event sink does not receive stream payloads.
 
 ## Cause classes (facts, never decisions)
 
@@ -196,8 +213,9 @@ during/after the handoff, before/after the terminal transaction, between deliver
   event holds back only its own attempt's later events.
 - `bind_run`: the first accepted order binds an executor root to its plan/revision; use one root per scheduler run.
 - Events enter the core through the adapter's sink because M4 does not exist yet; the sink is a port so M4 can sit in between.
-- `route:<id>` resolves through M2's persisted selected route. The adapter checks its plan/revision/task binding and rejects a
-  decision superseded for that task. Operator-written `direct:<provider>/<model>[@profile][#effort]` references are refused when
+- `route:<id>` resolves through M2's persisted selected route. The adapter checks its plan/revision/task binding, rejects a
+  decision superseded for that task, and rejects missing or expired quota evidence at resolution and immediately before
+  provider launch, including routes that waited in the queue. Operator-written `direct:<provider>/<model>[@profile][#effort]` references are refused when
   an M2 lookup is configured unless `allow_direct=True`; M3 never chooses a default model.
 - The module never integrates prerequisite work: `after` only orders tasks in time and a task starts from `base_ref` (default `HEAD` of its
   repository). The methodology's `wire(..., integrate_predecessors=True)` (`bt_scheduler_integrator`, on by default; `integrate_predecessors=False` turns it off) supplies a `base_ref` that

@@ -5,6 +5,8 @@ to the explicit deterministic policy "retry while the attempt budget lasts, then
 """
 from __future__ import annotations
 
+import math
+
 from .contracts import (
     EXEC_STATES,
     RECOVERY_ACTIONS,
@@ -49,9 +51,13 @@ def pending(ctx: Ctx) -> list[FailureContext]:
 
 
 def valid_proposal(value: object) -> bool:
-    return (isinstance(value, RecoveryProposal) and value.action in RECOVERY_ACTIONS
-            and isinstance(value.wait_seconds, (int, float)) and not isinstance(value.wait_seconds, bool)
-            and value.wait_seconds >= 0 and isinstance(value.reason, str))
+    try:
+        return (type(value) is RecoveryProposal and type(value.action) is str and value.action in RECOVERY_ACTIONS
+                and type(value.wait_seconds) in (int, float)
+                and value.wait_seconds >= 0 and math.isfinite(value.wait_seconds)
+                and type(value.reason) is str)
+    except OverflowError:
+        return False
 
 
 def apply_recovery(ctx: Ctx, context: FailureContext, proposal: object) -> str:

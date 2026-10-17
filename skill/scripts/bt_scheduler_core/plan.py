@@ -17,12 +17,17 @@ from typing import Any
 from .errors import SchedulerError
 
 SUPPORTED_MAJOR = 1
+PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0"})
+SCHEMA_1_2_SINCE = (1, 2, 0)
+TASK_KINDS = frozenset({"implement", "test", "docs", "audit", "research"})
+VERIFICATION_CATEGORIES = frozenset({"static", "functional", "integration", "regression", "product"})
 MAX_BYTES = 2_000_000
 MAX_TASKS = 10_000
 HASH_RE = re.compile(r"[0-9a-f]{64}")
-VERSION_RE = re.compile(r"([0-9]+)\.[0-9]+\.[0-9]+")
-OPAQUE_KEYS = ("title", "objective", "complexity", "scope", "estimated_minutes", "risk", "coupling", "confidence",
-               "estimate_rationale", "classification_evidence")
+VERSION_RE = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)")
+LEGACY_OPAQUE_KEYS = ("title", "objective", "complexity", "scope", "estimated_minutes", "risk", "coupling",
+                      "confidence", "estimate_rationale", "classification_evidence")
+OPAQUE_KEYS = (*LEGACY_OPAQUE_KEYS, "kind")
 
 
 @dataclass(frozen=True, eq=False)
@@ -136,8 +141,13 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
     match = VERSION_RE.fullmatch(version) if isinstance(version, str) else None
     if not match:
         raise SchedulerError("PLAN_INVALID", "schema_version must look like 1.0.0")
-    if int(match.group(1)) != SUPPORTED_MAJOR:
-        raise SchedulerError("PLAN_SCHEMA_UNSUPPORTED", f"schema major {match.group(1)}; this core reads {SUPPORTED_MAJOR}.x")
+    try:
+        schema_version = tuple(int(match.group(index)) for index in (1, 2, 3))
+    except ValueError as exc:
+        raise SchedulerError("PLAN_INVALID", "schema_version components are too large") from exc
+    if schema_version[0] != SUPPORTED_MAJOR:
+        raise SchedulerError("PLAN_SCHEMA_UNSUPPORTED", f"schema major {schema_version[0]}; this core reads {SUPPORTED_MAJOR}.x")
+    schema_1_2 = schema_version >= SCHEMA_1_2_SINCE
     pid, rev = data.get("plan_id"), data.get("revision")
     if not _text(pid):
         issues.append("plan_id must be a non-empty string")
@@ -174,8 +184,16 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
         if not isinstance(verification, list) or not all(isinstance(v, dict) for v in verification):
             issues.append(f"{tid}: verification must be a list of objects")
             verification = []
+        if schema_1_2:
+            if item.get("kind") not in TASK_KINDS:
+                issues.append(f"{tid}: kind must be one of {', '.join(sorted(TASK_KINDS))}")
+            for check_index, check in enumerate(verification):
+                if check.get("category") not in VERIFICATION_CATEGORIES:
+                    issues.append(f"{tid}: verification[{check_index}].category must be one of "
+                                  f"{', '.join(sorted(VERIFICATION_CATEGORIES))}")
         if len(set(item.get("after", []) if _strings(item.get("after", [])) else [])) != len(item.get("after", [])):
             issues.append(f"{tid}: duplicate entries in after")
+        meta_keys = OPAQUE_KEYS if schema_1_2 else LEGACY_OPAQUE_KEYS
         tasks.append(TaskSpec(
             id=tid, milestone_id=str(item.get("milestone_id", "")), after=tuple(item.get("after", ())) if _strings(item.get("after", [])) else (),
             repository=str(item.get("repository", "")).strip(),
@@ -183,7 +201,7 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
             expected_paths=tuple(item.get("expected_paths", ())) if _strings(item.get("expected_paths", [])) else (),
             acceptance_criteria=tuple(item.get("acceptance_criteria", ())) if _strings(item.get("acceptance_criteria", [])) else (),
             verification=tuple(json.loads(json.dumps(v)) for v in verification),
-            meta={k: item[k] for k in OPAQUE_KEYS if k in item}))
+            meta={k: item[k] for k in meta_keys if k in item}))
     for task in tasks:
         for dep in task.after:
             if dep not in seen:

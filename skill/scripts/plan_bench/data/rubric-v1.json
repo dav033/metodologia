@@ -1,0 +1,77 @@
+{
+  "rubric_id": "req024-planner-quality-v1",
+  "version": "1.0.0",
+  "scale": {
+    "minimum": 0,
+    "maximum": 3,
+    "anchors": {
+      "0": "Absent, contradictory, or materially misleading evidence for the criterion.",
+      "1": "Partial evidence; a consequential omission or ambiguity remains for the implementer.",
+      "2": "The plan is usable and mostly explicit; remaining gaps are local and bounded.",
+      "3": "The plan is precise, internally consistent, evidence-backed, and leaves no material decision to the implementer."
+    },
+    "evidence_rule": "Every numeric score must cite at least one exact artifact location and a short verbatim excerpt."
+  },
+  "criteria": [
+    {
+      "id": "J1",
+      "name": "technical_precision",
+      "direction": "higher",
+      "definition": "Inputs, outputs, algorithms, edge cases, invariants, errors, and resolved versus open decisions are specified in proportion to task complexity."
+    },
+    {
+      "id": "J2",
+      "name": "verification_distinction",
+      "direction": "higher",
+      "definition": "Static, functional, integration, regression, and product verification are distinguished; commands are real and claims match what each check proves."
+    },
+    {
+      "id": "J3",
+      "name": "architecture_and_ownership",
+      "direction": "higher",
+      "definition": "Contracts, module boundaries, ownership, compatibility, data migration, rollback, and external decisions preserve the inspected architecture."
+    },
+    {
+      "id": "J4",
+      "name": "safe_parallelism_and_interfaces",
+      "direction": "higher",
+      "definition": "The dependency graph permits real independent work while shared resources, interfaces, owners, and integration criteria prevent unsafe concurrency."
+    },
+    {
+      "id": "J5",
+      "name": "oracle_risk_detection",
+      "direction": "higher",
+      "definition": "For every preregistered oracle, record detected yes/no with a quoted plan location; classify each new risk as valid or invalid with a quote and rationale."
+    },
+    {
+      "id": "J6",
+      "name": "ambiguity_and_decision_handling",
+      "direction": "higher",
+      "definition": "Functional ambiguity, assumptions, product decisions, confidence, and approval gates are exposed without inventing facts or decisions."
+    },
+    {
+      "id": "J7",
+      "name": "scope_and_coordination_efficiency",
+      "direction": "higher",
+      "definition": "Work is cohesive and independently verifiable, with justified decomposition and parallelism, and avoids unnecessary tasks or coordination."
+    },
+    {
+      "id": "J8",
+      "name": "semantic_review_incremental_value",
+      "direction": "categorical",
+      "definition": "Classify every semantic-review finding as demonstrated defect, plausible risk, or false, cite its evidence, and mark whether the deterministic gate already caught it. Do not convert this classification into an overall score."
+    }
+  ],
+  "adjudication": {
+    "trigger": "For a numeric criterion, adjudicate when the two reviewers differ by more than one point.",
+    "limit": "At most one adjudication per output and criterion; apply the same process to both controlled arms.",
+    "oracle_binary_items": "Report reviewer disagreements explicitly; do not invent a numeric distance for yes/no findings."
+  },
+  "prohibitions": [
+    "No cross-metric aggregate or overall planner score.",
+    "No causal comparison with retrospective artifacts.",
+    "No imputation of missing or incomplete cells.",
+    "No superiority claim when the pinned directional rule is not met.",
+    "Every numeric score and oracle/risk judgement requires cited evidence."
+  ]
+}

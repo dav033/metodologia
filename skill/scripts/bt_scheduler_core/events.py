@@ -44,10 +44,12 @@ def _reject(ctx: Ctx, status: str, reason: str, msg_id: str, task_id: str = "", 
 
 
 def _preflight(ctx: Ctx, msg_id: str, plan_id: str, revision: int, task_id: str, attempt_id: str,
-               token: int | None) -> tuple[IngestResult | None, object]:
+               token: int | None, *, allow_superseded: bool = False) -> tuple[IngestResult | None, object]:
     state = ctx.state
     if plan_id != state.plan_id or revision != state.revision:
         return _reject(ctx, "invalid", "wrong_plan", msg_id), None
+    if allow_superseded and ctx.tx.has_incident_event(msg_id):
+        return IngestResult("duplicate", "already_processed", msg_id), None
     if state.has_seen(msg_id):
         return IngestResult("duplicate", "already_processed", msg_id), None
     att = state.attempts.get(attempt_id)
@@ -55,7 +57,8 @@ def _preflight(ctx: Ctx, msg_id: str, plan_id: str, revision: int, task_id: str,
         return _reject(ctx, "invalid", "unknown_attempt", msg_id, task_id, attempt_id), None
     if token is not None and token != att.token:
         return _reject(ctx, "stale", "token_mismatch", msg_id, task_id, attempt_id), None
-    if state.tasks[task_id].attempts[-1] != attempt_id:
+    task = state.tasks.get(task_id)
+    if task is None or (not allow_superseded and task.attempts[-1] != attempt_id):
         return _reject(ctx, "stale", "superseded_attempt", msg_id, task_id, attempt_id), None
     return None, att
 
@@ -63,10 +66,15 @@ def _preflight(ctx: Ctx, msg_id: str, plan_id: str, revision: int, task_id: str,
 def apply_event(ctx: Ctx, event: Event) -> IngestResult:
     kind = EventKind(event.kind)
     early, att = _preflight(ctx, event.event_id, event.plan_id, event.revision, event.task_id, event.attempt_id,
-                            event.token)
+                            event.token, allow_superseded=kind == EventKind.INCIDENT_OBSERVED)
     if early:
         return early
     attempt_id, current = att.id, A(att.state)
+    if kind == EventKind.INCIDENT_OBSERVED:
+        detail = {key: value for key, value in event.payload.items() if key not in ("task_id", "attempt_id")}
+        ctx.audit("incident_observed", att.task_id, attempt_id, **detail)
+        ctx.state.remember(event.event_id)
+        return IngestResult("applied", "", event.event_id)
     if current in ATTEMPT_TERMINAL:
         return _reject(ctx, "stale", "attempt_closed", event.event_id, att.task_id, attempt_id)
     att.last_event_at = ctx.now

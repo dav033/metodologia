@@ -6,9 +6,10 @@ what to do on a launch) lives here. No other file may import `bt_planner` (test_
 """
 from __future__ import annotations
 
-from pathlib import Path
+import json
 import re
 import subprocess
+from pathlib import Path
 
 import bt_planner as planner
 from bt_plan_adapter_evidence import verify_command
@@ -16,6 +17,67 @@ from bt_planner import cli as planner_cli
 
 # What the methodology calls an approved plan; the module itself only has a default for these words.
 APPROVED_STATES = ("approved", "launched", "done", "merged")
+PLAN_SCHEMA_CONSUMER_GATE_SINCE = (1, 2, 0)
+_SCHEMA_VERSION_RE = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)")
+
+
+def _schema_version(plan_path: Path) -> tuple[str, tuple[int, int, int]] | None:
+    """Read only the version marker; the Planner contract validates the whole document at every action gate."""
+    try:
+        plan = json.loads(Path(plan_path).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError, RecursionError):
+        return None
+    if not isinstance(plan, dict):
+        return None
+    value = plan.get("schema_version")
+    match = _SCHEMA_VERSION_RE.fullmatch(value) if isinstance(value, str) else None
+    if match is None:
+        return None
+    try:
+        version = tuple(int(match.group(index)) for index in (1, 2, 3))
+    except ValueError:
+        return None
+    return value, version
+
+
+def plan_schema_version(plan_path: Path) -> str | None:
+    """Return a syntactically valid version marker; the Planner owns full contract validation."""
+    version = _schema_version(plan_path)
+    return version[0] if version is not None else None
+
+
+def plan_schema_version_details(plan_path: Path) -> tuple[str, tuple[int, int, int]] | None:
+    """Return the syntactically valid version and parsed components for downstream compatibility checks."""
+    return _schema_version(plan_path)
+
+
+def plan_consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None,
+                          plan_path: Path | None = None) -> str | None:
+    """Evaluate a caller-supplied capability report without importing downstream consumers here."""
+    version = _schema_version(plan_path or (Path(rdir) / planner.PLAN_JSON))
+    if version is None or version[1] < PLAN_SCHEMA_CONSUMER_GATE_SINCE:
+        return None
+    compatibility = compatibility_report if isinstance(compatibility_report, dict) else {}
+    if compatibility.get("required_schema_version") == version[0] and compatibility.get("supported") is True:
+        return None
+    consumers = compatibility.get("consumers")
+    consumers = consumers if isinstance(consumers, dict) else {}
+    unavailable = []
+    if compatibility.get("required_schema_version") != version[0]:
+        reported = compatibility.get("required_schema_version")
+        unavailable.append(f"capability report (schema {reported if isinstance(reported, str) else 'unknown'})")
+    for name in ("M1", "M2", "M6"):
+        consumer = consumers.get(name)
+        status = consumer.get("status") if isinstance(consumer, dict) else "unknown"
+        if status != "supported":
+            unavailable.append(f"{name} ({status if isinstance(status, str) else 'unknown'})")
+    planner_status = compatibility.get("planner")
+    planner_status = planner_status.get("status") if isinstance(planner_status, dict) else "unknown"
+    if not isinstance(planner_status, str) or planner_status != "supported":
+        unavailable.insert(0, f"Planner ({planner_status if isinstance(planner_status, str) else 'unknown'})")
+    return (f"PLAN_CONSUMER_INCOMPATIBLE: PLAN.json schema {version[0]} requires compatible M1/M2/M6 consumers; "
+            f"unsupported or unknown: {', '.join(unavailable)}. Check `bitacora.py plan-json compat "
+            f"{plan_id(rdir)}` before approval or execution")
 
 
 def plan_id(rdir: Path) -> str:
@@ -40,9 +102,6 @@ def ref_verifier(rdir: Path):
     """`command:` and `precedent:` evidence must point at something that exists in this workspace: an executable or a
     path for a command; a requirement (and task), decision, pending item or commit for a precedent. True/False when
     it can tell, None when it cannot (a URL, an unresolved repository)."""
-    import re
-    import subprocess
-
     roots = repo_roots(rdir) or {}
     try:
         import bt_core as core
@@ -95,14 +154,43 @@ def ref_verifier(rdir: Path):
     return check
 
 
-def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = False, emit=print) -> int:
+def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = False, emit=print,
+            compatibility_report: dict[str, object] | None = None) -> int:
     """Back the `bitacora.py plan-json <action> REQ-NNN` command."""
+    if action == "compat":
+        messages: list[str] = []
+        code = planner_cli.run(action, rdir, plan_id=plan_id(rdir), force=force, as_json=as_json,
+                               approved_states=APPROVED_STATES, repo_roots=repo_roots(rdir),
+                               ref_exists=ref_verifier(rdir), emit=messages.append)
+        if code:
+            for message in messages:
+                emit(message)
+            return code
+        try:
+            report = json.loads("\n".join(messages))
+        except (TypeError, ValueError):
+            emit("PLAN_COMPATIBILITY_REPORT_FAILED: the Planner returned an unreadable compatibility report")
+            return 2
+        if not isinstance(report, dict):
+            emit("PLAN_COMPATIBILITY_REPORT_FAILED: the Planner returned an invalid compatibility report")
+            return 2
+        if compatibility_report is not None:
+            report["downstream_compatibility"] = compatibility_report
+        emit(json.dumps(report, indent=1, ensure_ascii=False))
+        return 0
+    if action in {"freeze", "bind"}:
+        problem = publishable_problem(rdir, compatibility_report=compatibility_report) if action == "freeze" else \
+            plan_consumer_problem(rdir, compatibility_report=compatibility_report)
+        if problem:
+            emit(problem)
+            return 2
     return planner_cli.run(action, rdir, plan_id=plan_id(rdir), force=force, as_json=as_json,
                            approved_states=APPROVED_STATES, repo_roots=repo_roots(rdir), ref_exists=ref_verifier(rdir),
                            emit=emit)
 
 
-def handoff_problems(rdir: Path, limit: int = 5) -> list[str]:
+def handoff_problems(rdir: Path, limit: int = 5, *,
+                     compatibility_report: dict[str, object] | None = None) -> list[str]:
     """Reasons `handoff` must refuse the plan because its (opt-in) PLAN.json is invalid; [] for legacy plans."""
     if not (Path(rdir) / planner.PLAN_JSON).exists():
         return []
@@ -111,15 +199,20 @@ def handoff_problems(rdir: Path, limit: int = 5) -> list[str]:
     out = [f"PLAN.json: {e}" for e in errors[:limit]]
     if len(errors) > limit:
         out.append(f"PLAN.json: {len(errors) - limit} more error(s); run `bitacora.py plan-json check {plan_id(rdir)}`")
+    if not errors and (problem := plan_consumer_problem(rdir, compatibility_report=compatibility_report)):
+        out.append(f"PLAN.json: {problem}")
     return out
 
 
-def launch_problem(rdir: Path, *, freeze: bool = True, forced: bool = False) -> str | None:
+def launch_problem(rdir: Path, *, freeze: bool = True, forced: bool = False,
+                   compatibility_report: dict[str, object] | None = None) -> str | None:
     """The gate every launch path passes (standard, foreground, web, handoff, and a new run itself): None when the
     plan may run, otherwise one line saying why not. The plan must be valid, consistent with PLAN.md and exactly the
     approved (frozen) revision. A launch never creates the approval record: a plan that was never frozen is refused
     (`PLAN_NOT_FROZEN`); only an explicit `forced` launch is taken as the owner's approval and frozen (`freeze` False
     verifies without writing). A legacy plan (no PLAN.json, nothing frozen) always passes."""
+    if problem := plan_consumer_problem(rdir, compatibility_report=compatibility_report):
+        return problem
     try:
         planner.bind_approved(rdir, plan_id(rdir), APPROVED_STATES, repo_roots=repo_roots(rdir), freeze=freeze,
                               forced=forced, verify_files=True, ref_exists=ref_verifier(rdir))
@@ -133,21 +226,26 @@ def launch_problem(rdir: Path, *, freeze: bool = True, forced: bool = False) -> 
     return None
 
 
-def freeze_on_launch(rdir: Path, *, dry_run: bool = False, forced: bool = False) -> None:
+def freeze_on_launch(rdir: Path, *, dry_run: bool = False, forced: bool = False,
+                     compatibility_report: dict[str, object] | None = None) -> None:
     """Standard/web launch: refuse (SystemExit with the cause) unless the run would execute exactly the approved,
     frozen revision. A dry run verifies and writes nothing."""
-    problem = launch_problem(rdir, freeze=not dry_run, forced=forced)
+    problem = launch_problem(rdir, freeze=not dry_run, forced=forced,
+                             compatibility_report=compatibility_report)
     if problem:
         raise SystemExit(problem)
 
 
-def resume_problem(rdir: Path, state: dict) -> str | None:
+def resume_problem(rdir: Path, state: dict, *,
+                   compatibility_report: dict[str, object] | None = None) -> str | None:
     """A RESUMED run must not go on executing content nobody approved. When the run carries a `plan_ref` (or the plan
     has frozen revisions): PLAN.json must still exist, be valid and be the latest approved revision, the PLAN.md prose
     must be the approved one, and the run's own `plan_ref` must point at that same revision (a run started under r1
     while r2 was approved keeps r1's verification commands: start a new run instead). The gate never writes RUN.json.
     File evidence is not re-verified (the run's own work may have moved those files). Plans without the contract are
     never gated."""
+    if problem := plan_consumer_problem(rdir, compatibility_report=compatibility_report):
+        return problem
     raw_ref = state.get("plan_ref") if isinstance(state, dict) else None
     ref = raw_ref if isinstance(raw_ref, dict) else None
     try:
@@ -181,7 +279,7 @@ def resume_problem(rdir: Path, state: dict) -> str | None:
     return None
 
 
-def publishable_problem(rdir: Path) -> str | None:
+def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None) -> str | None:
     """Approval gate: a PLAN.json that is invalid, or contradicts PLAN.md, cannot be approved. None for legacy plans."""
     if not (Path(rdir) / planner.PLAN_JSON).exists():
         return None
@@ -192,15 +290,17 @@ def publishable_problem(rdir: Path) -> str | None:
         return (f"PLAN_CHECK_FAILED: the plan cannot be approved, PLAN.json could not be checked "
                 f"({type(exc).__name__}); run `bitacora.py plan-json check {plan_id(rdir)}`")
     if report.ok:
-        return None
+        return plan_consumer_problem(rdir, compatibility_report=compatibility_report)
     more = f" (+{len(report.errors) - 5} more)" if len(report.errors) > 5 else ""
     return ("PLAN_INVALID: the plan cannot be approved while PLAN.json has errors: " + "; ".join(report.errors[:5]) +
             more + f" (bitacora.py plan-json check {plan_id(rdir)})")
 
 
-def freeze_approved(rdir: Path) -> None:
+def freeze_approved(rdir: Path, *, compatibility_report: dict[str, object] | None = None) -> None:
     """Called right after PLAN.md became `approved`: the approved PLAN.json is frozen at that moment, so what the
     owner approved is what any later launch is compared against. No PLAN.json -> nothing to do."""
+    if problem := publishable_problem(rdir, compatibility_report=compatibility_report):
+        raise SystemExit(problem)
     try:
         planner.freeze_if_present(rdir, plan_id(rdir), APPROVED_STATES, repo_roots(rdir), verify_files=True,
                                   ref_exists=ref_verifier(rdir))

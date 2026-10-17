@@ -104,13 +104,14 @@ def autostart_path(project: str, req: str) -> Path:
     return _startup_dir() / f"metodologia-run-{_safe(project)}-{_safe(req)}.cmd"
 
 
-def install_autostart(project: str, req: str) -> Path:
+def install_autostart(project: str, req: str, *, scheduler: bool = False) -> Path:
     from bt_core import ROOT, SCRIPT
 
     if host.platform() != "windows":
-        return bt_autostart.install(project, req, ROOT, SCRIPT)
+        return bt_autostart.install(project, req, ROOT, SCRIPT, scheduler=scheduler)
 
-    run = f'""{sys.executable}" "{SCRIPT}" --project {project} run {req} --resume"'  # outer quotes: cmd /k strips one pair
+    command = "scheduler-run" if scheduler else "run"
+    run = f'""{sys.executable}" "{SCRIPT}" --project {project} {command} {req} --resume"'  # outer quotes: cmd /k strips one pair
     title = f"{project} {req} marathon"
     if shutil.which("wt"):
         launch = f'wt -w new --title "{title}" cmd /k {run}'

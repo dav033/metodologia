@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .contracts import Assignment
+from .contracts import Assignment, route_metadata_valid
 from .model import AttemptRec
 from .resources import claims_for, first_conflict
 from .states import AttemptState as A
@@ -38,6 +38,8 @@ def claim(ctx: Ctx, assignment: Assignment) -> ClaimResult:
         return ClaimResult(False, "unknown_task", task_id=str(task_id))
     if not isinstance(assignment.executor, str) or not assignment.executor.strip():
         return ClaimResult(False, "invalid_executor", task_id=task_id)
+    if not route_metadata_valid(assignment.route_metadata):
+        return ClaimResult(False, "invalid_route_metadata", task_id=task_id)
     refuse = _refusal(ctx, task_id)
     if refuse:
         ctx.audit("reservation_refused", task_id, reason=refuse)
@@ -49,6 +51,9 @@ def claim(ctx: Ctx, assignment: Assignment) -> ClaimResult:
         ctx.audit("reservation_refused", task_id, reason="resource_conflict", holder=holder)
         return ClaimResult(False, "resource_conflict", task_id=task_id)
     rec = state.tasks[task_id]
+    rec.route_metadata = dict(assignment.route_metadata)
+    rec.route_status = "assigned"
+    rec.route_reason = ""
     number = len(rec.attempts) + 1
     attempt_id = f"att-{state.next('attempt'):04d}"
     token = state.next("token")

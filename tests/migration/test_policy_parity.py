@@ -14,8 +14,11 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 SKILL = REPO / "skill"
 
-# Reviewed removals/renames: "<path>#<heading or row prefix>" -> reason. Empty on purpose.
-ALLOWED_REMOVALS: dict[str, str] = {}
+# Reviewed removals/renames: "<path>#<heading or row prefix>" -> reason.
+ALLOWED_REMOVALS: dict[str, str] = {
+    "skill/references/subagents.md### The five roles":
+        "D-055 adds Planner to the six existing helper roles; the heading now names all seven roles.",
+}
 
 
 def head(path: str) -> str | None:

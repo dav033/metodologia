@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-API_VERSION = "1.0.0"
+API_VERSION = "1.2.0"
+LEGACY_API_VERSIONS = frozenset({"1.0.0", "1.1.0"})
 COMPLEXITY_VALUES = ("low", "medium", "high", "extreme")
 SCOPE_VALUES = ("isolated_fix", "small_change", "large_change", "full_feature", "full_system")
 LEVEL_VALUES = ("low", "medium", "high")
@@ -147,6 +148,9 @@ class RouteSummary:
     effort: str | None
     baseline_rank: int | None = None
     factor_codes: tuple[str, ...] = ()
+    quota_observed_at: float | None = None
+    quota_used_percent: float | None = None
+    quota_valid_until: float | None = None
 
 
 @dataclass(frozen=True)

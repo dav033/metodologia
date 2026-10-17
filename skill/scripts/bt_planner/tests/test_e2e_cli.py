@@ -37,7 +37,7 @@ class EndToEnd(unittest.TestCase):
         self.base = Path(self._tmp.name)
         self.work = self.base / "REQ-200-shipping"
         self.work.mkdir()
-        (self.work / "SPEC.md").write_text("# Spec\n", encoding="utf-8")
+        (self.work / "SPEC.md").write_text("# Spec\n## Requirements\n- R1. Demo requirement\n", encoding="utf-8")
         self.set_status("in-progress")
         self.elsewhere = self.base / "unrelated-cwd"
         self.elsewhere.mkdir()

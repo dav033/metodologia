@@ -1,8 +1,11 @@
 """T3: validation before side effects; idempotent start, duplicate/conflict/queue_full answers; no second writer."""
 from __future__ import annotations
 
+import json
+import sqlite3
 import sys
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[2])]
@@ -43,6 +46,20 @@ class Start(unittest.TestCase):
         w.x.start(order(1))
         w.resolver.fail = ex.ExecutorError("ROUTE_UNRESOLVABLE", "stale now")
         self.assertEqual(w.x.start(order(1)).status, "duplicate")
+
+    def test_a_legacy_order_without_plan_hash_replays_without_a_second_writer(self):
+        w = self.quiet()
+        original = order(1)
+        self.assertEqual(w.x.start(original).status, "accepted")
+        stored = w.x.ledger.get(original.attempt_id)["request"]
+        stored.pop("plan_sha256")
+        with sqlite3.connect(w.x.ledger.path) as connection:
+            connection.execute("UPDATE attempts SET request=? WHERE attempt_id=?",
+                               (json.dumps(stored, sort_keys=True, separators=(",", ":")), original.attempt_id))
+        replay = w.x.start(replace(original, plan_sha256="a" * 64))
+        self.assertEqual((replay.status, replay.attempt_id), ("duplicate", original.attempt_id))
+        self.assertEqual(w.resolver.calls, 1)
+        self.assertEqual(w.x.ledger.all_ids(), [original.attempt_id])
 
     def test_the_same_key_with_a_different_order_is_rejected(self):
         w = self.quiet()

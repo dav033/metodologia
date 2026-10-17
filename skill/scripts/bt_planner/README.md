@@ -22,7 +22,9 @@ execution state. Only two things are written: `PLAN.json` (`init`) and `plan-rev
 | `revisions.py` | immutable approved revisions (`plan-revisions/`), manifest + sha256, `run_reference` |
 | `markdown.py` | the `PLAN.md` task-line / milestone grammar (own parser) and what it would otherwise drop silently |
 | `evidence.py` | classification evidence (schema 1.1.0): typed references, justification quality, confidence rules |
-| `quality.py` | plan-level coherence (unordered tasks that collide, redundant edges) and the `report` summary |
+| `traceability.py` | SPEC requirement extraction and requirement-to-task coverage validation/projection |
+| `interfaces.py` | cross-task interface validation and report projection |
+| `quality.py` | plan coherence, verification findings and the `report` summary |
 | `sync.py` | skeleton from PLAN.md, PLAN.md ↔ PLAN.json consistency, `check`, approval freeze, the launch gate `bind_approved`, compat report |
 | `_lock.py` | exclusive lock for one plan directory |
 | `cli.py`, `__main__.py` | command line |
@@ -34,8 +36,9 @@ execution state. Only two things are written: `PLAN.json` (`init`) and `plan-rev
 All actions: `python -m bt_planner <action> [directory|file] [--plan-id ID] [--force] [--json] [--approved-states a,b]`
 (run with the folder that contains `bt_planner` on `PYTHONPATH`, or from it). Exit code 0 = ok, 2 = invalid or refused.
 
-- `python -m bt_planner init <dir>` derives the skeleton from `<dir>/PLAN.md`; classification stays absent and is
-  reported as gaps (never defaulted). It refuses an ambiguous PLAN.md (`PLAN_MD_AMBIGUOUS`).
+- `python -m bt_planner init <dir>` derives the skeleton from `<dir>/PLAN.md` and the referenced SPEC's `Requirements`
+  section; `covers` starts empty unless PLAN.md declares it, and missing classifications and verification categories
+  are reported as gaps (never defaulted). It refuses an ambiguous PLAN.md (`PLAN_MD_AMBIGUOUS`).
 - `python -m bt_planner check <dir> [--repo ROLE=PATH ...]` is the publication gate: schema, unique ids, existing
   references, no cycles, no dependency on a later milestone, no orphan milestone, classification evidence, unordered
   tasks that share a path or resource, PLAN.md ↔ PLAN.json agreement (below) and frozen-revision integrity. With `--repo`
@@ -45,7 +48,9 @@ All actions: `python -m bt_planner <action> [directory|file] [--plan-id ID] [--f
   `--approved-states`).
 - `python -m bt_planner bind <dir>` is the launch gate, read-only: PLAN.json is valid and **is exactly** the latest
   frozen (approved) revision. `python -m bt_planner report <dir>` prints the quality summary (critical path in minutes,
-  widest level, distributions, tasks without a machine-checked verification, evidence coverage, collisions).
+  widest level, distributions, tasks without a machine-checked verification, evidence coverage and collisions). Schema
+  1.2.0 adds `coverage`, declared `interfaces`, `verification_categories` and `criteria_without_command`; 1.0.0/1.1.0
+  report shapes stay unchanged.
 - `python -m bt_planner show <dir>` lists frozen revisions.
 - `python -m bt_planner compat <dir>` is read-only: what an existing plan already provides and what needs explicit
   enrichment (legacy `complexity:`/`risk:` values are reported verbatim as legacy labels, never converted).
@@ -75,12 +80,13 @@ Files that exist before the module is used: `PLAN.md` (the narrative; grammar be
 
 ```
 ### M1 — Milestone title
-- [ ] T1 — Task title · repo: backend · after: T0, T0a · verify: `pytest -q` · files: src/a.py · resources: db
+- [ ] T1 — Task title · repo: backend · after: T0, T0a · verify: `pytest -q` · files: src/a.py · resources: db · covers: R1, R2 · kind: test
 ```
 
 Task ids `T1`, `T2.1`, `T3a`; milestone headings `###`/`####` with `M<number>`; fields separated by ` · `; `verify` only
-when backticked; unsafe `files` (absolute or `..`) are dropped; HTML comments ignored. The supervisor's own parser
-(`bt_runstate`) reads the same grammar (last milestone heading wins); a test keeps both identical on every real plan.
+when backticked; unsafe `files` (absolute or `..`) are dropped; HTML comments ignored. Planner sync checks `covers`
+and `kind` for schema 1.2.0; `covers` remains Planner metadata and is not added to the supervisor's runtime parser.
+Parser parity continues comparing their shared fields on real plans.
 
 ### PLAN.md ↔ PLAN.json agreement
 
@@ -95,25 +101,40 @@ when backticked; unsafe `files` (absolute or `..`) are dropped; HTML comments ig
 | `verify: \`cmd\`` | one `command` verification with exactly that value (extra ones are fine; a `verify:` that is not backticked is an error) |
 | `files: a, b` / `resources: x` | every stated entry must be in `expected_paths` / `shared_resources` (JSON may add more, never drop) |
 | `risk: low / medium / high` | `risk` (other legacy words are never converted) |
+| `covers: R1, R2` (schema 1.2.0) | task `covers` IDs, as a set |
+| `kind: implement` (schema 1.2.0) | model-agnostic task `kind` |
 | `### M1 — title` | milestone `title`; the set of milestones and each task's membership |
 
 What PLAN.md does not state is not a contradiction. A field repeated on one line, an unusable `files:`/`resources:`,
 a misspelt field (`repository:` for `repo:`) and a checkbox line with a near-miss id (`t1`, `T-5`) are reported with
 their line instead of being dropped. Duplicate ids in PLAN.json name their `tasks[i]` positions.
 
-## The contract (schema 1.1.0)
+## The contract (schema 1.2.0)
 
 Per task, all required (no `null`, no silent defaults): `id`, `milestone_id`, `title`, `objective`, `repository`,
 `after` (`[]` if none), `acceptance_criteria` (observable, non-empty), `verification` (`{type: command|manual, value,
 purpose}`; `manual` also needs `expected`; optional `created_by: T<n>` for a test the plan itself creates),
 `complexity`, `scope`, `estimated_minutes`, `risk`, `coupling`, `confidence`, `estimate_rationale`,
 `classification_evidence` (required from 1.1.0, below), `expected_paths`
-(guidance, may be `[]`), `shared_resources` (`[]` if none known). Per milestone: `id`, `title`, `acceptance_criteria`.
+(guidance, may be `[]`), `shared_resources` (`[]` if none known). From 1.2.0 every task also requires non-empty `covers`
+(IDs declared at the top level) and `kind` (`implement`, `test`, `docs`, `audit`, `research`). Each verification also
+requires `category` (`static`, `functional`, `integration`, `regression`, `product`), separate from `type`.
+Per milestone: `id`, `title`, `acceptance_criteria`.
 Top level: `schema_version`, `plan_id`, `revision` (1..1000000), `spec_ref` (relative path inside the directory),
-`milestones`, `tasks`. Extra fields are allowed, except scheduling/execution keys (`model`, `agent`, `account`,
+`milestones`, `tasks`, and from 1.2.0 non-empty unique `requirements` IDs matching the SPEC Requirements section.
+Optional `interfaces` declare producer/consumer contracts and integration criteria. Extra fields are allowed, except scheduling/execution keys (`model`, `agent`, `account`,
 `workers`, `status`, `attempts`, `sessions`, `cost`…, and any key made of a scheduling word such as `model_hint`,
 `assignee`, `executor`, `llm`, `max_parallel`, `numWorkers`) which are rejected at any nesting level. Ids use ASCII digits;
 NaN/Infinity are rejected; `estimated_minutes` is 1..100000 (a warning above 480: consider splitting).
+
+The `report` fields describe planned coverage, declared interfaces and verification evidence only. They do not mean that
+requirements are accepted or integration has run. Until the coordinated T11 M1/M2/M6 compatibility migration and its
+fail-closed capability check are complete, do not approve, hand off, launch or resume a schema 1.2.0 plan.
+
+`coverage` maps each requirement ID to its planned task IDs (an empty list is uncovered); `interfaces` lists the
+declared producer/consumer contract; `verification_categories` groups declared checks by requirement; and
+`criteria_without_command` lists criteria whose verification does not provide one unique exact-purpose command for M6.
+None of these projections is an acceptance boolean.
 
 ### Rubric (the dimensions are independent)
 
@@ -209,8 +230,9 @@ The manifest records how each revision was frozen (`source`: `approval` or `laun
 
 ## Revisions
 
-Serialisation is canonical (fixed key order, UTF-8, trailing newline). Schema 1.1.0 also sorts nested keys; a 1.0.0
-document keeps byte for byte the text it was frozen with, so the hash of a revision frozen before 1.1.0 never moves
+Serialisation is canonical (fixed key order, UTF-8, trailing newline). Schema 1.1.0 also sorts nested keys; schema
+1.2.0 adds its fields after legacy contract fields. A 1.0.0 document keeps byte for byte the text it was frozen with,
+so the hash of a revision frozen before 1.1.0 never moves
 (verified against the previous implementation).
 
 `freeze` writes `plan-revisions/PLAN.r<N>.json` (canonical text, read-only, created exclusively) and appends to

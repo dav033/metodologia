@@ -1,0 +1,3 @@
+{"type":"assistant","uuid":"c-msg-1","timestamp":"2026-10-15T12:00:00Z","message":{"role":"assistant","content":[{"type":"text","text":"private answer"},{"type":"text","text":"second private block"}],"extra_metadata":"nested private"}}
+{"type":"assistant","uuid":"c-tool-1","message":{"role":"assistant","content":[{"type":"tool_use","id":"tool-1","name":"Bash","input":{"command":"secret command"}}]}}
+{"type":"result","uuid":"c-result","is_error":false,"usage":{"input_tokens":12,"output_tokens":4,"provider_extra":"nested usage secret"}}

@@ -145,8 +145,9 @@ session on their own errors; if one seems silent, run the script by hand to see 
 
 ## Subagents installed
 
-Five roles — `explorer`, `researcher`, `implementer`, `reviewer`, `runner` — defined in `agents/` and installed
-for Claude Code and Codex by `scripts/install_agents.py` (re-run it after editing `agents/`).
+Six helper roles — `explorer`, `researcher`, `implementer`, `reviewer`, `runner`, `antagonist` — are defined in
+`agents/` and installed for Claude Code and Codex. Planner is installed for Claude Code, Codex, and Antigravity; each
+registered Claude/Codex account receives its own copy. Run `scripts/install_agents.py` after editing `agents/`.
 
 ## Templates
 

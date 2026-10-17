@@ -30,12 +30,13 @@ def desktop_arg(value: str) -> str:
     return quoted.replace("\\", "\\\\").replace("%", "%%")
 
 
-def install(project: str, req: str, root: Path, cli: Path) -> Path:
+def install(project: str, req: str, root: Path, cli: Path, *, scheduler: bool = False) -> Path:
     path = entry_path(project, req)
     name = path.stem
     state = root / ".state"
+    command = "scheduler-run" if scheduler else "run"
     script = host.write_script(state / "launch" / name, root,
-                               [sys.executable, str(cli), "--project", project, "run", req, "--resume"],
+                               [sys.executable, str(cli), "--project", project, command, req, "--resume"],
                                {"BITACORA_ROOT": str(root), "PATH": os.environ.get("PATH", "")})
     argv = ["/bin/bash", "-l", str(script)]
     path.parent.mkdir(parents=True, exist_ok=True)

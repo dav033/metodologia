@@ -3,8 +3,6 @@ real planner (`init` -> classify -> `check` -> `freeze`), then the real core, a 
 from __future__ import annotations
 
 import json
-import os
-import time
 from pathlib import Path
 from unittest.mock import patch
 
@@ -35,12 +33,14 @@ def classify(rdir: Path, tasks: list[dict], files: list[str]) -> None:
         own = f"{task['id']}/**"
         ref = [f"file:{files[i % len(files)]}"]
         task.update(
-            objective=f"{spec['title']} is delivered and its check passes", complexity=spec.get("complexity", "low"),
+            objective=f"{spec['title']} is delivered and its check passes", kind="implement", covers=["R1"],
+            complexity=spec.get("complexity", "low"),
             scope="small_change", estimated_minutes=spec.get("minutes", 20), risk=spec.get("risk", "low"),
             coupling="low", confidence="high",
             estimate_rationale=f"{spec['title']} touches only its own folder and was read against {files[i % len(files)]}",
             expected_paths=[own], shared_resources=[], acceptance_criteria=[f"{task['id']} output exists and is correct"],
-            verification=[{"type": "command", "value": "python3 -c \"raise SystemExit(0)\"", "purpose": f"smoke {task['id']}"}])
+            verification=[{"type": "command", "value": "python3 -c \"raise SystemExit(0)\"",
+                           "purpose": f"smoke {task['id']}", "category": "functional"}])
         words = {
             "complexity": f"{spec['title']} needs no design decision because its goal is one known change",
             "scope": f"{spec['title']} changes only the folder {task['id']} and nothing else in the repository",
@@ -66,7 +66,10 @@ class Pipeline:
         self.files = files
 
     def run(self) -> dict:
-        (self.rdir / "SPEC.md").write_text("# spec\n")
+        (self.rdir / "SPEC.md").write_text(
+            "# Chain integration\n\n## Requirements\n"
+            "- R1. Deliver every task through the planner, scheduler, decision engine and executor; "
+            "only the independent verifier can accept its output.\n")
         (self.rdir / "PLAN.md").write_text(plan_md(self.req, self.tasks))
         with patch.object(bt_core, "ROOT", self.world.root):
             self.step("init")
@@ -77,7 +80,10 @@ class Pipeline:
 
     def step(self, action: str) -> None:
         out: list[str] = []
-        code = bt_plan_adapter.run_cli(action, self.rdir, emit=out.append)
+        import bt_scheduler_adapter
+        report = bt_scheduler_adapter.plan_compatibility_report(self.rdir) \
+            if action in {"freeze", "bind", "compat"} else None
+        code = bt_plan_adapter.run_cli(action, self.rdir, emit=out.append, compatibility_report=report)
         if code != 0:
             raise AssertionError(f"plan-json {action} failed ({code}):\n" + "\n".join(out)[-3000:])
 
@@ -103,23 +109,33 @@ class M2Port:
         self.m2 = m2
         self.ledger = m2.DecisionLedger(ledger_path)
         self.engine = m2.DecisionEngine(self.ledger)
-        self.route_table = route_table          # callable(task_id) -> list of (provider, model, profile, effort), best first
+        self.route_table = route_table          # callable(task_id) -> routes, optionally adding quota_status after effort
         self.decisions: dict[str, object] = {}  # task_id -> last DecisionRecord
+        self.decision_history: dict[str, list[object]] = {}
+        self.proposal_calls = 0
 
     def propose(self, request):
         import bt_scheduler_decision_adapter as adapter2
         candidate = real_candidate
+        self.proposal_calls += 1
         out = []
         for view in request.ready[:max(0, request.free_slots)]:
             facts, _, _ = adapter2.task_facts(view.id, view.meta, view.dependencies, view.acceptance_criteria,
                                               view.verification, view.shared_resources, view.expected_paths)
-            candidates = tuple(candidate(provider=p, model=m, profile=prof, effort=e or None, rank=rank,
-                                         observed_at=request.now - 1, valid_until=request.now + 3600)
-                               for rank, (p, m, prof, e) in enumerate(self.route_table(view.id)))
+            candidates = []
+            for rank, route in enumerate(self.route_table(view.id)):
+                p, m, prof, e, *state = route
+                quota_status = state[0] if state else "available"
+                candidates.append(candidate(
+                    provider=p, model=m, profile=prof, effort=e or None, rank=rank, quota_status=quota_status,
+                    used_percent=100.0 if quota_status == "exhausted" else 20.0,
+                    observed_at=request.now - 1, valid_until=request.now + 3600,
+                ))
             record = self.engine.decide(self.m2.DecisionRequest(
                 request.plan_id, request.revision, request.plan_sha256, request.free_slots, request.now, facts,
-                candidates, "m2-chain-test", None))
+                tuple(candidates), "m2-chain-test", None))
             self.decisions[view.id] = record
+            self.decision_history.setdefault(view.id, []).append(record)
             if record.selected is not None:
                 out.append(core.Assignment(view.id, "route:" + self.m2.executor_reference(record.decision_id,
                                                                                           record.selected.route_id), "m2"))

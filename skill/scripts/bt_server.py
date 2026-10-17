@@ -190,7 +190,9 @@ class Handler(BaseHTTPRequestHandler):
             return f"Monitor abierto: conéctate a «{info['session']}» desde claude.ai/code o la app de Claude."
         from bt_page_run import apply_control
         msg = apply_control(rdir, form.get("action", ""))
-        commit(ROOT, f"{project}: {rid} marathon {form.get('action')} (web)")
+        from bt_page_run import scheduler_authority
+        if not scheduler_authority(rdir):
+            commit(ROOT, f"{project}: {rid} marathon {form.get('action')} (web)")
         return msg
 
 

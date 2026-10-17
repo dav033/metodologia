@@ -121,12 +121,21 @@ def marathon_script(project: str, rid: str, agent: str, model: str, repo_path: P
                              launch_env(project, profile))
 
 
+def scheduler_script(project: str, rid: str, repo_path: Path, launch_dir: Path) -> Path:
+    argv = [sys.executable, str(SCRIPT), "--project", project, "scheduler-run", rid]
+    return host.write_script(launch_dir / f"{project}-{rid}-scheduler", repo_path, argv, launch_env(project))
+
+
 def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", repo: str | None = None,
            force: bool = False, dry_run: bool = False, model: str = "haiku", profile: str | None = None,
            pool: str | None = None, background: bool = False, foreground: bool = False,
-           planning_session: str | None = None) -> dict:
+           planning_session: str | None = None, scheduler: bool = False) -> dict:
     """`pool`: accounts the marathon's router may use ("auto" or ids). `background`: no window, a detached tmux
     session / systemd unit even on a desktop (the automatic hand-off uses it)."""
+    if scheduler and mode != "marathon":
+        raise SystemExit("--scheduler is only supported with --mode marathon")
+    if scheduler and foreground:
+        raise SystemExit("--scheduler cannot be combined with --foreground")
     if foreground:
         if background or repo or force:
             raise SystemExit("Foreground launch cannot override approval, create a repo or detach the supervisor")
@@ -148,6 +157,10 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
     if not plan.exists():
         raise SystemExit(f"No PLAN.md for {req}. Plan first: bitacora.py req plan {req}")
     status = _front(plan, "status")
+    if scheduler and status != "approved":
+        raise SystemExit(f"Scheduler launch requires PLAN.md status 'approved'; found '{status}'.")
+    if scheduler and not (rdir / "PLAN.json").is_file():
+        raise SystemExit("Scheduler launch requires an approved frozen PLAN.json revision.")
     if status != "approved" and not force:
         raise SystemExit(f"PLAN.md status is '{status}', not 'approved'. Get the user's approval and set "
                          f"`status: approved` first (or pass --force if the user explicitly said to launch).")
@@ -163,16 +176,24 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
         raise SystemExit(f"No repos registered for '{project}'. Pass --repo <path> or run "
                          f"`bitacora.py --project {project} workspace add <role> <path>`.")
     import bt_plan_adapter  # a PLAN.json contract is validated and bound to its approved revision before anything runs;
-    bt_plan_adapter.freeze_on_launch(rdir, dry_run=dry_run, forced=force)  # after the repos exist, so file evidence is checkable
+    import bt_scheduler_adapter
+    bt_plan_adapter.freeze_on_launch(
+        rdir, dry_run=dry_run, forced=force and not scheduler,
+        compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir),
+    )
     new_repos = [role for role, p in repos.items() if not p.exists() or not any(p.iterdir())]
     workdir = ws.workdir(ROOT, project) or next(iter(repos.values()))
     repo_path = workdir
     rid = req_id(rdir)
-    handoff = write_handoff(project, rdir, workdir, repos, agent, mode, new_repos)
+    handoff = None if scheduler else write_handoff(project, rdir, workdir, repos, agent, mode, new_repos)
     launch_dir = STATE / "launch"
     launch_dir.mkdir(parents=True, exist_ok=True)
     marathon = mode == "marathon"
-    if marathon:
+    if scheduler:
+        prompt = ""
+        ps1 = scheduler_script(project, rid, repo_path, launch_dir)
+        title, what = f"{project} {rid} scheduler", "Scheduler supervisor"
+    elif marathon:
         prompt = ""  # no /loop prompt: the supervisor builds one prompt per task
         ps1 = marathon_script(project, rid, agent, model, repo_path, launch_dir, profile, pool)
         title, what = f"{project} {rid} marathon", f"marathon supervisor ({'pool ' + pool if pool else agent}, {model})"
@@ -188,7 +209,7 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
         if background:
             os.environ["BITACORA_TERMINAL"] = "tmux"
         cmd = open_window(repo_path, ps1, title)
-        if marathon and agent == "claude" and not background:  # companion session reachable through Remote Control
+        if marathon and not scheduler and agent == "claude" and not background:  # companion session reachable through Remote Control
             from bt_monitor import open_monitor
             try:
                 monitor = open_monitor(project, rid, profile=profile)["session"]
@@ -203,5 +224,6 @@ def launch(project: str, req: str, agent: str = "claude", mode: str = "loop", re
         commit(ROOT, f"{project}: launch {rid} ({agent}{', marathon' if marathon else ''})")
     return {"project": project, "req": rid, "agent": agent, "profile": profile, "mode": mode, "model": model, "workdir": workdir.as_posix(),
             "repos": {r: p.as_posix() for r, p in repos.items()}, "new_repos": new_repos,
-            "handoff": handoff.as_posix(), "script": ps1.as_posix(), "prompt": prompt, "opened": cmd,
+            "handoff": handoff.as_posix() if handoff else None,
+            "script": ps1.as_posix(), "prompt": prompt, "opened": cmd,
             "monitor": monitor}

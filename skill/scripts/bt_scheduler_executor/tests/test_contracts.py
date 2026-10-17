@@ -18,6 +18,16 @@ class Types(unittest.TestCase):
         again = ex.StartRequest.from_dict(json.loads(json.dumps(req.to_dict())))
         self.assertEqual(again, req)
 
+    def test_plan_hash_is_optional_for_legacy_requests_and_validated_when_present(self):
+        legacy = support.order(1).to_dict()
+        legacy.pop("plan_sha256")
+        self.assertEqual(ex.StartRequest.from_dict(legacy).plan_sha256, "")
+        valid = {**legacy, "plan_sha256": "a" * 64}
+        self.assertEqual(ex.StartRequest.from_dict(valid).plan_sha256, "a" * 64)
+        for invalid in (None, "A" * 64, "a" * 63, 4):
+            with self.subTest(invalid=invalid), self.assertRaises(ex.ExecutorError):
+                ex.StartRequest.from_dict({**legacy, "plan_sha256": invalid})
+
     def test_malformed_orders_are_refused_with_a_stable_code(self):
         good = support.order(1).to_dict()
         for field, bad in (("attempt_id", ""), ("attempt_id", 5), ("revision", "1"), ("revision", True), ("token", None),
@@ -44,6 +54,12 @@ class Types(unittest.TestCase):
             ex.Route.from_dict({"model": "m"})
         route = ex.Route.from_dict({"provider": "p", "model": "m"})
         self.assertEqual((route.profile, route.effort), ("", ""))
+        with_quota = ex.Route.from_dict({"provider": "p", "model": "m", "single_use": True,
+                                         "quota_valid_until": 123.5})
+        self.assertEqual(ex.Route.from_dict(json.loads(json.dumps(with_quota.to_dict()))), with_quota)
+        for invalid in (True, float("inf"), -1, "123"):
+            with self.subTest(invalid=invalid), self.assertRaises(ex.ExecutorError):
+                ex.Route.from_dict({"provider": "p", "model": "m", "quota_valid_until": invalid})
 
     def test_receipt_and_status_vocabularies_are_closed(self):
         with self.assertRaises(ValueError):

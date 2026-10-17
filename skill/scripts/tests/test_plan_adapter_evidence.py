@@ -24,7 +24,9 @@ class PlanAdapterEvidence(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.rdir = self.root / "sample" / "requirements" / "REQ-001-demo"
         self.rdir.mkdir(parents=True)
-        (self.rdir / "SPEC.md").write_text("# Spec\n## Contract\n", encoding="utf-8")
+        (self.rdir / "SPEC.md").write_text(
+            "# Spec\n## Contract\n## Requirements\n- R1. Validate evidence safely.\n", encoding="utf-8"
+        )
         (self.rdir / "PLAN.md").write_text(
             "---\nstatus: approved\n---\n# Plan\n\n### M1 — Base\n"
             "- [ ] T1 — Validate evidence · repo: app · verify: `python3 -m unittest`\n",
@@ -41,6 +43,10 @@ class PlanAdapterEvidence(unittest.TestCase):
 
     def approve(self) -> dict:
         return sync.approve_freeze(self.rdir, "REQ-001", repo_roots={"app": self.repo}, verify_files=True)
+
+    def compatibility_report(self) -> dict[str, object]:
+        import bt_scheduler_adapter
+        return bt_scheduler_adapter.plan_compatibility_report(self.rdir)
 
     def test_interpreter_options_and_wrappers_cannot_hide_missing_targets(self):
         verify = self.verifier()
@@ -67,12 +73,17 @@ class PlanAdapterEvidence(unittest.TestCase):
 
     def test_resume_checks_plan_ref_identity_hash_and_presence(self):
         entry = self.approve()
+        report = self.compatibility_report()
         wrong_id = {"plan_ref": {"plan_id": "REQ-OTHER", "revision": 1, "sha256": entry["sha256"]}}
-        self.assertIn("PLAN_REF_MISMATCH", adapter.resume_problem(self.rdir, wrong_id) or "")
+        self.assertIn("PLAN_REF_MISMATCH", adapter.resume_problem(
+            self.rdir, wrong_id, compatibility_report=report
+        ) or "")
 
         missing_hash = {"plan_ref": {"plan_id": "REQ-001", "revision": 1}}
-        self.assertIn("PLAN_REF_MISMATCH", adapter.resume_problem(self.rdir, missing_hash) or "")
-        self.assertIn("PLAN_REF_MISSING", adapter.resume_problem(self.rdir, {}) or "")
+        self.assertIn("PLAN_REF_MISMATCH", adapter.resume_problem(
+            self.rdir, missing_hash, compatibility_report=report
+        ) or "")
+        self.assertIn("PLAN_REF_MISSING", adapter.resume_problem(self.rdir, {}, compatibility_report=report) or "")
 
     def test_malformed_revision_state_is_returned_as_a_resume_problem(self):
         self.approve()
@@ -81,14 +92,15 @@ class PlanAdapterEvidence(unittest.TestCase):
         frozen.write_bytes(b"\xff")
         state = {"plan_ref": {"plan_id": "REQ-001", "revision": 1,
                                "sha256": rev.list_revisions(self.rdir)[0]["sha256"]}}
-        self.assertTrue((adapter.resume_problem(self.rdir, state) or "").startswith("PLAN_INVALID"))
-        self.assertTrue((adapter.launch_problem(self.rdir) or "").startswith("PLAN_INVALID"))
+        report = self.compatibility_report()
+        self.assertTrue((adapter.resume_problem(self.rdir, state, compatibility_report=report) or "").startswith("PLAN_INVALID"))
+        self.assertTrue((adapter.launch_problem(self.rdir, compatibility_report=report) or "").startswith("PLAN_INVALID"))
 
     def test_malformed_manifest_is_returned_as_a_resume_problem(self):
         folder = self.rdir / "plan-revisions"
         folder.mkdir()
         (folder / rev.MANIFEST).write_text("[" * 100000 + "0" + "]" * 100000, encoding="utf-8")
-        problem = adapter.resume_problem(self.rdir, {})
+        problem = adapter.resume_problem(self.rdir, {}, compatibility_report=self.compatibility_report())
         self.assertTrue(problem and problem.startswith("REVISION_STORE_UNREADABLE"), problem)
 
 

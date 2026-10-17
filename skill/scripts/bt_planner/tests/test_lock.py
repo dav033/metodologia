@@ -71,7 +71,7 @@ class AcrossProcesses(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="planner-procs-") as tmp:
             plan_dir = Path(tmp) / "REQ-300-race"
             plan_dir.mkdir()
-            (plan_dir / "SPEC.md").write_text("# s\n", encoding="utf-8")
+            (plan_dir / "SPEC.md").write_text("# s\n## Requirements\n- R1. Demo requirement\n", encoding="utf-8")
             (plan_dir / "PLAN.md").write_text("---\nstatus: approved\n---\n### M1 — A\n- [ ] T1 — One · repo: app · "
                                               "verify: `python3 -m unittest -q`\n", encoding="utf-8")
             (plan_dir / "PLAN.json").write_text(pc.dumps(classify(sync.skeleton(plan_dir))), encoding="utf-8")

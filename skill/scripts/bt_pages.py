@@ -94,7 +94,9 @@ def dashboard() -> str:
         runs = "".join(
             f'<li>Maratón <a href="{purl(pdir.name, "req", m["req"])}?tab=run">{e(m["req"])}</a> {badge(m["status"])} '
             f'{m["done"]}/{m["total"]} · latido {fmt_age(m["age"])}'
-            f'{" <strong>· ¿detenida?</strong>" if m["stale"] else ""}</li>' for m in active_runs(pdir))
+            f'{" <strong>· ¿detenida?</strong>" if m["stale"] else ""}'
+            f'{(" · <code>bitacora.py --project " + e(pdir.name) + " scheduler-run " + e(m["req"]) + " --resume</code>"
+               if m["stale"] and m.get("authority") == "scheduler" else "")}</li>' for m in active_runs(pdir))
         cards.append(f"""<div class="card"><h3><a href="{purl(pdir.name)}">{e(pdir.name)}</a></h3>
 <div class="muted" style="font-size:13px">{e(repo) or "sin repos registrados"}</div>
 <div class="kpis"><span class="kpi">{len(active)} activos</span><span class="kpi">{len(open_pending(pdir))} pendientes</span>

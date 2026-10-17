@@ -117,7 +117,9 @@ def plan_decide(rdir: Path, approve: bool, comments: str, via: str) -> str:
     plan = rdir / "PLAN.md"
     if approve:  # an invalid or PLAN.md-contradicting PLAN.json (opt-in contract) is never approved
         import bt_plan_adapter
-        problem = bt_plan_adapter.publishable_problem(rdir)
+        import bt_scheduler_adapter
+        compatibility_report = bt_scheduler_adapter.plan_compatibility_report(rdir)
+        problem = bt_plan_adapter.publishable_problem(rdir, compatibility_report=compatibility_report)
         if problem:
             raise SystemExit(problem)
     stamp = f"{dt.datetime.now():%Y-%m-%d %H:%M}"
@@ -129,7 +131,10 @@ def plan_decide(rdir: Path, approve: bool, comments: str, via: str) -> str:
     set_front(plan, "status", status)
     if approve:  # freeze exactly what was just approved: later launches are compared against this revision
         import bt_plan_adapter
-        bt_plan_adapter.freeze_approved(rdir)
+        import bt_scheduler_adapter
+        bt_plan_adapter.freeze_approved(
+            rdir, compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir)
+        )
     return status
 
 

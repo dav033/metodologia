@@ -60,7 +60,9 @@ class Case(unittest.TestCase):
 
 class Boundary(unittest.TestCase):
     ALLOWED_USERS = frozenset({"bt_scheduler_adapter.py", "test_scheduler_integration.py",
-                               "test_scheduler_decision_sources.py", "test_package_install.py"})
+                               "test_scheduler_decision_sources.py", "test_scheduler_decision_integration.py",
+                               "test_plan_contract_compat.py",
+                               "test_package_install.py"})
 
     def names_in(self, path: Path) -> set[str]:
         found = set()
@@ -248,6 +250,57 @@ class Projection(Case):
         # drive with the core's own simulated world on the same repository
         snap, core = simulate(scheduler.plan, scheduler.repository, sc.Config(max_parallel_tasks=2))
         return core, snap
+
+    def test_projection_joins_frozen_complexity_with_the_run_route(self):
+        text = plan_text(tasks=[TASKS[0] | {"complexity": "medium"}])
+        sha = freeze(self.rdir, text)
+        plan = adapter.approved_plan(self.rdir)
+        snap = sc.Snapshot(
+            plan_id=plan.plan_id, revision=plan.revision, plan_sha256=sha, status="running",
+            paused=False, cancel_requested=False,
+            tasks={"T1": {
+                "state": "ready", "unreachable": False, "attempts": 0, "evidence": "", "executor": "",
+                "route_metadata": {"schema_version": sc.ROUTING_CONTRACT_VERSION, "provider": "claude",
+                                   "model": "sonnet", "effort": "xhigh", "profile": "claude-work",
+                                   "account_ref": "acct:opaque-1", "assignment_reason": "route_policy_preferred",
+                                   "quota_state": "fresh", "quota_reason": "quota_fresh",
+                                   "quota_observed_at": "1792170000.0", "quota_valid_until": "1792177200.0",
+                                   "quota_used_percent": "12.5"},
+                "route_status": "recommended", "route_reason": "",
+            }},
+            counts={"ready": 1, "live_attempts": 0}, unreachable=(), attention=(), pending_outbox=0,
+        )
+
+        row = adapter.project(snap, plan)["tasks"][0]
+
+        self.assertEqual((row["id"], row["milestone"], row["complexity"]), ("T1", "M1", "medium"))
+        self.assertEqual((row["profile"], row["model"], row["effort"], row["route_status"]),
+                         ("claude-work", "sonnet", "xhigh", "recommended"))
+        self.assertEqual(row["provider"], "claude")
+        self.assertEqual((row["account_ref"], row["selection_reason"], row["quota_state"],
+                          row["quota_reason"], row["quota_observed_at"], row["quota_valid_until"],
+                          row["quota_used_percent"]),
+                         ("acct:opaque-1", "route_policy_preferred", "fresh", "quota_fresh",
+                          "1792170000.0", "1792177200.0", "12.5"))
+
+    def test_projection_keeps_stable_no_route_reason_without_fabricating_route_telemetry(self):
+        text = plan_text(tasks=[TASKS[0] | {"complexity": "high"}])
+        sha = freeze(self.rdir, text)
+        plan = adapter.approved_plan(self.rdir)
+        snap = sc.Snapshot(
+            plan_id=plan.plan_id, revision=plan.revision, plan_sha256=sha, status="running",
+            paused=False, cancel_requested=False,
+            tasks={"T1": {"state": "blocked", "unreachable": False, "attempts": 0, "evidence": "", "executor": "",
+                          "route_metadata": {}, "route_status": "unavailable",
+                          "route_reason": "m2_batch_unavailable"}},
+            counts={"blocked": 1, "live_attempts": 0}, unreachable=(), attention=(), pending_outbox=0,
+        )
+
+        row = adapter.project(snap, plan)["tasks"][0]
+
+        self.assertEqual((row["route_status"], row["route_reason"], row["model"], row["account_ref"],
+                          row["quota_state"]),
+                         ("unavailable", "m2_batch_unavailable", "", "", ""))
 
     def test_projection_uses_the_legacy_vocabulary_and_marks_its_authority(self):
         core, snap = self.finished_scheduler()

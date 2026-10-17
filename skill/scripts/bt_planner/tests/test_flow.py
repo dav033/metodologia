@@ -35,7 +35,7 @@ class PlannerCycle(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.dir = Path(self._tmp.name) / "REQ-001-demo"
         self.dir.mkdir()
-        (self.dir / "SPEC.md").write_text("# Spec\n", encoding="utf-8")
+        (self.dir / "SPEC.md").write_text("# Spec\n## Requirements\n- R1. Demo requirement\n", encoding="utf-8")
         self.set_status("draft")
 
     def set_status(self, status: str) -> None:
@@ -84,7 +84,7 @@ class PlannerCycle(unittest.TestCase):
     def test_public_api_is_complete_and_importable(self):
         for name in planner.__all__:
             self.assertTrue(hasattr(planner, name), name)
-        self.assertEqual(planner.SCHEMA_VERSION, "1.1.0")
+        self.assertEqual(planner.SCHEMA_VERSION, "1.2.0")
         self.assertIn("plan_id", planner.example_text())
 
 

@@ -9,6 +9,8 @@ from __future__ import annotations
 import fnmatch
 import re
 
+VERIFICATION_CATEGORIES = ("static", "functional", "integration", "regression", "product")
+
 _WILD = re.compile(r"[*?\[]")
 
 
@@ -230,3 +232,167 @@ def analyze(plan: dict) -> dict:
         "unconsumed_results": unconsumed_results(plan),
         "redundant_edges": redundant_edges(plan),
     }
+
+
+def _plan_tasks(plan: object) -> list[tuple[str, dict]]:
+    if not isinstance(plan, dict) or not isinstance(plan.get("tasks"), list):
+        return []
+    return [(task.get("id") if isinstance(task.get("id"), str) else f"tasks[{index}]", task)
+            for index, task in enumerate(plan["tasks"]) if isinstance(task, dict)]
+
+
+def verification_categories(plan: dict) -> dict[str, dict[str, object]]:
+    """Project declared verification categories and planned work onto each requirement; never reports acceptance."""
+    requirements = plan.get("requirements") if isinstance(plan, dict) else None
+    if not isinstance(requirements, list):
+        return {}
+    coverage: dict[str, dict[str, object]] = {}
+    for requirement_id in requirements:
+        if isinstance(requirement_id, str) and requirement_id not in coverage:
+            coverage[requirement_id] = {"categories": [], "verifications": [], "planned_work": [],
+                                        "manual_only": False}
+
+    category_sets: dict[str, set[str]] = {requirement_id: set() for requirement_id in coverage}
+    manual_state: dict[str, list[str]] = {requirement_id: [] for requirement_id in coverage}
+    for task_id, task in _plan_tasks(plan):
+        covers = task.get("covers") if isinstance(task.get("covers"), list) else []
+        task_requirements = {item for item in covers if isinstance(item, str)} & coverage.keys()
+        verifications = task.get("verification") if isinstance(task.get("verification"), list) else []
+        for requirement_id in task_requirements:
+            for index, item in enumerate(verifications):
+                if not isinstance(item, dict):
+                    continue
+                category = item.get("category")
+                kind = item.get("type")
+                created_by = item.get("created_by")
+                planned = isinstance(created_by, str) and bool(created_by.strip())
+                record = {"task_id": task_id, "verification_index": index,
+                          "type": kind if isinstance(kind, str) else None,
+                          "category": category if isinstance(category, str) else None,
+                          "planned": planned}
+                coverage[requirement_id]["verifications"].append(record)
+                if kind in ("command", "manual"):
+                    manual_state[requirement_id].append(kind)
+                if category in VERIFICATION_CATEGORIES:
+                    category_sets[requirement_id].add(category)
+                if planned:
+                    planned_record = {**record, "created_by": created_by,
+                                      "purpose": item.get("purpose") if isinstance(item.get("purpose"), str) else ""}
+                    coverage[requirement_id]["planned_work"].append(planned_record)
+
+    for requirement_id, details in coverage.items():
+        details["categories"] = [category for category in VERIFICATION_CATEGORIES
+                                 if category in category_sets[requirement_id]]
+        types = manual_state[requirement_id]
+        details["manual_only"] = bool(types) and all(kind == "manual" for kind in types)
+    return coverage
+
+
+def planned_verifications(plan: dict) -> list[dict[str, object]]:
+    """List verification items with `created_by` as planned work, not existing evidence."""
+    planned: list[dict[str, object]] = []
+    for task_id, task in _plan_tasks(plan):
+        verifications = task.get("verification") if isinstance(task.get("verification"), list) else []
+        for index, item in enumerate(verifications):
+            if not isinstance(item, dict):
+                continue
+            created_by = item.get("created_by")
+            if not isinstance(created_by, str) or not created_by.strip():
+                continue
+            planned.append({"task_id": task_id, "verification_index": index,
+                            "type": item.get("type") if isinstance(item.get("type"), str) else None,
+                            "category": item.get("category") if isinstance(item.get("category"), str) else None,
+                            "purpose": item.get("purpose") if isinstance(item.get("purpose"), str) else "",
+                            "created_by": created_by, "status": "planned_work"})
+    return planned
+
+
+def criteria_without_command(plan: dict) -> list[dict[str, object]]:
+    """Report criteria without one unique command after trim or whose purpose fails M6's exact-match rule."""
+    missing: list[dict[str, object]] = []
+    for task_id, task in _plan_tasks(plan):
+        criteria = task.get("acceptance_criteria") if isinstance(task.get("acceptance_criteria"), list) else []
+        verifications = task.get("verification") if isinstance(task.get("verification"), list) else []
+        valid_verifications = [(index, item) for index, item in enumerate(verifications) if isinstance(item, dict)]
+        for criterion in criteria:
+            if not isinstance(criterion, str):
+                continue
+            normalized = criterion.strip()
+            if not normalized:
+                continue
+            normalized_matches = [(index, item) for index, item in valid_verifications
+                                  if isinstance(item.get("purpose"), str) and item["purpose"].strip() == normalized]
+            exact_matches = [(index, item) for index, item in valid_verifications
+                             if item.get("purpose") == criterion]
+            exact_commands = [(index, item) for index, item in exact_matches if item.get("type") == "command"]
+            if len(exact_matches) == 1 and len(exact_commands) == 1:
+                continue
+
+            if len(exact_matches) > 1:
+                reason = "ambiguous_purpose"
+            elif normalized_matches and not exact_matches:
+                reason = "whitespace_mismatch"
+            elif exact_matches and exact_matches[0][1].get("type") == "manual":
+                reason = "manual_verification"
+            elif exact_matches:
+                reason = "no_command"
+            else:
+                reason = "purpose_not_found"
+            missing.append({"task_id": task_id, "criterion": criterion, "reason": reason,
+                            "m6_criterion_status": "NEEDS_REVIEW",
+                            "verification_indexes": [index for index, _ in normalized_matches]})
+    return missing
+
+
+def verification_report(plan: dict) -> dict[str, object]:
+    """Stable Planner report fields for T10 to expose without changing legacy analysis output."""
+    return {"verification_categories": verification_categories(plan),
+            "criteria_without_command": criteria_without_command(plan)}
+
+
+def verification_findings(plan: dict) -> list[str]:
+    """Return deterministic schema 1.2.0 warnings; M6 remains authoritative for every runtime verdict."""
+    if not isinstance(plan, dict):
+        return []
+    warnings: list[str] = []
+    for item in planned_verifications(plan):
+        warnings.append(f"{item['task_id']}.verification[{item['verification_index']}]: created_by "
+                        f"{item['created_by']!r} is planned work, not existing evidence")
+
+    for item in criteria_without_command(plan):
+        task_id = item["task_id"]
+        criterion = item["criterion"]
+        reason = item["reason"]
+        if reason == "whitespace_mismatch":
+            detail = "purpose matches after whitespace trim, but M6 currently compares it exactly"
+        elif reason == "manual_verification":
+            detail = "manual verification cannot produce an automatic PASS"
+        elif reason == "ambiguous_purpose":
+            detail = "multiple verifications have the same purpose"
+        elif reason == "no_command":
+            detail = "no command verification matches the purpose"
+        else:
+            detail = "no verification purpose matches after whitespace trim"
+        warnings.append(f"{task_id}.acceptance_criteria: {criterion!r}; {detail}; M6 will mark this criterion "
+                        "NEEDS_REVIEW")
+
+    for requirement_id, details in verification_categories(plan).items():
+        records = details["verifications"]
+        if details["manual_only"]:
+            warnings.append(f"requirements.{requirement_id}: covering tasks have only manual verification; M6 will "
+                            "leave criteria NEEDS_REVIEW")
+        categories = details["categories"]
+        if not records or not categories:
+            continue
+        product_checks = [record for record in records
+                          if record["category"] == "product" and not record["planned"]]
+        if product_checks:
+            continue
+        if any(record["category"] == "product" for record in records):
+            detail = "product-category verification is only planned work, not existing evidence"
+        else:
+            detail = f"declared categories are {', '.join(categories)} and include no product-level verification"
+        warnings.append(f"requirements.{requirement_id}: Planner review whether user-visible/product claims need "
+                        f"product-level verification; {detail}; lower-level tests are not product acceptance")
+
+    return warnings

@@ -17,18 +17,27 @@ from .model import AuditEntry, RunState
 class Transaction:
     """What the engine sees inside a transaction: the state (or None for an empty store) and the audit trail."""
 
-    def __init__(self, state: RunState | None, *, readonly: bool = False):
+    def __init__(self, state: RunState | None, *, readonly: bool = False,
+                 incident_event_seen: Callable[[str], bool] | None = None):
         self.state = state
         self.readonly = readonly
         self.entries: list[AuditEntry] = []
+        self._incident_event_seen = incident_event_seen or (lambda _event_id: False)
+        self._pending_incident_event_ids: set[str] = set()
+
+    def has_incident_event(self, event_id: str) -> bool:
+        return event_id in self._pending_incident_event_ids or self._incident_event_seen(event_id)
 
     def audit(self, kind: str, /, *, at: float, task_id: str = "", attempt_id: str = "", **detail: Any) -> None:
         if self.readonly:
             raise RuntimeError("audit inside a read-only transaction")
         if self.state is None:
             raise RuntimeError("audit before the run state exists")
+        safe_detail = json.loads(json.dumps(detail, default=str))
+        if kind == "incident_observed" and isinstance(safe_detail.get("idempotency_key"), str):
+            self._pending_incident_event_ids.add(safe_detail["idempotency_key"])
         self.entries.append(AuditEntry(self.state.next("audit"), at, kind, self.state.plan_id, task_id, attempt_id,
-                                       json.loads(json.dumps(detail, default=str))))
+                                       safe_detail))
 
 
 class StateRepository(Protocol):
@@ -49,25 +58,29 @@ class InMemoryRepository:
         self._lock = threading.RLock()
         self._doc: str | None = None
         self._audit: list[AuditEntry] = []
+        self._incident_event_ids: set[str] = set()
         self.before_commit: Callable[[], None] | None = None
         self.commits = 0
 
     @contextmanager
     def transaction(self) -> Iterator[Transaction]:
         with self._lock:
-            tx = Transaction(RunState.from_dict(json.loads(self._doc)) if self._doc is not None else None)
+            tx = Transaction(RunState.from_dict(json.loads(self._doc)) if self._doc is not None else None,
+                             incident_event_seen=self._incident_event_ids.__contains__)
             yield tx
             if self.before_commit:
                 self.before_commit()
             if tx.state is not None:
                 self._doc = json.dumps(tx.state.to_dict(), sort_keys=True)   # an unchanged document is the same text
             self._audit.extend(tx.entries)
+            self._incident_event_ids.update(tx._pending_incident_event_ids)
             self.commits += 1
 
     @contextmanager
     def read_transaction(self) -> Iterator[Transaction]:
         with self._lock:
-            yield Transaction(RunState.from_dict(json.loads(self._doc)) if self._doc is not None else None, readonly=True)
+            yield Transaction(RunState.from_dict(json.loads(self._doc)) if self._doc is not None else None,
+                              readonly=True, incident_event_seen=self._incident_event_ids.__contains__)
 
     def audit_log(self, since: int = 0) -> list[AuditEntry]:
         with self._lock:

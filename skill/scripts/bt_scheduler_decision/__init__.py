@@ -1,4 +1,20 @@
 """M2's isolated public contract; methodology and local inference adapters live outside this package."""
+from .batch import (
+    AccountConcurrency,
+    BatchAssignment,
+    BatchPlan,
+    BatchRouteExclusion,
+    BatchUnassignment,
+    plan_ready_batch,
+)
+from .batch_quota import (
+    BatchQuotaAssessment,
+    BatchRouteQuotaAssessment,
+    RouteQuotaRequirement,
+    assess_batch_quota,
+)
+from .batch_quota_evidence import BatchQuotaEvidence
+from .batch_ledger import BatchDecisionStore
 from .contracts import (
     API_VERSION,
     AUTH_STATES,
@@ -22,11 +38,18 @@ from .contracts import (
     DecisionRequest,
     Exclusion,
     LayaChoice,
-    RouteHistory,
     RouteBinding,
+    RouteHistory,
     RouteSummary,
     TaskFacts,
     ValidatedRequest,
+)
+from .demand import (
+    DemandEstimate,
+    DemandSample,
+    attribute_quota_delta,
+    estimate_demand,
+    observed_token_usage,
 )
 from .engine import (
     Chooser,
@@ -35,7 +58,15 @@ from .engine import (
     QualityGate,
     task_is_ambiguous,
 )
-from .history import HistoryAssessment, assess_history
+from .history import (
+    ContextualHistoryAssessment,
+    HistoryAssessment,
+    PerformanceContext,
+    PerformanceHistoryError,
+    PerformanceMeasurement,
+    aggregate_performance_history,
+    assess_history,
+)
 from .identity import (
     account_reference,
     candidate_route_id,
@@ -44,14 +75,47 @@ from .identity import (
     parse_executor_reference,
     sha256_json,
 )
-from .policy import CandidateRanking, deterministic_reference, rank_candidates
+from .learning_snapshots import LearningSnapshot, LearningSnapshotStore
+from .ledger_errors import DecisionLedgerError
+from .performance_events import (
+    PerformanceEvent,
+    PerformanceEventError,
+    normalize_performance_event,
+    reduce_performance_events,
+)
+from .policy import (
+    CandidateRanking,
+    QuotaWindowPreference,
+    RoutePolicyConfig,
+    RoutePolicyEvidence,
+    deterministic_reference,
+    rank_candidates,
+)
+from .quota import (
+    QuotaAssessment,
+    QuotaObservation,
+    assess_account_windows,
+    assess_required_windows,
+    normalize_cached_windows,
+)
 from .recorder import (
     DecisionLedger,
-    DecisionLedgerError,
     decision_id_for,
     idempotency_key,
     resolve_executor_binding,
     resolve_executor_reference,
+)
+from .shadow import (
+    SHADOW_POLICY_VERSION,
+    ShadowAssignment,
+    ShadowComparison,
+    ShadowTaskComparison,
+    compare_shadow_batch,
+)
+from .temporal import (
+    TemporalEvaluation,
+    TemporalEvaluationError,
+    evaluate_prequential_history,
 )
 from .validation import validate_request
 
@@ -70,37 +134,81 @@ __all__ = [
     "QUOTA_STATES",
     "RUNTIME_STATES",
     "SCOPE_VALUES",
+    "SHADOW_POLICY_VERSION",
     "SOURCE_REASON_CODES",
+    "AccountConcurrency",
+    "BatchAssignment",
+    "BatchDecisionStore",
+    "BatchPlan",
+    "BatchQuotaEvidence",
+    "BatchQuotaAssessment",
+    "BatchRouteExclusion",
+    "BatchRouteQuotaAssessment",
+    "BatchUnassignment",
     "Candidate",
     "CandidateRanking",
     "Chooser",
     "ChooserFailure",
     "Confidence",
+    "ContextualHistoryAssessment",
     "DecisionEngine",
     "DecisionInputError",
     "DecisionLedger",
     "DecisionLedgerError",
     "DecisionRecord",
     "DecisionRequest",
+    "DemandEstimate",
+    "DemandSample",
     "Exclusion",
     "HistoryAssessment",
     "LayaChoice",
+    "LearningSnapshot",
+    "LearningSnapshotStore",
+    "PerformanceContext",
+    "PerformanceEvent",
+    "PerformanceEventError",
+    "PerformanceHistoryError",
+    "PerformanceMeasurement",
     "QualityGate",
-    "RouteHistory",
+    "QuotaAssessment",
+    "QuotaObservation",
+    "QuotaWindowPreference",
     "RouteBinding",
+    "RouteHistory",
+    "RoutePolicyConfig",
+    "RoutePolicyEvidence",
+    "RouteQuotaRequirement",
     "RouteSummary",
+    "ShadowAssignment",
+    "ShadowComparison",
+    "ShadowTaskComparison",
     "TaskFacts",
+    "TemporalEvaluation",
+    "TemporalEvaluationError",
     "ValidatedRequest",
     "account_reference",
+    "aggregate_performance_history",
+    "assess_account_windows",
+    "assess_batch_quota",
     "assess_history",
+    "assess_required_windows",
+    "attribute_quota_delta",
     "candidate_route_id",
     "canonical_json",
+    "compare_shadow_batch",
     "decision_id_for",
     "deterministic_reference",
+    "estimate_demand",
+    "evaluate_prequential_history",
     "executor_reference",
     "idempotency_key",
+    "normalize_cached_windows",
+    "normalize_performance_event",
+    "observed_token_usage",
     "parse_executor_reference",
+    "plan_ready_batch",
     "rank_candidates",
+    "reduce_performance_events",
     "resolve_executor_binding",
     "resolve_executor_reference",
     "sha256_json",

@@ -44,6 +44,7 @@ class EventKind(str, Enum):
     EXECUTION_FAILED = "execution_failed"
     EXECUTION_CANCELLED = "execution_cancelled"
     HEARTBEAT = "heartbeat"                       # liveness hint only; never proves death or life
+    INCIDENT_OBSERVED = "incident_observed"       # audit reference only; never changes scheduler state
 
 
 T, A = TaskState, AttemptState

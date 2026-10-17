@@ -1,0 +1,71 @@
+{
+  "extension": {
+    "zeta": {
+      "second": 2,
+      "first": 1
+    },
+    "alpha": 1
+  },
+  "tasks": [
+    {
+      "verification": [
+        {
+          "purpose": "reject expired sessions",
+          "value": "python3 -m unittest",
+          "type": "command"
+        }
+      ],
+      "acceptance_criteria": [
+        "Expired sessions are rejected"
+      ],
+      "shared_resources": [
+        "session-contract"
+      ],
+      "expected_paths": [
+        "src/auth/**",
+        "tests/auth/**"
+      ],
+      "confidence": "medium",
+      "coupling": "medium",
+      "risk": "high",
+      "estimated_minutes": 25,
+      "scope": "full_system",
+      "complexity": "medium",
+      "after": [],
+      "repository": "backend",
+      "objective": "Reject expired sessions while preserving valid sessions",
+      "title": "Fix session validation",
+      "milestone_id": "M1",
+      "id": "T1",
+      "estimate_rationale": "Local change with an established contract",
+      "scope_exception": {
+        "reason": "The migration is bounded",
+        "owner": "security",
+        "approved_by": "reviewer"
+      },
+      "legacy_extension": {
+        "zeta": {
+          "second": 2,
+          "first": 1
+        },
+        "alpha": [
+          "stable",
+          "order"
+        ]
+      }
+    }
+  ],
+  "milestones": [
+    {
+      "acceptance_criteria": [
+        "The auth contract is preserved"
+      ],
+      "title": "Authentication",
+      "id": "M1"
+    }
+  ],
+  "spec_ref": "SPEC.md",
+  "revision": 1,
+  "plan_id": "REQ-GOLDEN",
+  "schema_version": "1.0.0"
+}

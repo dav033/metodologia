@@ -12,7 +12,7 @@ never writes `RUN.json`: it inspects, writes, validates, hands over and ends.
 
 | File | Owner | Role |
 |---|---|---|
-| `SPEC.md`, `PLAN.md` | planner | what/why and the human narrative (task-line grammar unchanged) |
+| `SPEC.md`, `PLAN.md` | planner | what/why and the human narrative (schema 1.2.0 adds `covers:` and `kind:` annotations) |
 | `PLAN.json` | planner | the classified, validated contract the scheduler reads |
 | `plan-revisions/PLAN.r<N>.json` + `MANIFEST.json` | planner at approval | immutable approved revisions with sha256 |
 | `HANDOFF.md` | launch | context for a fresh executor session |
@@ -24,17 +24,20 @@ Checkboxes in `PLAN.md` are presentation; once `RUN.json` exists it alone is aut
 ## Planner flow
 
 1. Inspect the real project; never copy paths, commands or tests from another plan without checking they exist.
-2. Write `SPEC.md` and `PLAN.md` as usual (milestones `### M1 — …`, task lines with `after:` and backticked `verify:`).
-3. `bitacora.py plan-json init REQ-NNN` derives the skeleton; every classification field stays **absent** and is reported.
-4. Fill the classification in `PLAN.json` (rubric: `bt_planner/README.md`). **Argue every dimension**: schema 1.1.0 needs
+2. Write `SPEC.md` and `PLAN.md` as usual (milestones `### M1 — …`, task lines with `after:` and backticked `verify:`;
+   schema 1.2.0 task lines may also state `covers:` and `kind:`).
+3. `bitacora.py plan-json init REQ-NNN` derives the skeleton and requirement IDs from `SPEC.md`'s `Requirements`
+   section. Each task starts with empty `covers` unless PLAN.md declares coverage; missing fields remain gaps.
+4. Fill the classification and requirement coverage in `PLAN.json` (rubric: `bt_planner/README.md`). **Argue every dimension**: schema 1.1.0 needs
    `classification_evidence` per task (justification of at least 4 words + typed references `file:`, `command:`,
    `precedent:`, `spec:`, `task:`, `assumption:`). Cite files you actually opened; `confidence: high` cannot stand on
    assumptions; an unknown stays `confidence: low` with a research task before the work that depends on it.
 5. `bitacora.py plan-json check REQ-NNN` (exit 2 on any error) is the publication gate: schema, evidence (`file:`
    references are verified against the project's registered repositories; unverifiable ones are an error at approval and
-   launch), PLAN.md ↔ PLAN.json agreement and
-   unordered tasks that collide. Fix and rerun; do not present an invalid plan for approval. `plan-json report REQ-NNN`
-   prints critical path, widest level, distributions and gaps: read it before asking for approval.
+   launch), PLAN.md ↔ PLAN.json agreement and unordered tasks that collide. For schema 1.2.0 it also validates
+   requirement coverage, interface contracts, task `kind` and verification `category`. Fix and rerun; do not present an
+   invalid plan for approval. `plan-json report REQ-NNN` adds planned coverage, declared interfaces and verification
+   projections for 1.2.0; these are not acceptance verdicts.
 6. Approval freezes: `plan approve` (terminal), the web button and `handoff` validate PLAN.json and freeze exactly that
    revision (an invalid plan cannot be approved). **A launch never freezes**: a plan approved by editing `status:` by
    hand is refused with `PLAN_NOT_FROZEN` until `plan-json freeze REQ-NNN` records the approval (only an explicit
@@ -42,12 +45,15 @@ Checkboxes in `PLAN.md` are presentation; once `RUN.json` exists it alone is aut
 7. Close the planning session; a later session reads `PLAN.json` / `plan-revisions/` only. Nothing here launches agents.
 
 `plan-json show REQ-NNN` lists revisions; `plan-json compat REQ-NNN` is read-only and reports what a legacy plan lacks
-(and any ambiguity in its PLAN.md). Schema 1.0.0 plans already frozen keep working; new revisions are published as 1.1.0.
+(and any ambiguity in its PLAN.md). Schema 1.0.0/1.1.0 plans already frozen keep working; new revisions use 1.2.0.
+Do not approve, hand off, launch or resume a 1.2.0 plan until the T11 M1/M2/M6 compatibility migration and its
+fail-closed capability check are complete.
 
 ### What `check` compares between PLAN.md and PLAN.json
 
 Ids defined once on both sides, milestone membership and titles, task titles, `repo:` against `repository`, `after:`
-(as a set), a stated `verify:` against a command verification, a legacy `risk: low|medium|high`. A value PLAN.md does not
+(as a set), a stated `verify:` against a command verification, a legacy `risk: low|medium|high`, and, for schema 1.2.0,
+explicit `covers:` and `kind:` values. A value PLAN.md does not
 state is not a contradiction; one it states differently is an error. Fields the parser would silently drop (a repeated
 field, an `after` entry that is not a task id, an unbackticked `verify`) are reported with their line.
 

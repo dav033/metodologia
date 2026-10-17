@@ -267,6 +267,9 @@ class Boundary(unittest.TestCase):
             rel = path.relative_to(REPO)
             if ".git" in rel.parts or MODULE in rel.parts or rel.parts[0] == "bitacora" or "node_modules" in rel.parts:
                 continue
+            # This boundary is about runtime dependencies; tests may import the executor directly.
+            if "tests" in rel.parts or path.name.startswith("test_"):
+                continue
             if path.name not in self.ALLOWED and MODULE in self.names_in(path):
                 offenders.append(str(rel))
         self.assertEqual(offenders, [], "only bt_scheduler_executor_adapter may reach the executor module")

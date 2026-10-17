@@ -1,20 +1,22 @@
-"""Marathon tab of a requirement: live view of RUN.json (progress, heartbeat, tasks, log) and pause/resume/stop.
+"""Run tab of a requirement: authority-specific status view and pause/resume/stop controls.
 
-Reads RUN.json directly (plain JSON, tolerant of a half-written file) and writes the controls through
-bt_runstate.update (locked read-modify-write), so a button never clobbers what the supervisor saved meanwhile.
+Legacy runs read RUN.json and update its control field. Scheduler runs read RUN.projection.json and send controls to M1.
 """
 from __future__ import annotations
 
+import math
 import socket
 from html import escape as e
 
+import bt_runtier as tier_
+import bt_scheduler_adapter as scheduler_
 from bt_core import *  # noqa: F403
 from bt_pages import badge, purl
-import bt_runtier as tier_
 
 ACTIVE = ("running", "waiting", "paused")
 CONTROLS = {"pause": "pause", "stop": "stop", "resume": None}
 STALE_EXTRA_MIN = 10
+SCHEDULER_STALE_MIN = scheduler_.SCHEDULER_STALE_MINUTES
 
 
 def run_file(rdir: Path) -> Path:
@@ -22,11 +24,21 @@ def run_file(rdir: Path) -> Path:
 
 
 def load_run(rdir: Path) -> dict | None:
+    if scheduler_.scheduler_authority(rdir):
+        return scheduler_.read_projection(rdir)
     try:
         data = json.loads(run_file(rdir).read_text(encoding="utf-8"))
     except Exception:
         return None
     return data if isinstance(data, dict) else None
+
+
+def scheduler_authority(rdir: Path) -> bool:
+    return scheduler_.scheduler_authority(rdir)
+
+
+def has_run(rdir: Path) -> bool:
+    return scheduler_authority(rdir) or run_file(rdir).is_file()
 
 
 def progress(run: dict) -> tuple[int, int]:
@@ -35,7 +47,7 @@ def progress(run: dict) -> tuple[int, int]:
 
 
 def age_minutes(iso: str | None) -> float | None:
-    if not iso:
+    if not isinstance(iso, str) or not iso:
         return None
     try:
         at = dt.datetime.fromisoformat(iso)
@@ -57,6 +69,19 @@ def fmt_age(minutes: float | None) -> str:
     return f"hace {minutes / 1440:.1f} d"
 
 
+def _format_quota_epoch(value: object) -> str:
+    if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+        return "sin dato"
+    try:
+        timestamp = float(value)
+        if not math.isfinite(timestamp):
+            return "sin dato"
+        at = dt.datetime.fromtimestamp(timestamp, tz=dt.UTC)
+    except (OverflowError, OSError, ValueError):
+        return "sin dato"
+    return at.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
 def is_stale(run: dict) -> bool:
     """An active (running/waiting/paused) marathon whose heartbeat is older than one session timeout plus a margin:
     the supervisor is gone. Waits and pauses heartbeat too, so they are checked the same way."""
@@ -68,22 +93,37 @@ def is_stale(run: dict) -> bool:
 
 
 def active_runs(pdir: Path) -> list[dict]:
-    """Marathons of a project that are running, waiting or paused (for the dashboard)."""
+    """Active legacy and Scheduler runs of a project, each read from its authority."""
     out = []
-    for f in sorted(pdir.glob("requirements/REQ-*/RUN.json")):
-        run = load_run(f.parent)
+    for rdir in sorted(path for path in (pdir / "requirements").glob("REQ-*") if path.is_dir()):
+        run = load_run(rdir)
+        is_scheduler = scheduler_authority(rdir)
+        if run is None and is_scheduler:
+            out.append({"req": req_id(rdir), "status": "desconocido", "done": 0, "total": 0,
+                        "age": None, "stale": True, "authority": "scheduler"})
+            continue
         if run and run.get("status") in ACTIVE:
             done, total = progress(run)
-            out.append({"req": run.get("req") or req_id(f.parent), "status": run["status"], "done": done,
+            is_scheduler = run.get("authority") == scheduler_.AUTHORITY
+            stale = scheduler_is_stale(run) if is_scheduler else is_stale(run)
+            out.append({"req": run.get("req") or req_id(rdir), "status": run["status"], "done": done,
                         "total": total, "age": age_minutes((run.get("heartbeat") or {}).get("at")),
-                        "stale": is_stale(run)})
+                        "stale": stale, "authority": "scheduler" if is_scheduler else "legacy"})
     return out
 
 
+def scheduler_is_stale(run: dict) -> bool:
+    return scheduler_.projection_is_stale(run)
+
+
 def apply_control(rdir: Path, action: str) -> str:
-    """Write the pause/resume/stop request into RUN.json (the supervisor honors it between sessions)."""
+    """Route a run control through its authority, preserving legacy state and Scheduler ownership."""
     if action not in CONTROLS:
         raise SystemExit(f"Acción desconocida: {action}")
+    if scheduler_authority(rdir):
+        scheduler_.apply_control(rdir, action, by="web")
+        return {"pause": "Ejecución Scheduler pausada.", "resume": "Ejecución Scheduler reanudada.",
+                "stop": "Cancelación enviada a M1."}[action]
     if load_run(rdir) is None:
         raise SystemExit("Este requerimiento no tiene RUN.json (no se lanzó en modo maratón).")
     import bt_runstate  # locked read-modify-write: never overwrites what the supervisor saved meanwhile
@@ -141,7 +181,13 @@ def _log_rows(run: dict) -> str:
 def run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
     run = load_run(rdir)
     if run is None:
+        if scheduler_authority(rdir):
+            command = f"bitacora.py --project {project} scheduler-run {rid} --resume"
+            return (f'<div class="notice warn">La proyección Scheduler no disponible. La base M1 se conserva. '
+                    f'Reconstruye la vista con <code>{e(command)}</code>.</div>')
         return '<p class="muted">Este requerimiento no se lanzó en modo maratón.</p>'
+    if run.get("authority") == scheduler_.AUTHORITY:
+        return _scheduler_run_panel(project, rid, run, token)
     done, total = progress(run)
     hb = run.get("heartbeat") or {}
     age = age_minutes(hb.get("at"))
@@ -179,3 +225,87 @@ def run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
                 f'Claude (Remote Control) — pregúntale cómo va, o pídele pausar/reanudar/detener.</p>')
     return (f'<div class="kpis">{"".join(kpis)}</div>{bar}{notes}{controls}<h2>Tareas</h2>{_task_rows(run)}'
             f'<h2>Últimas sesiones</h2>{_log_rows(run)}')
+
+
+def _scheduler_run_panel(project: str, rid: str, run: dict, token: str) -> str:
+    done, total = progress(run)
+    hb = run.get("heartbeat") or {}
+    age = age_minutes(hb.get("at"))
+    status = str(run.get("status", "?"))
+    stale = scheduler_is_stale(run)
+    plan = run.get("plan_ref") or {}
+    kpis = (f'<span class="kpi">autoridad Scheduler M1</span><span class="kpi">estado {badge(status)}</span>'
+            f'<span class="kpi">progreso {done}/{total}</span><span class="kpi">latido {fmt_age(age)}</span>'
+            f'<span class="kpi">plan r{e(str(plan.get("revision", "?")))}</span>')
+    notes = ""
+    if stale:
+        command = f"bitacora.py --project {project} scheduler-run {rid} --resume"
+        notes = (f'<div class="notice warn">El latido Scheduler supera {SCHEDULER_STALE_MIN} min; '
+                 f'el proceso puede haberse detenido. Reanuda con <code>{e(command)}</code>.</div>')
+    rows = []
+    for task in run.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+        model = str(task.get("model") or "")
+        if model:
+            model_label = " · ".join(part for part in (str(task.get("provider") or ""),
+                                                        str(task.get("profile") or ""), model) if part)
+            if task.get("effort"):
+                model_label += f' ({task["effort"]})'
+            route_status = {"recommended": "planificado", "assigned": "revalidado al iniciar"}.get(
+                str(task.get("route_status", "")), "")
+            if route_status:
+                model_label += f" · {route_status}"
+        else:
+            model_label = {"unavailable": "Sin ruta elegible", "unplanned": "Pendiente"}.get(
+                str(task.get("route_status", "")), "—")
+            route_reason = str(task.get("route_reason") or "")
+            if route_reason:
+                model_label += f" · motivo: {route_reason}"
+        quota_state = str(task.get("quota_state") or "")
+        account = str(task.get("account_ref") or "")
+        route_details = []
+        if account:
+            route_details.append(f"cuenta {account}")
+        if quota_state:
+            quota_text = f"cuota {quota_state}"
+            observed = str(task.get("quota_observed_at") or "")
+            valid_until = str(task.get("quota_valid_until") or "")
+            used = str(task.get("quota_used_percent") or "")
+            if observed:
+                quota_text += f" · observada {_format_quota_epoch(observed)}"
+            if valid_until:
+                quota_text += f" · válida hasta {_format_quota_epoch(valid_until)}"
+            if used:
+                quota_text += f" · uso {used}%"
+            route_details.append(quota_text)
+        quota_reason = str(task.get("quota_reason") or "")
+        if quota_reason:
+            route_details.append(f"evidencia {quota_reason}")
+        selection_reason = str(task.get("selection_reason") or "")
+        if selection_reason:
+            route_details.append(f"selección {selection_reason}")
+        route_detail = "<br>".join(e(value) for value in route_details) or "—"
+        rows.append(
+            f'<tr><td>{e(str(task.get("id", "")))}</td><td>{e(str(task.get("milestone") or "—"))}</td>'
+            f'<td>{e(str(task.get("title", "")))}</td><td>{e(str(task.get("complexity") or "—"))}</td>'
+            f'<td>{e(model_label)}</td><td>{route_detail}</td>'
+            f'<td>{badge(str(task.get("scheduler_state", task.get("status", "?"))))}</td>'
+            f'<td>{e(str(task.get("attempts", 0)))}</td></tr>')
+    table = (f'<table><tr><th>ID</th><th>Hito</th><th>Tarea</th><th>Complejidad</th><th>Modelo M2</th>'
+             f'<th>Cuenta y evidencia de cuota</th><th>Estado M1</th><th>Intentos</th></tr>{"".join(rows)}</table>'
+             if rows else '<p class="muted">El plan no tiene tareas en la proyección.</p>')
+    controls = ""
+    if status in ACTIVE:
+        action_url = purl(project, "req", rid, "run")
+
+        def btn(action: str, label: str) -> str:
+            return (f'<form method="post" action="{action_url}" style="display:inline">'
+                    f'<input type="hidden" name="token" value="{e(token)}">'
+                    f'<input type="hidden" name="action" value="{action}">'
+                    f'<button type="submit">{label}</button></form>')
+
+        controls = f'<div class="actions">{btn("pause", "Pausar")}{btn("resume", "Reanudar")}' \
+                   f'{btn("stop", "Detener")}</div>'
+    return (f'<div class="kpis">{kpis}</div><progress max="{max(total, 1)}" value="{done}" '
+            f'style="width:100%"></progress>{notes}{controls}<h2>Tareas</h2>{table}')

@@ -23,10 +23,11 @@ def snapshot_of(h):
 
 
 class ContractVersion(unittest.TestCase):
-    def test_new_events_advertise_contract_v11(self):
+    def test_new_events_advertise_contract_v12(self):
         event = sc.Event("e1", "REQ-T", 1, "T1", "a1", "monitor", "execution_started")
-        self.assertEqual(sc.CONTRACT_VERSION, "1.1.0")
-        self.assertEqual(event.to_dict()["contract_version"], "1.1.0")
+        self.assertEqual(sc.CONTRACT_VERSION, "1.2.0")
+        self.assertEqual(sc.SchedulerCore.contract_version, "1.2.0")
+        self.assertEqual(event.to_dict()["contract_version"], "1.2.0")
 
     def test_v10_events_remain_readable(self):
         event = sc.Event("e1", "REQ-T", 1, "T1", "a1", "monitor", "execution_started",

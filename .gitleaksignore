@@ -2,3 +2,36 @@
 skill/scripts/tests/test_learn.py:generic-api-key:45
 skill/scripts/tests/test_audit_fixes.py:generic-api-key:252
 skill/scripts/tests/test_audit_fixes_round2.py:generic-api-key:322
+
+# Synthetic Stripe-shaped strings used to verify evidence redaction; not credentials.
+skill/scripts/bt_scheduler_monitor/tests/test_redaction.py:stripe-access-token:31
+skill/scripts/bt_scheduler_monitor/tests/test_redaction.py:stripe-access-token:35
+
+# Verified SHA-256 integrity manifests; mirror exact bitacora scanner exclusions.
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP2-opus-files-before.json:generic-api-key:16
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP2-opus-files-before.json:generic-api-key:64
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP3-opus-files-before.json:generic-api-key:77
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP3-opus-files-before.json:generic-api-key:245
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP3-opus-files-before.json:generic-api-key:318
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP3-sol-files-before.json:generic-api-key:77
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP3-sol-files-before.json:generic-api-key:245
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP3-sol-files-before.json:generic-api-key:318
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP3-astra-files-before.json:generic-api-key:77
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP3-astra-files-before.json:generic-api-key:245
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP3-astra-files-before.json:generic-api-key:318
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP1-astra-files-before.json:generic-api-key:16
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP1-astra-files-before.json:generic-api-key:64
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP1-sol-files-before.json:generic-api-key:16
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP1-sol-files-before.json:generic-api-key:64
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP1-opus-files-before.json:generic-api-key:16
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP1-opus-files-before.json:generic-api-key:64
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP2-astra-files-before.json:generic-api-key:16
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP2-astra-files-before.json:generic-api-key:64
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP2-sol-files-before.json:generic-api-key:16
+bitacora/metodologia/artifacts/planner-model-duel-20261017/CP2-sol-files-before.json:generic-api-key:64
+bitacora/metodologia/artifacts/explorer-ladder-20261017/gemini-recovery/source-hashes.json:generic-api-key:85
+bitacora/metodologia/artifacts/explorer-ladder-20261017/gemini-recovery/source-hashes.json:generic-api-key:171
+bitacora/metodologia/artifacts/explorer-ladder-20261017/gemini-recovery/source-hashes.json:generic-api-key:233
+bitacora/metodologia/artifacts/explorer-ladder-20261017/source-hashes.json:generic-api-key:85
+bitacora/metodologia/artifacts/explorer-ladder-20261017/source-hashes.json:generic-api-key:171
+bitacora/metodologia/artifacts/explorer-ladder-20261017/source-hashes.json:generic-api-key:233

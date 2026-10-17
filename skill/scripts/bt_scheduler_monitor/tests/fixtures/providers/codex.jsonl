@@ -1,0 +1,4 @@
+{"type":"turn.started","id":"t-1","thread_id":"thread-private"}
+{"type":"item.started","id":"i-1","item":{"type":"command_execution","command":"private command","cwd":"/private/worktree","provider_extra":"nested command metadata"}}
+{"type":"item.completed","id":"i-2","item":{"type":"command_execution","exit_code":0,"aggregated_output":"private output"}}
+{"type":"turn.completed","id":"t-2","usage":{"input_tokens":20,"output_tokens":7,"cached_input_tokens":12,"reasoning_output_tokens":3,"provider_extra":"nested usage metadata"}}

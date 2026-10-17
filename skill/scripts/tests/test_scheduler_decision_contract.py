@@ -6,9 +6,13 @@ import json
 import unittest
 from pathlib import Path
 
+import bt_scheduler_decision as public_api
 from bt_scheduler_decision import (
+    API_VERSION,
     DecisionLedger,
     DecisionRequest,
+    LearningSnapshot,
+    LearningSnapshotStore,
     resolve_executor_reference,
 )
 
@@ -22,7 +26,9 @@ class DecisionContractTests(unittest.TestCase):
 
     def test_request_has_approved_plan_and_explicit_quota_state(self):
         request = self.contract["decision_request"]
-        self.assertEqual(self.contract["contract_version"], "1.0.0")
+        self.assertEqual(self.contract["contract_version"], "1.2.0")
+        self.assertEqual(API_VERSION, self.contract["contract_version"])
+        self.assertEqual(self.contract["compatible_record_versions"], ["1.0.0", "1.1.0", "1.2.0"])
         self.assertIn("checkpoint_revision", request["nullable"])
         self.assertIs(inspect.signature(DecisionRequest).parameters["checkpoint_revision"].default,
                       inspect.Parameter.empty)
@@ -63,15 +69,84 @@ class DecisionContractTests(unittest.TestCase):
         self.assertIn("ValidatedRequest rejected", ledger["write_input"])
         self.assertEqual(ledger["maximum_records"], 100000)
         self.assertEqual(ledger["maximum_record_bytes"], 131072)
+        self.assertIn("schema version 3", ledger["storage"])
+        self.assertIn("through schema 2 learning_snapshots to schema 3 batch_decisions",
+                      ledger["schema_1_migration"])
+        self.assertIn("read-only schema-1 opens remain valid", ledger["schema_1_migration"])
+        self.assertIn("read-only schema-2 opens remain valid", ledger["schema_2_migration"])
         self.assertIn("BEGIN IMMEDIATE", ledger["transaction"])
         self.assertEqual(ledger["file_mode_octal"], "0600")
         self.assertIn("read-only", ledger["executor_resolution"])
         self.assertTrue(callable(DecisionLedger))
+        self.assertTrue(callable(LearningSnapshot))
+        self.assertTrue(callable(LearningSnapshotStore))
         self.assertTrue(callable(resolve_executor_reference))
         record = self.contract["decision_record"]
         self.assertIn("baseline_route", record["factor_code_values"])
         self.assertIn("laya_choice_accepted", record["factor_code_values"])
         self.assertIn("laya_timeout", record["fallback_reason_values"])
+
+    def test_batch_decision_ledger_has_a_versioned_public_surface_and_fixed_bounds(self):
+        batch = self.contract["batch_decision"]
+        self.assertEqual(batch["schema_version"], "1.3.0")
+        self.assertEqual(batch["store"], "DecisionLedger.batch_decisions")
+        self.assertEqual(batch["store_type"], "BatchDecisionStore")
+        self.assertEqual(batch["methods"], ["persist", "get"])
+        self.assertTrue(isinstance(inspect.getattr_static(DecisionLedger, "batch_decisions"), property))
+        surface = batch["public_surface"]
+        self.assertEqual(surface["planner"], "plan_ready_batch")
+        self.assertEqual(surface["store_type"], batch["store_type"])
+        self.assertIn("preserve_baseline_by_task: Mapping[task_id, bool]", surface["optional_inputs"])
+        self.assertIn("quota_evidence_by_task: Mapping[task_id, Mapping[route_id, BatchQuotaEvidence]]",
+                      surface["optional_inputs"])
+        self.assertIn("per-task baseline-preservation flags", batch["input_fingerprint"])
+        for name in (*surface["input_types"], *surface["result_types"], surface["planner"], surface["store_type"]):
+            self.assertTrue(callable(getattr(public_api, name)), name)
+            self.assertIn(name, public_api.__all__)
+        self.assertEqual(batch["maximum_tasks"], 128)
+        self.assertEqual(batch["maximum_candidates_and_account_edges"], 4096)
+        self.assertEqual(batch["maximum_batch_decisions"], 10000)
+        self.assertEqual(batch["maximum_plan_bytes"], 2097152)
+        self.assertIn("assignments", batch["stored_fields"])
+        self.assertEqual(batch["assignment_reasons"], ["route_policy_preferred", "account_capacity_alternative"])
+        self.assertIn("route_exclusions", batch["stored_fields"])
+        self.assertIn("quota_evidence", batch["stored_fields"])
+        self.assertEqual(batch["compatible_record_versions"], ["1.2.0", "1.3.0"])
+        self.assertIn("legacy 1.2.0", batch["compatibility"])
+        self.assertIn("batch algorithm v1", batch["rollback"])
+        self.assertTrue(batch["immutability"].startswith("append-only"))
+
+    def test_shadow_comparison_is_opt_in_replayable_and_side_effect_free(self):
+        shadow = self.contract["shadow_comparison"]
+        self.assertEqual(shadow["schema_version"], API_VERSION)
+        self.assertEqual(shadow["policy_version"], public_api.SHADOW_POLICY_VERSION)
+        self.assertEqual(shadow["disabled_result"], None)
+        self.assertFalse(shadow["durable_persistence"])
+        self.assertEqual(shadow["side_effects"], {
+            "dispatch_performed": False,
+            "reservations_created": False,
+            "task_state_changed": False,
+            "ledger_written": False,
+            "provider_called": False,
+        })
+        for name in shadow["result_types"] + [shadow["api"]]:
+            self.assertTrue(callable(getattr(public_api, name)), name)
+            self.assertIn(name, public_api.__all__)
+        self.assertEqual(shadow["stable_difference_codes"], [
+            "same_assignment", "route_changed", "assignment_added", "assignment_removed",
+            "assignment_reason_changed", "same_unassignment", "unassignment_reason_changed",
+        ])
+
+    def test_learning_snapshots_are_versioned_bounded_and_content_addressed(self):
+        snapshot = self.contract["learning_snapshot"]
+        self.assertEqual(snapshot["schema_version"], "1.2.0")
+        self.assertEqual(snapshot["maximum_snapshots"], 10000)
+        self.assertEqual(snapshot["maximum_snapshot_bytes"], 32768)
+        self.assertIn("created_at", snapshot["stored_fields"])
+        self.assertEqual(snapshot["time_units"]["learning_cutoff"], "finite UTC epoch seconds")
+        self.assertIn("source_fingerprint", snapshot)
+        self.assertIn("append-only", snapshot["immutability"])
+        self.assertIn("raw events", snapshot["redaction"])
 
     def test_idempotency_excludes_wall_clock_but_binds_all_decision_sources(self):
         idem = self.contract["idempotency"]
@@ -89,10 +164,46 @@ class DecisionContractTests(unittest.TestCase):
         self.assertEqual(self.contract["route_identity"]["canonical_fields"],
                          ["provider", "model", "profile", "effort"])
         self.assertIn("account_ref", self.contract["decision_record"]["route_fields"])
+        self.assertIn("quota_observed_at", self.contract["decision_record"]["route_fields"])
+        self.assertIn("quota_used_percent", self.contract["decision_record"]["route_fields"])
+        self.assertIn("quota_valid_until", self.contract["decision_record"]["route_fields"])
         self.assertIn("quota_snapshot_sha256", self.contract["decision_record"]["required"])
         self.assertIn("alternatives", self.contract["decision_record"]["required"])
         self.assertEqual(self.contract["m1_batch"]["max_proposals"], "AssignmentRequest.free_slots")
         self.assertTrue(self.contract["m1_batch"]["m1_remains_final_authority"])
+
+    def test_quota_observation_contract_is_versioned_bounded_and_cache_only(self):
+        quota = self.contract["quota_observation"]
+        self.assertEqual(quota["schema_version"], "1.2.0")
+        self.assertIn("account_ref", quota["required"])
+        self.assertIn("window_id", quota["required"])
+        self.assertIn("resets_at", quota["required"])
+        self.assertEqual(quota["max_validity_seconds"], 86400)
+        self.assertFalse(quota["performs_network_access"])
+        self.assertEqual(quota["null_reset_provider"], "claude")
+        self.assertEqual(quota["source_by_provider"]["antigravity"], "antigravity_cache")
+
+    def test_demand_contract_separates_units_and_requires_clean_attribution(self):
+        demand = self.contract["quota_demand"]
+        self.assertEqual(demand["schema_version"], self.contract["contract_version"])
+        self.assertIn("sample_count", demand["estimate_fields"])
+        self.assertIn("attribution", demand["sample_fields"])
+        self.assertEqual(demand["units"], ["provider_tokens", "quota_percentage_points"])
+        self.assertIn("one active task and explicit evidence that external usage is absent",
+                      demand["attribution_requirements"])
+        self.assertIn("unknown with attribution_unknown", demand["contamination_result"])
+        self.assertTrue(demand["never_convert_between_units"])
+        self.assertEqual(demand["max_estimate_ttl_seconds"], 86400)
+
+    def test_batch_quota_contract_deduplicates_shared_accounts_and_requires_every_window(self):
+        batch = self.contract["batch_quota"]
+        self.assertEqual(batch["schema_version"], API_VERSION)
+        self.assertEqual(batch["effective_account_key"], ["provider", "account_ref"])
+        self.assertFalse(batch["durable_reservations"])
+        self.assertTrue(batch["m1_remains_final_authority"])
+        self.assertIn("every declared base and model-specific window", batch["route_eligibility"])
+        self.assertIn("assessment", batch["route_result_fields"])
+        self.assertIn("exhausted_windows", batch["assessment_fields"])
 
     def test_confidence_and_privacy_do_not_claim_more_than_the_evidence(self):
         confidence = self.contract["confidence"]

@@ -1,6 +1,7 @@
 # metodologia
 
-Mi forma de trabajar con IA, empaquetada como skill para **Claude Code** y **Codex**:
+Mi forma de trabajar con IA, empaquetada como skill para **Claude Code** y **Codex**, con Planner disponible también
+en **Antigravity**:
 
 - **Requerimientos por rondas** → spec → plan → **una sola aprobación** → ejecutor autónomo (`/loop` en Claude,
   `/goal` en Codex) en una ventana aparte.
@@ -13,7 +14,9 @@ Mi forma de trabajar con IA, empaquetada como skill para **Claude Code** y **Cod
 - **Telemetría y aprendizaje**: cada intento queda medido por agente, modelo y esfuerzo; lo aprendido sobre el
   proyecto y tus preferencias se guarda con evidencia y se inyecta en las sesiones siguientes.
 - **Estándares de ingeniería** (responsabilidad única, features, Atomic Design, alerta de 500 líneas, tests
-  pragmáticos, stacks por defecto) y **5 subagentes** (explorer, researcher, implementer, reviewer, runner).
+  pragmáticos, stacks por defecto) y **7 agentes**: Planner más explorer, researcher, implementer, reviewer, runner y
+  antagonist. Planner está disponible en Claude Code, Codex y Antigravity; los perfiles configurados de Claude y Codex
+  reciben su propia instalación.
 - **Calidad de interfaces y revisiones con evidencia**: dirección visual explícita, contenido real y cobertura
   de interacción; revisión del impacto en consumidores y simplificaciones concretas. Adaptaciones selectivas de
   Antislop y Thermos, integradas en el flujo existente, sin dependencias ni nuevas puertas de aprobación.

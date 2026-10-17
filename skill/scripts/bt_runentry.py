@@ -1,10 +1,22 @@
 """Supervisor entry, capability preflight and runtime selection."""
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
 
 from bt_runloop import run_loop
 from bt_runutil import keep_awake
+
+
+@contextlib.contextmanager
+def _legacy_start_lock(rdir: Path):
+    import bt_scheduler_adapter as scheduler_adapter
+
+    try:
+        with scheduler_adapter.owner_lock(rdir):
+            yield
+    except scheduler_adapter.core.SchedulerError as exc:
+        raise SystemExit(f"{exc.code}: {exc}") from exc
 
 
 def isolation_of(state: dict | None, options: dict) -> str:
@@ -19,36 +31,37 @@ def supervise(project: str, req: str, **options) -> int:
     from bt_requirements_gate import require_ready
 
     rdir = engine.find_req(engine.ROOT / project, req)
-    from bt_scheduler_adapter import refuse_legacy_run
-    refuse_legacy_run(rdir)            # one authority per requirement: a scheduler-owned run is not ours to take over
-    require_ready(rdir)
-    existing = engine.rs.load(rdir)
-    runtime = None
-    if existing and existing.get('orchestration_mode') == 'foreground-v1' and not options.get('foreground'):
-        raise SystemExit('FOREGROUND_RESUME_REQUIRED: resume with --foreground; native fallback is forbidden')
-    if options.get('foreground'):
-        from bt_orchestration_terminal import (
-            TerminalError,
-            configured_runtime,
-            preflight,
-        )
-        try:
-            runtime = preflight(options.get('foreground_runtime') or configured_runtime())
-        except TerminalError as exc:
-            raise SystemExit(str(exc)) from exc
-        if require_ready(rdir)['status'] != 'ready':
-            raise SystemExit('FOREGROUND_REQUIREMENTS_REQUIRED: record requirements-v1 authority first')
-        limits = (existing or {}).get('limits', {})
-        workers = options.get('workers') or limits.get('workers', 1)
-        isolation = isolation_of(existing, options)
-        if options.get('agent_cmd') or workers != 1 or isolation == 'worktree':
-            raise SystemExit('FOREGROUND_SERIAL_REQUIRED: one coordinator; worker isolation belongs to its delegates')
-    if existing and existing['status'] == 'done':
-        print(f"{existing['req']} already finished (RUN.json status done).")
-        return 0
-    state = engine._open(project, rdir, options)
-    if state is None:
-        return 1
+    with _legacy_start_lock(rdir):
+        from bt_scheduler_adapter import refuse_legacy_run
+        refuse_legacy_run(rdir)            # one authority per requirement: a scheduler-owned run is not ours to take over
+        require_ready(rdir)
+        existing = engine.rs.load(rdir)
+        runtime = None
+        if existing and existing.get('orchestration_mode') == 'foreground-v1' and not options.get('foreground'):
+            raise SystemExit('FOREGROUND_RESUME_REQUIRED: resume with --foreground; native fallback is forbidden')
+        if options.get('foreground'):
+            from bt_orchestration_terminal import (
+                TerminalError,
+                configured_runtime,
+                preflight,
+            )
+            try:
+                runtime = preflight(options.get('foreground_runtime') or configured_runtime())
+            except TerminalError as exc:
+                raise SystemExit(str(exc)) from exc
+            if require_ready(rdir)['status'] != 'ready':
+                raise SystemExit('FOREGROUND_REQUIREMENTS_REQUIRED: record requirements-v1 authority first')
+            limits = (existing or {}).get('limits', {})
+            workers = options.get('workers') or limits.get('workers', 1)
+            isolation = isolation_of(existing, options)
+            if options.get('agent_cmd') or workers != 1 or isolation == 'worktree':
+                raise SystemExit('FOREGROUND_SERIAL_REQUIRED: one coordinator; worker isolation belongs to its delegates')
+        if existing and existing['status'] == 'done':
+            print(f"{existing['req']} already finished (RUN.json status done).")
+            return 0
+        state = engine._open(project, rdir, options)
+        if state is None:
+            return 1
     if runtime:
         from bt_orchestration_identity import recover
         from bt_orchestration_runtime import adopt_run

@@ -15,14 +15,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from . import contract as pc
-from . import quality
-from . import resources
+from . import interfaces, quality, resources, sync, traceability
 from . import revisions as rev
-from . import sync
 
 ACTIONS = ("init", "check", "freeze", "bind", "report", "show", "compat", "validate", "schema", "example")
 
@@ -101,7 +99,12 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
                     emit(f"ERROR {line}")
                 emit("INVALID: the report needs a valid PLAN.json")
                 return 2
-            emit(json.dumps(quality.analyze(plan), indent=1, ensure_ascii=False))
+            summary = quality.analyze(plan)
+            if pc.schema_tuple(plan) >= pc.EXTENSIONS_SINCE:
+                summary.update({"coverage": traceability.coverage_report(plan),
+                                "interfaces": interfaces.report(plan),
+                                **quality.verification_report(plan)})
+            emit(json.dumps(summary, indent=1, ensure_ascii=False))
             return 0
         if action == "freeze":
             entry = sync.approve_freeze(target, plan_id, states, repo_roots, ref_exists=ref_exists)

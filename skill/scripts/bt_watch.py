@@ -11,6 +11,7 @@ from __future__ import annotations
 import time
 
 import bt_runstate as rs
+import bt_scheduler_adapter as scheduler_
 from bt_core import *  # noqa: F403
 
 TERMINAL = ("done", "blocked", "stopped")
@@ -106,6 +107,43 @@ def report(project: str, req: str, state: dict, lines: list[str]) -> str:
     return "\n".join(out)
 
 
+def scheduler_news(project: str, req: str, state: dict, cursor: dict) -> tuple[list[str], dict]:
+    tasks = [[str(t.get("id", "")), str(t.get("scheduler_state", t.get("status", "?")))]
+             for t in state.get("tasks", []) if isinstance(t, dict)]
+    tasks.sort()
+    done = sum(task.get("status") == "done" for task in state.get("tasks", []) if isinstance(task, dict))
+    total = len(state.get("tasks", []))
+    snap = {"authority": "scheduler", "status": state.get("status"), "tasks": tasks,
+            "done": done, "total": total, "stale": scheduler_.projection_is_stale(state)}
+    lines = []
+    if not cursor:
+        lines.append(f"- ejecución Scheduler: {snap['status']} · {done}/{total} tareas completadas")
+    else:
+        if cursor.get("status") != snap["status"]:
+            lines.append(f"- estado Scheduler: {snap['status']}")
+        if cursor.get("tasks") != tasks:
+            lines.append(f"- progreso Scheduler: {done}/{total} tareas completadas")
+    if snap["stale"] and not cursor.get("stale"):
+        command = f"bitacora.py --project {project} scheduler-run {req} --resume"
+        lines.append(f"- el heartbeat está vencido; puede reanudarse con: {command}")
+    attention = state.get("attention")
+    if attention and (not cursor or cursor.get("attention") != attention):
+        lines.append(f"- atención M1: {', '.join(str(item) for item in attention)}")
+    new = {**snap, "attention": attention or []}
+    return lines, new
+
+
+def scheduler_report(project: str, req: str, state: dict, lines: list[str]) -> str:
+    tasks = state.get("tasks", [])
+    done = sum(task.get("status") == "done" for task in tasks if isinstance(task, dict))
+    total = len(tasks)
+    status = str(state.get("status", "desconocido"))
+    terminal = status in ("done", "blocked", "stopped")
+    out = [f"{project} {req} · Scheduler · {status} · {done}/{total} tareas completadas", *lines]
+    out.append("terminal: true" if terminal else "terminal: false (vuelve a ejecutar watch para el próximo cambio)")
+    return "\n".join(out)
+
+
 def watch(project: str, req: str, timeout_min: float = 360, poll_sec: float = 15) -> str:
     """Wait for news on the run (or `timeout_min`), tell it once, remember it was told."""
     rdir = find_req(ROOT / project, req)
@@ -113,6 +151,21 @@ def watch(project: str, req: str, timeout_min: float = 360, poll_sec: float = 15
     deadline = time.time() + timeout_min * 60
     state = None
     while True:
+        if scheduler_.scheduler_authority(rdir):
+            state = scheduler_.read_projection(rdir)
+            if state is None:
+                command = f"bitacora.py --project {project} scheduler-run {rid} --resume"
+                return (f"{project} {rid} · Scheduler · proyección no disponible\n"
+                        f"La base M1 se conserva. Recupera la vista con: {command}\nterminal: false")
+            cursor = _load_cursor(project, rid)
+            lines, new = scheduler_news(project, rid, state, cursor)
+            if lines or state.get("status") in TERMINAL:
+                _save_cursor(project, rid, new)
+                return scheduler_report(project, rid, state, lines or ["- sin cambios nuevos"])
+            if time.time() >= deadline:
+                return scheduler_report(project, rid, state, [f"- sin cambios en {int(timeout_min)} min"])
+            time.sleep(poll_sec)
+            continue
         try:
             state = rs.load(rdir)
         except rs.RunStateError:

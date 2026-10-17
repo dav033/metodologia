@@ -1,0 +1,115 @@
+{
+  "extension": {
+    "zeta": {
+      "second": 2,
+      "first": 1
+    },
+    "alpha": 1
+  },
+  "tasks": [
+    {
+      "verification": [
+        {
+          "purpose": "reject expired sessions",
+          "value": "python3 -m unittest",
+          "type": "command"
+        }
+      ],
+      "acceptance_criteria": [
+        "Expired sessions are rejected"
+      ],
+      "shared_resources": [
+        "session-contract"
+      ],
+      "expected_paths": [
+        "src/auth/**",
+        "tests/auth/**"
+      ],
+      "confidence": "medium",
+      "coupling": "medium",
+      "risk": "high",
+      "estimated_minutes": 25,
+      "scope": "full_system",
+      "complexity": "medium",
+      "after": [],
+      "repository": "backend",
+      "objective": "Reject expired sessions while preserving valid sessions",
+      "title": "Fix session validation",
+      "milestone_id": "M1",
+      "id": "T1",
+      "estimate_rationale": "Local change with an established contract",
+      "scope_exception": {
+        "reason": "The migration is bounded",
+        "owner": "security",
+        "approved_by": "reviewer"
+      },
+      "legacy_extension": {
+        "zeta": {
+          "second": 2,
+          "first": 1
+        },
+        "alpha": [
+          "stable",
+          "order"
+        ]
+      },
+      "classification_evidence": {
+        "complexity": {
+          "justification": "T1: the change follows a pattern already present in the module so little reasoning is needed",
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ]
+        },
+        "scope": {
+          "justification": "T1: one small localized change confined to a single component of the repository",
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ]
+        },
+        "duration": {
+          "justification": "T1: comparable to similar edits in this module including running its local tests",
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ]
+        },
+        "risk": {
+          "justification": "T1: a mistake is local reversible and caught by the task verification command",
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ]
+        },
+        "coupling": {
+          "justification": "T1: no other task edits the same files or depends on a shared contract",
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ]
+        },
+        "confidence": {
+          "justification": "T1: the affected code was read and a precedent for this exact change exists",
+          "evidence": [
+            "spec:SPEC.md",
+            "precedent:REQ-001"
+          ]
+        }
+      }
+    }
+  ],
+  "milestones": [
+    {
+      "acceptance_criteria": [
+        "The auth contract is preserved"
+      ],
+      "title": "Authentication",
+      "id": "M1"
+    }
+  ],
+  "spec_ref": "SPEC.md",
+  "revision": 1,
+  "plan_id": "REQ-GOLDEN",
+  "schema_version": "1.1.0"
+}

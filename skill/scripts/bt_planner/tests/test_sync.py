@@ -53,7 +53,7 @@ class Base(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.rdir = self.root / "REQ-042-demo"
         self.rdir.mkdir(parents=True)
-        (self.rdir / "SPEC.md").write_text("# spec\n", encoding="utf-8")
+        (self.rdir / "SPEC.md").write_text("# spec\n## Requirements\n- R1. Demo requirement\n", encoding="utf-8")
         self.write_md("approved")
 
     def write_md(self, status: str, text: str | None = None) -> None:

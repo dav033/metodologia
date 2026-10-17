@@ -135,7 +135,10 @@ def assess(project: str, rdir: Path) -> dict:
     if loop:
         problems.append("circular dependency: " + " -> ".join(loop))
     import bt_plan_adapter  # opt-in planner contract: an invalid PLAN.json is never handed over
-    problems += bt_plan_adapter.handoff_problems(rdir)
+    import bt_scheduler_adapter
+    problems += bt_plan_adapter.handoff_problems(
+        rdir, compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir)
+    )
     roles = ws.repos(ROOT, project)
     for t in tasks:
         if t["repo"] and t["repo"] not in roles:

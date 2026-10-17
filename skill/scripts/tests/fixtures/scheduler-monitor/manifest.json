@@ -1,0 +1,8 @@
+{
+  "revision": "scheduler-monitor-fixtures-v1",
+  "description": "Deterministic metadata-only three-agent SQLite benchmark fixture.",
+  "events_per_agent": 100,
+  "providers": ["claude", "codex", "antigravity"],
+  "uses_live_providers": false,
+  "starts_processes": false
+}

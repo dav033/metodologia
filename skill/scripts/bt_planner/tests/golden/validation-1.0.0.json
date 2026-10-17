@@ -1,0 +1,7 @@
+{
+  "errors": [],
+  "warnings": [
+    "T1.scope: full_system accepted only through scope_exception ('The migration is bounded'); the owner must review it at approval",
+    "T1.classification_evidence: absent (schema 1.0.0 plan; new revisions need 1.1.0)"
+  ]
+}

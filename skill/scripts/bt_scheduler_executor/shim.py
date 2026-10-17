@@ -10,9 +10,12 @@ the shim and, once spawned, of the agent), `output.log` (head), `output.tail` (l
 """
 from __future__ import annotations
 
+import errno
 import json
 import os
+import selectors
 import signal
+import struct
 import subprocess
 import sys
 import threading
@@ -22,6 +25,38 @@ from pathlib import Path
 DESCENDANT_LIMIT = 4096
 DESCENDANT_SCAN_PROCESS_LIMIT = 16384
 DESCENDANT_SCAN_SECONDS = 0.1
+STREAM_MAGIC = b"BTM4"
+STREAM_VERSION = 1
+STREAM_MAX_DATA = 3840
+STREAM_READER_STARTUP_GRACE_SECONDS = 0.5
+STREAM_HEADER = struct.Struct("!4sBBHQQ")
+STREAMS = {"stdout": 1, "stderr": 2}
+
+
+def encode_stream_frame(stream: str, sequence: int, offset: int, data: bytes) -> bytes:
+    """Encode one atomic FIFO frame; the binary header and payload fit within Linux PIPE_BUF."""
+    if stream not in STREAMS or not 0 <= sequence < 1 << 64 or not 0 <= offset < 1 << 64:
+        raise ValueError("invalid stream frame metadata")
+    if not isinstance(data, bytes) or len(data) > STREAM_MAX_DATA:
+        raise ValueError("stream frame payload exceeds 3840 bytes")
+    return encode_stream_frame_id(STREAMS[stream], sequence, offset, data)
+
+
+def encode_stream_frame_id(stream_id: int, sequence: int, offset: int, data: bytes) -> bytes:
+    if stream_id not in (1, 2, 3, 4) or len(data) > STREAM_MAX_DATA:
+        raise ValueError("invalid stream frame")
+    return STREAM_HEADER.pack(STREAM_MAGIC, STREAM_VERSION, stream_id, len(data), sequence, offset) + data
+
+
+def decode_stream_frame(raw: bytes) -> tuple[str, int, int, bytes]:
+    if len(raw) < STREAM_HEADER.size:
+        raise ValueError("truncated stream frame header")
+    magic, version, stream_id, size, sequence, offset = STREAM_HEADER.unpack(raw[:STREAM_HEADER.size])
+    if magic != STREAM_MAGIC or version != STREAM_VERSION or stream_id not in (1, 2):
+        raise ValueError("unsupported stream frame header")
+    if size > STREAM_MAX_DATA or len(raw) != STREAM_HEADER.size + size:
+        raise ValueError("invalid stream frame length")
+    return ("stdout" if stream_id == 1 else "stderr"), sequence, offset, raw[STREAM_HEADER.size:]
 
 
 def _atomic(path: Path, data: dict) -> None:
@@ -133,7 +168,8 @@ def _ident(pid: int) -> str:
         return f"{boot}:{ticks}"
     except (OSError, IndexError):
         try:
-            out = subprocess.run(["ps", "-o", "lstart=", "-p", str(pid)], capture_output=True, text=True, timeout=5)
+            out = subprocess.run(["ps", "-o", "lstart=", "-p", str(pid)], capture_output=True, text=True,
+                                 timeout=5, check=False)
             return f"ps:{out.stdout.strip()}"
         except (OSError, subprocess.SubprocessError):
             return ""
@@ -194,6 +230,127 @@ class Output:
         return max(0, self.total - self.head_written - len(self.tail)) if self.total > self.head_written else 0
 
 
+class StreamTap:
+    """Best-effort nonblocking FIFO writer; output artifact draining never depends on a monitor reader."""
+
+    def __init__(self, directory: Path):
+        self.path = directory / "stream.fifo"
+        self.fd: int | None = None
+        self.streams = {name: {"read": 0, "sent": 0, "dropped": 0, "sequence": 0, "offset": 0,
+                               "ranges": [], "pending": None} for name in STREAMS}
+        self.directory = directory
+        self.reader_deadline = time.monotonic() + STREAM_READER_STARTUP_GRACE_SECONDS
+        self.lock = threading.Lock()
+        self.persist_lock = threading.Lock()
+        self.stop_summary = threading.Event()
+        self.summary_thread = threading.Thread(target=self._summary_loop, daemon=True, name="m3-stream-summary")
+        self.summary_thread.start()
+
+    def feed(self, name: str, chunk: bytes) -> None:
+        with self.lock:
+            state = self.streams[name]
+            state["read"] += len(chunk)
+            for start in range(0, len(chunk), STREAM_MAX_DATA):
+                data = chunk[start:start + STREAM_MAX_DATA]
+                seq, offset = state["sequence"], state["offset"]
+                state["sequence"] += 1
+                state["offset"] += len(data)
+                pending = state["pending"]
+                if pending is not None:
+                    gap_data = struct.pack("!QQ", pending["dropped_bytes"], pending["dropped_frames"])
+                    gap_id = 3 if name == "stdout" else 4
+                    if self._write(encode_stream_frame_id(gap_id, pending["first_sequence"], pending["first_offset"], gap_data)):
+                        state["pending"] = None
+                if state["pending"] is not None:
+                    self._drop(state, seq, offset, len(data))
+                    continue
+                if self._write(encode_stream_frame(name, seq, offset, data)):
+                    state["sent"] += len(data)
+                else:
+                    self._drop(state, seq, offset, len(data))
+
+    def _write(self, frame: bytes) -> bool:
+        try:
+            while self.fd is None:
+                try:
+                    self.fd = os.open(self.path, os.O_WRONLY | os.O_NONBLOCK | getattr(os, "O_CLOEXEC", 0))
+                except OSError as error:
+                    if error.errno != errno.ENXIO or time.monotonic() >= self.reader_deadline:
+                        raise
+                    time.sleep(min(0.01, self.reader_deadline - time.monotonic()))
+            written = os.write(self.fd, frame)
+            if written != len(frame):
+                raise OSError("partial atomic FIFO write")
+            return True
+        except OSError:
+            if self.fd is not None:
+                try:
+                    os.close(self.fd)
+                except OSError:
+                    pass
+                self.fd = None
+            return False
+
+    @staticmethod
+    def _drop(state: dict, sequence: int, offset: int, size: int) -> None:
+        state["dropped"] += size
+        ranges = state["ranges"]
+        if ranges and ranges[-1]["last_sequence"] + 1 == sequence:
+            item = ranges[-1]
+            item["last_sequence"], item["last_offset"] = sequence, offset + size
+            item["dropped_bytes"] += size
+            item["dropped_frames"] += 1
+        elif len(ranges) < 64:
+            ranges.append({"first_sequence": sequence, "last_sequence": sequence, "first_offset": offset,
+                           "last_offset": offset + size, "dropped_bytes": size, "dropped_frames": 1})
+        else:
+            item = ranges[-1]
+            item["last_sequence"], item["last_offset"] = sequence, offset + size
+            item["dropped_bytes"] += size
+            item["dropped_frames"] += 1
+        pending = state["pending"]
+        if pending is None:
+            state["pending"] = {"first_sequence": sequence, "first_offset": offset,
+                                "dropped_bytes": size, "dropped_frames": 1}
+        else:
+            pending["dropped_bytes"] += size
+            pending["dropped_frames"] += 1
+
+    def _summary(self) -> dict:
+        with self.lock:
+            def snapshot(name: str) -> dict:
+                state = self.streams[name]
+                copied = {key: value for key, value in state.items() if key not in ("ranges", "pending")}
+                copied["ranges"] = [dict(item) for item in state["ranges"]]
+                copied["pending"] = dict(state["pending"]) if state["pending"] is not None else None
+                return copied
+
+            return {"schema_version": "1.0.0", "stream_ref": "stream.fifo",
+                    "stdout": snapshot("stdout"), "stderr": snapshot("stderr")}
+
+    def persist(self) -> None:
+        with self.persist_lock:
+            try:
+                _atomic(self.directory / "stream.json", self._summary())
+            except OSError:
+                pass
+
+    def _summary_loop(self) -> None:
+        while not self.stop_summary.wait(0.25):
+            self.persist()
+
+    def close(self) -> None:
+        self.stop_summary.set()
+        self.summary_thread.join(timeout=1)
+        if self.fd is not None:
+            try:
+                os.close(self.fd)
+            except OSError:
+                pass
+            self.fd = None
+        self.persist()
+
+
 def main(argv: list[str]) -> int:
     if os.fork() != 0:      # the launcher's child exits at once (and is reaped); the real shim is re-parented to init,
         os._exit(0)         # so it never becomes a zombie of an executor that may have died, and owns no pipe of it
@@ -211,6 +368,7 @@ def main(argv: list[str]) -> int:
             "started_at": started, "child_pid": None, "child_pgid": None, "child_ident": None}
     _atomic(directory / "shim.json", info)
     out = Output(directory, int(spec["head_bytes"]), int(spec["tail_bytes"]))
+    stream_tap = StreamTap(directory)
     reason, rc, error, child = "exited", None, "", None
     try:
         if state["cancel"] or (directory / "abort").exists():
@@ -218,7 +376,7 @@ def main(argv: list[str]) -> int:
         else:
             try:
                 child = subprocess.Popen(spec["argv"], stdin=subprocess.PIPE if spec.get("stdin") is not None
-                                         else subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                         else subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          cwd=spec["cwd"], start_new_session=True, close_fds=True)
             except OSError as exc:
                 reason, error = "spawn_error", f"{type(exc).__name__}: {exc.strerror or exc}"
@@ -228,14 +386,25 @@ def main(argv: list[str]) -> int:
             descendants = DescendantRecorder(directory)
 
             def pump() -> None:
-                while True:
-                    try:
-                        chunk = os.read(child.stdout.fileno(), 65536)
-                    except OSError:
-                        break
-                    if not chunk:
-                        break
-                    out.feed(chunk)
+                selector = selectors.DefaultSelector()
+                selector.register(child.stdout, selectors.EVENT_READ, "stdout")
+                selector.register(child.stderr, selectors.EVENT_READ, "stderr")
+                streams = {"stdout": child.stdout, "stderr": child.stderr}
+                try:
+                    while streams:
+                        for key, _ in selector.select(timeout=0.5):
+                            name = key.data
+                            try:
+                                chunk = os.read(key.fd, 65536)
+                            except OSError:
+                                chunk = b""
+                            if not chunk:
+                                selector.unregister(streams.pop(name))
+                                continue
+                            out.feed(chunk)
+                            stream_tap.feed(name, chunk)
+                finally:
+                    selector.close()
 
             def feed_stdin() -> None:
                 try:
@@ -269,6 +438,7 @@ def main(argv: list[str]) -> int:
             _kill(child.pid, signal.SIGKILL)            # nothing of the agent may outlive it and keep writing
             reader.join(timeout=5)
     finally:
+        stream_tap.close()
         out.close()
     ended = time.time()
     _atomic(directory / "exit.json", {

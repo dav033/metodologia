@@ -61,7 +61,7 @@ def _list(raw: str | None, *, paths: bool) -> list[str] | None:
 
 NEAR_MISS_KEYS = {"repository": "repo", "depends": "after", "depends_on": "after", "dependencies": "after",
                   "deps": "after", "verification": "verify", "test": "verify", "tests": "verify", "file": "files",
-                  "paths": "files", "resource": "resources", "shared_resources": "resources"}
+                  "paths": "files", "resource": "resources", "shared_resources": "resources", "cover": "covers"}
 NEAR_TASK_RE = re.compile(r"^\s*[-*]\s+\[[ xX]\]\s+[*_`]*([Tt][-_.]?[0-9][\w.-]*?)[*_`]*(?:\s|$)")
 
 
@@ -98,8 +98,16 @@ def parse_task_line(rest: str, problems: list[str] | None = None) -> dict:
     resources = _list(fields.get("resources"), paths=False)
     if fields.get("resources", "").strip() and resources is None:
         issues.append("resources: contains an empty entry; the whole list is ignored")
+    covers = _list(fields.get("covers"), paths=False)
+    if "covers" in fields and covers is None:
+        issues.append("covers: needs a non-empty comma-separated list; the whole list is ignored")
+    elif covers is not None and len(set(covers)) != len(covers):
+        issues.append("covers: lists the same requirement more than once")
+    kind = fields.get("kind") or None
+    if "kind" in fields and kind is None:
+        issues.append("kind: needs a non-empty Scheduler-supported kind")
     return {"title": parts[0].strip(), "repo": fields.get("repo") or None, "verify": verify, "after": after,
-            "files": files, "resources": resources,
+            "files": files, "resources": resources, "covers": covers, "kind": kind,
             "complexity": (fields.get("complexity") or fields.get("size") or "").lower() or None,
             "risk": (fields.get("risk") or "").lower() or None}
 

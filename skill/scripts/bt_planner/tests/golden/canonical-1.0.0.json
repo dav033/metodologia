@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "REQ-GOLDEN",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "extension": {
+    "zeta": {
+      "second": 2,
+      "first": 1
+    },
+    "alpha": 1
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Authentication",
+      "acceptance_criteria": [
+        "The auth contract is preserved"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Fix session validation",
+      "objective": "Reject expired sessions while preserving valid sessions",
+      "repository": "backend",
+      "after": [],
+      "complexity": "medium",
+      "scope": "full_system",
+      "estimated_minutes": 25,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Local change with an established contract",
+      "expected_paths": [
+        "src/auth/**",
+        "tests/auth/**"
+      ],
+      "shared_resources": [
+        "session-contract"
+      ],
+      "acceptance_criteria": [
+        "Expired sessions are rejected"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 -m unittest",
+          "purpose": "reject expired sessions"
+        }
+      ],
+      "legacy_extension": {
+        "zeta": {
+          "second": 2,
+          "first": 1
+        },
+        "alpha": [
+          "stable",
+          "order"
+        ]
+      },
+      "scope_exception": {
+        "reason": "The migration is bounded",
+        "owner": "security",
+        "approved_by": "reviewer"
+      }
+    }
+  ]
+}

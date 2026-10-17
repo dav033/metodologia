@@ -67,21 +67,15 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
         o = {**o, "agent": bt_profiles.provider_of(pool[0])}
     audit = o.get("audit") if o.get("audit") is not None else (
         bt_agents._config("audit.mode", "milestone") == "milestone" if pool else None)
+    from bt_run_plan_gate import validate_run_plan
+    validate_run_plan(rdir, state)
     if state is None:  # a NEW run: its plan must be valid and exactly the approved revision (a resume is left alone)
-        import bt_plan_adapter
-        problem = bt_plan_adapter.launch_problem(rdir)
-        if problem:
-            raise SystemExit(problem)
         state = rs.init_state(project, rdir, o.get("agent") or "claude", o.get("model") or "haiku",
                               o.get("ultracode") is not False, limits, pool, bool(audit))
         if profile:
             state["profile"] = profile
         rs.save(rdir, state)
         return state
-    import bt_plan_adapter  # a resume never rewrites RUN.json, but it may not run content nobody approved
-    problem = bt_plan_adapter.resume_problem(rdir, state)
-    if problem:
-        raise SystemExit(problem)
     hb = state.get("heartbeat") or {}
     if (hb.get("machine") == socket.gethostname() and hb.get("pid") not in (None, os.getpid())
             and state["status"] in ("running", "waiting", "paused") and not rs.is_stale(state, 3)

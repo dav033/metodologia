@@ -124,6 +124,49 @@ credit must be carried here as well.
 The pinned upstream copy used for review is `/home/david/.local/share/metodologia-migration/upstream/skills`;
 the review record is `bitacora/metodologia/migracion/evidence/POCOCK-REVIEW.md`.
 
+## Planner-only skill adaptations
+
+These resources are available only through the `planner` agent definition. The instructions were re-expressed for
+this methodology's requirement rounds, `PLAN.json` contract and deterministic validator; no upstream code,
+scripts, dependencies or verbatim workflow text is distributed.
+
+| metodologia file | Upstream source (pinned revision) | Adaptation |
+|---|---|---|
+| `agents/planner/skills/socratic-elicitation/SKILL.md` | [`mthines/agent-skills` `interview`](https://github.com/mthines/agent-skills/blob/39b3f44106590db62e7f1509b2d9c727e47243cf/skills/analysis/interview/SKILL.md) | Adaptive, research-first clarification; the existing requirement workflow remains authoritative. |
+| `agents/planner/skills/wbs-dag-decomposition/SKILL.md` | [`addyosmani/agent-skills` `planning-and-task-breakdown`](https://github.com/addyosmani/agent-skills/blob/aeac41d4d005999432bb7312f7ff06383a91d59d/skills/planning-and-task-breakdown/SKILL.md) | Small verifiable tasks and dependency mapping, constrained to the local schema. |
+| `agents/planner/skills/adversarial-plan-review/SKILL.md` | [`ctxr-dev/agent-plan-reviewer`](https://github.com/ctxr-dev/agent-plan-reviewer/tree/2cff4fefc44576aa28217a4af728117d511a1c57) | Read-only evidence checks and actionable findings; local structural validation remains deterministic. |
+
+The optional Mermaid projection is original glue over `PLAN.json`; no diagram package, renderer, hosted MCP, Gantt
+date convention or PlantUML source is included.
+
+MIT License notices for the adapted prompt concepts:
+
+```text
+MIT License
+
+Copyright (c) 2026 Mads Thines <madsthines@gmail.com> (https://github.com/mthines)
+Copyright (c) 2025 Addy Osmani
+Copyright (c) 2026 Dmitri Meshin <dmitri.meshin@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ## Apache License 2.0
 
 Full license text from the pinned Caveman LICENSE. Sections 1–9 and END OF TERMS AND CONDITIONS

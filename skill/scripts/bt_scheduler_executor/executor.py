@@ -11,7 +11,6 @@ independent verifier). A clean exit is reported as `execution_finished` = "the a
 from __future__ import annotations
 
 import datetime as dt
-import json
 import os
 import signal
 import subprocess
@@ -195,7 +194,7 @@ class AgentExecutor(SpawnMixin, SettleMixin, RecoverMixin):
             raise ExecutorError("PORT_ERROR", type(error).__name__) from None
 
     def _replay(self, row: dict[str, Any], request: StartRequest) -> Receipt:
-        if row["request"] != _normal(request.to_dict()):
+        if not request.matches_record(row["request"]):
             return Receipt("rejected", "KEY_CONFLICT", "the idempotency key was used with a different order",
                            request.attempt_id)
         if row["state"] == m.REJECTED:
@@ -437,9 +436,29 @@ class AgentExecutor(SpawnMixin, SettleMixin, RecoverMixin):
         row = self.ledger.get(attempt_id)
         if row is None:
             return None
+        adir = self.attempts_dir / row["dirname"]
+        stream = artifacts.read_json(adir / "stream.json") or {}
+        stdout, stderr = stream.get("stdout", {}), stream.get("stderr", {})
+        info = artifacts.read_shim(adir / "shim.json")
+        child_ident = str(info.get("child_ident") or "")
+        boot_id, _, ticks = child_ident.partition(":")
+        stream_status = {"schema_version": "1.0.0", "execution_id": attempt_id,
+                         "plan_revision": row["request"].get("revision", 1),
+                         "task_id": row["request"].get("task_id", "unknown"), "attempt_id": attempt_id,
+                         "process_identity": {"platform": "linux", "host_boot_id": boot_id or None,
+                                              "pid": info.get("child_pid"),
+                                              "start_ticks": int(ticks) if ticks.isdigit() else None},
+                         "stream_ref": stream.get("stream_ref", "stream.fifo"),
+                         "provider": (row.get("route") or {}).get("provider", "unknown"),
+                         "profile_id": (row.get("route") or {}).get("profile") or None,
+                         "model": (row.get("route") or {}).get("model"),
+                         **{f"{name}_bytes_{metric}": int(state.get(key, 0))
+                            for name, state in (("stdout", stdout), ("stderr", stderr))
+                            for metric, key in (("read", "read"), ("sent", "sent"), ("dropped", "dropped"))},
+                         **{f"{name}_last_{field}": state.get(key) for name, state in (("stdout", stdout), ("stderr", stderr))
+                            for field, key in (("sequence", "sequence"), ("offset", "offset"))},
+                         "dropped_ranges": [{**item, "stream": name}
+                                            for name, state in (("stdout", stdout), ("stderr", stderr))
+                                            for item in state.get("ranges", [])]}
         return {"attempt_id": attempt_id, "state": row["state"], "outcome": row.get("outcome"),
-                "handoff": row.get("handoff"), "artifacts": artifacts.paths(self.attempts_dir / row["dirname"])}
-
-
-def _normal(value: Any) -> Any:
-    return json.loads(json.dumps(value, sort_keys=True))
+                "handoff": row.get("handoff"), "stream": stream_status, "artifacts": artifacts.paths(adir)}

@@ -1,0 +1,16 @@
+{
+  "idempotency_key": "verify:T-001:att-001",
+  "plan_id": "PLAN-TEST",
+  "revision": 1,
+  "task_id": "T-001",
+  "attempt_id": "att-001",
+  "token": 1,
+  "acceptance_criteria": ["unit tests pass"],
+  "verification": [
+    {
+      "type": "command",
+      "value": "python3 -m unittest -q",
+      "purpose": "unit tests pass"
+    }
+  ]
+}
