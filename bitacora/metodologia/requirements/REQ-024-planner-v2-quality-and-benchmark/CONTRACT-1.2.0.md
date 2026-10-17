@@ -10,7 +10,7 @@ status: confirmed-for-implementation
 
 Proceed with the approved additive PLAN.json 1.2.0 proposal. New semantics are gated by `schema_version >= 1.2.0`; 1.0.0 and 1.1.0 retain their validation results, field behavior and frozen canonical bytes. The 1.2.0 canonical bytes are a new hash namespace and are not required to match the old reader's output.
 
-This is safe only as a coordinated migration. The current Scheduler/M6 consumers are **not yet safe for 1.2.0**: M1 accepts major 1 but drops `kind` from task metadata, M2 therefore infers kind from the title, and M6 rejects verification `category`. Do not approve, hand off, launch or resume a 1.2.0 plan through these readers until T11 updates them and proves an explicit compatibility gate. The approved T6–T11 work supplies that migration; this record does not claim it is already implemented.
+This required a coordinated migration. The T5 audit found M1 dropped `kind`, M2 inferred it from the title, and M6 rejected verification `category`. T11 has since updated those consumers and added explicit capability checks. Current approval, handoff, launch, resume and frozen-revision loading fail closed when a required capability is missing, malformed, unknown, unsupported or mismatched. Existing 1.0.0/1.1.0 behavior and frozen hashes remain supported.
 
 ## Contract additions
 
@@ -41,7 +41,7 @@ The full shape and validation rules remain in `PLAN.md`'s Contract 1.2.0 proposa
 ## Migration and rollback
 
 1. T6–T10 implement and test Planner 1.2.0 validation, schema/example/report/docs, while T4 protects current canonical bytes.
-2. T11 updates M1/M2/M6 and adds an explicit downstream capability check. The check covers plan approval, handoff, launch and resume; it must fail closed for an older or unknown consumer set.
+2. T11 updated M1/M2/M6 and added an explicit downstream capability check covering plan approval, handoff, launch, resume and frozen-revision loading. It fails closed for older, malformed or unknown consumer declarations.
 3. Continue accepting existing 1.0.0/1.1.0 plans throughout. Do not create or freeze a 1.2.0 approved revision until the Planner and all required Scheduler/M6 capabilities are present and the compatibility tests pass.
 4. Roll back by selecting an already approved compatible 1.1.0 revision and its matching consumer set. Never feed a 1.2.0 plan to old M2/M6 readers. Down-conversion is explicit and permitted only when legacy title inference matches the declared kind and dropped categories are recorded; otherwise stop.
 
@@ -52,3 +52,11 @@ The full shape and validation rules remain in `PLAN.md`'s Contract 1.2.0 proposa
 - T5 direct compatibility probes confirmed that current M1 accepts a proposed 1.2.0 input while dropping `kind`, and current M6 rejects `category` with `ORDER_INVALID`. These are reported migration requirements, not passing compatibility behavior.
 - A source scan found no direct PLAN.json consumer in the other registered application repositories and no review-UI reader in methodology source.
 - Disposition: proceed to T6 because the approved T11 migration explicitly addresses each incompatible consumer and prevents use of 1.2.0 until that migration passes. If T11 cannot demonstrate fail-closed compatibility, stop before any 1.2.0 approval or launch.
+
+## T11 implementation and disposition
+
+- M1 forwards validated `kind`; M2 uses explicit kinds for 1.2.0 and keeps legacy title inference; M6 validates and hashes `category`, omitting it when absent to preserve legacy hashes.
+- The compatibility report covers Planner, M1, M2 and M6. Approval, handoff, launch, resume and loading the exact frozen Scheduler revision reject missing, malformed, unknown, unsupported or mismatched capability markers.
+- Focused compatibility tests passed 9/9 after adding mixed-validity marker coverage. M1 loader 23/23, launch paths 23/23, adapter evidence 5/5, plan integration 21/21, Scheduler integration 30/30, M6 package 67/67 and wheel install 19/19 passed. Scoped Ruff, compilation and diff checks passed; independent spec and standards reviews approved.
+- The broader M2 decision-source suite remains quarantined under P-107 because its due-only preflight contacted live quota sources and 3/13 assignment tests failed. No model-generation task ran. Do not rerun until synthetic preflight isolation is in place.
+- Disposition: T11's compatibility migration is implemented. Do not infer that a 1.2.0 plan was approved or launched; REQ-024 continues at T12, and provider/model benchmark work remains behind its approved tasks and limits.

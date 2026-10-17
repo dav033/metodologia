@@ -1,0 +1,43 @@
+{
+  "prepared_at_utc": "2026-10-17T00:17:11.892436+00:00",
+  "inventory": "profiles-inventory-t15.redacted.json",
+  "provider_calls_made": 0,
+  "effective_account_cap": 5,
+  "prepared_profiles": [
+    {
+      "profile": "antigravity",
+      "provider": "antigravity",
+      "model": "gemini-3.8-flash-low",
+      "effort": null,
+      "runtime_preflight": "ready"
+    },
+    {
+      "profile": "claude-personal",
+      "provider": "claude",
+      "model": "haiku",
+      "effort": null,
+      "runtime_preflight": "ready"
+    },
+    {
+      "profile": "claude-work",
+      "provider": "claude",
+      "model": "haiku",
+      "effort": null,
+      "runtime_preflight": "ready"
+    },
+    {
+      "profile": "codex-1",
+      "provider": "codex",
+      "model": "gpt-6-luna",
+      "effort": "medium",
+      "runtime_preflight": "ready"
+    },
+    {
+      "profile": "codex-luis",
+      "provider": "codex",
+      "model": "gpt-6-luna",
+      "effort": "medium",
+      "runtime_preflight": "ready"
+    }
+  ]
+}

@@ -7,8 +7,8 @@ Sempertex balloon-decoration demo (`demo-decoracion`: Next 16 on Vercel + Python
 engine: the **Taller 3D** (`/3d`, pro tool with a scene AI agent) and the **guided customer chat** (`/asistente`,
 quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
 
-## Current state (last deployment record: `65edd83b`, 2026-10-11 06:14; local work: 2026-10-16)
-- REQ-015 local branch `feat/req-015-judge-fix` at `26db7b8b`, 24 commits ahead of tracked origin/main; T12 cap and audit #3 corrections are committed locally. Current uncommitted work makes the colour regression reproducible without the ignored Shopify snapshot and includes it in guiada:test. No push/deploy in this session. Previous REQ-015 independent reviews approve; prior full gate passed (P-076 closed).
+## Current state (last deployment record: `cde6f62b`, 2026-10-16; local work: 2026-10-16)
+- REQ-015 local branch `feat/req-015-judge-fix` at `26db7b8b`, 24 commits ahead of tracked origin/main; T12 cap and audit #3 corrections are committed locally. Current uncommitted work makes the colour regression reproducible without the ignored Shopify snapshot and includes it in guiada:test. No push/deploy of REQ-015 in this session. Previous REQ-015 independent reviews approve; prior full gate passed (P-076 closed).
 - **One quote everywhere (D-038) live:** same plan = same price on every surface; per-balloon spares with a cost cap;
   Python = engine (42-BOM shared fixture in CI). Every guided idea (engine and curated) is priced by the single pricer;
   prod e2e «paridad de precio» checks assistant = Taller on every release.
@@ -20,9 +20,10 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
   second glitter wall, plum chrome → Reflex. Left in P-068 (doors, pink roses, low camera).
 - **Spend caps are global (392fff68):** paid-call hourly caps count in Neon `topes_gasto` (migration 035), not per Vercel instance.
 - **Happia Integrations API client live (2026-10-15, 2e43a113):** HappiaClient reads the new `{status,data,pagination}` contract (prod recommender had been 502 since 2026-10-12); services reader and session-guarded check route `/api/happie/prueba-api`; outside-consumer guide `docs/happie-external-integration.md`. Open: P-094 (UI routes recomendar/recomendar-pasos still fail the strict happie.v1 schema).
+- **Happie service-first chat live (VPS SHA `cde6f62b`, 2026-10-16):** the follow-up accepts “comida informal” as context, advances to guest count and retains the requested pizzas. Independent services, packages, or both remain opt-in `happie.v2`; existing `happie.v1` fields are unchanged. PR #12 remains open on `f8227ca5` → `cde6f62b`; a later deploy from main can replace this feature SHA until integration. Both containers are healthy after manual deploy run `38983121237`; no authenticated Gemini turn was replayed after the fix.
 - **Ship gate:** `npm run gate` locally + `escena:test` (405-scene golden, honesty, photo suites) in CI; free prod pulse `npm run prod:pulso`; rollback drill on prod 2026-10-11 all PASS (research/ciclo/SIMULACRO-ROLLBACK-2026-10-11.md).
 - **72 h marathon STOPPED** at cycle 26 (2026-10-11 06:14; planned end 2026-10-12 16:44). Its state is in `research/ciclo/STATE.md`.
-  From 2026-10-13 development runs entirely from this laptop (owner decision, D-041); origin/main is still `65edd83b` and the
+  From 2026-10-13 development runs entirely from this laptop (owner decision, D-041); origin/main is `f8227ca5` and the
   judge-fix task (card/quote count parity, honest edit banner, card price) never reached origin.
 - **Local AI = Claude Haiku via Claude Code CLI** (no API key; `.env.local` IA_PROVEEDOR=claude, IA_CLAUDE_TRANSPORTE=cli,
   IA_LOCAL_ESFUERZO=medium); production stays on Gemini.

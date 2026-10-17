@@ -1,0 +1,16 @@
+{
+  "total": 0.08,
+  "llamadas": [
+    {
+      "variante": "base",
+      "semilla": 21,
+      "archivo": "base-s21.png",
+      "escena": "07",
+      "costo": 0.08,
+      "resultado": "fallo",
+      "cuando": "2026-10-17T00:03:28.224Z",
+      "motivo": "IMAGEN_PROVEEDOR_NO_DISPONIBLE: fal.ai rechazó la cuenta (403, saldo_agotado): User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing.",
+      "ms": 897
+    }
+  ]
+}

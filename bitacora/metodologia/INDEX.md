@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-16 18:01 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 19:17 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -68,17 +68,17 @@ _Generated 2026-10-16 18:01 by `bitacora.py index`. Do not edit by hand._
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
 - P-003 · Visual review of the local web UI · med/S
+- P-107 · Isolate M2 decision-source tests from live quota preflight · med/S
 - P-001 · Non-Scheduler follow-ups: Maros REQ-005 E2E and Relay F-23 helper success-path tests · med/M
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T · med/L
-- P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · low/S
 
 ## Recent decisions
 
+- D-060 — Adopt PLAN.json 1.2.0 after the coordinated consumer migration
 - D-059 — Approve and bound the REQ-024 Planner V2 benchmark
 - D-058 — Persist allowlisted quota telemetry in M2 batch records
 - D-057 — Assign Scheduler M2 routes by task fit and effective-account quota
 - D-056 — Route the full approved DAG through M2 at run startup
-- D-055 — Install Planner in every currently configured local AI profile
 
 ## Artifacts
 

@@ -1,0 +1,54 @@
+bt_handoff.py:17:24: RUF100 [*] Unused `noqa` directive (non-enabled: `F403`)
+bt_handoff.py:22:34: ISC004 Unparenthesized implicit string concatenation in collection
+bt_handoff.py:26:31: ISC004 Unparenthesized implicit string concatenation in collection
+bt_handoff.py:30:31: ISC004 Unparenthesized implicit string concatenation in collection
+bt_handoff.py:35:32: ISC004 Unparenthesized implicit string concatenation in collection
+bt_handoff.py:65:100: FURB167 [*] Use of regular expression alias `re.I`
+bt_handoff.py:77:92: FURB167 [*] Use of regular expression alias `re.I`
+bt_handoff.py:80:98: FURB167 [*] Use of regular expression alias `re.I`
+bt_handoff.py:86:56: FURB167 [*] Use of regular expression alias `re.S`
+bt_handoff.py:89:45: FURB167 [*] Use of regular expression alias `re.I`
+bt_handoff.py:100:70: FURB167 [*] Use of regular expression alias `re.I`
+bt_launch.py:12:24: RUF100 [*] Unused `noqa` directive (non-enabled: `F403`)
+bt_launch.py:34:9: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:43:9: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:52:9: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:54:9: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:57:9: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:62:9: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:65:9: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:67:9: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:72:9: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:80:38: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:83:38: ISC004 Unparenthesized implicit string concatenation in collection
+bt_launch.py:216:20: BLE001 Do not catch blind exception: `Exception`
+bt_rounds.py:20:24: RUF100 [*] Unused `noqa` directive (non-enabled: `F403`)
+bt_run.py:8:1: I001 [*] Import block is un-sorted or un-formatted
+bt_run.py:15:24: RUF100 [*] Unused `noqa` directive (non-enabled: `F403`)
+bt_run.py:23:84: F401 [*] `bt_runsession.session_tier` imported but unused
+bt_run.py:213:5: S110 `try`-`except`-`pass` detected, consider logging the exception
+bt_run.py:213:12: BLE001 Do not catch blind exception: `Exception`
+tests/test_plan_adapter_evidence.py:13:1: I001 [*] Import block is un-sorted or un-formatted
+tests/test_plan_adapter_evidence.py:13:36: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_adapter_evidence.py:14:30: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_adapter_evidence.py:15:40: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_adapter_evidence.py:16:42: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_adapter_evidence.py:17:48: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:13:8: F401 [*] `subprocess` imported but unused
+tests/test_plan_integration.py:24:1: I001 [*] Import block is un-sorted or un-formatted
+tests/test_plan_integration.py:24:21: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:25:19: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:26:20: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:27:19: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:28:36: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:29:27: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:30:31: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:31:54: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:32:56: RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+tests/test_plan_integration.py:131:9: SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+tests/test_plan_integration.py:152:9: SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+tests/test_plan_integration.py:282:18: RUF012 Mutable default value for class attribute
+tests/test_plan_launch_paths.py:2:1: I001 [*] Import block is un-sorted or un-formatted
+tests/test_plan_launch_paths.py:220:9: SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+Found 52 errors.
+[*] 30 fixable with the `--fix` option (15 hidden fixes can be enabled with the `--unsafe-fixes` option).

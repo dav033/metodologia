@@ -1,0 +1,713 @@
+{
+ "plan_id": "REQ-024",
+ "plan_status": "in-progress",
+ "plan_md_problems": [],
+ "has_plan_json": true,
+ "task_count": 22,
+ "milestones_in_md": [
+  "M1",
+  "M2",
+  "M3",
+  "M4",
+  "M5",
+  "M6"
+ ],
+ "tasks_without_milestone": [],
+ "tasks": [
+  {
+   "id": "T1",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T2",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "acceptance_criteria",
+    "verification",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T3",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T4",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T5",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T6",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T7",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "shared_resources",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T8",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "shared_resources",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T9",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "shared_resources",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T10",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": true,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T11",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T12",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T13",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T14",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T15",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T16",
+   "derived": [
+    "after",
+    "covers",
+    "expected_paths",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T17",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T18",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T19",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T20",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T21",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "shared_resources",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  },
+  {
+   "id": "T22",
+   "derived": [
+    "after",
+    "covers",
+    "id",
+    "milestone_id",
+    "repository",
+    "title",
+    "verification"
+   ],
+   "needs_enrichment": [
+    "objective",
+    "complexity",
+    "scope",
+    "estimated_minutes",
+    "risk",
+    "coupling",
+    "confidence",
+    "estimate_rationale",
+    "classification_evidence",
+    "expected_paths",
+    "shared_resources",
+    "acceptance_criteria",
+    "kind"
+   ],
+   "done_in_md": false,
+   "legacy_complexity": null,
+   "legacy_risk": null
+  }
+ ],
+ "skeleton_errors": 284,
+ "downstream_compatibility": {
+  "required_schema_version": "1.1.0",
+  "planner": {
+   "status": "supported",
+   "schema_version": "1.2.0"
+  },
+  "supported": true,
+  "consumers": {
+   "M1": {
+    "status": "supported",
+    "supported_schema_versions": [
+     "1.0.0",
+     "1.1.0",
+     "1.2.0"
+    ]
+   },
+   "M2": {
+    "status": "supported",
+    "supported_schema_versions": [
+     "1.0.0",
+     "1.1.0",
+     "1.2.0"
+    ]
+   },
+   "M6": {
+    "status": "supported",
+    "supported_schema_versions": [
+     "1.0.0",
+     "1.1.0",
+     "1.2.0"
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "nombre": "matte light pink",
+    "hex": "#F2B6C8",
+    "acabado": "matte",
+    "sempertex": "Fashion Rosado"
+  },
+  {
+    "nombre": "pale lilac",
+    "hex": "#B6B8DC",
+    "acabado": "matte",
+    "sempertex": "Pastel Mate Lila"
+  },
+  {
+    "nombre": "chrome gold",
+    "hex": "#A08344",
+    "acabado": "glossy chrome",
+    "sempertex": "Reflex Dorado"
+  }
+]

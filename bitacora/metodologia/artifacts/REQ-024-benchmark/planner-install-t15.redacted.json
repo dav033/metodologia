@@ -1,0 +1,14 @@
+{
+  "captured_at_utc": "2026-10-17T00:16:42.308596+00:00",
+  "command": "install_agents.py --agent planner",
+  "exit_status": 0,
+  "installed_native_profile_count": 5,
+  "installed_by_provider": {
+    "claude": 2,
+    "codex": 2,
+    "antigravity": 1
+  },
+  "all_reported_files_have_generator_marker": true,
+  "hand_authored_conflicts_skipped": 0,
+  "conflict_messages": []
+}

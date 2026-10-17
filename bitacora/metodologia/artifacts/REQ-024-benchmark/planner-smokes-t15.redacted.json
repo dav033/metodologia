@@ -1,0 +1,32 @@
+{
+  "approved_cap": 5,
+  "inventory": "profiles-inventory-t15.redacted.json",
+  "smokes": [
+    {
+      "profile": "antigravity",
+      "provider": "antigravity",
+      "model": "gemini-3.8-flash-low",
+      "effort": null,
+      "attempt_count": 1,
+      "status": "blocked",
+      "started_at_utc": "2026-10-17T00:17:28.103787+00:00",
+      "timeout_seconds": 120,
+      "exit_status": 3,
+      "response_received": false,
+      "response_characters": 0,
+      "provider_stderr_received": true,
+      "elapsed_seconds": 7.927,
+      "finished_at_utc": "2026-10-17T00:17:36.030593+00:00"
+    },
+    {
+      "profile": "claude-personal",
+      "provider": "claude",
+      "model": "haiku",
+      "effort": null,
+      "attempt_count": 1,
+      "status": "started",
+      "started_at_utc": "2026-10-17T00:17:45.183531+00:00",
+      "timeout_seconds": 120
+    }
+  ]
+}

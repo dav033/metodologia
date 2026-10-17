@@ -1,0 +1,18 @@
+usage: bitacora.py planner invoke [-h] --provider {claude,codex,antigravity}
+                                  --profile PROFILE --model MODEL
+                                  [--effort EFFORT] [--timeout TIMEOUT]
+                                  [--req REQ] [--repo ROLE=PATH]
+
+options:
+  -h, --help            show this help message and exit
+  --provider {claude,codex,antigravity}
+  --profile PROFILE     account profile from `bitacora profiles list`
+  --model MODEL         exact model id or alias to pass to the selected
+                        provider
+  --effort EFFORT       exact effort selector; omit to retain the provider's
+                        configured default
+  --timeout TIMEOUT     provider deadline in seconds (1–86400)
+  --req REQ             REQ-NNN in the selected project; supplies its
+                        requirement directory
+  --repo ROLE=PATH      workspace repository mapping; repeat once per
+                        repository role

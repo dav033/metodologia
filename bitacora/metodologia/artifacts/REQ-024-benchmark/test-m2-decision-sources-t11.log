@@ -1,0 +1,12 @@
+$ python3 -m unittest discover -s tests -p test_scheduler_decision_sources.py
+Output summary:
+  Ran 13 tests in 6.509s
+  FAILED (failures=3)
+  exit_code=1
+
+Failures:
+- M1DecisionPortTests.test_assignment_persists_decision_and_returns_only_resolvable_selected_reference: `len(first)` was 0, expected 1 (test_scheduler_decision_sources.py:290).
+- M1DecisionPortTests.test_m1_reserves_the_m2_recommendation_through_its_assignment_contract: task state was `ready`, expected `active` (test_scheduler_decision_sources.py:406).
+- M1DecisionPortTests.test_port_only_decides_ready_tasks_within_the_m1_free_slot_limit: assignments were empty, expected T2 (test_scheduler_decision_sources.py:347).
+
+The suite was not rerun. Source inspection showed its assignment path calls `refresh_quota_preflight`, which polls real configured accounts when due and runs `agy --dangerously-skip-permissions --output-format text --print=/usage` when the Antigravity usage cache is stale. The Antigravity cache file mtime changed to 2026-10-16 23:29:34 UTC during this run; the subscription-usage cache and event log mtime remained 23:00:32 UTC. This was a quota-usage read, not a Planner model turn or task execution. Route-test failures remain unresolved; make these tests synthetic before rerunning the suite.

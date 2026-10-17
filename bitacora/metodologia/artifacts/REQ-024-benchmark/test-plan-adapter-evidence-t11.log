@@ -1,0 +1,10 @@
+test_interpreter_options_and_wrappers_cannot_hide_missing_targets (test_plan_adapter_evidence.PlanAdapterEvidence.test_interpreter_options_and_wrappers_cannot_hide_missing_targets) ... ok
+test_malformed_manifest_is_returned_as_a_resume_problem (test_plan_adapter_evidence.PlanAdapterEvidence.test_malformed_manifest_is_returned_as_a_resume_problem) ... ok
+test_malformed_revision_state_is_returned_as_a_resume_problem (test_plan_adapter_evidence.PlanAdapterEvidence.test_malformed_revision_state_is_returned_as_a_resume_problem) ... ok
+test_real_targets_still_pass_the_offline_command_check (test_plan_adapter_evidence.PlanAdapterEvidence.test_real_targets_still_pass_the_offline_command_check) ... ok
+test_resume_checks_plan_ref_identity_hash_and_presence (test_plan_adapter_evidence.PlanAdapterEvidence.test_resume_checks_plan_ref_identity_hash_and_presence) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.277s
+
+OK

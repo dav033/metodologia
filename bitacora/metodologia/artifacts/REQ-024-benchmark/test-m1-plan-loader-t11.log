@@ -1,0 +1,28 @@
+test_a_missing_or_malformed_approval_hash_is_refused (test_plan.Approval.test_a_missing_or_malformed_approval_hash_is_refused) ... ok
+test_bytes_and_text_hash_the_same (test_plan.Approval.test_bytes_and_text_hash_the_same) ... ok
+test_expected_identity_must_match (test_plan.Approval.test_expected_identity_must_match) ... ok
+test_one_changed_byte_breaks_approval (test_plan.Approval.test_one_changed_byte_breaks_approval) ... ok
+test_valid_json_is_not_an_approved_plan (test_plan.Approval.test_valid_json_is_not_an_approved_plan) ... ok
+test_dependents_ancestors_descendants (test_plan.Graph.test_dependents_ancestors_descendants) ... ok
+test_unknown_task_is_a_stable_error (test_plan.Graph.test_unknown_task_is_a_stable_error) ... ok
+test_a_failed_load_leaves_no_state_anywhere (test_plan.Invalid.test_a_failed_load_leaves_no_state_anywhere) ... ok
+test_cycles_are_reported_with_the_path (test_plan.Invalid.test_cycles_are_reported_with_the_path) ... ok
+test_duplicate_ids_unknown_references_and_self_dependency (test_plan.Invalid.test_duplicate_ids_unknown_references_and_self_dependency) ... ok
+test_identity_fields (test_plan.Invalid.test_identity_fields) ... ok
+test_oversized_plan_is_refused (test_plan.Invalid.test_oversized_plan_is_refused) ... ok
+test_runaway_nesting_is_a_clean_error (test_plan.Invalid.test_runaway_nesting_is_a_clean_error) ... ok
+test_task_list_shape (test_plan.Invalid.test_task_list_shape) ... ok
+test_unreadable_inputs (test_plan.Invalid.test_unreadable_inputs) ... ok
+test_unsupported_or_bad_schema_version (test_plan.Invalid.test_unsupported_or_bad_schema_version) ... ok
+test_wrong_field_types (test_plan.Invalid.test_wrong_field_types) ... ok
+test_a_contract_example_plan_loads_bound_to_id_revision_and_hash (test_plan.Loading.test_a_contract_example_plan_loads_bound_to_id_revision_and_hash) ... ok
+test_a_very_deep_chain_does_not_overflow_the_stack (test_plan.Loading.test_a_very_deep_chain_does_not_overflow_the_stack) ... ok
+test_classification_travels_as_opaque_meta_and_nothing_else_is_interpreted (test_plan.Loading.test_classification_travels_as_opaque_meta_and_nothing_else_is_interpreted) ... ok
+test_loading_a_file_never_modifies_it (test_plan.Loading.test_loading_a_file_never_modifies_it) ... ok
+test_planner_classification_evidence_travels_as_opaque_meta (test_plan.Loading.test_planner_classification_evidence_travels_as_opaque_meta) ... ok
+test_task_order_of_the_plan_is_preserved (test_plan.Loading.test_task_order_of_the_plan_is_preserved) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 0.196s
+
+OK

@@ -1,0 +1,62 @@
+{
+  "captured_at_utc": "2026-10-17T00:16:15.814813+00:00",
+  "source_command": "bitacora.py --project metodologia profiles list",
+  "baseline_registered_profile_count": 7,
+  "current_registered_profile_ids": [
+    "antigravity",
+    "claude",
+    "claude-personal",
+    "claude-work",
+    "codex",
+    "codex-1",
+    "codex-luis"
+  ],
+  "new_profile_ids_excluded": [],
+  "baseline_effective_profiles": [
+    {
+      "profile": "antigravity",
+      "provider": "antigravity",
+      "effective_account_id": "887af2e0d4867f0d",
+      "default_smoke_model": "gemini-3.8-flash-low",
+      "default_smoke_effort": null,
+      "status": "eligible"
+    },
+    {
+      "profile": "claude-personal",
+      "provider": "claude",
+      "effective_account_id": "f86fa9e5dbc07b07",
+      "default_smoke_model": "haiku",
+      "default_smoke_effort": null,
+      "status": "eligible"
+    },
+    {
+      "profile": "claude-work",
+      "provider": "claude",
+      "effective_account_id": "293f0e50bacd5ba7",
+      "default_smoke_model": "haiku",
+      "default_smoke_effort": null,
+      "status": "eligible"
+    },
+    {
+      "profile": "codex-1",
+      "provider": "codex",
+      "effective_account_id": "d4f98cfeb89726af",
+      "default_smoke_model": "gpt-6-luna",
+      "default_smoke_effort": "medium",
+      "status": "eligible"
+    },
+    {
+      "profile": "codex-luis",
+      "provider": "codex",
+      "effective_account_id": "bfd43363d353aed6",
+      "default_smoke_model": "gpt-6-luna",
+      "default_smoke_effort": "medium",
+      "status": "eligible"
+    }
+  ],
+  "eligible_effective_account_count": 5,
+  "approved_effective_account_cap": 5,
+  "model_effort_rule": "existing bt_agents.model_for(provider, tier=0); no quota read",
+  "quota_refreshed": false,
+  "provider_call_made": false
+}

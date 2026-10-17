@@ -1,0 +1,13 @@
+test_consumer_capabilities_report_legacy_support_and_unknown_future_versions (test_plan_contract_compat.PlanContractCompatibility.test_consumer_capabilities_report_legacy_support_and_unknown_future_versions) ... ok
+test_legacy_kind_stays_title_inferred_and_legacy_category_is_absent (test_plan_contract_compat.PlanContractCompatibility.test_legacy_kind_stays_title_inferred_and_legacy_category_is_absent) ... ok
+test_m2_prefers_valid_explicit_kind_over_title_inference (test_plan_contract_compat.PlanContractCompatibility.test_m2_prefers_valid_explicit_kind_over_title_inference) ... ok
+test_m6_hashes_category_and_keeps_the_legacy_hash_unchanged (test_plan_contract_compat.PlanContractCompatibility.test_m6_hashes_category_and_keeps_the_legacy_hash_unchanged) ... ok
+test_rollback_restores_frozen_1_1_bytes_without_rewriting_hash (test_plan_contract_compat.PlanContractCompatibility.test_rollback_restores_frozen_1_1_bytes_without_rewriting_hash) ... ok
+test_scheduler_rechecks_capability_against_the_frozen_revision (test_plan_contract_compat.PlanContractCompatibility.test_scheduler_rechecks_capability_against_the_frozen_revision) ... ok
+test_schema_1_2_requires_and_forwards_validated_kind_and_category (test_plan_contract_compat.PlanContractCompatibility.test_schema_1_2_requires_and_forwards_validated_kind_and_category) ... ok
+test_unknown_consumer_capability_blocks_approval_handoff_launch_and_resume (test_plan_contract_compat.PlanContractCompatibility.test_unknown_consumer_capability_blocks_approval_handoff_launch_and_resume) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.091s
+
+OK

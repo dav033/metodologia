@@ -1,0 +1,26 @@
+test_command_plumbing_uses_the_requirement_id_and_the_methodology_states (test_plan_integration.Cli.test_command_plumbing_uses_the_requirement_id_and_the_methodology_states) ... ok
+test_parser_registers_the_command (test_plan_integration.Cli.test_parser_registers_the_command) ... ok
+test_a_complete_plan_json_passes (test_plan_integration.Handoff.test_a_complete_plan_json_passes) ... ok
+test_an_incomplete_plan_json_blocks_the_handoff (test_plan_integration.Handoff.test_an_incomplete_plan_json_blocks_the_handoff) ... ok
+test_plans_without_the_contract_are_untouched (test_plan_integration.Handoff.test_plans_without_the_contract_are_untouched) ... ok
+test_dry_run_never_writes (test_plan_integration.Launch.test_dry_run_never_writes) ... ok
+test_launch_binds_the_revision_frozen_at_approval_and_never_creates_it (test_plan_integration.Launch.test_launch_binds_the_revision_frozen_at_approval_and_never_creates_it) ... ok
+test_launch_refuses_an_invalid_approved_plan_json (test_plan_integration.Launch.test_launch_refuses_an_invalid_approved_plan_json) ... ok
+test_legacy_plans_launch_as_before (test_plan_integration.Launch.test_legacy_plans_launch_as_before) ... ok
+test_every_real_plan_in_the_repository (test_plan_integration.ParserParity.test_every_real_plan_in_the_repository) ... ok
+test_synthetic_document (test_plan_integration.ParserParity.test_synthetic_document) ... ok
+test_a_finished_run_json_keeps_its_bytes_and_has_no_plan_ref (test_plan_integration.RealHistoricalPlans.test_a_finished_run_json_keeps_its_bytes_and_has_no_plan_ref) ... ok
+test_compat_changes_nothing_and_reports_missing_classification (test_plan_integration.RealHistoricalPlans.test_compat_changes_nothing_and_reports_missing_classification) ... ok
+test_plans_without_milestone_headings_are_flagged (test_plan_integration.RealHistoricalPlans.test_plans_without_milestone_headings_are_flagged) ... ok
+test_a_real_interpreter_in_front_of_a_missing_script_or_npm_script_is_not_evidence (test_plan_integration.RefVerifier.test_a_real_interpreter_in_front_of_a_missing_script_or_npm_script_is_not_evidence) ... ok
+test_it_knows_requirements_tasks_decisions_commands_and_commits (test_plan_integration.RefVerifier.test_it_knows_requirements_tasks_decisions_commands_and_commits) ... ok
+test_a_damaged_store_leaves_a_trace_and_does_not_stop_the_run (test_plan_integration.RunState.test_a_damaged_store_leaves_a_trace_and_does_not_stop_the_run) ... ok
+test_an_existing_run_json_is_never_modified_by_planner_operations (test_plan_integration.RunState.test_an_existing_run_json_is_never_modified_by_planner_operations) ... ok
+test_new_run_records_plan_ref_only_when_a_revision_is_frozen (test_plan_integration.RunState.test_new_run_records_plan_ref_only_when_a_revision_is_frozen) ... ok
+test_module_convention_is_documented (test_plan_integration.Wiring.test_module_convention_is_documented) ... ok
+test_skill_routes_to_the_reference_and_the_reference_to_the_module (test_plan_integration.Wiring.test_skill_routes_to_the_reference_and_the_reference_to_the_module) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.761s
+
+OK
