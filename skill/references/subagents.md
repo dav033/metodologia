@@ -157,6 +157,12 @@ Hard stops against loops: one review + at most one re-review per commit; the ant
 you don't re-run it on deferred items; if it times out or errors, commit anyway and note "antagonist skipped".
 Quick-track one-liners (typo, config value, copy) skip the gate.
 
+**With the independent milestone audit active** (a pool run with an `M<n>-audit` task still pending) that audit is the
+milestone's adversarial review, so per-commit passes are not repeated: the task runs its verify, tests and linters
+before each commit and calls the antagonist once only for `risk: high` / `level: architecture` work or changes to
+authentication, secrets, permissions, data migration or payments. Without a milestone audit the gate above stays
+mandatory. The supervisor's prompts take this rule from `bt_review_policy.commit_review_rule`.
+
 ## Where they plug into the flow
 
 | Flow step | Subagent use |

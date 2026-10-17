@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import socket
 import re
+import hashlib
 import subprocess
 import signal
 import time
@@ -207,7 +208,22 @@ def session_route(project: str, state: dict, task: dict | None, unit: list[dict]
             last = t.get("last_route") or {}
             if last.get("result") in ("failed", "verify_failed", "timeout", "escalated") and last.get("agent"):
                 avoid.add(last["agent"])
-    return bt_agents.route(project, state, tier, kind, avoid, busy)
+    risk = "high" if any(t.get("risk") == "high" for t in unit) else None
+    chosen = bt_agents.route(project, state, tier, kind, avoid, busy, risk)
+    return _explicit_effort(chosen, unit)
+
+
+def _explicit_effort(chosen: dict, unit: list[dict]) -> dict:
+    """A task may ask for a stronger effort than its tier's (`effort: xhigh` on the PLAN line): the only way xhigh/max
+    ever runs. Honoured for Claude and Codex, never lowers the effort, recorded in the route's `why`."""
+    asked = [t.get("effort") for t in unit if t.get("effort") in bt_agents.EFFORTS]
+    if not asked or chosen.get("agent") not in ("claude", "codex") or chosen.get("model") == "haiku":
+        return chosen
+    top = max(asked, key=bt_agents.EFFORTS.index)
+    current = chosen.get("effort")
+    if current in bt_agents.EFFORTS and bt_agents.EFFORTS.index(current) >= bt_agents.EFFORTS.index(top):
+        return chosen
+    return {**chosen, "effort": top, "why": f"{chosen.get('why', '')}; explicit task effort {top}".lstrip("; ")}
 
 
 def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int, workdir: Path,
@@ -252,7 +268,8 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
             raise ValueError('INVALID_EXECUTION_POLICY')
         env['BITACORA_EXECUTION_POLICY'] = 'restricted-v1'
     argv, stdin_text, shell = _argv(project, state, workdir, prompt, prompt_file, label, agent_cmd, model, effort)
-    timeout = state["limits"]["session_timeout_min"] * 60 * min(max(len(unit), 1), rs.MILESTONE_TIMEOUT_FACTOR)
+    timeout = tier_.session_timeout_min(state["limits"], int(route.get("tier") or 0)) * 60 * \
+        min(max(len(unit), 1), rs.MILESTONE_TIMEOUT_FACTOR)
     grace = grace_seconds()
     poll = min(5.0, max(0.2, grace / 2))
     head_before = _git_head(workdir)
@@ -307,7 +324,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
             log_file.write_text(text[-LOG_KEEP_CHARS:], encoding="utf-8")
         except OSError:  # a leftover grandchild may still hold the file; the full log is fine too
             pass
-    return {"rc": proc.returncode, "timed_out": timed_out, "stopped": stopped, "early_exit": early, "text": text,
+    return {"timeout_min": timeout / 60, "rc": proc.returncode, "timed_out": timed_out, "stopped": stopped, "early_exit": early, "text": text,
             "seconds": int(time.time() - start), "model": model, "effort": effort, "agent": state["agent"],
             "profile": state.get("profile"), "kind": route.get("kind"), "tier": route.get("tier"),
             "tasks": [t["id"] for t in unit], "why": route.get("why"),
@@ -350,8 +367,12 @@ def _change_size(workdir, before: str | None) -> dict | None:
                 added += int(found.group(2) or 0)
                 removed += int(found.group(3) or 0)
         commits = int(git("rev-list", "--count", f"{before}..{after}").strip() or 0) if after != before else 0
+        untracked = sorted(set(git("ls-files", "--others", "--exclude-standard").splitlines()))
+        contents = git("hash-object", "--", *untracked) if untracked else ""  # rewritten new files change the signature
+        signature = hashlib.sha1("\0".join([after or "", git("diff", "HEAD"), *sorted(names), contents])
+                                 .encode("utf-8", "replace"))
         return {"files": len(names), "insertions": added, "deletions": removed, "commits": commits,
-                "test_files": sum(1 for n in names if _TEST_FILE.search(n))}
+                "test_files": sum(1 for n in names if _TEST_FILE.search(n)), "tree_sig": signature.hexdigest()[:16]}
     except (OSError, ValueError, subprocess.SubprocessError):
         return None
 

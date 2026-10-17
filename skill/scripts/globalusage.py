@@ -2,7 +2,8 @@
 """globalusage: cuota de todas las suscripciones (Claude, Codex, Antigravity) sin gastar tokens de modelo.
 Uso: globalusage [--guardado]
 Por defecto lee la cuota EN VIVO (unos 4 s; caché de 20 s). --guardado muestra la última medición del temporizador horario.
-Cada fila muestra la edad de su medición."""
+Cada cuenta muestra, para la ventana de 5 horas y la de la semana, el uso y cuándo se renueva (en cuánto tiempo y fecha/hora
+de Colombia, America/Bogota), más la edad de su medición."""
 import datetime as dt, json, subprocess, sys, pathlib
 
 STATE = pathlib.Path.home() / "bitacora/.state"
@@ -39,22 +40,54 @@ except Exception as e:
     except Exception as e2:
         sys.exit(f"no pude leer el uso: {e2}")
 
-def barra(p):
-    n = round(p / 10)
+try:
+    from zoneinfo import ZoneInfo
+    BOGOTA = ZoneInfo("America/Bogota")
+except Exception:  # sin base tz: Colombia es UTC-5 todo el año
+    BOGOTA = dt.timezone(dt.timedelta(hours=-5), "COT")
+DIAS = ("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
+MESES = ("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic")
+DIM, BOLD, RST = "\033[2m", "\033[1m", "\033[0m"
+
+
+def ahora():
+    return dt.datetime.now(BOGOTA)
+
+
+def barra(p, ancho=20):
+    n = round(p / 100 * ancho)
     c = "\033[31m" if p >= 85 else "\033[33m" if p >= 60 else "\033[32m"
-    return f"{c}{'█' * n}{'░' * (10 - n)}\033[0m {p:5.1f}%"
+    return f"{c}{'█' * n}{'░' * (ancho - n)}{RST} {p:5.1f}%"
+
+
+def duracion(seg):
+    """'2 d 4 h 12 min', 'en 3 h 05 min', 'en 12 min' (solo las unidades que importan)."""
+    m = max(0, int(seg // 60))
+    d, resto = divmod(m, 1440)
+    h, mi = divmod(resto, 60)
+    if d:
+        return f"{d} d {h} h {mi:02d} min"
+    return f"{h} h {mi:02d} min" if h else f"{mi} min"
+
+
+def fecha(ts):
+    d = dt.datetime.fromtimestamp(ts, BOGOTA)
+    return f"{DIAS[d.weekday()]} {d.day} {MESES[d.month - 1]} {d:%H:%M}"
+
 
 def cuando(ts):
-    d = dt.datetime.fromtimestamp(ts)
-    hoy = d.date() == dt.date.today()
-    return d.strftime("%H:%M" if hoy else "%a %H:%M")
+    """'en 2 d 4 h 12 min  ·  dom 18 oct 13:59' en hora de Colombia."""
+    return f"en {duracion(ts - ahora().timestamp())}  ·  {fecha(ts)}"
+
 
 def perfil_actual():
     """Perfil desde el que corre esta sesión (ver bt_quota_live.current_profile)."""
     import bt_quota_live
     return bt_quota_live.current_profile()
 
+
 ACTUAL = perfil_actual()
+
 
 def _alias():
     """Perfiles que comparten cuenta con otro perfil ya mostrado (bt_agents.account_key), p. ej. claude = claude-personal."""
@@ -70,7 +103,9 @@ def _alias():
     except Exception:
         return {"claude", "codex"}
 
+
 ALIAS = _alias()
+
 
 def edad(ts):
     if not ts:
@@ -78,40 +113,46 @@ def edad(ts):
     m = round((dt.datetime.now().timestamp() - ts) / 60)
     return f"{m} min" if m < 90 else f"{m // 60} h"
 
-def linea(nombre, w, extra=""):
-    h, s = w.get("five_hour"), w.get("seven_day")
-    def f(x):
-        if not x:
-            return "sin datos".ljust(28)
-        usado, reset = x.get("used_percent"), x.get("resets_at")
-        if usado is None:
-            return "sin datos".ljust(28)
-        if reset is None:  # la API no informó cuándo se renueva la ventana
-            return f"{barra(usado)} ↺{'?':<9}"
-        if reset < dt.datetime.now().timestamp():  # la medición es de antes de que la ventana se renovara
-            return f"\033[2m{'ventana renovada (dato viejo)':<28}\033[0m"
-        return f"{barra(usado)} ↺{cuando(reset):<9}"
-    marca = nombre == ACTUAL
-    etiqueta = f"\033[1;7m▶ {nombre:<14}\033[0m" if marca else f"  {nombre:<14}"
-    print(f"{etiqueta} 5h {f(h)} 7d {f(s)} {extra}{'  ◀ esta sesión' if marca else ''}")
 
-print(f"\033[1mUso de suscripciones · {dt.datetime.now():%H:%M}\033[0m")
+def ventana(etiqueta, x):
+    """Una línea por ventana: barra, % usado y cuándo se renueva (en cuánto tiempo y fecha/hora de Colombia)."""
+    usado, reset = (x or {}).get("used_percent"), (x or {}).get("resets_at")
+    if usado is None:
+        return f"    {etiqueta:<8} {DIM}sin datos{RST}"
+    if reset is None:
+        return f"    {etiqueta:<8} {barra(usado)}   renueva: {DIM}la API no lo informó{RST}"
+    if reset < ahora().timestamp():  # la medición es anterior a la renovación de la ventana
+        return f"    {etiqueta:<8} {DIM}ya se renovó (dato viejo, último {usado:.0f}%){RST}"
+    return f"    {etiqueta:<8} {barra(usado)}   renueva {BOLD}{cuando(reset)}{RST}"
+
+
+def bloque(nombre, w, medido, estado="ok"):
+    marca = nombre == ACTUAL
+    titulo = f"\033[1;7m ▶ {nombre} {RST}" if marca else f"{BOLD}  {nombre}{RST}"
+    nota = "" if estado == "ok" else f"  {DIM}[{estado}]{RST}"
+    print(f"{titulo}  {DIM}medido hace {edad(medido)}{RST}{nota}{'  ◀ esta sesión' if marca else ''}")
+    print(ventana("5 horas", (w or {}).get("five_hour")))
+    print(ventana("semana", (w or {}).get("seven_day")))
+    print()
+
+
+print(f"{BOLD}Uso de suscripciones{RST}  {DIM}{ahora():%d/%m/%Y %H:%M} hora Colombia (UTC-5){RST}\n")
 for r in rows:
     if r["profile"] in ALIAS:
         continue  # alias de otra cuenta (misma cuenta registrada dos veces)
-    linea(r["profile"], r.get("windows", {}), f"· medido hace {edad(r.get('observed_at'))}" + ("" if r["status"] == "ok" else f" [{r['status']}]"))
+    bloque(r["profile"], r.get("windows", {}), r.get("observed_at"), r["status"])
 try:
     a = json.loads((STATE / "agy-usage.json").read_text())
-    linea("antigravity", a["windows"], f"· medido hace {edad(a['observed_at'])}")
+    bloque("antigravity", a["windows"], a["observed_at"])
 except Exception:
-    print(f"  {'antigravity':<14} sin medición")
+    print(f"{BOLD}  antigravity{RST}  {DIM}sin medición{RST}\n")
 
 hoy = dt.date.today().isoformat()
 import bt_events
 t = bt_events.summary([r for r in bt_events.read_all() if str(r.get("ts") or "").startswith(hoy)],
                       ("agent", "model"))
 if t:
-    print("\n\033[1mHoy por modelo\033[0m  intentos · verificados · tokens medidos · costo reportado · cobertura tokens/costo")
+    print(f"{BOLD}Hoy por modelo{RST}  intentos · verificados · tokens medidos · costo reportado · cobertura tokens/costo")
     for g in t:
         k = f"{g['agent']}/{g['model']}"
         tokens = f"{g['tokens_measured'] / 1000:.0f}k" if g["measured"] else "—"

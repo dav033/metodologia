@@ -53,6 +53,8 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
                                 ("workers", min(int(o["workers"]), 3 if isolation == "worktree" else rs.MAX_WORKERS)
                                  if o.get("workers") else None)) if v}
     limits["isolation"] = isolation
+    if o.get("session_timeout"):  # an explicit timeout is a deliberate budget: the tier table must not shorten it
+        limits["session_timeout_by_tier"] = None
     profile = o.get("profile") or (state or {}).get("profile")
     if profile:
         bt_profiles.authorize(profile, project)
@@ -91,8 +93,9 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
             if t["status"] == "in_progress":
                 t["status"] = "todo"
             elif t["status"] == "blocked" and o.get("retry_blocked"):
-                t.update(status="todo", attempts=0, error_hashes=[], pending_id=None, limit_streak=0,
-                         tier=tier_.start_tier(t.get("level"), t.get("kind"), t.get("complexity")))
+                t.update(status="todo", attempts=0, error_hashes=[], pending_id=None, limit_streak=0, idle_attempts=0,
+                         tier=tier_.start_tier(t.get("level"), t.get("kind"), t.get("complexity"), t.get("risk")),
+                         tree_sig=None)
         s["limits"].update(limits)
         if pool is not None:
             s["pool"] = pool
@@ -143,21 +146,34 @@ def _pool(project: str, requested: str | list | None, profile: str | None) -> li
 
 
 def _limited(project: str, rdir: Path, c: dict, state: dict, infos: list[dict]) -> None:
-    """A session hit a usage limit. Pinned run: wait for the reset. Pool: put that account on cooldown and carry on
-    with another one; wait only when every account is cooling down."""
-    epochs = [detect_limit(i) or 0 for i in infos]
+    """A session hit a usage limit. Pinned run: wait for the reset. Pool: put the account that really reported the
+    limit on cooldown and carry on with another route that is admissible for the SAME work (tier, kind, configured
+    model of the session that was limited, never a lighter one); wait only when no such route exists."""
+    epochs = [detect_limit(i) for i in infos]
     if not state.get("pool"):
-        enter_wait(rdir, project, state["req"], max(epochs), c["notified_wait"])
+        enter_wait(rdir, project, state["req"], max(e or 0 for e in epochs), c["notified_wait"])
         c["notified_wait"] = True
         return
+    marked = set()
     for info, epoch in zip(infos, epochs):
+        key = bt_agents.account_key(info.get("profile"), info.get("agent"))
+        if epoch is None or key in marked:  # no provider limit message in this session (e.g. a limit_streak misread)
+            continue
+        marked.add(key)
         until = bt_agents.quota_mark(info.get("profile"), info.get("agent"), epoch,
                                      limit_line(info.get("text", "")[-4000:]), info.get("model"))
         say(state, f"{info.get('profile') or info.get('agent')} hit a usage limit; cooling until "
                    f"{dt.datetime.fromtimestamp(until):%m-%d %H:%M}")
-    routes, soonest = bt_agents.candidates(project, state["pool"], 0)
-    if routes:
-        say(state, f"continuing on {routes[0]['profile']} ({routes[0]['agent']})")
+    soonest = None
+    for info in infos:
+        tier, kind = int(info.get("tier") or 0), info.get("kind") or "implement"
+        routes, free_at = bt_agents.candidates(project, state["pool"], tier, kind, state.get("model"))
+        if routes:
+            say(state, f"continuing on {routes[0]['profile']} ({routes[0]['agent']}) for tier {tier} {kind}")
+            continue
+        soonest = free_at if soonest is None or (free_at and free_at < soonest) else soonest
+        break
+    else:
         c["notified_wait"] = False
         return
     enter_wait(rdir, project, state["req"], int(soonest or 0), c["notified_wait"])

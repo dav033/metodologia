@@ -21,12 +21,13 @@ from pathlib import Path
 
 import bt_agents
 import bt_plan_adapter
+import bt_routing_policy
 from bt_core import STATE
-from bt_runtier import start_tier
+from bt_runtier import TIMEOUT_BY_TIER, group_max, start_tier
 
 LOG_KEEP = 200
 DEFAULT_LIMITS = {"max_attempts": 4, "session_timeout_min": 60, "max_sessions": 300, "workers": 1,
-                  "isolation": "off"}  # 4 = haiku, sonnet, opus, opus
+                  "isolation": "off", "session_timeout_by_tier": dict(TIMEOUT_BY_TIER)}  # group_max: bt_runtier / config  # 4 = haiku, sonnet, opus, opus
 TASK_RE = re.compile(r"^\s*[-*]\s+\[( |x|X)\]\s+(T\d+(?:\.\d+)?[a-z]?)\s*(?:—|–|--|-|:)\s*(.+?)\s*$")
 MILESTONE_RE = re.compile(r"^#{3,4}\s+(M\d+)\b\s*(?:—|–|--|-|:)?\s*(.*?)\s*$")
 HEADING_RE = re.compile(r"^#{1,4}\s+\S")
@@ -71,6 +72,7 @@ def parse_task_line(rest: str) -> dict:
             "level": (fields.get("level") or "").lower() or None,
             "kind": bt_agents.infer_kind(title, fields.get("kind")),
             "risk": (fields.get("risk") or "").lower() or None,
+            "effort": fields.get("effort", "").lower() if fields.get("effort", "").lower() in bt_agents.EFFORTS else None,
             "complexity": _complexity(fields.get("complexity") or fields.get("size"))}
 
 
@@ -140,8 +142,10 @@ def _new_task(p: dict) -> dict:
     return {"id": p["id"], "title": p["title"], "repo": p["repo"], "after": p["after"], "verify": p["verify"],
             "files": p.get("files"), "resources": p.get("resources"),
             "level": p["level"], "kind": p.get("kind") or "implement", "risk": p.get("risk"),
-            "complexity": p.get("complexity"),
-            "milestone": p.get("milestone"), "tier": start_tier(p["level"], p.get("kind"), p.get("complexity")),
+            "complexity": p.get("complexity"), "effort": p.get("effort"),
+            "milestone": p.get("milestone"),
+            "tier_reason": bt_routing_policy.start_tier(p["level"], p.get("kind"), p.get("complexity"), p.get("risk"))[1],
+            "tier": start_tier(p["level"], p.get("kind"), p.get("complexity"), p.get("risk")),
             "status": "done" if p["done"] else "todo",
             "attempts": 0, "last_error": None, "error_hashes": [], "evidence": None, "pending_id": None, "notes": []}
 
@@ -211,11 +215,11 @@ def sync_plan(state: dict, rdir: Path) -> dict:
             state["tasks"].append(_new_task(p))
             continue
         t["title"] = p["title"]
-        for key in ("milestone", "kind", "risk", "complexity"):  # a RUN.json from before these fields existed adopts them once
+        for key in ("milestone", "kind", "risk", "complexity", "effort"):  # a RUN.json from before these fields existed adopts them once
             if key not in t:
                 t[key] = p.get(key)
         if t["status"] == "todo" and not t.get("attempts"):  # never lowers a tier the task already climbed to
-            t["tier"] = max(int(t.get("tier") or 0), start_tier(t.get("level"), t.get("kind"), t.get("complexity")))
+            t["tier"] = max(int(t.get("tier") or 0), start_tier(t.get("level"), t.get("kind"), t.get("complexity"), t.get("risk")))
         drift += [f"{t['id']}.{k}" for k in ("repo", "after", "verify", "level", "files", "resources")
                   if (k not in ("files", "resources") or k in t) and t.get(k) != p[k]]
     state["plan_drift"] = list(dict.fromkeys(drift))
@@ -320,18 +324,26 @@ def next_task(state: dict) -> dict | None:
 
 
 def unit_of(state: dict, first: dict) -> list[dict]:
-    """The tasks one session takes: a task of a milestone brings along the milestone's other pending tasks whose
-    dependencies are done or inside the unit (plan order). A task outside a milestone, and an audit, run alone."""
+    """The tasks one session takes: a task of a milestone brings along the milestone's other pending tasks that share
+    its tier, kind and risk class and whose dependencies are done or inside the unit (plan order), up to the tier's
+    group size (bt_runtier.group_max). Mixed tiers never share a session, so a hard task cannot lift its light
+    neighbours to a stronger model. A task outside a milestone, and an audit, run alone."""
     if not first.get("milestone") or first.get("kind") == "audit" or first.get("synthetic"):
         return [first]
+    from bt_runtier import tier_of
+    limit = group_max(state.get("limits") or {}, tier_of(first))
+    shape = (tier_of(first), first.get("kind") or "implement", first.get("risk") == "high")
     done = {t["id"] for t in state["tasks"] if t["status"] == "done"}
     unit, ids = [first], {first["id"]}
     grew = True
-    while grew:  # every pending member whose dependencies are done or already in the unit, wherever it sits in the plan
+    while grew and len(unit) < limit:  # every pending member whose dependencies are done or already in the unit
         grew = False
         for t in state["tasks"]:
+            if len(unit) >= limit:
+                break
             if (t["id"] not in ids and t["status"] == "todo" and t.get("milestone") == first["milestone"]
-                    and not t.get("synthetic") and all(a in done or a in ids for a in t["after"])):
+                    and not t.get("synthetic") and all(a in done or a in ids for a in t["after"])
+                    and (tier_of(t), t.get("kind") or "implement", t.get("risk") == "high") == shape):
                 unit.append(t)
                 ids.add(t["id"])
                 grew = True

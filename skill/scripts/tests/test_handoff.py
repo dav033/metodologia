@@ -230,7 +230,7 @@ class DelegateTests(IsolatedCase):
         self.assertEqual(order["profile"], "codex-test")
         self.assertEqual(order["agent"], "codex")
         self.assertEqual((order["kind"], order["tier"], order["model"], order["effort"]),
-                         ("research", 1, "gpt-6.1-sol", "high"))
+                         ("research", 1, "gpt-6.1-sol", "medium"))
         self.assertEqual(json.loads((bt_delegate.DIR / order["id"] / "TASK.json").read_text()), order)
 
     def test_audit_created_inside_claude_prefers_codex_account(self):

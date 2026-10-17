@@ -22,6 +22,7 @@ import time
 from pathlib import Path
 
 import bt_profiles
+import bt_routing_policy
 from bt_core import STATE
 
 PROVIDERS = ("claude", "codex", "antigravity")
@@ -55,8 +56,9 @@ MODELS: dict[str, dict] = {
 # (model, effort) per provider and tier. Codex always gets an explicit effort: an account's config.toml default may
 # name a level the model does not support.
 LADDER: dict[str, tuple] = {
-    "claude": (("haiku", None), ("sonnet", "xhigh"), ("opus", "xhigh")),
-    "codex": (("gpt-6-luna", "medium"), ("gpt-6.1-sol", "high"), ("gpt-6.1-sol", "xhigh")),
+    # No rung climbs to xhigh by itself: xhigh is an explicit per-task `effort:` choice (bt_routing_policy).
+    "claude": (("haiku", None), ("sonnet", "medium"), ("opus", "high")),
+    "codex": (("gpt-6-luna", "medium"), ("gpt-6.1-sol", "medium"), ("gpt-6.1-sol", "high")),
     # Flash never goes to `high` automatically: a failure moves the work to another provider instead (router rule).
     "antigravity": (("gemini-3.8-flash-low", None), ("gemini-3.8-flash-low", None), ("gemini-3.8-flash-medium", None)),
 }
@@ -86,12 +88,13 @@ def infer_kind(title: str | None, explicit: str | None = None) -> str:
     return "implement"
 
 
-def start_tier(level: str | None, kind: str | None = None, complexity: str | None = None) -> int:
-    """Where a task starts on the ladder: architecture-level work at the top; an audit, and work declared large
-    (`complexity: L`), at the standard tier; everything else at the light tier."""
-    if (level or "").strip().lower() == "architecture":
-        return TOP
-    return max(KIND_TIER.get(kind or "", 0), 1 if complexity == "L" else 0)
+def start_tier(level: str | None, kind: str | None = None, complexity: str | None = None,
+               risk: str | None = None) -> int:
+    """Where a task starts on the ladder (policy and reason: bt_routing_policy.start_tier): architecture-level work at
+    the top; an audit, work declared large (`complexity: L`) or risky (`risk: high`) at the standard tier or above;
+    everything else at the light tier. A floor, never a ceiling: escalation can still raise it."""
+    import bt_routing_policy
+    return bt_routing_policy.start_tier(level, kind, complexity, risk)[0]
 
 
 def rank_of(model: str | None) -> int:
@@ -261,6 +264,8 @@ class _Rates(dict):
     provider with 1-4 attempts is known to be under-sampled instead of looking the same as an unseen one."""
 
     samples: dict = {}
+    lower: dict = {}   # lower confidence bound of each rate: what the quality band ranks by
+    recent: dict = {}  # attempts in the last 7 days by (agent, model): the exploration budget's counter
 
 
 def _stats() -> tuple[dict, dict]:
@@ -281,39 +286,53 @@ def _stats() -> tuple[dict, dict]:
             continue
         if 0 <= age <= LOAD_WINDOW_SEC:
             acc = account_key(r.get("profile"), r.get("agent"))
-            cost = MODELS.get(str(r.get("model")), {}).get("cost", 2)
+            cost = MODELS.get(str(r.get("model")), {}).get("cost", 2) * bt_routing_policy.effort_weight(r.get("effort"))
             load[acc] = load.get(acc, 0) + (r.get("seconds") or 0) * cost
     groups = bt_events.summary(rows, ("agent", "model", "kind"))
     counts = {(g["agent"], g["model"], g["kind"]): (g["done"] + g["failed"], g["done"]) for g in groups}
-    rates = _Rates({k: done / judged for k, (judged, done) in counts.items() if judged >= MIN_SAMPLES})
+    min_samples = int(_config("routing.min_samples", MIN_SAMPLES))
+    rates = _Rates({k: done / judged for k, (judged, done) in counts.items() if judged >= min_samples})
     rates.samples = {k: judged for k, (judged, _) in counts.items()}
+    # The band uses the lower confidence bound: a short lucky streak must not read as a proven route.
+    rates.lower = {k: bt_routing_policy.wilson_lower(done, judged) for k, (judged, done) in counts.items()
+                   if judged >= min_samples}
+    rates.recent = {}
+    for r in rows:
+        try:
+            if 0 <= now - dt.datetime.fromisoformat(r["ts"]).timestamp() <= bt_routing_policy.EXPLORE_WINDOW_SEC:
+                key = (r.get("agent"), r.get("model"))
+                rates.recent[key] = rates.recent.get(key, 0) + 1
+        except (KeyError, ValueError, TypeError):
+            continue
     return rates, load
 
 
-def _quality_order(agent: str, kind: str, rate: float | None, pressure: float | None, samples: int = 0) -> tuple:
+def _quality_order(agent: str, kind: str, rate: float | None, pressure: float | None, samples: int = 0,
+                   explore: bool = False) -> tuple:
     """Sort-key part after the provider rules (busy, avoided builder provider, `_role_rank`, which already put the
-    preferred auditor first). Implementation: fresh headroom first, then the measured success band. Audits within
-    one role rank: measured quality first (5+ judged audits), then the audit budget order (Codex Sol is the last
-    fallback after Claude Sonnet and Flash, agents.md rule 4), and only then headroom, which must not push the
-    audit to the most expensive fallback.
+    preferred auditor first). Implementation: quota headroom in 10-point buckets (unknown pressure counts as
+    mid-range), then the verified success band (lower confidence bound, 20-point bands). Audits within one role rank:
+    measured quality first, then the audit budget order (Codex Sol is the last fallback after Claude Sonnet and Flash,
+    agents.md rule 4), and only then headroom.
 
-    Cold start (T8, R8): an eligible provider/model with fewer than MIN_SAMPLES judged attempts of this kind takes the
-    best measured band for implementation work, so an established incumbent cannot starve it forever. The bound is
-    the sample count itself: after MIN_SAMPLES attempts its own rate decides. It sits below every role, avoid and
-    busy rule in the key and above nothing else: work-only, cooling and exhausted accounts never reach this point."""
-    band = -(round(rate * 5) if rate is not None else 3)
-    if rate is None and kind != "audit" and samples < MIN_SAMPLES:
-        band = -6  # one step better than a perfect measured band: explore first, bounded by MIN_SAMPLES
-    headroom = (pressure is None, pressure if pressure is not None else 0)
+    Cold start: a route with fewer than `routing.min_samples` judged attempts of this kind takes the top measured band
+    only when `explore` is set (bt_routing_policy.may_explore: cheap model or weekly budget left, low-risk non-audit
+    work). Otherwise it ranks as an unproven route, below every route whose lower bound is at least 0.1."""
+    band = -(round(rate * 5) if rate is not None else 1)  # unproven ranks below any route with a positive bound
+    if rate is None and explore:
+        band = -6
+    headroom = bt_routing_policy.pressure_bucket(pressure)
     if kind == "audit":
         return band, agent == "codex", headroom
     return headroom, band
 
 
 def candidates(project: str, pool: list[str], tier: int, kind: str = "implement", configured: str | None = None,
-               avoid_providers: set | None = None, busy: set | None = None) -> tuple[list[dict], float | None]:
+               avoid_providers: set | None = None, busy: set | None = None, risk: str | None = None
+               ) -> tuple[list[dict], float | None]:
     """(routes of `tier` ordered best first, earliest epoch a cooling account frees up when none is available).
-    `busy`: account keys already taken by sessions being started in the same batch (they go last)."""
+    `busy`: account keys already taken by sessions being started in the same batch (they go last). `risk` of the work
+    keeps cold-start exploration away from high-risk tasks."""
     from bt_subscriptions import capacity
     from bt_subscriptions import load as load_usage
     samples = load_usage(STATE)
@@ -332,18 +351,23 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
         if agent == "antigravity":  # Google's own quota report, refreshed by the supervisor (bt_agy)
             import bt_agy
             pressure, exhausted = bt_agy.capacity()
+        ranked_pressure = bt_routing_policy.paced_pressure(
+            pressure, bt_routing_policy.weekly_pace_surplus(samples.get(account_key(pid, agent)), time.time()))
         deadlines = [value for value in (cooling_until(pid, agent), exhausted) if value is not None]
         until = max(deadlines) if deadlines else None
         if until:
             soonest = until if soonest is None else min(soonest, until)
             continue
         rate = rates.get((agent, model, kind))
+        seen = getattr(rates, "samples", {}).get((agent, model, kind), 0)
+        explore = rate is None and bt_routing_policy.may_explore(
+            MODELS.get(model, {}).get("cost", 2), kind, risk, seen, getattr(rates, "recent", {}).get((agent, model), 0))
         routes.append({"profile": pid, "agent": agent, "model": model, "effort": effort, "tier": tier, "kind": kind,
                        "_key": (account_key(pid, agent) in (busy or ()),
                                 agent in (avoid_providers or ()),
                                 _role_rank(agent, kind, pressure),
-                                *_quality_order(agent, kind, rate, pressure,
-                                                getattr(rates, "samples", {}).get((agent, model, kind), 0)),
+                                *_quality_order(agent, kind, getattr(rates, "lower", {}).get((agent, model, kind), rate),
+                                                ranked_pressure, seen, explore),
                                 int(load.get(account_key(pid, agent), 0) // (LOAD_BUCKET_SEC * 2)), index),
                        "why": (("audit budget: Sonnet medium / Opus high; " if agent == "claude" else
                                 "audit fallback: Sol medium / high; ") if kind == "audit" else "") +
@@ -391,7 +415,7 @@ class NoRoute(Exception):
 
 
 def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_providers: set | None = None,
-          busy: set | None = None) -> dict:
+          busy: set | None = None, risk: str | None = None) -> dict:
     """The route of one session. Fixed mode (no pool): the run's own agent/profile at the tier's model. Pool mode:
     the best available candidate; raises NoRoute when all accounts are cooling down."""
     pool = state.get("pool") or []
@@ -401,7 +425,7 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
         return {"profile": state.get("profile"), "agent": agent, "model": model, "effort": effort, "tier": tier,
                 "kind": kind, "why": "fixed (no pool)"}
     _refresh_google_quota(pool)
-    routes, soonest = candidates(project, pool, tier, kind, state.get("model"), avoid_providers, busy)
+    routes, soonest = candidates(project, pool, tier, kind, state.get("model"), avoid_providers, busy, risk)
     if not routes:
         if soonest is None:  # nothing is cooling: no account of the pool may run this project any more
             raise bt_profiles.ProfileError(f"No account of the pool ({', '.join(pool)}) may run '{project}'. "
@@ -424,14 +448,14 @@ def _refresh_google_quota(pool: list[str]) -> None:
 
 def legacy_model_for(state: dict, tier: int) -> tuple[str | None, str | None]:
     """A run pinned to one agent. Claude: the configured model at tier 0 (haiku by default), the ladder above it.
-    Codex: a configured Codex model is kept and only the effort rises (xhigh from tier 1); with no Codex model
-    configured the CLI's own default model runs."""
+    Codex: a configured Codex model is kept and only the effort follows the ladder (medium at tier 1, high at tier 2;
+    xhigh only when a task asks for it); with no Codex model configured the CLI's own default model runs."""
     agent, configured = state.get("agent") or "claude", state.get("model")
     if agent == "antigravity":
         return (configured if provider_of_model(configured) == "antigravity" else "gemini-3.8-flash-low"), None
     if agent == "codex":
         model = configured if configured and provider_of_model(configured) != "claude" else None
-        return model, ("xhigh" if tier >= 1 else None)
+        return model, LADDER["codex"][min(TOP, max(0, tier))][1] if tier >= 1 else None
     if tier <= 0:
         return configured or "haiku", None
     tier = min(tier, TOP)

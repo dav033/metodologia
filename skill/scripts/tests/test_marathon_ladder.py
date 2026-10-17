@@ -9,11 +9,13 @@ import os
 import sys
 import time
 import unittest
+from unittest.mock import patch
 
 from test_marathon import TMP, MarathonCase, quiet  # noqa: F401  (sets BITACORA_ROOT before bt_* imports)
 
 import bt_core  # noqa: E402
 import bt_run  # noqa: E402
+import bt_runsettle  # noqa: E402
 import bt_runstate as rs  # noqa: E402
 import bt_runtask as rt  # noqa: E402
 
@@ -52,7 +54,7 @@ elif action == "report":
     pathlib.Path(os.environ["STUB_RDIR"], "REPORT.md").write_text("# report\\n")
 '''
 
-HAIKU, SONNET, OPUS = "--model haiku", "--model sonnet --effort xhigh", "--model opus --effort xhigh"
+HAIKU, SONNET, OPUS = "--model haiku", "--model sonnet --effort medium", "--model opus --effort high"
 
 
 class LadderCase(MarathonCase):
@@ -77,13 +79,13 @@ class LadderCase(MarathonCase):
 
 
 class Ladder(LadderCase):
-    def test_each_failure_climbs_haiku_sonnet_opus_with_xhigh(self):
+    def test_each_failure_climbs_haiku_sonnet_opus_without_automatic_xhigh(self):
         self.make_req(["- [ ] T1 — tricky"], {"T1": ["failn", "failn", "done"]})
         self.assertEqual(self.run_sup(), 0)
         self.assertEqual(self.argv_log("T1"), [HAIKU, SONNET, OPUS])
         rows = [x for x in self.state()["log"] if x["task"] == "T1"]
         self.assertEqual([(x["model"], x.get("effort")) for x in rows],
-                         [("haiku", None), ("sonnet", "xhigh"), ("opus", "xhigh")])
+                         [("haiku", None), ("sonnet", "medium"), ("opus", "high")])
         self.assertEqual((self.task("T1")["status"], self.task("T1")["tier"]), ("done", 2))
 
     def test_repeated_error_escalates_and_only_blocks_at_opus(self):
@@ -96,9 +98,18 @@ class Ladder(LadderCase):
 
     def test_differing_errors_get_four_attempts_haiku_sonnet_opus_opus(self):
         self.make_req(["- [ ] T1 — wobbly"], {"T1": ["failn"]})
-        self.run_sup()
+        with patch.object(bt_runsettle, "IDLE_ATTEMPTS_MAX", 99):  # the stub never edits files: isolate max_attempts
+            self.run_sup()
         self.assertEqual(self.argv_log("T1"), [HAIKU, SONNET, OPUS, OPUS])
         self.assertEqual((self.task("T1")["status"], self.task("T1")["attempts"]), ("blocked", 4))
+
+    def test_attempts_that_leave_the_tree_unchanged_stop_before_max_attempts(self):
+        self.make_req(["- [ ] T1 — wobbly"], {"T1": ["failn"]})
+        self.run_sup()
+        self.assertEqual(self.argv_log("T1"), [HAIKU, SONNET, OPUS])
+        t = self.task("T1")
+        self.assertEqual((t["status"], t["attempts"]), ("blocked", 3))
+        self.assertIn("no progress", self.pending_text())
 
     def test_architecture_level_starts_at_opus(self):
         self.make_req(["- [ ] T1 — design the sync engine · level: architecture", "- [ ] T2 — small"])

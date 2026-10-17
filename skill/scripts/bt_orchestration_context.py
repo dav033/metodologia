@@ -17,6 +17,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import bt_requirements_gate as gate
+import bt_review_policy
 from bt_orchestration_contract import (
     ContextError,
     ContextPressure,
@@ -198,7 +199,8 @@ def build_package(
             "Read referenced authority selectively; do not inject full skill, transcripts or historical notes. "
             "Admit every tool/read/debate/error envelope through the runtime byte budget before delivery. "
             "Persist documentation and a validated checkpoint before yielding or rotating. "
-            "Final/audit assignments require their verification and documentation; no success without evidence."
+            "Final/audit assignments require their verification and documentation; no success without evidence. "
+            + bt_review_policy.commit_review_rule(state, unit)
         ),
     }
     if checkpoint is not None:

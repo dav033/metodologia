@@ -471,7 +471,7 @@ class DecisionAssignmentIntegration(s.World):
         self.assertEqual(len(attempts), 1)
         selected = s.adapter.m2_ledger_lookup(self.tmp / "decisions.db")(attempts[0].executor)
         self.assertEqual((selected["profile"], selected["provider"], selected["model"], selected["effort"]),
-                         ("codex-luis", "codex", "gpt-6.1-sol", "high"))
+                         ("codex-luis", "codex", "gpt-6.1-sol", "medium"))
 
 
 if __name__ == "__main__":

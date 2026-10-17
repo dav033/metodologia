@@ -68,7 +68,7 @@ command, after the day log and every commit, and nothing may be left running in 
 `repo:`, `after:`, `verify:`, `level:`, `kind:` (implement, test, docs, audit, research; inferred from the title when
 absent), `complexity:` (S, M, L: recorded in telemetry so agents can be compared on comparable work) and `risk:`
 (`high` makes the automatic hand-off ask for approval) are optional. `level: architecture` marks a hard architecture/design task:
-it starts at the top of the escalation ladder (opus, effort xhigh) instead of haiku. `verify:` is run by the supervisor **only if it is inside backticks**
+it starts at the top of the escalation ladder (opus, effort high) instead of haiku. `verify:` is run by the supervisor **only if it is inside backticks**
 (from the task's repo dir, 10-minute timeout); free text is just guidance for the agent. Already-ticked `[x]` tasks
 start as done. `repo`, `after`, `verify` and `level` are **frozen when the run starts**: later edits to PLAN.md (even by the
 agent) are reported as plan drift and not adopted, so a session cannot rewrite its own gate; to change them, edit
@@ -217,17 +217,18 @@ This also applies when pinned to a provider; audits never inherit the builder's 
 
 Tiers are capability levels shared by every provider. With an account pool (`run --pool auto`, the default of
 `handoff`) each session's account, model and effort come from the router, and a failed attempt climbs one tier
-**and** prefers another provider: `agents.md` has the full table (Claude: haiku → sonnet xhigh → opus xhigh; Codex:
-gpt-6-luna medium → gpt-6.1-sol high → gpt-6.1-sol xhigh). The table below is a run pinned to one agent.
+**and** prefers another provider: `agents.md` has the full table (Claude: haiku → sonnet medium → opus high; Codex:
+gpt-6-luna medium → gpt-6.1-sol medium → gpt-6.1-sol high). The table below is a run pinned to one agent.
 
 | Tier | Claude | Codex |
 |---|---|---|
 | 0 | the run's `--model` (default **haiku**), default effort | its model, default effort |
-| 1 | **sonnet** `--effort xhigh` | same model, `-c model_reasoning_effort="xhigh"` |
-| 2 (top) | **opus** `--effort xhigh` | same model, `-c model_reasoning_effort="xhigh"` |
+| 1 | **sonnet** `--effort medium` | same model, `-c model_reasoning_effort="medium"` |
+| 2 (top) | **opus** `--effort high` | same model, `-c model_reasoning_effort="high"` |
 
-A configured model already stronger than a tier's (e.g. `--model opus`) is kept; only the effort rises. Codex never
-switches model: from tier 1 up it only raises the reasoning effort.
+A configured model already stronger than a tier's (e.g. `--model opus`) is kept; only the effort follows the tier. Codex never
+switches model: from tier 1 up it only raises the reasoning effort. Nothing climbs to `xhigh` by itself: a task that
+justifies it says so on its PLAN line (`effort: xhigh`), and the route records that explicit choice.
 
 - Each task keeps its `tier` (0–2) in RUN.json; each log entry records the `model` and `effort` of that session
   (the web tab shows both: the task table's **Modelo** column and the log's).
@@ -235,7 +236,18 @@ switches model: from tier 1 up it only raises the reasoning effort.
   or a user stop does not move it.
 - **Same error twice** below the top → escalate; at the top (opus) → `blocked`. With the default max_attempts 4 a
   task gets haiku, sonnet, opus, opus.
-- **`level: architecture`** on the PLAN line → the task starts at tier 2 (opus xhigh).
+- **Start tier** (`bt_routing_policy.start_tier`, a floor and never a ceiling; the reason is stored as `tier_reason`):
+  docs, test, research and implement start at 0; `complexity: L` or `risk: high` start at 1 (2 for an implementation
+  with both); `level: architecture` starts at tier 2 whatever the kind; audits start at 1.
+- **Session grouping.** A milestone session takes only pending tasks that share the first one's tier, kind and risk
+  class, up to `limits.group_max` per tier (default tier 0: 3, tiers 1–2: 1; also `routing.group_max`), in plan order
+  and with dependencies inside the group or already done. A hard task never lifts its light neighbours.
+- **Timeouts.** New runs bound a task session by tier (`session_timeout_by_tier`: 25 / 45 / 60 min), capped by
+  `session_timeout_min`; a session carrying several tasks gets up to three times that. An explicit `--timeout`
+  replaces the table; runs started before it keep their stored value. Claude Code 2.1.302 has no turn limit flag
+  (`--max-turns` does not exist; `--max-budget-usd` is API-only), so the timeout and the stagnation rule are the bounds.
+- **Stagnation.** A failed attempt whose resulting working tree equals the previous attempt's counts as idle; after two
+  idle attempts in a row the task is blocked with that diagnosis (a repeated error still blocks at the top tier).
 - **`task escalate REQ T --to standard|top --reason "..."`** (aliases `sonnet`, `opus`) (only for the session's own task) raises the tier, stores
   the reason in the task's notes so the next session reads it, and marks the session `escalated`. A target at or
   below the current tier is refused (the agent uses `task fail` instead), so an opus session cannot burn attempts

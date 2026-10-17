@@ -30,12 +30,12 @@ from bt_scheduler_decision.tests.support import request as m2_request
 class MethodologyDecisionSourceTests(unittest.TestCase):
     def test_route_options_follow_the_supported_provider_ladder_and_task_floor(self):
         self.assertEqual(m2_adapter._route_options("claude", 0, "implement"),
-                         (("haiku", None), ("sonnet", "xhigh"), ("opus", "xhigh")))
+                         (("haiku", None), ("sonnet", "medium"), ("opus", "high")))
         self.assertEqual(m2_adapter._route_options("codex", 1, "implement"),
-                         (("gpt-6.1-sol", "high"), ("gpt-6.1-sol", "xhigh")))
+                         (("gpt-6.1-sol", "medium"), ("gpt-6.1-sol", "high")))
         self.assertEqual(m2_adapter._route_options("codex", 0, "docs"),
-                         (("gpt-6-luna", "low"), ("gpt-6.1-sol", "high"),
-                          ("gpt-6.1-sol", "xhigh")))
+                         (("gpt-6-luna", "low"), ("gpt-6.1-sol", "medium"),
+                          ("gpt-6.1-sol", "high")))
         self.assertEqual(m2_adapter._route_options("claude", 1, "audit"),
                          (("sonnet", "medium"), ("opus", "high")))
         self.assertEqual(m2_adapter._route_options("antigravity", 0, "implement"),
@@ -129,22 +129,22 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
         by_route = {(row.profile, row.model, row.effort): row for row in rows}
         self.assertEqual(len(rows), 11)
         self.assertEqual(set(by_route), {
-            ("claude-a", "haiku", None), ("claude-a", "sonnet", "xhigh"),
-            ("claude-a", "opus", "xhigh"), ("claude-b", "haiku", None),
-            ("claude-b", "sonnet", "xhigh"), ("claude-b", "opus", "xhigh"),
-            ("codex-a", "gpt-6-luna", "medium"), ("codex-a", "gpt-6.1-sol", "high"),
-            ("codex-a", "gpt-6.1-sol", "xhigh"), ("agy-a", "gemini-3.8-flash-low", None),
+            ("claude-a", "haiku", None), ("claude-a", "sonnet", "medium"),
+            ("claude-a", "opus", "high"), ("claude-b", "haiku", None),
+            ("claude-b", "sonnet", "medium"), ("claude-b", "opus", "high"),
+            ("codex-a", "gpt-6-luna", "medium"), ("codex-a", "gpt-6.1-sol", "medium"),
+            ("codex-a", "gpt-6.1-sol", "high"), ("agy-a", "gemini-3.8-flash-low", None),
             ("agy-a", "gemini-3.8-flash-medium", None),
         })
         self.assertEqual(by_route[("claude-a", "haiku", None)].baseline_rank, 0)
         self.assertEqual(by_route[("claude-b", "haiku", None)].baseline_rank, 1)
         self.assertEqual(by_route[("codex-a", "gpt-6-luna", "medium")].baseline_rank, 2)
         self.assertEqual(by_route[("agy-a", "gemini-3.8-flash-low", None)].baseline_rank, 3)
-        self.assertIsNone(by_route[("claude-a", "sonnet", "xhigh")].baseline_rank)
+        self.assertIsNone(by_route[("claude-a", "sonnet", "medium")].baseline_rank)
         self.assertEqual(by_route[("claude-a", "haiku", None)].account_ref,
-                         by_route[("claude-a", "opus", "xhigh")].account_ref)
+                         by_route[("claude-a", "opus", "high")].account_ref)
         self.assertEqual(by_route[("claude-a", "haiku", None)].quota_status, "available")
-        self.assertEqual(by_route[("claude-a", "opus", "xhigh")].quota_status, "exhausted")
+        self.assertEqual(by_route[("claude-a", "opus", "high")].quota_status, "exhausted")
         self.assertEqual(by_route[("claude-a", "haiku", None)].history.verified_successes, 1)
         self.assertEqual(by_route[("claude-a", "haiku", None)].history.claimed_unverified, 1)
         self.assertEqual(by_route[("claude-a", "haiku", None)].history.duration_samples, 2)

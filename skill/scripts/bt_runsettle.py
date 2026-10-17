@@ -226,18 +226,29 @@ def enter_wait(rdir: Path, project: str, req: str, epoch: int, notified: bool) -
     return True
 
 
-def _fail_attempt(task: dict, err: str, max_attempts: int) -> str | None:
+IDLE_ATTEMPTS_MAX = 2  # consecutive failed attempts that leave the working tree exactly as the previous one left it
+
+
+def _fail_attempt(task: dict, err: str, max_attempts: int, change: dict | None = None) -> str | None:
     """Count a failed attempt and climb one tier. Returns why the task is stuck, or None. A repeated error only
-    blocks once the task already failed at the top tier; below it, it escalates like any other failure."""
+    blocks once the task already failed at the top tier; below it, it escalates like any other failure. Stagnation:
+    attempts whose resulting tree signature (`change["tree_sig"]`) equals the previous attempt's made no progress;
+    after IDLE_ATTEMPTS_MAX of them in a row the task is blocked with that diagnosis instead of burning more quota."""
     h = rs.error_hash(err)
     repeated = h in task["error_hashes"]
     tier = tier_.tier_of(task)
+    sig = (change or {}).get("tree_sig")
+    if sig:
+        task["idle_attempts"] = task.get("idle_attempts", 0) + 1 if sig == task.get("tree_sig") else 0
+        task["tree_sig"] = sig
     task.update(status="todo", attempts=task["attempts"] + 1, last_error=err,
                 error_hashes=(task["error_hashes"] + [h])[-10:])
     if task["attempts"] >= max_attempts:
         return f"{task['attempts']} failed attempts"
     if repeated and tier >= tier_.TOP:
         return "same error twice, the second time at the top model tier"
+    if task.get("idle_attempts", 0) >= IDLE_ATTEMPTS_MAX:
+        return f"no progress: {task['idle_attempts']} consecutive failed attempts left the working tree unchanged"
     task["tier"] = min(tier + 1, tier_.TOP)
     return None
 
@@ -295,7 +306,7 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
     elif skip_reason:  # a milestone session never reached it because a task it depends on did not finish
         result, summary = "skipped", skip_reason
     elif info["timed_out"]:  # before the limit check: a killed session's half-written output proves nothing
-        result, err = "timeout", f"session timeout after {state['limits']['session_timeout_min']} min"
+        result, err = "timeout", f"session timeout after {info.get('timeout_min') or state['limits']['session_timeout_min']:g} min"
     elif detect_limit(info) is not None:
         result = "usage_limit"
         if t.get("limit_streak", 0) + 1 >= LIMIT_STREAK_MAX:  # never-ending 'limit' = a misread failure, not a limit
@@ -336,7 +347,7 @@ def settle_task(project: str, rdir: Path, task_id: str, n: int, info: dict, work
             if task["attempts"] >= s["limits"]["max_attempts"]:
                 reason = f"{task['attempts']} attempts, the last one escalated ({summary})"
         elif result in ("timeout", "failed", "verify_failed"):
-            reason = _fail_attempt(task, err, s["limits"]["max_attempts"])
+            reason = _fail_attempt(task, err, s["limits"]["max_attempts"], info.get("change_size"))
             reason = reason and f"{reason}: {err}"
         elif result == "blocked":
             stuck.update(reason=task["last_error"] or "blocked by the agent", task=dict(task))

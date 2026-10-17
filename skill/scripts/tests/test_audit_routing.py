@@ -98,8 +98,8 @@ class AuditRoutingTests(AgentTests):
         self.assertEqual(routes[0]["agent"], "codex")
 
     def test_implementation_ladder_is_unchanged(self):
-        self.assertEqual(bt_agents.model_for("claude", 1), ("sonnet", "xhigh"))
-        self.assertEqual(bt_agents.model_for("codex", 2), ("gpt-6.1-sol", "xhigh"))
+        self.assertEqual(bt_agents.model_for("claude", 1), ("sonnet", "medium"))
+        self.assertEqual(bt_agents.model_for("codex", 2), ("gpt-6.1-sol", "high"))
 
     def test_high_risk_milestone_audit_starts_at_escalated_budget(self):
         for signal in ({"risk": "high"}, {"level": "architecture"}):

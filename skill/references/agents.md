@@ -24,10 +24,10 @@ This is the selected policy, not a runtime rollout. The source Explorer still de
 | Model | Provider (CLI) | Tiers | Use it for |
 |---|---|---|---|
 | `haiku` — Haiku 5.5 | Claude Code | 0 | mechanical edits, docs, small well-specified tasks, running and reading tests |
-| `sonnet` — Sonnet 5.5 | Claude Code | 1 (`--effort xhigh`) | everyday implementation, debugging, reviews |
-| `opus` — Opus 5.5 | Claude Code | 2 (`--effort xhigh`) | architecture, hard debugging, audits of risky changes |
+| `sonnet` — Sonnet 5.5 | Claude Code | 1 (`--effort medium`) | everyday implementation, debugging, reviews |
+| `opus` — Opus 5.5 | Claude Code | 2 (`--effort high`) | architecture, hard debugging, audits of risky changes |
 | `gpt-6-luna` — GPT-6 Luna | Codex | 0 (`medium`; docs `low`) | fast subagent work: well-specified modules, tests, docs, exploration |
-| `gpt-6.1-sol` — GPT-6.1 Sol | Codex | 1 (`high`), 2 (`xhigh`) | implementation that needs judgment, independent audits, architecture |
+| `gpt-6.1-sol` — GPT-6.1 Sol | Codex | 1 (`medium`), 2 (`high`) | implementation that needs judgment, independent audits, architecture |
 | `gemini-3.8-flash-low` — Gemini 3.8 Flash low | Antigravity CLI (`agy`, Google AI Pro) | 0–1 | **default auditor** (D-004); reserve builder when Claude and Codex are exhausted; not for interactive or urgent work |
 | `gemini-3.8-flash-medium` | Antigravity CLI | 2 (only on escalation) | long-horizon agentic work; not measured, 2.5× slower than low |
 | `gemini-3.8-flash-high` | Antigravity CLI | never automatic | avoid: timed out (900 s) twice on a task that low solved |
@@ -107,6 +107,30 @@ session with requirements, diff and relevant consumers; another provider is opti
 budget. Review corrections and affected paths on follow-up instead of repeating unaffected investigation.
 The final review consolidates milestone evidence and remaining cross-milestone risks, rather than restarting every
 completed audit. No xhigh/max by default; escalate for recorded risk or demonstrated difficulty, not file count.
+
+## Router quota policy (D-066)
+
+Single engine: `bt_agents.candidates` ranks the routes and the scheduler's decision adapter reads the same ladder, so
+there is no second router. Order of the sort key: busy account, avoided provider, role, **quota headroom**, **verified
+quality**, recent load, pool order.
+
+- Headroom is the bottleneck of the 5 h and 7 d windows in 10-point buckets; unknown or stale pressure counts as 50 %
+  (never empty, never full). An account burning its week faster than evenly (15+ points ahead of the share of the
+  window elapsed) is penalised by 20 points; accounts with slack are not pushed to spend it.
+- Quality is the lower 90 % confidence bound of the verified success rate (`done` only; claims the verify rejected and
+  `claimed` rows never count), with `routing.min_samples` (default 5) judged attempts of the same kind needed.
+- Cold start: an under-sampled route explores only for non-audit work that is not `risk: high`; cheap models freely
+  (bounded by min_samples), models of cost 6 or more (Opus, Sol) within `routing.explore_budget_week` attempts per
+  7 days (default 5; raise it with `bitacora.py config`).
+- Load weights use `routing.effort_weight` (default low 1, medium 1, high 1.5, xhigh 2: a heuristic estimate, never an
+  observation). `bitacora.py`-independent report: `python bt_efficiency.py` prints verified success, claim precision,
+  attempts and seconds per verified task, and consumption as *measured* (provider tokens) or *estimated*, each with the
+  number of attempts behind it and a confidence label. The two are never added together.
+- After a usage limit the supervisor re-asks the router for the tier and kind of the session that was limited; a task
+  at tier 2 is never served by a lighter model, and with no admissible route the run waits for the reset. Only an
+  account that produced a provider limit message is put on cooldown.
+- Not implemented: reserving quota for priority work, and learning from reworked or regressed tasks (the telemetry
+  has no field for later rework yet).
 
 ## Scheduler M2 route recommendations (D-057)
 

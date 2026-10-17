@@ -225,7 +225,7 @@ def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, 
     profiles = bt_profiles.load()
     usage = bt_subscriptions.load()
     tier = _tier_for(classifications, task_kind)
-    routes, _ = bt_agents.candidates(project, pool, tier, task_kind)
+    routes, _ = bt_agents.candidates(project, pool, tier, task_kind, risk=str(classifications.get("risk") or "") or None)
     router_rank = {
         (route.get("profile"), route.get("agent"), route.get("model"), route.get("effort")): index
         for index, route in enumerate(routes)

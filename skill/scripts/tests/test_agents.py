@@ -79,17 +79,17 @@ class ModelSelectionTests(AgentTests):
 
     def test_model_for_claude_tiers_and_configured_model_strength(self):
         self.assertEqual(bt_agents.model_for("claude", 0), ("haiku", None))
-        self.assertEqual(bt_agents.model_for("claude", 1), ("sonnet", "xhigh"))
-        self.assertEqual(bt_agents.model_for("claude", 2), ("opus", "xhigh"))
-        self.assertEqual(bt_agents.model_for("claude", 1, "opus"), ("opus", "xhigh"))
-        self.assertEqual(bt_agents.model_for("claude", 2, "sonnet"), ("opus", "xhigh"))
+        self.assertEqual(bt_agents.model_for("claude", 1), ("sonnet", "medium"))
+        self.assertEqual(bt_agents.model_for("claude", 2), ("opus", "high"))
+        self.assertEqual(bt_agents.model_for("claude", 1, "opus"), ("opus", "medium"))
+        self.assertEqual(bt_agents.model_for("claude", 2, "sonnet"), ("opus", "high"))
 
     def test_model_for_codex_tiers_always_set_effort_and_docs_use_low(self):
         self.assertEqual(bt_agents.model_for("codex", 0), ("gpt-6-luna", "medium"))
-        self.assertEqual(bt_agents.model_for("codex", 1), ("gpt-6.1-sol", "high"))
-        self.assertEqual(bt_agents.model_for("codex", 2), ("gpt-6.1-sol", "xhigh"))
+        self.assertEqual(bt_agents.model_for("codex", 1), ("gpt-6.1-sol", "medium"))
+        self.assertEqual(bt_agents.model_for("codex", 2), ("gpt-6.1-sol", "high"))
         self.assertEqual(bt_agents.model_for("codex", 0, kind="docs"), ("gpt-6-luna", "low"))
-        self.assertEqual(bt_agents.model_for("codex", 1, "gpt-6-luna"), ("gpt-6.1-sol", "high"))
+        self.assertEqual(bt_agents.model_for("codex", 1, "gpt-6-luna"), ("gpt-6.1-sol", "medium"))
 
     def test_configured_model_is_only_kept_for_its_provider(self):
         self.assertEqual(bt_agents.model_for("claude", 0, "gpt-6.1-sol"), ("haiku", None))
@@ -98,20 +98,20 @@ class ModelSelectionTests(AgentTests):
     def test_legacy_claude_ladder_and_stronger_configured_model(self):
         state = {"agent": "claude"}
         self.assertEqual(bt_agents.legacy_model_for(state, 0), ("haiku", None))
-        self.assertEqual(bt_agents.legacy_model_for(state, 1), ("sonnet", "xhigh"))
-        self.assertEqual(bt_agents.legacy_model_for(state, 2), ("opus", "xhigh"))
+        self.assertEqual(bt_agents.legacy_model_for(state, 1), ("sonnet", "medium"))
+        self.assertEqual(bt_agents.legacy_model_for(state, 2), ("opus", "high"))
         self.assertEqual(bt_agents.legacy_model_for({"agent": "claude", "model": "opus"}, 1),
-                         ("opus", "xhigh"))
+                         ("opus", "medium"))
         self.assertEqual(bt_agents.legacy_model_for({"agent": "claude", "model": "sonnet"}, 2),
-                         ("opus", "xhigh"))
+                         ("opus", "high"))
 
     def test_legacy_codex_keeps_only_codex_models_and_raises_effort_from_tier_one(self):
         self.assertEqual(bt_agents.legacy_model_for({"agent": "codex", "model": "gpt-6-luna"}, 0),
                          ("gpt-6-luna", None))
         self.assertEqual(bt_agents.legacy_model_for({"agent": "codex", "model": "gpt-6.1-sol"}, 1),
-                         ("gpt-6.1-sol", "xhigh"))
+                         ("gpt-6.1-sol", "medium"))
         self.assertEqual(bt_agents.legacy_model_for({"agent": "codex", "model": "opus"}, 2),
-                         (None, "xhigh"))
+                         (None, "high"))
 
 
 class QuotaTests(AgentTests):
