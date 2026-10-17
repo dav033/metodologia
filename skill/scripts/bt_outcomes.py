@@ -11,8 +11,10 @@ Verdicts: `verified` (the supervisor's verification passed), `failed` (the agent
 per-task data existed stay readable: `task_results` gives one outcome per task, a bare row one outcome per session
 (`granularity: session`), and a legacy aggregate `partial` is unjudged instead of a failure.
 
-Identity: an outcome is (project, run, task, attempt number); a recovered or replayed row repeats it and is dropped,
-and one task is verified at most once per run, whatever model repeats it after a restart.
+Identity: an outcome is (project, run_id, task, attempt number); a recovered or replayed row of the SAME run repeats it
+and is dropped, one task is verified at most once per run (whatever model repeats it after a restart), and a new run of
+the same REQ has another run_id so it never collides. Legacy rows without `run_id` are not merged at all: they cannot
+prove they belong to one run, so each counts as recorded (a documented limit of the old history).
 """
 from __future__ import annotations
 
@@ -34,12 +36,12 @@ def verdict_of(result: object, loss: object = None) -> str:
 
 
 def _identity(row: dict, task: str | None, attempt: object) -> str:
-    project, req = row.get("project"), row.get("req")
-    if attempt is None:  # no attempt number (final review, old rows): each session is its own attempt
-        return f"{row.get('event_id') or id(row)}:{task}"
-    if project and req and task:
-        return hashlib.sha1(f"{project}|{req}|{task}|{attempt}".encode()).hexdigest()[:16]
-    return f"{row.get('event_id') or id(row)}:{task}"  # a row without identity is only ever itself
+    """Stable id of one task outcome: (project, run_id, task, attempt). Rows written before `run_id` existed cannot
+    tell two runs of the same REQ apart, so they are never merged: each legacy session is its own outcome source."""
+    project, run_id = row.get("project"), row.get("run_id")
+    if run_id and project and task and attempt is not None:
+        return hashlib.sha1(f"{project}|{run_id}|{row.get('attempt_epoch') or 0}|{task}|{attempt}".encode()).hexdigest()[:16]
+    return f"{row.get('event_id') or id(row)}:{task}"  # no run/attempt identity: only ever itself
 
 
 def _tasks_of(row: dict) -> list[dict]:
@@ -47,7 +49,8 @@ def _tasks_of(row: dict) -> list[dict]:
     kind = row.get("kind") or "implement"
     declared = row.get("task_outcomes")
     if isinstance(declared, list) and declared:
-        return [{"id": t.get("id"), "kind": t.get("kind") or kind, "result": t.get("result"),
+        # `kind` is the SESSION's: the route (model, effort) was chosen for that kind, and reports group the same way
+        return [{"id": t.get("id"), "kind": kind, "result": t.get("result"),
                  "attempt": t.get("attempt"), "granularity": "task"} for t in declared if isinstance(t, dict)]
     results = row.get("task_results")
     if isinstance(results, dict) and results:
@@ -74,7 +77,7 @@ def outcomes(rows: list[dict]) -> list[dict]:
         for t in tasks:
             oid = _identity(row, t["id"], t["attempt"])
             verdict = verdict_of(t["result"], row.get("loss"))
-            unique = (row.get("project"), row.get("req"), t["id"])
+            unique = (row.get("project"), row.get("run_id"), t["id"])
             if oid in seen:
                 continue
             if verdict == "verified" and all(unique):
@@ -89,14 +92,16 @@ def outcomes(rows: list[dict]) -> list[dict]:
     return out
 
 
-def counts(rows: list[dict], by: tuple = ("agent", "model", "kind")) -> dict[tuple, dict]:
-    """Verdict counts per group of `by` fields (the task's kind stands for `kind`). `judged` = verified + failed:
+def counts(rows: list[dict], by: tuple = ("agent", "model", "effort", "kind")) -> dict[tuple, dict]:
+    """Verdict counts per group of `by` fields (`kind` is the session's). `judged` = verified + failed:
     provider losses, skips and unjudged results never enter a success rate."""
     groups: dict[tuple, dict] = {}
     for o in outcomes(rows):
-        key = tuple(o["kind"] if k == "kind" else o["row"].get(k) for k in by)
-        g = groups.setdefault(key, {"verified": 0, "failed": 0, "provider_loss": 0, "skipped": 0, "unjudged": 0})
+        key = tuple((o["row"].get(k) or "implement") if k == "kind" else o["row"].get(k) for k in by)
+        g = groups.setdefault(key, {"verified": 0, "failed": 0, "provider_loss": 0, "skipped": 0, "unjudged": 0,
+                                    "retries": 0})
         g[o["verdict"]] += 1
+        g["retries"] += o["retry"]
     for g in groups.values():
         g["judged"] = g["verified"] + g["failed"]
     return groups

@@ -374,8 +374,8 @@ class VerifiedEfficiency(unittest.TestCase):
         with patch.object(bt_events, "read_all", return_value=rows), patch.object(bt_agents, "account_key",
                                                                                   return_value="a"):
             rates, _ = bt_agents._stats()
-        self.assertEqual(rates[("codex", "gpt-6-luna", "implement")], 1.0)
-        self.assertEqual(rates.samples[("codex", "gpt-6-luna", "implement")], 5)
+        self.assertEqual(rates[("codex", "gpt-6-luna", None, "implement")], 1.0)
+        self.assertEqual(rates.samples[("codex", "gpt-6-luna", None, "implement")], 5)
 
 
 if __name__ == "__main__":

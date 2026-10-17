@@ -233,8 +233,11 @@ def _seen(path: Path, event_id: str) -> bool:
         return False
 
 
-def event_id_for(project: str, req, session: int) -> str:
-    return hashlib.sha1(f"{project}|{req}|{session}".encode()).hexdigest()[:16]
+def event_id_for(project: str, req, session: int, run_id: str | None = None) -> str:
+    """Stable id of one session. `run_id` (RUN.json `context_run_id`, created with the run and kept by resumes) keeps a
+    NEW run of the same REQ from colliding with the old one; without it (legacy rows, delegations) the id is the old
+    (project, req, session) hash, unchanged."""
+    return hashlib.sha1((f"{project}|{req}|{session}" + (f"|{run_id}" if run_id else "")).encode()).hexdigest()[:16]
 
 
 def record_attempt(project: str, state: dict, task_id: str, session: int, info: dict, result: str,
@@ -245,9 +248,10 @@ def record_attempt(project: str, state: dict, task_id: str, session: int, info: 
         now = dt.datetime.now().astimezone()
         agent = info.get("agent") or state.get("agent")  # the session's route, not the run's default
         profile = info.get("profile") if info.get("agent") else state.get("profile")
-        event_id = event_id_for(project, state.get("req"), session)
+        run_id = state.get("context_run_id") if isinstance(state.get("context_run_id"), str) else None
+        event_id = event_id_for(project, state.get("req"), session, run_id)
         row = {
-            "schema": SCHEMA, "event_id": event_id, "ts": now.isoformat(timespec="seconds"),
+            "schema": SCHEMA, "event_id": event_id, "run_id": run_id, "attempt_epoch": state.get("attempt_epoch"), "ts": now.isoformat(timespec="seconds"),
             "project": project, "work": bt_profiles.is_work_project(project), "req": state.get("req"),
             "task": task_id, "session": session, "agent": agent, "profile": profile,
             "model": info.get("model"), "requested_model": info.get("model"), "reported_model": None,
@@ -289,7 +293,7 @@ def _valid_row(row) -> bool:
     if not isinstance(row, dict) or not isinstance(row.get("result"), str):
         return False
     if any(row.get(k) is not None and not isinstance(row[k], str)
-           for k in tuple(k for k in GROUP_KEYS if k != "tier") + ("ts", "event_id", "req", "task")):
+           for k in tuple(k for k in GROUP_KEYS if k != "tier") + ("ts", "event_id", "req", "task", "run_id")):
         return False
     if any(row.get(k) is not None and _int(row[k]) is None for k in ("tier", "session")):
         return False
@@ -390,13 +394,25 @@ def summary(rows: list[dict], by: tuple | list | None = None, defects: list[dict
     for key, g in groups.items():
         judged = g["done"] + g["failed"]
         # `success_rate` keeps its published session-level meaning (decisions and reports read this exact number); the
-        # task view the router learns from is `task_success_rate` (a partial session is 2 verified + 1 failed there).
+        # task view the router learns from is `verified_task_success_rate` (alias `task_success_rate`: a partial session
+        # is 2 verified + 1 failed there; `task_success_rate_incl_unjudged` also counts claimed/blocked tasks against).
         g["success_rate"] = round(g["done"] / judged, 2) if judged else None
         judged_model = judged - g["failed_by_loss"]  # same rate without the failures the provider caused
         g["success_rate_excl_loss"] = round(g["done"] / judged_model, 2) if judged_model > 0 else None
-        tc = task_counts.get(key) or {"verified": 0, "failed": 0, "judged": 0}
-        g.update(tasks_verified=tc["verified"], tasks_failed=tc["failed"],
-                 task_success_rate=round(tc["verified"] / tc["judged"], 2) if tc["judged"] else None)
+        tc = task_counts.get(key) or {"verified": 0, "failed": 0, "judged": 0, "unjudged": 0, "provider_loss": 0,
+                                      "retries": 0}
+        attempted = tc["judged"] + tc["unjudged"]
+        seen = tc["judged"] + tc["provider_loss"] + tc["unjudged"]
+        g.update(
+            session_success_rate=g["success_rate"],  # explicit name of the legacy `success_rate` (per SESSION)
+            tasks_verified=tc["verified"], tasks_failed=tc["failed"], tasks_unjudged=tc["unjudged"],
+            tasks_provider_loss=tc["provider_loss"],
+            # per TASK: verified / (verified + failed) is what the router learns from
+            verified_task_success_rate=round(tc["verified"] / tc["judged"], 2) if tc["judged"] else None,
+            task_success_rate=round(tc["verified"] / tc["judged"], 2) if tc["judged"] else None,  # same number, as published
+            task_success_rate_incl_unjudged=round(tc["verified"] / attempted, 2) if attempted else None,
+            provider_failure_rate=round(tc["provider_loss"] / seen, 2) if seen else None,
+            retry_rate=round(tc["retries"] / seen, 2) if seen else None)
         if defects is None:
             g["audits_unreported"] = None
         g["avg_seconds"] = round(g["seconds"] / g["seconds_measured"]) if g["seconds_measured"] else None
@@ -414,25 +430,28 @@ def summary(rows: list[dict], by: tuple | list | None = None, defects: list[dict
 
 
 def advice(rows: list[dict], min_samples: int = 5, defects: list[dict] | None = None) -> list[str]:
-    """Plain-language observations to decide with: only from groups with enough judged attempts."""
+    """Plain-language observations to decide with: only from groups with enough judged TASK outcomes (bt_outcomes: the
+    same verdicts the router learns from; a partial session is not a failed one, provider losses are not the model's)."""
     out = []
-    table = [g for g in summary(rows, ("agent", "model", "effort", "kind")) if g["done"] + g["failed"] >= min_samples]
+    table = [g for g in summary(rows, ("agent", "model", "effort", "kind"))
+             if g["tasks_verified"] + g["tasks_failed"] >= min_samples]
     by_kind: dict[str, list[dict]] = {}
     for g in table:
         by_kind.setdefault(g["kind"], []).append(g)
     for kind, groups in sorted(by_kind.items()):
         compare_seconds = all(g["seconds_measured"] >= min_samples for g in groups)
-        groups.sort(key=lambda g: (-g["success_rate"], g["avg_seconds"] if compare_seconds else 0))
+        groups.sort(key=lambda g: (-g["verified_task_success_rate"], g["avg_seconds"] if compare_seconds else 0))
         best = groups[0]
         duration = (f"{best['avg_seconds']}s avg" if best["seconds_measured"] >= min_samples else
                     f"duration needs {min_samples} measured attempts")
         out.append(f"{kind}: best measured is {best['agent']}/{best['model']}"
-                   f"{' · ' + best['effort'] if best['effort'] else ''} ({best['success_rate']:.0%} of "
-                   f"{best['done'] + best['failed']}, {duration})")
+                   f"{' · ' + best['effort'] if best['effort'] else ''} ({best['verified_task_success_rate']:.0%} of "
+                   f"{best['tasks_verified'] + best['tasks_failed']}, {duration})")
         for g in groups[1:]:
-            if best["success_rate"] - g["success_rate"] >= 0.25:
+            if best["verified_task_success_rate"] - g["verified_task_success_rate"] >= 0.25:
                 out.append(f"{kind}: {g['agent']}/{g['model']}{' · ' + g['effort'] if g['effort'] else ''} succeeds "
-                           f"{g['success_rate']:.0%} of {g['done'] + g['failed']}: consider starting it one tier up")
+                           f"{g['verified_task_success_rate']:.0%} of {g['tasks_verified'] + g['tasks_failed']}: "
+                           f"consider starting it one tier up")
     quality = [g for g in summary(rows, ("agent", "model", "effort", "kind"), defects)
                if g["audited"] >= min_samples and g["findings_per_audited_task"] is not None]
     for g in sorted(quality, key=lambda g: (g["kind"], g["findings_per_audited_task"])):

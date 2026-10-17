@@ -260,13 +260,14 @@ def pool_for(project: str, requested: list[str] | None = None) -> list[str]:
 
 
 class _Rates(dict):
-    """Success rates by (agent, model, kind) with enough samples; `.samples` holds every judged-attempt count, so a
+    """Success rates by (agent, model, effort, kind) with enough samples; `.samples` holds every judged-attempt count, so a
     provider with 1-4 attempts is known to be under-sampled instead of looking the same as an unseen one."""
 
     samples: dict = {}
     lower: dict = {}   # lower confidence bound of each rate: what the quality band ranks by
     recent: dict = {}  # admitted explorations in the last 7 days by (agent, model): the exploration budget's counter
     recent_total: int = 0
+    pooled: dict = {}  # (agent, model, kind): outcomes of every effort together, with the per-effort split
 
 
 def _stats() -> tuple[dict, dict]:
@@ -294,13 +295,22 @@ def _stats() -> tuple[dict, dict]:
     # never enter a rate. Consumption (`load`, above) stays per session: a session is paid once.
     import bt_explore
     import bt_outcomes
-    counts = {k: (g["judged"], g["verified"]) for k, g in bt_outcomes.counts(rows, ("agent", "model", "kind")).items()}
+    # Identity of a measured configuration: (agent, model, effort, kind). Another effort of the same model is a
+    # different configuration: its outcomes are kept apart and only ever surface as labelled AGGREGATE evidence.
+    direct_counts = bt_outcomes.counts(rows, ("agent", "model", "effort", "kind"))
+    counts = {k: (g["judged"], g["verified"]) for k, g in direct_counts.items()}
     min_samples = int(_config("routing.min_samples", MIN_SAMPLES))
     rates = _Rates({k: done / judged for k, (judged, done) in counts.items() if judged >= min_samples})
     rates.samples = {k: judged for k, (judged, _) in counts.items()}
     # The band uses the lower confidence bound: a short lucky streak must not read as a proven route.
     rates.lower = {k: bt_routing_policy.wilson_lower(done, judged) for k, (judged, done) in counts.items()
                    if judged >= min_samples}
+    rates.pooled = {}
+    for (agent, model, effort, kind), (judged, done) in counts.items():
+        pooled = rates.pooled.setdefault((agent, model, kind), {"judged": 0, "verified": 0, "efforts": {}})
+        pooled["judged"] += judged
+        pooled["verified"] += done
+        pooled["efforts"][effort] = (judged, done)
     # Only admitted explorations (the ledger) spend the exploration budget: ordinary attempts never do.
     rates.recent, rates.recent_total = bt_explore.used(now)
     return rates, load
@@ -341,18 +351,22 @@ def _quality_order(agent: str, kind: str, rate: float | None, pressure: float | 
 
 def candidates(project: str, pool: list[str], tier: int, kind: str = "implement", configured: str | None = None,
                avoid_providers: set | None = None, busy: set | None = None, risk: str | None = None,
-               complexity: str | None = None, allow_explore: bool = True) -> tuple[list[dict], float | None]:
+               complexity: str | None = None, allow_explore: bool = True, effort: str | None = None
+               ) -> tuple[list[dict], float | None]:
     """(routes of `tier` ordered best first, earliest epoch a cooling account frees up when none is available).
     `busy`: account keys already taken by sessions being started in the same batch (they go last). `risk` and
     `complexity` of the work make it critical (bt_routing_policy.is_critical): quality leads quota and cold-start
     exploration stays away. Routes that would be explorations carry `exploring`; route() admits them against the
-    persistent budget (bt_explore) and asks again with `allow_explore=False` when the budget is spent."""
+    persistent budget (bt_explore) and asks again with `allow_explore=False` when the budget is spent. `effort`: an effort
+    the work asked for explicitly: it is applied BEFORE the routes are compared, so the quality evidence consulted is the
+    one of the effort that will really run."""
     from bt_subscriptions import capacity
     from bt_subscriptions import load as load_usage
     samples = load_usage(STATE)
     rates, load = _stats()
     profiles = bt_profiles.load()
     critical = bt_routing_policy.is_critical(tier, risk, complexity, kind)
+    asked_effort, effort = effort, None
     routes, soonest, staged = [], None, []
     for index, pid in enumerate(pool):
         spec = profiles.get(pid)
@@ -361,7 +375,8 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
         agent = spec["provider"]
         if spec.get("work_only") and not bt_profiles.is_work_project(project):
             continue  # a pool saved while the project was work must not outlive that flag
-        model, effort = model_for(agent, tier, configured, kind)
+        model, ladder_effort = model_for(agent, tier, configured, kind)
+        effort = apply_explicit_effort(agent, model, ladder_effort, asked_effort)
         pressure, exhausted = capacity(samples.get(account_key(pid, agent)), model)
         if agent == "antigravity":  # Google's own quota report, refreshed by the supervisor (bt_agy)
             import bt_agy
@@ -373,19 +388,19 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
         if until:
             soonest = until if soonest is None else min(soonest, until)
             continue
-        rate = rates.get((agent, model, kind))
-        seen = getattr(rates, "samples", {}).get((agent, model, kind), 0)
-        explore = allow_explore and rate is None and bt_routing_policy.may_explore(
+        evidence, rate, lower = evidence_for(rates, agent, model, effort, kind)
+        seen = evidence["samples"] if evidence["kind"] != "aggregate" else evidence["direct_samples"]
+        explore = allow_explore and rate is None and not evidence.get("poor") and bt_routing_policy.may_explore(
             MODELS.get(model, {}).get("cost", 2), kind, risk, seen, getattr(rates, "recent", {}).get((agent, model), 0),
             critical)
-        lower = getattr(rates, "lower", {}).get((agent, model, kind), rate)
-        staged.append((index, pid, agent, model, effort, pressure, ranked_pressure, rate, seen, explore, lower))
+        staged.append((index, pid, agent, model, effort, pressure, ranked_pressure, rate, seen, explore, lower,
+                       evidence))
     best = max((row[10] for row in staged if row[10] is not None), default=None)
-    for index, pid, agent, model, effort, pressure, ranked_pressure, rate, seen, explore, lower in staged:
+    for index, pid, agent, model, effort, pressure, ranked_pressure, rate, seen, explore, lower, evidence in staged:
         acc = account_key(pid, agent)
         cost = MODELS.get(model, {}).get("cost", 2) * bt_routing_policy.effort_weight(effort)
         routes.append({"profile": pid, "agent": agent, "model": model, "effort": effort, "tier": tier, "kind": kind,
-                       "exploring": explore, "account": acc,
+                       "exploring": explore, "account": acc, "evidence": evidence,
                        "_key": (acc in (busy or ()),
                                 agent in (avoid_providers or ()),
                                 _role_rank(agent, kind, pressure),
@@ -395,7 +410,7 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
                        "why": (("audit budget: Sonnet medium / Opus high; " if agent == "claude" else
                                 "audit fallback: Sol medium / high; ") if kind == "audit" else "") +
                               ("critical work: verified quality before quota; " if critical and kind != "audit" else "") +
-                              _why(agent, avoid_providers, rate, load.get(acc, 0), lower, seen) +
+                              _why(agent, avoid_providers, rate, load.get(acc, 0), lower, seen, evidence) +
                               (f"; subscription bottleneck {pressure:g}% used" if pressure is not None else
                                "; subscription usage unknown/stale")})
     # The rate is compared in 20-point bands on purpose: a few points of difference over a handful of attempts is
@@ -421,12 +436,59 @@ def _role_rank(agent: str, kind: str, pressure: float | None) -> int:
     return 1 if agent == "antigravity" else 0
 
 
-def _why(agent, avoid, rate, load, lower=None, seen: int = 0) -> str:
+AGGREGATE_DISCOUNT = 0.2  # indirect evidence ranks one 20-point band below what it would show if it were direct
+POOR_AGGREGATE = 0.3      # other efforts of this model measured below this lower bound: do not spend exploration on it
+
+
+def apply_explicit_effort(agent: str, model: str | None, effort: str | None, asked: str | None) -> str | None:
+    """The effort that really runs: a task may ask for a stronger one than its tier's (Claude and Codex, never Haiku),
+    never a weaker one. Used by the router (so the evidence consulted is the executed effort's) and by the session."""
+    if asked not in EFFORTS or agent not in ("claude", "codex") or model == "haiku":
+        return effort
+    if effort in EFFORTS and EFFORTS.index(effort) >= EFFORTS.index(asked):
+        return effort
+    return asked
+
+
+def evidence_for(rates, agent: str, model: str, effort: str | None, kind: str) -> tuple[dict, float | None, float | None]:
+    """(evidence, direct rate, ranking quality) of one configuration. `direct`: verified outcomes of exactly
+    (agent, model, effort, kind), at least `routing.min_samples`. `aggregate`: only OTHER efforts of the same model have
+    enough outcomes; they inform the ranking (lower bound minus one band) and the exploration priority, are labelled, and
+    NEVER become this effort's measured success rate. `none`: nothing usable, which blocks nothing."""
+    key = (agent, model, effort, kind)
+    samples = getattr(rates, "samples", {}).get(key, 0)
+    rate = rates.get(key)
+    if rate is not None:
+        lower = getattr(rates, "lower", {}).get(key, rate)
+        return {"kind": "direct", "samples": samples, "rate": rate, "lower": lower}, rate, lower
+    pooled = getattr(rates, "pooled", {}).get((agent, model, kind))
+    others = {e: v for e, v in (pooled or {"efforts": {}})["efforts"].items() if e != effort}
+    judged, done = sum(j for j, _ in others.values()), sum(d for _, d in others.values())
+    if judged >= int(_config("routing.min_samples", MIN_SAMPLES)):
+        # this effort's own outcomes, below the direct threshold, still count (a few direct failures are not hidden by
+        # a strong neighbour) and a direct majority of failures marks the route poor
+        own_judged, own_done = (pooled["efforts"].get(effort) or (0, 0)) if pooled else (0, 0)
+        judged, done = judged + own_judged, done + own_done
+        agg_lower = bt_routing_policy.wilson_lower(done, judged) or 0.0
+        return ({"kind": "aggregate", "samples": judged, "direct_samples": samples, "rate": None,
+                 "aggregate_rate": done / judged, "lower": max(0.0, agg_lower - AGGREGATE_DISCOUNT),
+                 "from_efforts": sorted(str(e) for e in others),
+                 "poor": agg_lower < POOR_AGGREGATE or own_judged - own_done > own_done},
+                None, max(0.0, agg_lower - AGGREGATE_DISCOUNT))
+    return {"kind": "none", "samples": samples, "rate": None, "lower": None}, None, None
+
+
+def _why(agent, avoid, rate, load, lower=None, seen: int = 0, evidence: dict | None = None) -> str:
     bits = []
     if avoid:
         bits.append("other provider than " + "/".join(sorted(avoid)) if agent not in avoid else "same provider")
-    bits.append(f"verified task success {rate:.0%} (lower bound {lower:.0%}, {seen} judged)" if rate is not None
-                else f"no proven history yet ({seen} judged)")
+    kind = (evidence or {}).get("kind")
+    if kind == "aggregate":
+        bits.append(f"INDIRECT evidence only: other efforts of this model {evidence['aggregate_rate']:.0%} over "
+                    f"{evidence['samples']} judged (ranked at lower bound minus one band; not this effort's success)")
+    else:
+        bits.append(f"direct verified task success {rate:.0%} (lower bound {lower:.0%}, {seen} judged)"
+                    if rate is not None else f"no proven history yet ({seen} judged)")
     bits.append(f"load {int(load // 60)} weighted-min in the last 5 h")
     return "; ".join(bits)
 
@@ -441,7 +503,7 @@ class NoRoute(Exception):
 
 def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_providers: set | None = None,
           busy: set | None = None, risk: str | None = None, complexity: str | None = None,
-          allow_explore: bool = True) -> dict:
+          allow_explore: bool = True, effort: str | None = None, decision_key: str | None = None) -> dict:
     """The route of one session. Fixed mode (no pool): the run's own agent/profile at the tier's model. Pool mode:
     the best available candidate; raises NoRoute when all accounts are cooling down. The route carries its `decision`
     (bt_explore): exploit, explore (admitted against the persistent budget), fallback (an account was cooling),
@@ -456,7 +518,7 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
                 "decision": bt_explore.decision_for("explicit", "the run is pinned to one agent (no pool)")}
     _refresh_google_quota(pool)
     args = (project, pool, tier, kind, state.get("model"), avoid_providers, busy, risk, complexity)
-    routes, soonest = candidates(*args, allow_explore=allow_explore)
+    routes, soonest = candidates(*args, allow_explore=allow_explore, effort=effort)
     if not routes:
         if soonest is None:  # nothing is cooling: no account of the pool may run this project any more
             raise bt_profiles.ProfileError(f"No account of the pool ({', '.join(pool)}) may run '{project}'. "
@@ -472,9 +534,9 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
             chosen, project, state.get("req"),
             f"cold start: {chosen['agent']}/{chosen['model']} has fewer than routing.min_samples judged {kind} outcomes "
             f"and {len(routes) - 1} other admissible route(s) exist",
-            limit, int(global_limit or 0) or None)
+            limit, int(global_limit or 0) or None, key=decision_key)
         if record is None:  # the weekly budget is spent (possibly by a concurrent supervisor): rank it as unproven
-            routes, soonest = candidates(*args, allow_explore=False)
+            routes, soonest = candidates(*args, allow_explore=False, effort=effort)
             chosen = routes[0]
     if record:
         decision = bt_explore.decision_for("explore", record["reason"], record)
@@ -486,6 +548,7 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
                                            "admissible route chosen")
     else:
         decision = bt_explore.decision_for("exploit", chosen["why"])
+    decision["evidence"] = chosen.get("evidence")  # what the choice rested on: direct, aggregate or none
     chosen = {k: v for k, v in chosen.items() if k != "exploring"}
     return {**chosen, "decision": decision}
 

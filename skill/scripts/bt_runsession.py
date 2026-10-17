@@ -210,19 +210,26 @@ def session_route(project: str, state: dict, task: dict | None, unit: list[dict]
                 avoid.add(last["agent"])
     risk = "high" if any(t.get("risk") == "high" for t in unit) else None
     complexity = "L" if any(t.get("complexity") == "L" for t in unit) else None
-    chosen = bt_agents.route(project, state, tier, kind, avoid, busy, risk, complexity)
+    label = "+".join(t["id"] for t in unit)  # a restart that re-routes this session reuses its exploration reservation
+    key = f"{state.get('context_run_id')}|{state.get('sessions', 0) + 1}|{label}" if state.get("context_run_id") else None
+    # The explicit effort is applied before the routes are compared (evidence of the effort that will run); the
+    # post-step only records it, and the session reports the executed effort to the telemetry.
+    chosen = bt_agents.route(project, state, tier, kind, avoid, busy, risk, complexity, effort=_asked_effort(unit),
+                             decision_key=key)
     return _explicit_effort(chosen, unit)
+
+
+def _asked_effort(unit: list[dict]) -> str | None:
+    asked = [t.get("effort") for t in unit if t.get("effort") in bt_agents.EFFORTS]
+    return max(asked, key=bt_agents.EFFORTS.index) if asked else None
 
 
 def _explicit_effort(chosen: dict, unit: list[dict]) -> dict:
     """A task may ask for a stronger effort than its tier's (`effort: xhigh` on the PLAN line): the only way xhigh/max
     ever runs. Honoured for Claude and Codex, never lowers the effort, recorded in the route's `why`."""
-    asked = [t.get("effort") for t in unit if t.get("effort") in bt_agents.EFFORTS]
-    if not asked or chosen.get("agent") not in ("claude", "codex") or chosen.get("model") == "haiku":
-        return chosen
-    top = max(asked, key=bt_agents.EFFORTS.index)
-    current = chosen.get("effort")
-    if current in bt_agents.EFFORTS and bt_agents.EFFORTS.index(current) >= bt_agents.EFFORTS.index(top):
+    top = _asked_effort(unit)
+    effective = bt_agents.apply_explicit_effort(chosen.get("agent"), chosen.get("model"), chosen.get("effort"), top)
+    if top is None or effective == chosen.get("effort"):
         return chosen
     return {**chosen, "effort": top, "why": f"{chosen.get('why', '')}; explicit task effort {top}".lstrip("; ")}
 

@@ -89,6 +89,8 @@ def _open(project: str, rdir: Path, o: dict) -> dict | None:
 
     def fn(s):
         rs.sync_plan(s, rdir)
+        if o.get("retry_blocked") and any(t["status"] == "blocked" for t in s["tasks"]):
+            s["attempt_epoch"] = int(s.get("attempt_epoch") or 0) + 1  # attempt numbers restart below: keep them distinct
         for t in s["tasks"]:
             if t["status"] == "in_progress":
                 t["status"] = "todo"

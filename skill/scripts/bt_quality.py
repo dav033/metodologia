@@ -63,7 +63,7 @@ def _history(rows: list[dict]) -> dict[tuple, list[dict]]:
     out: dict[tuple, list[dict]] = {}
     for r in rows:
         for tid in _task_ids(r):
-            out.setdefault((r.get("project"), r.get("req"), tid), []).append(r)
+            out.setdefault((r.get("project"), r.get("req"), r.get("run_id"), tid), []).append(r)
     for rs in out.values():
         rs.sort(key=lambda r: r.get("session") or 0)
     return out
@@ -78,7 +78,7 @@ def rework_events(rows: list[dict]) -> list[tuple[str, bool]]:
     """One (event_id, judged) per task attempt that failed before that task's accepted attempt; `judged` = its
     result is in summary's failed class (escalated is rework but not a judged failure)."""
     out = []
-    for (_, _, tid), history in _history(rows).items():
+    for (_, _, _, tid), history in _history(rows).items():
         accepted = _accepted_index(history, tid)
         if accepted is None:
             continue
@@ -87,16 +87,19 @@ def rework_events(rows: list[dict]) -> list[tuple[str, bool]]:
     return out
 
 
-def attribution(rows: list[dict], project: str, req: str, tasks: list[dict]) -> tuple[list[str], int]:
+def attribution(rows: list[dict], project: str, req: str, tasks: list[dict], run_id: str | None = None
+                ) -> tuple[list[str], int]:
     """(builder event_ids, earlier failed task attempts) for the done non-audit tasks of one milestone: only each
     task's last accepted attempt is attributed; the failed ones before it count as rework, per task."""
-    histories = _history([r for r in rows if r.get("project") == project and r.get("req") == req])
+    # another run of the same REQ is another history; rows of this run written before run_id existed are adopted by it
+    histories = _history([{**r, "run_id": run_id} if r.get("run_id") is None else r for r in rows
+                          if r.get("project") == project and r.get("req") == req and r.get("run_id") in (run_id, None)])
     ids: list[str] = []
     rework = 0
     for t in tasks:
         if t.get("status") != "done" or t.get("kind") == "audit" or t.get("synthetic"):
             continue
-        history = histories.get((project, req, t["id"]), [])
+        history = histories.get((project, req, run_id, t["id"]), [])
         accepted = _accepted_index(history, t["id"])
         if accepted is None or history[accepted].get("kind") == "audit":
             continue
@@ -112,13 +115,13 @@ def record_audit_verdict(project: str, state: dict, audit_task: dict, session: i
         if not (audit_task.get("synthetic") and audit_task.get("kind") == "audit" and audit_task.get("status") == "done"):
             return None
         now = dt.datetime.now().astimezone()
-        event_id = bt_events.event_id_for(project, state.get("req"), session)
+        event_id = bt_events.event_id_for(project, state.get("req"), session, state.get("context_run_id"))
         path = _path(now)
         if bt_events._seen(path, event_id):
             return None
         milestone = audit_task.get("milestone")
         members = [t for t in state.get("tasks", []) if t.get("milestone") == milestone]
-        builders, rework = attribution(bt_events.read_all(), project, state.get("req"), members)
+        builders, rework = attribution(bt_events.read_all(), project, state.get("req"), members, state.get("context_run_id"))
         findings = audit_task.get("findings")
         row = {"schema": 1, "event_id": event_id, "ts": now.isoformat(timespec="seconds"), "project": project,
                "req": state.get("req"), "milestone": milestone, "audit_task": audit_task.get("id"),

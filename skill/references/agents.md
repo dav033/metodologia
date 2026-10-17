@@ -121,11 +121,24 @@ avoided provider, role, then the quota/quality part below, expected cost per ver
   final consumption); a bare total is `total_only` (provider-specific, not comparable); inconsistent records are
   `contradictory`. Only `complete` records are comparable across providers. Old rows are read through the same function,
   never rewritten.
+- **Identity of a measured configuration is (agent, model, effort, kind)**: Sol medium and Sol high are different routes
+  with their own outcomes and lower bounds (`bt_agents._stats`, the decision adapter's history key). The effort that really
+  runs is applied BEFORE the routes are compared (`bt_agents.apply_explicit_effort`, `route(effort=...)`), so the evidence
+  and the telemetry belong to the executed effort. Evidence is labelled on every route (`route.evidence`, copied to
+  `decision.evidence`): `direct` (this exact configuration, `routing.min_samples`+ judged outcomes), `aggregate` (only OTHER
+  efforts of the same model have enough outcomes: they rank the route one band below their lower bound and mark a poor model
+  as not worth exploring, but are never this effort's success rate) or `none` (nothing usable; blocks nothing). Old rows
+  without an effort are a separate "unspecified" configuration and reach a route only as aggregate evidence.
 - **Quality learns from task outcomes** (`bt_outcomes`), not from session aggregates. One session = one cost; each task in it
   has its own verdict: verified, failed, provider loss (quota, credits, sign-in: not the model's quality), skipped or
   unjudged (claimed, blocked, escalated, a legacy aggregate `partial`). A session with 2 verified tasks and 1 failure is
-  2 + 1, not a failed session. An outcome is (project, run, task, attempt): replays are dropped and a task is verified at
-  most once per run. Synthetic rows are excluded and audits keep their own `kind`.
+  2 + 1, not a failed session. An outcome is (project, `run_id`, retry epoch, task, attempt): `run_id` is RUN.json's
+  `context_run_id`, born with a run and kept by resumes, so a NEW run of the same REQ never collides (its session ids,
+  `bt_events.event_id_for`, include it too); replays of one run are dropped and a task is verified at most once per run.
+  Rows written before `run_id` cannot prove which run they belong to and are never merged (each counts as recorded).
+  Reports separate `session_success_rate` (a partial session is one failed attempt; `success_rate` is its legacy name),
+  `task_success_rate`, `verified_task_success_rate` (what the router and `advice()` use), `provider_failure_rate` and
+  `retry_rate`. Synthetic rows are excluded and audits keep their own `kind`.
 - Headroom is the bottleneck of the 5 h and 7 d windows in 10-point buckets; unknown or stale pressure counts as 50 %
   (never empty, never full). An account burning its week faster than evenly (15+ points ahead of the share of the
   window elapsed) is penalised by 20 points; accounts with slack are not pushed to spend it.
@@ -140,7 +153,9 @@ avoided provider, role, then the quota/quality part below, expected cost per ver
   because a route was under-sampled, and that had a real alternative, is an exploration, never on audits, `risk: high` or
   critical work. Cheap models explore freely; models of cost 6+ (Opus, Sol) spend `routing.explore_budget_week` (default 5
   per agent+model per 7 days) of ADMITTED explorations, plus an optional `routing.explore_global_budget_week` (0 = none).
-  Reservation is atomic under a machine-wide lock, survives restarts, and records account, model, kind, tier, effort,
+  Reservation is atomic under an exclusive `flock` (other processes and threads; freed by the kernel if its holder dies;
+  fail closed after `LOCK_WAIT_SEC`, a failed write also admits nothing), is idempotent per session key, survives restarts,
+  quarantines torn lines as counted orphan reserves, and keeps counting unsettled reservations until their window ends, and records account, model, kind, tier, effort,
   reason, the budget before the choice and, when the attempt ends, its result and verification. Ordinary attempts do not
   spend it. Every route carries `decision.kind`: `exploit`, `explore`, `fallback` (an account was cooling),
   `escalation` (a failure moved the work) or `explicit` (pinned agent); old attempts have none and count for nothing.

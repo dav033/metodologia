@@ -30,7 +30,7 @@ class TelemetryIntegrityTests(unittest.TestCase):
             self.assertEqual(rows, [row])
             self.assertEqual(bt_events.summary(rows)[0]["done"], 1)
             rates, load = bt_agents._stats()
-            self.assertEqual(rates.samples[("codex", "gpt-6-luna", "implement")], 1)
+            self.assertEqual(rates.samples[("codex", "gpt-6-luna", None, "implement")], 1)
             self.assertEqual(load["account"], 10 * bt_agents.MODELS["gpt-6-luna"]["cost"])
 
     def test_duration_average_uses_only_measured_attempts_and_exposes_coverage(self):
@@ -124,7 +124,7 @@ class TelemetryIntegrityTests(unittest.TestCase):
         with patch.object(bt_events, "read_all", return_value=rows), patch.object(
                 bt_agents, "account_key", return_value="account"):
             rates, load = bt_agents._stats()
-        key = ("codex", "gpt-6-luna", "implement")
+        key = ("codex", "gpt-6-luna", None, "implement")
         self.assertEqual(rates[key], 1.0)
         self.assertEqual(rates.samples[key], 5)
         self.assertEqual(load["account"], 90 * bt_agents.MODELS["gpt-6-luna"]["cost"])

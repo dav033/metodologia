@@ -60,7 +60,7 @@ def path_of(did: str) -> Path:
     return DIR / did
 
 
-def auto_route(project: str, kind: str, tier: int | None, avoid: set | None = None) -> dict:
+def auto_route(project: str, kind: str, tier: int | None, avoid: set | None = None, effort: str | None = None) -> dict:
     """The router's choice for a delegation nobody pinned to an account: every account allowed for the project is a
     candidate, usage limits and measured results decide (bt_agents.route)."""
     pool = bt_agents.pool_for(project, bt_agents._config("routing.pool", []) or None)
@@ -68,7 +68,7 @@ def auto_route(project: str, kind: str, tier: int | None, avoid: set | None = No
         raise SystemExit(f"No account may run '{project}'. Check: bitacora.py agents")
     tier = bt_agents.start_tier(None, kind) if tier is None else tier
     try:
-        return bt_agents.route(project, {"pool": pool}, tier, kind, avoid, allow_explore=False)
+        return bt_agents.route(project, {"pool": pool}, tier, kind, avoid, allow_explore=False, effort=effort)
     except bt_agents.NoRoute as exc:
         raise SystemExit(f"Every account is waiting for a usage-limit reset (earliest "
                          f"{dt.datetime.fromtimestamp(exc.until):%Y-%m-%d %H:%M}). Nothing was sent.") from exc
@@ -85,7 +85,8 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
     if not profile and not agent:
         own = os.environ.get("BITACORA_KIND")  # an audit delegated from a builder session goes to another provider
         avoid = {bt_profiles.ambient_provider()} if kind == "audit" and own != "audit" else None
-        routed = auto_route(project, kind, tier, avoid - {None} if avoid else None)
+        routed = auto_route(project, kind, tier, avoid - {None} if avoid else None,
+                            **({"effort": effort} if effort else {}))
         profile, model, effort = routed["profile"], model or routed["model"], effort or routed["effort"]
     if profile:
         bt_profiles.authorize(profile, project)
@@ -248,7 +249,7 @@ def _next_route(order: dict) -> dict | None:
         if order.get("auto"):
             pool = bt_agents.pool_for(order["project"], bt_agents._config("routing.pool", []) or None)
             routes, soonest = bt_agents.candidates(order["project"], pool, tier, order.get("kind") or "implement",
-                                                   allow_explore=False)
+                                                   allow_explore=False, effort=order.get("effort"))
             if routes:
                 return routes[0]
         else:
