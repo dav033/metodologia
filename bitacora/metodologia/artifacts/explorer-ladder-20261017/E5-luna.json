@@ -1,0 +1,468 @@
+{
+  "schema_version": 1,
+  "case": "E5",
+  "route": {
+    "id": "luna",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "1ca2ecc212cdbfefa7df6fb34fa4560da6ceb895360043c7c8ddd2d4e21d2c36",
+  "prompt_characters": 3502,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248145.28054,
+    "windows": {
+      "five_hour": {
+        "used_percent": 57.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248146.0956311,
+  "argv": [
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "--json",
+    "-"
+  ],
+  "answer": {
+    "case": "E5",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "`_tier_floor` starts from task-kind tier; high complexity uses the router’s L rung, while extreme complexity or full-system scope selects architecture. Large-change/full-feature scope, medium/high coupling, and estimates ≥120 minutes raise the floor to at least tier 1; ≥240 minutes and high risk raise it to `TOP` (tier 2 here). Medium risk alone does not promote. The returned rules explain the applied floor.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_tier_floor",
+            "start_line": 80,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_sources.py",
+            "symbol": "test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion",
+            "start_line": 45,
+            "end_line": 64
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "`_candidate_rows` builds route candidates from each allowed pool profile and its provider, configured model/effort rungs, and task kind. Route IDs hash provider/model/profile/effort; the separate opaque `account_ref` hashes `account_key`. That key includes provider and the profile’s environment overlay, so account identity is not simply a provider name. Pool deduplication uses a distinct effective-account identity built from provider-specific account selectors and normalized paths.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_candidate_rows",
+            "start_line": 220,
+            "end_line": 260
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/identity.py",
+            "symbol": "candidate_route_id and account_reference",
+            "start_line": 61,
+            "end_line": 69
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "account_key and _pool_account_identity",
+            "start_line": 187,
+            "end_line": 212
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "Whole-plan routing calls `refresh_quota_preflight`; it groups authorized pool profiles by `_pool_account_identity`, polls one representative per Claude/Codex group, then maps the result to aliases. The default limit is 32 effective accounts, checked after grouping; excess returns unavailable before polling. The preflight call is made each routing pass, but source polling is not always forced: subscription `_reserve` skips accounts before the hourly due time, while Antigravity refresh returns a still-fresh cache (15-minute refresh age).",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 147,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 17,
+            "end_line": 47
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "_QUOTA_PREFLIGHT_MAX_ACCOUNTS and refresh_quota_preflight",
+            "start_line": 59,
+            "end_line": 66
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "_reserve and poll",
+            "start_line": 99,
+            "end_line": 120
+          },
+          {
+            "path": "skill/scripts/bt_agy.py",
+            "symbol": "refresh",
+            "start_line": 129,
+            "end_line": 165
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "`rank_candidates` applies hard filters before route-policy ordering: unauthorized profiles, non-available source, blocking capacity/cooldown reasons, invalid or unknown auth, unavailable/unknown runtime, and any quota state other than available (including stale, unknown, or exhausted) are excluded. Unsupported providers produce no route options. `rank_with_route_policy` begins with this hard-filtered ranking, so even excellent quality evidence cannot restore an excluded candidate.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_candidate_reasons and rank_candidates",
+            "start_line": 176,
+            "end_line": 229
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 232,
+            "end_line": 245
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_route_options",
+            "start_line": 135,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_policy.py",
+            "symbol": "test_multiobjective_policy_never_reintroduces_a_hard_excluded_route",
+            "start_line": 100,
+            "end_line": 127
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "Quality ranking requires validated contextual assessments with at least the policy minimum of five verified samples, observed source quality, consistent verified counts, and a valid 95% uncertainty interval. History computes Wilson intervals and falls back through exact context, complexity class, task family, then route, selecting the first available level with five verified samples. Cross-route quality comparison is enabled only when every eligible route has valid quality evidence and all selected levels match; otherwise quality contributes a neutral key and later objectives decide.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_quality_interval and _quality_objective_is_comparable",
+            "start_line": 311,
+            "end_line": 346
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "MIN_VERIFIED_SAMPLES and HISTORY_LEVELS",
+            "start_line": 22,
+            "end_line": 27
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "_wilson_interval and _measurement",
+            "start_line": 198,
+            "end_line": 220
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "aggregate_performance_history level selection",
+            "start_line": 303,
+            "end_line": 328
+          }
+        ]
+      },
+      {
+        "id": "Q6",
+        "answer": "The route-policy key is lexicographic: comparable quality lower bound descending, then interval width ascending; quota pressure ascending; duration ascending; comparable relative cost ascending; higher-risk reservation flag; near-reset preference; baseline rank; route ID. If quality is incomparable it is neutral. Duration uses supplied evidence, then measured median, else infinity. Cost is comparable only when every eligible route has a cost and all scales match; otherwise every route gets infinity at that position. Missing quota pressure defaults to infinity.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "OBJECTIVE_ORDER",
+            "start_line": 27,
+            "end_line": 39
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy cost and quality comparability",
+            "start_line": 294,
+            "end_line": 305
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_route_objective_key",
+            "start_line": 349,
+            "end_line": 381
+          }
+        ]
+      },
+      {
+        "id": "Q7",
+        "answer": "The policy API can accept contextual quality assessments and relative costs, but the whole-plan adapter does not supply either: `_route_evidence` supplies quota windows and duration only, and `plan_full_dag` passes that evidence into batch persistence. Thus the current whole-plan path cannot rank on contextual quality or API prices; relative-cost support is a capability, not wired price evidence. Actual subscription quota is used as pressure, not price.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "RoutePolicyEvidence",
+            "start_line": 101,
+            "end_line": 124
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_route_evidence",
+            "start_line": 48,
+            "end_line": 60
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 171,
+            "end_line": 187
+          }
+        ]
+      },
+      {
+        "id": "Q8",
+        "answer": "Batch matching first keeps at most one route option per `account_ref` for each task, then computes capacity by that same reference and assigns tasks within it. Shared-reference profile aliases therefore cannot create separate capacity; the source test asserts aliases plus active work are counted once. The plan API explicitly says it does not create durable reservations, and the ledger persists an immutable decision for replay, not an execution-capacity hold.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_rank_batch_routes and _account_capacities",
+            "start_line": 210,
+            "end_line": 264
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "plan_ready_batch",
+            "start_line": 369,
+            "end_line": 385
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_batch.py",
+            "symbol": "test_shared_account_capacity_counts_active_work_and_profile_aliases_once",
+            "start_line": 149,
+            "end_line": 165
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "BatchDecisionLedger.persist",
+            "start_line": 240,
+            "end_line": 246
+          }
+        ]
+      },
+      {
+        "id": "Q9",
+        "answer": "Floor tests cover medium risk without promotion, high/extreme complexity, scope, coupling, duration thresholds, high risk, and audit kind. Preflight tests cover the account limit after alias deduplication; batch tests cover shared-account capacity with aliases and active work. This source snapshot cannot establish live account identities, current auth, actual provider quota/window values, or current concurrency; it contains code paths and test fixtures, not live account observations.",
+        "evidence": [
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_sources.py",
+            "symbol": "test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion",
+            "start_line": 45,
+            "end_line": 64
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_quota_preflight.py",
+            "symbol": "test_limit_counts_effective_accounts_after_alias_deduplication",
+            "start_line": 95,
+            "end_line": 106
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_batch.py",
+            "symbol": "test_shared_account_capacity_counts_active_work_and_profile_aliases_once",
+            "start_line": 149,
+            "end_line": 165
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 17,
+            "end_line": 29
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "Actual account quotas, identities, authentication state, and available runtime binaries at decision time are external to this source snapshot and cannot be established here."
+    ]
+  },
+  "response_text": "{\"case\":\"E5\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"`_tier_floor` starts from task-kind tier; high complexity uses the router’s L rung, while extreme complexity or full-system scope selects architecture. Large-change/full-feature scope, medium/high coupling, and estimates ≥120 minutes raise the floor to at least tier 1; ≥240 minutes and high risk raise it to `TOP` (tier 2 here). Medium risk alone does not promote. The returned rules explain the applied floor.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_tier_floor\",\"start_line\":80,\"end_line\":116},{\"path\":\"skill/scripts/tests/test_scheduler_decision_sources.py\",\"symbol\":\"test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion\",\"start_line\":45,\"end_line\":64}]},{\"id\":\"Q2\",\"answer\":\"`_candidate_rows` builds route candidates from each allowed pool profile and its provider, configured model/effort rungs, and task kind. Route IDs hash provider/model/profile/effort; the separate opaque `account_ref` hashes `account_key`. That key includes provider and the profile’s environment overlay, so account identity is not simply a provider name. Pool deduplication uses a distinct effective-account identity built from provider-specific account selectors and normalized paths.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_candidate_rows\",\"start_line\":220,\"end_line\":260},{\"path\":\"skill/scripts/bt_scheduler_decision/identity.py\",\"symbol\":\"candidate_route_id and account_reference\",\"start_line\":61,\"end_line\":69},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"account_key and _pool_account_identity\",\"start_line\":187,\"end_line\":212}]},{\"id\":\"Q3\",\"answer\":\"Whole-plan routing calls `refresh_quota_preflight`; it groups authorized pool profiles by `_pool_account_identity`, polls one representative per Claude/Codex group, then maps the result to aliases. The default limit is 32 effective accounts, checked after grouping; excess returns unavailable before polling. The preflight call is made each routing pass, but source polling is not always forced: subscription `_reserve` skips accounts before the hourly due time, while Antigravity refresh returns a still-fresh cache (15-minute refresh age).\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":147,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":17,\"end_line\":47},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"_QUOTA_PREFLIGHT_MAX_ACCOUNTS and refresh_quota_preflight\",\"start_line\":59,\"end_line\":66},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"_reserve and poll\",\"start_line\":99,\"end_line\":120},{\"path\":\"skill/scripts/bt_agy.py\",\"symbol\":\"refresh\",\"start_line\":129,\"end_line\":165}]},{\"id\":\"Q4\",\"answer\":\"`rank_candidates` applies hard filters before route-policy ordering: unauthorized profiles, non-available source, blocking capacity/cooldown reasons, invalid or unknown auth, unavailable/unknown runtime, and any quota state other than available (including stale, unknown, or exhausted) are excluded. Unsupported providers produce no route options. `rank_with_route_policy` begins with this hard-filtered ranking, so even excellent quality evidence cannot restore an excluded candidate.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_candidate_reasons and rank_candidates\",\"start_line\":176,\"end_line\":229},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":232,\"end_line\":245},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_route_options\",\"start_line\":135,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_policy.py\",\"symbol\":\"test_multiobjective_policy_never_reintroduces_a_hard_excluded_route\",\"start_line\":100,\"end_line\":127}]},{\"id\":\"Q5\",\"answer\":\"Quality ranking requires validated contextual assessments with at least the policy minimum of five verified samples, observed source quality, consistent verified counts, and a valid 95% uncertainty interval. History computes Wilson intervals and falls back through exact context, complexity class, task family, then route, selecting the first available level with five verified samples. Cross-route quality comparison is enabled only when every eligible route has valid quality evidence and all selected levels match; otherwise quality contributes a neutral key and later objectives decide.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_quality_interval and _quality_objective_is_comparable\",\"start_line\":311,\"end_line\":346},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"MIN_VERIFIED_SAMPLES and HISTORY_LEVELS\",\"start_line\":22,\"end_line\":27},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"_wilson_interval and _measurement\",\"start_line\":198,\"end_line\":220},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"aggregate_performance_history level selection\",\"start_line\":303,\"end_line\":328}]},{\"id\":\"Q6\",\"answer\":\"The route-policy key is lexicographic: comparable quality lower bound descending, then interval width ascending; quota pressure ascending; duration ascending; comparable relative cost ascending; higher-risk reservation flag; near-reset preference; baseline rank; route ID. If quality is incomparable it is neutral. Duration uses supplied evidence, then measured median, else infinity. Cost is comparable only when every eligible route has a cost and all scales match; otherwise every route gets infinity at that position. Missing quota pressure defaults to infinity.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"OBJECTIVE_ORDER\",\"start_line\":27,\"end_line\":39},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy cost and quality comparability\",\"start_line\":294,\"end_line\":305},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_route_objective_key\",\"start_line\":349,\"end_line\":381}]},{\"id\":\"Q7\",\"answer\":\"The policy API can accept contextual quality assessments and relative costs, but the whole-plan adapter does not supply either: `_route_evidence` supplies quota windows and duration only, and `plan_full_dag` passes that evidence into batch persistence. Thus the current whole-plan path cannot rank on contextual quality or API prices; relative-cost support is a capability, not wired price evidence. Actual subscription quota is used as pressure, not price.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"RoutePolicyEvidence\",\"start_line\":101,\"end_line\":124},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_route_evidence\",\"start_line\":48,\"end_line\":60},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":171,\"end_line\":187}]},{\"id\":\"Q8\",\"answer\":\"Batch matching first keeps at most one route option per `account_ref` for each task, then computes capacity by that same reference and assigns tasks within it. Shared-reference profile aliases therefore cannot create separate capacity; the source test asserts aliases plus active work are counted once. The plan API explicitly says it does not create durable reservations, and the ledger persists an immutable decision for replay, not an execution-capacity hold.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_rank_batch_routes and _account_capacities\",\"start_line\":210,\"end_line\":264},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"plan_ready_batch\",\"start_line\":369,\"end_line\":385},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_batch.py\",\"symbol\":\"test_shared_account_capacity_counts_active_work_and_profile_aliases_once\",\"start_line\":149,\"end_line\":165},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"BatchDecisionLedger.persist\",\"start_line\":240,\"end_line\":246}]},{\"id\":\"Q9\",\"answer\":\"Floor tests cover medium risk without promotion, high/extreme complexity, scope, coupling, duration thresholds, high risk, and audit kind. Preflight tests cover the account limit after alias deduplication; batch tests cover shared-account capacity with aliases and active work. This source snapshot cannot establish live account identities, current auth, actual provider quota/window values, or current concurrency; it contains code paths and test fixtures, not live account observations.\",\"evidence\":[{\"path\":\"skill/scripts/tests/test_scheduler_decision_sources.py\",\"symbol\":\"test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion\",\"start_line\":45,\"end_line\":64},{\"path\":\"skill/scripts/tests/test_scheduler_quota_preflight.py\",\"symbol\":\"test_limit_counts_effective_accounts_after_alias_deduplication\",\"start_line\":95,\"end_line\":106},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_batch.py\",\"symbol\":\"test_shared_account_capacity_counts_active_work_and_profile_aliases_once\",\"start_line\":149,\"end_line\":165},{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":17,\"end_line\":29}]}],\"unknowns\":[\"Actual account quotas, identities, authentication state, and available runtime binaries at decision time are external to this source snapshot and cannot be established here.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 975010,
+    "cached_input_tokens": 894080,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 5227,
+    "reasoning_output_tokens": 1336
+  },
+  "observed_models": [],
+  "observed_tool_events": 17,
+  "response_words": 647,
+  "exit_code": 0,
+  "elapsed_seconds": 63.468,
+  "finished_at": 1792248209.564647,
+  "tool_audit": [
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files repo'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"tier.floor|tier_floor|complexity|coupling|minimum.*sample|comparable|effective_account|account_id|quota.*preflight|preflight|uncertainty|confidence|quality\" repo/skill/scripts/bt_scheduler* repo/skill/scripts/tests/test_scheduler_decision* repo/skill/scripts/tests/test_scheduler_quota_preflight.py'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"''^def |''^class |quality|price|duration|eligible|source|auth|runtime|quota|account|candidate|profile|selected_level|samples|confidence|uncertainty|batch|reservation\" repo/skill/scripts/bt_scheduler_decision_adapter.py repo/skill/scripts/bt_scheduler_decision_benchmark.py repo/skill/scripts/bt_scheduler_quality_adapter.py repo/skill/scripts/bt_scheduler_quota_preflight.py repo/skill/scripts/bt_agents.py repo/skill/scripts/bt_scheduler_executor_adapter.py repo/skill/scripts/bt_scheduler_laya.py'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_decision_adapter.py | sed -n '1,260p'; nl -ba repo/skill/scripts/bt_scheduler_quota_preflight.py | sed -n '1,130p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_decision_adapter.py | sed -n '220,420p'; rg -n \\\"def decide|def rank|minimum|MIN_|interval|comparable|selected|duration|cost|price|quality|assess|assessment|DecisionRequest|_candidate_rows|refresh\\\\(\\\" repo/skill/scripts/bt_scheduler_decision repo/skill/scripts/bt_scheduler_decision_adapter.py repo/skill/scripts/bt_scheduler_executor_wiring.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"def .*select|def decide|def rank|def _eligible|eligible|quality|lexic|duration|cost|assess_batch_quota|plan_ready_batch|minimum_verified|lower.*upper|interval\" repo/skill/scripts/bt_scheduler_decision/engine.py repo/skill/scripts/bt_scheduler_decision/history.py repo/skill/scripts/bt_scheduler_decision/batch.py repo/skill/scripts/bt_scheduler_decision/api.py repo/skill/scripts/bt_scheduler_decision/batch_quota.py'",
+      "command_truncated": false,
+      "exit_code": 2
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files repo/skill/scripts/bt_scheduler_decision | sort'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_decision/policy.py | sed -n '1,280p'; nl -ba repo/skill/scripts/bt_scheduler_decision/batch.py | sed -n '1,270p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_decision/policy.py | sed -n '260,430p'; nl -ba repo/skill/scripts/bt_scheduler_decision/batch.py | sed -n '267,430p'; nl -ba repo/skill/scripts/bt_scheduler_decision/identity.py | sed -n '1,100p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"RoutePolicyEvidence|quality_assessment|relative_cost|duration_seconds|plan_ready_batch|assess_batch_quota|refresh_quota_preflight|quota_evidence|account_concurrency|batch\" repo/skill/scripts/bt_scheduler* repo/skill/scripts/tests/test_scheduler* | head -240'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_plan_routing.py | sed -n '1,240p'; nl -ba repo/skill/scripts/bt_scheduler_m1_adapter.py | sed -n '1,200p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_agents.py | sed -n '187,258p'; nl -ba repo/skill/scripts/bt_scheduler_decision/batch_quota.py | sed -n '1,190p'; rg -n \\\"test_tier_floor|alias|effective account|capacity|account_ref|batch.*reservation|non.reserv|medium risk\\\" repo/skill/scripts/tests/test_scheduler_decision_sources.py repo/skill/scripts/bt_scheduler_decision/tests/test_batch.py repo/skill/scripts/tests/test_scheduler_quota_preflight.py repo/skill/scripts/bt_scheduler_decision/tests/test_candidates.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_decision/history.py | sed -n '18,30p;190,225p;300,330p'; nl -ba repo/skill/scripts/tests/test_scheduler_decision_sources.py | sed -n '39,78p'; nl -ba repo/skill/scripts/bt_scheduler_decision/tests/test_batch.py | sed -n '50,80p;145,170p'; nl -ba repo/skill/scripts/tests/test_scheduler_quota_preflight.py | sed -n '85,110p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n \\\"refresh_quota_preflight|plan_full_dag\\\" repo/skill/scripts/bt_scheduler* repo/skill/scripts/tests/test_scheduler*; nl -ba repo/skill/scripts/bt_scheduler_decision/tests/test_batch_ledger.py | sed -n '1,55p'; nl -ba repo/skill/scripts/bt_scheduler_decision/batch_ledger.py | sed -n '236,300p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_adapter.py | sed -n '55,74p;330,370p'; nl -ba repo/skill/scripts/bt_scheduler_decision/tests/test_policy.py | sed -n '1,180p'; nl -ba repo/skill/scripts/bt_scheduler_decision/tests/test_batch.py | sed -n '208,250p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n \\\"def poll|def refresh|MAX_AGE|due\\\" repo/skill/scripts/bt_subscriptions.py repo/skill/scripts/bt_agy.py; nl -ba repo/skill/scripts/bt_subscriptions.py | sed -n '1,140p'; nl -ba repo/skill/scripts/bt_agy.py | sed -n '1,100p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_subscriptions.py | sed -n '119,180p'; nl -ba repo/skill/scripts/bt_agy.py | sed -n '120,190p'; nl -ba repo/skill/scripts/bt_scheduler_decision/policy.py | sed -n '203,230p;349,382p'; nl -ba repo/skill/scripts/bt_scheduler_decision/tests/test_policy.py | sed -n '180,240p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    }
+  ],
+  "event_shapes": {
+    "thread.started": [
+      "thread_id",
+      "type"
+    ],
+    "turn.started": [
+      "type"
+    ],
+    "item.completed": [
+      "item",
+      "type"
+    ],
+    "item.started": [
+      "item",
+      "type"
+    ],
+    "turn.completed": [
+      "type",
+      "usage"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248209.5999002,
+    "windows": {
+      "five_hour": {
+        "used_percent": 57.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

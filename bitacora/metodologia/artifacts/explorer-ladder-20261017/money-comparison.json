@@ -1,0 +1,72 @@
+{
+  "scope": "Matched Explorer E4\u2013E6 only; excludes nine operational attempts and all E1\u2013E3; no repair calls or new inference",
+  "rows": [
+    {
+      "route": "luna",
+      "cases": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "costs_usd": [
+        "0.01027116",
+        "0.0196473",
+        "0.01938674"
+      ],
+      "total_api_equivalent_usd": "0.04930520",
+      "method": "Recorded uncached/cached input and output at Standard base API prices; speed/regional/individual-request long-context modifiers not independently attested."
+    },
+    {
+      "route": "haiku",
+      "cases": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "costs_usd": [
+        "0.03218161",
+        "0.18772381000000002",
+        "0.29441402000000005"
+      ],
+      "total_api_equivalent_usd": "0.51431944000000007",
+      "method": "Native CLI modelUsage.costUSD; an API-equivalent reported estimate, not a subscription invoice. Includes native per-request context/cache accounting."
+    },
+    {
+      "route": "sol",
+      "cases": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "costs_usd": [
+        "0.1929412",
+        "0.1943824",
+        "0.282398"
+      ],
+      "total_api_equivalent_usd": "0.6697216",
+      "method": "Recorded uncached/cached input and output at Standard base API prices; speed/regional/individual-request long-context modifiers not independently attested."
+    },
+    {
+      "route": "sonnet",
+      "cases": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "costs_usd": [
+        "0.3003752",
+        "0.3815379",
+        "0.6762598"
+      ],
+      "total_api_equivalent_usd": "1.3581729",
+      "method": "Native CLI modelUsage.costUSD; an API-equivalent reported estimate, not a subscription invoice. Includes native per-request context/cache accounting."
+    }
+  ],
+  "rates_verified": "2026-10-17",
+  "sources": [
+    "https://developers.openai.com/api/docs/models/gpt-6-luna",
+    "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+    "https://platform.claude.com/docs/en/about-claude/pricing"
+  ],
+  "limits": "API-equivalent estimates, not actual subscription charges or conversion to quota. Thinking already included in output. Aggregate raw token counts cannot be priced as uncached input. Haiku contexts above 100k use higher rates per request; native reported cost is retained instead of incorrectly applying one rate to whole-call totals."
+}

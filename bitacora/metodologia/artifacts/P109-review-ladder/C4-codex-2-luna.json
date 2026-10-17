@@ -1,0 +1,115 @@
+{
+  "case": "C4",
+  "profile": "codex-2",
+  "provider": "codex",
+  "requested_model": "gpt-6-luna",
+  "requested_effort": "max",
+  "variant": "codex-2-luna",
+  "prompt_sha256": "d9ad8244767bc360cc6385109aa23865b1be8e417e76aee5f7fd57befbaca4b3",
+  "prompt_characters": 4030,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792207238.5775597,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792207239.248398,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "Rounding each unit price to cents before multiplying violates the invoice rounding rule.",
+        "evidence": "The contract rounds the sum of unit_price_decimal × quantity to two decimal places. T1 rounds unit_price × 100 first, then multiplies by quantity.",
+        "failure_scenario": "For 0.335 × 3, the contract gives 1.005 → 1.01 (101 cents), while T1 gives 34 × 3 = 102 cents.",
+        "fix": "Sum exact Decimal unit_price × quantity values, then apply ROUND_HALF_UP once to the invoice total and convert to cents."
+      },
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "Generating a new idempotency key for each retry can charge the same invoice more than once after an ambiguous timeout.",
+        "evidence": "A timeout may happen after a charge succeeds; only retries with the same key are guaranteed safe. T2 generates a fresh key for each attempt, and the provider cannot look up charges by invoice metadata.",
+        "failure_scenario": "The first request charges successfully but times out; a retry with a new key creates a second charge for the same invoice.",
+        "fix": "Persist one idempotency key for the invoice and reuse it for every retry within the provider’s 72-hour guarantee."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "Committing the inbox marker separately from the business update can permanently discard a webhook.",
+        "evidence": "Transaction A commits the inbox event before transaction B updates the charge and creates the outbox row. A crash can occur between them, and a duplicate inbox event returns 200 without running B.",
+        "failure_scenario": "After a crash between A and B, redelivery sees the marker and returns 200, leaving the charge and outbox permanently unchanged.",
+        "fix": "Commit the inbox insert, charge update, and outbox insert atomically in one transaction."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "Finalization does not check that the worker still owns the current lease generation.",
+        "evidence": "T4’s UPDATE filters only by job ID. The contract requires completed state and result to belong to the current lease generation; generation 8 can be acquired while generation 7’s worker is paused.",
+        "failure_scenario": "The generation 7 worker resumes after generation 8 has acquired the job and overwrites its result or completion state.",
+        "fix": "Include the acquired generation in the finalization predicate and accept the update only when it matches the job’s current generation."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Marking an outbox row sent before publishing can lose the notification permanently.",
+        "evidence": "T5 commits sent=true before publishing, and restart scans only sent=false rows. A crash can occur between the commit and publish.",
+        "failure_scenario": "The dispatcher commits sent=true and crashes before publishing; restart skips the row, so no notification is delivered.",
+        "fix": "Publish using the immutable event ID, then mark sent after broker acknowledgment; retry unacknowledged rows with the same ID."
+      },
+      {
+        "task": "T6",
+        "severity": "medium",
+        "issue": "The listed verification scenarios omit the failure cases needed to catch the payment and crash-boundary defects.",
+        "evidence": "T6 tests timeout-before-provider-execution, lease renewal without a pause, and broker success, but not timeout after a successful charge, stale-worker resumption, or crashes between the T3 and T5 steps.",
+        "failure_scenario": "The listed tests can pass while retries double-charge, an inbox marker suppresses an unapplied webhook, a stale worker finalizes, or an outbox notification is lost.",
+        "fix": "Add failure-injection tests for timeout after provider success, a generation 7 worker resuming after generation 8 acquisition, a crash after T3 transaction A, and crashes around T5 publish and acknowledgment."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T1\",\"severity\":\"high\",\"issue\":\"Rounding each unit price to cents before multiplying violates the invoice rounding rule.\",\"evidence\":\"The contract rounds the sum of unit_price_decimal × quantity to two decimal places. T1 rounds unit_price × 100 first, then multiplies by quantity.\",\"failure_scenario\":\"For 0.335 × 3, the contract gives 1.005 → 1.01 (101 cents), while T1 gives 34 × 3 = 102 cents.\",\"fix\":\"Sum exact Decimal unit_price × quantity values, then apply ROUND_HALF_UP once to the invoice total and convert to cents.\"},{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"Generating a new idempotency key for each retry can charge the same invoice more than once after an ambiguous timeout.\",\"evidence\":\"A timeout may happen after a charge succeeds; only retries with the same key are guaranteed safe. T2 generates a fresh key for each attempt, and the provider cannot look up charges by invoice metadata.\",\"failure_scenario\":\"The first request charges successfully but times out; a retry with a new key creates a second charge for the same invoice.\",\"fix\":\"Persist one idempotency key for the invoice and reuse it for every retry within the provider’s 72-hour guarantee.\"},{\"task\":\"T3\",\"severity\":\"high\",\"issue\":\"Committing the inbox marker separately from the business update can permanently discard a webhook.\",\"evidence\":\"Transaction A commits the inbox event before transaction B updates the charge and creates the outbox row. A crash can occur between them, and a duplicate inbox event returns 200 without running B.\",\"failure_scenario\":\"After a crash between A and B, redelivery sees the marker and returns 200, leaving the charge and outbox permanently unchanged.\",\"fix\":\"Commit the inbox insert, charge update, and outbox insert atomically in one transaction.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"Finalization does not check that the worker still owns the current lease generation.\",\"evidence\":\"T4’s UPDATE filters only by job ID. The contract requires completed state and result to belong to the current lease generation; generation 8 can be acquired while generation 7’s worker is paused.\",\"failure_scenario\":\"The generation 7 worker resumes after generation 8 has acquired the job and overwrites its result or completion state.\",\"fix\":\"Include the acquired generation in the finalization predicate and accept the update only when it matches the job’s current generation.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"Marking an outbox row sent before publishing can lose the notification permanently.\",\"evidence\":\"T5 commits sent=true before publishing, and restart scans only sent=false rows. A crash can occur between the commit and publish.\",\"failure_scenario\":\"The dispatcher commits sent=true and crashes before publishing; restart skips the row, so no notification is delivered.\",\"fix\":\"Publish using the immutable event ID, then mark sent after broker acknowledgment; retry unacknowledged rows with the same ID.\"},{\"task\":\"T6\",\"severity\":\"medium\",\"issue\":\"The listed verification scenarios omit the failure cases needed to catch the payment and crash-boundary defects.\",\"evidence\":\"T6 tests timeout-before-provider-execution, lease renewal without a pause, and broker success, but not timeout after a successful charge, stale-worker resumption, or crashes between the T3 and T5 steps.\",\"failure_scenario\":\"The listed tests can pass while retries double-charge, an inbox marker suppresses an unapplied webhook, a stale worker finalizes, or an outbox notification is lost.\",\"fix\":\"Add failure-injection tests for timeout after provider success, a generation 7 worker resuming after generation 8 acquisition, a crash after T3 transaction A, and crashes around T5 publish and acknowledgment.\"}],\"uncertainties\":[]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 14667,
+    "cached_input_tokens": 11648,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2346,
+    "reasoning_output_tokens": 1552
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 22.044,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792207261.2926733,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

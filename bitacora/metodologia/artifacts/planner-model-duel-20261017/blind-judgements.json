@@ -1,0 +1,271 @@
+{
+  "P01": {
+    "items": [
+      {
+        "id": "C2-01",
+        "status": "full",
+        "evidence": "Metadata-only five-field projection and strict page schemas are specified; snapshot/detail contracts remain separate."
+      },
+      {
+        "id": "C2-02",
+        "status": "full",
+        "evidence": "Draft states ordering with a unique tuple tie-break, exclusive cursor boundaries, lookahead/terminal behavior, proposed page bounds and live-not-snapshot semantics; owner assumptions are visible."
+      },
+      {
+        "id": "C2-03",
+        "status": "full",
+        "evidence": "External MCP usage is explicitly unknown; notice/compatibility decisions and a release gate are required without claiming local tests prove external compatibility."
+      },
+      {
+        "id": "C2-04",
+        "status": "partial",
+        "evidence": "T4 adds real helper tests and T5 HTTP/browser coverage, but successful live pagination can still omit an updated existing project. T4 only prevents deletion inference from failed/partial traversal, not a completed non-snapshot traversal; legacy tabs pruning can close a valid tab."
+      }
+    ],
+    "notes": [
+      "Strong source/consumer inspection and explicit D1/D2 gates. No false command success or external compatibility claim observed.",
+      "Concrete remaining R2 regression: fetch default first page of 50 from 51 projects, then update the unseen saved-tab project so its updated_at moves above the anchor. The final successful page is empty and nextCursor null; existing tab filtering removes that still-existing project. Rejecting partial failures and deduplication do not address this; a snapshot or authoritative detail-confirmed deletion is needed."
+    ]
+  },
+  "P02": {
+    "items": [
+      {
+        "id": "C2-01",
+        "status": "full",
+        "evidence": "Metadata-only five-field projection and strict page schemas are specified; snapshot/detail contracts remain separate."
+      },
+      {
+        "id": "C2-02",
+        "status": "full",
+        "evidence": "Draft states ordering with a unique tuple tie-break, exclusive cursor boundaries, lookahead/terminal behavior, proposed page bounds and live-not-snapshot semantics; owner assumptions are visible."
+      },
+      {
+        "id": "C2-03",
+        "status": "full",
+        "evidence": "External MCP usage is explicitly unknown; notice/compatibility decisions and a release gate are required without claiming local tests prove external compatibility."
+      },
+      {
+        "id": "C2-04",
+        "status": "partial",
+        "evidence": "T3 adds server HTTP checks and T5 manual multi-page screen checks, but T4 is checked only by lint/types and keeps tab call sites unchanged. Completed live traversal omissions still trigger legacy absence-based tab removal; no runtime helper negative-path test or deletion confirmation is specified."
+      }
+    ],
+    "notes": [
+      "Recognizes unknown MCP consumer and stale SPEC wording about data_json versus parsed data. Proposed contract decisions are visible as revisable assumptions.",
+      "The live-pagination missing-project trace also applies here; A5 explicitly permits missed rows while the unchanged tabs consumer treats absence as deletion.",
+      "T4 introduces an unspecified page-count-overrun guard; the bound and behavior for a legitimate larger dataset are left to implementation. It needs a defined, justified policy or a non-arbitrary liveness strategy.",
+      "A5 says the live limitation is accepted, although no owner Q&A occurred. Read this only as an unapproved proposed assumption, consistent with the draft preface, not an actual owner decision."
+    ]
+  },
+  "P03": {
+    "items": [
+      {
+        "id": "C2-01",
+        "status": "full",
+        "evidence": "Metadata-only five-field projection and strict page schemas are specified; snapshot/detail contracts remain separate."
+      },
+      {
+        "id": "C2-02",
+        "status": "full",
+        "evidence": "Draft states ordering with a unique tuple tie-break, exclusive cursor boundaries, lookahead/terminal behavior, proposed page bounds and live-not-snapshot semantics; owner assumptions are visible."
+      },
+      {
+        "id": "C2-03",
+        "status": "full",
+        "evidence": "External MCP usage is explicitly unknown; notice/compatibility decisions and a release gate are required without claiming local tests prove external compatibility."
+      },
+      {
+        "id": "C2-04",
+        "status": "full",
+        "evidence": "D2/T5 require complete-load publication, deduplication, stale-refresh guards and detail-confirmed deletion (only404 removes missing saved/active tabs). T4 HTTP, T5 client/state tests and T6 real screen scenarios cover progression, terminal null and later-page failure."
+      }
+    ],
+    "notes": [
+      "Addresses the important live-pagination/tab-pruning interaction explicitly, rather than treating all-pages completion as a snapshot.",
+      "T5 introduces a scoped web tsx test dependency/script/lockfile change instead of asserting a nonexistent baseline test harness; planned work is labeled created_by.",
+      "External notice and coordinated cutover remain gated draft decisions. First-response structural checks are evaluated separately from these semantic notes."
+    ]
+  },
+  "P04": {
+    "items": [
+      {
+        "id": "C3-01",
+        "status": "full",
+        "evidence": "Tasks preserve project/asset data and raw JSON/timestamps, constraints, counts and explicit content-hash encoding; inventories and conversion failures are gated rather than silently coercing data."
+      },
+      {
+        "id": "C3-02",
+        "status": "full",
+        "evidence": "Async conversion covers repositories and HTTP/WS/assets; revision-before-no-op behavior, absent-key import serialization, concurrent writes/imports and commit-before-event behavior are explicitly required and tested."
+      },
+      {
+        "id": "C3-03",
+        "status": "partial",
+        "evidence": "A single-writer fence/final reconciliation and fail-closed promotion are addressed, but uninterrupted availability remains a blocking product/architecture gate. The current draft still needs a revised continuity mechanism if the literal no-availability-loss condition applies."
+      },
+      {
+        "id": "C3-04",
+        "status": "full",
+        "evidence": "Coordinated database/assets backup, checksummed complete bundles, isolated verified restore and rollback after PostgreSQL writes are planned; stale SQLite rollback is blocked and compatible PG release rollback is distinguished from restore."
+      },
+      {
+        "id": "C3-05",
+        "status": "full",
+        "evidence": "Docker/Compose/env and EC2 preflight/deploy/rollback are covered, including compatible backup tools, explicit DB connectivity, readiness, credential handling and storage compatibility checks."
+      }
+    ],
+    "notes": [
+      "Particularly concrete conditional cutover sequence: fence/drain, consistent source backup, empty isolated target import/typed hashes, candidate probes, route switch, then writes. Maintains raw JSON/timestamp representations and includes an explicit shared/exclusive mutation barrier for database/assets backups.",
+      "D1 honestly says the proposed maintenance branch does not satisfy literal uninterrupted availability and requires a replan with durable capture/replay if uninterrupted writes are mandatory. No owner acceptance was invented; this remains a blocked draft, not a zero-downtime proof."
+    ]
+  },
+  "P05": {
+    "items": [
+      {
+        "id": "C3-01",
+        "status": "full",
+        "evidence": "Tasks preserve project/asset data and raw JSON/timestamps, constraints, counts and explicit content-hash encoding; inventories and conversion failures are gated rather than silently coercing data."
+      },
+      {
+        "id": "C3-02",
+        "status": "full",
+        "evidence": "Async conversion covers repositories and HTTP/WS/assets; revision-before-no-op behavior, absent-key import serialization, concurrent writes/imports and commit-before-event behavior are explicitly required and tested."
+      },
+      {
+        "id": "C3-03",
+        "status": "partial",
+        "evidence": "A single-writer fence/final reconciliation and fail-closed promotion are addressed, but uninterrupted availability remains a blocking product/architecture gate. The current draft still needs a revised continuity mechanism if the literal no-availability-loss condition applies."
+      },
+      {
+        "id": "C3-04",
+        "status": "full",
+        "evidence": "Coordinated database/assets backup, checksummed complete bundles, isolated verified restore and rollback after PostgreSQL writes are planned; stale SQLite rollback is blocked and compatible PG release rollback is distinguished from restore."
+      },
+      {
+        "id": "C3-05",
+        "status": "full",
+        "evidence": "Docker/Compose/env and EC2 preflight/deploy/rollback are covered, including compatible backup tools, explicit DB connectivity, readiness, credential handling and storage compatibility checks."
+      }
+    ],
+    "notes": [
+      "Strong explicit provenance and no-op/import/revision invariants. Hashes use typed length-delimited row encoding; backup/recovery and incoming-release backup hazards are addressed.",
+      "The final source boundary and continuous-write solution remain future D1/T1 decisions; the draft does not supply an executable no-interruption handover protocol. It correctly refuses to assume a maintenance outage is accepted, but more planning is still required for that requirement."
+    ]
+  },
+  "P06": {
+    "items": [
+      {
+        "id": "C3-01",
+        "status": "partial",
+        "evidence": "T5 preserves rows/counts/hashes, but resolved design rule1 narrows SQLite integers to PG int4 without a verified bound (e.g. revision2^31), and T5 step7 treats missing/mismatched asset files as warnings instead of blocking verified migration."
+      },
+      {
+        "id": "C3-02",
+        "status": "partial",
+        "evidence": "Existing-row FOR UPDATE and parallel PUT tests cover updates, but do not serialize concurrent absent-key imports. Unique violations mapped to plain create Error can return500 for a racing import where baseline serialized semantics return409."
+      },
+      {
+        "id": "C3-03",
+        "status": "partial",
+        "evidence": "T7 defines stop-API/final-backup/import/activate and failure restart, but D2 explicitly needs a maintenance outage; no continuous-availability branch exists without new tasks. D2 is unapproved, so the literal availability condition remains unresolved."
+      },
+      {
+        "id": "C3-04",
+        "status": "partial",
+        "evidence": "PG dump/isolated restore/checksums are planned, but database snapshot and asset copy lack an explicit common mutation fence. The proposed AllowSqliteRollback escape knowingly allows stale-source data loss after PG writes instead of preserving those writes."
+      },
+      {
+        "id": "C3-05",
+        "status": "full",
+        "evidence": "Compose/EC2 configuration, matching PostgreSQL client, credentials outside argv/logs, readiness and incoming-release backup/cutover hazards are concretely addressed."
+      }
+    ],
+    "notes": [
+      "Permitted-input witness: SQLite can round-trip revision2147483648, which exceeds PostgreSQL int4. A checked wider representation/conversion or an actually established source bound is needed; no production overflow was observed.",
+      "FOR UPDATE locks retrieved rows, not a missing external key. Explicit absent-key serialization, an appropriate retry/upsert protocol, or another sound concurrency design must preserve import semantics. See migration-counterexamples.json and official PostgreSQL references.",
+      "A checksum-valid copied directory can still lack a file referenced by the database dump if deletion occurs between snapshot and copy. The plan needs coordinated asset retention/quiescence and fail-closed completeness verification.",
+      "An explicit flag plus data-loss warning does not meet the stated preservation requirement after PostgreSQL has accepted writes. That would require a separately approved scope change or verified reverse reconciliation; the current owner has approved neither."
+    ]
+  },
+  "P07": {
+    "items": [
+      {
+        "id": "C4-01",
+        "status": "full",
+        "evidence": "Recognizes the existing CLI report\u2192adapter\u2192Planner route, preserves its output/exit contract and adds content-level regression proof. Web access remains through a structured adapter helper; analysis is reused, not duplicated."
+      },
+      {
+        "id": "C4-02",
+        "status": "full",
+        "evidence": "Targets bt_page_req.plan_panel on the actual owner approval Plan tab, not the later code-merge review tab. Displays critical-path IDs/minutes, widest level and low-confidence tasks using the existing report semantics."
+      },
+      {
+        "id": "C4-03",
+        "status": "full",
+        "evidence": "Explicit missing-file branch preserves complete legacy panel HTML with no extra wrapper/notice. Planned characterization and actual page/adapter checks cover absent PLAN.json and status-dependent controls."
+      },
+      {
+        "id": "C4-04",
+        "status": "full",
+        "evidence": "Separates CLI/adapter checks from renderer/real-page integration, legacy regression and product inspection; present, absent and invalid cases and import-boundary safety are explicitly addressed."
+      }
+    ],
+    "notes": [
+      "Adds no unnecessary CLI feature when R1 already exists; separates the Plan approval tab from the Revisar code-review tab. Unexpected adapter errors return an explicit unavailable result rather than fabricated metrics; diagnostic presentation should remain sanitized/observable."
+    ]
+  },
+  "P08": {
+    "items": [
+      {
+        "id": "C4-01",
+        "status": "full",
+        "evidence": "Recognizes the existing CLI report\u2192adapter\u2192Planner route, preserves its output/exit contract and adds content-level regression proof. Web access remains through a structured adapter helper; analysis is reused, not duplicated."
+      },
+      {
+        "id": "C4-02",
+        "status": "full",
+        "evidence": "Targets bt_page_req.plan_panel on the actual owner approval Plan tab, not the later code-merge review tab. Displays critical-path IDs/minutes, widest level and low-confidence tasks using the existing report semantics."
+      },
+      {
+        "id": "C4-03",
+        "status": "full",
+        "evidence": "Explicit missing-file branch preserves complete legacy panel HTML with no extra wrapper/notice. Planned characterization and actual page/adapter checks cover absent PLAN.json and status-dependent controls."
+      },
+      {
+        "id": "C4-04",
+        "status": "full",
+        "evidence": "Separates CLI/adapter checks from renderer/real-page integration, legacy regression and product inspection; present, absent and invalid cases and import-boundary safety are explicitly addressed."
+      }
+    ],
+    "notes": [
+      "Particularly explicit absent/available/unavailable contract, real branching fixture values, legacy status coverage and no side effects. Correctly distinguishes the source product schema1.1.0 from the supplied1.2.0 planning-output contract; no product schema upgrade is proposed."
+    ]
+  },
+  "P09": {
+    "items": [
+      {
+        "id": "C4-01",
+        "status": "full",
+        "evidence": "Recognizes the existing CLI report\u2192adapter\u2192Planner route, preserves its output/exit contract and adds content-level regression proof. Web access remains through a structured adapter helper; analysis is reused, not duplicated."
+      },
+      {
+        "id": "C4-02",
+        "status": "full",
+        "evidence": "Targets bt_page_req.plan_panel on the actual owner approval Plan tab, not the later code-merge review tab. Displays critical-path IDs/minutes, widest level and low-confidence tasks using the existing report semantics."
+      },
+      {
+        "id": "C4-03",
+        "status": "full",
+        "evidence": "Explicit missing-file branch preserves complete legacy panel HTML with no extra wrapper/notice. Planned characterization and actual page/adapter checks cover absent PLAN.json and status-dependent controls."
+      },
+      {
+        "id": "C4-04",
+        "status": "full",
+        "evidence": "Separates CLI/adapter checks from renderer/real-page integration, legacy regression and product inspection; present, absent and invalid cases and import-boundary safety are explicitly addressed."
+      }
+    ],
+    "notes": [
+      "Explicitly protects actual req_page integration, hostile diagnostics, artifact immutability and missing-PLAN.md behavior. Branching fixture values and output ordering are concrete; current CLI shape and approval semantics remain unchanged."
+    ]
+  }
+}

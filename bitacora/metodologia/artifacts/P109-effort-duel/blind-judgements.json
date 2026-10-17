@@ -1,0 +1,207 @@
+{
+  "B01": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "notes": [
+      "Finding 11: the primary permanent transfer-tombstone fix is sound, but the alternative of merely never pruning source ledger operation-key dedup is insufficient under G2's epoch namespace if completed transfer rows are still removed. A retry in a new epoch can consume rights again. The counterexample in correction-checks.json assumes no unmentioned global lookup/uniqueness mechanism; retaining one would repair this alternative.",
+      "Finding 3: an across-epoch lookup alone must not be interpreted as atomic uniqueness or proof that no delayed prior append can still succeed. The explicit global-dedup option is sound; original-epoch reuse is conditional on the ledger accepting/reconciling that namespace, which the answer acknowledges."
+    ]
+  },
+  "B04": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "notes": []
+  },
+  "B12": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "notes": []
+  },
+  "B02": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      10,
+      11
+    ],
+    "notes": [
+      "Findings 10 and 11 separately discuss miss-path and cache-path branch binding. Both count once toward frozen root E1-D10; the cache recommendation adds useful repair detail without increasing seeded coverage."
+    ]
+  },
+  "B03": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "notes": [
+      "Finding 8 correctly establishes unsafe reuse of money, but its witness describes release of daily resource capacity. B8 releases money, and G1 independently guarantees resource-capacity accounting. State the witness in monetary units; daily capacity release is not established by the snippet."
+    ]
+  },
+  "B05": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "notes": [
+      "Finding 6's parenthetical claim that cheapest-first can potentially fail the primary cardinality objective is unsupported under the complete independent eligible list and nonnegative costs. It does maximize count; the secondary-net counterexample is correct and still establishes the frozen root. See the minimal-prefix proof in correction-checks.json.",
+      "Finding 8 correctly identifies premature money release, but its witness conflates a resource cost of 10 with released monetary funds/capacity. B8 does not establish resource-capacity release; use a separate concrete monetary reservation witness."
+    ]
+  },
+  "B07": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "notes": []
+  },
+  "B11": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "notes": []
+  },
+  "B06": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      "remote-epoch-fence",
+      9,
+      10
+    ],
+    "notes": [
+      "Finding 9 supplies a supported additional failure independent of ACK ordering: distinct-key delayed older remote activation can overwrite a newer worker epoch. Its worker-side atomic epoch fence/complete serialization fix addresses the supplied R5 constraint. Kept separate from the frozen denominator."
+    ]
+  },
+  "B10": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      "remote-epoch-fence",
+      9,
+      10
+    ],
+    "notes": [
+      "Finding 9 supplies the same supported additional remote-fencing root with a concrete delayed-command trace and sound epoch fence or serialization fix. This remains separate from frozen E3-D8 (ACK-before-CAS)."
+    ]
+  },
+  "B08": {
+    "mapping": [
+      5,
+      6,
+      9,
+      8,
+      7,
+      1,
+      2,
+      3,
+      4,
+      10
+    ],
+    "notes": [
+      "Finding 4 repairs ACK ordering, but its wider CAS-before-dispatch/epoch-bearing-key/eventual-reconciliation recommendation does not guarantee R5's remote monotonicity. Coordinator 11 can win its CAS, pause, then dispatch after coordinator 12 has committed and activated; distinct keys do not fence this. The uncertainty acknowledges the missing worker fence but does not present it as the independently proven extra. Preserve this limit rather than treating eventual convergence as prevention."
+    ]
+  },
+  "B09": {
+    "mapping": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "notes": [
+      "Finding 8 repairs the local ACK issue, but epoch-bearing keys and re-pushing authoritative state alone do not prevent a delayed previously winning coordinator from remotely overwriting a newer activation. The answer leaves this as uncertainty despite the supplied API semantics permitting the counterexample. A worker-side fence or complete per-worker command serialization is needed for the separate R5 remote invariant."
+    ]
+  }
+}

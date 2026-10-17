@@ -1,0 +1,22 @@
+[
+  {
+    "label": "E4-A",
+    "record": "E4-sonnet.json"
+  },
+  {
+    "label": "E4-B",
+    "record": "E4-luna.json"
+  },
+  {
+    "label": "E4-C",
+    "record": "E4-sol.json"
+  },
+  {
+    "label": "E4-D",
+    "record": "E4-haiku.json"
+  },
+  {
+    "label": "E4-E",
+    "record": "E4-gemini.json"
+  }
+]

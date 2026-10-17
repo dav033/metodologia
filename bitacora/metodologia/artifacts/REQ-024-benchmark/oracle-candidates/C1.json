@@ -1,0 +1,16 @@
+{
+  "schema_version": "candidate-1.0.0",
+  "case_id": "C1",
+  "state": "draft-not-frozen",
+  "items": [
+    {"id": "C1-01", "expectation": "Detect the visible-label collision between `arco` and `arco_asimetrico` for Arco orgánico.", "basis": ["REQ-024 PLAN.md, C1 known-defect inventory"]},
+    {"id": "C1-02", "expectation": "Detect that curated structure IDs are absent from the static piece menu; reordering existing cards cannot make those IDs selectable.", "basis": ["REQ-024 PLAN.md, C1 known-defect inventory"]},
+    {"id": "C1-03", "expectation": "Avoid persisting a widget field that causes rollback incompatibility with strict `WidgetGuiadoSchema` sessions.", "basis": ["REQ-024 PLAN.md, C1 known-defect inventory"]},
+    {"id": "C1-04", "expectation": "Ensure `guiada:test` actually executes the newly added tests.", "basis": ["REQ-024 PLAN.md, C1 known-defect inventory"]},
+    {"id": "C1-05", "expectation": "Ensure `test-propiedades-herramientas` exercises `proponer_composicion` rather than only unrelated helpers.", "basis": ["REQ-024 PLAN.md, C1 known-defect inventory"]},
+    {"id": "C1-06", "expectation": "Avoid a second mutable copy of `ESTRUCTURAS_SIN_VISTA_3D`; reuse the canonical source or define ownership explicitly.", "basis": ["REQ-024 PLAN.md, C1 known-defect inventory"]},
+    {"id": "C1-07", "expectation": "Apply the event policy after `propuestaConLoPedido` and cover the existing-plan bypass path.", "basis": ["REQ-024 PLAN.md, C1 known-defect inventory"]},
+    {"id": "C1-08", "expectation": "Normalize `briefVigente().evento` before policy comparison, including the existing input variants.", "basis": ["REQ-024 PLAN.md, C1 known-defect inventory"]},
+    {"id": "C1-09", "expectation": "Declare a dependency or shared-resource owner for tasks that edit `event-structure-policy`; do not leave them unordered.", "basis": ["REQ-024 PLAN.md, C1 known-defect inventory"]}
+  ]
+}

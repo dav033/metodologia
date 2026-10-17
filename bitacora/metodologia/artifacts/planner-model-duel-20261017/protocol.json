@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "scope": "Owner-authorized source-backed Planner model pilot; separate from formal REQ-024 matched-arm benchmark",
+  "routes": [
+    {
+      "id": "opus",
+      "profile": "claude-work",
+      "provider": "claude",
+      "model": "claude-opus-5-5",
+      "effort": "high"
+    },
+    {
+      "id": "sol",
+      "profile": "codex-2",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    },
+    {
+      "id": "astra",
+      "profile": "codex-2",
+      "provider": "codex",
+      "model": "gpt-6-astra",
+      "effort": "high"
+    }
+  ],
+  "target_calls": 9,
+  "cases_sha256": "da880ee7019efaa6cf3b48b75e8409c586122865ee9491b52a43f114b871ec1f",
+  "planner_bundle_sha256": "bb8d1d2994ce4f56126e08aae00292c4fea59af0159ca27f4d465c724c56aa73",
+  "task_instruction": "Controlled source-backed planning comparison. The complete shared Planner role/private skills/references are included below. Follow them to draft, not implement.\nWork only inside this isolated cell. The repository mapping is `repository` -> `./repo`; the requirement is `./request/SPEC.md`; schema and a generic example are in `./planner-resources/`. Inspect the requirement AND actual affected code/consumers/tests/configuration using read-only tools. The example teaches shape only, never task scope. Do not inspect other cells, oracle/expected files, original repositories, account configuration or private home files. No web, delegation, subagents, installs, git mutations, tests, builds or other executed code. Codex may use read-only shell commands to list/search/read files; Claude has Read/Grep/Glob only. Do not modify any file. The host captures outputs and runs frozen deterministic validation/check/report afterwards; do not claim any command passed or run the validator yourself.\nReturn a reviewable DRAFT even when the supplied requirement leaves product choices open: explicitly retain unknowns, proposed assumptions and decision-gated tasks. Do not invent owner approval, external consumer compatibility, executed commands or measured estimates. No actual owner Q&A occurs in this experiment. Do not approve/freeze/launch anything or assign providers/models/accounts/efforts/workers. No more than 8 independently actionable tasks. Aim for concise actionable plans rather than verbosity; completeness, safe dependencies and evidence matter.\nReturn exactly TWO fenced blocks with filename language labels, no other text:\n```PLAN.md\n<draft plan with scope, inspected findings and provenance, numbered milestone headings and checkbox task lines consistent with JSON, risks/assumptions/decision gates, task behavior, acceptance and verification>\n```\n```PLAN.json\n<one complete valid schema_version 1.2.0 object, revision 1, spec_ref SPEC.md, repository keys repository, real R1/R2/R3 coverage, all classifications/evidence and any necessary interfaces>\n```\nNo diagram. File evidence must be repository-relative (such as apps/api/src/app.ts), not prefixed repo/. Planned new tests are not existing evidence; specify created_by where appropriate. Estimates remain estimates; no comparable execution history is available in this sandbox. Use English. Per-case plan_id follows below.\n\nSHARED PLANNER INSTRUCTIONS:\n",
+  "runner_sha256": "83e47ffc0fb4f02ce1a645eca699c0f950bf126bafc37c3540b312fb54415310",
+  "base_harness_sha256": "7b18d84bd48539353dcb565ee307a75d0c7a7bd69028655e5dee8e0945553f92",
+  "deadline_seconds": 900,
+  "maximum_tasks": 8,
+  "output": "Two filename-labeled PLAN.md/PLAN.json fenced blocks, schema1.2.0",
+  "concurrency": "One call per account; Claude and Codex lanes parallel; Sol/Astra order alternates by case",
+  "corpus": "Pinned existing C2/C3/C4 source/spec/oracle candidate copies; no formal manifest or quality score modified",
+  "grading": "Frozen deterministic validator plus route-hidden coordinator semantic rubric; no new independent model-review calls. No automatic retries, repairs or fallback."
+}

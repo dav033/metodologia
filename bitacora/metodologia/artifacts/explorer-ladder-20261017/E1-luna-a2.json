@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "case": "E1",
+  "route": {
+    "id": "luna",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "6a5221c1621d10e863abe7edbab8630c99384d22d65b8503d506fcac3d60ba17",
+  "prompt_characters": 2253,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792247955.3832839,
+    "windows": {
+      "five_hour": {
+        "used_percent": 54.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792247956.122737,
+  "argv": [
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "--json",
+    "-"
+  ],
+  "answer": {
+    "case": "E1",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "`bt_cli_plan.add_parser` registers `plan-json`, with `report` among its allowed actions and an optional `REQ-NNN` argument. `bitacora.main` installs that parser and dispatches the `plan-json` command to `bt_cli_plan.dispatch`, which passes the action and requirement directory to `adapter.run_cli`.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "add_parser",
+            "start_line": 13,
+            "end_line": 16
+          },
+          {
+            "path": "skill/scripts/bitacora.py",
+            "symbol": "main",
+            "start_line": 135,
+            "end_line": 137
+          },
+          {
+            "path": "skill/scripts/bitacora.py",
+            "symbol": "main",
+            "start_line": 393,
+            "end_line": 394
+          },
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "dispatch",
+            "start_line": 54,
+            "end_line": 63
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "The adapter calls `planner_cli.run` for `report`; it does not special-case that action. Planner’s `run` has a concrete `report` branch: it reads and validates `PLAN.json`, computes `quality.analyze`, adds declared projections for schema 1.2 or later, emits JSON, and returns 0. Invalid or missing plans produce an error and return 2. Report is implemented, not merely advertised.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_plan_adapter.py",
+            "symbol": "run_cli",
+            "start_line": 181,
+            "end_line": 189
+          },
+          {
+            "path": "skill/scripts/bt_planner/cli.py",
+            "symbol": "run",
+            "start_line": 95,
+            "end_line": 108
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "`test_report.py` invokes `cli.run(\"report\", ...)`, asserts exit code 0, and parses the emitted JSON. It asserts that reports for schema 1.0.0 and 1.1.0 exactly match `quality.analyze`; for 1.2.0, legacy fields remain unchanged and declared coverage, interface, verification-category, and criteria-without-command fields are present, while `product_acceptance` is absent. The CLI integration test also asserts that dispatching `report` returns 0, but suppresses stdout and does not assert its contents.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_planner/tests/test_report.py",
+            "symbol": "PlannerReport.run_report",
+            "start_line": 14,
+            "end_line": 22
+          },
+          {
+            "path": "skill/scripts/bt_planner/tests/test_report.py",
+            "symbol": "PlannerReport.test_legacy_report_shapes_remain_unchanged",
+            "start_line": 24,
+            "end_line": 28
+          },
+          {
+            "path": "skill/scripts/bt_planner/tests/test_report.py",
+            "symbol": "PlannerReport.test_schema_1_2_report_adds_declared_quality_projections",
+            "start_line": 30,
+            "end_line": 38
+          },
+          {
+            "path": "skill/scripts/tests/test_plan_integration.py",
+            "symbol": "Cli.test_command_plumbing_uses_the_requirement_id_and_the_methodology_states",
+            "start_line": 218,
+            "end_line": 230
+          }
+        ]
+      }
+    ],
+    "unknowns": []
+  },
+  "response_text": "{\"case\":\"E1\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"`bt_cli_plan.add_parser` registers `plan-json`, with `report` among its allowed actions and an optional `REQ-NNN` argument. `bitacora.main` installs that parser and dispatches the `plan-json` command to `bt_cli_plan.dispatch`, which passes the action and requirement directory to `adapter.run_cli`.\",\"evidence\":[{\"path\":\"skill/scripts/bt_cli_plan.py\",\"symbol\":\"add_parser\",\"start_line\":13,\"end_line\":16},{\"path\":\"skill/scripts/bitacora.py\",\"symbol\":\"main\",\"start_line\":135,\"end_line\":137},{\"path\":\"skill/scripts/bitacora.py\",\"symbol\":\"main\",\"start_line\":393,\"end_line\":394},{\"path\":\"skill/scripts/bt_cli_plan.py\",\"symbol\":\"dispatch\",\"start_line\":54,\"end_line\":63}]},{\"id\":\"Q2\",\"answer\":\"The adapter calls `planner_cli.run` for `report`; it does not special-case that action. Planner’s `run` has a concrete `report` branch: it reads and validates `PLAN.json`, computes `quality.analyze`, adds declared projections for schema 1.2 or later, emits JSON, and returns 0. Invalid or missing plans produce an error and return 2. Report is implemented, not merely advertised.\",\"evidence\":[{\"path\":\"skill/scripts/bt_plan_adapter.py\",\"symbol\":\"run_cli\",\"start_line\":181,\"end_line\":189},{\"path\":\"skill/scripts/bt_planner/cli.py\",\"symbol\":\"run\",\"start_line\":95,\"end_line\":108}]},{\"id\":\"Q3\",\"answer\":\"`test_report.py` invokes `cli.run(\\\"report\\\", ...)`, asserts exit code 0, and parses the emitted JSON. It asserts that reports for schema 1.0.0 and 1.1.0 exactly match `quality.analyze`; for 1.2.0, legacy fields remain unchanged and declared coverage, interface, verification-category, and criteria-without-command fields are present, while `product_acceptance` is absent. The CLI integration test also asserts that dispatching `report` returns 0, but suppresses stdout and does not assert its contents.\",\"evidence\":[{\"path\":\"skill/scripts/bt_planner/tests/test_report.py\",\"symbol\":\"PlannerReport.run_report\",\"start_line\":14,\"end_line\":22},{\"path\":\"skill/scripts/bt_planner/tests/test_report.py\",\"symbol\":\"PlannerReport.test_legacy_report_shapes_remain_unchanged\",\"start_line\":24,\"end_line\":28},{\"path\":\"skill/scripts/bt_planner/tests/test_report.py\",\"symbol\":\"PlannerReport.test_schema_1_2_report_adds_declared_quality_projections\",\"start_line\":30,\"end_line\":38},{\"path\":\"skill/scripts/tests/test_plan_integration.py\",\"symbol\":\"Cli.test_command_plumbing_uses_the_requirement_id_and_the_methodology_states\",\"start_line\":218,\"end_line\":230}]}],\"unknowns\":[]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 110496,
+    "cached_input_tokens": 85248,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1692,
+    "reasoning_output_tokens": 491
+  },
+  "observed_models": [],
+  "observed_tool_events": 12,
+  "response_words": 152,
+  "exit_code": 0,
+  "elapsed_seconds": 17.674,
+  "finished_at": 1792247973.797699,
+  "tool_audit": [
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files repo'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"plan-json|def .*report|report.*REQ-|Planner\" repo/skill/scripts/bt_cli_plan.py repo/skill/scripts/bt_planner repo/skill/scripts/tests'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_planner/cli.py | sed -n '1,240p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/tests/test_plan_integration.py | sed -n '200,280p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_cli_plan.py | sed -n '1,130p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_plan_adapter.py | sed -n '1,240p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"bt_cli_plan|plan-json|def main|planner.*cli|bt_plan_adapter\" repo/skill/scripts/bitacora.py repo/skill/scripts/bt_entrypoints.py repo/skill/scripts/bt_plan_adapter.py repo/skill/scripts/bt_planner/cli.py'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_planner/tests/test_report.py | sed -n '1,130p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bitacora.py | sed -n '125,142p;384,400p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_planner/quality.py | sed -n '1,120p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/tests/test_plan_integration.py | sed -n '211,238p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n \\\"action == \\\\\\\"report\\\\\\\"|quality summary|critical_path|coverage\\\" repo/skill/scripts/bt_planner/tests repo/skill/scripts/tests/test_plan_integration.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    }
+  ],
+  "event_shapes": {
+    "thread.started": [
+      "thread_id",
+      "type"
+    ],
+    "turn.started": [
+      "type"
+    ],
+    "item.completed": [
+      "item",
+      "type"
+    ],
+    "item.started": [
+      "item",
+      "type"
+    ],
+    "turn.completed": [
+      "type",
+      "usage"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792247973.8312542,
+    "windows": {
+      "five_hour": {
+        "used_percent": 54.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

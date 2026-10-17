@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "native_calls": 0,
+  "source_write_denied": true,
+  "private_tmp_writable": true,
+  "current_repo_readable": true,
+  "other_tmp_cells_hidden": true,
+  "notes": "OS read-only root; only native .gemini state and private /tmp writable; current cell mounted at /tmp/cell. Initial offline mount at absent /work failed before any provider call; corrected to private /tmp/cell."
+}

@@ -1,0 +1,106 @@
+{
+  "case": "C1",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "haiku",
+  "requested_effort": "max",
+  "variant": "claude-work-haiku",
+  "prompt_sha256": "2d8a2108915cc803a5a4c00f12f0effd16ce2e9a1b1cb187ae98bedc51429e4f",
+  "prompt_characters": 2413,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206555.7123759,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792213799.979114,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.979132,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206556.088226,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "filter() uses a truthiness check ('if limit:'), so max_price=0 is treated like a missing parameter and no price filtering happens. This breaks R1 ('zero means only free products') and discards the None-vs-0 distinction the baseline parser provides.",
+        "evidence": "T1: 'if limit: return [p for p in items if p.price_cents <= limit]; otherwise return items'; baseline: 'parseOptionalNonnegativeInt distinguishes missing (None) and zero'; R1: 'zero means only free products'.",
+        "failure_scenario": "GET /products?max_price=0 returns every product, including priced ones, instead of only products with price_cents == 0.",
+        "fix": "Branch on None explicitly: 'if limit is None: return items', otherwise return [p for p in items if p.price_cents <= limit]."
+      },
+      {
+        "task": "T2",
+        "severity": "high",
+        "issue": "The price filter runs after pagination, so it only trims the already-sliced page instead of filtering the entire tenant catalog. This violates R2's required order (filter, sort, then paginate).",
+        "evidence": "T2: 'page=paginate(rows, offset, size); return filter(page, max_price)'; R2: 'Filter the entire tenant's catalog, sort by immutable product ID ascending, THEN paginate.'",
+        "failure_scenario": "A tenant has 100 products, size=20, and the only products within max_price are at sorted positions 45 and 70. The first page returns an empty list and matching items surface only on later pages, with short or empty pages in between. A client that stops at the first empty or short page never sees them, and offsets do not map to the filtered sequence.",
+        "fix": "Reorder to rows=findAllForTenant(session.tenant_id); rows=filter(rows, max_price); rows=sortById(rows); return paginate(rows, offset, size), with no filtering after paginate."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "The test plan cannot detect either defect above: it has no max_price=0 case, and its single-page fixture makes filter-after-paginate indistinguishable from filter-before-paginate. The acceptance criterion does not assert zero semantics, ID-ascending order or cross-page behavior either, so verification would pass an implementation that violates R1 and R2.",
+        "evidence": "T3: 'test missing limit, limit=1500, negative, decimal and tenant isolation. Test data has two matching products and two expensive ones, all within a single page.'",
+        "failure_scenario": "With 'if limit:' and filter-after-paginate both shipped, every listed test still passes (a nonzero limit on a one-page dataset gives identical results either way), so endpoint tests and typecheck both exit 0 while R1 and R2 are broken.",
+        "fix": "Add (a) max_price=0 with a 0-cent product and paid products, expecting only the free one(s); (b) a multi-page fixture, with page size smaller than the match count and matching products interleaved with expensive ones and stored out of ID order, asserting page 1 is full of matches, results are ID-ascending, and later offsets continue the filtered sequence without gaps or duplicates; (c) explicit HTTP 400 assertions for negative and decimal values."
+      }
+    ],
+    "uncertainties": [
+      "The baseline says the parser 'rejects invalid inputs' but not how (exception vs. error value); the plan does not state how that rejection becomes HTTP 400 (R4), so it cannot be confirmed that negative/decimal values yield 400 rather than 500.",
+      "sortById is used but is not listed in the baseline; ascending order by immutable product ID is assumed."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T1\",\"severity\":\"high\",\"issue\":\"filter() uses a truthiness check ('if limit:'), so max_price=0 is treated like a missing parameter and no price filtering happens. This breaks R1 ('zero means only free products') and discards the None-vs-0 distinction the baseline parser provides.\",\"evidence\":\"T1: 'if limit: return [p for p in items if p.price_cents <= limit]; otherwise return items'; baseline: 'parseOptionalNonnegativeInt distinguishes missing (None) and zero'; R1: 'zero means only free products'.\",\"failure_scenario\":\"GET /products?max_price=0 returns every product, including priced ones, instead of only products with price_cents == 0.\",\"fix\":\"Branch on None explicitly: 'if limit is None: return items', otherwise return [p for p in items if p.price_cents <= limit].\"},{\"task\":\"T2\",\"severity\":\"high\",\"issue\":\"The price filter runs after pagination, so it only trims the already-sliced page instead of filtering the entire tenant catalog. This violates R2's required order (filter, sort, then paginate).\",\"evidence\":\"T2: 'page=paginate(rows, offset, size); return filter(page, max_price)'; R2: 'Filter the entire tenant's catalog, sort by immutable product ID ascending, THEN paginate.'\",\"failure_scenario\":\"A tenant has 100 products, size=20, and the only products within max_price are at sorted positions 45 and 70. The first page returns an empty list and matching items surface only on later pages, with short or empty pages in between. A client that stops at the first empty or short page never sees them, and offsets do not map to the filtered sequence.\",\"fix\":\"Reorder to rows=findAllForTenant(session.tenant_id); rows=filter(rows, max_price); rows=sortById(rows); return paginate(rows, offset, size), with no filtering after paginate.\"},{\"task\":\"T3\",\"severity\":\"high\",\"issue\":\"The test plan cannot detect either defect above: it has no max_price=0 case, and its single-page fixture makes filter-after-paginate indistinguishable from filter-before-paginate. The acceptance criterion does not assert zero semantics, ID-ascending order or cross-page behavior either, so verification would pass an implementation that violates R1 and R2.\",\"evidence\":\"T3: 'test missing limit, limit=1500, negative, decimal and tenant isolation. Test data has two matching products and two expensive ones, all within a single page.'\",\"failure_scenario\":\"With 'if limit:' and filter-after-paginate both shipped, every listed test still passes (a nonzero limit on a one-page dataset gives identical results either way), so endpoint tests and typecheck both exit 0 while R1 and R2 are broken.\",\"fix\":\"Add (a) max_price=0 with a 0-cent product and paid products, expecting only the free one(s); (b) a multi-page fixture, with page size smaller than the match count and matching products interleaved with expensive ones and stored out of ID order, asserting page 1 is full of matches, results are ID-ascending, and later offsets continue the filtered sequence without gaps or duplicates; (c) explicit HTTP 400 assertions for negative and decimal values.\"}],\"uncertainties\":[\"The baseline says the parser 'rejects invalid inputs' but not how (exception vs. error value); the plan does not state how that rejection becomes HTTP 400 (R4), so it cannot be confirmed that negative/decimal values yield 400 rather than 500.\",\"sortById is used but is not listed in the baseline; ascending order by immutable product ID is assumed.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 2114,
+    "cache_read_input_tokens": 2694,
+    "output_tokens": 10727,
+    "output_tokens_details": {
+      "thinking_tokens": 9509
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2114,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 72.987,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206629.0752304,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792213800.307888,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.307905,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

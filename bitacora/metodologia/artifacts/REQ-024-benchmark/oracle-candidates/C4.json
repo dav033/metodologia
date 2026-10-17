@@ -1,0 +1,11 @@
+{
+  "schema_version": "candidate-1.0.0",
+  "case_id": "C4",
+  "state": "draft-not-frozen",
+  "items": [
+    {"id": "C4-01", "expectation": "Route `bitacora.py plan-json report REQ-NNN` through the existing adapter/report owner; do not duplicate PLAN.json quality calculations in the CLI or web layer.", "basis": ["SPEC.md R1", "source.tar: skill/scripts/bt_plan_adapter.py", "source.tar: skill/scripts/bt_planner/cli.py"]},
+    {"id": "C4-02", "expectation": "When PLAN.json exists, the web review page displays critical path, widest level, and low-confidence tasks from the report contract.", "basis": ["SPEC.md R2", "source.tar: skill/scripts/bt_page_review.py", "source.tar: skill/scripts/bt_planner/cli.py"]},
+    {"id": "C4-03", "expectation": "When PLAN.json is absent, the review page renders exactly as before; verify the observable fallback rather than only testing a helper or parser.", "basis": ["SPEC.md R3"]},
+    {"id": "C4-04", "expectation": "Separate adapter/CLI verification from web integration and regression evidence, covering both present and absent PLAN.json states with real repository commands.", "basis": ["SPEC.md R1-R3"]}
+  ]
+}

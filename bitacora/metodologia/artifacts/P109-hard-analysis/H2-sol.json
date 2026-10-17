@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "case": "H2",
+  "route": {
+    "id": "sol",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "b860c77bcf845e195c065b4c6e80048d1a9cc507fb153bb03b260997f4d76ef4",
+  "prompt_characters": 12371,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209336.9550729,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209337.6721735,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "S2",
+        "severity": "high",
+        "issue": "Choosing each task's cheapest currently available route does not maximize batch cardinality or implement the required global cost optimization.",
+        "evidence": "R1 requires maximum cardinality before minimizing total normalized cost. G2 supplies a complete eligibility matrix. T2 preserves the greedy implementation using a superseded memo; T6's identical-capability tests miss this fixture.",
+        "failure_scenario": "S2 processes J1 first and assigns it to A at cost 1. A then has no capacity for J2, producing one assignment. Assigning J1 to B and J2 to A produces two assignments, with total cost 3.",
+        "fix": "Replace per-task greedy selection with a capacitated assignment algorithm that first maximizes cardinality, then minimizes total normalized cost, then resolves remaining ties deterministically by task/account ID. Verify the G2 assignment."
+      },
+      {
+        "task": "S3",
+        "severity": "high",
+        "issue": "Reservation and dispatch validate quota freshness against the captured request time instead of the current time at each gate.",
+        "evidence": "R2 explicitly requires eligibility at recommendation, reservation commit and dispatch, allowing queue stalls up to 300 seconds. G3 provides different request and execution times. T3 retains S3, while T6 tests only dispatch without delay.",
+        "failure_scenario": "With observed_at=900 and request.now=1000, S3 checks 900 <= 1000 <= 1020 and returns true. At reservation or dispatch time 1100, that observation is stale because 1100 > 1020. Valid status, windows and reset timestamps do not restore freshness.",
+        "fix": "Read the injected clock separately at each eligibility gate and evaluate freshness and future reset times against that value. Reject or obtain a fresh valid quota observation when necessary; preserve the original observation separately as recommendation evidence."
+      },
+      {
+        "task": "S4",
+        "severity": "high",
+        "issue": "Cached input tokens are charged at both the full input rate and the cache rate.",
+        "evidence": "R3 states that input_tokens already includes cached_input_tokens and specifies subtraction before applying the input rate. T2 preserves the incompatible additive-bucket interpretation from the historical memo. Integer arithmetic does not correct that schema error.",
+        "failure_scenario": "For input_tokens=10, cached_input_tokens=4 and output_tokens=0, S4 charges 10*20 + 4*2 = 208 microcredits. The required charge is (10-4)*20 + 4*2 = 128, an overcharge of 80.",
+        "fix": "Compute (input_tokens-cached_input_tokens)*input_rate + cached_input_tokens*cache_rate + output_tokens*output_rate using exact integers. Keep reasoning output included in output without an additional charge, and verify a cached-input fixture."
+      },
+      {
+        "task": "S5",
+        "severity": "high",
+        "issue": "The external idempotency key changes with local generation, allowing ownership takeover to duplicate the logical task's external side effect.",
+        "evidence": "R4 limits each logical task to one external side effect. G4 guarantees only local write fencing, and G5 explicitly allows one execution for every distinct provider key. Trace A pauses W1 after its ownership check. T4 retains S5; T6 tests ownership loss only before that check.",
+        "failure_scenario": "W2 launches generation2 at t71. W1 resumes at t80 and launches generation1 on the same effective account. The keys differ, so both launches may execute. Rejecting W1's eventual database finalization does not undo its external effect.",
+        "fix": "Persist and reuse one provider idempotency identity for the logical run/task across ownership generations. Preserve the same effective-account deduplication scope for uncertain retries and reconcile the existing remote operation. Retain generation/owner CAS for local writes."
+      },
+      {
+        "task": "S6",
+        "severity": "high",
+        "issue": "Cancellation ACK is issued without preventing already admitted dispatches from starting remotely afterward; the claimed guarantee conflicts with the fixed ACK latency and chosen boundaries.",
+        "evidence": "R5 requires no new external start after successful ACK and explicitly excludes reliance on another local check. Trace B shows the race. S6 has neither dispatch draining nor remote admission fencing, while T5 promises success within 50ms.",
+        "failure_scenario": "A dispatcher observes an uncancelled run at t20 and pauses before sending. Cancel commits and ACKs at t21. The delayed request starts remotely at t22, violating R5 despite serialized control commands and correct revisions.",
+        "fix": "Before successful ACK, close dispatch admission and establish that every admitted request has either already started or definitively cannot start. This requires an appropriate remote admission protocol or waiting for definitive in-flight resolution. With the supplied boundaries, unconditional successful ACK within 50ms cannot be guaranteed; return pending within that budget and acknowledge success only after resolution, or explicitly change the contract."
+      },
+      {
+        "task": "S7",
+        "severity": "medium",
+        "issue": "The immutable recommendation records a mutable quota pathname rather than its decision input, and omits the injected decision time and policy version.",
+        "evidence": "R6 requires reproducible input evidence. G6 guarantees immutable map bytes but says the quota cache is overwritten and historical contents are unavailable. S7 keeps time and policy only in memory even though their persistence is allowed. T3 retains this design; T6 tests an unchanged cache.",
+        "failure_scenario": "A map is computed using one quota observation. The separate process then replaces /cache/quotas.json and the coordinator restarts. The map hash still verifies, but its original quota observation, decision time and policy version cannot be recovered from the retained data.",
+        "fix": "Persist the quota observation used, injected decision time and policy version through the existing versioned allowlist, and include them in the immutable hashed evidence. Store only allowlisted fields, excluding credentials and complete provider payloads."
+      },
+      {
+        "task": "S8",
+        "severity": "high",
+        "issue": "Reservation expiry follows estimated duration independently of continued execution, so cleanup can release capacity while a job remains live.",
+        "evidence": "R7 makes concurrency a simultaneous-execution constraint and rejects estimates as termination guarantees. Trace C supplies a healthy job exceeding its estimate. Heartbeats renew only the job lease, and cleanup neither checks execution state nor stops the job. T4 retains this behavior.",
+        "failure_scenario": "The t0 reservation expires at t65. The heartbeat at t50 extends the job lease to t110, yet cleanup at t66 deletes the reservation. A second task can reserve and launch on the limit1 account while the first remains active through t90.",
+        "fix": "Keep capacity occupied throughout live or uncertain execution. Couple reservation retention to execution ownership and heartbeats, and release capacity only after confirmed completion or confirmed remote termination. Neither estimated expiry nor lease expiry alone proves that remote execution has stopped."
+      },
+      {
+        "task": "S9",
+        "severity": "high",
+        "issue": "Settlement adds cumulative observations as independent charges; deduplicating event IDs does not deduplicate cumulative spend within an attempt.",
+        "evidence": "R8 distinguishes unique event IDs from cumulative attempt totals. Trace D supplies two distinct cumulative observations. S9 sums their full amounts. T6 exercises only repeated delivery of the same event, which the receipt mechanism already handles correctly.",
+        "failure_scenario": "For attempt X, u1 records cumulative spend 10 and u2 records cumulative spend 25. Both receipts are new, so S9 settles 10+25=35 instead of 25. Ignoring a repeated u2 leaves the overcharge intact.",
+        "fix": "Atomically maintain the accounted cumulative total per attempt and append only its positive increase, or settle directly from the latest cumulative total. Preserve event receipt deduplication, prevent older deliveries from increasing spend, and keep different attempts separate. Verify that trace D settles to 25."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"S2\",\n      \"severity\": \"high\",\n      \"issue\": \"Choosing each task's cheapest currently available route does not maximize batch cardinality or implement the required global cost optimization.\",\n      \"evidence\": \"R1 requires maximum cardinality before minimizing total normalized cost. G2 supplies a complete eligibility matrix. T2 preserves the greedy implementation using a superseded memo; T6's identical-capability tests miss this fixture.\",\n      \"failure_scenario\": \"S2 processes J1 first and assigns it to A at cost 1. A then has no capacity for J2, producing one assignment. Assigning J1 to B and J2 to A produces two assignments, with total cost 3.\",\n      \"fix\": \"Replace per-task greedy selection with a capacitated assignment algorithm that first maximizes cardinality, then minimizes total normalized cost, then resolves remaining ties deterministically by task/account ID. Verify the G2 assignment.\"\n    },\n    {\n      \"task\": \"S3\",\n      \"severity\": \"high\",\n      \"issue\": \"Reservation and dispatch validate quota freshness against the captured request time instead of the current time at each gate.\",\n      \"evidence\": \"R2 explicitly requires eligibility at recommendation, reservation commit and dispatch, allowing queue stalls up to 300 seconds. G3 provides different request and execution times. T3 retains S3, while T6 tests only dispatch without delay.\",\n      \"failure_scenario\": \"With observed_at=900 and request.now=1000, S3 checks 900 <= 1000 <= 1020 and returns true. At reservation or dispatch time 1100, that observation is stale because 1100 > 1020. Valid status, windows and reset timestamps do not restore freshness.\",\n      \"fix\": \"Read the injected clock separately at each eligibility gate and evaluate freshness and future reset times against that value. Reject or obtain a fresh valid quota observation when necessary; preserve the original observation separately as recommendation evidence.\"\n    },\n    {\n      \"task\": \"S4\",\n      \"severity\": \"high\",\n      \"issue\": \"Cached input tokens are charged at both the full input rate and the cache rate.\",\n      \"evidence\": \"R3 states that input_tokens already includes cached_input_tokens and specifies subtraction before applying the input rate. T2 preserves the incompatible additive-bucket interpretation from the historical memo. Integer arithmetic does not correct that schema error.\",\n      \"failure_scenario\": \"For input_tokens=10, cached_input_tokens=4 and output_tokens=0, S4 charges 10*20 + 4*2 = 208 microcredits. The required charge is (10-4)*20 + 4*2 = 128, an overcharge of 80.\",\n      \"fix\": \"Compute (input_tokens-cached_input_tokens)*input_rate + cached_input_tokens*cache_rate + output_tokens*output_rate using exact integers. Keep reasoning output included in output without an additional charge, and verify a cached-input fixture.\"\n    },\n    {\n      \"task\": \"S5\",\n      \"severity\": \"high\",\n      \"issue\": \"The external idempotency key changes with local generation, allowing ownership takeover to duplicate the logical task's external side effect.\",\n      \"evidence\": \"R4 limits each logical task to one external side effect. G4 guarantees only local write fencing, and G5 explicitly allows one execution for every distinct provider key. Trace A pauses W1 after its ownership check. T4 retains S5; T6 tests ownership loss only before that check.\",\n      \"failure_scenario\": \"W2 launches generation2 at t71. W1 resumes at t80 and launches generation1 on the same effective account. The keys differ, so both launches may execute. Rejecting W1's eventual database finalization does not undo its external effect.\",\n      \"fix\": \"Persist and reuse one provider idempotency identity for the logical run/task across ownership generations. Preserve the same effective-account deduplication scope for uncertain retries and reconcile the existing remote operation. Retain generation/owner CAS for local writes.\"\n    },\n    {\n      \"task\": \"S6\",\n      \"severity\": \"high\",\n      \"issue\": \"Cancellation ACK is issued without preventing already admitted dispatches from starting remotely afterward; the claimed guarantee conflicts with the fixed ACK latency and chosen boundaries.\",\n      \"evidence\": \"R5 requires no new external start after successful ACK and explicitly excludes reliance on another local check. Trace B shows the race. S6 has neither dispatch draining nor remote admission fencing, while T5 promises success within 50ms.\",\n      \"failure_scenario\": \"A dispatcher observes an uncancelled run at t20 and pauses before sending. Cancel commits and ACKs at t21. The delayed request starts remotely at t22, violating R5 despite serialized control commands and correct revisions.\",\n      \"fix\": \"Before successful ACK, close dispatch admission and establish that every admitted request has either already started or definitively cannot start. This requires an appropriate remote admission protocol or waiting for definitive in-flight resolution. With the supplied boundaries, unconditional successful ACK within 50ms cannot be guaranteed; return pending within that budget and acknowledge success only after resolution, or explicitly change the contract.\"\n    },\n    {\n      \"task\": \"S7\",\n      \"severity\": \"medium\",\n      \"issue\": \"The immutable recommendation records a mutable quota pathname rather than its decision input, and omits the injected decision time and policy version.\",\n      \"evidence\": \"R6 requires reproducible input evidence. G6 guarantees immutable map bytes but says the quota cache is overwritten and historical contents are unavailable. S7 keeps time and policy only in memory even though their persistence is allowed. T3 retains this design; T6 tests an unchanged cache.\",\n      \"failure_scenario\": \"A map is computed using one quota observation. The separate process then replaces /cache/quotas.json and the coordinator restarts. The map hash still verifies, but its original quota observation, decision time and policy version cannot be recovered from the retained data.\",\n      \"fix\": \"Persist the quota observation used, injected decision time and policy version through the existing versioned allowlist, and include them in the immutable hashed evidence. Store only allowlisted fields, excluding credentials and complete provider payloads.\"\n    },\n    {\n      \"task\": \"S8\",\n      \"severity\": \"high\",\n      \"issue\": \"Reservation expiry follows estimated duration independently of continued execution, so cleanup can release capacity while a job remains live.\",\n      \"evidence\": \"R7 makes concurrency a simultaneous-execution constraint and rejects estimates as termination guarantees. Trace C supplies a healthy job exceeding its estimate. Heartbeats renew only the job lease, and cleanup neither checks execution state nor stops the job. T4 retains this behavior.\",\n      \"failure_scenario\": \"The t0 reservation expires at t65. The heartbeat at t50 extends the job lease to t110, yet cleanup at t66 deletes the reservation. A second task can reserve and launch on the limit1 account while the first remains active through t90.\",\n      \"fix\": \"Keep capacity occupied throughout live or uncertain execution. Couple reservation retention to execution ownership and heartbeats, and release capacity only after confirmed completion or confirmed remote termination. Neither estimated expiry nor lease expiry alone proves that remote execution has stopped.\"\n    },\n    {\n      \"task\": \"S9\",\n      \"severity\": \"high\",\n      \"issue\": \"Settlement adds cumulative observations as independent charges; deduplicating event IDs does not deduplicate cumulative spend within an attempt.\",\n      \"evidence\": \"R8 distinguishes unique event IDs from cumulative attempt totals. Trace D supplies two distinct cumulative observations. S9 sums their full amounts. T6 exercises only repeated delivery of the same event, which the receipt mechanism already handles correctly.\",\n      \"failure_scenario\": \"For attempt X, u1 records cumulative spend 10 and u2 records cumulative spend 25. Both receipts are new, so S9 settles 10+25=35 instead of 25. Ignoring a repeated u2 leaves the overcharge intact.\",\n      \"fix\": \"Atomically maintain the accounted cumulative total per attempt and append only its positive increase, or settle directly from the latest cumulative total. Preserve event receipt deduplication, prevent older deliveries from increasing spend, and keep different attempts separate. Verify that trace D settles to 25.\"\n    }\n  ],\n  \"uncertainties\": []\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 17120,
+    "cached_input_tokens": 12288,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2783,
+    "reasoning_output_tokens": 1034
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 1138,
+  "exit_code": 0,
+  "elapsed_seconds": 69.475,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209407.1478908,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

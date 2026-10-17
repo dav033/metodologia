@@ -1,0 +1,145 @@
+{
+  "case": "C5",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "claude-haiku-5-5",
+  "requested_effort": "max",
+  "variant": "claude-work-haiku55",
+  "prompt_sha256": "5f5f4a347c4b41bc40e3fc40564023b518a938af2baa96e7deaaf83ed677323d",
+  "prompt_characters": 4990,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792207460.9191568,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792213800.11743,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.117451,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792207461.1937144,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T3",
+        "severity": "critical",
+        "issue": "Unfresh samples become zero usage and stay eligible. 'Fresh' is undefined, and the status, window and reset checks are absent.",
+        "evidence": "PLAN: \"use sample if fresh; otherwise substitute {five_hour:0,seven_day:0}\". CONTRACT: \"Unknown/stale readings are ineligible.\" BASELINE: \"a stale sample observed_at=700 is specifically ineligible regardless of percentage\".",
+        "failure_scenario": "observed_at=700 (stale at now=1000) scores 0 and outranks every fresh account with nonzero usage. T4 reserves it, and the startup map records it as the route.",
+        "fix": "Never substitute; exclude ineligible candidates. Eligible only if observed_at is within 120s of injected now, status=ok, 5h and 7d are present, and both resets are in the future."
+      },
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "Capacity buckets are keyed by profile_id, not effective account, so pA and pB (both acct-X) each get limit=1.",
+        "evidence": "PLAN: \"buckets keyed by profile_id, each with limit=1\"; \"M2 can recommend one READY task on pA and one on pB in same batch\". BASELINE: \"pA and pB resolve to account_ref=acct-X, with per-account concurrency=1\".",
+        "failure_scenario": "Both tasks reserve and dispatch, so two jobs run concurrently on acct-X, breaching its concurrency of 1 and doubling quota burn.",
+        "fix": "Key buckets and reservations by account_ref with limit=per-account concurrency. Use profile aliases only for CLI selection."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "Ranking sums 5h and 7d usage, which the contract forbids.",
+        "evidence": "PLAN: \"Score=5h_used+7d_used ascending\". CONTRACT: \"percentages from different windows must not be added.\" BASELINE: \"Bottleneck rule favors acct-X (30<50); summation favors acct-Y (50<60).\"",
+        "failure_scenario": "Summation selects acct-Y, so every equal-quality task in the batch goes to the wrong account.",
+        "fix": "Score by max(5h_used,7d_used) ascending, then stable account_ref."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "The SQLite write transaction spans the provider quota fetch.",
+        "evidence": "PLAN: \"BEGIN IMMEDIATE; ... fetch latest quota via bounded HTTP request (deadline 20s) ...\"; \"This path holds the write transaction during fetch.\" CONTRACT: \"No DB write transaction may span provider I/O.\"",
+        "failure_scenario": "A slow provider holds the write lock for up to 20s. Other M1 writes block or fail with busy errors, stalling dispatch and recovery.",
+        "fix": "Fetch before BEGIN IMMEDIATE. Inside the short transaction, re-read reservations, validate the sample against injected now, write, and COMMIT."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Dispatch recheck overwrites the map row and hash instead of appending a decision, which mutates v1 evidence.",
+        "evidence": "PLAN: \"replaces the recommendation inside the existing startup map row and recomputes its hash\". CONTRACT: \"A frozen map is append-only evidence with its original hash; revalidation must append a new decision\".",
+        "failure_scenario": "The original SHA-256 is lost, so after a route change the frozen evidence cannot be verified or audited.",
+        "fix": "Leave the map row untouched. Append a decision that references the parent map hash. Dashboards read the latest decision."
+      },
+      {
+        "task": "T6",
+        "severity": "critical",
+        "issue": "Restart deletes old reservations and redispatches incomplete tasks, including RUNNING, without reconciling live executors.",
+        "evidence": "PLAN: \"unconditionally deletes reservations belonging to the previous coordinator PID\"; \"RUNNING is treated as not completed\"; \"No executor cancel/query or reservation reconciliation occurs\". CONTRACT: \"their reservations must be reconciled before replacement dispatch.\"",
+        "failure_scenario": "If generation 1 is still live on acct-X at restart, its reservation is deleted and generation 2 starts there. Both apply side effects, and acct-X runs two jobs against a limit of 1.",
+        "fix": "Reconcile prior generations first: query or cancel by idempotency key, release reservations only on confirmed termination, treat RUNNING without a terminal report as live, and durably record new generations before dispatch."
+      },
+      {
+        "task": "T7",
+        "severity": "high",
+        "issue": "Tests cover only the happy path and clean shutdown after executors stop.",
+        "evidence": "PLAN: \"offline tests cover ... ordinary dispatch and clean shutdown/resume after all executors have stopped; all reported success.\"",
+        "failure_scenario": "The described suite would pass while every defect above remains undetected.",
+        "fix": "Add offline tests: observed_at=700 at now=1000 is ineligible; the bottleneck fixture picks acct-X; pA+pB yields one acct-X reservation; no transaction spans a stubbed fetch; v1 bytes/hash are unchanged after a v2 append; live-executor restart blocks replacement until reconciliation."
+      },
+      {
+        "task": "T5",
+        "severity": "medium",
+        "issue": "The dispatch recheck omits budget, which the contract requires M1 to revalidate.",
+        "evidence": "CONTRACT: \"READY predecessors, budget and reservations must be revalidated by M1 at dispatch.\" PLAN: \"M1 correctly rechecks current quota, predecessors and reservation availability\".",
+        "failure_scenario": "Dispatch proceeds without the budget check, even if budget was exhausted after recommendation.",
+        "fix": "Add the budget check to the T5 recheck and record its result in the appended decision."
+      }
+    ],
+    "uncertainties": [
+      "'budget' is not defined in the input; if it equals quota, the last finding is void."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T3\",\"severity\":\"critical\",\"issue\":\"Unfresh samples become zero usage and stay eligible. 'Fresh' is undefined, and the status, window and reset checks are absent.\",\"evidence\":\"PLAN: \\\"use sample if fresh; otherwise substitute {five_hour:0,seven_day:0}\\\". CONTRACT: \\\"Unknown/stale readings are ineligible.\\\" BASELINE: \\\"a stale sample observed_at=700 is specifically ineligible regardless of percentage\\\".\",\"failure_scenario\":\"observed_at=700 (stale at now=1000) scores 0 and outranks every fresh account with nonzero usage. T4 reserves it, and the startup map records it as the route.\",\"fix\":\"Never substitute; exclude ineligible candidates. Eligible only if observed_at is within 120s of injected now, status=ok, 5h and 7d are present, and both resets are in the future.\"},{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"Capacity buckets are keyed by profile_id, not effective account, so pA and pB (both acct-X) each get limit=1.\",\"evidence\":\"PLAN: \\\"buckets keyed by profile_id, each with limit=1\\\"; \\\"M2 can recommend one READY task on pA and one on pB in same batch\\\". BASELINE: \\\"pA and pB resolve to account_ref=acct-X, with per-account concurrency=1\\\".\",\"failure_scenario\":\"Both tasks reserve and dispatch, so two jobs run concurrently on acct-X, breaching its concurrency of 1 and doubling quota burn.\",\"fix\":\"Key buckets and reservations by account_ref with limit=per-account concurrency. Use profile aliases only for CLI selection.\"},{\"task\":\"T3\",\"severity\":\"high\",\"issue\":\"Ranking sums 5h and 7d usage, which the contract forbids.\",\"evidence\":\"PLAN: \\\"Score=5h_used+7d_used ascending\\\". CONTRACT: \\\"percentages from different windows must not be added.\\\" BASELINE: \\\"Bottleneck rule favors acct-X (30<50); summation favors acct-Y (50<60).\\\"\",\"failure_scenario\":\"Summation selects acct-Y, so every equal-quality task in the batch goes to the wrong account.\",\"fix\":\"Score by max(5h_used,7d_used) ascending, then stable account_ref.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"The SQLite write transaction spans the provider quota fetch.\",\"evidence\":\"PLAN: \\\"BEGIN IMMEDIATE; ... fetch latest quota via bounded HTTP request (deadline 20s) ...\\\"; \\\"This path holds the write transaction during fetch.\\\" CONTRACT: \\\"No DB write transaction may span provider I/O.\\\"\",\"failure_scenario\":\"A slow provider holds the write lock for up to 20s. Other M1 writes block or fail with busy errors, stalling dispatch and recovery.\",\"fix\":\"Fetch before BEGIN IMMEDIATE. Inside the short transaction, re-read reservations, validate the sample against injected now, write, and COMMIT.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"Dispatch recheck overwrites the map row and hash instead of appending a decision, which mutates v1 evidence.\",\"evidence\":\"PLAN: \\\"replaces the recommendation inside the existing startup map row and recomputes its hash\\\". CONTRACT: \\\"A frozen map is append-only evidence with its original hash; revalidation must append a new decision\\\".\",\"failure_scenario\":\"The original SHA-256 is lost, so after a route change the frozen evidence cannot be verified or audited.\",\"fix\":\"Leave the map row untouched. Append a decision that references the parent map hash. Dashboards read the latest decision.\"},{\"task\":\"T6\",\"severity\":\"critical\",\"issue\":\"Restart deletes old reservations and redispatches incomplete tasks, including RUNNING, without reconciling live executors.\",\"evidence\":\"PLAN: \\\"unconditionally deletes reservations belonging to the previous coordinator PID\\\"; \\\"RUNNING is treated as not completed\\\"; \\\"No executor cancel/query or reservation reconciliation occurs\\\". CONTRACT: \\\"their reservations must be reconciled before replacement dispatch.\\\"\",\"failure_scenario\":\"If generation 1 is still live on acct-X at restart, its reservation is deleted and generation 2 starts there. Both apply side effects, and acct-X runs two jobs against a limit of 1.\",\"fix\":\"Reconcile prior generations first: query or cancel by idempotency key, release reservations only on confirmed termination, treat RUNNING without a terminal report as live, and durably record new generations before dispatch.\"},{\"task\":\"T7\",\"severity\":\"high\",\"issue\":\"Tests cover only the happy path and clean shutdown after executors stop.\",\"evidence\":\"PLAN: \\\"offline tests cover ... ordinary dispatch and clean shutdown/resume after all executors have stopped; all reported success.\\\"\",\"failure_scenario\":\"The described suite would pass while every defect above remains undetected.\",\"fix\":\"Add offline tests: observed_at=700 at now=1000 is ineligible; the bottleneck fixture picks acct-X; pA+pB yields one acct-X reservation; no transaction spans a stubbed fetch; v1 bytes/hash are unchanged after a v2 append; live-executor restart blocks replacement until reconciliation.\"},{\"task\":\"T5\",\"severity\":\"medium\",\"issue\":\"The dispatch recheck omits budget, which the contract requires M1 to revalidate.\",\"evidence\":\"CONTRACT: \\\"READY predecessors, budget and reservations must be revalidated by M1 at dispatch.\\\" PLAN: \\\"M1 correctly rechecks current quota, predecessors and reservation availability\\\".\",\"failure_scenario\":\"Dispatch proceeds without the budget check, even if budget was exhausted after recommendation.\",\"fix\":\"Add the budget check to the T5 recheck and record its result in the appended decision.\"}],\"uncertainties\":[\"'budget' is not defined in the input; if it equals quota, the last finding is void.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 4016,
+    "cache_read_input_tokens": 2442,
+    "output_tokens": 60310,
+    "output_tokens_details": {
+      "thinking_tokens": 58243
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4016,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 227.452,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792207688.6453023,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792213799.895342,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.895361,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

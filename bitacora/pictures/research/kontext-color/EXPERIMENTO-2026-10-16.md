@@ -29,7 +29,8 @@ The source images, per-colour scores, visual notes and the old ledger remain in 
 - Before the first call, the offline and dry-run modes validated the 1024×1024 JPEG, all palette hexes, and the cap. Initial ledger total was US$0.00.
 - The first `base` request (seed 21) was rejected by fal.ai with HTTP 403 `saldo_agotado` / “User is locked. Reason: Exhausted balance.” No image was returned. The ledger conservatively reserves **US$0.08**; no retry was made. Current T44 ledger total is US$0.08, below the declared cap.
 - This rerun produced no visual comparison. Prior d evidence selected the wording in code, but it does not validate the changed Taller prompt visually.
+- Continuation revalidation: the offline prompt regression passed 5/5 and capped dry-run returned SECO OK (1024×1024 JPEG, 45,318 bytes, prompt 1,976 characters). The isolated ledger remained at US$0.08 with one rejected request; no provider call was made.
 
 ## Status
 
-The prompt implementation and offline tests are complete. T44 remains open until a valid Taller comparison can run within the US$0.60 cap; T53 remains open because it depends on T44. The marathon stays at 52/70 tasks (74.3%).
+The prompt implementation and offline tests are complete. Continuation revalidation passed 5/5 plus the capped offline dry-run; no new paid call was attempted. T44 remains open until a valid Taller comparison can run within the US$0.60 cap; T53 remains open because it depends on T44. Current marathon progress is 57/70 tasks (81.4%).

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "scope": "Owner-authorized hard analysis pilot, outside formal REQ-024 benchmark",
+  "cases": 3,
+  "target_calls": 12,
+  "routes": [
+    {
+      "id": "sol-medium",
+      "profile": "codex-2",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    {
+      "id": "sol-high",
+      "profile": "codex-2",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    },
+    {
+      "id": "sonnet-medium",
+      "profile": "claude-work",
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    {
+      "id": "sonnet-high",
+      "profile": "claude-work",
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    }
+  ],
+  "oracle_sha256": "a3d9f7b9386ec04c4918d2f993db71d6fcd9ff477d9b8e05834d840ec3c14902",
+  "instruction": "Analyze the complete supplied technical dossier: authoritative requirements, verified baseline guarantees, candidate code, traces and proposed plan. Cross their boundaries to find concrete failures. Historical memos do not override current requirements. Only explicitly verified baseline protections may be assumed correct; candidate snippets may contain defects.\nUse only this input. Do not browse, call tools, inspect local files or execute code. You are reviewing, not implementing. Do not invent guarantees, requirements or missing baseline protections. Deduplicate root causes; a missing regression test for a defect belongs with that defect, not a second finding. A correct primitive can have an incorrect caller. Give a specific witness and minimal fix for each finding. Report uncertainty rather than asserting a failure that depends on unspecified facts. There may be correct design choices worth preserving; do not force a finding for every section.\nReturn ONLY one JSON object, no markdown/prose outside it, at most 12 independent findings and 1800 whitespace-delimited words:\n{\"verdict\":\"acceptable|needs_changes\",\"findings\":[{\"task\":\"exact snippet/task ID\",\"severity\":\"critical|high|medium|low\",\"issue\":\"root cause\",\"evidence\":\"specific cross-references from the dossier\",\"failure_scenario\":\"minimal counterexample, trace or arithmetic\",\"fix\":\"minimal sound correction\"}],\"uncertainties\":[\"material unresolved issue, if any\"]}.\nUse English. A material proven defect requires needs_changes. State what the supplied evidence supports, without generic checklists.\n\nDOSSIER:\n",
+  "common_deadline_seconds": 900,
+  "maximum_findings": 12,
+  "maximum_words": 1800,
+  "base_harness_sha256": "7b18d84bd48539353dcb565ee307a75d0c7a7bd69028655e5dee8e0945553f92",
+  "runner_sha256": "ea404693b8cd0f575c4a27ae7eaf7fd951ab8e96615ddaca62dd307c15db9b6a",
+  "concurrency": "one per effective account, maximum two accounts; effort order alternates per case and between accounts",
+  "model_order": {
+    "codex": [
+      [
+        "medium",
+        "high"
+      ],
+      [
+        "high",
+        "medium"
+      ],
+      [
+        "medium",
+        "high"
+      ]
+    ],
+    "claude": [
+      [
+        "high",
+        "medium"
+      ],
+      [
+        "medium",
+        "high"
+      ],
+      [
+        "high",
+        "medium"
+      ]
+    ]
+  },
+  "grading": "Explicit coordinator mapping to 31 frozen root defects; accept grouped findings covering multiple roots; adjudicate supported extras separately; count duplicate coverage once; report groundedness and JSON reliability, not only recall.",
+  "limitations": [
+    "One run per cell; self-contained synthetic dossiers, not production repository audits",
+    "Different hidden CLI contexts/tokenizers/cache accounting",
+    "Matched medium/high efforts per owner request; no repeated cells, so order/cache and sampling variation remain limitations",
+    "Quota is coarse account telemetry, may lag/include other account use; zero displayed delta is not zero cost"
+  ]
+}

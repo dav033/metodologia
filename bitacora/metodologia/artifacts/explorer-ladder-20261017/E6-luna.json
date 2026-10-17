@@ -1,0 +1,571 @@
+{
+  "schema_version": 1,
+  "case": "E6",
+  "route": {
+    "id": "luna",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "909d6b76b183f20223377b3ca5950608e45e4a746be0a6edcc589861f6c0cdd2",
+  "prompt_characters": 4259,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248417.886941,
+    "windows": {
+      "five_hour": {
+        "used_percent": 64.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 11.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248418.5048127,
+  "argv": [
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "--json",
+    "-"
+  ],
+  "answer": {
+    "case": "E1",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "`step()` refreshes READY tasks, reconciles, assigns, then dispatches. M1 reads eligible READY tasks and calls the assignment port outside a write transaction; each proposal is revalidated by `claim()`, which atomically creates the RESERVED attempt, resource hold, ACTIVE task, and pending start outbox item. Dispatch commits an incremented delivery count before calling the execution port outside that transaction, then records its acknowledgement in a later write. The adapter maps the order to an M3 `StartRequest`; M3 validates it, resolves the route and workspace, inserts the attempt in its own ledger, then returns accepted. That receipt means queued/accepted, not that a process started.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.step / SchedulerCore._assign",
+            "start_line": 255,
+            "end_line": 325
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "claim",
+            "start_line": 34,
+            "end_line": 71
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._deliver_one / Dispatcher._send / Dispatcher._record_ack",
+            "start_line": 39,
+            "end_line": 76
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "CoreExecutionPort.start",
+            "start_line": 303,
+            "end_line": 328
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "AgentExecutor.start",
+            "start_line": 141,
+            "end_line": 185
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "On M1 restart, `start()` reconciles all live attempts. If the lost start acknowledgement left the outbox pending, later delivery sees a prior delivery and queries M3 before resending. A running/queued/other known answer suppresses resend; only `not_found` plus a still-RESERVED, pending start permits it. M3 checks its durable ledger by idempotency key: an identical stored order replays as duplicate; changed order under that key is rejected as KEY_CONFLICT. This protects the local M3 attempt record against duplicate starts.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.start",
+            "start_line": 107,
+            "end_line": 122
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._deliver_one / Dispatcher._still_unsent",
+            "start_line": 64,
+            "end_line": 82
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "AgentExecutor.start / AgentExecutor._replay",
+            "start_line": 141,
+            "end_line": 152
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/ledger.py",
+            "symbol": "Ledger.insert",
+            "start_line": 164,
+            "end_line": 180
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "Lease expiry only flags a live attempt for query. If the observation is unknown, M1 sets the attempt UNCERTAIN and schedules a shorter next query; it does not close the attempt, release its hold, move the task to RECOVERING, or make it retryable. Recovery considers RECOVERING tasks, and a new claim requires READY. Source tests assert the hold remains and another claim is refused.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._refresh",
+            "start_line": 265,
+            "end_line": 273
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/recovery.py",
+            "symbol": "apply_observation",
+            "start_line": 96,
+            "end_line": 136
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/recovery.py",
+            "symbol": "pending / apply_recovery",
+            "start_line": 24,
+            "end_line": 26
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_dispatch.py",
+            "symbol": "PortFailures.test_an_executor_that_cannot_even_answer_a_query_makes_the_attempt_uncertain_not_failed",
+            "start_line": 117,
+            "end_line": 126
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "A start never sent (`deliveries == 0`) is excluded from reconciliation and follows normal delivery. After delivery may have occurred, M1 queries first: `not_found` allows redelivery only while the start remains pending and the attempt is RESERVED or UNCERTAIN; UNCERTAIN is reset to RESERVED. If the start is no longer pending (or the state does not qualify), M1 records failure cause `lost` and releases the hold through `end_attempt()`.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher.reconcile / Dispatcher._deliver_one",
+            "start_line": 68,
+            "end_line": 76
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher.reconcile",
+            "start_line": 149,
+            "end_line": 157
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/recovery.py",
+            "symbol": "apply_observation",
+            "start_line": 125,
+            "end_line": 136
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/transitions.py",
+            "symbol": "end_attempt",
+            "start_line": 121,
+            "end_line": 132
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "M3’s terminal event goes through `CoreEventSink` to `SchedulerCore.ingest`. `execution_finished` advances the attempt to VERIFYING and enqueues verification; it does not complete the task. Only an accepted verdict in VERIFYING can complete it, with a named verifier and evidence; independent verification is required by default. The executor label cannot accept its own work under that default. A clean process exit alone is not acceptance.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "CoreEventSink.deliver",
+            "start_line": 339,
+            "end_line": 356
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "apply_event / request_verification",
+            "start_line": 66,
+            "end_line": 115
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "apply_verdict",
+            "start_line": 118,
+            "end_line": 146
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "module lifecycle guarantee",
+            "start_line": 1,
+            "end_line": 10
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "Lifecycle.test_started_then_finished_moves_the_attempt_but_never_completes_the_task / Lifecycle.test_the_executors_own_label_cannot_accept_its_work",
+            "start_line": 41,
+            "end_line": 72
+          }
+        ]
+      },
+      {
+        "id": "Q6",
+        "answer": "Ordinary reconciliation does not override VERIFYING: unknown, failed, not_found, or cancelled observations are audited and ignored because the verdict settles that state. An operator can use `resolve_attempt()` with an authorized `by` and an allowed outcome; it passes `manual=True`, which bypasses that ignore branch. This is a manual state-resolution capability, distinct from executor reconciliation.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/recovery.py",
+            "symbol": "apply_observation",
+            "start_line": 96,
+            "end_line": 108
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/operations.py",
+            "symbol": "resolve_attempt",
+            "start_line": 72,
+            "end_line": 83
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_hardening.py",
+            "symbol": "VerifyingIsSettledByVerdict.test_an_unknown_observation_does_not_pull_a_verifying_attempt_back_to_uncertain",
+            "start_line": 256,
+            "end_line": 264
+          }
+        ]
+      },
+      {
+        "id": "Q7",
+        "answer": "For ordinary events, M1 checks plan/revision, then durable seen-event IDs, attempt/task identity, fencing token, and that the attempt is the task’s current attempt. Repeated applied IDs are duplicates; wrong plan/revision and unknown attempt are invalid, while token mismatch and superseded attempts are stale. Only applied messages are remembered. `incident_observed` is a deliberate exception: it may refer to a known superseded attempt and has a durable incident-ID dedupe check, but still must match plan/revision, known attempt/task, and token. It only writes an audit reference and remembers the ID; it does not change task, attempt, or lease.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "_preflight / apply_event",
+            "start_line": 46,
+            "end_line": 77
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "apply_event",
+            "start_line": 78,
+            "end_line": 104
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "Idempotency / Stale / Invalid assertions",
+            "start_line": 133,
+            "end_line": 201
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_incident_contract.py",
+            "symbol": "incident reference and superseded-attempt assertions",
+            "start_line": 36,
+            "end_line": 75
+          }
+        ]
+      },
+      {
+        "id": "Q8",
+        "answer": "If cancellation finds a RESERVED attempt whose start is still pending with zero deliveries, it closes the attempt immediately; `end_attempt()` releases its hold. Otherwise M1 voids a pending start and enqueues cancellation, leaving the attempt and hold live until executor confirmation or reconciliation closes it. A cancel acknowledgement only requests reconciliation; it is not proof the work stopped.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/operations.py",
+            "symbol": "cancel",
+            "start_line": 35,
+            "end_line": 57
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/transitions.py",
+            "symbol": "end_attempt / release",
+            "start_line": 121,
+            "end_line": 132
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._record_ack",
+            "start_line": 111,
+            "end_line": 129
+          }
+        ]
+      },
+      {
+        "id": "Q9",
+        "answer": "M3 restart recovery watches RUNNING rows, and reconciles PREPARING and SETTLING rows. PREPARING checks persisted `shim.json` and `exit.json`, shim PID plus identity, child PID plus identity, and, if those records are absent, searches for the shim by argv and waits briefly for its record. It adopts a live shim/child, settles from an exit record, or prepares again when it finds no running evidence (stopping a found but unidentified shim and checking the workspace for an unrecorded writer first). SETTLING retries settlement from the stored outcome. RUNNING watch checks exit record and shim identity. These are local persisted/process observations; they do not establish what an external provider did beyond M3’s process boundary.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_executor/recovery.py",
+            "symbol": "RecoverMixin._recover / _reconcile_preparing",
+            "start_line": 14,
+            "end_line": 58
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/recovery.py",
+            "symbol": "RecoverMixin._adopt_running",
+            "start_line": 60,
+            "end_line": 71
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "AgentExecutor._retry_preparing / _retry_settling / _watch",
+            "start_line": 279,
+            "end_line": 365
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/settle.py",
+            "symbol": "SettleMixin._settle_once",
+            "start_line": 63,
+            "end_line": 96
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/tests/test_reconcile.py",
+            "symbol": "restart recovery assertions for PREPARING, adopted shim, and SETTLING",
+            "start_line": 98,
+            "end_line": 137
+          }
+        ]
+      },
+      {
+        "id": "Q10",
+        "answer": "For an M2-prefixed reference, `RouteResolver` calls the configured M2 lookup; missing lookup/result is ROUTE_UNRESOLVABLE. The ledger lookup strips `route:`, resolves only a persisted selected route, and returns plan/revision/task/hash, quota deadline, and account reference. The resolver rejects context/hash mismatch, superseded decisions, and expired quota evidence, then validates the route and repository policy before launch. It does not silently fall back for a missing or stale M2 reference. Direct references are separately gated and refused when M2 lookup is configured unless explicitly allowed.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "RouteResolver.resolve / check_context",
+            "start_line": 135,
+            "end_line": 180
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "m2_ledger_lookup",
+            "start_line": 199,
+            "end_line": 222
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/recorder.py",
+            "symbol": "DecisionLedger.resolve_executor_binding",
+            "start_line": 472,
+            "end_line": 480
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_recorder.py",
+            "symbol": "selected-route and binding assertions",
+            "start_line": 192,
+            "end_line": 233
+          }
+        ]
+      },
+      {
+        "id": "Q11",
+        "answer": "Source tests cover distinct failure modes: M1’s lost-ack test restores a pending start after M3 accepted it, restarts M1, then asserts one start delivery; its unknown-query test asserts UNCERTAIN, retained hold, and refusal of a second claim. Event tests assert duplicate IDs remain duplicates across restart, old-attempt events are stale without changing task/holds, and wrong fencing tokens are stale. Verifier tests assert finished leaves the task active/VERIFYING and the executor identity is rejected as verifier. M3 recovery tests assert a live agent is reattached, a shim-started attempt is adopted rather than duplicated, and SETTLING emits one terminal event. These are source assertions, not claims from executing tests.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_dispatch.py",
+            "symbol": "CrashPoints.test_crash_after_delivery_but_before_the_ack_was_recorded / PortFailures.test_an_executor_that_cannot_even_answer_a_query_makes_the_attempt_uncertain_not_failed",
+            "start_line": 92,
+            "end_line": 126
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "Idempotency.test_event_ids_are_remembered_across_a_restart / Stale assertions / Lifecycle assertions",
+            "start_line": 41,
+            "end_line": 72
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "Stale / Invalid assertions",
+            "start_line": 163,
+            "end_line": 201
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/tests/test_reconcile.py",
+            "symbol": "restart and adoption assertions",
+            "start_line": 33,
+            "end_line": 43
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/tests/test_reconcile.py",
+            "symbol": "PREPARING adoption and SETTLING assertions",
+            "start_line": 108,
+            "end_line": 137
+          }
+        ]
+      },
+      {
+        "id": "Q12",
+        "answer": "The source supports durable local intent, replay protection in M3’s ledger, event deduplication, and independent-verdict gating; it does not prove exactly-once effects at an arbitrary external provider or live-account availability. Automatic acceptance is conditional, not a general guarantee: optional M6 wiring can submit a verdict for a PASS result, but unresolved NEEDS_REVIEW remains pending until operator resolution. No snapshot evidence establishes live credentials, account health, or provider behavior.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_executor/ledger.py",
+            "symbol": "Ledger.insert",
+            "start_line": 167,
+            "end_line": 203
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quality_adapter.py",
+            "symbol": "QualityVerificationPort._deliver_one",
+            "start_line": 267,
+            "end_line": 312
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_wiring.py",
+            "symbol": "wire",
+            "start_line": 42,
+            "end_line": 50
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "apply_verdict",
+            "start_line": 127,
+            "end_line": 146
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "The snapshot cannot establish live provider/account availability or whether an arbitrary provider deduplicates side effects beyond M3’s local idempotency ledger.",
+      "Whether M6 is enabled in a deployed run depends on runtime wiring; source provides an opt-in quality-store path, not evidence of a live deployment configuration."
+    ]
+  },
+  "response_text": "{\"case\":\"E1\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"`step()` refreshes READY tasks, reconciles, assigns, then dispatches. M1 reads eligible READY tasks and calls the assignment port outside a write transaction; each proposal is revalidated by `claim()`, which atomically creates the RESERVED attempt, resource hold, ACTIVE task, and pending start outbox item. Dispatch commits an incremented delivery count before calling the execution port outside that transaction, then records its acknowledgement in a later write. The adapter maps the order to an M3 `StartRequest`; M3 validates it, resolves the route and workspace, inserts the attempt in its own ledger, then returns accepted. That receipt means queued/accepted, not that a process started.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.step / SchedulerCore._assign\",\"start_line\":255,\"end_line\":325},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"claim\",\"start_line\":34,\"end_line\":71},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._deliver_one / Dispatcher._send / Dispatcher._record_ack\",\"start_line\":39,\"end_line\":76},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"CoreExecutionPort.start\",\"start_line\":303,\"end_line\":328},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"AgentExecutor.start\",\"start_line\":141,\"end_line\":185}]},{\"id\":\"Q2\",\"answer\":\"On M1 restart, `start()` reconciles all live attempts. If the lost start acknowledgement left the outbox pending, later delivery sees a prior delivery and queries M3 before resending. A running/queued/other known answer suppresses resend; only `not_found` plus a still-RESERVED, pending start permits it. M3 checks its durable ledger by idempotency key: an identical stored order replays as duplicate; changed order under that key is rejected as KEY_CONFLICT. This protects the local M3 attempt record against duplicate starts.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.start\",\"start_line\":107,\"end_line\":122},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._deliver_one / Dispatcher._still_unsent\",\"start_line\":64,\"end_line\":82},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"AgentExecutor.start / AgentExecutor._replay\",\"start_line\":141,\"end_line\":152},{\"path\":\"skill/scripts/bt_scheduler_executor/ledger.py\",\"symbol\":\"Ledger.insert\",\"start_line\":164,\"end_line\":180}]},{\"id\":\"Q3\",\"answer\":\"Lease expiry only flags a live attempt for query. If the observation is unknown, M1 sets the attempt UNCERTAIN and schedules a shorter next query; it does not close the attempt, release its hold, move the task to RECOVERING, or make it retryable. Recovery considers RECOVERING tasks, and a new claim requires READY. Source tests assert the hold remains and another claim is refused.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._refresh\",\"start_line\":265,\"end_line\":273},{\"path\":\"skill/scripts/bt_scheduler_core/recovery.py\",\"symbol\":\"apply_observation\",\"start_line\":96,\"end_line\":136},{\"path\":\"skill/scripts/bt_scheduler_core/recovery.py\",\"symbol\":\"pending / apply_recovery\",\"start_line\":24,\"end_line\":26},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_dispatch.py\",\"symbol\":\"PortFailures.test_an_executor_that_cannot_even_answer_a_query_makes_the_attempt_uncertain_not_failed\",\"start_line\":117,\"end_line\":126}]},{\"id\":\"Q4\",\"answer\":\"A start never sent (`deliveries == 0`) is excluded from reconciliation and follows normal delivery. After delivery may have occurred, M1 queries first: `not_found` allows redelivery only while the start remains pending and the attempt is RESERVED or UNCERTAIN; UNCERTAIN is reset to RESERVED. If the start is no longer pending (or the state does not qualify), M1 records failure cause `lost` and releases the hold through `end_attempt()`.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher.reconcile / Dispatcher._deliver_one\",\"start_line\":68,\"end_line\":76},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher.reconcile\",\"start_line\":149,\"end_line\":157},{\"path\":\"skill/scripts/bt_scheduler_core/recovery.py\",\"symbol\":\"apply_observation\",\"start_line\":125,\"end_line\":136},{\"path\":\"skill/scripts/bt_scheduler_core/transitions.py\",\"symbol\":\"end_attempt\",\"start_line\":121,\"end_line\":132}]},{\"id\":\"Q5\",\"answer\":\"M3’s terminal event goes through `CoreEventSink` to `SchedulerCore.ingest`. `execution_finished` advances the attempt to VERIFYING and enqueues verification; it does not complete the task. Only an accepted verdict in VERIFYING can complete it, with a named verifier and evidence; independent verification is required by default. The executor label cannot accept its own work under that default. A clean process exit alone is not acceptance.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"CoreEventSink.deliver\",\"start_line\":339,\"end_line\":356},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"apply_event / request_verification\",\"start_line\":66,\"end_line\":115},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"apply_verdict\",\"start_line\":118,\"end_line\":146},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"module lifecycle guarantee\",\"start_line\":1,\"end_line\":10},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"Lifecycle.test_started_then_finished_moves_the_attempt_but_never_completes_the_task / Lifecycle.test_the_executors_own_label_cannot_accept_its_work\",\"start_line\":41,\"end_line\":72}]},{\"id\":\"Q6\",\"answer\":\"Ordinary reconciliation does not override VERIFYING: unknown, failed, not_found, or cancelled observations are audited and ignored because the verdict settles that state. An operator can use `resolve_attempt()` with an authorized `by` and an allowed outcome; it passes `manual=True`, which bypasses that ignore branch. This is a manual state-resolution capability, distinct from executor reconciliation.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/recovery.py\",\"symbol\":\"apply_observation\",\"start_line\":96,\"end_line\":108},{\"path\":\"skill/scripts/bt_scheduler_core/operations.py\",\"symbol\":\"resolve_attempt\",\"start_line\":72,\"end_line\":83},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_hardening.py\",\"symbol\":\"VerifyingIsSettledByVerdict.test_an_unknown_observation_does_not_pull_a_verifying_attempt_back_to_uncertain\",\"start_line\":256,\"end_line\":264}]},{\"id\":\"Q7\",\"answer\":\"For ordinary events, M1 checks plan/revision, then durable seen-event IDs, attempt/task identity, fencing token, and that the attempt is the task’s current attempt. Repeated applied IDs are duplicates; wrong plan/revision and unknown attempt are invalid, while token mismatch and superseded attempts are stale. Only applied messages are remembered. `incident_observed` is a deliberate exception: it may refer to a known superseded attempt and has a durable incident-ID dedupe check, but still must match plan/revision, known attempt/task, and token. It only writes an audit reference and remembers the ID; it does not change task, attempt, or lease.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"_preflight / apply_event\",\"start_line\":46,\"end_line\":77},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"apply_event\",\"start_line\":78,\"end_line\":104},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"Idempotency / Stale / Invalid assertions\",\"start_line\":133,\"end_line\":201},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_incident_contract.py\",\"symbol\":\"incident reference and superseded-attempt assertions\",\"start_line\":36,\"end_line\":75}]},{\"id\":\"Q8\",\"answer\":\"If cancellation finds a RESERVED attempt whose start is still pending with zero deliveries, it closes the attempt immediately; `end_attempt()` releases its hold. Otherwise M1 voids a pending start and enqueues cancellation, leaving the attempt and hold live until executor confirmation or reconciliation closes it. A cancel acknowledgement only requests reconciliation; it is not proof the work stopped.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/operations.py\",\"symbol\":\"cancel\",\"start_line\":35,\"end_line\":57},{\"path\":\"skill/scripts/bt_scheduler_core/transitions.py\",\"symbol\":\"end_attempt / release\",\"start_line\":121,\"end_line\":132},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._record_ack\",\"start_line\":111,\"end_line\":129}]},{\"id\":\"Q9\",\"answer\":\"M3 restart recovery watches RUNNING rows, and reconciles PREPARING and SETTLING rows. PREPARING checks persisted `shim.json` and `exit.json`, shim PID plus identity, child PID plus identity, and, if those records are absent, searches for the shim by argv and waits briefly for its record. It adopts a live shim/child, settles from an exit record, or prepares again when it finds no running evidence (stopping a found but unidentified shim and checking the workspace for an unrecorded writer first). SETTLING retries settlement from the stored outcome. RUNNING watch checks exit record and shim identity. These are local persisted/process observations; they do not establish what an external provider did beyond M3’s process boundary.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_executor/recovery.py\",\"symbol\":\"RecoverMixin._recover / _reconcile_preparing\",\"start_line\":14,\"end_line\":58},{\"path\":\"skill/scripts/bt_scheduler_executor/recovery.py\",\"symbol\":\"RecoverMixin._adopt_running\",\"start_line\":60,\"end_line\":71},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"AgentExecutor._retry_preparing / _retry_settling / _watch\",\"start_line\":279,\"end_line\":365},{\"path\":\"skill/scripts/bt_scheduler_executor/settle.py\",\"symbol\":\"SettleMixin._settle_once\",\"start_line\":63,\"end_line\":96},{\"path\":\"skill/scripts/bt_scheduler_executor/tests/test_reconcile.py\",\"symbol\":\"restart recovery assertions for PREPARING, adopted shim, and SETTLING\",\"start_line\":98,\"end_line\":137}]},{\"id\":\"Q10\",\"answer\":\"For an M2-prefixed reference, `RouteResolver` calls the configured M2 lookup; missing lookup/result is ROUTE_UNRESOLVABLE. The ledger lookup strips `route:`, resolves only a persisted selected route, and returns plan/revision/task/hash, quota deadline, and account reference. The resolver rejects context/hash mismatch, superseded decisions, and expired quota evidence, then validates the route and repository policy before launch. It does not silently fall back for a missing or stale M2 reference. Direct references are separately gated and refused when M2 lookup is configured unless explicitly allowed.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"RouteResolver.resolve / check_context\",\"start_line\":135,\"end_line\":180},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"m2_ledger_lookup\",\"start_line\":199,\"end_line\":222},{\"path\":\"skill/scripts/bt_scheduler_decision/recorder.py\",\"symbol\":\"DecisionLedger.resolve_executor_binding\",\"start_line\":472,\"end_line\":480},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_recorder.py\",\"symbol\":\"selected-route and binding assertions\",\"start_line\":192,\"end_line\":233}]},{\"id\":\"Q11\",\"answer\":\"Source tests cover distinct failure modes: M1’s lost-ack test restores a pending start after M3 accepted it, restarts M1, then asserts one start delivery; its unknown-query test asserts UNCERTAIN, retained hold, and refusal of a second claim. Event tests assert duplicate IDs remain duplicates across restart, old-attempt events are stale without changing task/holds, and wrong fencing tokens are stale. Verifier tests assert finished leaves the task active/VERIFYING and the executor identity is rejected as verifier. M3 recovery tests assert a live agent is reattached, a shim-started attempt is adopted rather than duplicated, and SETTLING emits one terminal event. These are source assertions, not claims from executing tests.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_dispatch.py\",\"symbol\":\"CrashPoints.test_crash_after_delivery_but_before_the_ack_was_recorded / PortFailures.test_an_executor_that_cannot_even_answer_a_query_makes_the_attempt_uncertain_not_failed\",\"start_line\":92,\"end_line\":126},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"Idempotency.test_event_ids_are_remembered_across_a_restart / Stale assertions / Lifecycle assertions\",\"start_line\":41,\"end_line\":72},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"Stale / Invalid assertions\",\"start_line\":163,\"end_line\":201},{\"path\":\"skill/scripts/bt_scheduler_executor/tests/test_reconcile.py\",\"symbol\":\"restart and adoption assertions\",\"start_line\":33,\"end_line\":43},{\"path\":\"skill/scripts/bt_scheduler_executor/tests/test_reconcile.py\",\"symbol\":\"PREPARING adoption and SETTLING assertions\",\"start_line\":108,\"end_line\":137}]},{\"id\":\"Q12\",\"answer\":\"The source supports durable local intent, replay protection in M3’s ledger, event deduplication, and independent-verdict gating; it does not prove exactly-once effects at an arbitrary external provider or live-account availability. Automatic acceptance is conditional, not a general guarantee: optional M6 wiring can submit a verdict for a PASS result, but unresolved NEEDS_REVIEW remains pending until operator resolution. No snapshot evidence establishes live credentials, account health, or provider behavior.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_executor/ledger.py\",\"symbol\":\"Ledger.insert\",\"start_line\":167,\"end_line\":203},{\"path\":\"skill/scripts/bt_scheduler_quality_adapter.py\",\"symbol\":\"QualityVerificationPort._deliver_one\",\"start_line\":267,\"end_line\":312},{\"path\":\"skill/scripts/bt_scheduler_executor_wiring.py\",\"symbol\":\"wire\",\"start_line\":42,\"end_line\":50},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"apply_verdict\",\"start_line\":127,\"end_line\":146}]}],\"unknowns\":[\"The snapshot cannot establish live provider/account availability or whether an arbitrary provider deduplicates side effects beyond M3’s local idempotency ledger.\",\"Whether M6 is enabled in a deployed run depends on runtime wiring; source provides an opt-in quality-store path, not evidence of a live deployment configuration.\"]}",
+  "format_valid": false,
+  "usage_reported": {
+    "input_tokens": 770170,
+    "cached_input_tokens": 680064,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 7151,
+    "reasoning_output_tokens": 2046
+  },
+  "observed_models": [],
+  "observed_tool_events": 13,
+  "response_words": 1048,
+  "exit_code": 0,
+  "elapsed_seconds": 62.087,
+  "finished_at": 1792248480.5920286,
+  "tool_audit": [
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files repo'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"READY|execution_finished|not_found|unknown|lost|VERIFYING|PREPARING|SETTLING|fenc|idempot|duplicate|reference|opaque|incident|pending\" repo/skill/scripts/bt_scheduler* repo/skill/scripts/tests/test_scheduler_m1_m6_e2e.py'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"def .*start|def .*deliver|not_found|execution_finished|VERIFYING|lease|unknown|idempotency|cancel|stale|fencing|attempt_id|incident\" repo/skill/scripts/bt_scheduler_core repo/skill/scripts/bt_scheduler_executor repo/skill/scripts/bt_scheduler_quality repo/skill/scripts/bt_scheduler_decision repo/skill/scripts/tests/test_scheduler_m1_m6_e2e.py'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"def (step|claim|deliver|ingest|reconcile|start|_start|recover|verify|cancel|resolve_executor_binding)|not_found|ExecutionStatus|class .*Adapter|execution_finished|start_order|idempotency_key\" repo/skill/scripts/bt_scheduler_core/{scheduler.py,dispatch.py,events.py,transitions.py,states.py,repository.py} repo/skill/scripts/bt_scheduler_executor/{executor.py,recovery.py,ledger.py} repo/skill/scripts/bt_scheduler_executor_wiring.py repo/skill/scripts/bt_scheduler_executor_adapter.py repo/skill/scripts/bt_scheduler_decision/{recorder.py,identity.py} repo/skill/scripts/bt_scheduler_core/tests/test_flow.py'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"sed -n '1,210p' repo/skill/scripts/bt_scheduler_core/dispatch.py; sed -n '190,295p' repo/skill/scripts/bt_scheduler_core/scheduler.py; sed -n '1,280p' repo/skill/scripts/bt_scheduler_core/events.py; sed -n '1,180p' repo/skill/scripts/bt_scheduler_core/transitions.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"sed -n '245,350p' repo/skill/scripts/bt_scheduler_core/scheduler.py; sed -n '1,240p' repo/skill/scripts/bt_scheduler_core/reservation.py; sed -n '1,230p' repo/skill/scripts/bt_scheduler_core/recovery.py; sed -n '130,265p' repo/skill/scripts/bt_scheduler_executor/executor.py; sed -n '150,220p' repo/skill/scripts/bt_scheduler_executor/ledger.py; sed -n '1,240p' repo/skill/scripts/bt_scheduler_executor/recovery.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"sed -n '1,160p' repo/skill/scripts/bt_scheduler_executor_wiring.py; sed -n '285,375p' repo/skill/scripts/bt_scheduler_executor_adapter.py; sed -n '460,490p' repo/skill/scripts/bt_scheduler_decision/recorder.py; rg -n \\\"resolve_executor_binding|executor_reference|ROUTE_UNRESOLVABLE|M2|reference\\\" repo/skill/scripts/bt_scheduler_executor repo/skill/scripts/bt_scheduler_executor_adapter.py repo/skill/scripts/bt_scheduler* | head -100; sed -n '1,240p' repo/skill/scripts/bt_scheduler_core/tests/test_dispatch.py; sed -n '1,250p' repo/skill/scripts/bt_scheduler_core/tests/test_events.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n \\\"class RouteResolver|def resolve\\\\(|resolve_executor_binding|def resolve_attempt|def cancel\\\\(|def _watch\\\\(|def _settle|def _retry_settling|def _recover|def _reconcile_preparing|PREPARING|SETTLING\\\" repo/skill/scripts/bt_scheduler_executor_adapter.py repo/skill/scripts/bt_scheduler_core/operations.py repo/skill/scripts/bt_scheduler_executor/{executor.py,recovery.py,settle.py}; nl -ba repo/skill/scripts/bt_scheduler_core/dispatch.py | sed -n '20,180p'; nl -ba repo/skill/scripts/bt_scheduler_core/recovery.py | sed -n '80,155p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_core/operations.py | sed -n '1,125p'; nl -ba repo/skill/scripts/bt_scheduler_core/events.py | sed -n '35,175p'; nl -ba repo/skill/scripts/bt_scheduler_executor/recovery.py | sed -n '1,95p'; nl -ba repo/skill/scripts/bt_scheduler_executor/settle.py | sed -n '50,105p'; nl -ba repo/skill/scripts/bt_scheduler_executor_adapter.py | sed -n '130,235p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_core/scheduler.py | sed -n '255,325p'; nl -ba repo/skill/scripts/bt_scheduler_core/reservation.py | sed -n '1,95p'; nl -ba repo/skill/scripts/bt_scheduler_core/tests/test_dispatch.py | sed -n '1,145p'; nl -ba repo/skill/scripts/bt_scheduler_core/tests/test_hardening.py | sed -n '245,275p'; nl -ba repo/skill/scripts/bt_scheduler_core/tests/test_incident_contract.py | sed -n '32,110p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_executor/tests/test_reconcile.py | sed -n '30,145p'; nl -ba repo/skill/scripts/bt_scheduler_decision/tests/test_recorder.py | sed -n '188,238p'; nl -ba repo/skill/scripts/bt_scheduler_executor/ledger.py | sed -n '160,214p'; nl -ba repo/skill/scripts/bt_scheduler_executor_adapter.py | sed -n '300,340p'; nl -ba repo/skill/scripts/bt_scheduler_executor/executor.py | sed -n '140,185p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n \\\"class QualityVerificationPort|accepted|Verdict\\\\(|verdict|human|review\\\" repo/skill/scripts/bt_scheduler_quality_adapter.py repo/skill/scripts/bt_scheduler_quality repo/skill/scripts/bt_scheduler_quality/tests/test_adapter.py repo/skill/scripts/bt_scheduler_quality/tests/test_lifecycle.py; nl -ba repo/skill/scripts/bt_scheduler_quality_adapter.py | sed -n '1,200p'; nl -ba repo/skill/scripts/bt_scheduler_core/tests/test_events.py | sed -n '130,235p'; nl -ba repo/skill/scripts/bt_scheduler_core/tests/test_incident_contract.py | sed -n '184,220p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_core/scheduler.py | sed -n '90,130p'; nl -ba repo/skill/scripts/bt_scheduler_executor/ledger.py | sed -n '65,115p'; nl -ba repo/skill/scripts/bt_scheduler_executor/settle.py | sed -n '63,98p'; nl -ba repo/skill/scripts/bt_scheduler_executor/executor.py | sed -n '275,365p'; nl -ba repo/skill/scripts/bt_scheduler_quality_adapter.py | sed -n '267,315p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    }
+  ],
+  "event_shapes": {
+    "thread.started": [
+      "thread_id",
+      "type"
+    ],
+    "turn.started": [
+      "type"
+    ],
+    "item.completed": [
+      "item",
+      "type"
+    ],
+    "item.started": [
+      "item",
+      "type"
+    ],
+    "turn.completed": [
+      "type",
+      "usage"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248480.6313894,
+    "windows": {
+      "five_hour": {
+        "used_percent": 64.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 11.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

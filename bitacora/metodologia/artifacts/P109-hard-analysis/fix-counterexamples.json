@@ -1,0 +1,13 @@
+{
+  "H2-D7": {
+    "remote_job_started": 0,
+    "last_renewal": 80,
+    "local_lease_until": 140,
+    "remote_job_finishes": 200,
+    "cleanup_at": 141,
+    "counterexample": "Lease is expired at141, remote job is still live until200; releasing allows overlap on capacity1. Applies to Gemini main OR rule and Sonnet alternative if reconciliation is removed."
+  },
+  "H2-D6": {
+    "counterexample": "Only quota hash is retained; mutable cache is overwritten and no historical content store exists. A commitment identifies a lost input but cannot reproduce it. Applies to Gemini hash-only alternative; storing allowlisted observation remains sound."
+  }
+}

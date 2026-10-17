@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "scope": "synthetic reviewer pilot, outside REQ-024 formal benchmark",
+  "cases": 5,
+  "planned_calls": 15,
+  "findings_limit": 8,
+  "word_limit": 900,
+  "oracle_sha256": "71beefc22baf08191b47165dc10bc36d22a2ba104f74d58bc37f9f82574d32dd",
+  "instruction": "Review the supplied implementation PLAN against its REQUIREMENTS and stated baseline.\nThis is a self-contained review: do not call tools, browse, inspect local files, or execute code.\nAll needed facts are in the input. Baseline guarantees explicitly stated as correct may be trusted.\nFind actionable correctness, security, dependency or verification defects. Do not invent missing requirements,\nrestate valid baseline protections as defects, or report style preferences. Deduplicate root causes.\nReturn ONLY JSON, no markdown fence, at most 8 findings and 900 words:\n{\"verdict\":\"acceptable|needs_changes\",\"findings\":[{\"task\":\"Tn\",\"severity\":\"critical|high|medium|low\",\n\"issue\":\"precise defect\",\"evidence\":\"exact supplied fact\",\"failure_scenario\":\"concrete consequence\",\n\"fix\":\"minimal correction\"}],\"uncertainties\":[\"only if material facts are missing\"]}.\nUse English for the JSON content. A plan with a material defect must be needs_changes.\n\nINPUT:\n",
+  "routes": [
+    [
+      "codex-2",
+      "codex",
+      "gpt-6.1-sol"
+    ],
+    [
+      "claude-work",
+      "claude",
+      "sonnet"
+    ],
+    [
+      "antigravity",
+      "antigravity",
+      "gemini-3.8-flash-high"
+    ]
+  ],
+  "repetitions": 1,
+  "score_rule": "Manually map each finding to predeclared defects, deduplicate; report recall, false positives, precision and F1. Any extra supported issue is adjudicated separately, never automatically called false positive.",
+  "limitations": [
+    "One run per cell; no statistical superiority claim",
+    "Synthetic plan reviews, no repository exploration or code execution",
+    "Provider contexts/tokenizers differ",
+    "Quota is coarse account-level telemetry and may lag or include concurrent account use"
+  ]
+}

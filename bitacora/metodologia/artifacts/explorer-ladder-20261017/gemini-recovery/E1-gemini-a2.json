@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "case": "E1",
+  "route": {
+    "id": "gemini",
+    "profile": "antigravity",
+    "provider": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "effort": "low"
+  },
+  "status": "completed",
+  "prompt_sha256": "6a5221c1621d10e863abe7edbab8630c99384d22d65b8503d506fcac3d60ba17",
+  "prompt_characters": 2253,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "AssertionError",
+    "observed_at": 1792248134.8118088,
+    "windows": {}
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248134.8118284,
+  "argv": [
+    "agy",
+    "--model",
+    "gemini-3.8-flash-low",
+    "--effort",
+    "low",
+    "--mode",
+    "plan",
+    "--sandbox",
+    "--disable-slash-commands",
+    "--output-format",
+    "stream-json",
+    "--print-timeout",
+    "900s",
+    "--print=<shared hashed prompt>"
+  ],
+  "answer": {
+    "case": "E1",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "`plan-json report REQ-NNN` is registered in `add_parser` using argparse choices on the `action` positional argument. When invoked, `dispatch` validates arguments and forwards execution to `bt_plan_adapter.run_cli`.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "add_parser",
+            "start_line": 13,
+            "end_line": 16
+          },
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "dispatch",
+            "start_line": 27,
+            "end_line": 63
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "`bt_plan_adapter.run_cli` delegates to `bt_planner.cli.run(action, ...)`. In `bt_planner.cli.run`, the `report` branch is fully implemented: it reads and validates `PLAN.json` via `sync.read_plan(target)` and `pc.validate(plan)`, generates quality summaries via `quality.analyze(plan)`, merges version-gated extensions (`coverage`, `interfaces`, and `quality.verification_report`) for schema versions >= 1.2.0, and emits the resulting JSON summary.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_plan_adapter.py",
+            "symbol": "run_cli",
+            "start_line": 157,
+            "end_line": 190
+          },
+          {
+            "path": "skill/scripts/bt_planner/cli.py",
+            "symbol": "run",
+            "start_line": 95,
+            "end_line": 108
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "In `bt_planner/tests/test_report.py`, `PlannerReport.test_schema_1_2_report_adds_declared_quality_projections` asserts that executing `cli.run(\"report\", ...)` returns exit code 0, preserves legacy `quality.analyze` keys, and includes 1.2.0 projection fields: `coverage` mapping R1 to T1 and T2, interface IF-1, `verification_categories` for R1 with categories 'functional' and 'regression', `criteria_without_command` as a list, and no `product_acceptance` key. (CLI dispatch integration is also asserted via `self.invoke(\"report\") == 0` in `tests/test_plan_integration.py`).",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_planner/tests/test_report.py",
+            "symbol": "PlannerReport.test_schema_1_2_report_adds_declared_quality_projections",
+            "start_line": 30,
+            "end_line": 38
+          },
+          {
+            "path": "skill/scripts/tests/test_plan_integration.py",
+            "symbol": "Cli.test_command_plumbing_uses_the_requirement_id_and_the_methodology_states",
+            "start_line": 218,
+            "end_line": 230
+          }
+        ]
+      }
+    ],
+    "unknowns": []
+  },
+  "response_text": "{\"case\":\"E1\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"`plan-json report REQ-NNN` is registered in `add_parser` using argparse choices on the `action` positional argument. When invoked, `dispatch` validates arguments and forwards execution to `bt_plan_adapter.run_cli`.\",\"evidence\":[{\"path\":\"skill/scripts/bt_cli_plan.py\",\"symbol\":\"add_parser\",\"start_line\":13,\"end_line\":16},{\"path\":\"skill/scripts/bt_cli_plan.py\",\"symbol\":\"dispatch\",\"start_line\":27,\"end_line\":63}]},{\"id\":\"Q2\",\"answer\":\"`bt_plan_adapter.run_cli` delegates to `bt_planner.cli.run(action, ...)`. In `bt_planner.cli.run`, the `report` branch is fully implemented: it reads and validates `PLAN.json` via `sync.read_plan(target)` and `pc.validate(plan)`, generates quality summaries via `quality.analyze(plan)`, merges version-gated extensions (`coverage`, `interfaces`, and `quality.verification_report`) for schema versions >= 1.2.0, and emits the resulting JSON summary.\",\"evidence\":[{\"path\":\"skill/scripts/bt_plan_adapter.py\",\"symbol\":\"run_cli\",\"start_line\":157,\"end_line\":190},{\"path\":\"skill/scripts/bt_planner/cli.py\",\"symbol\":\"run\",\"start_line\":95,\"end_line\":108}]},{\"id\":\"Q3\",\"answer\":\"In `bt_planner/tests/test_report.py`, `PlannerReport.test_schema_1_2_report_adds_declared_quality_projections` asserts that executing `cli.run(\\\"report\\\", ...)` returns exit code 0, preserves legacy `quality.analyze` keys, and includes 1.2.0 projection fields: `coverage` mapping R1 to T1 and T2, interface IF-1, `verification_categories` for R1 with categories 'functional' and 'regression', `criteria_without_command` as a list, and no `product_acceptance` key. (CLI dispatch integration is also asserted via `self.invoke(\\\"report\\\") == 0` in `tests/test_plan_integration.py`).\",\"evidence\":[{\"path\":\"skill/scripts/bt_planner/tests/test_report.py\",\"symbol\":\"PlannerReport.test_schema_1_2_report_adds_declared_quality_projections\",\"start_line\":30,\"end_line\":38},{\"path\":\"skill/scripts/tests/test_plan_integration.py\",\"symbol\":\"Cli.test_command_plumbing_uses_the_requirement_id_and_the_methodology_states\",\"start_line\":218,\"end_line\":230}]}],\"unknowns\":[]}\n",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 75078,
+    "output_tokens": 1538,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 218246,
+    "total_tokens": 76616
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 126,
+  "exit_code": 0,
+  "elapsed_seconds": 114.912,
+  "finished_at": 1792248249.7244508,
+  "tool_audit": [],
+  "event_shapes": {
+    "init": [
+      "conversation_id",
+      "event",
+      "init"
+    ],
+    "step_update": [
+      "event",
+      "step_update"
+    ],
+    "result": [
+      "event",
+      "result"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": "SUCCESS",
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "antigravity",
+    "status": "AssertionError",
+    "observed_at": 1792248249.7615044,
+    "windows": {}
+  }
+}

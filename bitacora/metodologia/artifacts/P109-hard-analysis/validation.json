@@ -1,0 +1,36 @@
+{
+  "checks": {
+    "oracle_sha256": true,
+    "runner_sha256": true,
+    "base_hash": true,
+    "oracle_24": true,
+    "input_route_H1_sol": true,
+    "input_route_H1_luna": true,
+    "input_route_H1_sonnet": true,
+    "input_route_H1_haiku": true,
+    "input_route_H1_gemini": true,
+    "input_route_H2_sol": true,
+    "input_route_H2_luna": true,
+    "input_route_H2_sonnet": true,
+    "input_route_H2_haiku": true,
+    "input_route_H2_gemini": true,
+    "input_route_H3_sol": true,
+    "input_route_H3_luna": true,
+    "input_route_H3_sonnet": true,
+    "input_route_H3_haiku": true,
+    "input_route_H3_gemini": true,
+    "14_complete_one_timeout": true,
+    "valid_json_and_no_observed_tools": true,
+    "six_claude_ids": true,
+    "usage_subsets": true,
+    "delayed_quota_all_ok": true,
+    "whitespace": true
+  },
+  "json_files_parsed": 25,
+  "python_files_ast_parsed": 4,
+  "known_failures": [
+    "H3 Gemini timeout 930.118s; response/usage unknown",
+    "Claude boundary quota http_429; per-model quota split unknown"
+  ],
+  "scope": "Evidence consistency only; no product suite or repeated provider call. Initial validation attempt encountered null timestamps on failed quota reads; delayed check now uses actual call completion times."
+}

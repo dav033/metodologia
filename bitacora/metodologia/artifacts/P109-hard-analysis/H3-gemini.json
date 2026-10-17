@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "case": "H3",
+  "route": {
+    "id": "gemini",
+    "profile": "antigravity",
+    "provider": "antigravity",
+    "model": "gemini-3.8-flash-high",
+    "effort": "high"
+  },
+  "status": "timeout",
+  "prompt_sha256": "1dc22f79a703521af19309e4e29224762a0428696279bcffed40988df573d7bb",
+  "prompt_characters": 13061,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792209617.9111235,
+    "windows": {
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792814417.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792227617.0,
+        "window_minutes": 300
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209617.9111578,
+  "exit_code": null,
+  "usage_reported": null,
+  "format_valid": false,
+  "elapsed_seconds": 930.118,
+  "quota_after": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792210551.5901318,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792815350.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792228550.0,
+        "window_minutes": 300
+      }
+    }
+  }
+}

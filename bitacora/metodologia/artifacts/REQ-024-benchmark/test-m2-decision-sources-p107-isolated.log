@@ -1,0 +1,82 @@
+test_assignment_persists_decision_and_returns_only_resolvable_selected_reference (test_scheduler_decision_sources.M1DecisionPortTests.test_assignment_persists_decision_and_returns_only_resolvable_selected_reference) ... ERROR
+test_m1_disables_laya_when_quality_artifacts_are_malformed (test_scheduler_decision_sources.M1DecisionPortTests.test_m1_disables_laya_when_quality_artifacts_are_malformed) ... ok
+test_m1_reserves_the_m2_recommendation_through_its_assignment_contract (test_scheduler_decision_sources.M1DecisionPortTests.test_m1_reserves_the_m2_recommendation_through_its_assignment_contract) ... FAIL
+test_port_obeys_ready_limit_and_free_slots (test_scheduler_decision_sources.M1DecisionPortTests.test_port_obeys_ready_limit_and_free_slots) ... ok
+test_port_only_decides_ready_tasks_within_the_m1_free_slot_limit (test_scheduler_decision_sources.M1DecisionPortTests.test_port_only_decides_ready_tasks_within_the_m1_free_slot_limit) ... ERROR
+test_candidate_snapshot_uses_real_router_order_and_fails_closed_on_unknown_quota (test_scheduler_decision_sources.MethodologyDecisionSourceTests.test_candidate_snapshot_uses_real_router_order_and_fails_closed_on_unknown_quota) ... ok
+test_claude_null_reset_is_known_in_m2_but_codex_null_reset_stays_unknown (test_scheduler_decision_sources.MethodologyDecisionSourceTests.test_claude_null_reset_is_known_in_m2_but_codex_null_reset_stays_unknown) ... ok
+test_codex_model_specific_bucket_unknown_blocks_only_its_model (test_scheduler_decision_sources.MethodologyDecisionSourceTests.test_codex_model_specific_bucket_unknown_blocks_only_its_model) ... ok
+test_route_options_follow_the_supported_provider_ladder_and_task_floor (test_scheduler_decision_sources.MethodologyDecisionSourceTests.test_route_options_follow_the_supported_provider_ladder_and_task_floor) ... ok
+test_tier_floor_explanation_names_classifications_and_rules_that_raise_it (test_scheduler_decision_sources.MethodologyDecisionSourceTests.test_tier_floor_explanation_names_classifications_and_rules_that_raise_it) ... ok
+test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion (test_scheduler_decision_sources.MethodologyDecisionSourceTests.test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion) ... ok
+test_unknown_and_stale_quota_are_not_eligible (test_scheduler_decision_sources.MethodologyDecisionSourceTests.test_unknown_and_stale_quota_are_not_eligible) ... ok
+test_unrepresentable_cached_observation_is_unknown_without_crashing_m2 (test_scheduler_decision_sources.MethodologyDecisionSourceTests.test_unrepresentable_cached_observation_is_unknown_without_crashing_m2) ... ok
+
+======================================================================
+ERROR: test_assignment_persists_decision_and_returns_only_resolvable_selected_reference (test_scheduler_decision_sources.M1DecisionPortTests.test_assignment_persists_decision_and_returns_only_resolvable_selected_reference)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_scheduler_decision_sources.py", line 295, in test_assignment_persists_decision_and_returns_only_resolvable_selected_reference
+    first = port.propose(request)
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_adapter.py", line 396, in propose
+    batch = self.ledger.batch_decisions.persist(
+        tuple(decision_requests), preserve_baseline_by_task=preserve_baseline_by_task,
+        quota_evidence_by_task=quota_evidence_by_task,
+    )
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_decision/batch_ledger.py", line 251, in persist
+    plan = plan_ready_batch(
+        requests, account_concurrency=account_concurrency,
+    ...<2 lines>...
+        quota_evidence_by_task=quota_evidence_by_task, policy=policy,
+    )
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_decision/batch.py", line 383, in plan_ready_batch
+    prepared = _prepare_batch(requests, account_concurrency, route_evidence_by_task, policy,
+                              preserve_baseline_by_task, quota_evidence_by_task)
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_decision/batch.py", line 203, in _prepare_batch
+    quota_evidence = validate_quota_evidence(quota_evidence_by_task, requests_by_task)
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_decision/batch_quota_evidence.py", line 68, in validate_quota_evidence
+    raise DecisionInputError(("batch.quota_evidence",))
+bt_scheduler_decision.contracts.DecisionInputError: decision_input_invalid: batch.quota_evidence
+
+======================================================================
+ERROR: test_port_only_decides_ready_tasks_within_the_m1_free_slot_limit (test_scheduler_decision_sources.M1DecisionPortTests.test_port_only_decides_ready_tasks_within_the_m1_free_slot_limit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_scheduler_decision_sources.py", line 353, in test_port_only_decides_ready_tasks_within_the_m1_free_slot_limit
+    assignments = port.propose(request_value)
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_adapter.py", line 396, in propose
+    batch = self.ledger.batch_decisions.persist(
+        tuple(decision_requests), preserve_baseline_by_task=preserve_baseline_by_task,
+        quota_evidence_by_task=quota_evidence_by_task,
+    )
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_decision/batch_ledger.py", line 251, in persist
+    plan = plan_ready_batch(
+        requests, account_concurrency=account_concurrency,
+    ...<2 lines>...
+        quota_evidence_by_task=quota_evidence_by_task, policy=policy,
+    )
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_decision/batch.py", line 383, in plan_ready_batch
+    prepared = _prepare_batch(requests, account_concurrency, route_evidence_by_task, policy,
+                              preserve_baseline_by_task, quota_evidence_by_task)
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_decision/batch.py", line 203, in _prepare_batch
+    quota_evidence = validate_quota_evidence(quota_evidence_by_task, requests_by_task)
+  File "/home/david/dev/metodologia/skill/scripts/bt_scheduler_decision/batch_quota_evidence.py", line 68, in validate_quota_evidence
+    raise DecisionInputError(("batch.quota_evidence",))
+bt_scheduler_decision.contracts.DecisionInputError: decision_input_invalid: batch.quota_evidence
+
+======================================================================
+FAIL: test_m1_reserves_the_m2_recommendation_through_its_assignment_contract (test_scheduler_decision_sources.M1DecisionPortTests.test_m1_reserves_the_m2_recommendation_through_its_assignment_contract)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_scheduler_decision_sources.py", line 413, in test_m1_reserves_the_m2_recommendation_through_its_assignment_contract
+    self.assertEqual(task["state"], "active")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'ready' != 'active'
+- ready
++ active
+
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.355s
+
+FAILED (failures=1, errors=2)

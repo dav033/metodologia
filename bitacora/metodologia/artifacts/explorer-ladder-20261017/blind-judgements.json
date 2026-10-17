@@ -1,0 +1,242 @@
+{
+  "grading": "Coordinator semantic adjudication against frozen question-level oracle and code; full covers material requested behavior, partial omits/misstates a material part, missing unsupported/wrong/no answer. Content and native contract reported separately. Partial blinding only; operational diagnosis exposed some identities.",
+  "judgements": {
+    "E1-A": {
+      "grades": [
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct registration, implemented producer chain and concrete test assertions."
+    },
+    "E1-B": {
+      "grades": [
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct code chain; distinguishes fixture requirement text from implementation."
+    },
+    "E1-C": {
+      "grades": [
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct handler, producer behavior and existing report assertions."
+    },
+    "E2-A": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct approval/render versus executor-report distinction and adapter producer. Some broad absence claims extend beyond the narrow cited render path; not a demonstrated core error."
+    },
+    "E2-C": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct Plan-tab caller/render path, separate executor report and reusable JSON producer."
+    },
+    "E3-A": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Semantic text is correct across all five questions. Native JSON lacks Q5/answers closing delimiters; semantic-only recovery explicitly recorded, no output repair counted as delivery success. Identity seen during format diagnosis: not blind for this cell."
+    },
+    "E3-B": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct validation dimensions, unknown metrics, route/correlation limitations and tests."
+    },
+    "E4-A": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct full-DAG, nonreservation, persisted guard and revalidation chain. Native answers array includes a stray citation object; strict contract remains failed."
+    },
+    "E4-B": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct full-DAG, route persistence, reservation ownership, failure/timestamp treatment and real tests."
+    },
+    "E4-C": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct chain plus precise distinction between real adapter revalidation test and core stub; correctly observes absent account-concurrency override at full-plan caller."
+    },
+    "E4-D": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct full-DAG/READY split, immutable batch versus resource holds, post-refresh clock and test wiring."
+    },
+    "E5-A": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct floor inputs, effective versus legacy account keys, due-only refresh, hard filters, comparable-quality gate, lexicographic ordering, actual quota/duration-only wiring and nonreserving account matching. C/D explicitly expose unsupplied live account concurrency and alias normalization limits."
+    },
+    "E5-C": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct floor inputs, effective versus legacy account keys, due-only refresh, hard filters, comparable-quality gate, lexicographic ordering, actual quota/duration-only wiring and nonreserving account matching. C/D explicitly expose unsupplied live account concurrency and alias normalization limits."
+    },
+    "E5-D": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct floor inputs, effective versus legacy account keys, due-only refresh, hard filters, comparable-quality gate, lexicographic ordering, actual quota/duration-only wiring and nonreserving account matching. C/D explicitly expose unsupplied live account concurrency and alias normalization limits."
+    },
+    "E6-E": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Complete durable admission/replay/reconcile/hold/verification chain, distinct not_found branches, incident exception, cancellation delivery-count distinction, M3 persisted process recovery and context/account gates. Explicitly qualifies configurable label independence and external exactly-once limits."
+    },
+    "E6-D": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "partial",
+        "full",
+        "full"
+      ],
+      "notes": "Correct lifecycle, hold retention, observation guards, incident exception and local restart limits. Q10 identifies returned account_ref and generic route validation but omits the actual conditional comparison against the current profile account and repeated driver validation; opaque account binding was explicitly requested."
+    },
+    "E5-B": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct floors, identity distinction, due-only refresh, hard filters, same-level quality gates, absent wired quality/cost, account matching and source-only tests.",
+      "grading_identity_visibility": "Route known during final follow-up reading; no full-blind claim."
+    },
+    "E6-A": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full",
+        "full"
+      ],
+      "notes": "Correct durable intent/acceptance, query-before-redelivery, RESERVED/UNCERTAIN not_found branch, hold retention, VERIFYING guard, incident exception, cancel acknowledgement distinction, persisted M3 recovery and repeated account/context validation. Minor process-recovery wording does not change the covered material branches.",
+      "grading_identity_visibility": "Route known during final follow-up reading; no full-blind claim."
+    },
+    "E6-B": {
+      "grades": [
+        "full",
+        "full",
+        "full",
+        "partial",
+        "full",
+        "full",
+        "full",
+        "partial",
+        "full",
+        "full",
+        "full",
+        "partial"
+      ],
+      "notes": "Q4 omits the UNCERTAIN -> RESERVED safe-redelivery branch and describes only RESERVED; recovery.apply_observation explicitly allows both. Q8 says an acknowledgement can close the attempt/release holds, but Dispatcher._record_ack for cancel only sets needs_reconcile; it is not terminal confirmation. Q12 overstates at-most-one M1 start delivery per attempt key; write-ahead query-before-resend permits safe redelivery, while M3 deduplicates local admission. Other material lifecycle/code paths addressed. Not a count of independent planted defects.",
+      "grading_identity_visibility": "Route known during final follow-up reading; no full-blind claim."
+    }
+  }
+}

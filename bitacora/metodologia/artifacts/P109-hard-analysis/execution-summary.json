@@ -1,0 +1,16 @@
+[
+  {
+    "provider": "codex",
+    "status": "complete"
+  },
+  {
+    "provider": "claude",
+    "status": "complete"
+  },
+  {
+    "provider": "antigravity",
+    "status": "stopped",
+    "case": "H3",
+    "route": "gemini"
+  }
+]

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "scope": "Owner-authorized real-source Explorer pilot, outside formal REQ-024 benchmark",
+  "recovery": "Initial three E1 calls returned but a collector dict.update TypeError discarded final data. Original records preserved/excluded; exactly three replacement E1 calls use -a2. No model failure or zero consumption inferred. Original protocol retained; corrected runner hash pinned here. Maximum 27 native attempts for 24 measured cells.",
+  "target_calls": 24,
+  "cases": 6,
+  "criteria": 40,
+  "routes": [
+    {
+      "id": "luna",
+      "profile": "codex-2",
+      "provider": "codex",
+      "model": "gpt-6-luna",
+      "effort": "high"
+    },
+    {
+      "id": "haiku",
+      "profile": "claude-work",
+      "provider": "claude",
+      "model": "claude-haiku-5-5",
+      "effort": "medium"
+    },
+    {
+      "id": "gemini",
+      "profile": "antigravity",
+      "provider": "antigravity",
+      "model": "gemini-3.8-flash-low",
+      "effort": "low"
+    },
+    {
+      "id": "sol",
+      "profile": "codex-2",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    {
+      "id": "sonnet",
+      "profile": "claude-work",
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    }
+  ],
+  "deadline_seconds": 900,
+  "instruction": "You are a read-only codebase Explorer in a controlled comparison. Inspect the real source in ./repo. You are not alone on the machine; do not modify or revert any files. Use file listing, search and targeted file reads only. No source execution/imports, tests, builds, installs, network, web, delegation, git operations or account/configuration inspection. Do not inspect parent directories, other cells, original repositories or oracle/expected/experiment files. All evidence must come from the supplied repo snapshot. Native permission rules remain in force. No implementation, patch proposal or bug review is requested.\nAnswer EVERY numbered question by tracing the real functions, callers and branches. Distinguish similarly named lifecycle concepts, policy capabilities and actual wiring. Prefer code and tests over comments; cite tests as assertions in source, not executed results. Do not invent missing integrations or live account facts. Explicitly state material unknowns. Use repository-relative paths starting skill/scripts/, exact symbol names and inclusive line ranges. File names alone are not sufficient evidence. Cite the narrowest range that actually supports each claim. Tests may be read but never run. Do not claim any check passed.\nReturn ONLY one JSON object (no markdown fences), using this shape:\n{\"case\":\"E1\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"concise grounded explanation\",\"evidence\":[{\"path\":\"skill/scripts/example.py\",\"symbol\":\"function_or_class\",\"start_line\":1,\"end_line\":8}]}],\"unknowns\":[\"material uncertainty if any\"]}.\nUse English. One answer per supplied question, no extra question IDs. Each answer needs at least one real code/test citation. Stay within the per-case word limit while covering every question. Do not expand into unrelated code.\nTASK:\n",
+  "frozen_hashes": {
+    "cases.json": "bca59f4d77e614be11a523ec2871b9d3eada76adfcdca2f5c7267eed117ab4a1",
+    "oracle.json": "1d3025577b7822f85d437556ad29b485eeed84acb33bb0cc387bbf2efdcebbc3",
+    "source-hashes.json": "b05a413e70c5c5ce77acc83a5dbeaff733b899c10d212ab2462e7841b5bad0f9",
+    "setup.py": "3beec642add3b832a3c32fab7e97be1f9956f17178aebbc73aeaba621629d4eb",
+    "run.py": "9e52fdcb2e8be79b54a28759cc135a287ba86278b707ad51a88d68d944515f73",
+    "base_harness": "7b18d84bd48539353dcb565ee307a75d0c7a7bd69028655e5dee8e0945553f92"
+  },
+  "concurrency": "Three providers in parallel, one call per account. Codex-2 serves both Luna and Sol serially; Claude Work serves Haiku/Sonnet serially. Pair order alternates by case.",
+  "grading": "Frozen per-question source-backed oracle; coordinator adjudication and structural/file/line checks; no independent model reviewer or repair calls.",
+  "limitations": [
+    "One repetition per cell; no statistical superiority inference.",
+    "Source snapshot includes local uncommitted implementation; no live credentials or state.",
+    "Native tools/context/cache differ. Model effort labels are not equivalent compute budgets.",
+    "Unknown and delayed account quotas remain unknown; no API-to-subscription conversion.",
+    "Codex requested model/effort and AGY low variant are pinned; effective runtime identity attestation may be unavailable.",
+    "Native read-only modes and instructions differ; before/after hashes prove net source state only."
+  ]
+}

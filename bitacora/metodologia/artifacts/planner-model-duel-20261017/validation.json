@@ -1,0 +1,127 @@
+{
+  "evidence_checks": {
+    "frozen_cases": true,
+    "frozen_planner_bundle": true,
+    "executed_runner_hash": true,
+    "base_collector_hash": true,
+    "frozen_validator_16_files": true,
+    "matched_prompt_CP1_opus": true,
+    "matched_prompt_CP1_sol": true,
+    "matched_prompt_CP1_astra": true,
+    "matched_prompt_CP2_opus": true,
+    "matched_prompt_CP2_sol": true,
+    "matched_prompt_CP2_astra": true,
+    "matched_prompt_CP3_opus": true,
+    "matched_prompt_CP3_sol": true,
+    "matched_prompt_CP3_astra": true,
+    "nine_terminal_cells": true,
+    "nine_native_successes": true,
+    "no_net_workspace_changes": true,
+    "identical_initial_workspaces_CP1": true,
+    "identical_initial_workspaces_CP2": true,
+    "identical_initial_workspaces_CP3": true,
+    "three_opus_effective_ids": true,
+    "claude_tool_allowlist": true,
+    "codex_observed_tool_type_is_shell": true,
+    "claude_explicit_read_paths_inside_cells": true,
+    "codex_command_audit_untruncated": true,
+    "no_native_overlap_codex-2": true,
+    "no_native_overlap_claude-work": true,
+    "usage_present_nine": true,
+    "token_subsets_not_double_counted": true,
+    "opus_cost_arithmetic": true,
+    "sol_cost_arithmetic": true,
+    "opus_equivalents_match_native_cost_metadata": true,
+    "delayed_final_quota_two_ok": true,
+    "judgements_saved_before_unblinding": true,
+    "nine_host_check_records": true,
+    "artifact_whitespace": true
+  },
+  "json_parsed_before_validation_write": 49,
+  "python_ast_parsed": 21,
+  "first_response_results": {
+    "output_blocks_valid": 9,
+    "schema_valid": 1,
+    "publishable": 1,
+    "cells": 9
+  },
+  "known_failures": [
+    {
+      "record": "CP1-opus",
+      "kind": "quota_before",
+      "status": "http_401"
+    },
+    {
+      "record": "CP1-opus.json",
+      "kind": "first_response_publishability",
+      "errors": [
+        "interfaces[0].integration_task: cannot be one of the consumer tasks"
+      ]
+    },
+    {
+      "record": "CP1-sol.json",
+      "kind": "first_response_publishability",
+      "errors": [
+        "interfaces[0].integration_task: cannot be one of the consumer tasks",
+        "interfaces[1].integration_task: cannot be one of the consumer tasks"
+      ]
+    },
+    {
+      "record": "CP2-astra.json",
+      "kind": "first_response_publishability",
+      "errors": [
+        "interfaces[0].integration_task: cannot be one of the consumer tasks",
+        "interfaces[1].integration_task: cannot be one of the consumer tasks",
+        "interfaces[2].integration_task: cannot be one of the consumer tasks"
+      ]
+    },
+    {
+      "record": "CP2-opus.json",
+      "kind": "first_response_publishability",
+      "errors": [
+        "interfaces[1].integration_task: cannot be one of the consumer tasks",
+        "interfaces[2].integration_task: cannot be one of the consumer tasks"
+      ]
+    },
+    {
+      "record": "CP2-sol.json",
+      "kind": "first_response_publishability",
+      "errors": [
+        "interfaces[0].integration_task: cannot be one of the consumer tasks",
+        "interfaces[1].integration_task: cannot be one of the consumer tasks",
+        "interfaces[2].integration_task: cannot be one of the consumer tasks"
+      ]
+    },
+    {
+      "record": "CP3-astra.json",
+      "kind": "first_response_publishability",
+      "errors": [
+        "interfaces[0].integration_task: cannot be one of the consumer tasks"
+      ]
+    },
+    {
+      "record": "CP3-opus.json",
+      "kind": "first_response_publishability",
+      "errors": [
+        "interfaces[0].integration_task: cannot be one of the consumer tasks"
+      ]
+    },
+    {
+      "record": "CP3-sol.json",
+      "kind": "first_response_publishability",
+      "errors": [
+        "interfaces[0].integration_task: cannot be one of the consumer tasks"
+      ]
+    }
+  ],
+  "limits": [
+    "First responses only; no validation-feedback repair turn",
+    "Coordinator grading only partially blinded and not independent",
+    "Requested Codex effective identity/internal effort/service tier not independently confirmed",
+    "Before/after hashes check net contents, not transient reverted writes",
+    "No product test suite or implementation executed"
+  ],
+  "notes": [
+    "Prototype cost calculation omitted per-million output scaling; caught immediately, corrected before reporting and checked against independent arithmetic."
+  ]
+}

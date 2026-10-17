@@ -6,6 +6,7 @@ status: draft
 _Rewritten at the end of each session that week. Set `status: final` once the week is over and rolled up._
 
 ## Highlights
+- D-065 records owner-approved Explorer Luna high, Sol medium for complicated work and Sonnet medium as its alternative; runtime stays unchanged. Researcher proposal is sourced and pending selection; no further experiment launched.
 - Scheduler work advanced through M4 and now has one tested Planner→M1→M2→M3→M4 fixture flow; P-036 and P-038 closed under REQ-018.
 - REQ-020 M2 T13–T23 offline integration, adversarial validation and synthetic benchmark are complete with independent review; the live-provider gate remains open.
 - REQ-022 closed the Scheduler launcher/status/recovery gap with explicit frozen-plan opt-in, one durable M1 owner, a heartbeat projection, and M1-routed CLI/web controls. Legacy launch stays default; P-026 closed and P-001 now tracks only separate Maros and Relay follow-ups.

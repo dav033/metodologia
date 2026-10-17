@@ -1,0 +1,8 @@
+test_packaging_registers_the_harness_and_pinned_rubric (test_plan_bench.PlannerBenchmarkEntryPointTests.test_packaging_registers_the_harness_and_pinned_rubric) ... ok
+test_parsers_accept_actual_planner_check_and_report_json_shapes (test_plan_bench.PlannerBenchmarkEntryPointTests.test_parsers_accept_actual_planner_check_and_report_json_shapes) ... ok
+test_rubric_cli_runs_from_an_unrelated_working_directory (test_plan_bench.PlannerBenchmarkEntryPointTests.test_rubric_cli_runs_from_an_unrelated_working_directory) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.270s
+
+OK

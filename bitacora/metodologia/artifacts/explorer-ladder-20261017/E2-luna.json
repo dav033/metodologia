@@ -1,0 +1,322 @@
+{
+  "schema_version": 1,
+  "case": "E2",
+  "route": {
+    "id": "luna",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "0282ccec49b6b755dfffd78f4902495e44b7ac2c39a1154194fd79c329837f85",
+  "prompt_characters": 2471,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792247974.4910674,
+    "windows": {
+      "five_hour": {
+        "used_percent": 54.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792247975.1997533,
+  "argv": [
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "--json",
+    "-"
+  ],
+  "answer": {
+    "case": "E2",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "The requirement page’s Plan tab renders the pre-approval plan through `bt_page_req.req_page` → `plan_panel`. The caller is `bt_server.Handler.route_get`, which passes the project, requirement, selected tab, and token to `req_page` for requirement URLs.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_server.py",
+            "symbol": "Handler.route_get",
+            "start_line": 111,
+            "end_line": 112
+          },
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "req_page",
+            "start_line": 15,
+            "end_line": 18
+          },
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "req_page",
+            "start_line": 33,
+            "end_line": 42
+          },
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "plan_panel",
+            "start_line": 100,
+            "end_line": 116
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "No. For the Plan tab, `req_page` calls `plan_panel`, which renders the contents of `PLAN.md` and, when status is `review`, an approval or change request form. That render path does not call the Planner report producer or render its structured output.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "req_page",
+            "start_line": 37,
+            "end_line": 39
+          },
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "plan_panel",
+            "start_line": 100,
+            "end_line": 116
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "They are different lifecycle stages and reports. The separate Review tab calls `review_panel`, which reads the executor’s `REPORT.md` and presents repository changes and traceability for review. The run prompt asks the final execution session to write that file, and the supervisor treats its existence as completion evidence. The Planner report is instead a quality summary of `PLAN.json` available through the Planner’s `report` action.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "REQ_TABS",
+            "start_line": 12,
+            "end_line": 12
+          },
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "req_page",
+            "start_line": 40,
+            "end_line": 42
+          },
+          {
+            "path": "skill/scripts/bt_page_review.py",
+            "symbol": "review_panel",
+            "start_line": 13,
+            "end_line": 18
+          },
+          {
+            "path": "skill/scripts/bt_runprompt.py",
+            "symbol": "final session prompt construction",
+            "start_line": 225,
+            "end_line": 230
+          },
+          {
+            "path": "skill/scripts/bt_planner/cli.py",
+            "symbol": "run",
+            "start_line": 95,
+            "end_line": 108
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "The reusable producer is `bt_planner.cli.run(\"report\", ...)`: it validates and reads `PLAN.json`, then emits a JSON object built from `quality.analyze(plan)` plus schema 1.2.0 projections for coverage, interfaces, and verification. The shape is presentation-independent: a mapping with fields such as `tasks`, `critical_path`, `distribution`, and, for schema 1.2.0, `coverage`, `interfaces`, `verification_categories`, and `criteria_without_command`. The methodology adapter boundary for a future UI is `bt_plan_adapter.run_cli(action, rdir, emit=...)`; `bt_cli_plan.dispatch` already routes the `plan-json report` command through it. The UI does not currently use that boundary for its Plan tab.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_planner/cli.py",
+            "symbol": "run",
+            "start_line": 95,
+            "end_line": 108
+          },
+          {
+            "path": "skill/scripts/bt_planner/quality.py",
+            "symbol": "analyze",
+            "start_line": 186,
+            "end_line": 234
+          },
+          {
+            "path": "skill/scripts/bt_planner/tests/test_report.py",
+            "symbol": "PlannerReport.test_schema_1_2_report_adds_declared_quality_projections",
+            "start_line": 30,
+            "end_line": 38
+          },
+          {
+            "path": "skill/scripts/bt_plan_adapter.py",
+            "symbol": "run_cli",
+            "start_line": 157,
+            "end_line": 189
+          },
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "dispatch",
+            "start_line": 54,
+            "end_line": 63
+          }
+        ]
+      }
+    ],
+    "unknowns": []
+  },
+  "response_text": "{\"case\":\"E2\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"The requirement page’s Plan tab renders the pre-approval plan through `bt_page_req.req_page` → `plan_panel`. The caller is `bt_server.Handler.route_get`, which passes the project, requirement, selected tab, and token to `req_page` for requirement URLs.\",\"evidence\":[{\"path\":\"skill/scripts/bt_server.py\",\"symbol\":\"Handler.route_get\",\"start_line\":111,\"end_line\":112},{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"req_page\",\"start_line\":15,\"end_line\":18},{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"req_page\",\"start_line\":33,\"end_line\":42},{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"plan_panel\",\"start_line\":100,\"end_line\":116}]},{\"id\":\"Q2\",\"answer\":\"No. For the Plan tab, `req_page` calls `plan_panel`, which renders the contents of `PLAN.md` and, when status is `review`, an approval or change request form. That render path does not call the Planner report producer or render its structured output.\",\"evidence\":[{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"req_page\",\"start_line\":37,\"end_line\":39},{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"plan_panel\",\"start_line\":100,\"end_line\":116}]},{\"id\":\"Q3\",\"answer\":\"They are different lifecycle stages and reports. The separate Review tab calls `review_panel`, which reads the executor’s `REPORT.md` and presents repository changes and traceability for review. The run prompt asks the final execution session to write that file, and the supervisor treats its existence as completion evidence. The Planner report is instead a quality summary of `PLAN.json` available through the Planner’s `report` action.\",\"evidence\":[{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"REQ_TABS\",\"start_line\":12,\"end_line\":12},{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"req_page\",\"start_line\":40,\"end_line\":42},{\"path\":\"skill/scripts/bt_page_review.py\",\"symbol\":\"review_panel\",\"start_line\":13,\"end_line\":18},{\"path\":\"skill/scripts/bt_runprompt.py\",\"symbol\":\"final session prompt construction\",\"start_line\":225,\"end_line\":230},{\"path\":\"skill/scripts/bt_planner/cli.py\",\"symbol\":\"run\",\"start_line\":95,\"end_line\":108}]},{\"id\":\"Q4\",\"answer\":\"The reusable producer is `bt_planner.cli.run(\\\"report\\\", ...)`: it validates and reads `PLAN.json`, then emits a JSON object built from `quality.analyze(plan)` plus schema 1.2.0 projections for coverage, interfaces, and verification. The shape is presentation-independent: a mapping with fields such as `tasks`, `critical_path`, `distribution`, and, for schema 1.2.0, `coverage`, `interfaces`, `verification_categories`, and `criteria_without_command`. The methodology adapter boundary for a future UI is `bt_plan_adapter.run_cli(action, rdir, emit=...)`; `bt_cli_plan.dispatch` already routes the `plan-json report` command through it. The UI does not currently use that boundary for its Plan tab.\",\"evidence\":[{\"path\":\"skill/scripts/bt_planner/cli.py\",\"symbol\":\"run\",\"start_line\":95,\"end_line\":108},{\"path\":\"skill/scripts/bt_planner/quality.py\",\"symbol\":\"analyze\",\"start_line\":186,\"end_line\":234},{\"path\":\"skill/scripts/bt_planner/tests/test_report.py\",\"symbol\":\"PlannerReport.test_schema_1_2_report_adds_declared_quality_projections\",\"start_line\":30,\"end_line\":38},{\"path\":\"skill/scripts/bt_plan_adapter.py\",\"symbol\":\"run_cli\",\"start_line\":157,\"end_line\":189},{\"path\":\"skill/scripts/bt_cli_plan.py\",\"symbol\":\"dispatch\",\"start_line\":54,\"end_line\":63}]}],\"unknowns\":[]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 266809,
+    "cached_input_tokens": 224128,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2804,
+    "reasoning_output_tokens": 802
+  },
+  "observed_models": [],
+  "observed_tool_events": 14,
+  "response_words": 217,
+  "exit_code": 0,
+  "elapsed_seconds": 27.384,
+  "finished_at": 1792248002.5839608,
+  "tool_audit": [
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files repo'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n \\\"REPORT\\\\.md|Planner report|planner report|Review|approval|approve|render.*plan|plan.*render\\\" repo/skill/scripts\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_page_review.py | sed -n '1,180p'; rg -n \\\"Review|Review tab|REPORT.md\\\" repo/skill/scripts/bt_page_req.py repo/skill/scripts/bt_pages.py repo/skill/scripts/bt_server.py\"",
+      "command_truncated": false,
+      "exit_code": 1
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_pages.py | sed -n '1,180p'; nl -ba repo/skill/scripts/bt_server.py | sed -n '80,240p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_page_req.py | sed -n '1,180p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n \\\"def report|report\\\\(\\\" repo/skill/scripts/bt_planner\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_planner/cli.py | sed -n '1,125p'; nl -ba repo/skill/scripts/bt_planner/tests/test_report.py | sed -n '1,100p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_planner/quality.py | sed -n '330,385p'; nl -ba repo/skill/scripts/bt_planner/traceability.py | sed -n '120,160p'; nl -ba repo/skill/scripts/bt_planner/interfaces.py | sed -n '130,165p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"bt_planner.*report|planner_report|Planner report|quality report|structured report|report.*plan\" repo/skill/scripts/bt_page_req.py repo/skill/scripts/bt_server.py repo/skill/scripts/bt_planner/tests'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_plan_adapter.py | sed -n '1,240p'; nl -ba repo/skill/scripts/bt_cli_plan.py | sed -n '1,200p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_planner/quality.py | sed -n '1,125p'; rg -n \\\"critical_path|def analyze|distribution\\\" repo/skill/scripts/bt_planner/quality.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"plan-json|report\" repo/skill/scripts/bt_plan_adapter.py repo/skill/scripts/bt_cli_plan.py repo/skill/scripts/bitacora.py'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_server.py | sed -n '1,55p'; nl -ba repo/skill/scripts/bt_planner/quality.py | sed -n '180,240p'; nl -ba repo/skill/scripts/bt_planner/tests/test_report.py | sed -n '14,38p'; nl -ba repo/skill/scripts/bt_plan_adapter.py | sed -n '157,190p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_runprompt.py | sed -n '220,235p'; nl -ba repo/skill/scripts/bt_page_req.py | sed -n '12,55p'; nl -ba repo/skill/scripts/bt_page_review.py | sed -n '1,20p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    }
+  ],
+  "event_shapes": {
+    "thread.started": [
+      "thread_id",
+      "type"
+    ],
+    "turn.started": [
+      "type"
+    ],
+    "item.started": [
+      "item",
+      "type"
+    ],
+    "item.completed": [
+      "item",
+      "type"
+    ],
+    "turn.completed": [
+      "type",
+      "usage"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248002.6185849,
+    "windows": {
+      "five_hour": {
+        "used_percent": 54.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

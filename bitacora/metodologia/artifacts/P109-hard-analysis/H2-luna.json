@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "case": "H2",
+  "route": {
+    "id": "luna",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6-luna",
+    "effort": "max"
+  },
+  "status": "completed",
+  "prompt_sha256": "b860c77bcf845e195c065b4c6e80048d1a9cc507fb153bb03b260997f4d76ef4",
+  "prompt_characters": 12371,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209557.4118102,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209558.0969791,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "S2 / T2",
+        "severity": "high",
+        "issue": "Greedy task-by-task assignment can defer tasks even when a maximum-cardinality assignment exists.",
+        "evidence": "R1 requires maximum cardinality before cost minimization. In G2, S2 assigns J1 to its cheapest route, A, leaving J2 unassigned. T2 proposes preserving this greedy algorithm.",
+        "failure_scenario": "S2 returns one assignment: J1→A. Assigning J1→B and J2→A assigns both tasks, with total normalized cost 3.",
+        "fix": "Find a maximum-cardinality assignment first, then minimize total cost among those assignments, using task/account IDs for deterministic ties."
+      },
+      {
+        "task": "S3 / T3",
+        "severity": "high",
+        "issue": "Later eligibility gates validate quota freshness against the request time instead of the time at that gate.",
+        "evidence": "R2 requires quota eligibility at recommendation, reservation and dispatch, using each gate's current time. S3 captures now=1000 and reuses it. G3 allows reservation or dispatch at 1100 with quota observed at 900; T3 proposes keeping this behavior.",
+        "failure_scenario": "At time 1100, the observation is 200 seconds old, beyond the 120-second limit. S3 still passes because 900≤1000≤1020.",
+        "fix": "At each gate, validate quota status, windows, reset times and freshness against that gate's injected current time. Refresh or reject/defer when the observation is stale."
+      },
+      {
+        "task": "S4 / T2",
+        "severity": "high",
+        "issue": "Cached input is charged twice because input_tokens already includes cached_input_tokens.",
+        "evidence": "R3 defines the cost as noncached input at the input rate plus cached input at the cache rate. S4 prices all input_tokens at the input rate, then adds cached_input_tokens at the cache rate; T2 proposes preserving it.",
+        "failure_scenario": "For input=10, cached=4, output=0, S4 returns 208 microcredits; the required cost is (10−4)×20+4×2=128.",
+        "fix": "Compute (input_tokens−cached_input_tokens)×input_rate + cached_input_tokens×cache_rate + output_tokens×output_rate, without an extra reasoning charge."
+      },
+      {
+        "task": "S5 / T4",
+        "severity": "critical",
+        "issue": "The provider idempotency key changes with generation, so a stale worker can create a second external job after takeover.",
+        "evidence": "R4 requires at most one side effect per logical task. S5 includes generation in the provider key. In trace A, W1 passes its owner check, pauses, and later calls the provider after W2 has launched generation 2. G4 specifies the same effective account, while G5 says different provider keys are not deduplicated.",
+        "failure_scenario": "W2 launches with key run:task:2; resumed W1 launches with run:task:1. Both keys can create jobs, even though W1's final database write is rejected.",
+        "fix": "Use the same provider-visible deduplication identity for every generation of a logical run/task, with the effective account held constant for that launch; otherwise require provider deduplication that spans accounts."
+      },
+      {
+        "task": "S6 / T5",
+        "severity": "high",
+        "issue": "The local cancellation check and ACK do not prevent an already queued launch from starting remotely afterward.",
+        "evidence": "R5 requires no new job to start after a successful cancel ACK and says local checks do not stop requests already about to be sent. In trace B, dispatch passes its check at t20, cancellation ACKs at t21, and the queued launch starts at t22. S6 has no drain or remote admission fence; T5 nevertheless claims the guarantee with a 50 ms local ACK budget.",
+        "failure_scenario": "The trace's launch starts after the successful ACK, violating R5.",
+        "fix": "Require a provider-enforced admission fence, confirmed before a successful ACK, or another protocol that proves all earlier requests can no longer start. If that cannot be confirmed within 50 ms, do not return a successful ACK within that limit."
+      },
+      {
+        "task": "S7 / T3",
+        "severity": "medium",
+        "issue": "The frozen map records a mutable quota source path instead of the decision inputs needed to reproduce the recommendation.",
+        "evidence": "R6 requires the quota observation, injected time and policy version. S7 stores only the source path and routes; G6 says the cache is overwritten in place and older contents are not retained, while time and policy version remain only in memory. T3 proposes keeping this map.",
+        "failure_scenario": "After the cache is refreshed, the original quota observation cannot be recovered from the recorded path, and the map contains neither the injected time nor policy version.",
+        "fix": "Persist the quota observation used, injected time and policy version in the existing versioned allowlist. Keep credentials and complete provider payloads out."
+      },
+      {
+        "task": "S8 / T4",
+        "severity": "high",
+        "issue": "Reservation cleanup can free account capacity while the executor is still live.",
+        "evidence": "R7 says estimates do not bound execution and capacity cannot be freed while a job is live or uncertain. S8 sets reservation expiry from the estimate and cleanup deletes by expiry without checking job state. In trace C, the reservation expires at 65, but the heartbeat at 50 extends the job lease to 110.",
+        "failure_scenario": "Cleanup at 66 deletes the reservation while the job is still live; the available READY task can then use the same limit-1 account concurrently.",
+        "fix": "Keep capacity occupied while the job is live or uncertain. Release it only after confirmed termination or safe recovery, using executor/job state rather than the estimated duration."
+      },
+      {
+        "task": "S9 / T6",
+        "severity": "high",
+        "issue": "Distinct cumulative snapshots are added as if each were an incremental charge.",
+        "evidence": "R8 says usage is cumulative per attempt and settlement must use the latest total. S9 appends every new event's cumulative amount and sums them. Trace D has distinct events for the same attempt with totals 10 and 25.",
+        "failure_scenario": "The final sum is 10+25=35 instead of the latest total, 25. Deduplicating a repeated event ID does not prevent this.",
+        "fix": "Retain receipt deduplication, but update a per-attempt cumulative total monotonically and settle from that total. For trace D, settle 25."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"S2 / T2\",\n      \"severity\": \"high\",\n      \"issue\": \"Greedy task-by-task assignment can defer tasks even when a maximum-cardinality assignment exists.\",\n      \"evidence\": \"R1 requires maximum cardinality before cost minimization. In G2, S2 assigns J1 to its cheapest route, A, leaving J2 unassigned. T2 proposes preserving this greedy algorithm.\",\n      \"failure_scenario\": \"S2 returns one assignment: J1→A. Assigning J1→B and J2→A assigns both tasks, with total normalized cost 3.\",\n      \"fix\": \"Find a maximum-cardinality assignment first, then minimize total cost among those assignments, using task/account IDs for deterministic ties.\"\n    },\n    {\n      \"task\": \"S3 / T3\",\n      \"severity\": \"high\",\n      \"issue\": \"Later eligibility gates validate quota freshness against the request time instead of the time at that gate.\",\n      \"evidence\": \"R2 requires quota eligibility at recommendation, reservation and dispatch, using each gate's current time. S3 captures now=1000 and reuses it. G3 allows reservation or dispatch at 1100 with quota observed at 900; T3 proposes keeping this behavior.\",\n      \"failure_scenario\": \"At time 1100, the observation is 200 seconds old, beyond the 120-second limit. S3 still passes because 900≤1000≤1020.\",\n      \"fix\": \"At each gate, validate quota status, windows, reset times and freshness against that gate's injected current time. Refresh or reject/defer when the observation is stale.\"\n    },\n    {\n      \"task\": \"S4 / T2\",\n      \"severity\": \"high\",\n      \"issue\": \"Cached input is charged twice because input_tokens already includes cached_input_tokens.\",\n      \"evidence\": \"R3 defines the cost as noncached input at the input rate plus cached input at the cache rate. S4 prices all input_tokens at the input rate, then adds cached_input_tokens at the cache rate; T2 proposes preserving it.\",\n      \"failure_scenario\": \"For input=10, cached=4, output=0, S4 returns 208 microcredits; the required cost is (10−4)×20+4×2=128.\",\n      \"fix\": \"Compute (input_tokens−cached_input_tokens)×input_rate + cached_input_tokens×cache_rate + output_tokens×output_rate, without an extra reasoning charge.\"\n    },\n    {\n      \"task\": \"S5 / T4\",\n      \"severity\": \"critical\",\n      \"issue\": \"The provider idempotency key changes with generation, so a stale worker can create a second external job after takeover.\",\n      \"evidence\": \"R4 requires at most one side effect per logical task. S5 includes generation in the provider key. In trace A, W1 passes its owner check, pauses, and later calls the provider after W2 has launched generation 2. G4 specifies the same effective account, while G5 says different provider keys are not deduplicated.\",\n      \"failure_scenario\": \"W2 launches with key run:task:2; resumed W1 launches with run:task:1. Both keys can create jobs, even though W1's final database write is rejected.\",\n      \"fix\": \"Use the same provider-visible deduplication identity for every generation of a logical run/task, with the effective account held constant for that launch; otherwise require provider deduplication that spans accounts.\"\n    },\n    {\n      \"task\": \"S6 / T5\",\n      \"severity\": \"high\",\n      \"issue\": \"The local cancellation check and ACK do not prevent an already queued launch from starting remotely afterward.\",\n      \"evidence\": \"R5 requires no new job to start after a successful cancel ACK and says local checks do not stop requests already about to be sent. In trace B, dispatch passes its check at t20, cancellation ACKs at t21, and the queued launch starts at t22. S6 has no drain or remote admission fence; T5 nevertheless claims the guarantee with a 50 ms local ACK budget.\",\n      \"failure_scenario\": \"The trace's launch starts after the successful ACK, violating R5.\",\n      \"fix\": \"Require a provider-enforced admission fence, confirmed before a successful ACK, or another protocol that proves all earlier requests can no longer start. If that cannot be confirmed within 50 ms, do not return a successful ACK within that limit.\"\n    },\n    {\n      \"task\": \"S7 / T3\",\n      \"severity\": \"medium\",\n      \"issue\": \"The frozen map records a mutable quota source path instead of the decision inputs needed to reproduce the recommendation.\",\n      \"evidence\": \"R6 requires the quota observation, injected time and policy version. S7 stores only the source path and routes; G6 says the cache is overwritten in place and older contents are not retained, while time and policy version remain only in memory. T3 proposes keeping this map.\",\n      \"failure_scenario\": \"After the cache is refreshed, the original quota observation cannot be recovered from the recorded path, and the map contains neither the injected time nor policy version.\",\n      \"fix\": \"Persist the quota observation used, injected time and policy version in the existing versioned allowlist. Keep credentials and complete provider payloads out.\"\n    },\n    {\n      \"task\": \"S8 / T4\",\n      \"severity\": \"high\",\n      \"issue\": \"Reservation cleanup can free account capacity while the executor is still live.\",\n      \"evidence\": \"R7 says estimates do not bound execution and capacity cannot be freed while a job is live or uncertain. S8 sets reservation expiry from the estimate and cleanup deletes by expiry without checking job state. In trace C, the reservation expires at 65, but the heartbeat at 50 extends the job lease to 110.\",\n      \"failure_scenario\": \"Cleanup at 66 deletes the reservation while the job is still live; the available READY task can then use the same limit-1 account concurrently.\",\n      \"fix\": \"Keep capacity occupied while the job is live or uncertain. Release it only after confirmed termination or safe recovery, using executor/job state rather than the estimated duration.\"\n    },\n    {\n      \"task\": \"S9 / T6\",\n      \"severity\": \"high\",\n      \"issue\": \"Distinct cumulative snapshots are added as if each were an incremental charge.\",\n      \"evidence\": \"R8 says usage is cumulative per attempt and settlement must use the latest total. S9 appends every new event's cumulative amount and sums them. Trace D has distinct events for the same attempt with totals 10 and 25.\",\n      \"failure_scenario\": \"The final sum is 10+25=35 instead of the latest total, 25. Deduplicating a repeated event ID does not prevent this.\",\n      \"fix\": \"Retain receipt deduplication, but update a per-attempt cumulative total monotonically and settle from that total. For trace D, settle 25.\"\n    }\n  ],\n  \"uncertainties\": []\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 16428,
+    "cached_input_tokens": 11648,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 9768,
+    "reasoning_output_tokens": 8265
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 921,
+  "exit_code": 0,
+  "elapsed_seconds": 79.235,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209637.3324192,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

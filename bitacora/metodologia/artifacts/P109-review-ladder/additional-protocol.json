@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "scope": "Owner-requested extension of the same synthetic reviewer pilot",
+  "additional_calls": 10,
+  "total_planned_calls": 25,
+  "effort": "max",
+  "routes": [
+    [
+      "claude-work",
+      "claude",
+      "haiku",
+      "claude-work-haiku"
+    ],
+    [
+      "codex-2",
+      "codex",
+      "gpt-6-luna",
+      "codex-2-luna"
+    ]
+  ],
+  "oracle_sha256": "71beefc22baf08191b47165dc10bc36d22a2ba104f74d58bc37f9f82574d32dd",
+  "instruction_sha256": "b5beeb929baf693ae52b9c351b62c4d1d47349713095f91755422f46840faf6f",
+  "account_isolation": "Run only after all 15 original calls; Haiku shares Claude Work, Luna shares Codex-2",
+  "capability_evidence": "Local Codex-2 models_cache advertises max for gpt-6-luna; Claude CLI 2.1.301 accepts max as an effort option. Effective provider acceptance is checked in each result; no fallback is configured.",
+  "comparison": "Original models remain at high; the two added models are requested at max, per owner instruction. This is a comparison of the requested routes, not an equal-effort model experiment."
+}

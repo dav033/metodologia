@@ -1,0 +1,114 @@
+{
+  "case": "C2",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "claude-haiku-5-5",
+  "requested_effort": "max",
+  "variant": "claude-work-haiku55",
+  "prompt_sha256": "61aade8d5e2b90b9eee1044aed7f25e1ccc04968a91123f0729926a6a5b4258a",
+  "prompt_characters": 2774,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206908.3392324,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792213799.551166,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.551187,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206908.6327364,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "critical",
+        "issue": "Dependency cycle: T1 is after T3, T3 is after T2, and T2 is after T1, so no valid execution order exists.",
+        "evidence": "T1 'add nullable column migration', after=[T3], writes=[db/migrations/014.sql]. T3 'regenerate migration snapshot after DTO update', after=[T2]. T2 'extend API DTO and generated shared Order contract', after=[T1]. Requirement: 'All plan dependencies must be acyclic.'",
+        "failure_scenario": "No task in the cycle can start, and T4 and T5 are blocked transitively. The migration and contract changes are never applied or verified, and the plan deadlocks or silently drops tasks.",
+        "fix": "Remove after=[T3] from T1 so it has no prerequisite. Resulting order: T1 -> T2 -> T3; T2 -> T4; T3 and T4 -> T5. The snapshot is derived from 014.sql, so it must follow T1, not precede it."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "T2 and T4 both write packages/contracts/order.ts with no dependency path between them and no merge owner. T4 also hand-patches a generated file instead of consuming T2's regenerated output. The resource label order-contract does not serialize them.",
+        "evidence": "T2 'extend API DTO and generated shared Order contract', after=[T1], writes=[apps/api/order-dto.ts,packages/contracts/order.ts], resources=[order-contract]. T4 'extend client serializer and patch shared Order contract to include delivery_note', after=[T1], writes=[apps/web/order-client.ts,packages/contracts/order.ts], resources=[order-contract]. 'No merge owner exists.' Requirement: 'resource labels alone do not lock tasks.' Baseline: 'both producer and consumer must compile against the same final definition.'",
+        "failure_scenario": "T2 and T4 run concurrently after T1. One edit overwrites or conflicts with the other, or the next regeneration erases T4's hand patch. The API can then emit delivery_note while the client compiles against a definition without it, or the reverse. Rolling back either task to the previous commit can also revert the other's contract edit.",
+        "fix": "Make T2 the sole writer of packages/contracts/order.ts, regenerating rather than hand-patching. Change T4 to after=[T2] and remove packages/contracts/order.ts from its writes so it consumes the regenerated type. This gives an explicit path T2 -> T4, so no merge owner is needed."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "The verification command chains checks with &&, so typecheck and unit tests never run when lint fails, and their exit statuses cannot be recorded.",
+        "evidence": "T5 command='npm run lint && npm run typecheck && npm run test:unit'; acceptance='record the exit status of all three checks, including if lint fails'. Requirement: 'Execute lint, typecheck and unit tests even if an earlier command fails, recording an exit status for each.'",
+        "failure_scenario": "A lint failure masks a typecheck or unit-test failure. The recorded results are incomplete, the acceptance criterion cannot be met as written, and a broken build can pass the verification gate.",
+        "fix": "Run the three checks as independent steps, each executed regardless of earlier results, with every exit code captured and written to docs/run.md (for example, a small runner that executes all three and stores each code)."
+      },
+      {
+        "task": "T2",
+        "severity": "medium",
+        "issue": "Deployment order for the API change is unspecified. Only migration and frontend are staged, yet the T2 DTO extension exposes the new column.",
+        "evidence": "'Migration deployment and frontend deployment will be staged separately after approval.' T2 'extend API DTO and generated shared Order contract'. Requirement: 'without changing existing order behavior'.",
+        "failure_scenario": "If the API that reads delivery_note ships before migration 014 is applied, existing order reads fail against the old schema. That changes existing order behavior even though the migration itself is backward-compatible.",
+        "fix": "State an explicit deploy gate: apply migration 014, then deploy the T2 API change, then the frontend (T4). Include the API in the staging statement."
+      }
+    ],
+    "uncertainties": [
+      "Whether the T2 API change reads delivery_note from the database, rather than only passing it through a contract, is not stated; the deploy-order finding assumes it reads the column.",
+      "No supplied test is named that verifies existing order responses are unchanged when delivery_note is null; T5 records only lint, typecheck and unit exit codes."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T1\",\"severity\":\"critical\",\"issue\":\"Dependency cycle: T1 is after T3, T3 is after T2, and T2 is after T1, so no valid execution order exists.\",\"evidence\":\"T1 'add nullable column migration', after=[T3], writes=[db/migrations/014.sql]. T3 'regenerate migration snapshot after DTO update', after=[T2]. T2 'extend API DTO and generated shared Order contract', after=[T1]. Requirement: 'All plan dependencies must be acyclic.'\",\"failure_scenario\":\"No task in the cycle can start, and T4 and T5 are blocked transitively. The migration and contract changes are never applied or verified, and the plan deadlocks or silently drops tasks.\",\"fix\":\"Remove after=[T3] from T1 so it has no prerequisite. Resulting order: T1 -> T2 -> T3; T2 -> T4; T3 and T4 -> T5. The snapshot is derived from 014.sql, so it must follow T1, not precede it.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"T2 and T4 both write packages/contracts/order.ts with no dependency path between them and no merge owner. T4 also hand-patches a generated file instead of consuming T2's regenerated output. The resource label order-contract does not serialize them.\",\"evidence\":\"T2 'extend API DTO and generated shared Order contract', after=[T1], writes=[apps/api/order-dto.ts,packages/contracts/order.ts], resources=[order-contract]. T4 'extend client serializer and patch shared Order contract to include delivery_note', after=[T1], writes=[apps/web/order-client.ts,packages/contracts/order.ts], resources=[order-contract]. 'No merge owner exists.' Requirement: 'resource labels alone do not lock tasks.' Baseline: 'both producer and consumer must compile against the same final definition.'\",\"failure_scenario\":\"T2 and T4 run concurrently after T1. One edit overwrites or conflicts with the other, or the next regeneration erases T4's hand patch. The API can then emit delivery_note while the client compiles against a definition without it, or the reverse. Rolling back either task to the previous commit can also revert the other's contract edit.\",\"fix\":\"Make T2 the sole writer of packages/contracts/order.ts, regenerating rather than hand-patching. Change T4 to after=[T2] and remove packages/contracts/order.ts from its writes so it consumes the regenerated type. This gives an explicit path T2 -> T4, so no merge owner is needed.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"The verification command chains checks with &&, so typecheck and unit tests never run when lint fails, and their exit statuses cannot be recorded.\",\"evidence\":\"T5 command='npm run lint && npm run typecheck && npm run test:unit'; acceptance='record the exit status of all three checks, including if lint fails'. Requirement: 'Execute lint, typecheck and unit tests even if an earlier command fails, recording an exit status for each.'\",\"failure_scenario\":\"A lint failure masks a typecheck or unit-test failure. The recorded results are incomplete, the acceptance criterion cannot be met as written, and a broken build can pass the verification gate.\",\"fix\":\"Run the three checks as independent steps, each executed regardless of earlier results, with every exit code captured and written to docs/run.md (for example, a small runner that executes all three and stores each code).\"},{\"task\":\"T2\",\"severity\":\"medium\",\"issue\":\"Deployment order for the API change is unspecified. Only migration and frontend are staged, yet the T2 DTO extension exposes the new column.\",\"evidence\":\"'Migration deployment and frontend deployment will be staged separately after approval.' T2 'extend API DTO and generated shared Order contract'. Requirement: 'without changing existing order behavior'.\",\"failure_scenario\":\"If the API that reads delivery_note ships before migration 014 is applied, existing order reads fail against the old schema. That changes existing order behavior even though the migration itself is backward-compatible.\",\"fix\":\"State an explicit deploy gate: apply migration 014, then deploy the T2 API change, then the frontend (T4). Include the API in the staging statement.\"}],\"uncertainties\":[\"Whether the T2 API change reads delivery_note from the database, rather than only passing it through a contract, is not stated; the deploy-order finding assumes it reads the column.\",\"No supplied test is named that verifies existing order responses are unchanged when delivery_note is null; T5 records only lint, typecheck and unit exit codes.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 3279,
+    "cache_read_input_tokens": 2442,
+    "output_tokens": 30664,
+    "output_tokens_details": {
+      "thinking_tokens": 29110
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3279,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 127.834,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792207036.466287,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792213799.695937,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.695956,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

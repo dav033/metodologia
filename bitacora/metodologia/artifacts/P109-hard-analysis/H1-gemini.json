@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "case": "H1",
+  "route": {
+    "id": "gemini",
+    "profile": "antigravity",
+    "provider": "antigravity",
+    "model": "gemini-3.8-flash-high",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "08b234531046b26b06ebd5f1563c071c0405df8e29d9a04520d6141c37f91491",
+  "prompt_characters": 9983,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792209279.0003674,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792814078.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792227278.0,
+        "window_minutes": 300
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209279.000425,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "B2",
+        "severity": "high",
+        "issue": "Delimiter collision in posting key generation due to naive string concatenation with ':' delimiter when tenant_id and invoice_id can contain colons.",
+        "evidence": "Dossier states IDs are opaque ASCII strings that may contain colons. R1 requires every external posting for a logical invoice to be distinct across tenants. G2 confirms invoice_id is unique only within a tenant. G4 supplies a verified canonical_tuple_bytes helper. T2 uses B2 unchanged, and T6 masks this by testing only one tenant with globally distinct fixture invoice IDs.",
+        "failure_scenario": "Tenant 'corp:1' with invoice '100' and tenant 'corp' with invoice '1:100' both produce concatenation 'corp:1:100', yielding identical SHA-256 posting keys and causing an external posting collision and dropped/misattributed posting.",
+        "fix": "Use the verified canonical_tuple_bytes helper: return sha256(canonical_tuple_bytes([tenant, invoice])).hexdigest()."
+      },
+      {
+        "task": "B3",
+        "severity": "high",
+        "issue": "Inclusive comparison (>=) in rebuild event loop double-counts the event at snapshot.through_revision.",
+        "evidence": "R2 states snapshots contain the balance after applying all events with revision <= through_revision, and reconstruction applies later events once. T2 quotes memo 2025-11 ('inclusive resume is simpler'), which does not override R2. T6 conceals this by testing fixtures with no event at the exact boundary.",
+        "failure_scenario": "Snapshot through_revision=10 has exact_eur_balance=50.00 (which already includes event 10 of +10.00 EUR). An event stream containing revision 10 (+10.00 EUR) and revision 11 (+5.00 EUR) evaluates 10 >= 10 as true, adding event 10 again and producing 65.00 EUR instead of the correct 55.00 EUR.",
+        "fix": "Change the boundary check to strictly greater than: if e.revision > snapshot.through_revision:."
+      },
+      {
+        "task": "B4 (contribution)",
+        "severity": "critical",
+        "issue": "Replay currency conversion queries latest_rate_revision() instead of the event's historical fx_revision.",
+        "evidence": "R2 mandates replaying source events must produce the same balance independent of current date. R3 requires EUR = USD / USD_per_EUR from each event's fx_revision. R8 prohibits rewriting historical FX data. G3 notes get_rate(r) fetches exact revisions. T2 relies on unapproved historical memo ('current FX keeps reports comparable'), and T6 masks it with fixtures where old and current revisions have equal rates.",
+        "failure_scenario": "An event has usd_amount=120 and fx_revision=1 (rate 1.20 USD/EUR). When reconstructed later after latest_rate_revision() reaches revision 2 (rate 1.50 USD/EUR), B4 computes 120 / 1.50 = 80.00 EUR instead of 120 / 1.20 = 100.00 EUR. Replays on different dates produce diverging balances.",
+        "fix": "Fetch the exchange rate using the event's own fx_revision: rate = get_rate(e.fx_revision)."
+      },
+      {
+        "task": "B4 (cents)",
+        "severity": "medium",
+        "issue": "cents() quantize call omits explicit rounding mode, defaulting to active context ROUND_HALF_EVEN instead of required half away from zero.",
+        "evidence": "R3 specifies rounding the aggregate once to two decimals using half away from zero. G3 states the active Decimal context is ROUND_HALF_EVEN. T6 masks this defect by using cent fixtures with no half-cent ties.",
+        "failure_scenario": "An exact EUR total of Decimal('0.025') quantizes under active context ROUND_HALF_EVEN to Decimal('0.02') (2 cents) because 2 is even. R3 half away from zero requires Decimal('0.03') (3 cents).",
+        "fix": "Specify ROUND_HALF_UP explicitly: return int(exact_total.quantize(Decimal('0.01'), rounding=decimal.ROUND_HALF_UP) * 100)."
+      },
+      {
+        "task": "B5 (apply_backfill)",
+        "severity": "critical",
+        "issue": "UPDATE query lacks tenant_id scoping while executing under administrative BYPASSRLS role, corrupting matching invoice_ids in other tenants.",
+        "evidence": "R1 mandates every database migration write preserve logical invoice isolation (tenant_id, invoice_id). R8 forbids reassigning rows across tenants. G1 notes migration worker has BYPASSRLS so RLS does not constrain writes. G2 states invoice_id is unique only within a tenant. T6 tests only ordinary API role RLS and single-tenant backfill with globally distinct IDs.",
+        "failure_scenario": "Tenant T1 has invoice 'INV-1' (balance 100). Tenant T2 independently has invoice 'INV-1' (balance 900, migration_epoch IS NULL). When backfilling T1, B5 executes UPDATE invoices SET ... WHERE invoice_id='INV-1' AND migration_epoch IS NULL. Bypassing RLS, this overwrites T2's balance_v2 and revision with T1's values.",
+        "fix": "Include tenant_id in the UPDATE query: WHERE tenant_id=:tenant AND invoice_id=:invoice AND migration_epoch IS NULL, passing tenant=tenant."
+      },
+      {
+        "task": "B5 / T3",
+        "severity": "critical",
+        "issue": "Backfill concurrency check overwrites newer live writes because migration_epoch IS NULL is not evidence that the ledger has not advanced.",
+        "evidence": "R4 dictates a backfill must not replace a newer live result with an older snapshot result, and live writers deliberately leave migration_epoch unchanged. G5 notes source read and target write are separate transactions with live commits permitted between them. T3 relies on flawed atomic UPDATE argument. T6 tests backfill with no concurrent live writer.",
+        "failure_scenario": "Backfill reads snapshot at revision 2 (balance 50). A concurrent live transaction increments ledger_revision to 3, appends event, and updates balance_v2 to 75 and source_revision_v2 to 3, leaving migration_epoch NULL. Backfill then executes B5; because migration_epoch IS NULL matches, it overwrites balance_v2 to 50 and source_revision_v2 to 2, permanently clobbering live revision 3.",
+        "fix": "Add a revision guard to the WHERE clause: AND (source_revision_v2 IS NULL OR source_revision_v2 <= :rev). If live writes advanced past :rev, set migration_epoch without regressing balance_v2 or source_revision_v2."
+      },
+      {
+        "task": "B6",
+        "severity": "high",
+        "issue": "Cutover readiness compares the sum of partition offsets across partitions rather than verifying that every individual required partition has reached its target.",
+        "evidence": "R5 requires consumer applied position to reach EVERY required partition and states partition offsets have no cross-partition numerical meaning. T4 issues cutover certificates using B6. T6 masks this with barrier fixtures where all partitions advance together.",
+        "failure_scenario": "required_positions={'p1': 100, 'p2': 100} (sum 200). applied_positions={'p1': 190, 'p2': 20} (sum 210). B6 returns True because 210 >= 200, issuing a cutover certificate even though partition 'p2' has reached only 20 of 100 required events.",
+        "fix": "Replace cross-partition summation with individual partition checks: return all(applied_positions[p] >= req for p, req in required_positions.items())."
+      },
+      {
+        "task": "B7 / T5",
+        "severity": "critical",
+        "issue": "Resuming dead-letter queue jobs after the provider's 7-day deduplication window re-posts timed-out jobs, creating duplicate external accounting postings.",
+        "evidence": "R6 specifies external provider deduplicates keys for 7 days after first acceptance, transport timeout is unknown outcome, and no duplicate posting is permitted even when a DLQ job is resumed much later. T5 configures 30-day DLQ retention and retries timeouts blindly. T6 tests retries only within 60 seconds.",
+        "failure_scenario": "An initial posting at t=0 experiences a transport timeout after the provider accepted it. The job enters DLQ and is resumed by an operator at t=15 days (> 7 days). B7 calls provider.post with the original key. Because the provider's 7-day deduplication cache expired, the provider processes the payment a second time, creating a duplicate posting.",
+        "fix": "In B7 / T5, check if an unconfirmed attempt occurred outside the deduplication window (e.g., now - job.first_attempt_at > 7 days with attempts > 0); if so, block automated posting and hold the job for manual reconciliation."
+      }
+    ],
+    "uncertainties": [
+      "The out-of-band operational procedure for manually reconciling unknown transport timeouts before DLQ resumption is unspecified, given that the external provider exposes no invoice lookup API (R6, T5) and the service defines no automated status verification endpoint."
+    ]
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"B2\",\n      \"severity\": \"high\",\n      \"issue\": \"Delimiter collision in posting key generation due to naive string concatenation with ':' delimiter when tenant_id and invoice_id can contain colons.\",\n      \"evidence\": \"Dossier states IDs are opaque ASCII strings that may contain colons. R1 requires every external posting for a logical invoice to be distinct across tenants. G2 confirms invoice_id is unique only within a tenant. G4 supplies a verified canonical_tuple_bytes helper. T2 uses B2 unchanged, and T6 masks this by testing only one tenant with globally distinct fixture invoice IDs.\",\n      \"failure_scenario\": \"Tenant 'corp:1' with invoice '100' and tenant 'corp' with invoice '1:100' both produce concatenation 'corp:1:100', yielding identical SHA-256 posting keys and causing an external posting collision and dropped/misattributed posting.\",\n      \"fix\": \"Use the verified canonical_tuple_bytes helper: return sha256(canonical_tuple_bytes([tenant, invoice])).hexdigest().\"\n    },\n    {\n      \"task\": \"B3\",\n      \"severity\": \"high\",\n      \"issue\": \"Inclusive comparison (>=) in rebuild event loop double-counts the event at snapshot.through_revision.\",\n      \"evidence\": \"R2 states snapshots contain the balance after applying all events with revision <= through_revision, and reconstruction applies later events once. T2 quotes memo 2025-11 ('inclusive resume is simpler'), which does not override R2. T6 conceals this by testing fixtures with no event at the exact boundary.\",\n      \"failure_scenario\": \"Snapshot through_revision=10 has exact_eur_balance=50.00 (which already includes event 10 of +10.00 EUR). An event stream containing revision 10 (+10.00 EUR) and revision 11 (+5.00 EUR) evaluates 10 >= 10 as true, adding event 10 again and producing 65.00 EUR instead of the correct 55.00 EUR.\",\n      \"fix\": \"Change the boundary check to strictly greater than: if e.revision > snapshot.through_revision:.\"\n    },\n    {\n      \"task\": \"B4 (contribution)\",\n      \"severity\": \"critical\",\n      \"issue\": \"Replay currency conversion queries latest_rate_revision() instead of the event's historical fx_revision.\",\n      \"evidence\": \"R2 mandates replaying source events must produce the same balance independent of current date. R3 requires EUR = USD / USD_per_EUR from each event's fx_revision. R8 prohibits rewriting historical FX data. G3 notes get_rate(r) fetches exact revisions. T2 relies on unapproved historical memo ('current FX keeps reports comparable'), and T6 masks it with fixtures where old and current revisions have equal rates.\",\n      \"failure_scenario\": \"An event has usd_amount=120 and fx_revision=1 (rate 1.20 USD/EUR). When reconstructed later after latest_rate_revision() reaches revision 2 (rate 1.50 USD/EUR), B4 computes 120 / 1.50 = 80.00 EUR instead of 120 / 1.20 = 100.00 EUR. Replays on different dates produce diverging balances.\",\n      \"fix\": \"Fetch the exchange rate using the event's own fx_revision: rate = get_rate(e.fx_revision).\"\n    },\n    {\n      \"task\": \"B4 (cents)\",\n      \"severity\": \"medium\",\n      \"issue\": \"cents() quantize call omits explicit rounding mode, defaulting to active context ROUND_HALF_EVEN instead of required half away from zero.\",\n      \"evidence\": \"R3 specifies rounding the aggregate once to two decimals using half away from zero. G3 states the active Decimal context is ROUND_HALF_EVEN. T6 masks this defect by using cent fixtures with no half-cent ties.\",\n      \"failure_scenario\": \"An exact EUR total of Decimal('0.025') quantizes under active context ROUND_HALF_EVEN to Decimal('0.02') (2 cents) because 2 is even. R3 half away from zero requires Decimal('0.03') (3 cents).\",\n      \"fix\": \"Specify ROUND_HALF_UP explicitly: return int(exact_total.quantize(Decimal('0.01'), rounding=decimal.ROUND_HALF_UP) * 100).\"\n    },\n    {\n      \"task\": \"B5 (apply_backfill)\",\n      \"severity\": \"critical\",\n      \"issue\": \"UPDATE query lacks tenant_id scoping while executing under administrative BYPASSRLS role, corrupting matching invoice_ids in other tenants.\",\n      \"evidence\": \"R1 mandates every database migration write preserve logical invoice isolation (tenant_id, invoice_id). R8 forbids reassigning rows across tenants. G1 notes migration worker has BYPASSRLS so RLS does not constrain writes. G2 states invoice_id is unique only within a tenant. T6 tests only ordinary API role RLS and single-tenant backfill with globally distinct IDs.\",\n      \"failure_scenario\": \"Tenant T1 has invoice 'INV-1' (balance 100). Tenant T2 independently has invoice 'INV-1' (balance 900, migration_epoch IS NULL). When backfilling T1, B5 executes UPDATE invoices SET ... WHERE invoice_id='INV-1' AND migration_epoch IS NULL. Bypassing RLS, this overwrites T2's balance_v2 and revision with T1's values.\",\n      \"fix\": \"Include tenant_id in the UPDATE query: WHERE tenant_id=:tenant AND invoice_id=:invoice AND migration_epoch IS NULL, passing tenant=tenant.\"\n    },\n    {\n      \"task\": \"B5 / T3\",\n      \"severity\": \"critical\",\n      \"issue\": \"Backfill concurrency check overwrites newer live writes because migration_epoch IS NULL is not evidence that the ledger has not advanced.\",\n      \"evidence\": \"R4 dictates a backfill must not replace a newer live result with an older snapshot result, and live writers deliberately leave migration_epoch unchanged. G5 notes source read and target write are separate transactions with live commits permitted between them. T3 relies on flawed atomic UPDATE argument. T6 tests backfill with no concurrent live writer.\",\n      \"failure_scenario\": \"Backfill reads snapshot at revision 2 (balance 50). A concurrent live transaction increments ledger_revision to 3, appends event, and updates balance_v2 to 75 and source_revision_v2 to 3, leaving migration_epoch NULL. Backfill then executes B5; because migration_epoch IS NULL matches, it overwrites balance_v2 to 50 and source_revision_v2 to 2, permanently clobbering live revision 3.\",\n      \"fix\": \"Add a revision guard to the WHERE clause: AND (source_revision_v2 IS NULL OR source_revision_v2 <= :rev). If live writes advanced past :rev, set migration_epoch without regressing balance_v2 or source_revision_v2.\"\n    },\n    {\n      \"task\": \"B6\",\n      \"severity\": \"high\",\n      \"issue\": \"Cutover readiness compares the sum of partition offsets across partitions rather than verifying that every individual required partition has reached its target.\",\n      \"evidence\": \"R5 requires consumer applied position to reach EVERY required partition and states partition offsets have no cross-partition numerical meaning. T4 issues cutover certificates using B6. T6 masks this with barrier fixtures where all partitions advance together.\",\n      \"failure_scenario\": \"required_positions={'p1': 100, 'p2': 100} (sum 200). applied_positions={'p1': 190, 'p2': 20} (sum 210). B6 returns True because 210 >= 200, issuing a cutover certificate even though partition 'p2' has reached only 20 of 100 required events.\",\n      \"fix\": \"Replace cross-partition summation with individual partition checks: return all(applied_positions[p] >= req for p, req in required_positions.items()).\"\n    },\n    {\n      \"task\": \"B7 / T5\",\n      \"severity\": \"critical\",\n      \"issue\": \"Resuming dead-letter queue jobs after the provider's 7-day deduplication window re-posts timed-out jobs, creating duplicate external accounting postings.\",\n      \"evidence\": \"R6 specifies external provider deduplicates keys for 7 days after first acceptance, transport timeout is unknown outcome, and no duplicate posting is permitted even when a DLQ job is resumed much later. T5 configures 30-day DLQ retention and retries timeouts blindly. T6 tests retries only within 60 seconds.\",\n      \"failure_scenario\": \"An initial posting at t=0 experiences a transport timeout after the provider accepted it. The job enters DLQ and is resumed by an operator at t=15 days (> 7 days). B7 calls provider.post with the original key. Because the provider's 7-day deduplication cache expired, the provider processes the payment a second time, creating a duplicate posting.\",\n      \"fix\": \"In B7 / T5, check if an unconfirmed attempt occurred outside the deduplication window (e.g., now - job.first_attempt_at > 7 days with attempts > 0); if so, block automated posting and hold the job for manual reconciliation.\"\n    }\n  ],\n  \"uncertainties\": [\n    \"The out-of-band operational procedure for manually reconciling unknown transport timeouts before DLQ resumption is unspecified, given that the external provider exposes no invoice lookup API (R6, T5) and the service defines no automated status verification endpoint.\"\n  ]\n}\n",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 14026,
+    "output_tokens": 26622,
+    "thinking_tokens": 24379,
+    "cache_read_tokens": 0,
+    "total_tokens": 40648
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 1136,
+  "exit_code": 0,
+  "elapsed_seconds": 186.322,
+  "quota_after": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792209469.2804186,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792814268.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792227468.0,
+        "window_minutes": 300
+      }
+    }
+  }
+}

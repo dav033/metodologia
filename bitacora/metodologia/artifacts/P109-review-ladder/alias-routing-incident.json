@@ -1,0 +1,139 @@
+{
+  "status": "excluded_from_Haiku_comparison",
+  "reason": "Requested haiku alias but assistant metadata reports claude-sonnet-5-5",
+  "attempts": [
+    {
+      "case": "C1",
+      "profile": "claude-work",
+      "requested_model": "haiku",
+      "requested_effort": "max",
+      "observed_models": [
+        "claude-sonnet-5-5"
+      ],
+      "elapsed_seconds": 72.987,
+      "usage_reported": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 2114,
+        "cache_read_input_tokens": 2694,
+        "output_tokens": 10727,
+        "output_tokens_details": {
+          "thinking_tokens": 9509
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 2114,
+          "ephemeral_5m_input_tokens": 0
+        }
+      },
+      "quota_before": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792206555.7123759,
+        "windows": {
+          "five_hour": {
+            "used_percent": 3.0,
+            "resets_at": 1792213799.979114,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 87.0,
+            "resets_at": 1792277999.979132,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792206629.0752304,
+        "windows": {
+          "five_hour": {
+            "used_percent": 3.0,
+            "resets_at": 1792213800.307888,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 87.0,
+            "resets_at": 1792278000.307905,
+            "window_minutes": 10080.0
+          }
+        }
+      }
+    },
+    {
+      "case": "C2",
+      "profile": "claude-work",
+      "requested_model": "haiku",
+      "requested_effort": "max",
+      "observed_models": [
+        "claude-sonnet-5-5"
+      ],
+      "elapsed_seconds": 99.982,
+      "usage_reported": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 2115,
+        "cache_read_input_tokens": 2828,
+        "output_tokens": 14193,
+        "output_tokens_details": {
+          "thinking_tokens": 12801
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 2115,
+          "ephemeral_5m_input_tokens": 0
+        }
+      },
+      "quota_before": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792206629.4014664,
+        "windows": {
+          "five_hour": {
+            "used_percent": 3.0,
+            "resets_at": 1792213799.624743,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 87.0,
+            "resets_at": 1792277999.62476,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792206729.6815453,
+        "windows": {
+          "five_hour": {
+            "used_percent": 4.0,
+            "resets_at": 1792213799.981194,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 87.0,
+            "resets_at": 1792277999.981214,
+            "window_minutes": 10080.0
+          }
+        }
+      }
+    }
+  ],
+  "cause": "unconfirmed; account settings default to sonnet, but that alone does not prove why CLI model flag was overridden",
+  "coordinator_interruption": "SIGINT to coordinator only; in-flight subprocesses completed and measurements were preserved before exit 130; no C3 alias call",
+  "corrective_attempt": "Explicit claude-haiku-5-5 at max with effective-model guard after each case",
+  "sources": [
+    "https://platform.claude.com/docs/en/models/haiku-5-5/overview",
+    "https://platform.claude.com/docs/en/build-with-claude/effort"
+  ]
+}

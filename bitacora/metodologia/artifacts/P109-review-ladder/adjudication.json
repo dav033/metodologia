@@ -1,0 +1,1256 @@
+{
+  "schema_version": 1,
+  "method": "Explicit coordinator mapping against predeclared oracle; one run per cell; no independent formal benchmark grading",
+  "oracle_sha256": "71beefc22baf08191b47165dc10bc36d22a2ba104f74d58bc37f9f82574d32dd",
+  "cells": [
+    {
+      "record": "C1-codex-2.json",
+      "case": "C1",
+      "profile": "codex-2",
+      "requested_model": "gpt-6.1-sol",
+      "requested_effort": "high",
+      "detected": [
+        "C1-D1",
+        "C1-D2"
+      ],
+      "expected": 2,
+      "missed": [],
+      "finding_map": [
+        1,
+        2
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 216,
+      "elapsed_seconds": 13.398,
+      "tokens": {
+        "input_including_cache": 15535,
+        "cached_read_input": 12288,
+        "output_including_thinking": 508,
+        "thinking_subset": 122,
+        "total_tokens": 16043
+      },
+      "note": ""
+    },
+    {
+      "record": "C1-claude-work.json",
+      "case": "C1",
+      "profile": "claude-work",
+      "requested_model": "sonnet",
+      "requested_effort": "high",
+      "detected": [
+        "C1-D1",
+        "C1-D2"
+      ],
+      "expected": 2,
+      "missed": [],
+      "finding_map": [
+        2,
+        1,
+        0,
+        null
+      ],
+      "duplicates": 1,
+      "unconfirmed_concerns": 1,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 461,
+      "elapsed_seconds": 16.769,
+      "tokens": {
+        "input_including_cache": 4812,
+        "cached_read_input": 1662,
+        "output_including_thinking": 1921,
+        "thinking_subset": 667,
+        "total_tokens": 6733
+      },
+      "note": "Finding 4 raises missing HTTP-400 translation, but the supplied parser contract does not establish its error signaling or the existing HTTP translation. Track as unconfirmed, not a proven false positive or an additional proven defect."
+    },
+    {
+      "record": "C1-antigravity.json",
+      "case": "C1",
+      "profile": "antigravity",
+      "requested_model": "gemini-3.8-flash-high",
+      "requested_effort": "high",
+      "detected": [
+        "C1-D1",
+        "C1-D2"
+      ],
+      "expected": 2,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        0
+      ],
+      "duplicates": 1,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 227,
+      "elapsed_seconds": 38.094,
+      "tokens": {
+        "input_including_cache": 12399,
+        "cached_read_input": 0,
+        "output_including_thinking": 3732,
+        "thinking_subset": 3309,
+        "total_tokens": 16131
+      },
+      "note": ""
+    },
+    {
+      "record": "C2-codex-2.json",
+      "case": "C2",
+      "profile": "codex-2",
+      "requested_model": "gpt-6.1-sol",
+      "requested_effort": "high",
+      "detected": [
+        "C2-D1",
+        "C2-D2",
+        "C2-D3"
+      ],
+      "expected": 3,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 253,
+      "elapsed_seconds": 14.478,
+      "tokens": {
+        "input_including_cache": 15142,
+        "cached_read_input": 12288,
+        "output_including_thinking": 629,
+        "thinking_subset": 168,
+        "total_tokens": 15771
+      },
+      "note": ""
+    },
+    {
+      "record": "C2-claude-work.json",
+      "case": "C2",
+      "profile": "claude-work",
+      "requested_model": "sonnet",
+      "requested_effort": "high",
+      "detected": [
+        "C2-D1",
+        "C2-D2",
+        "C2-D3"
+      ],
+      "expected": 3,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 512,
+      "elapsed_seconds": 21.612,
+      "tokens": {
+        "input_including_cache": 4946,
+        "cached_read_input": 1662,
+        "output_including_thinking": 2655,
+        "thinking_subset": 1309,
+        "total_tokens": 7601
+      },
+      "note": "The cycle is proven. The extra claim that snapshot-after-DTO is intrinsically semantically wrong is not established; it is not needed to establish the cycle."
+    },
+    {
+      "record": "C2-antigravity.json",
+      "case": "C2",
+      "profile": "antigravity",
+      "requested_model": "gemini-3.8-flash-high",
+      "requested_effort": "high",
+      "detected": [
+        "C2-D1",
+        "C2-D2",
+        "C2-D3"
+      ],
+      "expected": 3,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 212,
+      "elapsed_seconds": 32.362,
+      "tokens": {
+        "input_including_cache": 12504,
+        "cached_read_input": 0,
+        "output_including_thinking": 4485,
+        "thinking_subset": 4048,
+        "total_tokens": 16989
+      },
+      "note": ""
+    },
+    {
+      "record": "C3-codex-2.json",
+      "case": "C3",
+      "profile": "codex-2",
+      "requested_model": "gpt-6.1-sol",
+      "requested_effort": "high",
+      "detected": [
+        "C3-D1",
+        "C3-D2",
+        "C3-D3",
+        "C3-D4"
+      ],
+      "expected": 4,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 391,
+      "elapsed_seconds": 22.013,
+      "tokens": {
+        "input_including_cache": 15284,
+        "cached_read_input": 12288,
+        "output_including_thinking": 893,
+        "thinking_subset": 206,
+        "total_tokens": 16177
+      },
+      "note": ""
+    },
+    {
+      "record": "C3-claude-work.json",
+      "case": "C3",
+      "profile": "claude-work",
+      "requested_model": "sonnet",
+      "requested_effort": "high",
+      "detected": [
+        "C3-D1",
+        "C3-D2",
+        "C3-D3",
+        "C3-D4"
+      ],
+      "expected": 4,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        null
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 1,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 709,
+      "elapsed_seconds": 23.098,
+      "tokens": {
+        "input_including_cache": 5178,
+        "cached_read_input": 1662,
+        "output_including_thinking": 2991,
+        "thinking_subset": 1083,
+        "total_tokens": 8169
+      },
+      "note": "Finding 5 proposes pre-cutover validation ordering. The mission does not explicitly require T6 before T5, and T5 has its own verification period; retain as an unconfirmed planning concern."
+    },
+    {
+      "record": "C3-antigravity.json",
+      "case": "C3",
+      "profile": "antigravity",
+      "requested_model": "gemini-3.8-flash-high",
+      "requested_effort": "high",
+      "detected": [
+        "C3-D1",
+        "C3-D2",
+        "C3-D3",
+        "C3-D4"
+      ],
+      "expected": 4,
+      "missed": [],
+      "finding_map": [
+        1,
+        0,
+        2,
+        0,
+        3,
+        0,
+        4,
+        null
+      ],
+      "duplicates": 3,
+      "unconfirmed_concerns": 1,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 573,
+      "elapsed_seconds": 80.485,
+      "tokens": {
+        "input_including_cache": 12649,
+        "cached_read_input": 0,
+        "output_including_thinking": 10934,
+        "thinking_subset": 9756,
+        "total_tokens": 23583
+      },
+      "note": "Findings 2/4/6 restate coverage for existing roots. Finding 8 is the same unconfirmed pre-cutover gate concern as Sonnet. The title says unvalidated tenant, but the evidence correctly distinguishes UUID validation from missing authorization."
+    },
+    {
+      "record": "C4-codex-2.json",
+      "case": "C4",
+      "profile": "codex-2",
+      "requested_model": "gpt-6.1-sol",
+      "requested_effort": "high",
+      "detected": [
+        "C4-D1",
+        "C4-D2",
+        "C4-D3",
+        "C4-D4",
+        "C4-D5"
+      ],
+      "expected": 5,
+      "missed": [],
+      "finding_map": [
+        4,
+        1,
+        2,
+        3,
+        5
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 576,
+      "elapsed_seconds": 31.938,
+      "tokens": {
+        "input_including_cache": 15355,
+        "cached_read_input": 12288,
+        "output_including_thinking": 1341,
+        "thinking_subset": 368,
+        "total_tokens": 16696
+      },
+      "note": ""
+    },
+    {
+      "record": "C4-claude-work.json",
+      "case": "C4",
+      "profile": "claude-work",
+      "requested_model": "sonnet",
+      "requested_effort": "high",
+      "detected": [
+        "C4-D1",
+        "C4-D2",
+        "C4-D3",
+        "C4-D4",
+        "C4-D5"
+      ],
+      "expected": 5,
+      "missed": [],
+      "finding_map": [
+        4,
+        1,
+        2,
+        3,
+        5,
+        0
+      ],
+      "duplicates": 1,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 877,
+      "elapsed_seconds": 24.192,
+      "tokens": {
+        "input_including_cache": 5361,
+        "cached_read_input": 1662,
+        "output_including_thinking": 3156,
+        "thinking_subset": 933,
+        "total_tokens": 8517
+      },
+      "note": ""
+    },
+    {
+      "record": "C4-antigravity.json",
+      "case": "C4",
+      "profile": "antigravity",
+      "requested_model": "gemini-3.8-flash-high",
+      "requested_effort": "high",
+      "detected": [
+        "C4-D1",
+        "C4-D2",
+        "C4-D3",
+        "C4-D4",
+        "C4-D5"
+      ],
+      "expected": 5,
+      "missed": [],
+      "finding_map": [
+        4,
+        1,
+        2,
+        3,
+        5,
+        0
+      ],
+      "duplicates": 1,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 529,
+      "elapsed_seconds": 46.03,
+      "tokens": {
+        "input_including_cache": 12725,
+        "cached_read_input": 0,
+        "output_including_thinking": 6127,
+        "thinking_subset": 5147,
+        "total_tokens": 18852
+      },
+      "note": ""
+    },
+    {
+      "record": "C5-codex-2.json",
+      "case": "C5",
+      "profile": "codex-2",
+      "requested_model": "gpt-6.1-sol",
+      "requested_effort": "high",
+      "detected": [
+        "C5-D1",
+        "C5-D2",
+        "C5-D3",
+        "C5-D4",
+        "C5-D5",
+        "C5-D6"
+      ],
+      "expected": 6,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 628,
+      "elapsed_seconds": 28.499,
+      "tokens": {
+        "input_including_cache": 15586,
+        "cached_read_input": 12288,
+        "output_including_thinking": 1205,
+        "thinking_subset": 161,
+        "total_tokens": 16791
+      },
+      "note": ""
+    },
+    {
+      "record": "C5-claude-work.json",
+      "case": "C5",
+      "profile": "claude-work",
+      "requested_model": "sonnet",
+      "requested_effort": "high",
+      "detected": [
+        "C5-D1",
+        "C5-D2",
+        "C5-D3",
+        "C5-D4",
+        "C5-D5",
+        "C5-D6"
+      ],
+      "expected": 6,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        0
+      ],
+      "duplicates": 1,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": true,
+      "automatically_usable": false,
+      "response_words": 1105,
+      "elapsed_seconds": 29.72,
+      "tokens": {
+        "input_including_cache": 5684,
+        "cached_read_input": 1662,
+        "output_including_thinking": 4141,
+        "thinking_subset": 1098,
+        "total_tokens": 9825
+      },
+      "note": "Output contains two JSON documents plus prose and 1105 whitespace-delimited words. Content recovery is for manual scoring only, never a successful machine contract. Finding 7 restates verification coverage and adds an unproven task-order concern. Its claim that reservations can change while BEGIN IMMEDIATE holds the write transaction is incorrect under the stated database locking; the network-in-transaction defect remains correct."
+    },
+    {
+      "record": "C5-antigravity.json",
+      "case": "C5",
+      "profile": "antigravity",
+      "requested_model": "gemini-3.8-flash-high",
+      "requested_effort": "high",
+      "detected": [
+        "C5-D1",
+        "C5-D2",
+        "C5-D3",
+        "C5-D4",
+        "C5-D5",
+        "C5-D6"
+      ],
+      "expected": 6,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 521,
+      "elapsed_seconds": 39.416,
+      "tokens": {
+        "input_including_cache": 12945,
+        "cached_read_input": 0,
+        "output_including_thinking": 5294,
+        "thinking_subset": 4343,
+        "total_tokens": 18239
+      },
+      "note": "All six roots are correct. The stale-quota scenario overstates execution impact: baseline M1 correctly revalidates at dispatch, so the evidence establishes a bad M2 recommendation, not that a depleted-provider call necessarily occurs."
+    },
+    {
+      "record": "C1-codex-2-luna.json",
+      "case": "C1",
+      "profile": "codex-2",
+      "requested_model": "gpt-6-luna",
+      "requested_effort": "max",
+      "detected": [
+        "C1-D1",
+        "C1-D2"
+      ],
+      "expected": 2,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        0
+      ],
+      "duplicates": 1,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 178,
+      "elapsed_seconds": 10.771,
+      "tokens": {
+        "input_including_cache": 14370,
+        "cached_read_input": 11648,
+        "output_including_thinking": 1038,
+        "thinking_subset": 696,
+        "total_tokens": 15408
+      },
+      "note": ""
+    },
+    {
+      "record": "C2-codex-2-luna.json",
+      "case": "C2",
+      "profile": "codex-2",
+      "requested_model": "gpt-6-luna",
+      "requested_effort": "max",
+      "detected": [
+        "C2-D1",
+        "C2-D2",
+        "C2-D3"
+      ],
+      "expected": 3,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 175,
+      "elapsed_seconds": 14.49,
+      "tokens": {
+        "input_including_cache": 14927,
+        "cached_read_input": 11648,
+        "output_including_thinking": 1379,
+        "thinking_subset": 1057,
+        "total_tokens": 16306
+      },
+      "note": ""
+    },
+    {
+      "record": "C1-claude-work-haiku55.json",
+      "case": "C1",
+      "profile": "claude-work",
+      "requested_model": "claude-haiku-5-5",
+      "requested_effort": "max",
+      "detected": [
+        "C1-D1",
+        "C1-D2"
+      ],
+      "expected": 2,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        0,
+        0,
+        null,
+        0
+      ],
+      "duplicates": 3,
+      "unconfirmed_concerns": 1,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 665,
+      "elapsed_seconds": 115.154,
+      "tokens": {
+        "input_including_cache": 5588,
+        "cached_read_input": 0,
+        "output_including_thinking": 27692,
+        "thinking_subset": 26010,
+        "total_tokens": 33280
+      },
+      "note": "Findings 3/4 restate tests for the two roots. Finding 5 assumes the named tenant isolation test has no foreign-tenant fixture, which is not established. Finding 6 repeats coverage and treats unspecified HTTP assertions as missing; the invalid-input tests are already named. Track these caveats without inventing additional proven defects."
+    },
+    {
+      "record": "C2-claude-work-haiku55.json",
+      "case": "C2",
+      "profile": "claude-work",
+      "requested_model": "claude-haiku-5-5",
+      "requested_effort": "max",
+      "detected": [
+        "C2-D1",
+        "C2-D2",
+        "C2-D3"
+      ],
+      "expected": 3,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3,
+        null
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 1,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 583,
+      "elapsed_seconds": 127.834,
+      "tokens": {
+        "input_including_cache": 5723,
+        "cached_read_input": 2442,
+        "output_including_thinking": 30664,
+        "thinking_subset": 29110,
+        "total_tokens": 36387
+      },
+      "note": "Finding 4 raises unspecified API deployment ordering. The task ordering and staged deployment facts do not prove the API will ship before the database migration; track as an unconfirmed plan concern. Sonnet raised the same point as an uncertainty, rather than as a finding."
+    },
+    {
+      "record": "C3-codex-2-luna.json",
+      "case": "C3",
+      "profile": "codex-2",
+      "requested_model": "gpt-6-luna",
+      "requested_effort": "max",
+      "detected": [
+        "C3-D1",
+        "C3-D2",
+        "C3-D3",
+        "C3-D4"
+      ],
+      "expected": 4,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 341,
+      "elapsed_seconds": 23.883,
+      "tokens": {
+        "input_including_cache": 15069,
+        "cached_read_input": 11648,
+        "output_including_thinking": 2740,
+        "thinking_subset": 2144,
+        "total_tokens": 17809
+      },
+      "note": ""
+    },
+    {
+      "record": "C3-claude-work-haiku55.json",
+      "case": "C3",
+      "profile": "claude-work",
+      "requested_model": "claude-haiku-5-5",
+      "requested_effort": "max",
+      "detected": [
+        "C3-D1",
+        "C3-D2",
+        "C3-D3",
+        "C3-D4"
+      ],
+      "expected": 4,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        4,
+        3,
+        null
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 1,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 711,
+      "elapsed_seconds": 201.088,
+      "tokens": {
+        "input_including_cache": 5954,
+        "cached_read_input": 2442,
+        "output_including_thinking": 48171,
+        "thinking_subset": 46230,
+        "total_tokens": 54125
+      },
+      "note": "Finding 5 raises the same unconfirmed T6-before-cutover concern as Sonnet/Gemini, adding a rollback rehearsal proposal. The predeclared defects already account for the broken rollback. The optional trigger/canary uncertainties are not counted as findings."
+    },
+    {
+      "record": "C4-codex-2-luna.json",
+      "case": "C4",
+      "profile": "codex-2",
+      "requested_model": "gpt-6-luna",
+      "requested_effort": "max",
+      "detected": [
+        "C4-D1",
+        "C4-D2",
+        "C4-D3",
+        "C4-D4",
+        "C4-D5"
+      ],
+      "expected": 5,
+      "missed": [],
+      "finding_map": [
+        4,
+        1,
+        2,
+        3,
+        5,
+        0
+      ],
+      "duplicates": 1,
+      "unconfirmed_concerns": 0,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 480,
+      "elapsed_seconds": 22.044,
+      "tokens": {
+        "input_including_cache": 14667,
+        "cached_read_input": 11648,
+        "output_including_thinking": 2346,
+        "thinking_subset": 1552,
+        "total_tokens": 17013
+      },
+      "note": ""
+    },
+    {
+      "record": "C4-claude-work-haiku55.json",
+      "case": "C4",
+      "profile": "claude-work",
+      "requested_model": "claude-haiku-5-5",
+      "requested_effort": "max",
+      "detected": [
+        "C4-D1",
+        "C4-D2",
+        "C4-D3",
+        "C4-D4",
+        "C4-D5"
+      ],
+      "expected": 5,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        5,
+        3,
+        4,
+        0,
+        null
+      ],
+      "duplicates": 1,
+      "unconfirmed_concerns": 1,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 753,
+      "elapsed_seconds": 221.553,
+      "tokens": {
+        "input_including_cache": 6140,
+        "cached_read_input": 2442,
+        "output_including_thinking": 57761,
+        "thinking_subset": 55661,
+        "total_tokens": 63901
+      },
+      "note": "Finding 6 repeats coverage for seeded roots. Finding 7 raises rollback draining and the 72-hour retry boundary; whether the disabled new worker includes the outbox dispatcher, or jobs will be retried after 72h, is not specified. Retain as an unconfirmed concern, not a false positive. The generation finding also proposes provider-path ordering beyond the demonstrated finalization defect."
+    },
+    {
+      "record": "C5-codex-2-luna.json",
+      "case": "C5",
+      "profile": "codex-2",
+      "requested_model": "gpt-6-luna",
+      "requested_effort": "max",
+      "detected": [
+        "C5-D1",
+        "C5-D2",
+        "C5-D3",
+        "C5-D4",
+        "C5-D5",
+        "C5-D6"
+      ],
+      "expected": 6,
+      "missed": [],
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        null,
+        6
+      ],
+      "duplicates": 0,
+      "unconfirmed_concerns": 1,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 539,
+      "elapsed_seconds": 30.58,
+      "tokens": {
+        "input_including_cache": 15373,
+        "cached_read_input": 11648,
+        "output_including_thinking": 3745,
+        "thinking_subset": 2815,
+        "total_tokens": 19118
+      },
+      "note": "Finding 6 correctly observes that the T5 revalidation list does not explicitly name the required budget check. This is a useful additional traceability concern outside the predeclared oracle. As with the HTTP-400 translation concern, omitted plan text does not prove an existing runtime guard is absent; retain separately from the 20 proven seeded defects, without silently expanding the frozen denominator or declaring the observation false."
+    },
+    {
+      "record": "C5-claude-work-haiku55.json",
+      "case": "C5",
+      "profile": "claude-work",
+      "requested_model": "claude-haiku-5-5",
+      "requested_effort": "max",
+      "detected": [
+        "C5-D1",
+        "C5-D2",
+        "C5-D3",
+        "C5-D4",
+        "C5-D5",
+        "C5-D6"
+      ],
+      "expected": 6,
+      "missed": [],
+      "finding_map": [
+        2,
+        1,
+        3,
+        4,
+        5,
+        6,
+        0,
+        null
+      ],
+      "duplicates": 1,
+      "unconfirmed_concerns": 1,
+      "content_recovered_only_for_manual_scoring": false,
+      "automatically_usable": true,
+      "response_words": 645,
+      "elapsed_seconds": 227.452,
+      "tokens": {
+        "input_including_cache": 6460,
+        "cached_read_input": 2442,
+        "output_including_thinking": 60310,
+        "thinking_subset": 58243,
+        "total_tokens": 66770
+      },
+      "note": "All six planted roots are found. Finding 7 duplicates their test coverage; finding 8 is the same budget traceability concern as Luna, with an explicit uncertainty about budget versus quota. Two auxiliary claims are incorrect: the contract does define fresh quota, and the baseline explicitly guarantees v1 preservation. The overwritten startup map is defective, but claiming it necessarily mutates v1 evidence contradicts that baseline."
+    }
+  ],
+  "summaries": [
+    {
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "cases": 5,
+      "detected": 20,
+      "expected": 20,
+      "automatically_usable_cases": 5,
+      "duplicates": 0,
+      "unconfirmed_concerns": 0,
+      "recall": 1.0,
+      "precision_bounds": [
+        1.0,
+        1.0
+      ],
+      "f1_bounds": [
+        1.0,
+        1.0
+      ],
+      "elapsed_seconds_sum": 110.326,
+      "tokens": {
+        "input_including_cache": 76902,
+        "cached_read_input": 61440,
+        "output_including_thinking": 4576,
+        "thinking_subset": 1025,
+        "total_tokens": 81478
+      },
+      "tokens_per_detected_defect": 4073.9,
+      "seconds_per_detected_defect": 5.52,
+      "quota_before_first": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792206224.9296045,
+        "windows": {
+          "five_hour": {
+            "used_percent": 1.0,
+            "resets_at": 1792223259.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 0.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after_last": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792206494.3115022,
+        "windows": {
+          "five_hour": {
+            "used_percent": 2.0,
+            "resets_at": 1792223259.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 0.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      }
+    },
+    {
+      "model": "sonnet",
+      "effort": "high",
+      "cases": 5,
+      "detected": 20,
+      "expected": 20,
+      "automatically_usable_cases": 4,
+      "duplicates": 3,
+      "unconfirmed_concerns": 2,
+      "recall": 1.0,
+      "precision_bounds": [
+        0.9090909090909091,
+        1.0
+      ],
+      "f1_bounds": [
+        0.9523809523809523,
+        1.0
+      ],
+      "elapsed_seconds_sum": 115.391,
+      "tokens": {
+        "input_including_cache": 25981,
+        "cached_read_input": 8310,
+        "output_including_thinking": 14864,
+        "thinking_subset": 5090,
+        "total_tokens": 40845
+      },
+      "tokens_per_detected_defect": 2042.2,
+      "seconds_per_detected_defect": 5.77,
+      "quota_before_first": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792206224.9297504,
+        "windows": {
+          "five_hour": {
+            "used_percent": 2.0,
+            "resets_at": 1792213800.260835,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 87.0,
+            "resets_at": 1792278000.260859,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after_last": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792206495.1648018,
+        "windows": {
+          "five_hour": {
+            "used_percent": 3.0,
+            "resets_at": 1792213799.573,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 87.0,
+            "resets_at": 1792277999.573018,
+            "window_minutes": 10080.0
+          }
+        }
+      }
+    },
+    {
+      "model": "gemini-3.8-flash-high",
+      "effort": "high",
+      "cases": 5,
+      "detected": 20,
+      "expected": 20,
+      "automatically_usable_cases": 5,
+      "duplicates": 5,
+      "unconfirmed_concerns": 1,
+      "recall": 1.0,
+      "precision_bounds": [
+        0.9523809523809523,
+        1.0
+      ],
+      "f1_bounds": [
+        0.975609756097561,
+        1.0
+      ],
+      "elapsed_seconds_sum": 236.387,
+      "tokens": {
+        "input_including_cache": 63222,
+        "cached_read_input": 0,
+        "output_including_thinking": 30572,
+        "thinking_subset": 26603,
+        "total_tokens": 93794
+      },
+      "tokens_per_detected_defect": 4689.7,
+      "seconds_per_detected_defect": 11.82,
+      "quota_before_first": {
+        "profile": "antigravity",
+        "status": "ok",
+        "observed_at": 1792206229.9402187,
+        "windows": {
+          "seven_day": {
+            "used_percent": 0.0,
+            "resets_at": 1792808476.0,
+            "window_minutes": 10080
+          },
+          "five_hour": {
+            "used_percent": 0.0,
+            "resets_at": 1792221676.0,
+            "window_minutes": 300
+          },
+          "seven_day_claude_gpt": {
+            "used_percent": 0.0,
+            "resets_at": 1792811029.0,
+            "window_minutes": 10080
+          },
+          "five_hour_claude_gpt": {
+            "used_percent": 0.0,
+            "resets_at": 1792224229.0,
+            "window_minutes": 300
+          }
+        }
+      },
+      "quota_after_last": {
+        "profile": "antigravity",
+        "status": "ok",
+        "observed_at": 1792206522.6962528,
+        "windows": {
+          "seven_day": {
+            "used_percent": 1.0,
+            "resets_at": 1792808476.0,
+            "window_minutes": 10080
+          },
+          "five_hour": {
+            "used_percent": 2.0,
+            "resets_at": 1792221676.0,
+            "window_minutes": 300
+          },
+          "seven_day_claude_gpt": {
+            "used_percent": 0.0,
+            "resets_at": 1792811317.0,
+            "window_minutes": 10080
+          },
+          "five_hour_claude_gpt": {
+            "used_percent": 0.0,
+            "resets_at": 1792224517.0,
+            "window_minutes": 300
+          }
+        }
+      }
+    },
+    {
+      "model": "gpt-6-luna",
+      "effort": "max",
+      "cases": 5,
+      "detected": 20,
+      "expected": 20,
+      "automatically_usable_cases": 5,
+      "duplicates": 2,
+      "unconfirmed_concerns": 1,
+      "recall": 1.0,
+      "precision_bounds": [
+        0.9523809523809523,
+        1.0
+      ],
+      "f1_bounds": [
+        0.975609756097561,
+        1.0
+      ],
+      "elapsed_seconds_sum": 101.768,
+      "tokens": {
+        "input_including_cache": 74406,
+        "cached_read_input": 58240,
+        "output_including_thinking": 11248,
+        "thinking_subset": 8264,
+        "total_tokens": 85654
+      },
+      "tokens_per_detected_defect": 4282.7,
+      "seconds_per_detected_defect": 5.09,
+      "quota_before_first": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792206555.7124639,
+        "windows": {
+          "five_hour": {
+            "used_percent": 2.0,
+            "resets_at": 1792223259.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 0.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after_last": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792207492.1214576,
+        "windows": {
+          "five_hour": {
+            "used_percent": 2.0,
+            "resets_at": 1792223259.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 0.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      }
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "effort": "max",
+      "cases": 5,
+      "detected": 20,
+      "expected": 20,
+      "automatically_usable_cases": 5,
+      "duplicates": 5,
+      "unconfirmed_concerns": 5,
+      "recall": 1.0,
+      "precision_bounds": [
+        0.8,
+        1.0
+      ],
+      "f1_bounds": [
+        0.888888888888889,
+        1.0
+      ],
+      "elapsed_seconds_sum": 893.081,
+      "tokens": {
+        "input_including_cache": 29865,
+        "cached_read_input": 9768,
+        "output_including_thinking": 224598,
+        "thinking_subset": 215254,
+        "total_tokens": 254463
+      },
+      "tokens_per_detected_defect": 12723.1,
+      "seconds_per_detected_defect": 44.65,
+      "quota_before_first": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792206792.4388626,
+        "windows": {
+          "five_hour": {
+            "used_percent": 5.0,
+            "resets_at": 1792213799.738712,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 87.0,
+            "resets_at": 1792277999.738727,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after_last": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792207688.6453023,
+        "windows": {
+          "five_hour": {
+            "used_percent": 6.0,
+            "resets_at": 1792213799.895342,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 87.0,
+            "resets_at": 1792277999.895361,
+            "window_minutes": 10080.0
+          }
+        }
+      }
+    }
+  ],
+  "precision_policy": "Unconfirmed additional concerns are not automatically false positives. Report conservative/optimistic precision and F1 bounds: the lower bound treats each as unsupported, the upper bound treats each as valid. Duplicates are excluded from both numerator and denominator. These are descriptive scores, not statistical confidence intervals. Incorrect auxiliary statements are documented separately from otherwise correct root findings.",
+  "excluded": [
+    "C1-claude-work-haiku.json",
+    "C2-claude-work-haiku.json"
+  ]
+}

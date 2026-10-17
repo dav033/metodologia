@@ -1,0 +1,19 @@
+{
+  "source": "H1-haiku finding5; post-hoc extra outside frozen oracle",
+  "checks": [
+    {
+      "precision": 28,
+      "candidate_aggregate": "0.0049999999999999999999999999",
+      "candidate_cents_after_rounding_mode_fix": 0,
+      "exact_cents": 1
+    },
+    {
+      "precision": 50,
+      "candidate_aggregate": "0.00499999999999999999999999999999999999999999999999",
+      "candidate_cents_after_rounding_mode_fix": 0,
+      "exact_cents": 1
+    }
+  ],
+  "scope": "Finite Decimal contributions rounded before aggregation; supplied sources remain unchanged. Actual configured precision is not specified.",
+  "comparison": "Sol/Sonnet raised the precision question as uncertainty; Luna/Haiku supplied concrete witnesses."
+}

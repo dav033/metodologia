@@ -1,0 +1,753 @@
+{
+  "schema_version": "1.2.0",
+  "plan_id": "REQ-CP2",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "requirements": ["R1", "R2", "R3"],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Establish migration and recovery decisions",
+      "acceptance_criteria": [
+        "A source-backed decision packet defines availability, target prerequisites, and recovery behavior or explicitly blocks dependent implementation.",
+        "No missing product decision is represented as owner approval."
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Implement compatible PostgreSQL persistence",
+      "acceptance_criteria": [
+        "Versioned PostgreSQL schema preserves persisted values and database constraints.",
+        "Asynchronous repositories and all inspected consumers preserve client contracts and revision concurrency semantics."
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Build migration and operational recovery",
+      "acceptance_criteria": [
+        "Transfer tooling verifies every table by counts and content hashes and verifies referenced asset files.",
+        "Complete PostgreSQL backups restore into isolated destinations with matching manifests.",
+        "Deployment and rollback refuse promotion without compatible storage, verified recovery artifacts, and readiness."
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Prove compatibility and rehearse recovery",
+      "acceptance_criteria": [
+        "Automated coverage exercises R1, R2, and R3 against isolated PostgreSQL.",
+        "Rehearsals produce data-integrity, availability, and recovery evidence against the recorded decision contract.",
+        "Actual production acceptance remains blocked until final-source verification and applicable decision gates are satisfied."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Specify availability and recovery gates",
+      "objective": "Produce a source-backed migration decision packet defining D1 availability and writer fencing, D2 PostgreSQL prerequisites, and D3 recovery and rollback boundaries. Prepare explicit alternatives and unresolved blockers rather than inventing decisions.",
+      "repository": "repository",
+      "after": [],
+      "covers": ["R1", "R2", "R3"],
+      "kind": "research",
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "low",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "Provisional allowance for a documented contract and inventory procedure based on the inspected persistence and deployment paths. Live size, traffic, recovery objectives, and owner decisions are unavailable; there is no comparable execution history.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Availability and rollback decisions span database transactions, asset files, sessions, and deployment.",
+          "evidence": ["file:apps/api/src/http/auth.ts", "file:apps/api/src/services/asset-service.ts", "file:ops/ec2/deploy.ps1"]
+        },
+        "scope": {
+          "justification": "The research produces one bounded migration decision document rather than runtime changes.",
+          "evidence": ["spec:SPEC.md#requirements", "file:docs/deployment.md"]
+        },
+        "duration": {
+          "justification": "The estimate covers inspecting operational boundaries and writing their decision packet, excluding implementation.",
+          "evidence": ["file:apps/api/src/backup.ts", "file:ops/ec2/rollback.ps1", "assumption:No comparable execution history or live operational inventory is available."]
+        },
+        "risk": {
+          "justification": "This task only records decisions and blockers without changing persistent state.",
+          "evidence": ["spec:SPEC.md#requirements"]
+        },
+        "coupling": {
+          "justification": "The cutover-contract resource governs later transfer, recovery, and deployment behavior.",
+          "evidence": ["task:T4", "task:T5", "task:T6"]
+        },
+        "confidence": {
+          "justification": "Repository behavior is visible but availability and recovery objectives remain unspecified.",
+          "evidence": ["file:docs/deployment.md", "assumption:D1 through D3 require future decisions and are not approved."]
+        }
+      },
+      "expected_paths": ["docs/postgresql-migration.md"],
+      "shared_resources": ["cutover-contract", "recovery-contract"],
+      "acceptance_criteria": [
+        "D1 specifies permitted read/write interruption or delay, in-flight requests, single-writer fencing, session/WebSocket continuity, and failure thresholds, or marks each unanswered item blocking.",
+        "D2 records required PostgreSQL version, connectivity, TLS, capacity, credentials delivery, and migration privileges without selecting a service or account.",
+        "D3 distinguishes PostgreSQL code rollback, database restore, and returning to SQLite after PostgreSQL writes, with RPO/RTO, retention, and rollback-window decisions or explicit blockers.",
+        "The packet recommends no loss of acknowledged writes and explains why a fenced copy alone does not prove uninterrupted availability.",
+        "A live inventory procedure records source schema, row and asset sizes, invalid records, source mutation boundary, and numeric compatibility before estimates or implementation are revised.",
+        "Continuous-write capture or durable buffering and reverse migration require an explicit design and revised decomposition before affected implementation proceeds."
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "category": "product",
+          "value": "Review docs/postgresql-migration.md against SPEC.md and the inspected persistence, authentication, backup, and deployment paths.",
+          "purpose": "Expose material product decisions before implementation.",
+          "expected": "Every D1-D3 question is either backed by a future recorded decision or explicitly blocks dependent work; no maintenance window, data-loss allowance, or external compatibility is assumed."
+        },
+        {
+          "type": "manual",
+          "category": "static",
+          "value": "Trace the proposed client behavior matrix to repository mutation branches, HTTP errors, asset operations, and WebSocket authorization.",
+          "purpose": "Ground the compatibility contract in inspected consumers.",
+          "expected": "The matrix includes stale revisions before no-op detection, unchanged timestamps on no-ops, post-commit events, and asynchronous asset compensation."
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M2",
+      "title": "Add versioned PostgreSQL storage",
+      "objective": "After the applicable T1 decisions are recorded, supply PostgreSQL connection lifecycle, explicit transactional schema migrations, readiness, and transaction primitives while preserving the SQLite schema's data and constraints.",
+      "repository": "repository",
+      "after": ["T1"],
+      "covers": ["R1", "R2", "R3"],
+      "kind": "implement",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 210,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Estimate covers the two inspected tables, connection configuration, versioned migrations, and isolated schema tests. It is not based on execution history and must be revisited for the D2 target version.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Two small tables need explicit PostgreSQL migrations and carefully preserved value representations.",
+          "evidence": ["file:apps/api/src/db/database.ts"]
+        },
+        "scope": {
+          "justification": "Storage foundations change while repository and transport behavior belongs to T3.",
+          "evidence": ["file:apps/api/src/config.ts", "file:apps/api/package.json", "task:T3"]
+        },
+        "duration": {
+          "justification": "The allowance covers connection lifecycle, schema constraints, readiness, and migration tests.",
+          "evidence": ["file:apps/api/src/db/database.ts", "file:apps/api/tsconfig.json", "assumption:PostgreSQL target prerequisites will be settled through T1."]
+        },
+        "risk": {
+          "justification": "Incorrect schema conversion could truncate values or weaken persistent data constraints.",
+          "evidence": ["file:apps/api/src/db/database.ts", "spec:SPEC.md#requirements"]
+        },
+        "coupling": {
+          "justification": "The pg-store resource supplies transactions and schema versions consumed by repositories and recovery.",
+          "evidence": ["task:T3", "task:T4", "task:T5"]
+        },
+        "confidence": {
+          "justification": "The source schema is inspected but target version and operational configuration remain pending.",
+          "evidence": ["file:apps/api/src/db/database.ts", "task:T1"]
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/db/database.ts",
+        "apps/api/src/db/migrations/**",
+        "apps/api/src/config.ts",
+        "apps/api/package.json",
+        "package-lock.json",
+        ".env.example",
+        "apps/api/test/database.test.ts"
+      ],
+      "shared_resources": ["pg-store", "schema-version-contract"],
+      "acceptance_criteria": [
+        "An explicit version ledger replaces PRAGMA user_version; migrations run transactionally under a migration lock, repeat safely, and reject unsupported newer schemas.",
+        "Both tables preserve primary keys, external_key and relative_path uniqueness, required fields, defaults, foreign keys, and asset cascade deletion.",
+        "JSON and timestamp strings remain verbatim; PostgreSQL rejects invalid JSON without JSONB normalization changing raw no-op comparisons.",
+        "Integer representations preserve source values without silent truncation and convert client-visible numbers only after safe-range checks.",
+        "Missing or invalid PostgreSQL configuration fails clearly without creating an empty SQLite fallback or exposing credentials.",
+        "Connection failures and schema mismatch fail readiness; transaction helpers roll back failures and always release connections.",
+        "SQLite remains available only for explicit migration and recovery compatibility needs."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "category": "static",
+          "value": "npm run typecheck -w @training/api",
+          "purpose": "Check PostgreSQL foundation types against the API compiler configuration."
+        },
+        {
+          "type": "command",
+          "category": "integration",
+          "value": "npm run test -w @training/api",
+          "purpose": "Exercise schema migration repeatability, newer-version rejection, constraints, rollback, and connection release against isolated PostgreSQL.",
+          "created_by": "T2"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Preserve repository and consumer behavior asynchronously",
+      "objective": "Convert repositories and every persistence consumer to awaited operations, retaining exact API results, revision ordering, file compensation, and post-commit publication. Implement only the mutation-drain and fencing contract explicitly settled in T1.",
+      "repository": "repository",
+      "after": ["T2"],
+      "covers": ["R2", "R3"],
+      "kind": "implement",
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 420,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "The estimate covers the short repositories and their HTTP, lifecycle, asset, and WebSocket consumers with focused tests. D1 may materially change mutation coordination; its mechanism must be specified and this task revised before execution if necessary. No measured precedent is available.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Promise conversion changes transaction concurrency, HTTP completion, WebSocket authorization, and asset failure compensation.",
+          "evidence": ["file:apps/api/src/app.ts", "file:apps/api/src/ws/server.ts", "file:apps/api/src/services/asset-service.ts"]
+        },
+        "scope": {
+          "justification": "Every inspected runtime persistence consumer must change alongside both repositories.",
+          "evidence": ["file:apps/api/src/server.ts", "file:apps/api/src/repositories/project-repository.ts", "file:apps/api/src/repositories/asset-repository.ts"]
+        },
+        "duration": {
+          "justification": "The estimate includes asynchronous propagation and focused concurrency and rejection tests across consumers.",
+          "evidence": ["file:apps/api/test/repository.test.ts", "file:apps/api/src/app.ts", "assumption:D1 mutation coordination may require revised scope."]
+        },
+        "risk": {
+          "justification": "Missing awaits or non-atomic revisions can acknowledge failed writes or overwrite client data.",
+          "evidence": ["file:apps/api/src/repositories/project-repository.ts", "file:apps/web/hooks/use-project-sync.ts"]
+        },
+        "coupling": {
+          "justification": "The pg-store and cutover-contract resources connect runtime writes to migration and consistent recovery.",
+          "evidence": ["task:T2", "task:T4", "task:T5", "task:T6"]
+        },
+        "confidence": {
+          "justification": "Existing call sites are known but the availability-preserving drain protocol remains decision-gated.",
+          "evidence": ["file:apps/api/src/server.ts", "file:apps/api/src/http/auth.ts", "task:T1"]
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/repositories/project-repository.ts",
+        "apps/api/src/repositories/asset-repository.ts",
+        "apps/api/src/services/asset-service.ts",
+        "apps/api/src/app.ts",
+        "apps/api/src/server.ts",
+        "apps/api/src/ws/server.ts",
+        "apps/api/src/db/write-barrier.ts",
+        "apps/api/test/repository.test.ts",
+        "apps/api/test/async-consumers.test.ts"
+      ],
+      "shared_resources": ["pg-store", "cutover-contract", "api-v1-contract", "asset-files"],
+      "acceptance_criteria": [
+        "All repository calls, readiness checks, asset operations, WebSocket existence checks, startup, and shutdown await completion and propagate failures through the existing observable error contracts.",
+        "Each mutation uses one checked-out transaction connection and serializes competing external-key operations, including absent-key create/import races.",
+        "Missing import with expectedRevision other than zero returns conflict at revision zero; existing imports and updates check expectedRevision before no-op detection.",
+        "Changed writes increment revision exactly once; no-ops preserve revision and updatedAt; two changed writes with the same expected revision yield one success and one conflict with the committed revision.",
+        "Identifiers, timestamps, list ordering by updated_at descending, snapshot shapes, import flags, 404/400/409/500 envelopes, and browser versus MCP event sources remain compatible with inspected behavior.",
+        "Revision and deletion events follow successful persistence completion; failed writes publish no success events, and no-op updates/imports publish no revision event.",
+        "Asset insertion rejection removes its newly written file after the awaited database failure; path checks, byte validation, URLs, file responses, and successful project deletion behavior remain intact.",
+        "The T1-approved mutation barrier covers admitted database and asset mutations, drains before a consistency boundary, and resumes or aborts according to that contract; no unapproved maintenance behavior is introduced."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "category": "static",
+          "value": "npm run typecheck",
+          "purpose": "Detect asynchronous signature mismatches across workspace consumers."
+        },
+        {
+          "type": "command",
+          "category": "functional",
+          "value": "npm run test -w @training/api",
+          "purpose": "Verify revision ordering, concurrent mutation outcomes, awaited failures, asset compensation, and commit-before-event behavior.",
+          "created_by": "T3"
+        },
+        {
+          "type": "manual",
+          "category": "regression",
+          "value": "Compare the asynchronous call graph with app.ts, server.ts, asset-service.ts, ws/server.ts, and the T1 client matrix.",
+          "purpose": "Find missed synchronous consumers that compilation alone may not expose.",
+          "expected": "No response serializes a Promise, no WebSocket upgrade bypasses awaited existence checks, and no shutdown closes storage before admitted operations finish."
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M3",
+      "title": "Build verified SQLite data transfer",
+      "objective": "Produce a non-destructive SQLite-to-PostgreSQL transfer and verification tool using T2 storage and T3 repository reads, with an explicit final source boundary before any target is eligible for promotion.",
+      "repository": "repository",
+      "after": ["T3"],
+      "covers": ["R1"],
+      "kind": "implement",
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 300,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "Allowance covers two-table transfer, deterministic manifests, asset validation, and interrupted-transfer tests. Data volume and D1 reconciliation mechanism are unknown; throughput and production duration cannot be estimated from this sandbox.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Transfer correctness requires a stable source boundary and exact cross-store value verification.",
+          "evidence": ["file:apps/api/src/db/database.ts", "file:apps/api/src/repositories/project-repository.ts", "task:T1"]
+        },
+        "scope": {
+          "justification": "A dedicated transfer tool handles the existing two tables and asset inventory.",
+          "evidence": ["file:apps/api/src/repositories/asset-repository.ts", "file:apps/api/src/services/asset-service.ts"]
+        },
+        "duration": {
+          "justification": "The estimate covers transfer mechanics and mismatch fixtures without assuming live migration throughput.",
+          "evidence": ["file:apps/api/test/repository.test.ts", "assumption:Source row counts and asset sizes are unknown."]
+        },
+        "risk": {
+          "justification": "A stale snapshot or lossy representation would violate the requirement to migrate all data.",
+          "evidence": ["spec:SPEC.md#requirements", "file:apps/api/src/db/database.ts"]
+        },
+        "coupling": {
+          "justification": "The migration-manifest resource is consumed by recovery, deployment, and integrated acceptance.",
+          "evidence": ["task:T5", "task:T6", "task:T7", "task:T8"]
+        },
+        "confidence": {
+          "justification": "Source columns are known but live validity and write-continuity decisions remain unverified.",
+          "evidence": ["file:apps/api/src/db/database.ts", "task:T1", "assumption:No live source inventory has been collected."]
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/migrate-sqlite.ts",
+        "apps/api/src/db/content-manifest.ts",
+        "apps/api/test/migration.test.ts"
+      ],
+      "shared_resources": ["pg-store", "cutover-contract", "migration-manifest", "asset-files"],
+      "acceptance_criteria": [
+        "The source is opened read-only or copied through a consistent SQLite snapshot without running openDatabase auto-migrations against original data.",
+        "Preflight rejects unsupported source versions, constraint violations, invalid JSON, unsafe numeric conversions, and missing or mismatched referenced asset files without silently repairing or dropping records.",
+        "Projects load before assets into an isolated migration target, preserving all stored columns, identifiers, external keys, revisions, raw JSON strings, timestamp strings, and relative paths.",
+        "Counts and per-row SHA-256 hashes use an explicit column order and typed length-delimited UTF-8 encoding; table hashes use rows ordered by primary key under defined byte ordering.",
+        "The report includes both tables' counts, per-row and aggregate content hashes, source/schema identity, and asset paths, sizes, and SHA-256 checksums without logging project payloads.",
+        "A nonempty unrelated target, interrupted load, or any count/hash/file mismatch fails nonzero and leaves the authoritative source unchanged; rerun uses explicit isolated retry state and cannot silently duplicate rows.",
+        "Repository snapshots from the target match the source fixtures, and target promotion requires final D1 reconciliation or fencing evidence proving no acknowledged source writes were omitted."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "category": "integration",
+          "value": "npm run test -w @training/api",
+          "purpose": "Verify exact transfer, deterministic hashes, asset integrity, mismatch rejection, and interrupted retry behavior.",
+          "created_by": "T4"
+        },
+        {
+          "type": "manual",
+          "category": "product",
+          "value": "Review the transfer manifest and final-boundary evidence requirements against D1.",
+          "purpose": "Prevent treating an initial snapshot as proof that all live data migrated.",
+          "expected": "Promotion is blocked until counts and hashes describe the final authoritative source boundary and satisfy the recorded availability contract."
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M3",
+      "title": "Implement consistent PostgreSQL backup and restore",
+      "objective": "Replace SQLite backup assumptions with a complete PostgreSQL-and-assets backup format and isolated restore workflow that reuse T4 content verification and satisfy the T1 recovery contract.",
+      "repository": "repository",
+      "after": ["T4"],
+      "covers": ["R1", "R3"],
+      "kind": "implement",
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 300,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "Estimate covers dump orchestration, asset consistency, complete manifests, isolated restore, and corruption tests. RPO/RTO, retention, target version, and post-cutover SQLite fallback remain gated by T1; no comparable measurements exist.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Database snapshots and mutable asset files need one explicit recoverable consistency boundary.",
+          "evidence": ["file:apps/api/src/backup.ts", "file:apps/api/src/services/asset-service.ts"]
+        },
+        "scope": {
+          "justification": "Backup and restore tooling change while deployment activation remains owned by T6.",
+          "evidence": ["file:apps/api/src/backup.ts", "task:T6"]
+        },
+        "duration": {
+          "justification": "The allowance includes manifest completion, isolated restore, and partial-backup failure handling.",
+          "evidence": ["file:apps/api/src/backup.ts", "task:T4", "assumption:Live backup sizes and recovery timings are unavailable."]
+        },
+        "risk": {
+          "justification": "An apparently valid but inconsistent backup can permanently lose database or asset content.",
+          "evidence": ["spec:SPEC.md#requirements", "file:apps/api/src/backup.ts"]
+        },
+        "coupling": {
+          "justification": "The recovery-contract consumes migration-manifest hashes and supplies guarded recovery to deployment.",
+          "evidence": ["task:T4", "task:T6", "task:T8"]
+        },
+        "confidence": {
+          "justification": "Existing backup gaps are inspected but recovery objectives and fallback policy remain unresolved.",
+          "evidence": ["file:apps/api/src/backup.ts", "file:ops/ec2/rollback.ps1", "task:T1"]
+        }
+      },
+      "expected_paths": [
+        "apps/api/src/backup.ts",
+        "apps/api/src/restore.ts",
+        "apps/api/test/recovery.test.ts"
+      ],
+      "shared_resources": ["pg-store", "migration-manifest", "recovery-contract", "asset-files", "cutover-contract"],
+      "acceptance_criteria": [
+        "Backup uses compatible PostgreSQL dump tooling and the T1-approved boundary excluding asset creation/deletion races across all writers while keeping availability within D1.",
+        "Each complete artifact contains database dump, required assets, content manifest, release identifier, and schema/version metadata; checksums cover every payload file and a completion marker is written last.",
+        "Dump, copy, checksum, disk, or subprocess failure produces nonzero failure and never publishes a partial directory as a usable backup; mutation coordination is safely released.",
+        "Restore validates checksums and version compatibility before modifying an isolated destination, restores database and assets, and compares table counts, content hashes, constraints, and file checksums before promotion eligibility.",
+        "Recovery leaves the currently authoritative store untouched until validated promotion and preserves the failed candidate for diagnosis without leaking credentials or project content.",
+        "PostgreSQL code rollback and data restore have separate preconditions; returning to SQLite after new PostgreSQL writes is blocked unless D3 supplies a verified lossless reverse-transfer design.",
+        "Retention and recovery timing criteria are implemented only from recorded D3 decisions; the task does not invent an RPO, RTO, or deletion policy."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "category": "integration",
+          "value": "npm run test -w @training/api",
+          "purpose": "Exercise backup-to-restore equality and reject missing assets, corrupted dumps/checksums, incomplete artifacts, and incompatible schemas.",
+          "created_by": "T5"
+        },
+        {
+          "type": "manual",
+          "category": "product",
+          "value": "Review backup and recovery state transitions against D1 and D3.",
+          "purpose": "Check recovery completeness beyond a successful dump command.",
+          "expected": "Each rollback state identifies its authoritative store, accepted writes, asset boundary, validation requirements, and a fail-closed path when lossless recovery is unavailable."
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M3",
+      "title": "Integrate guarded deployment and rollback",
+      "objective": "Wire the PostgreSQL runtime and T4-T5 tooling into configuration, container packaging, preflight, deployment, and rollback without activating any release in this planning session.",
+      "repository": "repository",
+      "after": ["T5"],
+      "covers": ["R1", "R2", "R3"],
+      "kind": "implement",
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 270,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "Estimate covers inspected EC2 scripts, image packaging, environment examples, and guarded state transitions. Actual target topology and availability mechanism must be settled first; infrastructure execution and rollout duration remain unknown.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Deployment must coordinate old-store backup, target validation, writer handover, and routing failures.",
+          "evidence": ["file:ops/ec2/deploy.ps1", "file:ops/ec2/compose.yml", "file:ops/ec2/rollback.ps1"]
+        },
+        "scope": {
+          "justification": "Container packaging, environment configuration, and multiple operational scripts change together.",
+          "evidence": ["file:apps/api/Dockerfile", "file:.env.example", "file:ops/ec2/preflight.ps1"]
+        },
+        "duration": {
+          "justification": "The allowance covers script guards and packaging work but excludes unknown infrastructure provisioning.",
+          "evidence": ["file:ops/ec2/deploy.ps1", "file:apps/api/Dockerfile", "assumption:D2 target infrastructure is not supplied in this cell."]
+        },
+        "risk": {
+          "justification": "Incorrect release or storage switching can interrupt service or reactivate stale data.",
+          "evidence": ["file:ops/ec2/deploy.ps1", "file:ops/ec2/rollback.ps1", "spec:SPEC.md#requirements"]
+        },
+        "coupling": {
+          "justification": "The cutover-contract and recovery-contract resources must agree with transfer and backup outputs.",
+          "evidence": ["task:T1", "task:T4", "task:T5", "task:T8"]
+        },
+        "confidence": {
+          "justification": "Current release scripts are visible but target networking and continuity requirements remain unknown.",
+          "evidence": ["file:ops/ec2/compose.yml", "file:docs/deployment.md", "task:T1"]
+        }
+      },
+      "expected_paths": [
+        "apps/api/Dockerfile",
+        ".env.example",
+        "ops/ec2/compose.yml",
+        "ops/ec2/preflight.ps1",
+        "ops/ec2/deploy.ps1",
+        "ops/ec2/rollback.ps1",
+        "docs/deployment.md",
+        "docs/architecture.md"
+      ],
+      "shared_resources": ["pg-store", "cutover-contract", "recovery-contract", "migration-manifest", "deployment-layout"],
+      "acceptance_criteria": [
+        "Configuration and packaging support the recorded D2 target and matching PostgreSQL backup/restore utilities while retaining asset and backup persistence.",
+        "PostgreSQL credentials are supplied through the existing protected configuration boundary, omitted from logs and artifacts, and no database port is made public implicitly.",
+        "Preflight checks target connectivity, required schema/client versions, source identity, storage capacity, backup destination, and recorded D1-D3 gates before activation.",
+        "Deployment backs up the currently running source with compatible tooling rather than assuming the incoming PostgreSQL release can back up SQLite.",
+        "The handover sequence enforces the agreed single-writer boundary, final transfer verification, readiness, routing switch, and resumption order; a failed prerequisite prevents promotion.",
+        "Rollback distinguishes compatible PostgreSQL releases from SQLite-only releases and refuses stale SQLite fallback after PostgreSQL writes without verified reconciliation.",
+        "Failed post-switch readiness triggers the recorded recovery state machine without claiming that changing the current symlink restores data.",
+        "Existing private API exposure, shared asset paths, and unrelated stack services remain preserved; the scripts make no unsupported claim of uninterrupted sessions or WebSockets."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "category": "static",
+          "value": "npm run build -w @training/api",
+          "purpose": "Verify that runtime, migration, backup, and restore TypeScript entrypoints compile for container packaging."
+        },
+        {
+          "type": "manual",
+          "category": "static",
+          "value": "Review rendered isolated deployment configuration and each deploy/rollback failure branch against D1-D3.",
+          "purpose": "Check operational guards and packaging that TypeScript compilation does not exercise.",
+          "expected": "No activation precedes backup, final verification, and readiness; required utilities and volumes exist, and incompatible rollback fails before routing or writer changes."
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M4",
+      "title": "Add persistence compatibility and failure coverage",
+      "objective": "Extend the repository's node:test harness with real PostgreSQL concurrency, HTTP/WebSocket, migration, and recovery coverage that proves the implemented cross-task contracts rather than assuming sequential SQLite tests are sufficient.",
+      "repository": "repository",
+      "after": ["T6"],
+      "covers": ["R1", "R2", "R3"],
+      "kind": "test",
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 360,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Estimate covers isolated fixtures, two-connection race tests, HTTP/WebSocket assertions, and operational failure scenarios using the existing test script. The existing test surface is small; no comparable execution history supports a measured estimate.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Concurrent writers and failure ordering require integration assertions beyond the existing sequential revision test.",
+          "evidence": ["file:apps/api/test/repository.test.ts", "file:apps/api/src/ws/server.ts", "file:apps/api/src/app.ts"]
+        },
+        "scope": {
+          "justification": "Coverage spans runtime compatibility, data transfer, and recovery across several focused test files.",
+          "evidence": ["file:apps/api/package.json", "task:T3", "task:T4", "task:T5", "task:T6"]
+        },
+        "duration": {
+          "justification": "The estimate includes shared isolated fixtures and focused concurrency and corruption scenarios.",
+          "evidence": ["file:apps/api/test/repository.test.ts", "file:packages/contracts/test/project.test.ts"]
+        },
+        "risk": {
+          "justification": "False-positive integration tests could conceal functional regressions despite isolated test data.",
+          "evidence": ["file:apps/api/test/repository.test.ts", "spec:SPEC.md#requirements"]
+        },
+        "coupling": {
+          "justification": "The tests consume pg-store, API, migration-manifest, recovery, and deployment contracts together.",
+          "evidence": ["task:T2", "task:T3", "task:T4", "task:T5", "task:T6"]
+        },
+        "confidence": {
+          "justification": "Existing test commands and client contracts are inspected but new integration fixtures remain unbuilt.",
+          "evidence": ["file:apps/api/package.json", "file:apps/web/lib/api/client.ts", "file:packages/contracts/src/project.ts"]
+        }
+      },
+      "expected_paths": [
+        "apps/api/test/**",
+        "apps/api/package.json",
+        "docs/postgresql-migration.md"
+      ],
+      "shared_resources": ["pg-store", "api-v1-contract", "migration-manifest", "recovery-contract", "deployment-layout"],
+      "acceptance_criteria": [
+        "Tests use isolated PostgreSQL databases and at least two independent connections for conflicting writes; required acceptance runs fail rather than silently skip when PostgreSQL is unavailable.",
+        "Create, lookup, list, update, no-op, delete, and import tests assert identifiers, timestamps, raw-data behavior, import flags, and exact client-visible status/error contracts.",
+        "Concurrency tests cover stale changed and stale no-op writes, simultaneous external-key create/import, deletion races, rollback after failure, and one revision increment per successful changed write.",
+        "HTTP and WebSocket tests assert authenticated existence checks, post-commit revision visibility, no event on failed/no-op writes, expected event source, and readiness failures.",
+        "Asset tests cover upload/download/delete, invalid bytes, database rejection compensation, file paths, and backup races involving asset mutation.",
+        "Migration and recovery tests cover empty and populated stores, Unicode and raw JSON preservation, missing/corrupt assets, interrupted transfer, target collisions, corrupt backups, schema mismatch, and exact restored counts/hashes.",
+        "Operational failure tests prove that invalid manifests, failed readiness, or incompatible rollback prevent activation; tests use isolated substitutes and never contact the deployment host.",
+        "Inspected browser behavior is covered by protocol assertions without claiming compatibility of the absent external MCP repository."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "category": "integration",
+          "value": "npm run test -w @training/api",
+          "purpose": "Run the PostgreSQL compatibility, concurrency, transfer, recovery, and isolated operational failure matrix.",
+          "created_by": "T7"
+        },
+        {
+          "type": "command",
+          "category": "regression",
+          "value": "npm run test -w @training/contracts",
+          "purpose": "Retain existing project import validation behavior."
+        },
+        {
+          "type": "command",
+          "category": "static",
+          "value": "npm run typecheck",
+          "purpose": "Check workspace source types after persistence and test-harness integration."
+        },
+        {
+          "type": "manual",
+          "category": "static",
+          "value": "Review test assertions, isolated resource cleanup, and required database setup.",
+          "purpose": "Account for API tests being outside the existing production TypeScript include set.",
+          "expected": "Tests execute through the inspected tsx/node:test script, assertions check observable outcomes, and fixture cleanup cannot target live databases or asset directories."
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M4",
+      "title": "Rehearse cutover and recovery acceptance",
+      "objective": "Produce an isolated end-to-end cutover and recovery acceptance packet using the completed tooling, preserving unresolved gates and explicitly defining the final-source evidence required before any separately authorized production promotion.",
+      "repository": "repository",
+      "after": ["T7"],
+      "covers": ["R1", "R2", "R3"],
+      "kind": "audit",
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 240,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "Provisional allowance for isolated rehearsals and evidence review, not production rollout or migration throughput. Data volume, availability thresholds, and RPO/RTO are unknown and require T1 decisions before this estimate is reliable.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The rehearsal must reconcile data integrity, client continuity, and multiple recovery states.",
+          "evidence": ["spec:SPEC.md#requirements", "file:apps/web/hooks/use-project-sync.ts", "file:ops/ec2/rollback.ps1"]
+        },
+        "scope": {
+          "justification": "This audit produces a bounded acceptance packet using completed implementation artifacts.",
+          "evidence": ["task:T4", "task:T5", "task:T6", "task:T7"]
+        },
+        "duration": {
+          "justification": "The estimate covers isolated scenario execution and evidence review rather than unknown live transfer time.",
+          "evidence": ["file:docs/deployment.md", "assumption:Production data size and recovery targets are unavailable."]
+        },
+        "risk": {
+          "justification": "An incomplete rehearsal can mislead a later rollout decision despite isolated execution.",
+          "evidence": ["spec:SPEC.md#requirements", "file:ops/ec2/deploy.ps1"]
+        },
+        "coupling": {
+          "justification": "The acceptance packet integrates cutover-contract, migration-manifest, recovery-contract, and API behavior.",
+          "evidence": ["task:T1", "task:T4", "task:T5", "task:T6", "task:T7"]
+        },
+        "confidence": {
+          "justification": "Acceptance thresholds and representative live inventory remain unavailable until the decision gates resolve.",
+          "evidence": ["task:T1", "assumption:No live availability or recovery measurements exist in this sandbox."]
+        }
+      },
+      "expected_paths": [
+        "docs/postgresql-migration.md",
+        "docs/deployment.md",
+        "docs/postgresql-rehearsal.md"
+      ],
+      "shared_resources": [
+        "pg-store",
+        "cutover-contract",
+        "migration-manifest",
+        "recovery-contract",
+        "api-v1-contract",
+        "deployment-layout",
+        "asset-files"
+      ],
+      "acceptance_criteria": [
+        "D1-D3 and source-inventory prerequisites are recorded before rehearsals are treated as acceptance evidence; unresolved decisions remain explicit blockers.",
+        "An isolated populated SQLite source migrates to PostgreSQL with matching project and asset counts, every row hash, and referenced asset-file checksums.",
+        "Writes and asset uploads/deletions during handover follow the settled single-writer protocol, with no lost acknowledged writes and availability/session/WebSocket behavior compared against D1.",
+        "Interrupted migration, database outage, failed readiness, and failed promotion preserve or recover the correct authoritative writer without activating an unverified target.",
+        "Backup restore and rollback before and after PostgreSQL accepts writes are rehearsed; unsupported SQLite fallback is demonstrably blocked rather than losing accepted writes.",
+        "Observed restore times and recovery results are reported with environment and data-size context and compared with D3 without inventing measurements.",
+        "The packet distinguishes automated checks, isolated product evidence, external-consumer unknowns, and missing production evidence.",
+        "Any future production completion requires separately authorized execution plus final authoritative-source counts/hashes, asset verification, availability evidence, and tested recovery artifacts; fixture success is not recorded as migration of all existing live data."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "category": "integration",
+          "value": "npm run test -w @training/api",
+          "purpose": "Confirm the integrated acceptance suite before isolated operational rehearsals.",
+          "created_by": "T7"
+        },
+        {
+          "type": "manual",
+          "category": "product",
+          "value": "Execute the documented cutover, interruption, backup/restore, and rollback scenarios only in an isolated environment and review their evidence packet.",
+          "purpose": "Evaluate R1-R3 against explicit operational decisions rather than treating unit-test success as product acceptance.",
+          "expected": "Data and assets reconcile at the final boundary, acknowledged writes survive, measured continuity and recovery meet recorded targets, and failures or unresolved gates block later promotion."
+        }
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "IF-1",
+      "title": "PostgreSQL storage and asynchronous persistence",
+      "owner": "API persistence boundary",
+      "producer_task": "T2",
+      "consumer_tasks": ["T3", "T4", "T5", "T7"],
+      "integration_task": "T7",
+      "inputs": [
+        "Recorded PostgreSQL configuration and supported schema version",
+        "Parameterized queries and transaction callbacks"
+      ],
+      "outputs": [
+        "Awaitable query and transaction operations with checked connection release",
+        "Versioned projects/assets schema and readiness result"
+      ],
+      "invariants": [
+        "A transaction uses one checked-out connection and rolls back on failure.",
+        "JSON text, timestamp strings, identifiers, and numeric values are not silently normalized or truncated.",
+        "Unknown schema versions and unavailable storage fail closed without SQLite fallback."
+      ],
+      "integration_criteria": [
+        "Repositories, transfer, and recovery use the same version and value representation.",
+        "Concurrent mutation, rollback, readiness, and connection-release tests pass in isolated PostgreSQL."
+      ]
+    },
+    {
+      "id": "IF-2",
+      "title": "Verified transfer content manifest",
+      "owner": "Migration verification format",
+      "producer_task": "T4",
+      "consumer_tasks": ["T5", "T6", "T7", "T8"],
+      "integration_task": "T8",
+      "inputs": [
+        "Consistent source identity and final mutation boundary",
+        "Explicit ordered project/asset columns and referenced asset files"
+      ],
+      "outputs": [
+        "Per-table counts, per-row SHA-256 hashes, and aggregate content hashes",
+        "Asset path, size, and checksum inventory with schema and source identity"
+      ],
+      "invariants": [
+        "Hash encoding is typed and length-delimited with fixed columns and primary-key byte ordering.",
+        "Raw JSON strings, timestamps, revisions, and all persisted metadata participate in verification.",
+        "Any mismatch or unreconciled source write prevents promotion."
+      ],
+      "integration_criteria": [
+        "Transfer and restored-store manifests compare exactly for the same consistency boundary.",
+        "Corruption, missing files, stale boundaries, and unsupported source versions produce explicit failure."
+      ]
+    },
+    {
+      "id": "IF-3",
+      "title": "Complete backup and guarded recovery",
+      "owner": "Persistence recovery boundary",
+      "producer_task": "T5",
+      "consumer_tasks": ["T6", "T7", "T8"],
+      "integration_task": "T8",
+      "inputs": [
+        "D1 mutation-consistency protocol and D3 recovery decisions",
+        "Authoritative store, asset directory, release identity, and schema version"
+      ],
+      "outputs": [
+        "Completed backup containing dump, assets, metadata, and payload checksums",
+        "Isolated validated restore candidate and explicit promotion eligibility"
+      ],
+      "invariants": [
+        "Partial or incompatible backups cannot become eligible for restore promotion.",
+        "Database and assets describe the same recoverable mutation boundary.",
+        "Code rollback does not imply data rollback.",
+        "Returning to SQLite after PostgreSQL writes requires verified reconciliation and cannot use a stale source silently."
+      ],
+      "integration_criteria": [
+        "Deployment obtains a compatible complete backup before switching stores or releases.",
+        "Restore equality and failure rehearsals preserve acknowledged writes and satisfy recorded recovery thresholds."
+      ]
+    }
+  ]
+}

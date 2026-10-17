@@ -1,0 +1,994 @@
+{
+  "schema_version": 1,
+  "case": "E5",
+  "route": {
+    "id": "sonnet",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "1ca2ecc212cdbfefa7df6fb34fa4560da6ceb895360043c7c8ddd2d4e21d2c36",
+  "prompt_characters": 3502,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248426.6502564,
+    "windows": {
+      "five_hour": {
+        "used_percent": 20.0,
+        "resets_at": 1792262399.911507,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792277999.911527,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248427.04792,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-sonnet-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "plan",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "answer": {
+    "case": "E5",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "The floor is computed in `_tier_floor`; `_tier_for` returns only its first element. It starts from `bt_agents.start_tier`. Architecture is true when complexity is `extreme` or scope is `full_system`, and that gives TOP (2). Complexity `high` or `extreme` passes router complexity \"L\", which gives tier 1 for non-architecture work. Scope `large_change` or `full_feature` raises the floor to at least 1. Coupling `medium` or `high` raises it to at least 1. Duration of 120 minutes or more gives at least 1, and 240 or more gives TOP. Risk `high` gives TOP. Risk `medium` has no branch, so it does not raise the tier by itself. Audit kind has a floor of 1 through `KIND_TIER`. The test asserts that low-complexity, medium-risk work stays at `(0, ('kind:implement',))`. It asserts that each other factor raises the floor as described.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_tier_floor",
+            "start_line": 80,
+            "end_line": 111
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "start_tier",
+            "start_line": 89,
+            "end_line": 94
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "KIND_TIER",
+            "start_line": 63,
+            "end_line": 63
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_sources.py",
+            "symbol": "test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion",
+            "start_line": 45,
+            "end_line": 64
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "`_candidate_rows` takes the authorized pool from `pool_for` and computes the tier floor. For each profile it calls `_route_options`, which lists the configured (model, effort) rungs from the floor up to TOP for that provider. It then builds one `Candidate` per option. The `route_id` is `candidate_route_id`, a SHA-256 of provider, model, profile and effort. The `account_ref` is `account_reference(account_key(profile, provider))`, a hash of the legacy key. That key is the provider plus the profile's sorted env overlay. So account identity is not just a provider name. It is a hash of the provider and env-derived key, and it is separate from the profile id. `pool_for` deduplicates by `_pool_account_identity`, which uses the provider, the normalized account env variables and default directories. The candidate's `account_ref` itself comes from the env-overlay key, not from that identity function.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_candidate_rows",
+            "start_line": 220,
+            "end_line": 261
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_route_options",
+            "start_line": 135,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/identity.py",
+            "symbol": "candidate_route_id",
+            "start_line": 61,
+            "end_line": 69
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "account_key",
+            "start_line": 187,
+            "end_line": 196
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "_pool_account_identity",
+            "start_line": 199,
+            "end_line": 212
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "pool_for",
+            "start_line": 225,
+            "end_line": 256
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "`plan_full_dag` calls the injected `refresh_quota`, which is `refresh_quota_preflight` and then `refresh(project, 32)`. `refresh` groups the pool's profiles by `bt_agents._pool_account_identity`. If that fails, it falls back to (provider, account_key). A group's first profile is the leader, and the leader's row is copied to every alias in the group. If there are more than 32 groups, it returns `{\"*\": unavailable, preflight_account_limit_exceeded}` without polling. Only the claude and codex leaders go to `bt_subscriptions.poll`. Antigravity groups share one `bt_agy.refresh()` result. Refresh is not always forced. `poll` dedupes by identity again. For each identity it calls `_reserve`, which returns None, so that account is skipped, when `now` is before the last attempt plus `MIN_POLL_SECONDS` (3480 s). It also skips on `retry_at` and on a `manual_challenge` status. Reads run sequentially, once per account, with no model calls. A poll exception marks every row `refresh_failed`. Tests assert the 32-account cap, no polling when it is exceeded, and that 40 aliases over two identities poll only `[\"alias-0\", \"alias-20\"]`.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 11,
+            "end_line": 80
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 82,
+            "end_line": 108
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "refresh_quota_preflight",
+            "start_line": 60,
+            "end_line": 66
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "poll",
+            "start_line": 119,
+            "end_line": 143
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "_reserve",
+            "start_line": 100,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "MIN_POLL_SECONDS",
+            "start_line": 15,
+            "end_line": 18
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_quota_preflight.py",
+            "symbol": "test_limit_counts_effective_accounts_after_alias_deduplication",
+            "start_line": 95,
+            "end_line": 106
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "Unsupported sources are dropped at two points. `_route_options` returns no options for a provider not in `PROVIDERS`, and `_candidate_rows` skips that profile. `_candidate_reasons` then excludes a candidate for any of these: unauthorized profile; `source_status` other than available (including unknown, quota_exhausted and auth_invalid); blocking source codes (capacity_unknown, capacity_exhausted, cooldown_active); `auth_status` other than valid; `runtime_status` other than available; `quota_status` of stale, exhausted or unknown. `_usage_facts` and `_apply_preflight` produce those statuses. `_usage_facts` sets exhausted at 100% pressure or when an exhaustion time lies in the future. `_apply_preflight` forces quota to unknown when preflight is not available. Quality cannot bypass this. `rank_with_route_policy` calls `rank_candidates` first and applies quality floors and objectives only to `ranking.eligible`. It returns no_hard_eligible_route if that list is empty. A test asserts that hard-excluded routes stay excluded.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_candidate_reasons",
+            "start_line": 176,
+            "end_line": 194
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 245,
+            "end_line": 274
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_usage_facts",
+            "start_line": 47,
+            "end_line": 77
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_apply_preflight",
+            "start_line": 63,
+            "end_line": 73
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_route_options",
+            "start_line": 135,
+            "end_line": 139
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_policy.py",
+            "symbol": "test_quality_floor_requires_correlated_history_and_minimum_samples",
+            "start_line": 129,
+            "end_line": 148
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "Quality ranks routes only after hard eligibility, and only when `_quality_objective_is_comparable` returns True for all remaining eligible routes. That function requires `_quality_interval` to be non-None for every route. `_quality_interval` requires the assessment to have the current API version and the same route_id, and to name a known `selected_level`. It requires `minimum_verified_samples` at or above the policy minimum, and exactly one measurement at the selected level. It also requires `source_quality=='observed'`, `verified_samples` at or above the minimum, successes plus failures equal to samples, and a finite 95% interval within 0..1 with lower at most upper. The policy config rejects a minimum below `MIN_VERIFIED_SAMPLES`. All routes must also share one `selected_level`. If so, the key is (0, -lower bound, interval width). Otherwise the quality key is constant (0,0,0). A configured floor excludes routes whose interval is missing or whose lower bound is below the floor. Tests: different context levels disable comparison, and unmeasured routes are not penalized.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_quality_interval",
+            "start_line": 311,
+            "end_line": 332
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_quality_objective_is_comparable",
+            "start_line": 335,
+            "end_line": 346
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_route_objective_key",
+            "start_line": 349,
+            "end_line": 356
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "RoutePolicyConfig",
+            "start_line": 127,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_policy.py",
+            "symbol": "test_different_context_levels_disable_cross_route_quality_comparison",
+            "start_line": 180,
+            "end_line": 197
+          }
+        ]
+      },
+      {
+        "id": "Q6",
+        "answer": "`_route_objective_key` sorts by this tuple. First comes the constant quality key, so it has no effect. Then quota pressure: the maximum used_percent across evidence windows, or else `candidate.quota_used_percent`, or infinity. Then duration: evidence duration, else the measured median when there are duration samples, else infinity. Then relative cost. Then `reserved_for_higher_risk`. Then `not reset_soon`: a window at the limiting pressure that resets within the reset window sorts earlier. Then baseline_rank (None last), then route_id. Cost counts only when `cost_is_comparable`, meaning every eligible route has a cost and all share exactly one `relative_cost_scale`. Otherwise every route's cost is infinity. Missing duration or cost becomes infinity, so those routes sort after routes with known values and tie on that field. They are not excluded. A test shows that fresh quota pressure orders routes ahead of the provider baseline when quality is missing.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_route_objective_key",
+            "start_line": 349,
+            "end_line": 381
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 294,
+            "end_line": 305
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_policy.py",
+            "symbol": "test_missing_verified_quality_still_orders_fresh_quota_before_provider_baseline",
+            "start_line": 150,
+            "end_line": 162
+          }
+        ]
+      },
+      {
+        "id": "Q7",
+        "answer": "Policy capability: `RoutePolicyEvidence` can carry `quality_assessment`, `quota_windows`, `duration_seconds`, `relative_cost` with `relative_cost_scale`, and `reserved_for_higher_risk`. Current wiring: `_route_evidence` in the whole-plan adapter builds `RoutePolicyEvidence(quota_windows=windows, duration_seconds=duration)` only. The quota window is a single \"current_quota\" window, and only when the quota is available and still valid. Duration comes from the candidate's history median. It never sets `quality_assessment`, `relative_cost`, `relative_cost_scale` or `reserved_for_higher_risk`. `plan_full_dag` passes this evidence to `persist`. So contextual quality assessments and API prices are not supplied by this adapter. In this path quality never ranks routes, and cost is infinity for every route. The route policy is the default, which has no quality floors. `batch.py` takes `risk` from task classifications and passes it to `rank_with_route_policy`, but with no floors configured it has no effect. Candidate `history` quality is only a coarse RouteHistory label from `_history_snapshot`, not the contextual assessment the policy reads. I did not find another caller that supplies contextual assessments.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_route_evidence",
+            "start_line": 48,
+            "end_line": 60
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 179,
+            "end_line": 188
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "RoutePolicyEvidence",
+            "start_line": 101,
+            "end_line": 110
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "RoutePolicyConfig",
+            "start_line": 131,
+            "end_line": 131
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_rank_batch_routes",
+            "start_line": 217,
+            "end_line": 223
+          }
+        ]
+      },
+      {
+        "id": "Q8",
+        "answer": "`_rank_batch_routes` ranks each task with `rank_with_route_policy`. It keeps only the best-ranked route per `account_ref` through `account_options.setdefault`. Two profiles that share an `account_ref` therefore become one option per task. `_account_capacities` sets each account's capacity to min(free_slots, max_concurrent − active_assignments), or to free_slots when no concurrency fact is supplied. `_match_batch_routes` uses augmenting-path matching, and occupants per account must stay below that capacity. Aliases with the same `account_ref` cannot add capacity. The test with two aliases, active=1 and max=2, assigns only T1 and leaves T2 as `account_concurrency_exhausted`. Caveat: `plan_full_dag` calls `persist` without `account_concurrency`, so the real wiring uses the free_slots default and not a real per-account limit. A persisted batch is not a durable execution reservation. `plan_ready_batch` is documented as creating no durable reservations. `BatchDecisionStore.persist` only inserts an idempotent plan record into `batch_decisions`, replaying the first stored result. The module that wires it, `bt_scheduler_plan_routing`, describes itself as non-reserving.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_rank_batch_routes",
+            "start_line": 232,
+            "end_line": 240
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_account_capacities",
+            "start_line": 251,
+            "end_line": 264
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_match_batch_routes",
+            "start_line": 267,
+            "end_line": 304
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "plan_ready_batch",
+            "start_line": 369,
+            "end_line": 375
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "BatchDecisionStore.persist",
+            "start_line": 240,
+            "end_line": 294
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_batch.py",
+            "symbol": "test_shared_account_capacity_counts_active_work_and_profile_aliases_once",
+            "start_line": 149,
+            "end_line": 165
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 182,
+            "end_line": 188
+          }
+        ]
+      },
+      {
+        "id": "Q9",
+        "answer": "Floor variation is covered in `test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion` (lines 45–64) and in `test_tier_floor_explanation_names_classifications_and_rules_that_raise_it` (lines 66–72). Quality-floor handling is in `test_quality_floor_requires_correlated_history_and_minimum_samples`. Alias and capacity behavior is covered in the following tests. `test_shared_account_capacity_counts_active_work_and_profile_aliases_once` asserts that profile aliases share one account capacity. `test_alias_routes_share_one_account_pressure_without_summing_profile_budgets` asserts the same for quota pressure. `test_limit_counts_effective_accounts_after_alias_deduplication` covers the preflight cap. All of these use synthetic candidates or mocks, and I read them without running them. The snapshot cannot prove how much quota real accounts have or when it resets, or that the CLI or auth state is valid. It also cannot show that two profile names map to the same real account in a given install, since that depends on live env and directories. Nor can it prove that a stored batch's account capacity matches reality, because the real call passes no account concurrency. The preflight tests mock `poll` and `bt_agy` for the same reason.",
+        "evidence": [
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_sources.py",
+            "symbol": "test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion",
+            "start_line": 45,
+            "end_line": 64
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_batch.py",
+            "symbol": "test_shared_account_capacity_counts_active_work_and_profile_aliases_once",
+            "start_line": 149,
+            "end_line": 165
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_batch.py",
+            "symbol": "test_alias_routes_share_one_account_pressure_without_summing_profile_budgets",
+            "start_line": 58,
+            "end_line": 71
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_quota_preflight.py",
+            "symbol": "test_limit_counts_effective_accounts_after_alias_deduplication",
+            "start_line": 95,
+            "end_line": 106
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "Real quota levels, reset times and auth state of live accounts are not in the snapshot. All tests mock them.",
+      "Whether two profiles resolve to the same real account depends on runtime env and filesystem state.",
+      "I did not trace whether any other caller supplies contextual quality assessments or API prices. In the whole-plan path they are not supplied.",
+      "`plan_full_dag` supplies no `AccountConcurrency` facts, so real per-account concurrency limits are not shown. The default capacity is free_slots.",
+      "I did not inspect how or whether downstream execution consumes the persisted batch metadata. I did not read `batch_quota.py`, and `bt_scheduler_adapter.py` only for the preflight wrapper."
+    ]
+  },
+  "response_text": "{\"case\":\"E5\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"The floor is computed in `_tier_floor`; `_tier_for` returns only its first element. It starts from `bt_agents.start_tier`. Architecture is true when complexity is `extreme` or scope is `full_system`, and that gives TOP (2). Complexity `high` or `extreme` passes router complexity \\\"L\\\", which gives tier 1 for non-architecture work. Scope `large_change` or `full_feature` raises the floor to at least 1. Coupling `medium` or `high` raises it to at least 1. Duration of 120 minutes or more gives at least 1, and 240 or more gives TOP. Risk `high` gives TOP. Risk `medium` has no branch, so it does not raise the tier by itself. Audit kind has a floor of 1 through `KIND_TIER`. The test asserts that low-complexity, medium-risk work stays at `(0, ('kind:implement',))`. It asserts that each other factor raises the floor as described.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_tier_floor\",\"start_line\":80,\"end_line\":111},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"start_tier\",\"start_line\":89,\"end_line\":94},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"KIND_TIER\",\"start_line\":63,\"end_line\":63},{\"path\":\"skill/scripts/tests/test_scheduler_decision_sources.py\",\"symbol\":\"test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion\",\"start_line\":45,\"end_line\":64}]},{\"id\":\"Q2\",\"answer\":\"`_candidate_rows` takes the authorized pool from `pool_for` and computes the tier floor. For each profile it calls `_route_options`, which lists the configured (model, effort) rungs from the floor up to TOP for that provider. It then builds one `Candidate` per option. The `route_id` is `candidate_route_id`, a SHA-256 of provider, model, profile and effort. The `account_ref` is `account_reference(account_key(profile, provider))`, a hash of the legacy key. That key is the provider plus the profile's sorted env overlay. So account identity is not just a provider name. It is a hash of the provider and env-derived key, and it is separate from the profile id. `pool_for` deduplicates by `_pool_account_identity`, which uses the provider, the normalized account env variables and default directories. The candidate's `account_ref` itself comes from the env-overlay key, not from that identity function.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_candidate_rows\",\"start_line\":220,\"end_line\":261},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_route_options\",\"start_line\":135,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_decision/identity.py\",\"symbol\":\"candidate_route_id\",\"start_line\":61,\"end_line\":69},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"account_key\",\"start_line\":187,\"end_line\":196},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"_pool_account_identity\",\"start_line\":199,\"end_line\":212},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"pool_for\",\"start_line\":225,\"end_line\":256}]},{\"id\":\"Q3\",\"answer\":\"`plan_full_dag` calls the injected `refresh_quota`, which is `refresh_quota_preflight` and then `refresh(project, 32)`. `refresh` groups the pool's profiles by `bt_agents._pool_account_identity`. If that fails, it falls back to (provider, account_key). A group's first profile is the leader, and the leader's row is copied to every alias in the group. If there are more than 32 groups, it returns `{\\\"*\\\": unavailable, preflight_account_limit_exceeded}` without polling. Only the claude and codex leaders go to `bt_subscriptions.poll`. Antigravity groups share one `bt_agy.refresh()` result. Refresh is not always forced. `poll` dedupes by identity again. For each identity it calls `_reserve`, which returns None, so that account is skipped, when `now` is before the last attempt plus `MIN_POLL_SECONDS` (3480 s). It also skips on `retry_at` and on a `manual_challenge` status. Reads run sequentially, once per account, with no model calls. A poll exception marks every row `refresh_failed`. Tests assert the 32-account cap, no polling when it is exceeded, and that 40 aliases over two identities poll only `[\\\"alias-0\\\", \\\"alias-20\\\"]`.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":11,\"end_line\":80},{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":82,\"end_line\":108},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"refresh_quota_preflight\",\"start_line\":60,\"end_line\":66},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"poll\",\"start_line\":119,\"end_line\":143},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"_reserve\",\"start_line\":100,\"end_line\":116},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"MIN_POLL_SECONDS\",\"start_line\":15,\"end_line\":18},{\"path\":\"skill/scripts/tests/test_scheduler_quota_preflight.py\",\"symbol\":\"test_limit_counts_effective_accounts_after_alias_deduplication\",\"start_line\":95,\"end_line\":106}]},{\"id\":\"Q4\",\"answer\":\"Unsupported sources are dropped at two points. `_route_options` returns no options for a provider not in `PROVIDERS`, and `_candidate_rows` skips that profile. `_candidate_reasons` then excludes a candidate for any of these: unauthorized profile; `source_status` other than available (including unknown, quota_exhausted and auth_invalid); blocking source codes (capacity_unknown, capacity_exhausted, cooldown_active); `auth_status` other than valid; `runtime_status` other than available; `quota_status` of stale, exhausted or unknown. `_usage_facts` and `_apply_preflight` produce those statuses. `_usage_facts` sets exhausted at 100% pressure or when an exhaustion time lies in the future. `_apply_preflight` forces quota to unknown when preflight is not available. Quality cannot bypass this. `rank_with_route_policy` calls `rank_candidates` first and applies quality floors and objectives only to `ranking.eligible`. It returns no_hard_eligible_route if that list is empty. A test asserts that hard-excluded routes stay excluded.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_candidate_reasons\",\"start_line\":176,\"end_line\":194},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":245,\"end_line\":274},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_usage_facts\",\"start_line\":47,\"end_line\":77},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_apply_preflight\",\"start_line\":63,\"end_line\":73},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_route_options\",\"start_line\":135,\"end_line\":139},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_policy.py\",\"symbol\":\"test_quality_floor_requires_correlated_history_and_minimum_samples\",\"start_line\":129,\"end_line\":148}]},{\"id\":\"Q5\",\"answer\":\"Quality ranks routes only after hard eligibility, and only when `_quality_objective_is_comparable` returns True for all remaining eligible routes. That function requires `_quality_interval` to be non-None for every route. `_quality_interval` requires the assessment to have the current API version and the same route_id, and to name a known `selected_level`. It requires `minimum_verified_samples` at or above the policy minimum, and exactly one measurement at the selected level. It also requires `source_quality=='observed'`, `verified_samples` at or above the minimum, successes plus failures equal to samples, and a finite 95% interval within 0..1 with lower at most upper. The policy config rejects a minimum below `MIN_VERIFIED_SAMPLES`. All routes must also share one `selected_level`. If so, the key is (0, -lower bound, interval width). Otherwise the quality key is constant (0,0,0). A configured floor excludes routes whose interval is missing or whose lower bound is below the floor. Tests: different context levels disable comparison, and unmeasured routes are not penalized.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_quality_interval\",\"start_line\":311,\"end_line\":332},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_quality_objective_is_comparable\",\"start_line\":335,\"end_line\":346},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_route_objective_key\",\"start_line\":349,\"end_line\":356},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"RoutePolicyConfig\",\"start_line\":127,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_policy.py\",\"symbol\":\"test_different_context_levels_disable_cross_route_quality_comparison\",\"start_line\":180,\"end_line\":197}]},{\"id\":\"Q6\",\"answer\":\"`_route_objective_key` sorts by this tuple. First comes the constant quality key, so it has no effect. Then quota pressure: the maximum used_percent across evidence windows, or else `candidate.quota_used_percent`, or infinity. Then duration: evidence duration, else the measured median when there are duration samples, else infinity. Then relative cost. Then `reserved_for_higher_risk`. Then `not reset_soon`: a window at the limiting pressure that resets within the reset window sorts earlier. Then baseline_rank (None last), then route_id. Cost counts only when `cost_is_comparable`, meaning every eligible route has a cost and all share exactly one `relative_cost_scale`. Otherwise every route's cost is infinity. Missing duration or cost becomes infinity, so those routes sort after routes with known values and tie on that field. They are not excluded. A test shows that fresh quota pressure orders routes ahead of the provider baseline when quality is missing.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_route_objective_key\",\"start_line\":349,\"end_line\":381},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":294,\"end_line\":305},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_policy.py\",\"symbol\":\"test_missing_verified_quality_still_orders_fresh_quota_before_provider_baseline\",\"start_line\":150,\"end_line\":162}]},{\"id\":\"Q7\",\"answer\":\"Policy capability: `RoutePolicyEvidence` can carry `quality_assessment`, `quota_windows`, `duration_seconds`, `relative_cost` with `relative_cost_scale`, and `reserved_for_higher_risk`. Current wiring: `_route_evidence` in the whole-plan adapter builds `RoutePolicyEvidence(quota_windows=windows, duration_seconds=duration)` only. The quota window is a single \\\"current_quota\\\" window, and only when the quota is available and still valid. Duration comes from the candidate's history median. It never sets `quality_assessment`, `relative_cost`, `relative_cost_scale` or `reserved_for_higher_risk`. `plan_full_dag` passes this evidence to `persist`. So contextual quality assessments and API prices are not supplied by this adapter. In this path quality never ranks routes, and cost is infinity for every route. The route policy is the default, which has no quality floors. `batch.py` takes `risk` from task classifications and passes it to `rank_with_route_policy`, but with no floors configured it has no effect. Candidate `history` quality is only a coarse RouteHistory label from `_history_snapshot`, not the contextual assessment the policy reads. I did not find another caller that supplies contextual assessments.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_route_evidence\",\"start_line\":48,\"end_line\":60},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":179,\"end_line\":188},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"RoutePolicyEvidence\",\"start_line\":101,\"end_line\":110},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"RoutePolicyConfig\",\"start_line\":131,\"end_line\":131},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_rank_batch_routes\",\"start_line\":217,\"end_line\":223}]},{\"id\":\"Q8\",\"answer\":\"`_rank_batch_routes` ranks each task with `rank_with_route_policy`. It keeps only the best-ranked route per `account_ref` through `account_options.setdefault`. Two profiles that share an `account_ref` therefore become one option per task. `_account_capacities` sets each account's capacity to min(free_slots, max_concurrent − active_assignments), or to free_slots when no concurrency fact is supplied. `_match_batch_routes` uses augmenting-path matching, and occupants per account must stay below that capacity. Aliases with the same `account_ref` cannot add capacity. The test with two aliases, active=1 and max=2, assigns only T1 and leaves T2 as `account_concurrency_exhausted`. Caveat: `plan_full_dag` calls `persist` without `account_concurrency`, so the real wiring uses the free_slots default and not a real per-account limit. A persisted batch is not a durable execution reservation. `plan_ready_batch` is documented as creating no durable reservations. `BatchDecisionStore.persist` only inserts an idempotent plan record into `batch_decisions`, replaying the first stored result. The module that wires it, `bt_scheduler_plan_routing`, describes itself as non-reserving.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_rank_batch_routes\",\"start_line\":232,\"end_line\":240},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_account_capacities\",\"start_line\":251,\"end_line\":264},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_match_batch_routes\",\"start_line\":267,\"end_line\":304},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"plan_ready_batch\",\"start_line\":369,\"end_line\":375},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"BatchDecisionStore.persist\",\"start_line\":240,\"end_line\":294},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_batch.py\",\"symbol\":\"test_shared_account_capacity_counts_active_work_and_profile_aliases_once\",\"start_line\":149,\"end_line\":165},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":182,\"end_line\":188}]},{\"id\":\"Q9\",\"answer\":\"Floor variation is covered in `test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion` (lines 45–64) and in `test_tier_floor_explanation_names_classifications_and_rules_that_raise_it` (lines 66–72). Quality-floor handling is in `test_quality_floor_requires_correlated_history_and_minimum_samples`. Alias and capacity behavior is covered in the following tests. `test_shared_account_capacity_counts_active_work_and_profile_aliases_once` asserts that profile aliases share one account capacity. `test_alias_routes_share_one_account_pressure_without_summing_profile_budgets` asserts the same for quota pressure. `test_limit_counts_effective_accounts_after_alias_deduplication` covers the preflight cap. All of these use synthetic candidates or mocks, and I read them without running them. The snapshot cannot prove how much quota real accounts have or when it resets, or that the CLI or auth state is valid. It also cannot show that two profile names map to the same real account in a given install, since that depends on live env and directories. Nor can it prove that a stored batch's account capacity matches reality, because the real call passes no account concurrency. The preflight tests mock `poll` and `bt_agy` for the same reason.\",\"evidence\":[{\"path\":\"skill/scripts/tests/test_scheduler_decision_sources.py\",\"symbol\":\"test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion\",\"start_line\":45,\"end_line\":64},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_batch.py\",\"symbol\":\"test_shared_account_capacity_counts_active_work_and_profile_aliases_once\",\"start_line\":149,\"end_line\":165},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_batch.py\",\"symbol\":\"test_alias_routes_share_one_account_pressure_without_summing_profile_budgets\",\"start_line\":58,\"end_line\":71},{\"path\":\"skill/scripts/tests/test_scheduler_quota_preflight.py\",\"symbol\":\"test_limit_counts_effective_accounts_after_alias_deduplication\",\"start_line\":95,\"end_line\":106}]}],\"unknowns\":[\"Real quota levels, reset times and auth state of live accounts are not in the snapshot. All tests mock them.\",\"Whether two profiles resolve to the same real account depends on runtime env and filesystem state.\",\"I did not trace whether any other caller supplies contextual quality assessments or API prices. In the whole-plan path they are not supplied.\",\"`plan_full_dag` supplies no `AccountConcurrency` facts, so real per-account concurrency limits are not shown. The default capacity is free_slots.\",\"I did not inspect how or whether downstream execution consumes the persisted batch metadata. I did not read `batch_quota.py`, and `bt_scheduler_adapter.py` only for the preflight wrapper.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 20,
+    "cache_creation_input_tokens": 61573,
+    "cache_read_input_tokens": 278859,
+    "output_tokens": 10732,
+    "output_tokens_details": {
+      "thinking_tokens": 531
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 61573,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 24,
+  "response_words": 1372,
+  "exit_code": 0,
+  "elapsed_seconds": 80.931,
+  "finished_at": 1792248507.9805384,
+  "tool_audit": [
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "floor|effective_account|account_identity|def .*preflight"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_decision/policy.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_quota_preflight.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "tier_floor|task_tier|_floor\\b|def .*floor|def _pool_account_identity|def account_key|def poll\\b",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_decision_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_agents.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_subscriptions.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "MIN_POLL_SECONDS =|MAX_AGE_SECONDS =|def start_tier|^TOP\\b|def account_reference|def candidate_route_id|rank_with_route_policy|RoutePolicyEvidence\\(|quality_assessment|relative_cost|quota_preflight",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_plan_routing.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_decision/batch.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_decision/identity.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_agents.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_agents.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_agents.py",
+        "pattern": "KIND_TIER ="
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_decision/batch_ledger.py",
+        "pattern": "reserv|def persist|durable"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "def test_.*(floor|alias|account|capacity|reserv|tier)",
+        "glob": "**/test_*.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_decision/batch_ledger.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_decision/tests/test_batch.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/tests",
+        "pattern": "_tier_floor|_tier_for|floor",
+        "glob": "test_scheduler_decision_*.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/tests/test_scheduler_quota_preflight.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/tests/test_scheduler_decision_sources.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_decision/tests/test_policy.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_subscriptions.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/sonnet/repo/skill/scripts/bt_scheduler_adapter.py"
+      }
+    }
+  ],
+  "event_shapes": {
+    "system": [
+      "estimated_tokens",
+      "estimated_tokens_delta",
+      "session_id",
+      "subtype",
+      "type",
+      "uuid"
+    ],
+    "assistant": [
+      "message",
+      "parent_tool_use_id",
+      "request_id",
+      "session_id",
+      "timestamp",
+      "type",
+      "uuid"
+    ],
+    "rate_limit_event": [
+      "rate_limit_info",
+      "session_id",
+      "type",
+      "uuid"
+    ],
+    "user": [
+      "message",
+      "parent_tool_use_id",
+      "session_id",
+      "timestamp",
+      "tool_result_meta",
+      "tool_use_result",
+      "type",
+      "uuid"
+    ],
+    "result": [
+      "api_error_status",
+      "duration_api_ms",
+      "duration_ms",
+      "fast_mode_disabled_reason",
+      "fast_mode_state",
+      "first_content_frame_ms",
+      "is_error",
+      "modelUsage",
+      "num_turns",
+      "permission_denials",
+      "queued_turn_count",
+      "result",
+      "result_index",
+      "safety_stops",
+      "session_id",
+      "stop_reason",
+      "subagent_stats",
+      "subtype",
+      "terminal_reason",
+      "time_to_request_ms",
+      "total_cost_usd",
+      "ttft_ms",
+      "ttft_stream_ms",
+      "type",
+      "usage",
+      "uuid"
+    ]
+  },
+  "per_message_usage": [
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3580,
+      "cache_read_input_tokens": 4236,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3580
+      },
+      "output_tokens": 9
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3580,
+      "cache_read_input_tokens": 4236,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3580
+      },
+      "output_tokens": 9
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 918,
+      "cache_read_input_tokens": 7816,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 918
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 918,
+      "cache_read_input_tokens": 7816,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 918
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 10539,
+      "cache_read_input_tokens": 8734,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 10539
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 10539,
+      "cache_read_input_tokens": 8734,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 10539
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 892,
+      "cache_read_input_tokens": 19273,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 892
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 892,
+      "cache_read_input_tokens": 19273,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 892
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 892,
+      "cache_read_input_tokens": 19273,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 892
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7917,
+      "cache_read_input_tokens": 20165,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7917
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7917,
+      "cache_read_input_tokens": 20165,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7917
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2976,
+      "cache_read_input_tokens": 28082,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2976
+      },
+      "output_tokens": 57
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2976,
+      "cache_read_input_tokens": 28082,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2976
+      },
+      "output_tokens": 57
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2976,
+      "cache_read_input_tokens": 28082,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2976
+      },
+      "output_tokens": 57
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2976,
+      "cache_read_input_tokens": 28082,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2976
+      },
+      "output_tokens": 57
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2976,
+      "cache_read_input_tokens": 28082,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2976
+      },
+      "output_tokens": 57
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 14270,
+      "cache_read_input_tokens": 31058,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 14270
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 14270,
+      "cache_read_input_tokens": 31058,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 14270
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 14270,
+      "cache_read_input_tokens": 31058,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 14270
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 14270,
+      "cache_read_input_tokens": 31058,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 14270
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 14270,
+      "cache_read_input_tokens": 31058,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 14270
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7349,
+      "cache_read_input_tokens": 45328,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7349
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7349,
+      "cache_read_input_tokens": 45328,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7349
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7349,
+      "cache_read_input_tokens": 45328,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7349
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7349,
+      "cache_read_input_tokens": 45328,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7349
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8813,
+      "cache_read_input_tokens": 52677,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8813
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8813,
+      "cache_read_input_tokens": 52677,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8813
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8813,
+      "cache_read_input_tokens": 52677,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8813
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8813,
+      "cache_read_input_tokens": 52677,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8813
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8813,
+      "cache_read_input_tokens": 52677,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8813
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4319,
+      "cache_read_input_tokens": 61490,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4319
+      },
+      "output_tokens": 793
+    }
+  ],
+  "model_usage_reported": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 20,
+      "outputTokens": 10732,
+      "cacheReadInputTokens": 278859,
+      "cacheCreationInputTokens": 61573,
+      "webSearchRequests": 0,
+      "costUSD": 0.3815379,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 531
+    }
+  },
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248508.0171802,
+    "windows": {
+      "five_hour": {
+        "used_percent": 22.0,
+        "resets_at": 1792262400.254274,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792278000.25429,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

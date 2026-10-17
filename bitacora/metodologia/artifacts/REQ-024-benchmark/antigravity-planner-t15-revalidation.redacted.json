@@ -1,0 +1,23 @@
+{
+  "schema_version": "t15-antigravity-revalidation/1",
+  "decision": "D-062",
+  "provider": "antigravity",
+  "profile": "antigravity",
+  "model": "gemini-3.8-flash-low",
+  "effort": null,
+  "timeout_seconds": 120,
+  "observed_at_utc": "2026-10-17T02:21:44+00:00",
+  "attempt_count": 1,
+  "exit_status": 0,
+  "response_received": true,
+  "sentinel_match": true,
+  "response_characters": 16,
+  "runtime_reported_model_validated": true,
+  "stderr_received": false,
+  "elapsed_seconds": 21.418,
+  "raw_prompt_stored": false,
+  "raw_response_stored": false,
+  "quota_refreshed": false,
+  "fallback_used": false,
+  "provider_substituted": false
+}

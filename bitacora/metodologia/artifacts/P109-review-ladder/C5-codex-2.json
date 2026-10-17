@@ -1,0 +1,114 @@
+{
+  "case": "C5",
+  "profile": "codex-2",
+  "provider": "codex",
+  "requested_model": "gpt-6.1-sol",
+  "requested_effort": "high",
+  "prompt_sha256": "5f5f4a347c4b41bc40e3fc40564023b518a938af2baa96e7deaaf83ed677323d",
+  "prompt_characters": 4990,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206465.141185,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206465.8129303,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "high",
+        "issue": "Capacity and reservations are keyed by profile rather than effective account, allowing aliases to bypass the account concurrency limit.",
+        "evidence": "T2 constructs \"capacity buckets keyed by profile_id, each with limit=1\" and M1 uses identical buckets. Both pA and pB resolve to acct-X, whose concurrency limit is 1.",
+        "failure_scenario": "Two READY tasks are recommended on pA and pB and both receive reservations. M1's profile-keyed availability check permits concurrent execution on acct-X, exceeding its limit.",
+        "fix": "Key recommendation capacity and M1's durable reservations by resolved account_ref. Retain profile aliases only for selection and routing. Verify that pA and pB together permit at most one concurrent reservation."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "Replacing stale or missing quota with zero usage makes ineligible accounts eligible and falsely attractive.",
+        "evidence": "T3 says \"use sample if fresh; otherwise substitute {five_hour:0,seven_day:0}\". The contract makes unknown/stale readings ineligible and specifically excludes observed_at=700 when now=1000.",
+        "failure_scenario": "A stale candidate receives a zero score and wins the recommendation over eligible accounts. Correct dispatch revalidation then rejects that route; if all readings are stale, M2 still recommends work when no account is eligible.",
+        "fix": "Exclude candidates unless observed_at is within 120 seconds of injected now, status is ok, both windows exist, and both resets are future. Return no eligible recommendation when none qualify. Test the supplied stale fixture."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "Quota ranking adds percentages from different windows instead of comparing their maximum.",
+        "evidence": "T3 specifies \"Score=5h_used+7d_used ascending\". The required bottleneck rule favors acct-X at 30 over acct-Y at 50, while summation favors acct-Y at 50 over acct-X at 60.",
+        "failure_scenario": "For the supplied equal-capability, no-quality-evidence tasks, M2 selects acct-Y despite acct-X having the lower required bottleneck.",
+        "fix": "Rank eligible candidates by max(five_hour_used, seven_day_used), preserving the capability/quality ordering and deterministic tie-break. Assert that the supplied fixture selects acct-X."
+      },
+      {
+        "task": "T4",
+        "severity": "medium",
+        "issue": "Provider HTTP I/O occurs while a database write transaction is open.",
+        "evidence": "T4 executes \"BEGIN IMMEDIATE\", fetches quota via HTTP with a 20-second deadline, and only then commits. The contract prohibits any DB write transaction spanning provider I/O.",
+        "failure_scenario": "A quota request consumes its deadline while holding the write transaction, blocking other writers such as reservation releases and lifecycle updates.",
+        "fix": "Fetch quota before opening the write transaction. Inside a short transaction, recheck sample eligibility against injected now, load current reservation counts, and atomically append the decision and reservations."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Dispatch revalidation overwrites frozen recommendation evidence and destroys its original hash.",
+        "evidence": "T5 \"replaces the recommendation inside the existing startup map row and recomputes its hash\"; \"No prior copy/history exists.\" Frozen maps must preserve their original bytes and hash.",
+        "failure_scenario": "When dispatch chooses a different route, the startup recommendation becomes unrecoverable, preventing an audit from distinguishing the original evidence from the later dispatch decision.",
+        "fix": "Keep the startup map and hash immutable. Append a separate revalidation decision linked to that map, and have dashboards derive the latest route from appended decisions."
+      },
+      {
+        "task": "T6",
+        "severity": "critical",
+        "issue": "Restart releases live reservations and redispatches unfinished work without reconciling surviving executors.",
+        "evidence": "T6 unconditionally deletes prior-PID reservations, increments generation, and redispatches RUNNING tasks without executor query, cancellation, or reconciliation. Each new generation permits a distinct external job.",
+        "failure_scenario": "An old executor continues applying side effects while the restarted coordinator launches a replacement generation. Both execute the same task, potentially duplicating irreversible effects and exceeding account capacity.",
+        "fix": "Reconcile existing intents and live executor jobs before releasing reservations or creating replacement generations. Preserve reservations while execution remains live or uncertain, and redispatch only after establishing that replacement is safe. Test restart with delayed reports and a surviving executor."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"T2\",\n      \"severity\": \"high\",\n      \"issue\": \"Capacity and reservations are keyed by profile rather than effective account, allowing aliases to bypass the account concurrency limit.\",\n      \"evidence\": \"T2 constructs \\\"capacity buckets keyed by profile_id, each with limit=1\\\" and M1 uses identical buckets. Both pA and pB resolve to acct-X, whose concurrency limit is 1.\",\n      \"failure_scenario\": \"Two READY tasks are recommended on pA and pB and both receive reservations. M1's profile-keyed availability check permits concurrent execution on acct-X, exceeding its limit.\",\n      \"fix\": \"Key recommendation capacity and M1's durable reservations by resolved account_ref. Retain profile aliases only for selection and routing. Verify that pA and pB together permit at most one concurrent reservation.\"\n    },\n    {\n      \"task\": \"T3\",\n      \"severity\": \"high\",\n      \"issue\": \"Replacing stale or missing quota with zero usage makes ineligible accounts eligible and falsely attractive.\",\n      \"evidence\": \"T3 says \\\"use sample if fresh; otherwise substitute {five_hour:0,seven_day:0}\\\". The contract makes unknown/stale readings ineligible and specifically excludes observed_at=700 when now=1000.\",\n      \"failure_scenario\": \"A stale candidate receives a zero score and wins the recommendation over eligible accounts. Correct dispatch revalidation then rejects that route; if all readings are stale, M2 still recommends work when no account is eligible.\",\n      \"fix\": \"Exclude candidates unless observed_at is within 120 seconds of injected now, status is ok, both windows exist, and both resets are future. Return no eligible recommendation when none qualify. Test the supplied stale fixture.\"\n    },\n    {\n      \"task\": \"T3\",\n      \"severity\": \"high\",\n      \"issue\": \"Quota ranking adds percentages from different windows instead of comparing their maximum.\",\n      \"evidence\": \"T3 specifies \\\"Score=5h_used+7d_used ascending\\\". The required bottleneck rule favors acct-X at 30 over acct-Y at 50, while summation favors acct-Y at 50 over acct-X at 60.\",\n      \"failure_scenario\": \"For the supplied equal-capability, no-quality-evidence tasks, M2 selects acct-Y despite acct-X having the lower required bottleneck.\",\n      \"fix\": \"Rank eligible candidates by max(five_hour_used, seven_day_used), preserving the capability/quality ordering and deterministic tie-break. Assert that the supplied fixture selects acct-X.\"\n    },\n    {\n      \"task\": \"T4\",\n      \"severity\": \"medium\",\n      \"issue\": \"Provider HTTP I/O occurs while a database write transaction is open.\",\n      \"evidence\": \"T4 executes \\\"BEGIN IMMEDIATE\\\", fetches quota via HTTP with a 20-second deadline, and only then commits. The contract prohibits any DB write transaction spanning provider I/O.\",\n      \"failure_scenario\": \"A quota request consumes its deadline while holding the write transaction, blocking other writers such as reservation releases and lifecycle updates.\",\n      \"fix\": \"Fetch quota before opening the write transaction. Inside a short transaction, recheck sample eligibility against injected now, load current reservation counts, and atomically append the decision and reservations.\"\n    },\n    {\n      \"task\": \"T5\",\n      \"severity\": \"high\",\n      \"issue\": \"Dispatch revalidation overwrites frozen recommendation evidence and destroys its original hash.\",\n      \"evidence\": \"T5 \\\"replaces the recommendation inside the existing startup map row and recomputes its hash\\\"; \\\"No prior copy/history exists.\\\" Frozen maps must preserve their original bytes and hash.\",\n      \"failure_scenario\": \"When dispatch chooses a different route, the startup recommendation becomes unrecoverable, preventing an audit from distinguishing the original evidence from the later dispatch decision.\",\n      \"fix\": \"Keep the startup map and hash immutable. Append a separate revalidation decision linked to that map, and have dashboards derive the latest route from appended decisions.\"\n    },\n    {\n      \"task\": \"T6\",\n      \"severity\": \"critical\",\n      \"issue\": \"Restart releases live reservations and redispatches unfinished work without reconciling surviving executors.\",\n      \"evidence\": \"T6 unconditionally deletes prior-PID reservations, increments generation, and redispatches RUNNING tasks without executor query, cancellation, or reconciliation. Each new generation permits a distinct external job.\",\n      \"failure_scenario\": \"An old executor continues applying side effects while the restarted coordinator launches a replacement generation. Both execute the same task, potentially duplicating irreversible effects and exceeding account capacity.\",\n      \"fix\": \"Reconcile existing intents and live executor jobs before releasing reservations or creating replacement generations. Preserve reservations while execution remains live or uncertain, and redispatch only after establishing that replacement is safe. Test restart with delayed reports and a surviving executor.\"\n    }\n  ],\n  \"uncertainties\": []\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 15586,
+    "cached_input_tokens": 12288,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1205,
+    "reasoning_output_tokens": 161
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 28.499,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206494.3115022,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

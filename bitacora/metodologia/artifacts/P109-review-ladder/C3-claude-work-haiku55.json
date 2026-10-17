@@ -1,0 +1,122 @@
+{
+  "case": "C3",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "claude-haiku-5-5",
+  "requested_effort": "max",
+  "variant": "claude-work-haiku55",
+  "prompt_sha256": "f607c6548fa9cd09445d9705da124b7a0755c2645ecb983e0aac81ab11b4e905",
+  "prompt_characters": 3391,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792207036.7887483,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792213800.019731,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.019747,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792207037.1015775,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "Owner resolution lets a client-supplied query tenant replace the session tenant, and nothing authorizes that tenant. The mission requires the query filter to never widen the session tenant.",
+        "evidence": "'resolves owner=request.query.tenant ?? session.tenant_id'; 'middleware authenticates user but does not authorize query tenant'; mission: 'must never widen the server session tenant'",
+        "failure_scenario": "Any authenticated user sends tenant=<another tenant's UUID> and receives that tenant's documents. The planned tests (own documents, malformed tenant) cannot detect this, so 'tenant isolation preserved' is unverified.",
+        "fix": "Set owner = session.tenant_id. Accept request.query.tenant only as a narrowing filter: reject with 403, or return no rows, when it differs from session.tenant_id. Add a cross-tenant test that expects denial and zero rows."
+      },
+      {
+        "task": "T3",
+        "severity": "critical",
+        "issue": "Keyset pagination mixes keys. The predicate uses id, but the ordering uses created_at, and the cursor is set to the last row in created_at order rather than the largest id. Later batches skip any row whose id sorts below that cursor.",
+        "evidence": "'WHERE id > :cursor ORDER BY created_at ASC,id ASC LIMIT 100'; 'transactionally persist cursor=selected[-1].id'; 'contains IDs 10,90,20,80; batch size 2 gives first batch [10,90]'; 'Start cursor=00'",
+        "failure_scenario": "Batch 1 is [10,90], so the cursor becomes 90. Batch 2 runs WHERE id > '90', finds nothing, and the loop ends as if complete, leaving 20 and 80 with tenant_id NULL. Random UUIDs skip a large share of the table the same way. Those rows become invisible to T2, and the T5 drop then erases their only owner value. The planned test ('lexical and creation order') cannot expose this.",
+        "fix": "Use ORDER BY id ASC to match the predicate, or compare (created_at,id) and persist both values. Start from the nil UUID 00000000-0000-0000-0000-000000000000, not '00' (not a valid UUID literal). Test with IDs ordered differently in lexical and creation order, such as 10,90,20,80, and assert zero NULL tenant_id rows at completion."
+      },
+      {
+        "task": "T5",
+        "severity": "critical",
+        "issue": "The legacy column and trigger are dropped at 12:15, 15 minutes after cutover. This ends the rollback window then, not at next-day 12:00 as the mission requires.",
+        "evidence": "'drop legacy_owner_tenant and the trigger at 12:15'; baseline: 'old binary reads only legacy_owner_tenant, and fails if that column is absent'; 'no database restore is allowed, and no recreation/reverse backfill is provided'; mission: '24-hour executable rollback window'",
+        "failure_scenario": "After 12:15 UTC, redeploying the old binary fails on the missing column, and restore and reverse backfill are unavailable. Any defect found later is unrecoverable, and NULL-tenant_id rows (see T3) lose their only owner value.",
+        "fix": "Delete the 12:15 drop step. Keep legacy_owner_tenant and the trigger until the window closes at next-day 12:00 UTC, then drop them in a separate later change."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "The purge predicate is age>=30 days, but the policy keeps age <=30 days and purges only age >30 days.",
+        "evidence": "'deletes where age>=30days'; requirement: 'keeps documents whose age is <=30 days; only age >30 days is purgeable'; 'Test age=29days and age=31days'",
+        "failure_scenario": "A document aged exactly 30 days is deleted irreversibly. If age is measured in whole days, every document aged 30 to 31 days is deleted. The 29- and 31-day tests pass, so nothing flags this.",
+        "fix": "Delete only where age > 30 days (equivalently created_at < clock_utc minus 30 days). Add a test at exactly 30 days expecting retention, and keep the 29- and 31-day cases."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Cutover and the legacy drop are not gated on T6. T5 depends only on T2, T3, and T4, and the plan has no rollback rehearsal even though the mission requires an executable rollback.",
+        "evidence": "'T5 after T2,T3,T4'; 'T6: assert tenant_id NOT NULL only after backfill, run independent migration and API tests, capture results'; 'Rollback documented as redeploy old binary'",
+        "failure_scenario": "Traffic switches and the legacy column is dropped while the completeness check and independent tests are unfinished or failing, so the T3 defect can reach production silently. The documented rollback has never been run, so it may fail when needed.",
+        "fix": "Make T5 depend on T6. Gate cutover on zero rows returned by WHERE tenant_id IS NULL OR tenant_id IS DISTINCT FROM legacy_owner_tenant, and on passing independent tests. Rehearse the old-binary rollback in staging against the schema that exists during the window, and capture the result."
+      }
+    ],
+    "uncertainties": [
+      "Trigger timing (BEFORE or AFTER insert) is not stated. A NOT NULL on tenant_id keeps old-binary inserts working only if the trigger sets tenant_id before the constraint is checked.",
+      "Whether new-version traffic reaches any user before the 12:00 UTC 100% switch (for example a canary) is not stated. If it does, the 24-hour window must start at that first request, not at 12:00."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"Owner resolution lets a client-supplied query tenant replace the session tenant, and nothing authorizes that tenant. The mission requires the query filter to never widen the session tenant.\",\"evidence\":\"'resolves owner=request.query.tenant ?? session.tenant_id'; 'middleware authenticates user but does not authorize query tenant'; mission: 'must never widen the server session tenant'\",\"failure_scenario\":\"Any authenticated user sends tenant=<another tenant's UUID> and receives that tenant's documents. The planned tests (own documents, malformed tenant) cannot detect this, so 'tenant isolation preserved' is unverified.\",\"fix\":\"Set owner = session.tenant_id. Accept request.query.tenant only as a narrowing filter: reject with 403, or return no rows, when it differs from session.tenant_id. Add a cross-tenant test that expects denial and zero rows.\"},{\"task\":\"T3\",\"severity\":\"critical\",\"issue\":\"Keyset pagination mixes keys. The predicate uses id, but the ordering uses created_at, and the cursor is set to the last row in created_at order rather than the largest id. Later batches skip any row whose id sorts below that cursor.\",\"evidence\":\"'WHERE id > :cursor ORDER BY created_at ASC,id ASC LIMIT 100'; 'transactionally persist cursor=selected[-1].id'; 'contains IDs 10,90,20,80; batch size 2 gives first batch [10,90]'; 'Start cursor=00'\",\"failure_scenario\":\"Batch 1 is [10,90], so the cursor becomes 90. Batch 2 runs WHERE id > '90', finds nothing, and the loop ends as if complete, leaving 20 and 80 with tenant_id NULL. Random UUIDs skip a large share of the table the same way. Those rows become invisible to T2, and the T5 drop then erases their only owner value. The planned test ('lexical and creation order') cannot expose this.\",\"fix\":\"Use ORDER BY id ASC to match the predicate, or compare (created_at,id) and persist both values. Start from the nil UUID 00000000-0000-0000-0000-000000000000, not '00' (not a valid UUID literal). Test with IDs ordered differently in lexical and creation order, such as 10,90,20,80, and assert zero NULL tenant_id rows at completion.\"},{\"task\":\"T5\",\"severity\":\"critical\",\"issue\":\"The legacy column and trigger are dropped at 12:15, 15 minutes after cutover. This ends the rollback window then, not at next-day 12:00 as the mission requires.\",\"evidence\":\"'drop legacy_owner_tenant and the trigger at 12:15'; baseline: 'old binary reads only legacy_owner_tenant, and fails if that column is absent'; 'no database restore is allowed, and no recreation/reverse backfill is provided'; mission: '24-hour executable rollback window'\",\"failure_scenario\":\"After 12:15 UTC, redeploying the old binary fails on the missing column, and restore and reverse backfill are unavailable. Any defect found later is unrecoverable, and NULL-tenant_id rows (see T3) lose their only owner value.\",\"fix\":\"Delete the 12:15 drop step. Keep legacy_owner_tenant and the trigger until the window closes at next-day 12:00 UTC, then drop them in a separate later change.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"The purge predicate is age>=30 days, but the policy keeps age <=30 days and purges only age >30 days.\",\"evidence\":\"'deletes where age>=30days'; requirement: 'keeps documents whose age is <=30 days; only age >30 days is purgeable'; 'Test age=29days and age=31days'\",\"failure_scenario\":\"A document aged exactly 30 days is deleted irreversibly. If age is measured in whole days, every document aged 30 to 31 days is deleted. The 29- and 31-day tests pass, so nothing flags this.\",\"fix\":\"Delete only where age > 30 days (equivalently created_at < clock_utc minus 30 days). Add a test at exactly 30 days expecting retention, and keep the 29- and 31-day cases.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"Cutover and the legacy drop are not gated on T6. T5 depends only on T2, T3, and T4, and the plan has no rollback rehearsal even though the mission requires an executable rollback.\",\"evidence\":\"'T5 after T2,T3,T4'; 'T6: assert tenant_id NOT NULL only after backfill, run independent migration and API tests, capture results'; 'Rollback documented as redeploy old binary'\",\"failure_scenario\":\"Traffic switches and the legacy column is dropped while the completeness check and independent tests are unfinished or failing, so the T3 defect can reach production silently. The documented rollback has never been run, so it may fail when needed.\",\"fix\":\"Make T5 depend on T6. Gate cutover on zero rows returned by WHERE tenant_id IS NULL OR tenant_id IS DISTINCT FROM legacy_owner_tenant, and on passing independent tests. Rehearse the old-binary rollback in staging against the schema that exists during the window, and capture the result.\"}],\"uncertainties\":[\"Trigger timing (BEFORE or AFTER insert) is not stated. A NOT NULL on tenant_id keeps old-binary inserts working only if the trigger sets tenant_id before the constraint is checked.\",\"Whether new-version traffic reaches any user before the 12:00 UTC 100% switch (for example a canary) is not stated. If it does, the 24-hour window must start at that first request, not at 12:00.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 3510,
+    "cache_read_input_tokens": 2442,
+    "output_tokens": 48171,
+    "output_tokens_details": {
+      "thinking_tokens": 46230
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3510,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 201.088,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792207238.1897502,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792213800.461032,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.461052,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

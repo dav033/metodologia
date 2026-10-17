@@ -325,3 +325,11 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Alternatives:** Add fields or services to v1 — rejected due to strict readers; create separate services/mixed endpoints — rejected because they duplicate existing auth, state and idempotency boundaries.
 - **Consequences and rollback:** Maintain independent v1/v2 contract and behavior tests. Roll back to the prior checked release; no persisted schema migration is needed and existing v1 callers require no request change.
 - **Source:** Owner request on 2026-10-16 and `docs/happie-external-integration.md`; [brain decision](../../dev/cerebro/pictures/decisiones/20261016-happie-v2-compatible-services.md).
+
+## D-055 — Limit REQ-014 synchronization to the approved Ship #1 payload
+- **Date:** 2026-10-16 · **Status:** Accepted · **Scope:** REQ-014 T14
+- **Context:** An earlier continuation ruling deferred branch synchronization while the shared worktree held unrelated changes. The approved plan's T14 now explicitly requires merging `origin/main` and permits only ship tasks to push. The staged T11/T12 payload is reviewed; other changes belong to later work.
+- **Decision:** Supersede the no-sync ruling for T14 only. Keep unrelated edits out of the shipping commit and preserve them; merge the current `origin/main`, run T14 gates one at a time, and push only after they pass. Hold the commit until the owner resolves the message-language conflict between `AGENTS.md` and the plan.
+- **Alternatives:** Leave the branch unsynchronized, which leaves T14 incomplete; include the full dirty worktree, which would mix unrelated tasks into the release.
+- **Consequences and rollback:** Only the approved shipping history can reach the deploy branch. Verify the deployed SHA and retain the pre-deploy main SHA for rollback evidence; no commit, merge, push, or deployment has occurred yet.
+- **Source:** Approved REQ-014 `PLAN.md` T14 and `SPEC.md` deploy policy; [2026-10-16 day log](2026-10/W3/2026-10-16.md).

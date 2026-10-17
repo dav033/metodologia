@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-16 18:55 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-16 21:55 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -49,18 +49,18 @@ _Generated 2026-10-16 18:55 by `bitacora.py index`. Do not edit by hand._
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
 - P-015 · REQ-002 remaining rollout verification: current read-only Neon audit proves 028 tables and · high/M
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
+- P-103 · Resolve the three mainline Quality failures from `2d8463b9` (motor fixture, quotation fixt · high/M
 - P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
 - P-086 · `tamano_pieza` shrink (-1) enlarges a piece whose start size is below the constructor mini · med/S
 - P-002 · FLUX photo color fidelity: residual ΔE ~15 after hex prompt (c25490f1); next: photoreal ca · med/M
-- P-007 · Split Taller3D.tsx (1022 lines) by responsibility: top bar, rail panels, viewer overlay, i · med/M
 
 ## Recent decisions
 
+- D-055 — Limit REQ-014 synchronization to the approved Ship #1 payload
 - D-054 — Preserve the existing Happie v1 contract while adding opt-in services
 - D-053 — Persist shareable Taller quote snapshots outside customer sessions
 - D-052 — Resume REQ-017 with revisable Planner defaults
 - D-051 — Keep REQ-017 limited to reviewing the Planner output
-- D-050 — Bound semiarco fill calibration by the verified price and count corpus
 
 ## Timeline
 

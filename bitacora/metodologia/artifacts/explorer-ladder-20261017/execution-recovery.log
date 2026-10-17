@@ -1,0 +1,49 @@
+START E1-haiku-a2 claude-work medium
+START E1-luna-a2 codex-2 high
+START E1-gemini-a2 antigravity low
+DONE E1-gemini-a2 completed 6.927 s JSON False tools 0 changes 0
+START E2-gemini antigravity low
+DONE E1-luna-a2 completed 17.674 s JSON True tools 12 changes 0
+START E2-luna codex-2 high
+DONE E1-haiku-a2 completed 28.973 s JSON True tools 16 changes 0
+START E2-haiku claude-work medium
+DONE E2-gemini completed 10.926 s JSON False tools 0 changes 0
+START E3-gemini antigravity low
+DONE E2-luna completed 27.384 s JSON True tools 14 changes 0
+START E3-luna codex-2 high
+DONE E3-gemini completed 11.704 s JSON False tools 0 changes 0
+START E4-gemini antigravity low
+DONE E4-gemini completed 12.081 s JSON False tools 0 changes 0
+DONE E2-haiku completed 55.853 s JSON True tools 26 changes 0
+START E3-haiku claude-work medium
+START E5-gemini antigravity low
+DONE E3-luna completed 38.92 s JSON True tools 7 changes 0
+START E4-sol codex-2 medium
+DONE E5-gemini completed 6.008 s JSON False tools 0 changes 0
+START E6-gemini antigravity low
+DONE E6-gemini completed 6.179 s JSON False tools 0 changes 0
+DONE E3-haiku completed 41.296 s JSON False tools 16 changes 0
+START E4-sonnet claude-work medium
+DONE E4-sol completed 57.756 s JSON True tools 8 changes 0
+START E4-luna codex-2 high
+DONE E4-sonnet completed 58.361 s JSON False tools 19 changes 0
+START E4-haiku claude-work medium
+DONE E4-luna completed 40.978 s JSON True tools 8 changes 0
+START E5-luna codex-2 high
+DONE E5-luna completed 63.468 s JSON True tools 17 changes 0
+START E5-sol codex-2 medium
+DONE E4-haiku completed 99.139 s JSON True tools 27 changes 0
+START E5-haiku claude-work medium
+DONE E5-sol completed 89.115 s JSON True tools 8 changes 0
+START E6-sol codex-2 medium
+DONE E6-sol completed 115.597 s JSON True tools 33 changes 0
+START E6-luna codex-2 high
+DONE E5-haiku completed 183.127 s JSON True tools 56 changes 0
+START E5-sonnet claude-work medium
+DONE E6-luna completed 62.087 s JSON False tools 13 changes 0
+DONE E5-sonnet completed 80.931 s JSON True tools 24 changes 0
+START E6-sonnet claude-work medium
+DONE E6-sonnet completed 142.242 s JSON True tools 48 changes 0
+START E6-haiku claude-work medium
+DONE E6-haiku completed 211.769 s JSON True tools 50 changes 0
+EXECUTION SUMMARY [{"provider": "codex", "status": "complete"}, {"provider": "claude", "status": "complete"}, {"provider": "antigravity", "status": "complete"}]

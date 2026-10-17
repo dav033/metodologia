@@ -1,0 +1,204 @@
+[
+  {
+    "id": "E1",
+    "title": "Targeted CLI lookup",
+    "difficulty": 1,
+    "questions": [
+      {
+        "id": "Q1",
+        "question": "Where is `plan-json report REQ-NNN` registered, and which handler receives it?"
+      },
+      {
+        "id": "Q2",
+        "question": "Trace the handler to the Planner module. Is report already implemented or only advertised?"
+      },
+      {
+        "id": "Q3",
+        "question": "Find an existing test for report output or its CLI integration; explain the exact behavior it asserts."
+      }
+    ]
+  },
+  {
+    "id": "E2",
+    "title": "UI ownership and similarly named reports",
+    "difficulty": 2,
+    "questions": [
+      {
+        "id": "Q1",
+        "question": "Which page and function render the plan before approval? Trace its caller."
+      },
+      {
+        "id": "Q2",
+        "question": "Does that approval panel currently include the structured Planner report? Cite the actual render path."
+      },
+      {
+        "id": "Q3",
+        "question": "The application also has a Review tab and REPORT.md. Are these the same report or a different lifecycle stage?"
+      },
+      {
+        "id": "Q4",
+        "question": "Find the reusable report producer and its presentation-independent shape. Identify the adapter boundary a future UI would use, without implementing it."
+      }
+    ]
+  },
+  {
+    "id": "E3",
+    "title": "History projection and misleading nearby telemetry",
+    "difficulty": 3,
+    "questions": [
+      {
+        "id": "Q1",
+        "question": "Trace `plan-json history --kind ...` from argument validation to its result producer. When is REQ-NNN rejected?"
+      },
+      {
+        "id": "Q2",
+        "question": "What exact context dimensions and task kinds are accepted? What happens to unknown fields or invalid values?"
+      },
+      {
+        "id": "Q3",
+        "question": "Find the returned quality, duration, retry and consumption measurements. Are any of them currently observed numbers?"
+      },
+      {
+        "id": "Q4",
+        "question": "Why does existing per-route M2 quality or attempt telemetry not automatically populate these Planner measurements?"
+      },
+      {
+        "id": "Q5",
+        "question": "Locate tests that demonstrate unknown output and prevent leaking route identities. State what these tests do not establish about live performance."
+      }
+    ]
+  },
+  {
+    "id": "E4",
+    "title": "Whole DAG recommendation versus READY reservation",
+    "difficulty": 4,
+    "questions": [
+      {
+        "id": "Q1",
+        "question": "Trace Scheduler start into whole-plan route mapping. Does it include blocked/dependent tasks or only READY tasks?"
+      },
+      {
+        "id": "Q2",
+        "question": "Find the concrete bridge to M2 and the bounded joint allocation. Is it one decision per task or one batch operation for the map?"
+      },
+      {
+        "id": "Q3",
+        "question": "Where are planned routes/unavailable reasons persisted, and what prevents repeating the map on restart?"
+      },
+      {
+        "id": "Q4",
+        "question": "Does whole-plan mapping reserve executor capacity or launch work? Locate the component that really reserves."
+      },
+      {
+        "id": "Q5",
+        "question": "Trace READY assignment after account quota changes. Is the old planned model/profile blindly reused?"
+      },
+      {
+        "id": "Q6",
+        "question": "Where are quota refresh failures converted into unknown/unavailable facts, and how is the request timestamp tied to fresh observations?"
+      },
+      {
+        "id": "Q7",
+        "question": "Find an existing integration/regression test for plan-time routes versus execution-time revalidation or nonreservation. Explain its actual scenario."
+      }
+    ]
+  },
+  {
+    "id": "E5",
+    "title": "Tier floors, comparable quality and effective account allocation",
+    "difficulty": 5,
+    "questions": [
+      {
+        "id": "Q1",
+        "question": "Locate the real task-tier floor calculation. Explain the effects of high/extreme complexity, scope, coupling, duration and risk. Does medium risk alone force a higher tier?"
+      },
+      {
+        "id": "Q2",
+        "question": "Trace creation of candidate model/effort/profile/account identities. Is account identity simply a provider name?"
+      },
+      {
+        "id": "Q3",
+        "question": "Trace quota sampling preflight. How are aliases of one effective account grouped, is refresh always forced, and what bounds the work?"
+      },
+      {
+        "id": "Q4",
+        "question": "Locate hard eligibility filters for unsupported sources, auth/runtime and stale/unknown/exhausted quota. Can a good quality score bypass them?"
+      },
+      {
+        "id": "Q5",
+        "question": "When can quality rank routes? Trace minimum verified samples, uncertainty intervals and cross-route selected-level comparability."
+      },
+      {
+        "id": "Q6",
+        "question": "Without comparable quality, what is the actual lexicographic order? How are missing or incomparable duration/cost facts handled?"
+      },
+      {
+        "id": "Q7",
+        "question": "Does the actual whole-plan adapter supply contextual quality assessments and API prices to that ranking? Separate policy capability from currently wired evidence."
+      },
+      {
+        "id": "Q8",
+        "question": "Trace batch matching by effective account. Can two profile aliases manufacture capacity, and is a persisted batch a durable execution reservation?"
+      },
+      {
+        "id": "Q9",
+        "question": "Find tests that cover floor variation and account alias/capacity behavior. Identify any runtime facts about actual account quotas that this source snapshot cannot prove."
+      }
+    ]
+  },
+  {
+    "id": "E6",
+    "title": "Extreme: crash, lost acknowledgement, stale events and independent verification",
+    "difficulty": 6,
+    "questions": [
+      {
+        "id": "Q1",
+        "question": "Reconstruct the path from READY selection to a durable start order and M3 acceptance. Identify ownership and transaction boundaries, including when external calls happen."
+      },
+      {
+        "id": "Q2",
+        "question": "Suppose M3 accepted a start but its acknowledgement was lost and M1 restarts. Trace how M1 decides whether to resend; identify the same-key protection in M3."
+      },
+      {
+        "id": "Q3",
+        "question": "If the attempt lease expires and the executor query returns unknown, what happens to task, attempt, resource holds and retry eligibility? Cite the real branches."
+      },
+      {
+        "id": "Q4",
+        "question": "Contrast query not_found for a pending unsent start versus not_found after delivery. Which branch allows safe redelivery and which records loss?"
+      },
+      {
+        "id": "Q5",
+        "question": "Trace an execution_finished event all the way to task completion. Is clean process exit or claimed success sufficient, and who may accept the work?"
+      },
+      {
+        "id": "Q6",
+        "question": "During VERIFYING, a later executor query says unknown or failed. Does reconciliation override the verifier? Locate the exception for operator action."
+      },
+      {
+        "id": "Q7",
+        "question": "Trace duplicate event IDs, wrong plan/revision, old attempt IDs and wrong fencing tokens. Explain the incident-event exception rather than applying one blanket rule."
+      },
+      {
+        "id": "Q8",
+        "question": "What happens if cancellation arrives before pending start delivery versus while work may already be running? Are holds immediately discarded in both cases?"
+      },
+      {
+        "id": "Q9",
+        "question": "Locate M3 restart recovery for PREPARING/RUNNING/SETTLING. What persisted process/shim/result facts are checked, and what remains uncertain instead of launching a duplicate?"
+      },
+      {
+        "id": "Q10",
+        "question": "Trace how an opaque M2 reference is bound back to the approved plan/task and account before M3 launch. Can a stale or mismatched reference silently fall back?"
+      },
+      {
+        "id": "Q11",
+        "question": "Find executable tests covering lost-ack restart, unknown-hold retention and stale/duplicate/verifier handling. Give distinct examples and explain their assertions; do not run them."
+      },
+      {
+        "id": "Q12",
+        "question": "State the limit of the end-to-end guarantee. Does this source prove exactly-once effects at an arbitrary external provider, automatic quality acceptance, or live-account availability?"
+      }
+    ]
+  }
+]

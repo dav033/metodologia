@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "case": "E1",
+  "route": {
+    "id": "sonnet-high",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "c6fcc49647cf78ffabe835f1b3207b51d1ced11ea55057f36d961d6bd5ab59e9",
+  "prompt_characters": 12027,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792211968.3565097,
+    "windows": {
+      "five_hour": {
+        "used_percent": 10.0,
+        "resets_at": 1792213799.653293,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792277999.653319,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792211968.7589526,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "C1 request deduplication",
+        "severity": "high",
+        "issue": "The fingerprint omits amount_minor. R1 makes the amount part of the immutable transfer identity, but a retry compares only the fingerprint.",
+        "evidence": "R1 lists amount_minor in the tuple. C1 hashes (src_tenant, src_account, dst_tenant, dst_account, currency). The row stores the amount, but the comparison ignores it. T1 does not test same ID with a new amount.",
+        "failure_scenario": "ID X is accepted for 10. A retry of X for 1000 with the same other fields matches the fingerprint and returns the prior ACCEPTED decision. A conflicting request is treated as a true retry instead of being rejected.",
+        "fix": "Include amount_minor in the canonical tuple fingerprint, or compare the full stored tuple. Add a same-ID/different-amount test."
+      },
+      {
+        "task": "C2 regional rights rebalance (receiver B)",
+        "severity": "critical",
+        "issue": "The receiver credit is not idempotent. The receipt insert is diagnostic only and its result is ignored, so every duplicate delivery adds the amount again.",
+        "evidence": "R2 requires reallocation to neither create nor destroy rights, and says delivery may duplicate or reorder. G1 gives at-least-once delivery. C2 runs `rights[B] += amount` unconditionally and ignores the insert_if_absent result. T2 tests only one delivery.",
+        "failure_scenario": "A sends move m for 5 and decrements by 5. The message is delivered twice. B's rights rise by 10, so regional rights sum to 5 more than the available balance and the extra rights can be spent.",
+        "fix": "In B's local transaction, call insert_if_absent(move_id) and apply `rights[B] += amount` only if the row was newly inserted. Keep receipts for as long as the sender can redeliver. Add a duplicate-delivery test."
+      },
+      {
+        "task": "C3 source failover recovery",
+        "severity": "critical",
+        "issue": "Recovery appends the debit with the current leader epoch. Ledger idempotency is per (epoch, key) only, so a new epoch re-appends a debit the old epoch may already hold.",
+        "evidence": "G2 says dedup is scoped to the epoch and different epochs have separate namespaces. C3 uses epoch=current_leader_epoch with operation_key=transfer_id. The old-epoch debit may exist while the receipt was lost. R1 and R2 require a single debit. T3 does not change leader.",
+        "failure_scenario": "T is accepted in epoch 4, (4,T) is appended, and the receipt is lost. After cutover to epoch 5, recovery appends (5,T). The ledger now holds two debits for T, while the destination credits once through global dedup.",
+        "fix": "Persist the epoch and operation key of the first debit append in the transfer row at acceptance, and reuse them on retry. If old-epoch appends are fenced, first look up an existing debit for transfer_id across epochs and adopt its receipt. Add a test that runs recovery across a leader change."
+      },
+      {
+        "task": "C4 joint-configuration commit",
+        "severity": "critical",
+        "issue": "The commit rule counts a majority of the union instead of a separate old majority AND a separate new majority.",
+        "evidence": "R3 requires both majorities during joint configuration. C4 uses len(ack & union) >= len(union)//2 + 1. T4 passes only because ACK={b,c,d} with old={a,b,c}, new={b,c,d} has both majorities anyway.",
+        "failure_scenario": "old={a,b,c}, new={c,d,e}, union size 5, threshold 3. ACK={a,b,d} meets the threshold. Old has 2 of 3 but new has only d (1 of 3). await_commit issues a certificate without a new majority, and a new-config leader can later lose that entry.",
+        "fix": "Use `len(ack & old) >= len(old)//2 + 1 and len(ack & new) >= len(new)//2 + 1` until the joint-config entry is committed. Add a test that ACKs a union majority lacking a new majority."
+      },
+      {
+        "task": "C5 prepare/commit coordinator",
+        "severity": "critical",
+        "issue": "The coordinator treats an appended COMMIT as a durable decision. It records it, sends it to participants and returns accepted before await_commit obtains a certificate.",
+        "evidence": "R3 says a local append is not committed. R4 requires a durable commit certificate. G2 says only await_commit(index,digest) yields one. C5 sets durable_decision_index=index, sends the commit and defers await_commit. Participants trust the message. T5 never loses leadership.",
+        "failure_scenario": "The coordinator appends COMMIT at index 10 and sends it. Participants credit and debit. The leader dies and the uncommitted suffix is truncated. A new leader finds no COMMIT, and recovery or timeout aborts. The participants already applied the commit.",
+        "fix": "Call await_commit(index, digest) and use the resulting certificate before recording the decision durable, before send_commit_to_participants and before returning accepted. If it does not complete, return an unknown or pending state. Add a test that truncates the suffix after the append."
+      },
+      {
+        "task": "C6 participant recovery sweeper",
+        "severity": "critical",
+        "issue": "A PREPARED participant unilaterally aborts after 60 seconds without learning the coordinator's decision, although no bound exists on commit-message delay.",
+        "evidence": "R4 says a durable COMMIT can never later abort and that uncertainty may wait. C6 aborts on a timer. The dossier says the participant may have missed a delayed commit while the coordinator holds a certificate. T6 covers only transactions with no coordinator decision.",
+        "failure_scenario": "Both participants are PREPARED and the coordinator has a durable certificate for COMMIT. The commit message to P2 is delayed more than 60 seconds. P2's sweeper rolls back and marks ABORTED, while P1 commits. Money is destroyed or lost.",
+        "fix": "Remove the timer-only abort. A PREPARED participant must query the coordinator's durable decision and apply COMMIT or ABORT as returned, holding resources while unknown. Abort only on a durable ABORT, or through a coordinator-fenced presumed-abort protocol. This witness needs no C5 defect. C5's truncation witness needs no C6 defect, and each is independently sufficient for a split outcome."
+      },
+      {
+        "task": "C7 recovery after snapshot install",
+        "severity": "high",
+        "issue": "The skip test compares config_number with a log index, which are independent dimensions. It ignores the checkpoint's committed_log_index and digest.",
+        "evidence": "R3 and R4 say config number is separate from log index and that a committed prefix must not be skipped. C7 tests local_checkpoint.config_number >= remote_log_last_index. The checkpoint has an exact committed_log_index that goes unused. T7 uses equal config and index values.",
+        "failure_scenario": "The local checkpoint has config_number=10 and committed_log_index=5. The remote committed log ends at 8. Since 10 >= 8, replay is skipped and entries 6-8 are never applied, so the transfers in them are lost.",
+        "fix": "Skip only if checkpoint.committed_log_index >= the remote committed last index and the digest at the checkpoint index matches the remote branch. Otherwise replay from checkpoint.committed_log_index+1. Use the remote committed index, not its raw last index. Add a test with unequal config and index."
+      },
+      {
+        "task": "C8 composite balance read",
+        "severity": "high",
+        "issue": "The read sums latest_component per account, which may come from different indices, and returns max(index) as if it were one snapshot.",
+        "evidence": "R5 requires ONE committed global snapshot index. G5 says latest_component may return values at different indices. C8 says an atomic transfer between requested accounts can commit between reads. T8 uses a quiescent ledger.",
+        "failure_scenario": "A=100 and B=0 at index 10. A transfer of 40 from A to B commits at index 11. C8 reads A at 10 (100), then B at 11 (40), and returns balance 140 with index 11. Neither snapshot ever held 140.",
+        "fix": "Choose one committed index I, for example the local committed index, and read every account with snapshot_component(a, I). Return I, and make sure the authorization check covers that read. Add a concurrent-transfer test."
+      },
+      {
+        "task": "C9 signed historical read — cache before authorization",
+        "severity": "high",
+        "issue": "The cache lookup precedes current_auth, so a cache hit skips authorization and revoked principals still read cached data.",
+        "evidence": "R5 requires revocation to apply to every new read, including historical snapshots, evaluated at the read's linearization point. G5 says revocation does not purge caches. C9 returns cached.payload before require(current_auth). The cache is shared by principals of the tenant, and T9 hits only with the same principal.",
+        "failure_scenario": "Principal P reads and the payload is cached under (tenant, 7). P is then revoked and presents a valid signed token. The cache hits and P receives the payload without any current_auth check.",
+        "fix": "Call require(current_auth(principal, tenant)) first on every request, then consult the cache. Add a test of revoke then cache hit."
+      },
+      {
+        "task": "C9 signed historical read — token digest unchecked on miss",
+        "severity": "high",
+        "issue": "On a cache miss the function checks index <= local_committed_index but never compares token.digest with the local branch digest at token.index, and then serves the local branch's snapshot.",
+        "evidence": "R6 says a token cannot be used on a branch with a different digest even at the same integer index. The dossier says distinct branches at equal indices are possible after disaster recovery. C9 verifies the signature, tenant and index only. T9 uses valid tokens on the same branch.",
+        "failure_scenario": "The token is signed for index 50 with digest D1. After disaster recovery the local branch has digest D2 at index 50. The signature is valid and 50 <= committed, so the miss path returns snapshot_component(account, 50) from branch D2 for a D1 token.",
+        "fix": "Before reading the snapshot, require that the local log digest at token.index equals token.digest. Add a test with a same-index, different-digest token."
+      },
+      {
+        "task": "C9 signed historical read — cache key omits branch digest",
+        "severity": "medium",
+        "issue": "The cache key is (tenant, token.index), so an entry filled on one branch is served to a token for another digest even if the miss path is fixed.",
+        "evidence": "R6 binds the token to a digest. C9 keys the cache by (tenant, token.index) and returns on a hit without digest comparison. The outer-key note covers the account and request digest, not the log digest. Branches can share an index after disaster recovery.",
+        "failure_scenario": "A payload cached for (tenant, 50) with digest D1 stays in the cache. After recovery, a token for (50, D2) hits that key and receives the D1-branch payload, even though a digest check on the miss path would have passed or rejected it.",
+        "fix": "Key the cache by (tenant, token.index, token.digest), or invalidate it on a branch change, and verify the digest before any hit is served. Add a cross-branch cache test."
+      },
+      {
+        "task": "C10 checkpoint and retention",
+        "severity": "high",
+        "issue": "Retention deletes COMPLETED transfer rows and source dedup entries after 30 days and omits them from the checkpoint, which breaks indefinite retry safety on the source.",
+        "evidence": "R1, R2 and R6 require retry safety indefinitely, and the API never expires transfer IDs. G4's destination dedup is retained forever, but source dedup (the C1 lookup row and the ledger operation-key entry) is deleted. G3 says the caller chooses which obligations the checkpoint includes. T10 tests restore after 7 days only.",
+        "failure_scenario": "Transfer X completes on day 0, and its row and dedup entry are deleted on day 31. A client retries X on a new leader. lookup_transfer finds nothing, so it is treated as new. The ordinary debit consumes the source's rights and balance again. Destination dedup rejects the second credit. The source is debited twice and the destination credited once. A different tuple under the same ID would also go undetected.",
+        "fix": "Never prune the (transfer_id -> full tuple or fingerprint including amount, decision, ledger receipt) record. Compact it to a minimal permanent record if needed, include it in checkpoints, and keep the ledger operation-key obligation. Add a test that retries after more than 30 days on a new leader."
+      }
+    ],
+    "uncertainties": [
+      "C3: the dossier does not say whether the ledger can look up a prior debit across epochs, or whether old-epoch appends are accepted after cutover. The recommended fix depends on which holds, but the double-debit witness does not.",
+      "C1: the dossier does not say whether lookup_transfer and the insert of the fingerprint row are atomic for concurrent first requests with the same ID. I make no claim about that race.",
+      "C10: the dossier does not say whether the source learns of destination credit rejections. The source double-debit is established regardless."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"C1 request deduplication\",\"severity\":\"high\",\"issue\":\"The fingerprint omits amount_minor. R1 makes the amount part of the immutable transfer identity, but a retry compares only the fingerprint.\",\"evidence\":\"R1 lists amount_minor in the tuple. C1 hashes (src_tenant, src_account, dst_tenant, dst_account, currency). The row stores the amount, but the comparison ignores it. T1 does not test same ID with a new amount.\",\"failure_scenario\":\"ID X is accepted for 10. A retry of X for 1000 with the same other fields matches the fingerprint and returns the prior ACCEPTED decision. A conflicting request is treated as a true retry instead of being rejected.\",\"fix\":\"Include amount_minor in the canonical tuple fingerprint, or compare the full stored tuple. Add a same-ID/different-amount test.\"},{\"task\":\"C2 regional rights rebalance (receiver B)\",\"severity\":\"critical\",\"issue\":\"The receiver credit is not idempotent. The receipt insert is diagnostic only and its result is ignored, so every duplicate delivery adds the amount again.\",\"evidence\":\"R2 requires reallocation to neither create nor destroy rights, and says delivery may duplicate or reorder. G1 gives at-least-once delivery. C2 runs `rights[B] += amount` unconditionally and ignores the insert_if_absent result. T2 tests only one delivery.\",\"failure_scenario\":\"A sends move m for 5 and decrements by 5. The message is delivered twice. B's rights rise by 10, so regional rights sum to 5 more than the available balance and the extra rights can be spent.\",\"fix\":\"In B's local transaction, call insert_if_absent(move_id) and apply `rights[B] += amount` only if the row was newly inserted. Keep receipts for as long as the sender can redeliver. Add a duplicate-delivery test.\"},{\"task\":\"C3 source failover recovery\",\"severity\":\"critical\",\"issue\":\"Recovery appends the debit with the current leader epoch. Ledger idempotency is per (epoch, key) only, so a new epoch re-appends a debit the old epoch may already hold.\",\"evidence\":\"G2 says dedup is scoped to the epoch and different epochs have separate namespaces. C3 uses epoch=current_leader_epoch with operation_key=transfer_id. The old-epoch debit may exist while the receipt was lost. R1 and R2 require a single debit. T3 does not change leader.\",\"failure_scenario\":\"T is accepted in epoch 4, (4,T) is appended, and the receipt is lost. After cutover to epoch 5, recovery appends (5,T). The ledger now holds two debits for T, while the destination credits once through global dedup.\",\"fix\":\"Persist the epoch and operation key of the first debit append in the transfer row at acceptance, and reuse them on retry. If old-epoch appends are fenced, first look up an existing debit for transfer_id across epochs and adopt its receipt. Add a test that runs recovery across a leader change.\"},{\"task\":\"C4 joint-configuration commit\",\"severity\":\"critical\",\"issue\":\"The commit rule counts a majority of the union instead of a separate old majority AND a separate new majority.\",\"evidence\":\"R3 requires both majorities during joint configuration. C4 uses len(ack & union) >= len(union)//2 + 1. T4 passes only because ACK={b,c,d} with old={a,b,c}, new={b,c,d} has both majorities anyway.\",\"failure_scenario\":\"old={a,b,c}, new={c,d,e}, union size 5, threshold 3. ACK={a,b,d} meets the threshold. Old has 2 of 3 but new has only d (1 of 3). await_commit issues a certificate without a new majority, and a new-config leader can later lose that entry.\",\"fix\":\"Use `len(ack & old) >= len(old)//2 + 1 and len(ack & new) >= len(new)//2 + 1` until the joint-config entry is committed. Add a test that ACKs a union majority lacking a new majority.\"},{\"task\":\"C5 prepare/commit coordinator\",\"severity\":\"critical\",\"issue\":\"The coordinator treats an appended COMMIT as a durable decision. It records it, sends it to participants and returns accepted before await_commit obtains a certificate.\",\"evidence\":\"R3 says a local append is not committed. R4 requires a durable commit certificate. G2 says only await_commit(index,digest) yields one. C5 sets durable_decision_index=index, sends the commit and defers await_commit. Participants trust the message. T5 never loses leadership.\",\"failure_scenario\":\"The coordinator appends COMMIT at index 10 and sends it. Participants credit and debit. The leader dies and the uncommitted suffix is truncated. A new leader finds no COMMIT, and recovery or timeout aborts. The participants already applied the commit.\",\"fix\":\"Call await_commit(index, digest) and use the resulting certificate before recording the decision durable, before send_commit_to_participants and before returning accepted. If it does not complete, return an unknown or pending state. Add a test that truncates the suffix after the append.\"},{\"task\":\"C6 participant recovery sweeper\",\"severity\":\"critical\",\"issue\":\"A PREPARED participant unilaterally aborts after 60 seconds without learning the coordinator's decision, although no bound exists on commit-message delay.\",\"evidence\":\"R4 says a durable COMMIT can never later abort and that uncertainty may wait. C6 aborts on a timer. The dossier says the participant may have missed a delayed commit while the coordinator holds a certificate. T6 covers only transactions with no coordinator decision.\",\"failure_scenario\":\"Both participants are PREPARED and the coordinator has a durable certificate for COMMIT. The commit message to P2 is delayed more than 60 seconds. P2's sweeper rolls back and marks ABORTED, while P1 commits. Money is destroyed or lost.\",\"fix\":\"Remove the timer-only abort. A PREPARED participant must query the coordinator's durable decision and apply COMMIT or ABORT as returned, holding resources while unknown. Abort only on a durable ABORT, or through a coordinator-fenced presumed-abort protocol. This witness needs no C5 defect. C5's truncation witness needs no C6 defect, and each is independently sufficient for a split outcome.\"},{\"task\":\"C7 recovery after snapshot install\",\"severity\":\"high\",\"issue\":\"The skip test compares config_number with a log index, which are independent dimensions. It ignores the checkpoint's committed_log_index and digest.\",\"evidence\":\"R3 and R4 say config number is separate from log index and that a committed prefix must not be skipped. C7 tests local_checkpoint.config_number >= remote_log_last_index. The checkpoint has an exact committed_log_index that goes unused. T7 uses equal config and index values.\",\"failure_scenario\":\"The local checkpoint has config_number=10 and committed_log_index=5. The remote committed log ends at 8. Since 10 >= 8, replay is skipped and entries 6-8 are never applied, so the transfers in them are lost.\",\"fix\":\"Skip only if checkpoint.committed_log_index >= the remote committed last index and the digest at the checkpoint index matches the remote branch. Otherwise replay from checkpoint.committed_log_index+1. Use the remote committed index, not its raw last index. Add a test with unequal config and index.\"},{\"task\":\"C8 composite balance read\",\"severity\":\"high\",\"issue\":\"The read sums latest_component per account, which may come from different indices, and returns max(index) as if it were one snapshot.\",\"evidence\":\"R5 requires ONE committed global snapshot index. G5 says latest_component may return values at different indices. C8 says an atomic transfer between requested accounts can commit between reads. T8 uses a quiescent ledger.\",\"failure_scenario\":\"A=100 and B=0 at index 10. A transfer of 40 from A to B commits at index 11. C8 reads A at 10 (100), then B at 11 (40), and returns balance 140 with index 11. Neither snapshot ever held 140.\",\"fix\":\"Choose one committed index I, for example the local committed index, and read every account with snapshot_component(a, I). Return I, and make sure the authorization check covers that read. Add a concurrent-transfer test.\"},{\"task\":\"C9 signed historical read — cache before authorization\",\"severity\":\"high\",\"issue\":\"The cache lookup precedes current_auth, so a cache hit skips authorization and revoked principals still read cached data.\",\"evidence\":\"R5 requires revocation to apply to every new read, including historical snapshots, evaluated at the read's linearization point. G5 says revocation does not purge caches. C9 returns cached.payload before require(current_auth). The cache is shared by principals of the tenant, and T9 hits only with the same principal.\",\"failure_scenario\":\"Principal P reads and the payload is cached under (tenant, 7). P is then revoked and presents a valid signed token. The cache hits and P receives the payload without any current_auth check.\",\"fix\":\"Call require(current_auth(principal, tenant)) first on every request, then consult the cache. Add a test of revoke then cache hit.\"},{\"task\":\"C9 signed historical read — token digest unchecked on miss\",\"severity\":\"high\",\"issue\":\"On a cache miss the function checks index <= local_committed_index but never compares token.digest with the local branch digest at token.index, and then serves the local branch's snapshot.\",\"evidence\":\"R6 says a token cannot be used on a branch with a different digest even at the same integer index. The dossier says distinct branches at equal indices are possible after disaster recovery. C9 verifies the signature, tenant and index only. T9 uses valid tokens on the same branch.\",\"failure_scenario\":\"The token is signed for index 50 with digest D1. After disaster recovery the local branch has digest D2 at index 50. The signature is valid and 50 <= committed, so the miss path returns snapshot_component(account, 50) from branch D2 for a D1 token.\",\"fix\":\"Before reading the snapshot, require that the local log digest at token.index equals token.digest. Add a test with a same-index, different-digest token.\"},{\"task\":\"C9 signed historical read — cache key omits branch digest\",\"severity\":\"medium\",\"issue\":\"The cache key is (tenant, token.index), so an entry filled on one branch is served to a token for another digest even if the miss path is fixed.\",\"evidence\":\"R6 binds the token to a digest. C9 keys the cache by (tenant, token.index) and returns on a hit without digest comparison. The outer-key note covers the account and request digest, not the log digest. Branches can share an index after disaster recovery.\",\"failure_scenario\":\"A payload cached for (tenant, 50) with digest D1 stays in the cache. After recovery, a token for (50, D2) hits that key and receives the D1-branch payload, even though a digest check on the miss path would have passed or rejected it.\",\"fix\":\"Key the cache by (tenant, token.index, token.digest), or invalidate it on a branch change, and verify the digest before any hit is served. Add a cross-branch cache test.\"},{\"task\":\"C10 checkpoint and retention\",\"severity\":\"high\",\"issue\":\"Retention deletes COMPLETED transfer rows and source dedup entries after 30 days and omits them from the checkpoint, which breaks indefinite retry safety on the source.\",\"evidence\":\"R1, R2 and R6 require retry safety indefinitely, and the API never expires transfer IDs. G4's destination dedup is retained forever, but source dedup (the C1 lookup row and the ledger operation-key entry) is deleted. G3 says the caller chooses which obligations the checkpoint includes. T10 tests restore after 7 days only.\",\"failure_scenario\":\"Transfer X completes on day 0, and its row and dedup entry are deleted on day 31. A client retries X on a new leader. lookup_transfer finds nothing, so it is treated as new. The ordinary debit consumes the source's rights and balance again. Destination dedup rejects the second credit. The source is debited twice and the destination credited once. A different tuple under the same ID would also go undetected.\",\"fix\":\"Never prune the (transfer_id -> full tuple or fingerprint including amount, decision, ledger receipt) record. Compact it to a minimal permanent record if needed, include it in checkpoints, and keep the ledger operation-key obligation. Add a test that retries after more than 30 days on a new leader.\"}],\"uncertainties\":[\"C3: the dossier does not say whether the ledger can look up a prior debit across epochs, or whether old-epoch appends are accepted after cutover. The recommended fix depends on which holds, but the double-debit witness does not.\",\"C1: the dossier does not say whether lookup_transfer and the insert of the fingerprint row are atomic for concurrent first requests with the same ID. I make no claim about that race.\",\"C10: the dossier does not say whether the source learns of destination credit rejections. The source double-debit is established regardless.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 6293,
+    "cache_read_input_tokens": 1662,
+    "output_tokens": 8459,
+    "output_tokens_details": {
+      "thinking_tokens": 4104
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6293,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "response_words": 1783,
+  "exit_code": 0,
+  "elapsed_seconds": 66.495,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792212035.254702,
+    "windows": {
+      "five_hour": {
+        "used_percent": 10.0,
+        "resets_at": 1792213799.520885,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792277999.520909,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

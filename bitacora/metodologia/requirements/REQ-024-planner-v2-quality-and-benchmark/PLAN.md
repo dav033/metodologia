@@ -181,10 +181,10 @@ Rollback selects the last compatible approved 1.1.0 revision and restores the ma
 - [x] T12 — Update the Planner profile and private skills for the new gates and provider neutrality · repo: skill · after: T10, T13 · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_planner_profile.py` · files: skill/agents/planner.md, skill/agents/planner/skills · resources: planner-profile · covers: R3, R4, R5, R6, R7, R9, R10, R15
 - [x] T13 — Add a read-only planning-history projection that keeps sparse data unknown · repo: skill · after: T3 · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_history.py` · files: skill/scripts/bt_plan_history.py · resources: planning-history-projection · covers: R9
 - [x] T14 — Add a provider-neutral Planner invocation adapter · repo: skill · after: T12 · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_planner_runtime.py` · files: skill/scripts/bt_planner_runtime.py, skill/scripts/tests/test_planner_runtime.py · resources: planner-profile, planner-runtime · covers: R15
-- [ ] T15 — Install and smoke-test Planner across configured local AI profiles · repo: skill · after: T14 · verify: `python3 skill/scripts/bitacora.py profiles list` · files: ~/.claude/agents/planner.md, ~/.claude-work/agents/planner.md, ~/.codex/agents/planner.toml, ~/.codex-luis/agents/planner.toml · resources: planner-profile, planner-runtime, configured-ai-accounts · covers: R2, R14, R15
+- [x] T15 — Install and smoke-test Planner across configured local AI profiles · repo: skill · after: T14 · verify: `python3 skill/scripts/bitacora.py profiles list` · files: ~/.claude/agents/planner.md, ~/.claude-work/agents/planner.md, ~/.codex/agents/planner.toml, ~/.codex-luis/agents/planner.toml · resources: planner-profile, planner-runtime, configured-ai-accounts · covers: R2, R14, R15
 
 ### M5 — Reproducible planning benchmark
-- [ ] T16 — Build the planning benchmark harness and pinned rubric · repo: skill · after: T11 · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_bench.py` · files: skill/scripts/bt_plan_bench.py, skill/scripts/plan_bench · resources: benchmark-store · covers: R10, R11, R12
+- [x] T16 — Build the planning benchmark harness and pinned rubric · repo: skill · after: T11 · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_bench.py` · files: skill/scripts/bt_plan_bench.py, skill/scripts/plan_bench · resources: benchmark-store · covers: R10, R11, R12
 - [ ] T17 — Freeze the benchmark corpus, oracles and matched run configurations · repo: skill · after: T15, T16 · verify: `python3 skill/scripts/bt_plan_bench.py verify /home/david/bitacora/metodologia/artifacts/REQ-024-benchmark` · resources: benchmark-store · covers: R11
 - [ ] T18 — Execute the matched benchmark runs within the resource cap · repo: skill · after: T17 · verify: `python3 skill/scripts/bt_plan_bench.py score /home/david/bitacora/metodologia/artifacts/REQ-024-benchmark` · resources: benchmark-store · covers: R11, R12
 - [ ] T19 — Collect blind reviews and score historical REQ-017 outputs retrospectively · repo: skill · after: T18 · verify: `python3 skill/scripts/bt_plan_bench.py verify --reviews /home/david/bitacora/metodologia/artifacts/REQ-024-benchmark` · resources: benchmark-store · covers: R1, R10, R11, R12
@@ -392,6 +392,9 @@ End to end, the requirement is met when all of the following hold:
 Product-level acceptance of REQ-017 is explicitly not part of this requirement.
 
 ## Rulings
+- T16 uses a standard-library-only `plan_bench` package. `bt_planner report` emits JSON directly (there is no `--json` switch for that action); `check --json` supplies validation output. The harness validates both outputs and preserves the full 1.2.0 coverage, interface and verification fields required by IF-2.
+- T16 cells admit only approved plan, check, quality, metric-source and metadata files; symlinks and unapproved artifacts are rejected. Each measured metric pins a source command, relative output path and SHA-256. Complete cells require observed metrics; partial work must be explicitly marked incomplete.
+- T16 verifies data and computes per-metric descriptive findings only. It does not launch models, infer missing cells, assign an aggregate score or make an overall-superiority claim. D-059's usage caps are unchanged.
 
 ## Progress log
 - 2026-10-16: Planner draft written from read-only inspection. Post-draft `bt_planner check` passed; awaiting owner review.

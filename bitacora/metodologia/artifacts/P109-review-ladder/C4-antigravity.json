@@ -1,0 +1,132 @@
+{
+  "case": "C4",
+  "profile": "antigravity",
+  "provider": "antigravity",
+  "requested_model": "gemini-3.8-flash-high",
+  "requested_effort": "high",
+  "prompt_sha256": "d9ad8244767bc360cc6385109aa23865b1be8e417e76aee5f7fd57befbaca4b3",
+  "prompt_characters": 4030,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792206415.0660505,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792811214.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792224414.0,
+        "window_minutes": 300
+      }
+    }
+  },
+  "started_at": 1792206415.0663445,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "Premature per-unit rounding produces incorrect invoice totals violating the contractual rounding formula.",
+        "evidence": "compute cents_per_unit=round_half_up(unit_price*100), invoice_cents=sum(cents_per_unit*quantity) vs contract Invoice total equals round_half_up(sum(unit_price_decimal * quantity),2)",
+        "failure_scenario": "For unit_price=0.335 and quantity=3, the contractual total is round_half_up(1.005, 2) = $1.01 (101 cents), but T1 rounds 0.335 to 34 cents first, producing 102 cents and overcharging the customer.",
+        "fix": "Compute sum(unit_price_decimal * quantity) across line items, round once using ROUND_HALF_UP to 2 decimal places, and convert the result to integer cents."
+      },
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "Generating a fresh idempotency key on retry after timeout risks duplicate customer charges.",
+        "evidence": "on timeout retry at most twice, generating a fresh key for each attempt vs contract Provider guarantees at-most-one charge PER idempotency key for 72h; a timeout may occur after the charge succeeded. Retrying the SAME key is safe; provider has no lookup by invoice metadata.",
+        "failure_scenario": "If a charge succeeds at the provider but the network request times out, retrying with a newly generated key bypasses provider idempotency and creates a second charge for the same invoice.",
+        "fix": "Reuse the initial idempotency key across all retry attempts for the invoice."
+      },
+      {
+        "task": "T3",
+        "severity": "critical",
+        "issue": "Non-atomic separation of inbox insertion and charge update leads to silently dropped webhook events upon crash.",
+        "evidence": "transaction A inserts event_id into inbox and commits. Then transaction B updates charge status and creates outbox row. If inbox event_id already exists, respond 200 immediately without transaction B. A crash can occur between A and B. vs contract A processed inbox marker must imply the corresponding business update committed.",
+        "failure_scenario": "If the worker crashes after transaction A commits but before transaction B executes, subsequent webhook redeliveries see event_id in the inbox and exit with 200, permanently preventing the charge status update and outbox creation.",
+        "fix": "Execute inbox insertion, charge status update, and outbox event creation within a single atomic database transaction."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "Job finalization lacks a lease generation check, permitting expired zombie workers to overwrite current generations.",
+        "evidence": "Finalization uses UPDATE jobs SET state='completed',result=:result WHERE id=:id; no generation/owner predicate. vs contract Completed state and result must belong to current lease generation.",
+        "failure_scenario": "Worker A pauses longer than 60s at generation 7 and Worker B acquires generation 8. When Worker A resumes, its finalization update succeeds without checking generation, overwriting Worker B's active work with stale generation 7 results.",
+        "fix": "Modify finalization to include a generation predicate: UPDATE jobs SET state='completed', result=:result WHERE id=:id AND generation=:acquired_generation."
+      },
+      {
+        "task": "T5",
+        "severity": "critical",
+        "issue": "Transactionally committing sent=true before broker acknowledgement permanently loses notifications if a crash occurs.",
+        "evidence": "outbox dispatcher transactionally sets sent=true, commits; then publishes with immutable event ID and waits for broker ack. Restart scans WHERE sent=false. No reconciliation scans sent rows. vs contract A committed payment must eventually produce exactly one logical notification, despite process crashes",
+        "failure_scenario": "If the dispatcher crashes after committing sent=true but before publishing to the broker, the restart recovery ignores the record because sent=true, resulting in permanent notification loss.",
+        "fix": "Commit sent=true only after receiving broker acknowledgement, or keep sent=false and record an in-flight timestamp reconciled upon restart."
+      },
+      {
+        "task": "T6",
+        "severity": "medium",
+        "issue": "Verification scope omits core failure modes governed by system contract requirements.",
+        "evidence": "simulate ordinary success, duplicate webhook, timeout-before-provider-execution, lease renewal with no pause, and broker success.",
+        "failure_scenario": "Edge cases such as timeouts occurring after provider charge execution, expired workers resuming post-pause, and process crashes between decoupled steps remain unverified, allowing idempotency and concurrency violations into production.",
+        "fix": "Add integration test cases for timeout-after-provider-execution, worker lease expiry followed by stale completion attempts, and crashes during outbox dispatch."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T1\",\"severity\":\"high\",\"issue\":\"Premature per-unit rounding produces incorrect invoice totals violating the contractual rounding formula.\",\"evidence\":\"compute cents_per_unit=round_half_up(unit_price*100), invoice_cents=sum(cents_per_unit*quantity) vs contract Invoice total equals round_half_up(sum(unit_price_decimal * quantity),2)\",\"failure_scenario\":\"For unit_price=0.335 and quantity=3, the contractual total is round_half_up(1.005, 2) = $1.01 (101 cents), but T1 rounds 0.335 to 34 cents first, producing 102 cents and overcharging the customer.\",\"fix\":\"Compute sum(unit_price_decimal * quantity) across line items, round once using ROUND_HALF_UP to 2 decimal places, and convert the result to integer cents.\"},{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"Generating a fresh idempotency key on retry after timeout risks duplicate customer charges.\",\"evidence\":\"on timeout retry at most twice, generating a fresh key for each attempt vs contract Provider guarantees at-most-one charge PER idempotency key for 72h; a timeout may occur after the charge succeeded. Retrying the SAME key is safe; provider has no lookup by invoice metadata.\",\"failure_scenario\":\"If a charge succeeds at the provider but the network request times out, retrying with a newly generated key bypasses provider idempotency and creates a second charge for the same invoice.\",\"fix\":\"Reuse the initial idempotency key across all retry attempts for the invoice.\"},{\"task\":\"T3\",\"severity\":\"critical\",\"issue\":\"Non-atomic separation of inbox insertion and charge update leads to silently dropped webhook events upon crash.\",\"evidence\":\"transaction A inserts event_id into inbox and commits. Then transaction B updates charge status and creates outbox row. If inbox event_id already exists, respond 200 immediately without transaction B. A crash can occur between A and B. vs contract A processed inbox marker must imply the corresponding business update committed.\",\"failure_scenario\":\"If the worker crashes after transaction A commits but before transaction B executes, subsequent webhook redeliveries see event_id in the inbox and exit with 200, permanently preventing the charge status update and outbox creation.\",\"fix\":\"Execute inbox insertion, charge status update, and outbox event creation within a single atomic database transaction.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"Job finalization lacks a lease generation check, permitting expired zombie workers to overwrite current generations.\",\"evidence\":\"Finalization uses UPDATE jobs SET state='completed',result=:result WHERE id=:id; no generation/owner predicate. vs contract Completed state and result must belong to current lease generation.\",\"failure_scenario\":\"Worker A pauses longer than 60s at generation 7 and Worker B acquires generation 8. When Worker A resumes, its finalization update succeeds without checking generation, overwriting Worker B's active work with stale generation 7 results.\",\"fix\":\"Modify finalization to include a generation predicate: UPDATE jobs SET state='completed', result=:result WHERE id=:id AND generation=:acquired_generation.\"},{\"task\":\"T5\",\"severity\":\"critical\",\"issue\":\"Transactionally committing sent=true before broker acknowledgement permanently loses notifications if a crash occurs.\",\"evidence\":\"outbox dispatcher transactionally sets sent=true, commits; then publishes with immutable event ID and waits for broker ack. Restart scans WHERE sent=false. No reconciliation scans sent rows. vs contract A committed payment must eventually produce exactly one logical notification, despite process crashes\",\"failure_scenario\":\"If the dispatcher crashes after committing sent=true but before publishing to the broker, the restart recovery ignores the record because sent=true, resulting in permanent notification loss.\",\"fix\":\"Commit sent=true only after receiving broker acknowledgement, or keep sent=false and record an in-flight timestamp reconciled upon restart.\"},{\"task\":\"T6\",\"severity\":\"medium\",\"issue\":\"Verification scope omits core failure modes governed by system contract requirements.\",\"evidence\":\"simulate ordinary success, duplicate webhook, timeout-before-provider-execution, lease renewal with no pause, and broker success.\",\"failure_scenario\":\"Edge cases such as timeouts occurring after provider charge execution, expired workers resuming post-pause, and process crashes between decoupled steps remain unverified, allowing idempotency and concurrency violations into production.\",\"fix\":\"Add integration test cases for timeout-after-provider-execution, worker lease expiry followed by stale completion attempts, and crashes during outbox dispatch.\"}],\"uncertainties\":[]}\n",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 12725,
+    "output_tokens": 6127,
+    "thinking_tokens": 5147,
+    "cache_read_tokens": 0,
+    "total_tokens": 18852
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 46.03,
+  "quota_after": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792206465.1400256,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792811263.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792224463.0,
+        "window_minutes": 300
+      }
+    }
+  }
+}

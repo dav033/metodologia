@@ -1,0 +1,1199 @@
+{
+  "schema_version": 1,
+  "case": "CP2",
+  "route": {
+    "id": "opus",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "2c4853c7b9850b4803bbf052974892481ba5ef09a793c5b6938845c6cd96a608",
+  "prompt_characters": 69508,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792244953.1234868,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792262400.355144,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792278000.355163,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792244953.4570045,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-opus-5-5",
+    "--effort",
+    "high",
+    "--safe-mode",
+    "--restricted",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "plan",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "answer": null,
+  "response_text": "```PLAN.md\n---\nplan_id: REQ-CP2\nrevision: 1\nstatus: draft\nspec_ref: SPEC.md\n---\n\n# REQ-CP2 — TRAIN-6: Move Training API persistence from SQLite to PostgreSQL (DRAFT)\n\nDraft for owner review. It is not approved, frozen or launched. Product and ops choices that the requirement leaves open are listed as decision gates, each with a recommended default. No owner answers have been recorded. Estimates are planner estimates: this sandbox has no comparable execution history. No commands were run while preparing this draft.\n\n## Goal and scope\n\nMove the API's persistence for `projects` and `assets` metadata from SQLite (`better-sqlite3`) to PostgreSQL. No data may be lost and availability must be preserved within the window chosen at D2.\n\n- **R1** Every existing row is migrated and verified with row counts and content hashes.\n- **R2** Clients see identical API behaviour, including revision conflicts (`409 REVISION_CONFLICT` + `currentRevision`).\n- **R3** Backups and rollback keep working on the new store.\n\n**In scope:** a PostgreSQL store module and schema migration; an async port of the repositories, asset service, HTTP handlers, WebSocket upgrade and server lifecycle; parity tests; a verified SQLite→PostgreSQL migration CLI; backup and restore on PostgreSQL; changes to compose, deploy and rollback; a guarded cutover script; a rehearsal.\n\n**Out of scope:**\n- Changes to the HTTP/WS contract, `packages/contracts`, `apps/web` or the separate MCP adapter repository.\n- Persistent sessions. They stay in memory, as in `apps/api/src/http/auth.ts`.\n- Moving asset files off the filesystem volume.\n- Running more than one API instance.\n- Removing `better-sqlite3`. It is kept for the migration tool and for SQLite rollback.\n- Running the production cutover. The owner runs it after approval.\n\n## Inspected findings (provenance)\n\n- `apps/api/src/db/database.ts`:\n  - Synchronous `better-sqlite3`; `PRAGMA user_version` migration to schema 1 inside `BEGIN IMMEDIATE`; it rejects a version newer than 1.\n  - `data_json TEXT CHECK(json_valid)`; `projects.external_key UNIQUE`; `assets.project_id REFERENCES projects ON DELETE CASCADE`; `relative_path UNIQUE`.\n  - `assertDatabaseReady` runs `integrity_check` and the version check.\n- `apps/api/src/repositories/project-repository.ts`:\n  - `mutate` runs inside `BEGIN IMMEDIATE`: it reads by `external_key`, throws `RevisionConflictError(current.revision)` on a mismatch, and sets `changed` by plain string comparison of `name`, `description` and `data_json`. The revision is bumped only when something changed.\n  - Creating a duplicate key throws a plain `Error`, which becomes a 500 via `app.ts`.\n  - `list` orders by `updated_at DESC`. Timestamps are ISO strings.\n- `apps/api/src/repositories/asset-repository.ts` and `apps/api/src/services/asset-service.ts`: synchronous inserts, lists and deletes. A file is written with `wx` before the row is inserted and removed if the insert fails.\n- `apps/api/src/app.ts`:\n  - Synchronous handlers. `hub.publish` runs after a successful mutation.\n  - The error middleware maps conflicts to 409, not-found to 404, Zod errors to 400, 413 to 413, and anything else to 500.\n  - `/readyz` calls `assertDatabaseReady`.\n- `apps/api/src/ws/server.ts`: calls `repository.getById` synchronously during upgrade and answers 404 if it fails.\n- `apps/api/src/server.ts`: `db.close()` on shutdown.\n- `apps/api/src/errors.ts`: the error classes.\n- `apps/api/src/backup.ts`:\n  - Runs `db.backup` to `training.db` and copies `assets/`. Writes `checksums.sha256`, `git-sha.txt`, `schema-version.txt` and `manifest.json`.\n  - Already uses top-level await.\n  - Its default backup root is `dirname(dbPath)/backups` (`/app/data/backups`), while compose mounts `/app/backups`. This only works if `api.env` sets `TRAINING_BACKUP_DIR`; that file is not in the repo.\n- `ops/ec2/deploy.ps1`: runs `node apps/api/dist/backup.js` with the **new** image before activation.\n- `ops/ec2/rollback.ps1`: rolls back code only and warns that the DB is not restored.\n- `ops/ec2/compose.yml`: mounts `shared/data` and `shared/backups`, and uses `env_file` `shared/api.env`.\n- `apps/api/Dockerfile`: `node:20-bookworm-slim` with a native build toolchain; no PostgreSQL client.\n- `apps/api/src/config.ts`: `TRAINING_DB_PATH`; production guards for secrets and HTTPS.\n- `.env.example`: lists the current environment variables.\n- `apps/api/package.json`:\n  - Scripts `test` (`node --import tsx --test test/*.test.ts`), `typecheck`, `build` and `backup`.\n  - No `pg` dependency.\n- `apps/api/test/repository.test.ts`: the only API test, against a temporary SQLite file.\n- Client consumers: `apps/web/lib/api/client.ts` reads `status` and `currentRevision`; `apps/web/hooks/use-project-sync.ts` handles conflicts. The snapshot shape is `packages/contracts/src/project.ts` (`revision` int, `createdAt`/`updatedAt` strings).\n- `docs/architecture.md` and `docs/api-contract.md`: single API instance, in-memory hub, the commit-then-publish rule, and the 409 contract.\n\n## Resolved design rules (evidence-backed, not owner choices)\n\n1. **Column types.** Use `TEXT` for ids, `external_key`, `name`, `description`, `field`, `relative_path`, `mime_type`, `sha256`, `created_at`, `updated_at` and `data_json`. Use `INTEGER` for `schema_version`, `revision` and `byte_size`.\n   - `data_json` stays `TEXT` with a JSON validity check (cast to `jsonb` in a CHECK). It must **not** be JSONB, so that the `changed` string comparison, the exact payload bytes and the content hashes are preserved.\n   - Timestamps stay ISO `TEXT`, so API strings are unchanged.\n   - No `BIGINT` and no uncast `COUNT(*)`, because `pg` returns int8 as a string.\n2. **Concurrency.** Use one transaction per mutation with `SELECT … WHERE external_key = $1 FOR UPDATE`. This replaces `BEGIN IMMEDIATE`.\n   - A unique-violation on `external_key` during create maps to the same plain `Error(\"El externalKey ya existe.\")`, so the client still gets a 500.\n   - On any error: rollback, release the client, rethrow.\n3. **Schema versioning.** A `schema_migrations` table is written under a PostgreSQL advisory lock. A recorded version above 1 throws `Unsupported database schema N`. Readiness means the server is reachable and the version is exactly 1.\n4. **Request ordering.** The ordering inside each request stays the same: delete asset files before deleting the row (the cascade is kept); publish only after commit; in the WS upgrade, await the project lookup before `handleUpgrade`.\n\n## Decision gates (owner; recommended default in brackets)\n\n- **D1 Hosting and version:** where PostgreSQL runs and which major version. [A compose `postgres:16` service on the EC2 `stack_web` host, data volume under `shared/`, and a matching `postgresql-client`.] This affects T6, T7 and T8.\n- **D2 Availability:** the acceptable write-freeze or downtime at cutover. [A short maintenance window: stop the API, take the final SQLite backup, migrate and verify, then activate. Zero-downtime dual-write is excluded; requiring it would mean new tasks.] This affects T7 and T8.\n- **D3 Post-cutover rollback policy:** [Forward-only once verified. Recovery is via a PostgreSQL restore, plus code rollback between PostgreSQL releases. Rolling back to a SQLite release needs an explicit flag and an acknowledgement that writes made after cutover will be lost. A reverse PG→SQLite export is a new task only if the owner requires it.] This affects T7.\n- **D4 Backups:** retention and off-host copies. [Keep today's local layout; off-host copies are out of scope.]\n- **D5 Test database:** how a PostgreSQL instance is provided for `npm test`. [`TRAINING_TEST_DATABASE_URL` pointing at a disposable local instance. The test helper fails rather than skipping when it is unset.]\n\n## Assumptions (revisable)\n\n- **A1** PostgreSQL ≥ 14 is available for arm64 (`uname -m` = aarch64 in `deploy.ps1`).\n- **A2** The API remains a single instance.\n- **A3** Asset files stay on the `/app/data/assets` volume; only metadata rows move.\n- **A4** Express 5 forwards rejected promises from async handlers to the error middleware. T4 tests verify this.\n- **A5** Production data size fits the 4 GB free-disk preflight. T1 checks this.\n\n## Risks\n\n- JSONB or `timestamptz` would silently change `changed` detection, output strings and hashes. Mitigation: rule 1.\n- Lock semantics differ between `BEGIN IMMEDIATE` and `FOR UPDATE`. Mitigation: T4 concurrency tests.\n- The first PostgreSQL deploy through `deploy.ps1` would run the new backup against an empty or unreachable PostgreSQL and take no SQLite backup. Mitigation: the T7 cutover script and a deploy guard.\n- A `pg_dump` version different from the server's breaks backups. Mitigation: D1 and T6.\n- The existing backup-directory mismatch, if `api.env` lacks `TRAINING_BACKUP_DIR`. Mitigation: T1 verifies it; T6 makes the directory explicit.\n- Rolling back to a SQLite release loses post-cutover writes. Mitigation: D3 and the T7 guard.\n- Rehearsal copies contain personal data (names, emails, ages). They must stay on controlled hosts and be deleted after T8.\n- Credential exposure. `TRAINING_DATABASE_URL` lives only in `api.env` (chmod 600 already enforced). It is never logged and never passed in argv to `pg_dump`/`pg_restore`.\n- Tie order in `list` for equal `updated_at` values is unspecified in both stores.\n\n## Milestones and tasks\n\n### M1 — PostgreSQL runtime with identical API behaviour\nAcceptance: the API runs entirely on PostgreSQL, with typecheck clean and the parity and concurrency tests green. The decision record exists.\n\n- [ ] T1 — Record PostgreSQL hosting, cutover window and rollback decisions · repo: repository · covers: R1, R3 · kind: research\n- [ ] T2 — Add PostgreSQL store module with schema migration and readiness · repo: repository · verify: `npm test -w @training/api` · covers: R1, R2 · kind: implement\n- [ ] T3 — Port repositories, asset service, HTTP and WebSocket callers to PostgreSQL · repo: repository · after: T2 · verify: `npm test -w @training/api` · covers: R2 · kind: implement\n- [ ] T4 — Add HTTP parity and concurrency regression tests on PostgreSQL · repo: repository · after: T3 · verify: `npm test -w @training/api` · covers: R2 · kind: test\n\n### M2 — Verified data migration\nAcceptance: a SQLite snapshot migrates into an empty PostgreSQL database, and the commit happens only when counts and hashes match.\n\n- [ ] T5 — Build verified SQLite-to-PostgreSQL data migration tool · repo: repository · after: T2 · verify: `npm test -w @training/api` · covers: R1 · kind: implement\n\n### M3 — Backup, rollback and cutover readiness\nAcceptance: PostgreSQL backups restore and verify. Deployment, cutover and rollback scripts are guarded. A rehearsal proves R1–R3 on a production-like copy.\n\n- [ ] T6 — Replace SQLite backup with PostgreSQL dump and verified restore · repo: repository · after: T1, T5 · verify: `npm test -w @training/api` · covers: R3, R1 · kind: implement\n- [ ] T7 — Update deployment, cutover script and rollback guards for PostgreSQL · repo: repository · after: T3, T6 · covers: R3, R1 · kind: implement\n- [ ] T8 — Rehearse cutover, restore and rollback on a production-like copy · repo: repository · after: T4, T7 · verify: `npm run typecheck -w @training/api` · covers: R1, R2, R3 · kind: audit\n\n## Task behaviour\n\n### T1 — Decision record\n- Writes `docs/decisions/TRAIN-6-postgres.md` covering D1–D5: options, the recommended default, and owner status (`pending` until the owner answers).\n- Records verified environment facts with read-only checks: the PostgreSQL target, whether `api.env` sets `TRAINING_BACKUP_DIR`, the current DB and asset sizes, and free disk.\n- It does not approve anything on the owner's behalf.\n\n### T2 — PostgreSQL store module\n- New file `apps/api/src/db/postgres.ts` exposes:\n  - `openPostgres(url)`: returns a migrated `pg.Pool`.\n  - `withTransaction(pool, fn)`.\n  - `assertPostgresReady(pool)`.\n  - Schema 1 exactly per design rules 1 and 3.\n- `database.ts` (SQLite) stays untouched, because it is the migration source, and typecheck stays green.\n- `config.databaseUrl` reads `TRAINING_DATABASE_URL`; production throws if it is missing. Add it to `.env.example`.\n- Add the `pg` dependency.\n- Add the test helper `apps/api/test/helpers/pg.ts`. It creates an isolated schema or database per test from `TRAINING_TEST_DATABASE_URL` and fails explicitly when that is unset.\n\n### T3 — Async port\nAll of the following become async on the T2 pool: the `ProjectRepository` methods, `AssetRepository`, `AssetService`, the `app.ts` handlers, the `ws/server.ts` upgrade and `server.ts` (top-level `await openPostgres`, `pool.end()` on shutdown). Behaviour must be preserved exactly:\n\n- `create` → revision 1.\n- `update`/`upsertImport` with a stale `expectedRevision` → `RevisionConflictError(stored revision)`.\n- Import of a missing key with `expectedRevision ≠ 0` → `RevisionConflictError(0)`.\n- An unchanged payload → `changed=false`, same revision and `updatedAt`, no event.\n- A duplicate key on create → 500.\n- An asset insert failure deletes the written file. An unknown project in an asset upload → 500, as today.\n- Delete removes the files, then the row; the DB cascade removes asset rows.\n- Response bodies and status codes are unchanged.\n\n`repository.test.ts` is ported to async and PostgreSQL. `better-sqlite3` imports remain only in the SQLite source code (`db/database.ts`, and later the migration tool).\n\n### T4 — Parity tests\nThe tests start `createApp` with a test config that has an MCP bearer token, on an ephemeral port. They assert:\n\n- create 201;\n- GET by id and by external key, and 404 bodies;\n- PUT stale → 409 `{error.code: REVISION_CONFLICT, currentRevision}`;\n- import create, import with `expectedRevision≠0` on a missing key → 409 with `currentRevision 0`, and import unchanged → `changed:false`;\n- DELETE 204 cascades asset rows;\n- `/readyz` 200, and 503 after the version row is altered;\n- Zod 400.\n\nA concurrency test fires N parallel PUTs carrying the same `expectedRevision`: exactly one succeeds, the others get 409, and the final revision is +1.\n\n### T5 — Migration CLI\n`apps/api/src/migration/sqlite-to-postgres.ts`, run as an npm script:\n\n1. Open the source read-only (`fileMustExist`). Abort unless `integrity_check` is `ok` and `user_version` is 1.\n2. The target must be at schema 1 with both tables empty; otherwise abort. No merging.\n3. In a single PostgreSQL transaction, insert `projects` and then `assets`, copying every column verbatim.\n4. Compute counts and SHA-256 hashes on both sides with `row-hash.ts`:\n   - rows are sorted by `id` using JavaScript code-point order, not DB collation;\n   - each row is serialized as a JSON array of the columns in schema order.\n5. On any mismatch: ROLLBACK, exit non-zero, write the report. Otherwise COMMIT and write a report JSON (counts, hashes, source file SHA-256, timestamps).\n6. `--verify-only` compares without writing.\n7. Missing or mismatched asset files are reported as warnings only; they do not block.\n\n### T6 — Backup and restore\n- `backup.ts` keeps the existing directory layout but replaces `training.db` with `training.pgdump` (`pg_dump --format=custom --no-owner`).\n  - Credentials are passed via `PG*` environment variables derived from the URL, never in argv.\n  - It also writes `verification.json`, the T5 hash report taken from the backup's own snapshot.\n  - `schema-version.txt` comes from `schema_migrations`. `manifest.json` gains `store: \"postgresql\"` and is written last.\n  - Any failure exits non-zero.\n- New `restore.ts`:\n  1. Verify `checksums.sha256`.\n  2. Refuse a non-empty target.\n  3. Run `pg_restore --exit-on-error --single-transaction`.\n  4. Recompute hashes and compare them with `verification.json`.\n  5. Restore assets only into an empty, explicit directory.\n- The Dockerfile installs a PostgreSQL client that matches D1.\n\n### T7 — Deployment, cutover and rollback scripts\n- `compose.yml`: implements D1 (a PostgreSQL service with a healthcheck and a volume under `shared/`, or an external URL in `api.env`). Keeps the `/app/data` (assets) and `/app/backups` mounts.\n- `deploy.ps1`: refuses to activate if PostgreSQL is unreachable or not at schema 1, then checks `/readyz` after activation.\n- New `cutover.ps1`, a guarded one-time script:\n  1. Stop the API.\n  2. Run the current (SQLite) release's `backup.js`.\n  3. Run the T5 CLI from the new image against that backup's `training.db`.\n  4. On failure: restart the old release and do not activate.\n  5. On success: activate, check `/readyz`, and take the first PostgreSQL backup.\n- `rollback.ps1`: code rollback between PostgreSQL releases is unchanged. Rolling back to a release without `apps/api/src/db/postgres.ts` requires `-AllowSqliteRollback` and prints the D3 data-loss warning.\n- `docs/deployment.md` and `docs/architecture.md` describe the runbook and the restore procedure.\n\n### T8 — Rehearsal\nOn a controlled non-production host, using a copy of a real backup:\n\n- run the cutover, the T5 verification, the T4 suite, a backup, a restore into a fresh database with hash match, and both rollback paths;\n- record the measured downtime for D2 and every deviation in `docs/runbooks/TRAIN-6-rehearsal.md`;\n- delete the data copies afterwards.\n\n## Interfaces\n\n- **IF-1 PostgreSQL store module.** T2 produces it; T3, T5 and T6 consume it; T4 is the integration test.\n- **IF-2 Row-hash verification report.** T5 produces it; T6 and T8 consume it; T6 integrates it.\n- **IF-3 Async repository/HTTP contract.** T3 produces it; T4, T7 and T8 consume it; T4 integrates it.\n\n## Verification (planned; nothing has been run)\n\n- **Static:** `npm run typecheck -w @training/api`\n- **Functional / regression / integration:** `npm test -w @training/api`, which needs `TRAINING_TEST_DATABASE_URL`. New test files are created by T2–T6 and are not existing evidence.\n- **Product:** the T8 manual rehearsal. Green tests show only the behaviour they exercise; production acceptance needs the T8 record and owner sign-off.\n\n## Requirement traceability\n\n- **R1:** T1, T2, T5, T6, T7, T8\n- **R2:** T2, T3, T4, T8\n- **R3:** T1, T6, T7, T8\n```\n```PLAN.json\n{\n  \"schema_version\": \"1.2.0\",\n  \"plan_id\": \"REQ-CP2\",\n  \"revision\": 1,\n  \"spec_ref\": \"SPEC.md\",\n  \"requirements\": [\"R1\", \"R2\", \"R3\"],\n  \"milestones\": [\n    {\n      \"id\": \"M1\",\n      \"title\": \"PostgreSQL runtime with identical API behaviour\",\n      \"acceptance_criteria\": [\n        \"API runtime persistence uses only PostgreSQL with typecheck clean\",\n        \"HTTP parity and concurrency tests pass against PostgreSQL\",\n        \"Decision record lists D1-D5 with recommended defaults and owner status\"\n      ]\n    },\n    {\n      \"id\": \"M2\",\n      \"title\": \"Verified data migration\",\n      \"acceptance_criteria\": [\n        \"SQLite snapshot migrates into empty PostgreSQL and commits only when row counts and content hashes match\"\n      ]\n    },\n    {\n      \"id\": \"M3\",\n      \"title\": \"Backup, rollback and cutover readiness\",\n      \"acceptance_criteria\": [\n        \"PostgreSQL backups restore into an empty database with matching hashes\",\n        \"Deploy, cutover and rollback scripts refuse unsafe states\",\n        \"Rehearsal record demonstrates R1, R2 and R3 on a production-like copy\"\n      ]\n    }\n  ],\n  \"tasks\": [\n    {\n      \"id\": \"T1\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Record PostgreSQL hosting, cutover window and rollback decisions\",\n      \"objective\": \"A decision record states D1-D5 options, recommended defaults, pending owner status and verified environment facts so backup, deploy and rehearsal work does not rest on guesses\",\n      \"repository\": \"repository\",\n      \"after\": [],\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 60,\n      \"risk\": \"medium\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"low\",\n      \"estimate_rationale\": \"Document plus read-only environment checks; no comparable execution history exists in this sandbox, so the estimate is preliminary\",\n      \"expected_paths\": [\"docs/decisions/TRAIN-6-postgres.md\"],\n      \"shared_resources\": [\"train6-decision-record\"],\n      \"acceptance_criteria\": [\n        \"Record lists D1 to D5 with options, recommended default and owner status pending or answered\",\n        \"Record states whether api.env sets TRAINING_BACKUP_DIR and the observed database and asset sizes\",\n        \"No decision is marked approved without an owner reference\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"manual\",\n          \"value\": \"Read docs/decisions/TRAIN-6-postgres.md against the D1-D5 list in PLAN.md\",\n          \"purpose\": \"confirm every decision gate and environment fact is recorded\",\n          \"expected\": \"Five decisions with defaults and status plus backup dir, data size and disk facts\",\n          \"category\": \"product\"\n        }\n      ],\n      \"covers\": [\"R1\", \"R3\"],\n      \"kind\": \"research\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Choices span hosting, availability window and rollback semantics that interact with deploy scripts\",\n          \"evidence\": [\"file:ops/ec2/deploy.ps1\", \"file:ops/ec2/rollback.ps1\", \"spec:SPEC.md#requirements\"]\n        },\n        \"scope\": {\n          \"justification\": \"Produces one decision document and reads environment facts without code changes\",\n          \"evidence\": [\"file:ops/ec2/preflight.ps1\", \"file:ops/ec2/compose.yml\"]\n        },\n        \"duration\": {\n          \"justification\": \"Writing five decision entries and running read-only preflight style checks fits about an hour\",\n          \"evidence\": [\"file:ops/ec2/preflight.ps1\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"A wrong hosting or rollback assumption propagates into irreversible cutover steps later\",\n          \"evidence\": [\"file:ops/ec2/rollback.ps1\", \"file:apps/api/src/backup.ts\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Backup, deployment and rehearsal tasks consume these decisions directly\",\n          \"evidence\": [\"task:T6\", \"task:T7\", \"task:T8\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Server-side api.env and production data volume are not visible in the repository\",\n          \"evidence\": [\"file:ops/ec2/compose.yml\", \"assumption:api.env content unknown\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T2\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Add PostgreSQL store module with schema migration and readiness\",\n      \"objective\": \"A new store module opens a pg pool from TRAINING_DATABASE_URL, applies schema 1 under an advisory lock, rejects newer schema versions and exposes an async readiness check while SQLite code stays intact\",\n      \"repository\": \"repository\",\n      \"after\": [],\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 120,\n      \"risk\": \"medium\",\n      \"coupling\": \"high\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Mirrors the existing 50-line SQLite migrate/readiness module plus config, dependency and a test helper; no execution history to calibrate\",\n      \"expected_paths\": [\n        \"apps/api/src/db/postgres.ts\",\n        \"apps/api/src/config.ts\",\n        \"apps/api/package.json\",\n        \"package-lock.json\",\n        \".env.example\",\n        \"apps/api/test/helpers/pg.ts\",\n        \"apps/api/test/postgres-store.test.ts\"\n      ],\n      \"shared_resources\": [\"postgres-schema-v1\", \"apps/api/package.json\"],\n      \"acceptance_criteria\": [\n        \"Running migration twice on an empty database creates projects and assets with TEXT ids, timestamps and data_json, INTEGER revision, schema_version and byte_size, and records version 1 once\",\n        \"A recorded schema version above 1 makes openPostgres reject with Unsupported database schema\",\n        \"assertPostgresReady rejects when version is not 1 or the server is unreachable\",\n        \"Production config throws when TRAINING_DATABASE_URL is missing and the URL is never logged\",\n        \"Test helper fails with an explicit message when TRAINING_TEST_DATABASE_URL is unset\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"npm run typecheck -w @training/api\",\n          \"purpose\": \"store module compiles beside unchanged SQLite code\",\n          \"category\": \"static\"\n        },\n        {\n          \"type\": \"command\",\n          \"value\": \"npm test -w @training/api\",\n          \"purpose\": \"schema, version guard and readiness behave as specified\",\n          \"category\": \"functional\",\n          \"created_by\": \"T2\"\n        }\n      ],\n      \"covers\": [\"R1\", \"R2\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Type mapping must preserve exact strings and numbers, which needs some deliberate decisions\",\n          \"evidence\": [\"file:apps/api/src/db/database.ts\", \"file:packages/contracts/src/project.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"One new module plus config, dependency and helper; callers switch in a later task\",\n          \"evidence\": [\"file:apps/api/src/config.ts\", \"file:apps/api/package.json\"]\n        },\n        \"duration\": {\n          \"justification\": \"Existing migrate and readiness logic is short, so porting it with tests takes about two hours\",\n          \"evidence\": [\"file:apps/api/src/db/database.ts\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"Wrong column types would silently alter API strings or hashes for every consumer\",\n          \"evidence\": [\"file:apps/api/src/repositories/project-repository.ts\", \"spec:SPEC.md#requirements\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Repository port, migration tool and backup all build on this schema module\",\n          \"evidence\": [\"task:T3\", \"task:T5\", \"task:T6\"]\n        },\n        \"confidence\": {\n          \"justification\": \"The source schema and config were read fully; PostgreSQL behaviour is standard\",\n          \"evidence\": [\"file:apps/api/src/db/database.ts\", \"file:.env.example\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T3\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Port repositories, asset service, HTTP and WebSocket callers to PostgreSQL\",\n      \"objective\": \"All runtime persistence uses the PostgreSQL pool through async methods while every status code, body, revision rule and publish-after-commit ordering matches the SQLite implementation\",\n      \"repository\": \"repository\",\n      \"after\": [\"T2\"],\n      \"complexity\": \"high\",\n      \"scope\": \"large_change\",\n      \"estimated_minutes\": 240,\n      \"risk\": \"high\",\n      \"coupling\": \"high\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Six source files switch from sync to async with transaction semantics translated; no calibrated history, so estimate is moderate\",\n      \"expected_paths\": [\n        \"apps/api/src/repositories/project-repository.ts\",\n        \"apps/api/src/repositories/asset-repository.ts\",\n        \"apps/api/src/services/asset-service.ts\",\n        \"apps/api/src/app.ts\",\n        \"apps/api/src/server.ts\",\n        \"apps/api/src/ws/server.ts\",\n        \"apps/api/test/repository.test.ts\"\n      ],\n      \"shared_resources\": [\"postgres-schema-v1\", \"http-api-contract\"],\n      \"acceptance_criteria\": [\n        \"Ported repository test shows revision 1 on create, 2 on update and RevisionConflictError on stale revision\",\n        \"Unchanged update returns changed false, keeps revision and updatedAt and publishes no event\",\n        \"Stale expectedRevision on project update and import returns 409 REVISION_CONFLICT with stored currentRevision\",\n        \"Concurrent duplicate externalKey create maps unique violation to the same plain error and a 500 response\",\n        \"WebSocket upgrade for an unknown project still answers 404 and shutdown ends the pool\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"npm run typecheck -w @training/api\",\n          \"purpose\": \"all callers await the async persistence API\",\n          \"category\": \"static\"\n        },\n        {\n          \"type\": \"command\",\n          \"value\": \"npm test -w @training/api\",\n          \"purpose\": \"ported repository test passes on PostgreSQL\",\n          \"category\": \"regression\"\n        }\n      ],\n      \"covers\": [\"R2\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"BEGIN IMMEDIATE serialisation must become row locking without changing conflict outcomes across components\",\n          \"evidence\": [\"file:apps/api/src/repositories/project-repository.ts\", \"file:apps/api/src/ws/server.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"Touches repositories, service, HTTP handlers, WebSocket upgrade and server lifecycle\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/api/src/server.ts\", \"file:apps/api/src/services/asset-service.ts\"]\n        },\n        \"duration\": {\n          \"justification\": \"Mechanical async conversion plus careful mutate rewrite is roughly half a day\",\n          \"evidence\": [\"file:apps/api/src/repositories/asset-repository.ts\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"Clients depend on 409 bodies and revision numbers; a mistake loses edits or breaks sync\",\n          \"evidence\": [\"file:apps/web/lib/api/client.ts\", \"file:apps/web/hooks/use-project-sync.ts\", \"file:docs/api-contract.md\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Consumes the store module and defines the contract that parity tests and deployment use\",\n          \"evidence\": [\"task:T2\", \"task:T4\", \"task:T7\"]\n        },\n        \"confidence\": {\n          \"justification\": \"All persistence callers and error mapping were read; Express async forwarding remains assumed\",\n          \"evidence\": [\"file:apps/api/src/errors.ts\", \"file:apps/api/src/app.ts\", \"assumption:Express 5 forwards async rejections\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T4\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Add HTTP parity and concurrency regression tests on PostgreSQL\",\n      \"objective\": \"Executable HTTP-level tests prove client-visible responses and concurrent revision conflicts match the pre-migration contract on PostgreSQL\",\n      \"repository\": \"repository\",\n      \"after\": [\"T3\"],\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 180,\n      \"risk\": \"medium\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Two new test files driving createApp over an ephemeral port with a bearer token; uncalibrated estimate\",\n      \"expected_paths\": [\"apps/api/test/http-parity.test.ts\", \"apps/api/test/concurrency.test.ts\"],\n      \"shared_resources\": [\"http-api-contract\"],\n      \"acceptance_criteria\": [\n        \"Tests assert create 201, get by id and external key, and 404 NOT_FOUND bodies\",\n        \"Stale PUT returns 409 with REVISION_CONFLICT and currentRevision; missing-key import with nonzero expectedRevision returns currentRevision 0\",\n        \"Unchanged import returns changed false; delete returns 204 and removes asset rows\",\n        \"readyz returns 200 normally and 503 after the version row is altered; invalid payload returns 400 VALIDATION_ERROR\",\n        \"Parallel PUTs with one expectedRevision yield exactly one success, the rest 409, final revision plus one\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"npm test -w @training/api\",\n          \"purpose\": \"HTTP parity and concurrency behaviour on PostgreSQL\",\n          \"category\": \"integration\",\n          \"created_by\": \"T4\"\n        }\n      ],\n      \"covers\": [\"R2\"],\n      \"kind\": \"test\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Expected outcomes are already defined by existing handlers; concurrency setup needs some care\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/api/test/repository.test.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"Adds two test files without touching production source\",\n          \"evidence\": [\"file:apps/api/package.json\"]\n        },\n        \"duration\": {\n          \"justification\": \"Roughly a dozen HTTP cases plus a parallel writer harness takes about three hours\",\n          \"evidence\": [\"file:apps/api/src/http/auth.ts\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"Weak assertions could let a regression in conflict handling pass unnoticed\",\n          \"evidence\": [\"file:docs/api-contract.md\", \"spec:SPEC.md#requirements\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Tests consume the async repository contract produced by the port task\",\n          \"evidence\": [\"task:T3\"]\n        },\n        \"confidence\": {\n          \"justification\": \"createApp accepts an injected config with an MCP token, so tests can authenticate directly\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/api/src/http/auth.ts\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T5\",\n      \"milestone_id\": \"M2\",\n      \"title\": \"Build verified SQLite-to-PostgreSQL data migration tool\",\n      \"objective\": \"A CLI copies every projects and assets row verbatim from a read-only SQLite snapshot into empty PostgreSQL in one transaction and commits only when row counts and per-table SHA-256 hashes match\",\n      \"repository\": \"repository\",\n      \"after\": [\"T2\"],\n      \"complexity\": \"high\",\n      \"scope\": \"large_change\",\n      \"estimated_minutes\": 240,\n      \"risk\": \"high\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"New CLI, shared hash module and fixture-based tests; two tables keep it bounded but verification logic needs care; uncalibrated\",\n      \"expected_paths\": [\n        \"apps/api/src/migration/sqlite-to-postgres.ts\",\n        \"apps/api/src/migration/row-hash.ts\",\n        \"apps/api/package.json\",\n        \"apps/api/test/sqlite-migration.test.ts\"\n      ],\n      \"shared_resources\": [\"postgres-schema-v1\", \"row-hash-contract\", \"apps/api/package.json\"],\n      \"acceptance_criteria\": [\n        \"Source failing integrity_check or not at user_version 1 aborts without writing\",\n        \"Non-empty or non-current target aborts without writing\",\n        \"Fixture with unicode, empty descriptions, large data_json and cascaded assets migrates with equal counts and hashes and a written report\",\n        \"Injected mismatch causes rollback, non-zero exit and an empty target\",\n        \"verify-only mode reports counts and hashes without writing\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"npm test -w @training/api\",\n          \"purpose\": \"migration commits on match and rolls back on mismatch\",\n          \"category\": \"functional\",\n          \"created_by\": \"T5\"\n        },\n        {\n          \"type\": \"command\",\n          \"value\": \"npm run typecheck -w @training/api\",\n          \"purpose\": \"migration tool compiles against both drivers\",\n          \"category\": \"static\"\n        }\n      ],\n      \"covers\": [\"R1\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Hashing must be collation independent and byte exact across two different drivers\",\n          \"evidence\": [\"file:apps/api/src/db/database.ts\", \"file:apps/api/src/repositories/asset-repository.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"New CLI with its own hash module, npm script and dedicated test suite\",\n          \"evidence\": [\"file:apps/api/package.json\", \"file:apps/api/src/backup.ts\"]\n        },\n        \"duration\": {\n          \"justification\": \"Copy loop is small but fixtures, failure injection and report output need about four hours\",\n          \"evidence\": [\"file:apps/api/test/repository.test.ts\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"A silent copy defect would lose or corrupt client training data at cutover\",\n          \"evidence\": [\"spec:SPEC.md#requirements\", \"file:apps/api/src/repositories/project-repository.ts\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Depends on schema module and its hash report is reused by backup verification\",\n          \"evidence\": [\"task:T2\", \"task:T6\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Source schema has only two tables and was fully inspected\",\n          \"evidence\": [\"file:apps/api/src/db/database.ts\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T6\",\n      \"milestone_id\": \"M3\",\n      \"title\": \"Replace SQLite backup with PostgreSQL dump and verified restore\",\n      \"objective\": \"The backup command writes the existing directory layout with a pg_dump file and hash report, and a restore command restores a chosen backup into an empty database and proves counts and hashes match\",\n      \"repository\": \"repository\",\n      \"after\": [\"T1\", \"T5\"],\n      \"complexity\": \"medium\",\n      \"scope\": \"large_change\",\n      \"estimated_minutes\": 180,\n      \"risk\": \"high\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Rewrite of a 24-line backup script, new restore script, Dockerfile client install and tests; client version depends on D1; uncalibrated\",\n      \"expected_paths\": [\n        \"apps/api/src/backup.ts\",\n        \"apps/api/src/restore.ts\",\n        \"apps/api/Dockerfile\",\n        \"apps/api/package.json\",\n        \"apps/api/test/backup-restore.test.ts\"\n      ],\n      \"shared_resources\": [\"postgres-schema-v1\", \"row-hash-contract\", \"backup-directory-layout\", \"apps/api/package.json\"],\n      \"acceptance_criteria\": [\n        \"Backup directory contains training.pgdump, assets, verification.json, checksums.sha256, git-sha.txt, schema-version.txt and manifest.json with store postgresql\",\n        \"pg_dump or pg_restore receive credentials through environment variables, never argv\",\n        \"A failed dump exits non-zero and leaves no manifest\",\n        \"Restore refuses bad checksums or a non-empty target and succeeds only when recomputed hashes match verification.json\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"npm test -w @training/api\",\n          \"purpose\": \"backup then restore round trip yields matching hashes\",\n          \"category\": \"integration\",\n          \"created_by\": \"T6\"\n        },\n        {\n          \"type\": \"command\",\n          \"value\": \"npm run build -w @training/api\",\n          \"purpose\": \"backup and restore compile into dist for the container\",\n          \"category\": \"static\"\n        }\n      ],\n      \"covers\": [\"R3\", \"R1\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"External tool invocation with secret handling and checksum verification needs moderate design\",\n          \"evidence\": [\"file:apps/api/src/backup.ts\", \"file:apps/api/Dockerfile\"]\n        },\n        \"scope\": {\n          \"justification\": \"Changes backup, adds restore, alters the container image and package scripts\",\n          \"evidence\": [\"file:apps/api/package.json\", \"file:apps/api/Dockerfile\"]\n        },\n        \"duration\": {\n          \"justification\": \"Backup layout already exists, so rewrite plus restore and round-trip test fits three hours\",\n          \"evidence\": [\"file:apps/api/src/backup.ts\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"Broken backups remove the only recovery path and may expose database credentials\",\n          \"evidence\": [\"file:ops/ec2/deploy.ps1\", \"file:ops/ec2/compose.yml\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Reuses the migration hash report and depends on hosting decisions for client version\",\n          \"evidence\": [\"task:T5\", \"task:T1\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Current backup flow was read; server-side backup dir and PostgreSQL version stay unresolved\",\n          \"evidence\": [\"file:apps/api/src/backup.ts\", \"assumption:D1 PostgreSQL major version pending\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T7\",\n      \"milestone_id\": \"M3\",\n      \"title\": \"Update deployment, cutover script and rollback guards for PostgreSQL\",\n      \"objective\": \"Compose, deploy and rollback scripts support PostgreSQL and a guarded one-time cutover script migrates, verifies and activates or restores the old release, with docs describing runbook and restore\",\n      \"repository\": \"repository\",\n      \"after\": [\"T3\", \"T6\"],\n      \"complexity\": \"medium\",\n      \"scope\": \"large_change\",\n      \"estimated_minutes\": 150,\n      \"risk\": \"high\",\n      \"coupling\": \"high\",\n      \"confidence\": \"low\",\n      \"estimate_rationale\": \"Edits three PowerShell scripts, adds one, updates compose and two docs; shape depends on D1-D3 owner answers; uncalibrated\",\n      \"expected_paths\": [\n        \"ops/ec2/compose.yml\",\n        \"ops/ec2/deploy.ps1\",\n        \"ops/ec2/rollback.ps1\",\n        \"ops/ec2/cutover.ps1\",\n        \"docs/deployment.md\",\n        \"docs/architecture.md\"\n      ],\n      \"shared_resources\": [\"ec2-release-layout\", \"backup-directory-layout\"],\n      \"acceptance_criteria\": [\n        \"Compose keeps /app/data and /app/backups mounts and provides PostgreSQL per D1\",\n        \"deploy.ps1 refuses activation when PostgreSQL is unreachable or not at schema 1\",\n        \"cutover.ps1 takes a SQLite backup with the current release, runs verified migration and restarts the old release on any failure\",\n        \"rollback.ps1 refuses a pre-PostgreSQL release unless -AllowSqliteRollback is given and prints the data-loss warning\",\n        \"docs/deployment.md documents cutover, restore and rollback steps\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"manual\",\n          \"value\": \"Review ops/ec2 scripts and docs, then execute them during the T8 rehearsal\",\n          \"purpose\": \"guards and runbook behave as specified on a non-production host\",\n          \"expected\": \"Each refusal path triggers and the success path activates the PostgreSQL release with readyz 200\",\n          \"category\": \"integration\"\n        }\n      ],\n      \"covers\": [\"R3\", \"R1\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Failure branches must restore availability while sequencing backup, migration and activation\",\n          \"evidence\": [\"file:ops/ec2/deploy.ps1\", \"file:ops/ec2/rollback.ps1\"]\n        },\n        \"scope\": {\n          \"justification\": \"Spans compose, three existing scripts, one new script and deployment docs\",\n          \"evidence\": [\"file:ops/ec2/compose.yml\", \"file:docs/deployment.md\", \"file:docs/architecture.md\"]\n        },\n        \"duration\": {\n          \"justification\": \"Script edits are short but the new cutover sequence and docs need about two and a half hours\",\n          \"evidence\": [\"file:ops/ec2/deploy.ps1\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"Mistakes here affect production availability and can lose writes after cutover\",\n          \"evidence\": [\"file:ops/ec2/rollback.ps1\", \"spec:SPEC.md#requirements\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Consumes the ported runtime and backup tooling and shares the release layout\",\n          \"evidence\": [\"task:T3\", \"task:T6\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Script shape depends on unanswered hosting, window and rollback decisions\",\n          \"evidence\": [\"task:T1\", \"assumption:D1 D2 D3 owner answers pending\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T8\",\n      \"milestone_id\": \"M3\",\n      \"title\": \"Rehearse cutover, restore and rollback on a production-like copy\",\n      \"objective\": \"A rehearsal on a controlled host with a copy of a real backup demonstrates verified migration, API parity, backup restore and both rollback paths and records measured downtime\",\n      \"repository\": \"repository\",\n      \"after\": [\"T4\", \"T7\"],\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 180,\n      \"risk\": \"high\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"low\",\n      \"estimate_rationale\": \"Execution time depends on unknown production data size and host setup; preliminary estimate only\",\n      \"expected_paths\": [\"docs/runbooks/TRAIN-6-rehearsal.md\"],\n      \"shared_resources\": [\"ec2-release-layout\"],\n      \"acceptance_criteria\": [\n        \"Rehearsal record shows migration report with equal counts and hashes for projects and assets\",\n        \"Record shows API test suite passing against the migrated copy\",\n        \"Record shows a backup restored into a fresh database with matching hashes and both rollback paths exercised\",\n        \"Record states measured write-freeze duration and confirms data copies were deleted\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"npm run typecheck -w @training/api\",\n          \"purpose\": \"rehearsed release compiles cleanly\",\n          \"category\": \"static\"\n        },\n        {\n          \"type\": \"manual\",\n          \"value\": \"Run cutover.ps1, restore and rollback.ps1 on a non-production host and fill docs/runbooks/TRAIN-6-rehearsal.md\",\n          \"purpose\": \"end-to-end product evidence for R1, R2 and R3\",\n          \"expected\": \"Hashes match, readyz 200 after cutover, restore verified, rollback paths behave and downtime recorded\",\n          \"category\": \"product\"\n        }\n      ],\n      \"covers\": [\"R1\", \"R2\", \"R3\"],\n      \"kind\": \"audit\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Coordinating several scripts on a realistic copy needs judgement when deviations appear\",\n          \"evidence\": [\"file:ops/ec2/deploy.ps1\", \"task:T7\"]\n        },\n        \"scope\": {\n          \"justification\": \"No product code changes; output is one rehearsal record\",\n          \"evidence\": [\"file:docs/deployment.md\"]\n        },\n        \"duration\": {\n          \"justification\": \"Three hours assumes small data volume and a ready host, both unverified\",\n          \"evidence\": [\"assumption:production data size unknown\", \"task:T1\"]\n        },\n        \"risk\": {\n          \"justification\": \"Copies include personal names, emails and ages, so mishandling exposes user data\",\n          \"evidence\": [\"file:packages/contracts/src/project.ts\", \"file:apps/api/test/repository.test.ts\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Depends on parity tests and deployment scripts being complete\",\n          \"evidence\": [\"task:T4\", \"task:T7\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Host availability and dataset size remain unknown until decisions are answered\",\n          \"evidence\": [\"assumption:rehearsal host not yet identified\", \"task:T1\"]\n        }\n      }\n    }\n  ],\n  \"interfaces\": [\n    {\n      \"id\": \"IF-1\",\n      \"title\": \"PostgreSQL store module\",\n      \"owner\": \"apps/api db layer\",\n      \"producer_task\": \"T2\",\n      \"consumer_tasks\": [\"T3\", \"T5\", \"T6\"],\n      \"integration_task\": \"T4\",\n      \"inputs\": [\"TRAINING_DATABASE_URL or TRAINING_TEST_DATABASE_URL connection string\"],\n      \"outputs\": [\"openPostgres returning a migrated pg Pool\", \"withTransaction helper\", \"async assertPostgresReady\", \"schema 1 tables projects and assets\"],\n      \"invariants\": [\n        \"Column names match SQLite schema 1; ids, timestamps and data_json are TEXT; revision, schema_version and byte_size are INTEGER\",\n        \"Recorded schema version above 1 is rejected\",\n        \"Migration runs under an advisory lock and records version once\"\n      ],\n      \"integration_criteria\": [\"Parity tests pass using pools created only through openPostgres\"]\n    },\n    {\n      \"id\": \"IF-2\",\n      \"title\": \"Row-hash verification report\",\n      \"owner\": \"apps/api migration tooling\",\n      \"producer_task\": \"T5\",\n      \"consumer_tasks\": [\"T6\", \"T8\"],\n      \"integration_task\": \"T6\",\n      \"inputs\": [\"rows of projects and assets from SQLite or PostgreSQL\"],\n      \"outputs\": [\"JSON report with per-table count and sha256\"],\n      \"invariants\": [\n        \"Rows sorted by id in JavaScript code-point order, not database collation\",\n        \"Each row serialized as a JSON array of columns in schema order with identical serializer for both stores\"\n      ],\n      \"integration_criteria\": [\"Restore recomputes the report and matches verification.json written by backup\"]\n    },\n    {\n      \"id\": \"IF-3\",\n      \"title\": \"Async repository and HTTP behaviour contract\",\n      \"owner\": \"apps/api repositories and app\",\n      \"producer_task\": \"T3\",\n      \"consumer_tasks\": [\"T4\", \"T7\", \"T8\"],\n      \"integration_task\": \"T4\",\n      \"inputs\": [\"HTTP requests defined in apps/api/src/app.ts and docs/api-contract.md\"],\n      \"outputs\": [\"Unchanged status codes, bodies, revision numbers and project.revision events\"],\n      \"invariants\": [\n        \"Stale expectedRevision yields 409 REVISION_CONFLICT with stored currentRevision\",\n        \"Unchanged payload keeps revision and publishes no event\",\n        \"Events publish only after commit\"\n      ],\n      \"integration_criteria\": [\"HTTP parity and concurrency tests pass on PostgreSQL\"]\n    }\n  ]\n}\n```",
+  "format_valid": false,
+  "usage_reported": {
+    "input_tokens": 16,
+    "cache_creation_input_tokens": 56050,
+    "cache_read_input_tokens": 321719,
+    "output_tokens": 38550,
+    "output_tokens_details": {
+      "thinking_tokens": 16758
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 56050,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-opus-5-5"
+  ],
+  "observed_tool_events": 33,
+  "tool_audit": [
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/request/SPEC.md"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "pattern": "planner-resources/**"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "pattern": "repo/**/*"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/db/database.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/repositories/project-repository.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/repositories/asset-repository.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/backup.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/package.json"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/config.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/app.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/server.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/services/asset-service.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/test/repository.test.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/errors.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/ws/server.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/ops/ec2/compose.yml"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/ops/ec2/deploy.ps1"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/ops/ec2/rollback.ps1"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/ops/ec2/preflight.ps1"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/Dockerfile"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/docs/deployment.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/docs/architecture.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/package.json"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/.env.example"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/docs/api-contract.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/src/http/auth.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/README.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/planner-resources/plan.example.json"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/web",
+        "pattern": "REVISION_CONFLICT|currentRevision|409"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/packages/contracts/src/project.ts",
+        "pattern": "ProjectSnapshotSchema|createdAt|updatedAt|revision"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/.gitignore"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/.dockerignore"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP2/opus/repo/apps/api/tsconfig.json"
+      }
+    }
+  ],
+  "model_usage_reported": {
+    "claude-opus-5-5": {
+      "inputTokens": 16,
+      "outputTokens": 38550,
+      "cacheReadInputTokens": 321719,
+      "cacheCreationInputTokens": 56050,
+      "webSearchRequests": 0,
+      "costUSD": 1.2838078,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 16758
+    }
+  },
+  "exit_code": 0,
+  "block_contract_valid": true,
+  "plan": {
+    "schema_version": "1.2.0",
+    "plan_id": "REQ-CP2",
+    "revision": 1,
+    "spec_ref": "SPEC.md",
+    "requirements": [
+      "R1",
+      "R2",
+      "R3"
+    ],
+    "milestones": [
+      {
+        "id": "M1",
+        "title": "PostgreSQL runtime with identical API behaviour",
+        "acceptance_criteria": [
+          "API runtime persistence uses only PostgreSQL with typecheck clean",
+          "HTTP parity and concurrency tests pass against PostgreSQL",
+          "Decision record lists D1-D5 with recommended defaults and owner status"
+        ]
+      },
+      {
+        "id": "M2",
+        "title": "Verified data migration",
+        "acceptance_criteria": [
+          "SQLite snapshot migrates into empty PostgreSQL and commits only when row counts and content hashes match"
+        ]
+      },
+      {
+        "id": "M3",
+        "title": "Backup, rollback and cutover readiness",
+        "acceptance_criteria": [
+          "PostgreSQL backups restore into an empty database with matching hashes",
+          "Deploy, cutover and rollback scripts refuse unsafe states",
+          "Rehearsal record demonstrates R1, R2 and R3 on a production-like copy"
+        ]
+      }
+    ],
+    "tasks": [
+      {
+        "id": "T1",
+        "milestone_id": "M1",
+        "title": "Record PostgreSQL hosting, cutover window and rollback decisions",
+        "objective": "A decision record states D1-D5 options, recommended defaults, pending owner status and verified environment facts so backup, deploy and rehearsal work does not rest on guesses",
+        "repository": "repository",
+        "after": [],
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 60,
+        "risk": "medium",
+        "coupling": "medium",
+        "confidence": "low",
+        "estimate_rationale": "Document plus read-only environment checks; no comparable execution history exists in this sandbox, so the estimate is preliminary",
+        "expected_paths": [
+          "docs/decisions/TRAIN-6-postgres.md"
+        ],
+        "shared_resources": [
+          "train6-decision-record"
+        ],
+        "acceptance_criteria": [
+          "Record lists D1 to D5 with options, recommended default and owner status pending or answered",
+          "Record states whether api.env sets TRAINING_BACKUP_DIR and the observed database and asset sizes",
+          "No decision is marked approved without an owner reference"
+        ],
+        "verification": [
+          {
+            "type": "manual",
+            "value": "Read docs/decisions/TRAIN-6-postgres.md against the D1-D5 list in PLAN.md",
+            "purpose": "confirm every decision gate and environment fact is recorded",
+            "expected": "Five decisions with defaults and status plus backup dir, data size and disk facts",
+            "category": "product"
+          }
+        ],
+        "covers": [
+          "R1",
+          "R3"
+        ],
+        "kind": "research",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Choices span hosting, availability window and rollback semantics that interact with deploy scripts",
+            "evidence": [
+              "file:ops/ec2/deploy.ps1",
+              "file:ops/ec2/rollback.ps1",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "scope": {
+            "justification": "Produces one decision document and reads environment facts without code changes",
+            "evidence": [
+              "file:ops/ec2/preflight.ps1",
+              "file:ops/ec2/compose.yml"
+            ]
+          },
+          "duration": {
+            "justification": "Writing five decision entries and running read-only preflight style checks fits about an hour",
+            "evidence": [
+              "file:ops/ec2/preflight.ps1",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "A wrong hosting or rollback assumption propagates into irreversible cutover steps later",
+            "evidence": [
+              "file:ops/ec2/rollback.ps1",
+              "file:apps/api/src/backup.ts"
+            ]
+          },
+          "coupling": {
+            "justification": "Backup, deployment and rehearsal tasks consume these decisions directly",
+            "evidence": [
+              "task:T6",
+              "task:T7",
+              "task:T8"
+            ]
+          },
+          "confidence": {
+            "justification": "Server-side api.env and production data volume are not visible in the repository",
+            "evidence": [
+              "file:ops/ec2/compose.yml",
+              "assumption:api.env content unknown"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T2",
+        "milestone_id": "M1",
+        "title": "Add PostgreSQL store module with schema migration and readiness",
+        "objective": "A new store module opens a pg pool from TRAINING_DATABASE_URL, applies schema 1 under an advisory lock, rejects newer schema versions and exposes an async readiness check while SQLite code stays intact",
+        "repository": "repository",
+        "after": [],
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 120,
+        "risk": "medium",
+        "coupling": "high",
+        "confidence": "medium",
+        "estimate_rationale": "Mirrors the existing 50-line SQLite migrate/readiness module plus config, dependency and a test helper; no execution history to calibrate",
+        "expected_paths": [
+          "apps/api/src/db/postgres.ts",
+          "apps/api/src/config.ts",
+          "apps/api/package.json",
+          "package-lock.json",
+          ".env.example",
+          "apps/api/test/helpers/pg.ts",
+          "apps/api/test/postgres-store.test.ts"
+        ],
+        "shared_resources": [
+          "postgres-schema-v1",
+          "apps/api/package.json"
+        ],
+        "acceptance_criteria": [
+          "Running migration twice on an empty database creates projects and assets with TEXT ids, timestamps and data_json, INTEGER revision, schema_version and byte_size, and records version 1 once",
+          "A recorded schema version above 1 makes openPostgres reject with Unsupported database schema",
+          "assertPostgresReady rejects when version is not 1 or the server is unreachable",
+          "Production config throws when TRAINING_DATABASE_URL is missing and the URL is never logged",
+          "Test helper fails with an explicit message when TRAINING_TEST_DATABASE_URL is unset"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm run typecheck -w @training/api",
+            "purpose": "store module compiles beside unchanged SQLite code",
+            "category": "static"
+          },
+          {
+            "type": "command",
+            "value": "npm test -w @training/api",
+            "purpose": "schema, version guard and readiness behave as specified",
+            "category": "functional",
+            "created_by": "T2"
+          }
+        ],
+        "covers": [
+          "R1",
+          "R2"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Type mapping must preserve exact strings and numbers, which needs some deliberate decisions",
+            "evidence": [
+              "file:apps/api/src/db/database.ts",
+              "file:packages/contracts/src/project.ts"
+            ]
+          },
+          "scope": {
+            "justification": "One new module plus config, dependency and helper; callers switch in a later task",
+            "evidence": [
+              "file:apps/api/src/config.ts",
+              "file:apps/api/package.json"
+            ]
+          },
+          "duration": {
+            "justification": "Existing migrate and readiness logic is short, so porting it with tests takes about two hours",
+            "evidence": [
+              "file:apps/api/src/db/database.ts",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "Wrong column types would silently alter API strings or hashes for every consumer",
+            "evidence": [
+              "file:apps/api/src/repositories/project-repository.ts",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "coupling": {
+            "justification": "Repository port, migration tool and backup all build on this schema module",
+            "evidence": [
+              "task:T3",
+              "task:T5",
+              "task:T6"
+            ]
+          },
+          "confidence": {
+            "justification": "The source schema and config were read fully; PostgreSQL behaviour is standard",
+            "evidence": [
+              "file:apps/api/src/db/database.ts",
+              "file:.env.example"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T3",
+        "milestone_id": "M1",
+        "title": "Port repositories, asset service, HTTP and WebSocket callers to PostgreSQL",
+        "objective": "All runtime persistence uses the PostgreSQL pool through async methods while every status code, body, revision rule and publish-after-commit ordering matches the SQLite implementation",
+        "repository": "repository",
+        "after": [
+          "T2"
+        ],
+        "complexity": "high",
+        "scope": "large_change",
+        "estimated_minutes": 240,
+        "risk": "high",
+        "coupling": "high",
+        "confidence": "medium",
+        "estimate_rationale": "Six source files switch from sync to async with transaction semantics translated; no calibrated history, so estimate is moderate",
+        "expected_paths": [
+          "apps/api/src/repositories/project-repository.ts",
+          "apps/api/src/repositories/asset-repository.ts",
+          "apps/api/src/services/asset-service.ts",
+          "apps/api/src/app.ts",
+          "apps/api/src/server.ts",
+          "apps/api/src/ws/server.ts",
+          "apps/api/test/repository.test.ts"
+        ],
+        "shared_resources": [
+          "postgres-schema-v1",
+          "http-api-contract"
+        ],
+        "acceptance_criteria": [
+          "Ported repository test shows revision 1 on create, 2 on update and RevisionConflictError on stale revision",
+          "Unchanged update returns changed false, keeps revision and updatedAt and publishes no event",
+          "Stale expectedRevision on project update and import returns 409 REVISION_CONFLICT with stored currentRevision",
+          "Concurrent duplicate externalKey create maps unique violation to the same plain error and a 500 response",
+          "WebSocket upgrade for an unknown project still answers 404 and shutdown ends the pool"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm run typecheck -w @training/api",
+            "purpose": "all callers await the async persistence API",
+            "category": "static"
+          },
+          {
+            "type": "command",
+            "value": "npm test -w @training/api",
+            "purpose": "ported repository test passes on PostgreSQL",
+            "category": "regression"
+          }
+        ],
+        "covers": [
+          "R2"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "BEGIN IMMEDIATE serialisation must become row locking without changing conflict outcomes across components",
+            "evidence": [
+              "file:apps/api/src/repositories/project-repository.ts",
+              "file:apps/api/src/ws/server.ts"
+            ]
+          },
+          "scope": {
+            "justification": "Touches repositories, service, HTTP handlers, WebSocket upgrade and server lifecycle",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/api/src/server.ts",
+              "file:apps/api/src/services/asset-service.ts"
+            ]
+          },
+          "duration": {
+            "justification": "Mechanical async conversion plus careful mutate rewrite is roughly half a day",
+            "evidence": [
+              "file:apps/api/src/repositories/asset-repository.ts",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "Clients depend on 409 bodies and revision numbers; a mistake loses edits or breaks sync",
+            "evidence": [
+              "file:apps/web/lib/api/client.ts",
+              "file:apps/web/hooks/use-project-sync.ts",
+              "file:docs/api-contract.md"
+            ]
+          },
+          "coupling": {
+            "justification": "Consumes the store module and defines the contract that parity tests and deployment use",
+            "evidence": [
+              "task:T2",
+              "task:T4",
+              "task:T7"
+            ]
+          },
+          "confidence": {
+            "justification": "All persistence callers and error mapping were read; Express async forwarding remains assumed",
+            "evidence": [
+              "file:apps/api/src/errors.ts",
+              "file:apps/api/src/app.ts",
+              "assumption:Express 5 forwards async rejections"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T4",
+        "milestone_id": "M1",
+        "title": "Add HTTP parity and concurrency regression tests on PostgreSQL",
+        "objective": "Executable HTTP-level tests prove client-visible responses and concurrent revision conflicts match the pre-migration contract on PostgreSQL",
+        "repository": "repository",
+        "after": [
+          "T3"
+        ],
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 180,
+        "risk": "medium",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "Two new test files driving createApp over an ephemeral port with a bearer token; uncalibrated estimate",
+        "expected_paths": [
+          "apps/api/test/http-parity.test.ts",
+          "apps/api/test/concurrency.test.ts"
+        ],
+        "shared_resources": [
+          "http-api-contract"
+        ],
+        "acceptance_criteria": [
+          "Tests assert create 201, get by id and external key, and 404 NOT_FOUND bodies",
+          "Stale PUT returns 409 with REVISION_CONFLICT and currentRevision; missing-key import with nonzero expectedRevision returns currentRevision 0",
+          "Unchanged import returns changed false; delete returns 204 and removes asset rows",
+          "readyz returns 200 normally and 503 after the version row is altered; invalid payload returns 400 VALIDATION_ERROR",
+          "Parallel PUTs with one expectedRevision yield exactly one success, the rest 409, final revision plus one"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm test -w @training/api",
+            "purpose": "HTTP parity and concurrency behaviour on PostgreSQL",
+            "category": "integration",
+            "created_by": "T4"
+          }
+        ],
+        "covers": [
+          "R2"
+        ],
+        "kind": "test",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Expected outcomes are already defined by existing handlers; concurrency setup needs some care",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/api/test/repository.test.ts"
+            ]
+          },
+          "scope": {
+            "justification": "Adds two test files without touching production source",
+            "evidence": [
+              "file:apps/api/package.json"
+            ]
+          },
+          "duration": {
+            "justification": "Roughly a dozen HTTP cases plus a parallel writer harness takes about three hours",
+            "evidence": [
+              "file:apps/api/src/http/auth.ts",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "Weak assertions could let a regression in conflict handling pass unnoticed",
+            "evidence": [
+              "file:docs/api-contract.md",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "coupling": {
+            "justification": "Tests consume the async repository contract produced by the port task",
+            "evidence": [
+              "task:T3"
+            ]
+          },
+          "confidence": {
+            "justification": "createApp accepts an injected config with an MCP token, so tests can authenticate directly",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/api/src/http/auth.ts"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T5",
+        "milestone_id": "M2",
+        "title": "Build verified SQLite-to-PostgreSQL data migration tool",
+        "objective": "A CLI copies every projects and assets row verbatim from a read-only SQLite snapshot into empty PostgreSQL in one transaction and commits only when row counts and per-table SHA-256 hashes match",
+        "repository": "repository",
+        "after": [
+          "T2"
+        ],
+        "complexity": "high",
+        "scope": "large_change",
+        "estimated_minutes": 240,
+        "risk": "high",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "New CLI, shared hash module and fixture-based tests; two tables keep it bounded but verification logic needs care; uncalibrated",
+        "expected_paths": [
+          "apps/api/src/migration/sqlite-to-postgres.ts",
+          "apps/api/src/migration/row-hash.ts",
+          "apps/api/package.json",
+          "apps/api/test/sqlite-migration.test.ts"
+        ],
+        "shared_resources": [
+          "postgres-schema-v1",
+          "row-hash-contract",
+          "apps/api/package.json"
+        ],
+        "acceptance_criteria": [
+          "Source failing integrity_check or not at user_version 1 aborts without writing",
+          "Non-empty or non-current target aborts without writing",
+          "Fixture with unicode, empty descriptions, large data_json and cascaded assets migrates with equal counts and hashes and a written report",
+          "Injected mismatch causes rollback, non-zero exit and an empty target",
+          "verify-only mode reports counts and hashes without writing"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm test -w @training/api",
+            "purpose": "migration commits on match and rolls back on mismatch",
+            "category": "functional",
+            "created_by": "T5"
+          },
+          {
+            "type": "command",
+            "value": "npm run typecheck -w @training/api",
+            "purpose": "migration tool compiles against both drivers",
+            "category": "static"
+          }
+        ],
+        "covers": [
+          "R1"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Hashing must be collation independent and byte exact across two different drivers",
+            "evidence": [
+              "file:apps/api/src/db/database.ts",
+              "file:apps/api/src/repositories/asset-repository.ts"
+            ]
+          },
+          "scope": {
+            "justification": "New CLI with its own hash module, npm script and dedicated test suite",
+            "evidence": [
+              "file:apps/api/package.json",
+              "file:apps/api/src/backup.ts"
+            ]
+          },
+          "duration": {
+            "justification": "Copy loop is small but fixtures, failure injection and report output need about four hours",
+            "evidence": [
+              "file:apps/api/test/repository.test.ts",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "A silent copy defect would lose or corrupt client training data at cutover",
+            "evidence": [
+              "spec:SPEC.md#requirements",
+              "file:apps/api/src/repositories/project-repository.ts"
+            ]
+          },
+          "coupling": {
+            "justification": "Depends on schema module and its hash report is reused by backup verification",
+            "evidence": [
+              "task:T2",
+              "task:T6"
+            ]
+          },
+          "confidence": {
+            "justification": "Source schema has only two tables and was fully inspected",
+            "evidence": [
+              "file:apps/api/src/db/database.ts"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T6",
+        "milestone_id": "M3",
+        "title": "Replace SQLite backup with PostgreSQL dump and verified restore",
+        "objective": "The backup command writes the existing directory layout with a pg_dump file and hash report, and a restore command restores a chosen backup into an empty database and proves counts and hashes match",
+        "repository": "repository",
+        "after": [
+          "T1",
+          "T5"
+        ],
+        "complexity": "medium",
+        "scope": "large_change",
+        "estimated_minutes": 180,
+        "risk": "high",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "Rewrite of a 24-line backup script, new restore script, Dockerfile client install and tests; client version depends on D1; uncalibrated",
+        "expected_paths": [
+          "apps/api/src/backup.ts",
+          "apps/api/src/restore.ts",
+          "apps/api/Dockerfile",
+          "apps/api/package.json",
+          "apps/api/test/backup-restore.test.ts"
+        ],
+        "shared_resources": [
+          "postgres-schema-v1",
+          "row-hash-contract",
+          "backup-directory-layout",
+          "apps/api/package.json"
+        ],
+        "acceptance_criteria": [
+          "Backup directory contains training.pgdump, assets, verification.json, checksums.sha256, git-sha.txt, schema-version.txt and manifest.json with store postgresql",
+          "pg_dump or pg_restore receive credentials through environment variables, never argv",
+          "A failed dump exits non-zero and leaves no manifest",
+          "Restore refuses bad checksums or a non-empty target and succeeds only when recomputed hashes match verification.json"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm test -w @training/api",
+            "purpose": "backup then restore round trip yields matching hashes",
+            "category": "integration",
+            "created_by": "T6"
+          },
+          {
+            "type": "command",
+            "value": "npm run build -w @training/api",
+            "purpose": "backup and restore compile into dist for the container",
+            "category": "static"
+          }
+        ],
+        "covers": [
+          "R3",
+          "R1"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "External tool invocation with secret handling and checksum verification needs moderate design",
+            "evidence": [
+              "file:apps/api/src/backup.ts",
+              "file:apps/api/Dockerfile"
+            ]
+          },
+          "scope": {
+            "justification": "Changes backup, adds restore, alters the container image and package scripts",
+            "evidence": [
+              "file:apps/api/package.json",
+              "file:apps/api/Dockerfile"
+            ]
+          },
+          "duration": {
+            "justification": "Backup layout already exists, so rewrite plus restore and round-trip test fits three hours",
+            "evidence": [
+              "file:apps/api/src/backup.ts",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "Broken backups remove the only recovery path and may expose database credentials",
+            "evidence": [
+              "file:ops/ec2/deploy.ps1",
+              "file:ops/ec2/compose.yml"
+            ]
+          },
+          "coupling": {
+            "justification": "Reuses the migration hash report and depends on hosting decisions for client version",
+            "evidence": [
+              "task:T5",
+              "task:T1"
+            ]
+          },
+          "confidence": {
+            "justification": "Current backup flow was read; server-side backup dir and PostgreSQL version stay unresolved",
+            "evidence": [
+              "file:apps/api/src/backup.ts",
+              "assumption:D1 PostgreSQL major version pending"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T7",
+        "milestone_id": "M3",
+        "title": "Update deployment, cutover script and rollback guards for PostgreSQL",
+        "objective": "Compose, deploy and rollback scripts support PostgreSQL and a guarded one-time cutover script migrates, verifies and activates or restores the old release, with docs describing runbook and restore",
+        "repository": "repository",
+        "after": [
+          "T3",
+          "T6"
+        ],
+        "complexity": "medium",
+        "scope": "large_change",
+        "estimated_minutes": 150,
+        "risk": "high",
+        "coupling": "high",
+        "confidence": "low",
+        "estimate_rationale": "Edits three PowerShell scripts, adds one, updates compose and two docs; shape depends on D1-D3 owner answers; uncalibrated",
+        "expected_paths": [
+          "ops/ec2/compose.yml",
+          "ops/ec2/deploy.ps1",
+          "ops/ec2/rollback.ps1",
+          "ops/ec2/cutover.ps1",
+          "docs/deployment.md",
+          "docs/architecture.md"
+        ],
+        "shared_resources": [
+          "ec2-release-layout",
+          "backup-directory-layout"
+        ],
+        "acceptance_criteria": [
+          "Compose keeps /app/data and /app/backups mounts and provides PostgreSQL per D1",
+          "deploy.ps1 refuses activation when PostgreSQL is unreachable or not at schema 1",
+          "cutover.ps1 takes a SQLite backup with the current release, runs verified migration and restarts the old release on any failure",
+          "rollback.ps1 refuses a pre-PostgreSQL release unless -AllowSqliteRollback is given and prints the data-loss warning",
+          "docs/deployment.md documents cutover, restore and rollback steps"
+        ],
+        "verification": [
+          {
+            "type": "manual",
+            "value": "Review ops/ec2 scripts and docs, then execute them during the T8 rehearsal",
+            "purpose": "guards and runbook behave as specified on a non-production host",
+            "expected": "Each refusal path triggers and the success path activates the PostgreSQL release with readyz 200",
+            "category": "integration"
+          }
+        ],
+        "covers": [
+          "R3",
+          "R1"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Failure branches must restore availability while sequencing backup, migration and activation",
+            "evidence": [
+              "file:ops/ec2/deploy.ps1",
+              "file:ops/ec2/rollback.ps1"
+            ]
+          },
+          "scope": {
+            "justification": "Spans compose, three existing scripts, one new script and deployment docs",
+            "evidence": [
+              "file:ops/ec2/compose.yml",
+              "file:docs/deployment.md",
+              "file:docs/architecture.md"
+            ]
+          },
+          "duration": {
+            "justification": "Script edits are short but the new cutover sequence and docs need about two and a half hours",
+            "evidence": [
+              "file:ops/ec2/deploy.ps1",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "Mistakes here affect production availability and can lose writes after cutover",
+            "evidence": [
+              "file:ops/ec2/rollback.ps1",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "coupling": {
+            "justification": "Consumes the ported runtime and backup tooling and shares the release layout",
+            "evidence": [
+              "task:T3",
+              "task:T6"
+            ]
+          },
+          "confidence": {
+            "justification": "Script shape depends on unanswered hosting, window and rollback decisions",
+            "evidence": [
+              "task:T1",
+              "assumption:D1 D2 D3 owner answers pending"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T8",
+        "milestone_id": "M3",
+        "title": "Rehearse cutover, restore and rollback on a production-like copy",
+        "objective": "A rehearsal on a controlled host with a copy of a real backup demonstrates verified migration, API parity, backup restore and both rollback paths and records measured downtime",
+        "repository": "repository",
+        "after": [
+          "T4",
+          "T7"
+        ],
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 180,
+        "risk": "high",
+        "coupling": "medium",
+        "confidence": "low",
+        "estimate_rationale": "Execution time depends on unknown production data size and host setup; preliminary estimate only",
+        "expected_paths": [
+          "docs/runbooks/TRAIN-6-rehearsal.md"
+        ],
+        "shared_resources": [
+          "ec2-release-layout"
+        ],
+        "acceptance_criteria": [
+          "Rehearsal record shows migration report with equal counts and hashes for projects and assets",
+          "Record shows API test suite passing against the migrated copy",
+          "Record shows a backup restored into a fresh database with matching hashes and both rollback paths exercised",
+          "Record states measured write-freeze duration and confirms data copies were deleted"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm run typecheck -w @training/api",
+            "purpose": "rehearsed release compiles cleanly",
+            "category": "static"
+          },
+          {
+            "type": "manual",
+            "value": "Run cutover.ps1, restore and rollback.ps1 on a non-production host and fill docs/runbooks/TRAIN-6-rehearsal.md",
+            "purpose": "end-to-end product evidence for R1, R2 and R3",
+            "expected": "Hashes match, readyz 200 after cutover, restore verified, rollback paths behave and downtime recorded",
+            "category": "product"
+          }
+        ],
+        "covers": [
+          "R1",
+          "R2",
+          "R3"
+        ],
+        "kind": "audit",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Coordinating several scripts on a realistic copy needs judgement when deviations appear",
+            "evidence": [
+              "file:ops/ec2/deploy.ps1",
+              "task:T7"
+            ]
+          },
+          "scope": {
+            "justification": "No product code changes; output is one rehearsal record",
+            "evidence": [
+              "file:docs/deployment.md"
+            ]
+          },
+          "duration": {
+            "justification": "Three hours assumes small data volume and a ready host, both unverified",
+            "evidence": [
+              "assumption:production data size unknown",
+              "task:T1"
+            ]
+          },
+          "risk": {
+            "justification": "Copies include personal names, emails and ages, so mishandling exposes user data",
+            "evidence": [
+              "file:packages/contracts/src/project.ts",
+              "file:apps/api/test/repository.test.ts"
+            ]
+          },
+          "coupling": {
+            "justification": "Depends on parity tests and deployment scripts being complete",
+            "evidence": [
+              "task:T4",
+              "task:T7"
+            ]
+          },
+          "confidence": {
+            "justification": "Host availability and dataset size remain unknown until decisions are answered",
+            "evidence": [
+              "assumption:rehearsal host not yet identified",
+              "task:T1"
+            ]
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "id": "IF-1",
+        "title": "PostgreSQL store module",
+        "owner": "apps/api db layer",
+        "producer_task": "T2",
+        "consumer_tasks": [
+          "T3",
+          "T5",
+          "T6"
+        ],
+        "integration_task": "T4",
+        "inputs": [
+          "TRAINING_DATABASE_URL or TRAINING_TEST_DATABASE_URL connection string"
+        ],
+        "outputs": [
+          "openPostgres returning a migrated pg Pool",
+          "withTransaction helper",
+          "async assertPostgresReady",
+          "schema 1 tables projects and assets"
+        ],
+        "invariants": [
+          "Column names match SQLite schema 1; ids, timestamps and data_json are TEXT; revision, schema_version and byte_size are INTEGER",
+          "Recorded schema version above 1 is rejected",
+          "Migration runs under an advisory lock and records version once"
+        ],
+        "integration_criteria": [
+          "Parity tests pass using pools created only through openPostgres"
+        ]
+      },
+      {
+        "id": "IF-2",
+        "title": "Row-hash verification report",
+        "owner": "apps/api migration tooling",
+        "producer_task": "T5",
+        "consumer_tasks": [
+          "T6",
+          "T8"
+        ],
+        "integration_task": "T6",
+        "inputs": [
+          "rows of projects and assets from SQLite or PostgreSQL"
+        ],
+        "outputs": [
+          "JSON report with per-table count and sha256"
+        ],
+        "invariants": [
+          "Rows sorted by id in JavaScript code-point order, not database collation",
+          "Each row serialized as a JSON array of columns in schema order with identical serializer for both stores"
+        ],
+        "integration_criteria": [
+          "Restore recomputes the report and matches verification.json written by backup"
+        ]
+      },
+      {
+        "id": "IF-3",
+        "title": "Async repository and HTTP behaviour contract",
+        "owner": "apps/api repositories and app",
+        "producer_task": "T3",
+        "consumer_tasks": [
+          "T4",
+          "T7",
+          "T8"
+        ],
+        "integration_task": "T4",
+        "inputs": [
+          "HTTP requests defined in apps/api/src/app.ts and docs/api-contract.md"
+        ],
+        "outputs": [
+          "Unchanged status codes, bodies, revision numbers and project.revision events"
+        ],
+        "invariants": [
+          "Stale expectedRevision yields 409 REVISION_CONFLICT with stored currentRevision",
+          "Unchanged payload keeps revision and publishes no event",
+          "Events publish only after commit"
+        ],
+        "integration_criteria": [
+          "HTTP parity and concurrency tests pass on PostgreSQL"
+        ]
+      }
+    ]
+  },
+  "elapsed_seconds": 351.594,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792245305.093517,
+    "windows": {
+      "five_hour": {
+        "used_percent": 8.0,
+        "resets_at": 1792262400.36429,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 89.0,
+        "resets_at": 1792278000.364306,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

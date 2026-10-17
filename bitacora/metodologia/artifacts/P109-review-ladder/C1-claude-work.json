@@ -1,0 +1,112 @@
+{
+  "case": "C1",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "sonnet",
+  "requested_effort": "high",
+  "prompt_sha256": "2d8a2108915cc803a5a4c00f12f0effd16ce2e9a1b1cb187ae98bedc51429e4f",
+  "prompt_characters": 2413,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206224.9297504,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792213800.260835,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.260859,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206225.3530164,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "The max_price filter runs after pagination (`page=paginate(rows, offset, size); return filter(page, max_price)`). R2 requires filtering the whole tenant catalog, sorting by ID, and only then paginating.",
+        "evidence": "R2: \"Filter the entire tenant's catalog, sort by immutable product ID ascending, THEN paginate.\" T2: \"page=paginate(rows, offset, size); return filter(page, max_price)\".",
+        "failure_scenario": "With size=10 and max_price=1500, matching products on later pages are never returned, because only the 10 lowest-ID rows are examined. Pages come back short or empty even when more matches exist, and clients that stop on a short page miss results.",
+        "fix": "In T2, use rows=findAllForTenant(session.tenant_id); rows=filter(rows, max_price); rows=sortById(rows); return paginate(rows, offset, size)."
+      },
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "The filter uses the truthiness check `if limit:`, so max_price=0 is treated like a missing value and returns the whole catalog. R1 says zero means only free products.",
+        "evidence": "T1: \"if limit: return [p for p in items if p.price_cents <= limit]; otherwise return items\". R1: \"Missing means no upper bound; zero means only free products.\" Baseline: the parser distinguishes None from zero.",
+        "failure_scenario": "GET /products?max_price=0 returns paid products as well as free ones. This silently breaks the zero-value contract, and the parser's None/0 distinction is discarded.",
+        "fix": "Use `if limit is None: return items`, otherwise filter with `p.price_cents <= limit`."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "The test plan cannot detect either defect above. It has no max_price=0 case and no multi-page case: all four products fit on one page, so filtering after pagination looks correct.",
+        "evidence": "T3: \"test missing limit, limit=1500, negative, decimal and tenant isolation. Test data has two matching products and two expensive ones, all within a single page.\"",
+        "failure_scenario": "The suite passes while max_price=0 returns everything and filtered pagination skips matches on later pages. The acceptance criterion \"optional maximum price works\" is declared met without evidence.",
+        "fix": "Add a max_price=0 test with a free product and paid products, expecting only the free ones. Add a multi-page test with matches spread across pages and a small page size. Assert the full ID-ascending sequence across pages with no gaps or duplicates, and a boundary test at price == limit."
+      },
+      {
+        "task": "T1",
+        "severity": "medium",
+        "issue": "The plan never says how a parser rejection becomes an HTTP 400, and T3 does not say the tests assert the status code. R4 requires 400 for negative and non-integer values.",
+        "evidence": "T1: \"Parse max_price with the baseline helper.\" R4: \"Invalid negative/non-integer limits return 400.\" Baseline: the parser \"rejects invalid inputs\" without specifying how.",
+        "failure_scenario": "If the helper raises an exception or returns an error value that the endpoint does not translate, invalid max_price produces a 500 or is ignored, and the data is returned unfiltered.",
+        "fix": "State in T1/T2 that a parser rejection is mapped to a 400 response before any data access, and have the T3 negative and decimal tests assert status 400 and no catalog data in the body."
+      }
+    ],
+    "uncertainties": [
+      "The baseline does not say whether parseOptionalNonnegativeInt signals invalid input by exception or by return value, so the 400 mapping in T1 cannot be verified from the supplied facts."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"The max_price filter runs after pagination (`page=paginate(rows, offset, size); return filter(page, max_price)`). R2 requires filtering the whole tenant catalog, sorting by ID, and only then paginating.\",\"evidence\":\"R2: \\\"Filter the entire tenant's catalog, sort by immutable product ID ascending, THEN paginate.\\\" T2: \\\"page=paginate(rows, offset, size); return filter(page, max_price)\\\".\",\"failure_scenario\":\"With size=10 and max_price=1500, matching products on later pages are never returned, because only the 10 lowest-ID rows are examined. Pages come back short or empty even when more matches exist, and clients that stop on a short page miss results.\",\"fix\":\"In T2, use rows=findAllForTenant(session.tenant_id); rows=filter(rows, max_price); rows=sortById(rows); return paginate(rows, offset, size).\"},{\"task\":\"T1\",\"severity\":\"high\",\"issue\":\"The filter uses the truthiness check `if limit:`, so max_price=0 is treated like a missing value and returns the whole catalog. R1 says zero means only free products.\",\"evidence\":\"T1: \\\"if limit: return [p for p in items if p.price_cents <= limit]; otherwise return items\\\". R1: \\\"Missing means no upper bound; zero means only free products.\\\" Baseline: the parser distinguishes None from zero.\",\"failure_scenario\":\"GET /products?max_price=0 returns paid products as well as free ones. This silently breaks the zero-value contract, and the parser's None/0 distinction is discarded.\",\"fix\":\"Use `if limit is None: return items`, otherwise filter with `p.price_cents <= limit`.\"},{\"task\":\"T3\",\"severity\":\"high\",\"issue\":\"The test plan cannot detect either defect above. It has no max_price=0 case and no multi-page case: all four products fit on one page, so filtering after pagination looks correct.\",\"evidence\":\"T3: \\\"test missing limit, limit=1500, negative, decimal and tenant isolation. Test data has two matching products and two expensive ones, all within a single page.\\\"\",\"failure_scenario\":\"The suite passes while max_price=0 returns everything and filtered pagination skips matches on later pages. The acceptance criterion \\\"optional maximum price works\\\" is declared met without evidence.\",\"fix\":\"Add a max_price=0 test with a free product and paid products, expecting only the free ones. Add a multi-page test with matches spread across pages and a small page size. Assert the full ID-ascending sequence across pages with no gaps or duplicates, and a boundary test at price == limit.\"},{\"task\":\"T1\",\"severity\":\"medium\",\"issue\":\"The plan never says how a parser rejection becomes an HTTP 400, and T3 does not say the tests assert the status code. R4 requires 400 for negative and non-integer values.\",\"evidence\":\"T1: \\\"Parse max_price with the baseline helper.\\\" R4: \\\"Invalid negative/non-integer limits return 400.\\\" Baseline: the parser \\\"rejects invalid inputs\\\" without specifying how.\",\"failure_scenario\":\"If the helper raises an exception or returns an error value that the endpoint does not translate, invalid max_price produces a 500 or is ignored, and the data is returned unfiltered.\",\"fix\":\"State in T1/T2 that a parser rejection is mapped to a 400 response before any data access, and have the T3 negative and decimal tests assert status 400 and no catalog data in the body.\"}],\"uncertainties\":[\"The baseline does not say whether parseOptionalNonnegativeInt signals invalid input by exception or by return value, so the 400 mapping in T1 cannot be verified from the supplied facts.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 3148,
+    "cache_read_input_tokens": 1662,
+    "output_tokens": 1921,
+    "output_tokens_details": {
+      "thinking_tokens": 667
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3148,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 16.769,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206242.1225064,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792213800.328834,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.328857,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

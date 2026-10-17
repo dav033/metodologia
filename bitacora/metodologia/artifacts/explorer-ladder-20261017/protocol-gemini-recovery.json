@@ -1,0 +1,19 @@
+{
+  "scope": "Exactly six permission-repair calls, original six preserved/excluded; no further retries",
+  "excluded_records": [
+    "E1-gemini-a2.json",
+    "E2-gemini.json",
+    "E3-gemini.json",
+    "E4-gemini.json",
+    "E5-gemini.json",
+    "E6-gemini.json"
+  ],
+  "runner_sha256": "f878bdb2d4526487a6c14ec71fd613d898872fef53a91a61aa0da2b7b57207c2",
+  "imported_runner_sha256": "9e52fdcb2e8be79b54a28759cc135a287ba86278b707ad51a88d68d944515f73",
+  "same_prompts_and_source": true,
+  "OS_sandbox": "read-only /, private /tmp, current cell read-only at /tmp/cell; .gemini native runtime state writable",
+  "native_permissions": "Explicit skip tool confirmations, plan mode, no product execution requested. Filesystem source writes denied by OS.",
+  "maximum_total_attempts": 33,
+  "stop_rule": "Stop repaired Gemini lane on first missing/invalid answer, provider failure or source change.",
+  "comparability_caveat": "Native permission/tool contexts differ across providers; this repairs an integration blocker, not model reasoning."
+}

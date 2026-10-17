@@ -1,0 +1,829 @@
+{
+  "schema_version": 1,
+  "case": "CP1",
+  "route": {
+    "id": "sol",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "859ecdf03c96d0b61e3bd5a53e8559891a78483ff01385742f67e847d78d08d0",
+  "prompt_characters": 69508,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792244716.0535767,
+    "windows": {
+      "five_hour": {
+        "used_percent": 0.0,
+        "resets_at": 1792262716.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792244716.7084124,
+  "argv": [
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "--json",
+    "-"
+  ],
+  "answer": null,
+  "response_text": "```PLAN.md\n# REQ-CP1 — Paginated project list\n\nDraft, revision 1. Planning only; no implementation, tests, builds, validator, approval or launch performed.\n\nScope: R1 introduces metadata-only cursor pages; R2 preserves existing project discovery, tabs and editing; R3 requires notice before an externally breaking change becomes live. External adapter implementation, deployment, authentication redesign, import-schema changes and database migrations are excluded.\n\n## Inspected findings and provenance\n\nRepository-relative references:\n\n- `apps/api/src/app.ts:30` returns `{projects: repository.list()}` behind existing authentication. Lines 37–57 retain separate snapshot/detail and mutation contracts; lines 65–72 define error responses.\n- `apps/api/src/repositories/project-repository.ts:14–35` selects every column, parses `data_json` into snapshot `data`, and orders only by `updated_at DESC`.\n- `apps/api/src/db/database.ts:25–35` provides metadata columns and unique project IDs. No pagination index exists; this draft proposes no migration or measured performance claim.\n- `apps/web/lib/api/client.ts:3–24` already defines the five-field `ProjectListItem`, but fetches a single unpaginated response.\n- `apps/web/components/project-list.tsx:27–46` expects the complete list. `apps/web/components/project-tabs-bar.tsx:23–45` treats absence from that list as deletion, refreshes names, and restores directly opened tabs. Its picker also needs projects beyond page one.\n- `apps/web/lib/open-tabs.ts`, project routes and `apps/web/hooks/use-project-sync.ts:24–34` show persisted tabs and separate snapshot-based editing.\n- `packages/contracts/src/project.ts:60–73`, its index, generator and existing tests were inspected. The generated JSON schema describes imports, not list responses.\n- `docs/architecture.md` identifies `trainingApp-mcp` as an external HTTP adapter. Its actual endpoint usage, snapshot assumptions, cursor support and contacts remain unknown.\n- Root/workspace package manifests, TypeScript configuration, API repository tests, authentication/configuration, API/deployment docs and `scripts/check-contract-drift.mjs` were inspected. Commands below exist in package scripts. `contracts:check` accesses another repository and is excluded.\n\n## Proposed assumptions and decision gates\n\nD1 — Pagination contract, unresolved. Recommend:\n- Optional `limit`: default 50, maximum 100; accept only one decimal integer string in 1–100. Reject arrays, objects, repeated values and invalid values.\n- Optional `cursor`: one nonempty base64url string, maximum 2048 characters, encoding strict `{v:1, updatedAt, id}`. Validate canonical ISO timestamp and nonempty ID; reject malformed encoding, unsupported versions and extra fields.\n- Authenticate first; invalid pagination returns HTTP 400 using the existing `VALIDATION_ERROR` envelope.\n- Order by `updated_at DESC, id DESC` using SQLite's existing text comparison. Seek strictly below the cursor tuple, bind SQL parameters, fetch `limit + 1`, return at most `limit` items. Emit a cursor from the last returned item only when an extra row exists; otherwise `nextCursor: null`.\n- Each item contains exactly `id`, `externalKey`, `name`, `revision`, `updatedAt`. Never select or parse `data_json` for listing.\n- Empty results return `{projects: [], nextCursor: null}`. A deleted anchor remains usable because seeking uses values, not anchor lookup.\n- Pagination is a live traversal, not a database snapshot. Concurrent updates can move rows; completeness and no duplicates are guaranteed for unchanged datasets only.\n- Preserve the web helper's complete-list behavior by collecting all pages before resolving. No new pagination UI.\n\nT1 must resolve D1 before T2–T5 begin. These are proposals, not owner decisions. A different pagination or UI policy requires revising downstream criteria.\n\nD2 — External transition, unresolved. Recommend a documented, noticed change to the existing endpoint, with detail GETs replacing snapshot reads and cursor traversal replacing single-response enumeration. Actual audience, delivery channel, notice lead time, effective release and required acknowledgement must be established from authorized evidence. If coexistence/versioning is required instead, revise this draft before implementation; no speculative legacy mode is included.\n\nT6 remains incomplete and R3 unaccepted without actual notice evidence satisfying D2. Draft documentation alone is not notice. This plan authorizes no external messages or release.\n\n## Milestones and tasks\n\n### M1 — Settle and publish the list contract\n\nAcceptance: D1 is resolved without silently filling product gaps; the shared page contract and external transition requirements are recorded.\n\n- [ ] T1 — Resolve pagination and transition decisions · repo: repository · covers: R1, R2, R3 · kind: research · files: docs/project-list-migration.md · resources: project-list-contract, external-list-transition\n\n  Record D1 and D2 proposals, verified local consumers, missing external evidence and downstream gates. Obtain authorized decisions in a future workflow; do not infer external compatibility. D1 must be resolved to complete this task; unresolved D2 remains an explicit release gate. Manual product verification expects decision provenance and a named condition for every remaining gate.\n\n- [ ] T2 — Define shared project list schemas · repo: repository · after: T1 · covers: R1, R2 · kind: implement · verify: `npm run test -w @training/contracts` · files: packages/contracts/src/project.ts, packages/contracts/test/project-list.test.ts, docs/api-contract.md · resources: project-list-contract\n\n  Add exported strict list-item and page schemas/types through the existing index export. Preserve import/snapshot schemas and generated import artifacts. Document the resolved query, cursor, response, concurrency and error rules. New contract tests reject snapshot fields and invalid page shapes; typecheck the contracts workspace.\n\n### M2 — Implement and verify both sides\n\nAcceptance: bounded metadata pages work through authenticated HTTP; both screens retain complete-list behavior and snapshot editing remains intact.\n\n- [ ] T3 — Implement metadata keyset pagination · repo: repository · after: T2 · covers: R1 · kind: implement · verify: `npm run build -w @training/contracts && npm run test -w @training/api` · files: apps/api/src/repositories/project-repository.ts, apps/api/src/app.ts, apps/api/test/projects-pagination.test.ts · resources: project-list-contract\n\n  Implement D1's explicit column projection, tuple seek, lookahead and cursor validation. Preserve authentication precedence, detail snapshots and mutation behavior. New repository/route cases cover empty lists, page boundaries, tied timestamps, deleted anchors, invalid queries and metadata-only output. No offset pagination or full-snapshot mapping.\n\n- [ ] T4 — Preserve complete web project discovery · repo: repository · after: T3 · covers: R2 · kind: implement · verify: `npm run build -w @training/contracts && npm run test -w @training/api` · files: apps/web/lib/api/client.ts, apps/web/components/project-list.tsx, apps/web/components/project-tabs-bar.tsx, apps/api/test/projects-client.test.ts · resources: project-list-contract, web-complete-project-list\n\n  Keep `listProjects()` returning `{projects}` to both consumers. Establish a session once per traversal, validate each page and encode cursors in requests. Accumulate privately until explicit null; reject page errors, malformed pages and repeated cursors without publishing partial state. Deduplicate by ID, retaining the higher revision and first encounter position. Only the latest refresh may update a component. Preserve previous list/tabs on failure; partial enumeration must never imply deletion. Test the real web helper with controlled fetch responses using the existing API TypeScript test runner, without new test dependencies.\n\n- [ ] T5 — Verify HTTP and screen integration · repo: repository · after: T4 · covers: R1, R2 · kind: test · verify: `npm run build -w @training/contracts && npm run test -w @training/api` · files: apps/api/test/projects-http.test.ts · resources: project-list-contract, web-complete-project-list\n\n  Add real HTTP tests using isolated temporary SQLite and an ephemeral local server, with cleanup. Exercise browser-cookie and bearer authentication, unauthorized requests, complete multi-page traversal and unchanged detail/revision behavior. Plan static checks with `npm run typecheck` and `npm run lint -w @training/web`.\n\n  Product verification uses more than 100 projects, tied timestamps, and a saved/directly opened tab outside page one: every project remains discoverable, the picker opens later projects, names refresh, real deletions remove tabs, and later-page failure retains prior state. Verify create/open/edit/save/delete flows. Automated success does not substitute for these screen checks.\n\n### M3 — Establish external transition readiness\n\nAcceptance: migration guidance matches verified behavior; R3 has actual notice evidence or remains explicitly blocked.\n\n- [ ] T6 — Document migration and verify notice evidence · repo: repository · after: T5 · covers: R3 · kind: docs · files: docs/api-contract.md, docs/project-list-migration.md · resources: external-list-transition, project-list-contract\n\n  Document removed snapshot fields, bounded default results, cursor traversal, terminal null, error handling, live-list limits and detail-fetch migration. Record actual D2 decisions and notice evidence before any future release changes the endpoint. Notice must identify the breaking behavior and effective transition; evidence must satisfy the agreed recipient/channel/timing conditions. Missing external access or delivery evidence keeps this task incomplete. Preparing guidance does not authorize sending it.\n\n## Coverage, dependencies and verification\n\nR1: T1 → T2 → T3 → T5. R2: T1 → T2 → T4 → T5. R3: T1 → T6, with D2 and actual notice as explicit gates. Task order also prevents overlapping contract/document changes. IF-1 owns the page contract; IF-2 owns the complete-list web adapter.\n\nAll checks are planned. New tests are identified by `created_by` in JSON and are not existing evidence. Commands run from the repository root in future implementation. No comparable execution history is available; minute values are provisional task estimates, excluding external waiting.\n\n## Risks and semantic self-review\n\n- Fact: tabs infer deletion from list absence (`project-tabs-bar.tsx:31–35`). Correction: publish only a complete successful traversal.\n- Plausible risk, high: external consumers depend on snapshots or exhaustive single responses (`SPEC.md`, `docs/architecture.md`). Correction: D2 plus T6 notice evidence; no compatibility claim from local tests.\n- Product decision: page sizes, cursor format, concurrency guarantee and transition strategy are unresolved. Correction: D1/D2 gates, not implementer discretion.\n- Plausible risk, medium: concurrent writes move rows across cursors. Correction: document live traversal and test stable datasets separately; deduplication cannot prove snapshot completeness.\n- Plausible risk, medium: collecting all pages preserves behavior but keeps total browser memory and traversal work proportional to project count. This is a revisable preservation strategy, not a performance measurement.\n- Fact: current tests cover revision conflicts and import validation, not pagination or browser behavior. Correction: T2–T5 add focused coverage and explicit product checks.\n\nSame-context semantic self-review checked requirement coverage, contract ownership, dependency order and evidence provenance. It is not independent approval; deterministic validation is left to the host.\n```\n\n```PLAN.json\n{\n  \"schema_version\": \"1.2.0\",\n  \"plan_id\": \"REQ-CP1\",\n  \"revision\": 1,\n  \"spec_ref\": \"SPEC.md\",\n  \"requirements\": [\"R1\", \"R2\", \"R3\"],\n  \"milestones\": [\n    {\n      \"id\": \"M1\",\n      \"title\": \"Settle and publish the list contract\",\n      \"acceptance_criteria\": [\n        \"D1 pagination decisions have recorded provenance before dependent implementation begins.\",\n        \"Shared page schemas and documentation state exact response, query and error behavior.\",\n        \"Unknown external consumer behavior and D2 transition conditions remain explicit.\"\n      ]\n    },\n    {\n      \"id\": \"M2\",\n      \"title\": \"Implement and verify both sides\",\n      \"acceptance_criteria\": [\n        \"Authenticated HTTP returns bounded metadata-only pages with deterministic keyset traversal.\",\n        \"Both web consumers receive complete successful enumerations and retain previous state on traversal failure.\",\n        \"New automated checks and explicit screen checks cover pagination and preserved snapshot workflows.\"\n      ]\n    },\n    {\n      \"id\": \"M3\",\n      \"title\": \"Establish external transition readiness\",\n      \"acceptance_criteria\": [\n        \"Migration guidance describes the verified endpoint behavior and consumer changes.\",\n        \"R3 remains unaccepted until actual notice evidence satisfies resolved D2 conditions before any future breaking release.\"\n      ]\n    }\n  ],\n  \"tasks\": [\n    {\n      \"id\": \"T1\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Resolve pagination and transition decisions\",\n      \"objective\": \"Produce an evidence-backed decision record resolving D1 and retaining an explicit D2 release gate for unavailable external consumer information.\",\n      \"repository\": \"repository\",\n      \"after\": [],\n      \"covers\": [\"R1\", \"R2\", \"R3\"],\n      \"kind\": \"research\",\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 45,\n      \"risk\": \"high\",\n      \"coupling\": \"high\",\n      \"confidence\": \"low\",\n      \"estimate_rationale\": \"Estimate for consolidating inspected local behavior and decision options; external evidence and decision waiting are unknown and excluded. No comparable execution history is available.\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Pagination and transition research must distinguish local facts from unresolved product choices.\",\n          \"evidence\": [\"spec:SPEC.md#requirements\", \"file:apps/web/components/project-tabs-bar.tsx\", \"file:docs/architecture.md\"]\n        },\n        \"scope\": {\n          \"justification\": \"The research produces one bounded migration and decision document.\",\n          \"evidence\": [\"file:docs/api-contract.md\", \"spec:SPEC.md#requirements\"]\n        },\n        \"duration\": {\n          \"justification\": \"Local consumer research is bounded but external decision waiting cannot be estimated.\",\n          \"evidence\": [\"file:apps/web/lib/api/client.ts\", \"file:docs/architecture.md\", \"assumption:Forty-five minutes covers local synthesis only, without comparable history.\"]\n        },\n        \"risk\": {\n          \"justification\": \"An incorrect transition decision can silently break the external HTTP adapter.\",\n          \"evidence\": [\"file:docs/architecture.md\", \"spec:SPEC.md#requirements\"]\n        },\n        \"coupling\": {\n          \"justification\": \"The project-list-contract decisions constrain T2 and the external-list-transition gate constrains T6.\",\n          \"evidence\": [\"task:T2\", \"task:T6\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Local consumers were inspected but external usage and owner choices remain unavailable.\",\n          \"evidence\": [\"file:apps/web/components/project-list.tsx\", \"file:docs/architecture.md\", \"assumption:External decision evidence will require a future authorized workflow.\"]\n        }\n      },\n      \"expected_paths\": [\"docs/project-list-migration.md\"],\n      \"shared_resources\": [\"project-list-contract\", \"external-list-transition\"],\n      \"acceptance_criteria\": [\n        \"Record local consumers, proposed D1 behavior and exact unresolved external evidence without claiming compatibility.\",\n        \"Resolve D1 with authorized decision provenance before completing T1 or starting T2 through T5.\",\n        \"Record D2 audience, channel, timing, effective transition and acknowledgement conditions when established; otherwise retain an explicit unresolved release gate.\",\n        \"If coexistence, versioning or a different UI policy is required, revise dependent tasks before implementation rather than inventing a compatibility mechanism.\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"manual\",\n          \"category\": \"product\",\n          \"value\": \"Review docs/project-list-migration.md against SPEC.md and the inspected API and web consumers.\",\n          \"purpose\": \"Verify decision readiness without fabricating owner answers or external compatibility.\",\n          \"expected\": \"D1 has actual decision provenance; D2 is either supported by evidence or explicitly unresolved with a release block.\"\n        }\n      ]\n    },\n    {\n      \"id\": \"T2\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Define shared project list schemas\",\n      \"objective\": \"Expose strict metadata item and cursor-page schemas for API and web consumers, with contract documentation matching resolved D1.\",\n      \"repository\": \"repository\",\n      \"after\": [\"T1\"],\n      \"covers\": [\"R1\", \"R2\"],\n      \"kind\": \"implement\",\n      \"complexity\": \"low\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 40,\n      \"risk\": \"medium\",\n      \"coupling\": \"high\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Estimate covers two small schemas, contract tests and documentation through the existing export pattern, conditional on D1 resolution. No comparable execution history is available.\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Shared list schemas follow existing strict Zod object and type patterns.\",\n          \"evidence\": [\"file:packages/contracts/src/project.ts\", \"file:packages/contracts/src/index.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"The contract change adds list definitions while preserving existing snapshot and import schemas.\",\n          \"evidence\": [\"file:packages/contracts/src/project.ts\", \"file:packages/contracts/src/generate-schema.ts\"]\n        },\n        \"duration\": {\n          \"justification\": \"Existing contract test infrastructure supports a focused schema verification pass.\",\n          \"evidence\": [\"file:packages/contracts/test/project.test.ts\", \"file:packages/contracts/package.json\", \"assumption:Forty minutes is provisional rather than historically measured.\"]\n        },\n        \"risk\": {\n          \"justification\": \"A mismatched list schema would break both API output and browser parsing.\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/web/lib/api/client.ts\"]\n        },\n        \"coupling\": {\n          \"justification\": \"The project-list-contract schemas are produced for T3 and T4 consumption.\",\n          \"evidence\": [\"task:T3\", \"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Schema and export structures were inspected but final pagination choices depend on T1.\",\n          \"evidence\": [\"file:packages/contracts/src/project.ts\", \"task:T1\"]\n        }\n      },\n      \"expected_paths\": [\n        \"packages/contracts/src/project.ts\",\n        \"packages/contracts/test/project-list.test.ts\",\n        \"docs/api-contract.md\"\n      ],\n      \"shared_resources\": [\"project-list-contract\"],\n      \"acceptance_criteria\": [\n        \"Export strict ProjectListItem and ProjectListPage schemas and inferred types through the existing index export.\",\n        \"Each item has exactly id, externalKey, name, revision and updatedAt; each page has projects and a string-or-null nextCursor.\",\n        \"Document resolved D1 query validation, tuple ordering, cursor encoding, terminal null, errors and live traversal limits.\",\n        \"New tests reject snapshot fields, missing nextCursor and invalid page values.\",\n        \"Preserve snapshot/import schemas and generated import JSON schema and hash artifacts.\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"category\": \"functional\",\n          \"value\": \"npm run test -w @training/contracts\",\n          \"purpose\": \"Exercise new strict list schemas alongside existing import validation.\",\n          \"created_by\": \"T2\"\n        },\n        {\n          \"type\": \"command\",\n          \"category\": \"static\",\n          \"value\": \"npm run typecheck -w @training/contracts\",\n          \"purpose\": \"Verify list schema exports and inferred types compile.\"\n        },\n        {\n          \"type\": \"manual\",\n          \"category\": \"regression\",\n          \"value\": \"Review the contracts changes and generated import artifact diff.\",\n          \"purpose\": \"Keep list work separate from the external import-schema contract.\",\n          \"expected\": \"Import and snapshot definitions retain their behavior; generated import schema and hash are unchanged.\"\n        }\n      ]\n    },\n    {\n      \"id\": \"T3\",\n      \"milestone_id\": \"M2\",\n      \"title\": \"Implement metadata keyset pagination\",\n      \"objective\": \"Return validated authenticated cursor pages using explicit metadata SQL projection without parsing project payloads.\",\n      \"repository\": \"repository\",\n      \"after\": [\"T2\"],\n      \"covers\": [\"R1\"],\n      \"kind\": \"implement\",\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 100,\n      \"risk\": \"high\",\n      \"coupling\": \"high\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Estimate covers repository projection, query and cursor validation, route adaptation and focused tests. The inspected code is small, but boundary behavior is new and depends on D1. No comparable history is available.\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Keyset pagination combines tuple comparisons, lookahead and hostile query validation.\",\n          \"evidence\": [\"file:apps/api/src/repositories/project-repository.ts\", \"file:apps/api/src/app.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"Pagination is confined to the list repository method, HTTP route and focused tests.\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/api/src/db/database.ts\"]\n        },\n        \"duration\": {\n          \"justification\": \"Repository fixtures exist but pagination and HTTP boundary cases require new coverage.\",\n          \"evidence\": [\"file:apps/api/test/repository.test.ts\", \"file:apps/api/package.json\", \"assumption:One hundred minutes is an uncalibrated focused implementation estimate.\"]\n        },\n        \"risk\": {\n          \"justification\": \"Changing the existing list endpoint alters an externally consumed API contract.\",\n          \"evidence\": [\"file:docs/architecture.md\", \"spec:SPEC.md#requirements\"]\n        },\n        \"coupling\": {\n          \"justification\": \"The project-list-contract produced by T2 is implemented here and consumed by T4.\",\n          \"evidence\": [\"task:T2\", \"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"SQL, HTTP errors and authentication were inspected but pagination semantics await D1.\",\n          \"evidence\": [\"file:apps/api/src/http/auth.ts\", \"file:apps/api/src/app.ts\", \"task:T1\"]\n        }\n      },\n      \"expected_paths\": [\n        \"apps/api/src/repositories/project-repository.ts\",\n        \"apps/api/src/app.ts\",\n        \"apps/api/test/projects-pagination.test.ts\"\n      ],\n      \"shared_resources\": [\"project-list-contract\"],\n      \"acceptance_criteria\": [\n        \"After D1 resolution, accept optional single-string limit and cursor parameters; proposed limits are default 50 and maximum 100.\",\n        \"Authenticate before validation; malformed limits, repeated or structured parameters and invalid cursor encoding, size, version or shape return HTTP 400 VALIDATION_ERROR.\",\n        \"Use explicit metadata columns, bound parameters and updated_at DESC then id DESC ordering; continuation seeks updated_at below the anchor or equal updated_at with id below the anchor.\",\n        \"Fetch limit plus one rows, emit at most limit items and encode the last emitted tuple only when a further row exists; empty and terminal pages return nextCursor null.\",\n        \"Do not select data_json or invoke snapshot parsing for list results; a deleted cursor anchor does not prevent continuation.\",\n        \"Preserve detail snapshots, mutation revisions and existing authentication behavior without a database migration.\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"category\": \"functional\",\n          \"value\": \"npm run build -w @training/contracts && npm run test -w @training/api\",\n          \"purpose\": \"Verify new pagination cases for empty, exact-size, lookahead, tied timestamp, deleted anchor and invalid query boundaries.\",\n          \"created_by\": \"T3\"\n        },\n        {\n          \"type\": \"manual\",\n          \"category\": \"static\",\n          \"value\": \"Review the list SQL, cursor decoder and route error paths.\",\n          \"purpose\": \"Verify projection and algorithm properties not established by response typing alone.\",\n          \"expected\": \"Only metadata columns are read; SQL is parameterized; tuple comparison matches ordering; authentication precedes validation; snapshot methods remain separate.\"\n        }\n      ]\n    },\n    {\n      \"id\": \"T4\",\n      \"milestone_id\": \"M2\",\n      \"title\": \"Preserve complete web project discovery\",\n      \"objective\": \"Adapt the browser list helper to consume all cursor pages atomically so project screens and tab reconciliation retain complete-list semantics.\",\n      \"repository\": \"repository\",\n      \"after\": [\"T3\"],\n      \"covers\": [\"R2\"],\n      \"kind\": \"implement\",\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 90,\n      \"risk\": \"medium\",\n      \"coupling\": \"high\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Estimate includes shared-schema parsing, traversal guards, component refresh sequencing and tests using the existing API TypeScript runner. Screen validation is separate in T5; no comparable history is available.\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Complete-list adaptation must coordinate asynchronous traversal, failures and tab reconciliation.\",\n          \"evidence\": [\"file:apps/web/lib/api/client.ts\", \"file:apps/web/components/project-tabs-bar.tsx\"]\n        },\n        \"scope\": {\n          \"justification\": \"The helper and its two known screen consumers form a bounded browser change.\",\n          \"evidence\": [\"file:apps/web/components/project-list.tsx\", \"file:apps/web/components/project-tabs-bar.tsx\"]\n        },\n        \"duration\": {\n          \"justification\": \"Existing fetch logic is compact but traversal failures need additional focused tests.\",\n          \"evidence\": [\"file:apps/web/lib/api/client.ts\", \"file:apps/api/package.json\", \"assumption:Ninety minutes is provisional and excludes browser product verification.\"]\n        },\n        \"risk\": {\n          \"justification\": \"Partial enumeration could hide projects and incorrectly remove persisted browser tabs.\",\n          \"evidence\": [\"file:apps/web/components/project-tabs-bar.tsx\", \"file:apps/web/lib/open-tabs.ts\"]\n        },\n        \"coupling\": {\n          \"justification\": \"The web-complete-project-list adapter consumes T3 pages and supplies T5 integration checks.\",\n          \"evidence\": [\"task:T3\", \"task:T5\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Both list consumers were inspected but the new traversal requires unexecuted verification.\",\n          \"evidence\": [\"file:apps/web/components/project-list.tsx\", \"file:apps/web/components/project-tabs-bar.tsx\"]\n        }\n      },\n      \"expected_paths\": [\n        \"apps/web/lib/api/client.ts\",\n        \"apps/web/components/project-list.tsx\",\n        \"apps/web/components/project-tabs-bar.tsx\",\n        \"apps/api/test/projects-client.test.ts\"\n      ],\n      \"shared_resources\": [\"project-list-contract\", \"web-complete-project-list\"],\n      \"acceptance_criteria\": [\n        \"Keep listProjects returning an object with projects to existing consumers while fetching pages sequentially until explicit nextCursor null.\",\n        \"Establish the session once per traversal, validate page schemas and encode cursor query values.\",\n        \"Accumulate privately and reject malformed pages, page failures and repeated cursors without resolving a partial list.\",\n        \"Deduplicate project IDs using higher revision values while preserving first encounter position; do not promise a snapshot under concurrent updates.\",\n        \"Only the latest refresh updates each component; failed traversal retains prior project and tab state and does not infer deletion from partial results.\",\n        \"Add controlled-fetch tests loading the actual web helper through the existing API tsx test runner without introducing dependencies.\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"category\": \"functional\",\n          \"value\": \"npm run build -w @training/contracts && npm run test -w @training/api\",\n          \"purpose\": \"Exercise the real web helper across multiple pages, terminal null, duplicate IDs, repeated cursors, malformed pages and later-page failures.\",\n          \"created_by\": \"T4\"\n        },\n        {\n          \"type\": \"command\",\n          \"category\": \"static\",\n          \"value\": \"npm run typecheck -w @training/web\",\n          \"purpose\": \"Verify both existing consumers remain compatible with the complete-list helper and shared item type.\"\n        }\n      ]\n    },\n    {\n      \"id\": \"T5\",\n      \"milestone_id\": \"M2\",\n      \"title\": \"Verify HTTP and screen integration\",\n      \"objective\": \"Establish automated HTTP evidence and explicit browser product evidence for metadata pagination and preserved project workflows.\",\n      \"repository\": \"repository\",\n      \"after\": [\"T4\"],\n      \"covers\": [\"R1\", \"R2\"],\n      \"kind\": \"test\",\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 90,\n      \"risk\": \"medium\",\n      \"coupling\": \"high\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Estimate covers isolated HTTP fixtures, integration cases, existing static checks and a bounded browser scenario. Runtime results and fixture setup time are unmeasured; no comparable history is available.\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"HTTP and screen verification crosses session authentication, SQLite fixtures and list reconciliation.\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/api/src/http/auth.ts\", \"file:apps/web/components/project-tabs-bar.tsx\"]\n        },\n        \"scope\": {\n          \"justification\": \"Focused integration coverage verifies one endpoint and existing project workflows.\",\n          \"evidence\": [\"file:apps/api/test/repository.test.ts\", \"file:apps/web/hooks/use-project-sync.ts\"]\n        },\n        \"duration\": {\n          \"justification\": \"The repository has test runners but lacks existing HTTP pagination fixtures.\",\n          \"evidence\": [\"file:apps/api/package.json\", \"file:apps/api/test/repository.test.ts\", \"assumption:Ninety minutes is a planning estimate without execution history.\"]\n        },\n        \"risk\": {\n          \"justification\": \"Weak integration assertions could miss truncated project discovery or snapshot editing regressions.\",\n          \"evidence\": [\"file:apps/web/components/project-list.tsx\", \"file:apps/web/hooks/use-project-sync.ts\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Integration checks consume T3 pagination and T4 web-complete-project-list behavior.\",\n          \"evidence\": [\"task:T3\", \"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Relevant entry points and test commands were inspected without executing the scenarios.\",\n          \"evidence\": [\"file:apps/api/src/server.ts\", \"file:package.json\", \"file:apps/web/package.json\"]\n        }\n      },\n      \"expected_paths\": [\"apps/api/test/projects-http.test.ts\"],\n      \"shared_resources\": [\"project-list-contract\", \"web-complete-project-list\"],\n      \"acceptance_criteria\": [\n        \"New HTTP tests use temporary SQLite and an ephemeral server with cleanup, covering cookie, bearer and unauthorized access.\",\n        \"A fixed dataset spanning multiple pages, including tied timestamps, is returned exactly once in tuple order with exact metadata fields and terminal null.\",\n        \"HTTP detail responses still contain full snapshots and existing stale-revision behavior remains verified.\",\n        \"With more than 100 projects, the list and picker expose later projects and a persisted or directly opened later-page tab survives refresh.\",\n        \"Browser checks cover name refresh, actual deletion reconciliation, failed later-page retention and create/open/edit/save/delete workflows.\",\n        \"Record automated and product results separately; unmet checks remain unresolved rather than being inferred from typechecking.\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"category\": \"integration\",\n          \"value\": \"npm run build -w @training/contracts && npm run test -w @training/api\",\n          \"purpose\": \"Exercise authenticated HTTP list traversal and detail preservation against real isolated SQLite.\",\n          \"created_by\": \"T5\"\n        },\n        {\n          \"type\": \"command\",\n          \"category\": \"regression\",\n          \"value\": \"npm run test -w @training/contracts\",\n          \"purpose\": \"Retain existing import validation and the new list contract tests.\"\n        },\n        {\n          \"type\": \"command\",\n          \"category\": \"static\",\n          \"value\": \"npm run typecheck\",\n          \"purpose\": \"Check cross-workspace API, contracts and web types.\"\n        },\n        {\n          \"type\": \"command\",\n          \"category\": \"static\",\n          \"value\": \"npm run lint -w @training/web\",\n          \"purpose\": \"Check the changed client and component code using the existing web lint script.\"\n        },\n        {\n          \"type\": \"manual\",\n          \"category\": \"product\",\n          \"value\": \"Exercise project list, picker, persisted tabs and editor with more than 100 projects, tied timestamps and a later-page failure.\",\n          \"purpose\": \"Verify visible workflows and prevent incomplete-list deletion inference.\",\n          \"expected\": \"Later projects remain discoverable, saved and direct tabs survive, names refresh, real deletions reconcile, failed traversal preserves prior state, and create/open/edit/save/delete remain usable.\"\n        }\n      ]\n    },\n    {\n      \"id\": \"T6\",\n      \"milestone_id\": \"M3\",\n      \"title\": \"Document migration and verify notice evidence\",\n      \"objective\": \"Provide accurate external migration guidance and keep the breaking endpoint transition blocked until actual notice evidence satisfies D2.\",\n      \"repository\": \"repository\",\n      \"after\": [\"T5\"],\n      \"covers\": [\"R3\"],\n      \"kind\": \"docs\",\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 30,\n      \"risk\": \"high\",\n      \"coupling\": \"high\",\n      \"confidence\": \"low\",\n      \"estimate_rationale\": \"Estimate covers local guidance and evidence review only. External access, notice delivery, acknowledgement and waiting time remain unknown and excluded; no comparable history is available.\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Migration guidance must distinguish documented changes from actual external notice fulfillment.\",\n          \"evidence\": [\"file:docs/api-contract.md\", \"spec:SPEC.md#requirements\"]\n        },\n        \"scope\": {\n          \"justification\": \"The transition work updates local guidance and records evidence without external implementation.\",\n          \"evidence\": [\"file:docs/architecture.md\", \"task:T1\"]\n        },\n        \"duration\": {\n          \"justification\": \"Local documentation is bounded while external notice timing remains entirely unverified.\",\n          \"evidence\": [\"file:docs/api-contract.md\", \"assumption:Thirty minutes excludes external delivery and waiting.\"]\n        },\n        \"risk\": {\n          \"justification\": \"Treating a draft notice as delivered would violate external consumer protection.\",\n          \"evidence\": [\"spec:SPEC.md#requirements\", \"file:docs/architecture.md\"]\n        },\n        \"coupling\": {\n          \"justification\": \"The external-list-transition gate consumes T1 decisions and T5 verified behavior.\",\n          \"evidence\": [\"task:T1\", \"task:T5\"]\n        },\n        \"confidence\": {\n          \"justification\": \"External consumer code, contacts and notice evidence are unavailable in this workspace.\",\n          \"evidence\": [\"file:docs/architecture.md\", \"spec:SPEC.md#requirements\", \"assumption:Actual notice evidence must come from a future authorized workflow.\"]\n        }\n      },\n      \"expected_paths\": [\"docs/api-contract.md\", \"docs/project-list-migration.md\"],\n      \"shared_resources\": [\"external-list-transition\", \"project-list-contract\"],\n      \"acceptance_criteria\": [\n        \"Document removed snapshot fields, default page bounds, cursor traversal, terminal null, validation errors and live traversal limitations.\",\n        \"Provide migration examples that enumerate every page and obtain full data through the existing detail endpoint.\",\n        \"Resolve D2 with evidence for affected recipients, delivery channel, notice timing, effective transition and any required acknowledgement.\",\n        \"Record actual notice evidence meeting D2 before any future release changes the endpoint; local guidance alone does not satisfy R3.\",\n        \"Keep T6 incomplete and R3 unaccepted when delivery evidence is missing; do not send messages, claim external compatibility or perform a release.\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"manual\",\n          \"category\": \"integration\",\n          \"value\": \"Compare migration examples with T5 HTTP evidence and the resolved page contract.\",\n          \"purpose\": \"Ensure external instructions match implemented pagination and preserved detail access.\",\n          \"expected\": \"Examples enumerate until null, fetch snapshots by ID and describe the actual breaking changes and concurrency limits.\"\n        },\n        {\n          \"type\": \"manual\",\n          \"category\": \"product\",\n          \"value\": \"Review the D2 decision record and actual notice evidence before any future breaking release.\",\n          \"purpose\": \"Establish R3 notice fulfillment separately from documentation preparation.\",\n          \"expected\": \"Evidence satisfies agreed recipient, channel, timing and acknowledgement conditions; otherwise the transition remains blocked and R3 remains unaccepted.\"\n        }\n      ]\n    }\n  ],\n  \"interfaces\": [\n    {\n      \"id\": \"IF-1\",\n      \"title\": \"Project list cursor page\",\n      \"owner\": \"repository project-list contract\",\n      \"producer_task\": \"T2\",\n      \"consumer_tasks\": [\"T3\", \"T4\", \"T5\", \"T6\"],\n      \"integration_task\": \"T5\",\n      \"inputs\": [\n        \"Authenticated GET /v1/projects with D1-validated optional limit and cursor.\"\n      ],\n      \"outputs\": [\n        \"A strict page containing projects with exactly id, externalKey, name, revision and updatedAt, plus nextCursor string or null.\"\n      ],\n      \"invariants\": [\n        \"D1 must be resolved before implementation; proposed defaults are 50 items and maximum 100.\",\n        \"Ordering and seeking use updated_at DESC then id DESC with parameterized tuple predicates and limit-plus-one lookahead.\",\n        \"No project data_json is selected or parsed for listing; detail endpoints retain snapshots.\",\n        \"Invalid pagination returns 400 VALIDATION_ERROR after authentication.\",\n        \"Stable datasets traverse completely without duplicates; concurrent mutation does not imply snapshot consistency.\",\n        \"External compatibility and notice fulfillment cannot be established by local schema or HTTP tests.\"\n      ],\n      \"integration_criteria\": [\n        \"HTTP tests verify exact metadata shapes, tied timestamp traversal, terminal null and invalid inputs.\",\n        \"The web adapter validates and consumes this page format without exposing a partial enumeration.\",\n        \"Migration guidance matches the verified wire contract.\"\n      ]\n    },\n    {\n      \"id\": \"IF-2\",\n      \"title\": \"Complete web project enumeration\",\n      \"owner\": \"repository browser project discovery\",\n      \"producer_task\": \"T4\",\n      \"consumer_tasks\": [\"T5\"],\n      \"integration_task\": \"T5\",\n      \"inputs\": [\n        \"Successive validated IF-1 pages obtained after establishing a browser session.\"\n      ],\n      \"outputs\": [\n        \"A resolved listProjects result containing the complete aggregated projects array, or a rejected traversal.\"\n      ],\n      \"invariants\": [\n        \"No partial result is published before explicit terminal null.\",\n        \"Repeated cursors, malformed pages and page errors reject the traversal.\",\n        \"Duplicate IDs retain higher revision values in first encounter position.\",\n        \"Only the latest refresh updates component state; a failed traversal preserves prior list and tabs.\",\n        \"Absence from a partial page is never interpreted as project deletion.\"\n      ],\n      \"integration_criteria\": [\n        \"Controlled-fetch tests exercise multiple pages and failure guards using the actual helper.\",\n        \"Screen verification demonstrates later-page discovery, persisted tab retention, name refresh and actual deletion reconciliation.\",\n        \"Separate detail-based editing remains functional.\"\n      ]\n    }\n  ]\n}\n```",
+  "format_valid": false,
+  "usage_reported": {
+    "input_tokens": 197472,
+    "cached_input_tokens": 150912,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 11223,
+    "reasoning_output_tokens": 2049
+  },
+  "observed_models": [],
+  "observed_tool_events": 6,
+  "tool_audit": [
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g 'SPEC.md' -g '*schema*' -g '*example*' -g 'README*' -g 'package.json' -g 'pyproject.toml' -g 'Makefile' -g '*lock*' .\"",
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat request/SPEC.md planner-resources/plan.schema.json planner-resources/plan.example.json; rg --files repo; cat repo/README.md repo/package.json repo/apps/api/package.json repo/apps/web/package.json repo/packages/contracts/package.json'",
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat repo/docs/api-contract.md repo/docs/architecture.md repo/docs/deployment.md; nl -ba repo/packages/contracts/src/project.ts; cat repo/packages/contracts/src/index.ts repo/packages/contracts/test/project.test.ts repo/apps/api/src/http/auth.ts repo/apps/api/src/errors.ts repo/apps/api/src/config.ts; cat repo/apps/api/tsconfig.json repo/apps/web/tsconfig.json repo/packages/contracts/tsconfig.json repo/tsconfig.base.json repo/scripts/check-contract-drift.mjs'",
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'nl -ba repo/apps/api/src/app.ts; nl -ba repo/apps/api/src/repositories/project-repository.ts; nl -ba repo/apps/api/src/db/database.ts; nl -ba repo/apps/api/test/repository.test.ts'",
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/apps/web/lib/api/client.ts; nl -ba repo/apps/web/components/project-list.tsx; nl -ba repo/apps/web/components/project-tabs-bar.tsx; nl -ba repo/apps/web/lib/open-tabs.ts; cat repo/apps/web/app/projects/page.tsx repo/apps/web/app/projects/layout.tsx; rg -n 'listProjects|ProjectListItem|/v1/projects|list\\\\(' repo/apps repo/packages repo/docs\"",
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/apps/web/components/project-list.tsx; nl -ba repo/apps/web/components/project-tabs-bar.tsx; nl -ba repo/apps/web/lib/api/client.ts; nl -ba repo/apps/web/lib/open-tabs.ts; cat repo/apps/web/app/projects/page.tsx repo/apps/web/app/projects/layout.tsx repo/apps/web/app/projects/\\\\[projectId\\\\]/page.tsx repo/apps/web/app/page.tsx; nl -ba repo/apps/web/hooks/use-project-sync.ts; cat repo/apps/api/src/ws/hub.ts repo/apps/api/src/server.ts repo/packages/contracts/src/generate-schema.ts; rg --files --hidden -g 'AGENTS.md' -g '\"'!node_modules'\"' -g '\"'!.git'\"' .\"",
+      "exit_code": 1
+    }
+  ],
+  "model_usage_reported": {},
+  "exit_code": 0,
+  "block_contract_valid": true,
+  "plan": {
+    "schema_version": "1.2.0",
+    "plan_id": "REQ-CP1",
+    "revision": 1,
+    "spec_ref": "SPEC.md",
+    "requirements": [
+      "R1",
+      "R2",
+      "R3"
+    ],
+    "milestones": [
+      {
+        "id": "M1",
+        "title": "Settle and publish the list contract",
+        "acceptance_criteria": [
+          "D1 pagination decisions have recorded provenance before dependent implementation begins.",
+          "Shared page schemas and documentation state exact response, query and error behavior.",
+          "Unknown external consumer behavior and D2 transition conditions remain explicit."
+        ]
+      },
+      {
+        "id": "M2",
+        "title": "Implement and verify both sides",
+        "acceptance_criteria": [
+          "Authenticated HTTP returns bounded metadata-only pages with deterministic keyset traversal.",
+          "Both web consumers receive complete successful enumerations and retain previous state on traversal failure.",
+          "New automated checks and explicit screen checks cover pagination and preserved snapshot workflows."
+        ]
+      },
+      {
+        "id": "M3",
+        "title": "Establish external transition readiness",
+        "acceptance_criteria": [
+          "Migration guidance describes the verified endpoint behavior and consumer changes.",
+          "R3 remains unaccepted until actual notice evidence satisfies resolved D2 conditions before any future breaking release."
+        ]
+      }
+    ],
+    "tasks": [
+      {
+        "id": "T1",
+        "milestone_id": "M1",
+        "title": "Resolve pagination and transition decisions",
+        "objective": "Produce an evidence-backed decision record resolving D1 and retaining an explicit D2 release gate for unavailable external consumer information.",
+        "repository": "repository",
+        "after": [],
+        "covers": [
+          "R1",
+          "R2",
+          "R3"
+        ],
+        "kind": "research",
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 45,
+        "risk": "high",
+        "coupling": "high",
+        "confidence": "low",
+        "estimate_rationale": "Estimate for consolidating inspected local behavior and decision options; external evidence and decision waiting are unknown and excluded. No comparable execution history is available.",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Pagination and transition research must distinguish local facts from unresolved product choices.",
+            "evidence": [
+              "spec:SPEC.md#requirements",
+              "file:apps/web/components/project-tabs-bar.tsx",
+              "file:docs/architecture.md"
+            ]
+          },
+          "scope": {
+            "justification": "The research produces one bounded migration and decision document.",
+            "evidence": [
+              "file:docs/api-contract.md",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "duration": {
+            "justification": "Local consumer research is bounded but external decision waiting cannot be estimated.",
+            "evidence": [
+              "file:apps/web/lib/api/client.ts",
+              "file:docs/architecture.md",
+              "assumption:Forty-five minutes covers local synthesis only, without comparable history."
+            ]
+          },
+          "risk": {
+            "justification": "An incorrect transition decision can silently break the external HTTP adapter.",
+            "evidence": [
+              "file:docs/architecture.md",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "coupling": {
+            "justification": "The project-list-contract decisions constrain T2 and the external-list-transition gate constrains T6.",
+            "evidence": [
+              "task:T2",
+              "task:T6"
+            ]
+          },
+          "confidence": {
+            "justification": "Local consumers were inspected but external usage and owner choices remain unavailable.",
+            "evidence": [
+              "file:apps/web/components/project-list.tsx",
+              "file:docs/architecture.md",
+              "assumption:External decision evidence will require a future authorized workflow."
+            ]
+          }
+        },
+        "expected_paths": [
+          "docs/project-list-migration.md"
+        ],
+        "shared_resources": [
+          "project-list-contract",
+          "external-list-transition"
+        ],
+        "acceptance_criteria": [
+          "Record local consumers, proposed D1 behavior and exact unresolved external evidence without claiming compatibility.",
+          "Resolve D1 with authorized decision provenance before completing T1 or starting T2 through T5.",
+          "Record D2 audience, channel, timing, effective transition and acknowledgement conditions when established; otherwise retain an explicit unresolved release gate.",
+          "If coexistence, versioning or a different UI policy is required, revise dependent tasks before implementation rather than inventing a compatibility mechanism."
+        ],
+        "verification": [
+          {
+            "type": "manual",
+            "category": "product",
+            "value": "Review docs/project-list-migration.md against SPEC.md and the inspected API and web consumers.",
+            "purpose": "Verify decision readiness without fabricating owner answers or external compatibility.",
+            "expected": "D1 has actual decision provenance; D2 is either supported by evidence or explicitly unresolved with a release block."
+          }
+        ]
+      },
+      {
+        "id": "T2",
+        "milestone_id": "M1",
+        "title": "Define shared project list schemas",
+        "objective": "Expose strict metadata item and cursor-page schemas for API and web consumers, with contract documentation matching resolved D1.",
+        "repository": "repository",
+        "after": [
+          "T1"
+        ],
+        "covers": [
+          "R1",
+          "R2"
+        ],
+        "kind": "implement",
+        "complexity": "low",
+        "scope": "small_change",
+        "estimated_minutes": 40,
+        "risk": "medium",
+        "coupling": "high",
+        "confidence": "medium",
+        "estimate_rationale": "Estimate covers two small schemas, contract tests and documentation through the existing export pattern, conditional on D1 resolution. No comparable execution history is available.",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Shared list schemas follow existing strict Zod object and type patterns.",
+            "evidence": [
+              "file:packages/contracts/src/project.ts",
+              "file:packages/contracts/src/index.ts"
+            ]
+          },
+          "scope": {
+            "justification": "The contract change adds list definitions while preserving existing snapshot and import schemas.",
+            "evidence": [
+              "file:packages/contracts/src/project.ts",
+              "file:packages/contracts/src/generate-schema.ts"
+            ]
+          },
+          "duration": {
+            "justification": "Existing contract test infrastructure supports a focused schema verification pass.",
+            "evidence": [
+              "file:packages/contracts/test/project.test.ts",
+              "file:packages/contracts/package.json",
+              "assumption:Forty minutes is provisional rather than historically measured."
+            ]
+          },
+          "risk": {
+            "justification": "A mismatched list schema would break both API output and browser parsing.",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/web/lib/api/client.ts"
+            ]
+          },
+          "coupling": {
+            "justification": "The project-list-contract schemas are produced for T3 and T4 consumption.",
+            "evidence": [
+              "task:T3",
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "Schema and export structures were inspected but final pagination choices depend on T1.",
+            "evidence": [
+              "file:packages/contracts/src/project.ts",
+              "task:T1"
+            ]
+          }
+        },
+        "expected_paths": [
+          "packages/contracts/src/project.ts",
+          "packages/contracts/test/project-list.test.ts",
+          "docs/api-contract.md"
+        ],
+        "shared_resources": [
+          "project-list-contract"
+        ],
+        "acceptance_criteria": [
+          "Export strict ProjectListItem and ProjectListPage schemas and inferred types through the existing index export.",
+          "Each item has exactly id, externalKey, name, revision and updatedAt; each page has projects and a string-or-null nextCursor.",
+          "Document resolved D1 query validation, tuple ordering, cursor encoding, terminal null, errors and live traversal limits.",
+          "New tests reject snapshot fields, missing nextCursor and invalid page values.",
+          "Preserve snapshot/import schemas and generated import JSON schema and hash artifacts."
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "category": "functional",
+            "value": "npm run test -w @training/contracts",
+            "purpose": "Exercise new strict list schemas alongside existing import validation.",
+            "created_by": "T2"
+          },
+          {
+            "type": "command",
+            "category": "static",
+            "value": "npm run typecheck -w @training/contracts",
+            "purpose": "Verify list schema exports and inferred types compile."
+          },
+          {
+            "type": "manual",
+            "category": "regression",
+            "value": "Review the contracts changes and generated import artifact diff.",
+            "purpose": "Keep list work separate from the external import-schema contract.",
+            "expected": "Import and snapshot definitions retain their behavior; generated import schema and hash are unchanged."
+          }
+        ]
+      },
+      {
+        "id": "T3",
+        "milestone_id": "M2",
+        "title": "Implement metadata keyset pagination",
+        "objective": "Return validated authenticated cursor pages using explicit metadata SQL projection without parsing project payloads.",
+        "repository": "repository",
+        "after": [
+          "T2"
+        ],
+        "covers": [
+          "R1"
+        ],
+        "kind": "implement",
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 100,
+        "risk": "high",
+        "coupling": "high",
+        "confidence": "medium",
+        "estimate_rationale": "Estimate covers repository projection, query and cursor validation, route adaptation and focused tests. The inspected code is small, but boundary behavior is new and depends on D1. No comparable history is available.",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Keyset pagination combines tuple comparisons, lookahead and hostile query validation.",
+            "evidence": [
+              "file:apps/api/src/repositories/project-repository.ts",
+              "file:apps/api/src/app.ts"
+            ]
+          },
+          "scope": {
+            "justification": "Pagination is confined to the list repository method, HTTP route and focused tests.",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/api/src/db/database.ts"
+            ]
+          },
+          "duration": {
+            "justification": "Repository fixtures exist but pagination and HTTP boundary cases require new coverage.",
+            "evidence": [
+              "file:apps/api/test/repository.test.ts",
+              "file:apps/api/package.json",
+              "assumption:One hundred minutes is an uncalibrated focused implementation estimate."
+            ]
+          },
+          "risk": {
+            "justification": "Changing the existing list endpoint alters an externally consumed API contract.",
+            "evidence": [
+              "file:docs/architecture.md",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "coupling": {
+            "justification": "The project-list-contract produced by T2 is implemented here and consumed by T4.",
+            "evidence": [
+              "task:T2",
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "SQL, HTTP errors and authentication were inspected but pagination semantics await D1.",
+            "evidence": [
+              "file:apps/api/src/http/auth.ts",
+              "file:apps/api/src/app.ts",
+              "task:T1"
+            ]
+          }
+        },
+        "expected_paths": [
+          "apps/api/src/repositories/project-repository.ts",
+          "apps/api/src/app.ts",
+          "apps/api/test/projects-pagination.test.ts"
+        ],
+        "shared_resources": [
+          "project-list-contract"
+        ],
+        "acceptance_criteria": [
+          "After D1 resolution, accept optional single-string limit and cursor parameters; proposed limits are default 50 and maximum 100.",
+          "Authenticate before validation; malformed limits, repeated or structured parameters and invalid cursor encoding, size, version or shape return HTTP 400 VALIDATION_ERROR.",
+          "Use explicit metadata columns, bound parameters and updated_at DESC then id DESC ordering; continuation seeks updated_at below the anchor or equal updated_at with id below the anchor.",
+          "Fetch limit plus one rows, emit at most limit items and encode the last emitted tuple only when a further row exists; empty and terminal pages return nextCursor null.",
+          "Do not select data_json or invoke snapshot parsing for list results; a deleted cursor anchor does not prevent continuation.",
+          "Preserve detail snapshots, mutation revisions and existing authentication behavior without a database migration."
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "category": "functional",
+            "value": "npm run build -w @training/contracts && npm run test -w @training/api",
+            "purpose": "Verify new pagination cases for empty, exact-size, lookahead, tied timestamp, deleted anchor and invalid query boundaries.",
+            "created_by": "T3"
+          },
+          {
+            "type": "manual",
+            "category": "static",
+            "value": "Review the list SQL, cursor decoder and route error paths.",
+            "purpose": "Verify projection and algorithm properties not established by response typing alone.",
+            "expected": "Only metadata columns are read; SQL is parameterized; tuple comparison matches ordering; authentication precedes validation; snapshot methods remain separate."
+          }
+        ]
+      },
+      {
+        "id": "T4",
+        "milestone_id": "M2",
+        "title": "Preserve complete web project discovery",
+        "objective": "Adapt the browser list helper to consume all cursor pages atomically so project screens and tab reconciliation retain complete-list semantics.",
+        "repository": "repository",
+        "after": [
+          "T3"
+        ],
+        "covers": [
+          "R2"
+        ],
+        "kind": "implement",
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 90,
+        "risk": "medium",
+        "coupling": "high",
+        "confidence": "medium",
+        "estimate_rationale": "Estimate includes shared-schema parsing, traversal guards, component refresh sequencing and tests using the existing API TypeScript runner. Screen validation is separate in T5; no comparable history is available.",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Complete-list adaptation must coordinate asynchronous traversal, failures and tab reconciliation.",
+            "evidence": [
+              "file:apps/web/lib/api/client.ts",
+              "file:apps/web/components/project-tabs-bar.tsx"
+            ]
+          },
+          "scope": {
+            "justification": "The helper and its two known screen consumers form a bounded browser change.",
+            "evidence": [
+              "file:apps/web/components/project-list.tsx",
+              "file:apps/web/components/project-tabs-bar.tsx"
+            ]
+          },
+          "duration": {
+            "justification": "Existing fetch logic is compact but traversal failures need additional focused tests.",
+            "evidence": [
+              "file:apps/web/lib/api/client.ts",
+              "file:apps/api/package.json",
+              "assumption:Ninety minutes is provisional and excludes browser product verification."
+            ]
+          },
+          "risk": {
+            "justification": "Partial enumeration could hide projects and incorrectly remove persisted browser tabs.",
+            "evidence": [
+              "file:apps/web/components/project-tabs-bar.tsx",
+              "file:apps/web/lib/open-tabs.ts"
+            ]
+          },
+          "coupling": {
+            "justification": "The web-complete-project-list adapter consumes T3 pages and supplies T5 integration checks.",
+            "evidence": [
+              "task:T3",
+              "task:T5"
+            ]
+          },
+          "confidence": {
+            "justification": "Both list consumers were inspected but the new traversal requires unexecuted verification.",
+            "evidence": [
+              "file:apps/web/components/project-list.tsx",
+              "file:apps/web/components/project-tabs-bar.tsx"
+            ]
+          }
+        },
+        "expected_paths": [
+          "apps/web/lib/api/client.ts",
+          "apps/web/components/project-list.tsx",
+          "apps/web/components/project-tabs-bar.tsx",
+          "apps/api/test/projects-client.test.ts"
+        ],
+        "shared_resources": [
+          "project-list-contract",
+          "web-complete-project-list"
+        ],
+        "acceptance_criteria": [
+          "Keep listProjects returning an object with projects to existing consumers while fetching pages sequentially until explicit nextCursor null.",
+          "Establish the session once per traversal, validate page schemas and encode cursor query values.",
+          "Accumulate privately and reject malformed pages, page failures and repeated cursors without resolving a partial list.",
+          "Deduplicate project IDs using higher revision values while preserving first encounter position; do not promise a snapshot under concurrent updates.",
+          "Only the latest refresh updates each component; failed traversal retains prior project and tab state and does not infer deletion from partial results.",
+          "Add controlled-fetch tests loading the actual web helper through the existing API tsx test runner without introducing dependencies."
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "category": "functional",
+            "value": "npm run build -w @training/contracts && npm run test -w @training/api",
+            "purpose": "Exercise the real web helper across multiple pages, terminal null, duplicate IDs, repeated cursors, malformed pages and later-page failures.",
+            "created_by": "T4"
+          },
+          {
+            "type": "command",
+            "category": "static",
+            "value": "npm run typecheck -w @training/web",
+            "purpose": "Verify both existing consumers remain compatible with the complete-list helper and shared item type."
+          }
+        ]
+      },
+      {
+        "id": "T5",
+        "milestone_id": "M2",
+        "title": "Verify HTTP and screen integration",
+        "objective": "Establish automated HTTP evidence and explicit browser product evidence for metadata pagination and preserved project workflows.",
+        "repository": "repository",
+        "after": [
+          "T4"
+        ],
+        "covers": [
+          "R1",
+          "R2"
+        ],
+        "kind": "test",
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 90,
+        "risk": "medium",
+        "coupling": "high",
+        "confidence": "medium",
+        "estimate_rationale": "Estimate covers isolated HTTP fixtures, integration cases, existing static checks and a bounded browser scenario. Runtime results and fixture setup time are unmeasured; no comparable history is available.",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "HTTP and screen verification crosses session authentication, SQLite fixtures and list reconciliation.",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/api/src/http/auth.ts",
+              "file:apps/web/components/project-tabs-bar.tsx"
+            ]
+          },
+          "scope": {
+            "justification": "Focused integration coverage verifies one endpoint and existing project workflows.",
+            "evidence": [
+              "file:apps/api/test/repository.test.ts",
+              "file:apps/web/hooks/use-project-sync.ts"
+            ]
+          },
+          "duration": {
+            "justification": "The repository has test runners but lacks existing HTTP pagination fixtures.",
+            "evidence": [
+              "file:apps/api/package.json",
+              "file:apps/api/test/repository.test.ts",
+              "assumption:Ninety minutes is a planning estimate without execution history."
+            ]
+          },
+          "risk": {
+            "justification": "Weak integration assertions could miss truncated project discovery or snapshot editing regressions.",
+            "evidence": [
+              "file:apps/web/components/project-list.tsx",
+              "file:apps/web/hooks/use-project-sync.ts"
+            ]
+          },
+          "coupling": {
+            "justification": "Integration checks consume T3 pagination and T4 web-complete-project-list behavior.",
+            "evidence": [
+              "task:T3",
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "Relevant entry points and test commands were inspected without executing the scenarios.",
+            "evidence": [
+              "file:apps/api/src/server.ts",
+              "file:package.json",
+              "file:apps/web/package.json"
+            ]
+          }
+        },
+        "expected_paths": [
+          "apps/api/test/projects-http.test.ts"
+        ],
+        "shared_resources": [
+          "project-list-contract",
+          "web-complete-project-list"
+        ],
+        "acceptance_criteria": [
+          "New HTTP tests use temporary SQLite and an ephemeral server with cleanup, covering cookie, bearer and unauthorized access.",
+          "A fixed dataset spanning multiple pages, including tied timestamps, is returned exactly once in tuple order with exact metadata fields and terminal null.",
+          "HTTP detail responses still contain full snapshots and existing stale-revision behavior remains verified.",
+          "With more than 100 projects, the list and picker expose later projects and a persisted or directly opened later-page tab survives refresh.",
+          "Browser checks cover name refresh, actual deletion reconciliation, failed later-page retention and create/open/edit/save/delete workflows.",
+          "Record automated and product results separately; unmet checks remain unresolved rather than being inferred from typechecking."
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "category": "integration",
+            "value": "npm run build -w @training/contracts && npm run test -w @training/api",
+            "purpose": "Exercise authenticated HTTP list traversal and detail preservation against real isolated SQLite.",
+            "created_by": "T5"
+          },
+          {
+            "type": "command",
+            "category": "regression",
+            "value": "npm run test -w @training/contracts",
+            "purpose": "Retain existing import validation and the new list contract tests."
+          },
+          {
+            "type": "command",
+            "category": "static",
+            "value": "npm run typecheck",
+            "purpose": "Check cross-workspace API, contracts and web types."
+          },
+          {
+            "type": "command",
+            "category": "static",
+            "value": "npm run lint -w @training/web",
+            "purpose": "Check the changed client and component code using the existing web lint script."
+          },
+          {
+            "type": "manual",
+            "category": "product",
+            "value": "Exercise project list, picker, persisted tabs and editor with more than 100 projects, tied timestamps and a later-page failure.",
+            "purpose": "Verify visible workflows and prevent incomplete-list deletion inference.",
+            "expected": "Later projects remain discoverable, saved and direct tabs survive, names refresh, real deletions reconcile, failed traversal preserves prior state, and create/open/edit/save/delete remain usable."
+          }
+        ]
+      },
+      {
+        "id": "T6",
+        "milestone_id": "M3",
+        "title": "Document migration and verify notice evidence",
+        "objective": "Provide accurate external migration guidance and keep the breaking endpoint transition blocked until actual notice evidence satisfies D2.",
+        "repository": "repository",
+        "after": [
+          "T5"
+        ],
+        "covers": [
+          "R3"
+        ],
+        "kind": "docs",
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 30,
+        "risk": "high",
+        "coupling": "high",
+        "confidence": "low",
+        "estimate_rationale": "Estimate covers local guidance and evidence review only. External access, notice delivery, acknowledgement and waiting time remain unknown and excluded; no comparable history is available.",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Migration guidance must distinguish documented changes from actual external notice fulfillment.",
+            "evidence": [
+              "file:docs/api-contract.md",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "scope": {
+            "justification": "The transition work updates local guidance and records evidence without external implementation.",
+            "evidence": [
+              "file:docs/architecture.md",
+              "task:T1"
+            ]
+          },
+          "duration": {
+            "justification": "Local documentation is bounded while external notice timing remains entirely unverified.",
+            "evidence": [
+              "file:docs/api-contract.md",
+              "assumption:Thirty minutes excludes external delivery and waiting."
+            ]
+          },
+          "risk": {
+            "justification": "Treating a draft notice as delivered would violate external consumer protection.",
+            "evidence": [
+              "spec:SPEC.md#requirements",
+              "file:docs/architecture.md"
+            ]
+          },
+          "coupling": {
+            "justification": "The external-list-transition gate consumes T1 decisions and T5 verified behavior.",
+            "evidence": [
+              "task:T1",
+              "task:T5"
+            ]
+          },
+          "confidence": {
+            "justification": "External consumer code, contacts and notice evidence are unavailable in this workspace.",
+            "evidence": [
+              "file:docs/architecture.md",
+              "spec:SPEC.md#requirements",
+              "assumption:Actual notice evidence must come from a future authorized workflow."
+            ]
+          }
+        },
+        "expected_paths": [
+          "docs/api-contract.md",
+          "docs/project-list-migration.md"
+        ],
+        "shared_resources": [
+          "external-list-transition",
+          "project-list-contract"
+        ],
+        "acceptance_criteria": [
+          "Document removed snapshot fields, default page bounds, cursor traversal, terminal null, validation errors and live traversal limitations.",
+          "Provide migration examples that enumerate every page and obtain full data through the existing detail endpoint.",
+          "Resolve D2 with evidence for affected recipients, delivery channel, notice timing, effective transition and any required acknowledgement.",
+          "Record actual notice evidence meeting D2 before any future release changes the endpoint; local guidance alone does not satisfy R3.",
+          "Keep T6 incomplete and R3 unaccepted when delivery evidence is missing; do not send messages, claim external compatibility or perform a release."
+        ],
+        "verification": [
+          {
+            "type": "manual",
+            "category": "integration",
+            "value": "Compare migration examples with T5 HTTP evidence and the resolved page contract.",
+            "purpose": "Ensure external instructions match implemented pagination and preserved detail access.",
+            "expected": "Examples enumerate until null, fetch snapshots by ID and describe the actual breaking changes and concurrency limits."
+          },
+          {
+            "type": "manual",
+            "category": "product",
+            "value": "Review the D2 decision record and actual notice evidence before any future breaking release.",
+            "purpose": "Establish R3 notice fulfillment separately from documentation preparation.",
+            "expected": "Evidence satisfies agreed recipient, channel, timing and acknowledgement conditions; otherwise the transition remains blocked and R3 remains unaccepted."
+          }
+        ]
+      }
+    ],
+    "interfaces": [
+      {
+        "id": "IF-1",
+        "title": "Project list cursor page",
+        "owner": "repository project-list contract",
+        "producer_task": "T2",
+        "consumer_tasks": [
+          "T3",
+          "T4",
+          "T5",
+          "T6"
+        ],
+        "integration_task": "T5",
+        "inputs": [
+          "Authenticated GET /v1/projects with D1-validated optional limit and cursor."
+        ],
+        "outputs": [
+          "A strict page containing projects with exactly id, externalKey, name, revision and updatedAt, plus nextCursor string or null."
+        ],
+        "invariants": [
+          "D1 must be resolved before implementation; proposed defaults are 50 items and maximum 100.",
+          "Ordering and seeking use updated_at DESC then id DESC with parameterized tuple predicates and limit-plus-one lookahead.",
+          "No project data_json is selected or parsed for listing; detail endpoints retain snapshots.",
+          "Invalid pagination returns 400 VALIDATION_ERROR after authentication.",
+          "Stable datasets traverse completely without duplicates; concurrent mutation does not imply snapshot consistency.",
+          "External compatibility and notice fulfillment cannot be established by local schema or HTTP tests."
+        ],
+        "integration_criteria": [
+          "HTTP tests verify exact metadata shapes, tied timestamp traversal, terminal null and invalid inputs.",
+          "The web adapter validates and consumes this page format without exposing a partial enumeration.",
+          "Migration guidance matches the verified wire contract."
+        ]
+      },
+      {
+        "id": "IF-2",
+        "title": "Complete web project enumeration",
+        "owner": "repository browser project discovery",
+        "producer_task": "T4",
+        "consumer_tasks": [
+          "T5"
+        ],
+        "integration_task": "T5",
+        "inputs": [
+          "Successive validated IF-1 pages obtained after establishing a browser session."
+        ],
+        "outputs": [
+          "A resolved listProjects result containing the complete aggregated projects array, or a rejected traversal."
+        ],
+        "invariants": [
+          "No partial result is published before explicit terminal null.",
+          "Repeated cursors, malformed pages and page errors reject the traversal.",
+          "Duplicate IDs retain higher revision values in first encounter position.",
+          "Only the latest refresh updates component state; a failed traversal preserves prior list and tabs.",
+          "Absence from a partial page is never interpreted as project deletion."
+        ],
+        "integration_criteria": [
+          "Controlled-fetch tests exercise multiple pages and failure guards using the actual helper.",
+          "Screen verification demonstrates later-page discovery, persisted tab retention, name refresh and actual deletion reconciliation.",
+          "Separate detail-based editing remains functional."
+        ]
+      }
+    ]
+  },
+  "elapsed_seconds": 212.573,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792244929.322518,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 2.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

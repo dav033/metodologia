@@ -530,7 +530,7 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 
 
 ## D-059 — Approve and bound the REQ-024 Planner V2 benchmark
-- **Date:** 2026-10-16 · **Status:** Accepted by owner; plan revision r1 frozen.
+- **Date:** 2026-10-16 · **Status:** Superseded by D-062 (Antigravity T15 smoke cap only; all other terms remain accepted).
 - **Context:** REQ-024 improves Planner V2 traceability, contract validation, verification honesty, local runtime availability, and reproducible quality measurement without changing Pictures product behavior. The benchmark distinguishes controlled current-V2 versus improved-V2 runs from retrospective historical artifacts.
 - **Decision:** Execute the approved six-milestone plan. Cap the matched benchmark at 30 runs plus one final Claude Opus 5.5 high REQ-017 reference run and 66 blind-review records. Use two independent reviewers under one hash-pinned rubric; pin their exact profiles/models in the frozen benchmark manifest before scoring. Cap launch-only smokes at one invocation per effective account, at most five under the current inventory; refresh that inventory before T15 and do not add newly configured accounts to the smoke set. Pictures q1–q5 and A6–A8 remain outside this approval.
 - **Alternatives:** Leave the benchmark unbounded or compare provider quality across all runtimes (rejected: usage is finite and the owner deferred quality parity); treat historical V1 as a controlled arm (rejected: its prompt, permissions, repository SHA and runtime differ).
@@ -546,3 +546,55 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** New drafts use required `covers`, task `kind` and verification `category` under the versioned 1.2.0 gate; they may declare `interfaces` when cross-task contracts need validation. Existing 1.0.0/1.1.0 revisions remain readable and immutable. Unknown downstream capability fails closed.
 - **Rollback:** Select an already approved compatible 1.1.0 revision and its matching consumers; never rewrite a frozen hash or feed a 1.2.0 plan to an older M1/M2/M6 reader. Follow the explicit down-conversion condition in `CONTRACT-1.2.0.md`; otherwise stop.
 - **Source:** Owner-approved REQ-024 r1/D-059, T10/T11 implementation and compatibility evidence in `requirements/REQ-024-planner-v2-quality-and-benchmark/CONTRACT-1.2.0.md` and `RUN.md`. Brain note: `decisiones/20261016-planner-contract-1_2_0.md`.
+
+## D-061 — Pin the configured profile and runtime in matched benchmark records
+- **Date:** 2026-10-16 · **Status:** Accepted under the mission's internal-contract authorization.
+- **Context:** REQ-024's frozen arms pinned the model, effort, tools and Planner configuration, but omitted the configured local profile and CLI runtime version. This left account/resource attribution and runtime reproducibility implicit. No frozen benchmark manifest or run cell existed yet.
+- **Decision:** Version the benchmark manifest and cell metadata as 1.1.0. Require `profile_id`, `runtime_id` and `runtime_version` on both arms, require the same values across arms, and verify that every cell repeats the frozen values. Do not store credentials or absolute configuration paths.
+- **Alternatives:** Leave account/runtime selection implicit (rejected: drift could go unnoticed); store configuration paths or authentication data (rejected: unnecessary sensitive data).
+- **Consequences:** T17 can freeze only when the exact configured profile and runtime version are declared; cell metadata can reject profile/runtime drift. The approved call caps and reviewer decisions are unchanged.
+- **Rollback:** Before any manifest is frozen, revert the schema/code change if the profile/runtime contract proves invalid. After freeze, introduce a new schema/manifest; never rewrite recorded cells.
+- **Source:** REQ-024 `RUN.md`, “T16/T17 pre-freeze runtime and profile pinning”; 25 benchmark package tests, scoped Ruff, `py_compile` and `git diff --check` passed. Brain note: `decisiones/20261016-req024-benchmark-runtime-profile.md`.
+
+## D-062 — Authorize necessary Antigravity T15 launch revalidation
+- **Date:** 2026-10-16 · **Status:** Accepted by owner direction · **Supersedes:** D-059 (Antigravity T15 smoke cap only).
+- **Context:** The first Antigravity T15 launch authenticated but failed before returning a response because the installed Planner exposed an unregistered tool. The tool mapping, wheel contents and model-selection validation were corrected locally. The owner authorized the necessary launch attempts and confirmed the configured accounts are authenticated.
+- **Decision:** Permit launch-only calls for the existing `antigravity` profile using exactly `gemini-3.8-flash-low`, omitted effort, a 120-second timeout, and the fixed prompt `Responde únicamente con PLANNER_SMOKE_OK. No modifiques archivos.` Stop after a successful response whose stream reports the requested model. If an attempt fails, diagnose it and make another call only to validate a diagnosed issue or a concrete correction; do not repeat an unchanged failed setup. Do not refresh quota, change account/profile/model/effort, fall back, or store prompt/response text. This exception changes no benchmark call cap, other account's smoke count, reviewer rule, or Pictures scope.
+- **Alternatives:** Retry blindly or substitute another profile/model (rejected: the call must validate the installed fix under the same explicit runtime); stop after the known local defect was corrected (rejected by the owner's authorization to continue as needed).
+- **Consequences:** T15 may complete after the fixed launch returns the exact sentinel with a matching CLI-reported model; T17–T22 remain gated until the T15 acceptance criterion and P-109 reviewer selection are satisfied.
+- **Rollback:** Stop further Antigravity T15 invocations and restore D-059's original smoke cap; preserve redacted attempt records.
+- **Source:** Owner instruction in session `01a1457f`; REQ-024 `RUN.md`, T15 failure diagnosis and local correction. Brain note: `decisiones/20261016-req024-antigravity-launch-revalidation.md`.
+
+
+## D-063 — Select Sol and Sonnet medium reviewers, with high for harder reviews
+- **Date:** 2026-10-17 · **Status:** Accepted by explicit owner direction.
+- **Decision:** The review pair is GPT-6.1 Sol (`gpt-6.1-sol`) at `medium` and Claude Sonnet 5.5 (`claude-sonnet-5-5`) at `medium`. Use their respective `high` variants when the review is more difficult. This is the owner's general reviewer model/effort policy, informed by the matched effort pilot; no quantitative difficulty threshold or automatic escalation algorithm was specified.
+- **Evidence:** `artifacts/P109-effort-duel/REPORT.md`: both efforts found 31/31 roots; both Sol efforts found the same supported extra. High added consumption/time without additional coverage in those three synthetic cases. These observations do not establish universal effort equivalence.
+- **Scope:** Documentation only, as requested. This records the selected models/efforts; it does not change runtime configuration, routing code, account defaults, an approved/frozen manifest or launch any review. Exact account profiles still need pinning for formal REQ-024 T17; the pilot's Codex-2/Claude Work accounts are not silently selected for that manifest.
+- **Alternatives:** Always use high (not selected); retain Gemini/Haiku/Luna as the default review pair (not selected). Earlier unselected model-pair proposals are historical.
+- **Consequences:** Model/effort selection under P-109 is resolved. Formal account/runtime pinning, the exact T17 isolation check, and any later implementation of this documented policy remain separate work.
+- **Rollback:** A later explicit owner decision may supersede this selection; preserve the experiments and this decision.
+- **Source:** Owner instruction in session `01a1457f`: both Sol and Sonnet medium review, their high variants for more difficult work; document only.
+
+
+## D-064 · Planner default Astra high, fallback Opus xhigh (2026-10-17)
+
+- **Status:** Accepted by the owner.
+- **Decision:** Use GPT-6 Astra (`gpt-6-astra`) **high** as the default Planner and Claude Opus 5.5 (`claude-opus-5-5`) **xhigh** as its fallback. The owner's correction explicitly selects Astra high, not xhigh.
+- **Evidence:** The native Planner pilot compared all candidates at high. Astra high was measured; Opus xhigh was not measured in that comparison.
+- **Scope:** Model/effort policy documentation only. No runtime routing, configuration, formal benchmark manifest or account identity is changed. Exact account profiles and fallback activation conditions remain unspecified. Preserve D-054: a fallback requires an explicit caller/coordinator selection, never silent substitution within a pinned request. Keep the existing validation/correction gate.
+- **Alternatives:** Astra xhigh was a transcription error, not the selected default. Sol high remains a measured alternative rather than the selected default.
+- **Consequences:** Planner and reviewer model/effort policies are now selected (D-064 and D-063); runtime enforcement and formal account pinning are separate work.
+- **Rollback:** Supersede with a later owner decision; retain the benchmark evidence.
+- **Source:** Owner correction in session `01a1457f`: Astra high by default and Opus xhigh as fallback.
+
+
+## D-065 — Select Luna high Explorer, with Sol/Sonnet medium for complicated exploration
+- **Date:** 2026-10-17 · **Status:** Accepted by explicit owner direction.
+- **Decision:** Default Explorer: GPT-6 Luna (`gpt-6-luna`) **high**. For complicated explorations: GPT-6.1 Sol (`gpt-6.1-sol`) **medium**; Claude Sonnet 5.5 (`claude-sonnet-5-5`) **medium** is an alternative to Sol medium. Haiku is not selected. No numerical complexity threshold, extra escalation condition or default account is introduced. Future comparisons involving Sol use `codex-2`, as explicitly requested; this is a comparison instruction, not a general production account selection.
+- **Evidence:** `artifacts/explorer-ladder-20261017/matched-comparison.json`, `money-comparison.json`, `blind-judgements.json` and `operational-incidents.md`. Same hard tasks E4–E6: Luna 27 full + 1 partial criteria, Sol/Sonnet 28 full each, Haiku 25 full + 3 partial. One sample per cell; coordinator judgement with partly route-hidden grading. Content and strict format are separate: Luna/Sonnet each passed 2/3 strict contracts; Sol/Haiku 3/3. Tokens include cache/repeated input; API equivalents are not invoices or subscription-quota conversion.
+- **Scope:** Policy documentation only. Source roles, installed agent files, routing ladders, account defaults and frozen manifests are not changed. Inspection found source Explorer `model: haiku` / `codex_effort: low`; the checked Claude/Codex-Luis installations retain those choices, with no explicit Codex role model. The installer does not emit a Codex model. This does not establish automatic enforcement of D-063/D-064 or this selection.
+- **Alternatives:** Haiku medium was measured but not selected; model selection does not require declaring a universal benchmark winner.
+- **Consequences:** Explorer selection is resolved independently of P-110's experimental closure. P-110 remains open: 23/24 measured cells returned, Gemini stopped after E5 strict-format failure and E6 was never launched; nine operational attempts remain excluded and repaired-Gemini per-cell quota remains unknown. No completed cell is repeated.
+- **Rollback:** Supersede with a later owner decision; preserve all evidence. No runtime rollback is needed for this documentation-only change.
+- **Source:** Owner's continuation instructions in `/home/david/Downloads/seguimiento-modelos-metodologia.txt`.

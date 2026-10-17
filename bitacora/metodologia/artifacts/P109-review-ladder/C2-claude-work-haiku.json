@@ -1,0 +1,105 @@
+{
+  "case": "C2",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "haiku",
+  "requested_effort": "max",
+  "variant": "claude-work-haiku",
+  "prompt_sha256": "61aade8d5e2b90b9eee1044aed7f25e1ccc04968a91123f0729926a6a5b4258a",
+  "prompt_characters": 2774,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206629.4014664,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792213799.624743,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.62476,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206629.6994867,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "critical",
+        "issue": "The dependency graph has a cycle, T1 -> T3 -> T2 -> T1, so none of T1-T3 can start, and T4 and T5 are blocked transitively. The migration (T1) has no valid reason to wait for the derived snapshot (T3).",
+        "evidence": "T1 after=[T3]; T3 after=[T2]; T2 after=[T1]. Requirement: 'All plan dependencies must be acyclic.' Baseline: 'Snapshot T3 is not a deployment prerequisite: it is derived repository metadata.'",
+        "failure_scenario": "A dependency-aware executor deadlocks or rejects the plan with nothing runnable. An executor that ignores the cycle runs the tasks in arbitrary order, and the results cannot be trusted.",
+        "fix": "Remove T3 from T1's after (T1 after=[]). The snapshot derives from the migration, never the reverse. With the T4 fix below, the DAG is T1 -> T2 -> {T3,T4} -> T5."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "T2 and T4 both write packages/contracts/order.ts with no dependency path between them (both depend only on T1) and no merge owner. The shared 'order-contract' label does not serialize them. T4 also hand-patches a file that T2 describes as generated, so producer and consumer are not guaranteed to compile against one final definition.",
+        "evidence": "T2 writes=[apps/api/order-dto.ts,packages/contracts/order.ts], after=[T1]; T4 writes=[apps/web/order-client.ts,packages/contracts/order.ts], after=[T1]; both resources=[order-contract]; 'No merge owner exists.' Requirement: 'Two tasks that modify the same file must have an explicit dependency path or a named merge owner; resource labels alone do not lock tasks.' Baseline: generated contract files are checked in and both sides must compile against the same final definition.",
+        "failure_scenario": "T2 and T4 run in parallel after T1. One edit overwrites the other, or both add delivery_note and produce a merge conflict, duplicate declaration or divergent type (optional vs nullable). The API or client then compiles against a different contract, and the next regeneration silently drops T4's hand patch. Per-task rollback to the previous commit also cannot isolate the shared file.",
+        "fix": "Make T2 the only writer of packages/contracts/order.ts and remove that path from T4's writes. Set T4 after=[T2] so the client serializer consumes the final generated contract. Alternatively, name one explicit merge owner for the file and order T4 after it."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "The verification command chains the checks with &&, so a failing lint stops typecheck and unit tests from running and leaves no exit status for them. This contradicts the requirement and T5's own acceptance criterion.",
+        "evidence": "command='npm run lint && npm run typecheck && npm run test:unit'; acceptance='record the exit status of all three checks, including if lint fails'. Requirement: 'Execute lint, typecheck and unit tests even if an earlier command fails, recording an exit status for each.'",
+        "failure_scenario": "Lint exits non-zero and typecheck and test:unit never run. docs/run.md holds at most one status, T5 cannot meet acceptance, and type errors, test regressions or contract mismatches go undetected.",
+        "fix": "Run the three checks unconditionally, for example with a small bash script that runs each, captures its own exit code, writes all three codes to docs/run.md, and exits non-zero if any failed. Do not use &&."
+      }
+    ],
+    "uncertainties": [
+      "The plan does not state whether 'npm run typecheck' compiles apps/api, apps/web and packages/contracts together. If it does not, no step verifies that producer and consumer compile against the same final contract."
+    ]
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"T1\",\n      \"severity\": \"critical\",\n      \"issue\": \"The dependency graph has a cycle, T1 -> T3 -> T2 -> T1, so none of T1-T3 can start, and T4 and T5 are blocked transitively. The migration (T1) has no valid reason to wait for the derived snapshot (T3).\",\n      \"evidence\": \"T1 after=[T3]; T3 after=[T2]; T2 after=[T1]. Requirement: 'All plan dependencies must be acyclic.' Baseline: 'Snapshot T3 is not a deployment prerequisite: it is derived repository metadata.'\",\n      \"failure_scenario\": \"A dependency-aware executor deadlocks or rejects the plan with nothing runnable. An executor that ignores the cycle runs the tasks in arbitrary order, and the results cannot be trusted.\",\n      \"fix\": \"Remove T3 from T1's after (T1 after=[]). The snapshot derives from the migration, never the reverse. With the T4 fix below, the DAG is T1 -> T2 -> {T3,T4} -> T5.\"\n    },\n    {\n      \"task\": \"T4\",\n      \"severity\": \"high\",\n      \"issue\": \"T2 and T4 both write packages/contracts/order.ts with no dependency path between them (both depend only on T1) and no merge owner. The shared 'order-contract' label does not serialize them. T4 also hand-patches a file that T2 describes as generated, so producer and consumer are not guaranteed to compile against one final definition.\",\n      \"evidence\": \"T2 writes=[apps/api/order-dto.ts,packages/contracts/order.ts], after=[T1]; T4 writes=[apps/web/order-client.ts,packages/contracts/order.ts], after=[T1]; both resources=[order-contract]; 'No merge owner exists.' Requirement: 'Two tasks that modify the same file must have an explicit dependency path or a named merge owner; resource labels alone do not lock tasks.' Baseline: generated contract files are checked in and both sides must compile against the same final definition.\",\n      \"failure_scenario\": \"T2 and T4 run in parallel after T1. One edit overwrites the other, or both add delivery_note and produce a merge conflict, duplicate declaration or divergent type (optional vs nullable). The API or client then compiles against a different contract, and the next regeneration silently drops T4's hand patch. Per-task rollback to the previous commit also cannot isolate the shared file.\",\n      \"fix\": \"Make T2 the only writer of packages/contracts/order.ts and remove that path from T4's writes. Set T4 after=[T2] so the client serializer consumes the final generated contract. Alternatively, name one explicit merge owner for the file and order T4 after it.\"\n    },\n    {\n      \"task\": \"T5\",\n      \"severity\": \"high\",\n      \"issue\": \"The verification command chains the checks with &&, so a failing lint stops typecheck and unit tests from running and leaves no exit status for them. This contradicts the requirement and T5's own acceptance criterion.\",\n      \"evidence\": \"command='npm run lint && npm run typecheck && npm run test:unit'; acceptance='record the exit status of all three checks, including if lint fails'. Requirement: 'Execute lint, typecheck and unit tests even if an earlier command fails, recording an exit status for each.'\",\n      \"failure_scenario\": \"Lint exits non-zero and typecheck and test:unit never run. docs/run.md holds at most one status, T5 cannot meet acceptance, and type errors, test regressions or contract mismatches go undetected.\",\n      \"fix\": \"Run the three checks unconditionally, for example with a small bash script that runs each, captures its own exit code, writes all three codes to docs/run.md, and exits non-zero if any failed. Do not use &&.\"\n    }\n  ],\n  \"uncertainties\": [\n    \"The plan does not state whether 'npm run typecheck' compiles apps/api, apps/web and packages/contracts together. If it does not, no step verifies that producer and consumer compile against the same final contract.\"\n  ]\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 2115,
+    "cache_read_input_tokens": 2828,
+    "output_tokens": 14193,
+    "output_tokens_details": {
+      "thinking_tokens": 12801
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2115,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 99.982,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206729.6815453,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792213799.981194,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.981214,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

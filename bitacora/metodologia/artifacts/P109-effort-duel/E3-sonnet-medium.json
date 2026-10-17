@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "case": "E3",
+  "route": {
+    "id": "sonnet-medium",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "f78f09343d2e55f765dacbc74990c6ccdc6bbb37b97b84cac201494e2d83db94",
+  "prompt_characters": 12903,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792212229.2306778,
+    "windows": {
+      "five_hour": {
+        "used_percent": 13.0,
+        "resets_at": 1792213800.481273,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792278000.481294,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792212229.5570388,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "A1 incremental cache key",
+        "severity": "high",
+        "issue": "The cache key omits build inputs that R1 requires: compiler flags, the normalized environment allowlist digest and resolved dependency artifact digests. It uses only dependency IDs, which are names.",
+        "evidence": "A1 hashes (source_digest, dependency IDs, target_arch). R1 requires reuse to be bit-for-bit equal to a fresh build. A1 states flags, env and dependency content digests are available but not keyed. R2 requires dependency hashes to reflect content, not paths or names. Tests vary only source and arch.",
+        "failure_scenario": "Build A with dependency B (id 'schema-b', digest D1), flags -O2. Then B's content changes to D2, or flags change to -O0. The key is unchanged, cache.has(key) is true, and the stale A built against D1/-O2 is returned. That differs from a fresh build.",
+        "fix": "Key = hash(canonical_tuple(source_digest, sorted (dep_id, resolved_dep_artifact_digest) pairs, flags_digest, normalized_env_allowlist_digest, target_arch)). Add tests that vary each of these inputs."
+      },
+      {
+        "task": "A2 DAG edge construction",
+        "severity": "high",
+        "issue": "The A->B edge for the link-time generated schema is missing because edges come only from source imports. A is therefore scheduled without waiting for B.",
+        "evidence": "A2 uses only generic_source_import_edges. A links to B via its command line, with no import. R2 says edges include link-time generated schemas. G3 says generic scanning is correct but B has no import in A. Tests start with B already built, which hides the gap.",
+        "failure_scenario": "B is requested at generation N+1 and is rebuilding. A has no predecessor, so it is ready and is built or bundled with B's generation-N schema or none. The deployment then mixes A(N+1) with B(N), or the build is nondeterministic.",
+        "fix": "Add explicit edges for command-line/link-time schema inputs (from build rules or the declared input trace) to the edge set and run the DAG validation. Add a test where B is rebuilding when A is requested."
+      },
+      {
+        "task": "A3 dependency output collection",
+        "severity": "high",
+        "issue": "Dependencies are resolved with version=max_completed_version_across_all_nodes. Versions are monotonic only per node, so this cross-node maximum is meaningless. It ignores the manifest's exact desired versions.",
+        "evidence": "A3 passes the same max to every dependency. R1 says the same version on different nodes has no ordering meaning. artifact_for returns the latest version <= v. The requested manifest holds exact versions. The A3 example has desired B2, B3 completed, and unrelated C at 100.",
+        "failure_scenario": "The node depends on B and C and the manifest asks B2 and C100. max=100, so artifact_for(B,100) returns B3, not B2. A is compiled with the wrong B even after A1 is fixed, on a cold cache.",
+        "fix": "For each dependency, fetch the exact manifest version (artifact_for_exact(dep, manifest[dep])). Require status COMPLETE with a durable manifest, and fail if it is absent. Drop the 'as of' lookup. Test with unequal per-node versions."
+      },
+      {
+        "task": "A4 publish successful build",
+        "severity": "high",
+        "issue": "COMPLETE and output_digest are committed in tx1 and resolved_input_manifest in tx2. A crash between them leaves a COMPLETE row without exact inputs. Recovery then fills the manifest from the mutable request record.",
+        "evidence": "R7 says COMPLETE implies the exact manifest and output digest are durable together. A4 says resolver COMPLETE rows are immediately visible, and recovery uses the then-current mutable request. G1 says finalize blob and DB COMPLETE are separate. Tests stop workers only before compilation.",
+        "failure_scenario": "The worker builds revision R1, uploads the output, commits tx1 and dies. The request moves to R2. Recovery writes R2's inputs as the manifest for the R1 output. Later reuse and dependents trust R1 bytes as R2 results.",
+        "fix": "Write status=COMPLETE, output_digest and resolved_input_manifest in one transaction, using the manifest captured at build start. Until then keep the row non-COMPLETE (e.g. STAGED/PENDING). Never backfill from the mutable request. Rows already COMPLETE without a manifest should be treated as invalid and rebuilt. Add a crash test between upload and commit."
+      },
+      {
+        "task": "A5 artifact GET",
+        "severity": "critical",
+        "issue": "The physical blob is returned before the policy check, so any authenticated caller who knows a digest reads another tenant's deduplicated content.",
+        "evidence": "A5 returns physical_blob(digest) if it exists, before require(current_artifact_policy). R3 says each retrieval authorizes first and that knowing a digest grants no privilege. Existence is global due to dedup. Tests use owned blobs only.",
+        "failure_scenario": "Tenant T1 stores blob X. Tenant T2 (authenticated) requests digest(X). The blob exists, so it is returned without a policy check.",
+        "fix": "Evaluate current_artifact_policy(principal, tenant, digest) first. Return identical not_found on denial or absence, so existence is not an oracle, and only then read the blob. Add a cross-tenant dedup test."
+      },
+      {
+        "task": "A6 attestation gate",
+        "severity": "critical",
+        "issue": "Only the signature, builder and executable digest are checked. Source revision, dependency digests (including the schema), env/flag digest, architecture and generation are not compared with the approved manifest.",
+        "evidence": "A6 says other fields are kept for audit but not checked. R4 requires all attested inputs to equal the approved manifest, and says a genuine signature for another build is insufficient. The schema digest is in the attestation's dependency list. Tests supply matching manifests only.",
+        "failure_scenario": "An allowed builder signed a build with the right executable digest but a different schema digest, or flags or arch. It passes the A6 checks, and activation proceeds against an unapproved build.",
+        "fix": "Before approve_activation, require equality of source revision, the full resolved dependency digest set (including schema B), env/flag digest, target arch, builder identity and build generation with the approved manifest and the deployment's executable and schema digests. Add mismatch tests per field."
+      },
+      {
+        "task": "A7 dispatch activation",
+        "severity": "high",
+        "issue": "The executable and schema are activated by two separate worker calls. A worker can serve a mixed pair between them.",
+        "evidence": "A7 calls activate_executable then activate_schema. The old pair is (Aold,Bold) and the layouts are incompatible. R5 requires every worker to run a complete pair from one generation. G2 says activate_pair exists and that workers don't need two commands. Tests send no requests during the gap.",
+        "failure_scenario": "After activate_executable(Anew) succeeds, a request arrives before activate_schema(Bnew). The worker serves Anew with Bold, which is an incompatible pair.",
+        "fix": "Use worker.activate_pair((Anew,Bnew), key=deployment_id) as a single call. Test with traffic between steps."
+      },
+      {
+        "task": "A8 global activation completion",
+        "severity": "critical",
+        "issue": "The ACK is sent when the remote worker accepts, before the durable epoch CAS. If the CAS fails, the operator has been told success, the authoritative state is unchanged, and the worker may hold an older pair.",
+        "evidence": "A8 does send_success_ack then CAS. R5 requires the ACK to imply the durable active generation changed, and a stale worker must not overwrite newer state. G2 says the worker idempotency key does not check global epochs. The scenario has epoch12 committed while epoch11 is paused.",
+        "failure_scenario": "Coordinator 11 dispatches and the worker accepts epoch11 pair. Coordinator 12 commits epoch12. Coordinator 11 resumes, sends the ACK, and its CAS(expected=old, new=11) fails with no further action. The operator sees success for a generation that is not active, and the worker serves 11 while the DB says 12.",
+        "fix": "Commit the durable CAS or epoch (and pending state) first and dispatch only if it succeeds. Send the ACK only after the commit succeeds. After the CAS, or on any failure or unknown result, reconcile the worker to the authoritative active pair under the newest epoch, using epoch-bearing keys. A stale coordinator abandons its work."
+      },
+      {
+        "task": "A9 garbage collection",
+        "severity": "critical",
+        "issue": "Roots are snapshotted at t0, but the tombstone transaction does not recheck references. A deployment that references a candidate after t0 still gets its blob tombstoned and deleted.",
+        "evidence": "A9 inserts the tombstone without a reference recheck, and the activation transaction checks only that the tombstone does not already exist. R6 forbids deleting artifacts referenced by active, pinned or in-progress activations. G4 says reference insertion immediately makes the artifacts roots. Tests never activate during collection.",
+        "failure_scenario": "t0: D is unreferenced and becomes a candidate. t1: the activation inserts a reference to D (no tombstone yet). t2: GC inserts the tombstone and deletes the blob. The pending or active deployment now references a deleted artifact.",
+        "fix": "In the same serializable transaction, check that the digest has no reference of any kind (active, rollback-pinned, pending) before inserting the tombstone, and abort or skip if one exists. Delete the blob only after the tombstone commits. Add a concurrent activate/GC test."
+      },
+      {
+        "task": "A10 rollback pin expiration",
+        "severity": "high",
+        "issue": "The pin is computed from created_at of G on the first deactivation only and is never refreshed. R6 requires 24h after the last deactivation.",
+        "evidence": "A10 sets pin_until=created_at+24h on first deactivation and leaves it unchanged on later ones. R6 says pins live 24h after the LAST deactivation that could need them. G may run for days and be reactivated.",
+        "failure_scenario": "G is created day 0, deactivated day 10. pin_until=day 1, so it is already expired and GC may delete G's artifacts immediately. A later rollback to G in the 24h window fails. The same applies after reactivation and a second deactivation on day 20.",
+        "fix": "On every deactivation set pin_until[G] = now (deactivation time) + 24h, never lowering it, and keep the pin while G is active. Add a test with a long-running G and with reactivation."
+      }
+    ],
+    "uncertainties": [
+      "A8: how a paused stale coordinator's worker command is superseded depends on worker behavior beyond the idempotency key, which the dossier doesn't specify. The reconciliation step in the fix assumes the coordinator can re-push the authoritative pair.",
+      "A5: whether an unauthorized caller should get a not_found response or an explicit denial is not specified. Both satisfy R3 so long as no bytes are revealed."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"A1 incremental cache key\",\"severity\":\"high\",\"issue\":\"The cache key omits build inputs that R1 requires: compiler flags, the normalized environment allowlist digest and resolved dependency artifact digests. It uses only dependency IDs, which are names.\",\"evidence\":\"A1 hashes (source_digest, dependency IDs, target_arch). R1 requires reuse to be bit-for-bit equal to a fresh build. A1 states flags, env and dependency content digests are available but not keyed. R2 requires dependency hashes to reflect content, not paths or names. Tests vary only source and arch.\",\"failure_scenario\":\"Build A with dependency B (id 'schema-b', digest D1), flags -O2. Then B's content changes to D2, or flags change to -O0. The key is unchanged, cache.has(key) is true, and the stale A built against D1/-O2 is returned. That differs from a fresh build.\",\"fix\":\"Key = hash(canonical_tuple(source_digest, sorted (dep_id, resolved_dep_artifact_digest) pairs, flags_digest, normalized_env_allowlist_digest, target_arch)). Add tests that vary each of these inputs.\"},{\"task\":\"A2 DAG edge construction\",\"severity\":\"high\",\"issue\":\"The A->B edge for the link-time generated schema is missing because edges come only from source imports. A is therefore scheduled without waiting for B.\",\"evidence\":\"A2 uses only generic_source_import_edges. A links to B via its command line, with no import. R2 says edges include link-time generated schemas. G3 says generic scanning is correct but B has no import in A. Tests start with B already built, which hides the gap.\",\"failure_scenario\":\"B is requested at generation N+1 and is rebuilding. A has no predecessor, so it is ready and is built or bundled with B's generation-N schema or none. The deployment then mixes A(N+1) with B(N), or the build is nondeterministic.\",\"fix\":\"Add explicit edges for command-line/link-time schema inputs (from build rules or the declared input trace) to the edge set and run the DAG validation. Add a test where B is rebuilding when A is requested.\"},{\"task\":\"A3 dependency output collection\",\"severity\":\"high\",\"issue\":\"Dependencies are resolved with version=max_completed_version_across_all_nodes. Versions are monotonic only per node, so this cross-node maximum is meaningless. It ignores the manifest's exact desired versions.\",\"evidence\":\"A3 passes the same max to every dependency. R1 says the same version on different nodes has no ordering meaning. artifact_for returns the latest version <= v. The requested manifest holds exact versions. The A3 example has desired B2, B3 completed, and unrelated C at 100.\",\"failure_scenario\":\"The node depends on B and C and the manifest asks B2 and C100. max=100, so artifact_for(B,100) returns B3, not B2. A is compiled with the wrong B even after A1 is fixed, on a cold cache.\",\"fix\":\"For each dependency, fetch the exact manifest version (artifact_for_exact(dep, manifest[dep])). Require status COMPLETE with a durable manifest, and fail if it is absent. Drop the 'as of' lookup. Test with unequal per-node versions.\"},{\"task\":\"A4 publish successful build\",\"severity\":\"high\",\"issue\":\"COMPLETE and output_digest are committed in tx1 and resolved_input_manifest in tx2. A crash between them leaves a COMPLETE row without exact inputs. Recovery then fills the manifest from the mutable request record.\",\"evidence\":\"R7 says COMPLETE implies the exact manifest and output digest are durable together. A4 says resolver COMPLETE rows are immediately visible, and recovery uses the then-current mutable request. G1 says finalize blob and DB COMPLETE are separate. Tests stop workers only before compilation.\",\"failure_scenario\":\"The worker builds revision R1, uploads the output, commits tx1 and dies. The request moves to R2. Recovery writes R2's inputs as the manifest for the R1 output. Later reuse and dependents trust R1 bytes as R2 results.\",\"fix\":\"Write status=COMPLETE, output_digest and resolved_input_manifest in one transaction, using the manifest captured at build start. Until then keep the row non-COMPLETE (e.g. STAGED/PENDING). Never backfill from the mutable request. Rows already COMPLETE without a manifest should be treated as invalid and rebuilt. Add a crash test between upload and commit.\"},{\"task\":\"A5 artifact GET\",\"severity\":\"critical\",\"issue\":\"The physical blob is returned before the policy check, so any authenticated caller who knows a digest reads another tenant's deduplicated content.\",\"evidence\":\"A5 returns physical_blob(digest) if it exists, before require(current_artifact_policy). R3 says each retrieval authorizes first and that knowing a digest grants no privilege. Existence is global due to dedup. Tests use owned blobs only.\",\"failure_scenario\":\"Tenant T1 stores blob X. Tenant T2 (authenticated) requests digest(X). The blob exists, so it is returned without a policy check.\",\"fix\":\"Evaluate current_artifact_policy(principal, tenant, digest) first. Return identical not_found on denial or absence, so existence is not an oracle, and only then read the blob. Add a cross-tenant dedup test.\"},{\"task\":\"A6 attestation gate\",\"severity\":\"critical\",\"issue\":\"Only the signature, builder and executable digest are checked. Source revision, dependency digests (including the schema), env/flag digest, architecture and generation are not compared with the approved manifest.\",\"evidence\":\"A6 says other fields are kept for audit but not checked. R4 requires all attested inputs to equal the approved manifest, and says a genuine signature for another build is insufficient. The schema digest is in the attestation's dependency list. Tests supply matching manifests only.\",\"failure_scenario\":\"An allowed builder signed a build with the right executable digest but a different schema digest, or flags or arch. It passes the A6 checks, and activation proceeds against an unapproved build.\",\"fix\":\"Before approve_activation, require equality of source revision, the full resolved dependency digest set (including schema B), env/flag digest, target arch, builder identity and build generation with the approved manifest and the deployment's executable and schema digests. Add mismatch tests per field.\"},{\"task\":\"A7 dispatch activation\",\"severity\":\"high\",\"issue\":\"The executable and schema are activated by two separate worker calls. A worker can serve a mixed pair between them.\",\"evidence\":\"A7 calls activate_executable then activate_schema. The old pair is (Aold,Bold) and the layouts are incompatible. R5 requires every worker to run a complete pair from one generation. G2 says activate_pair exists and that workers don't need two commands. Tests send no requests during the gap.\",\"failure_scenario\":\"After activate_executable(Anew) succeeds, a request arrives before activate_schema(Bnew). The worker serves Anew with Bold, which is an incompatible pair.\",\"fix\":\"Use worker.activate_pair((Anew,Bnew), key=deployment_id) as a single call. Test with traffic between steps.\"},{\"task\":\"A8 global activation completion\",\"severity\":\"critical\",\"issue\":\"The ACK is sent when the remote worker accepts, before the durable epoch CAS. If the CAS fails, the operator has been told success, the authoritative state is unchanged, and the worker may hold an older pair.\",\"evidence\":\"A8 does send_success_ack then CAS. R5 requires the ACK to imply the durable active generation changed, and a stale worker must not overwrite newer state. G2 says the worker idempotency key does not check global epochs. The scenario has epoch12 committed while epoch11 is paused.\",\"failure_scenario\":\"Coordinator 11 dispatches and the worker accepts epoch11 pair. Coordinator 12 commits epoch12. Coordinator 11 resumes, sends the ACK, and its CAS(expected=old, new=11) fails with no further action. The operator sees success for a generation that is not active, and the worker serves 11 while the DB says 12.\",\"fix\":\"Commit the durable CAS or epoch (and pending state) first and dispatch only if it succeeds. Send the ACK only after the commit succeeds. After the CAS, or on any failure or unknown result, reconcile the worker to the authoritative active pair under the newest epoch, using epoch-bearing keys. A stale coordinator abandons its work.\"},{\"task\":\"A9 garbage collection\",\"severity\":\"critical\",\"issue\":\"Roots are snapshotted at t0, but the tombstone transaction does not recheck references. A deployment that references a candidate after t0 still gets its blob tombstoned and deleted.\",\"evidence\":\"A9 inserts the tombstone without a reference recheck, and the activation transaction checks only that the tombstone does not already exist. R6 forbids deleting artifacts referenced by active, pinned or in-progress activations. G4 says reference insertion immediately makes the artifacts roots. Tests never activate during collection.\",\"failure_scenario\":\"t0: D is unreferenced and becomes a candidate. t1: the activation inserts a reference to D (no tombstone yet). t2: GC inserts the tombstone and deletes the blob. The pending or active deployment now references a deleted artifact.\",\"fix\":\"In the same serializable transaction, check that the digest has no reference of any kind (active, rollback-pinned, pending) before inserting the tombstone, and abort or skip if one exists. Delete the blob only after the tombstone commits. Add a concurrent activate/GC test.\"},{\"task\":\"A10 rollback pin expiration\",\"severity\":\"high\",\"issue\":\"The pin is computed from created_at of G on the first deactivation only and is never refreshed. R6 requires 24h after the last deactivation.\",\"evidence\":\"A10 sets pin_until=created_at+24h on first deactivation and leaves it unchanged on later ones. R6 says pins live 24h after the LAST deactivation that could need them. G may run for days and be reactivated.\",\"failure_scenario\":\"G is created day 0, deactivated day 10. pin_until=day 1, so it is already expired and GC may delete G's artifacts immediately. A later rollback to G in the 24h window fails. The same applies after reactivation and a second deactivation on day 20.\",\"fix\":\"On every deactivation set pin_until[G] = now (deactivation time) + 24h, never lowering it, and keep the pin while G is active. Add a test with a long-running G and with reactivation.\"}],\"uncertainties\":[\"A8: how a paused stale coordinator's worker command is superseded depends on worker behavior beyond the idempotency key, which the dossier doesn't specify. The reconciliation step in the fix assumes the coordinator can re-push the authoritative pair.\",\"A5: whether an unauthorized caller should get a not_found response or an explicit denial is not specified. Both satisfy R3 so long as no bytes are revealed.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 2116,
+    "cache_read_input_tokens": 6043,
+    "output_tokens": 4921,
+    "output_tokens_details": {
+      "thinking_tokens": 1226
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2116,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "response_words": 1456,
+  "exit_code": 0,
+  "elapsed_seconds": 37.204,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792212266.7620184,
+    "windows": {
+      "five_hour": {
+        "used_percent": 14.0,
+        "resets_at": 1792213800.026281,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792278000.0263,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

@@ -1,0 +1,498 @@
+{
+  "schema_version": 1,
+  "case": "E5",
+  "route": {
+    "id": "sol",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "1ca2ecc212cdbfefa7df6fb34fa4560da6ceb895360043c7c8ddd2d4e21d2c36",
+  "prompt_characters": 3502,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248210.3306117,
+    "windows": {
+      "five_hour": {
+        "used_percent": 57.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248211.0081155,
+  "argv": [
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "--json",
+    "-"
+  ],
+  "answer": {
+    "case": "E5",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "_candidate_rows calls _tier_for, which returns _tier_floor's tier. The floor starts with start_tier: architecture uses TOP (2); otherwise task kind and large complexity determine the starting tier. High complexity raises the minimum to 1; extreme complexity or full_system scope selects architecture. large_change/full_feature scope and medium/high coupling impose minimum 1. Integer duration excluding booleans imposes minimum 1 at 120 minutes and TOP at 240. High risk imposes TOP. Medium risk alone does not promote the tier. These are model-tier floors, distinct from optional statistical quality floors.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_tier_floor",
+            "start_line": 80,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "start_tier",
+            "start_line": 89,
+            "end_line": 94
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_candidate_rows",
+            "start_line": 220,
+            "end_line": 228
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "_candidate_rows obtains the authorized pool, profiles, quota cache and task floor. _route_options enumerates configured model/effort rungs from that floor through TOP, validates provider/effort and removes duplicate pairs. Each Candidate includes provider, model, profile, effort and account_ref. candidate_route_id hashes provider/model/profile/effort; account_reference separately hashes account_key. Account identity is not simply provider: the legacy key includes sorted profile environment entries. Separately, _pool_account_identity deduplicates by provider and normalized account selectors, expanding profile environment values and supplying default account directories. These two identity representations are related but not identical.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_route_options",
+            "start_line": 135,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_candidate_rows",
+            "start_line": 235,
+            "end_line": 260
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/identity.py",
+            "symbol": "candidate_route_id; account_reference",
+            "start_line": 61,
+            "end_line": 69
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "account_key; _pool_account_identity",
+            "start_line": 187,
+            "end_line": 212
+          },
+          {
+            "path": "skill/scripts/bt_profiles.py",
+            "symbol": "env_of",
+            "start_line": 99,
+            "end_line": 103
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "plan_full_dag invokes quota preflight before creating candidates and timestamps requests after returned observations. refresh groups pool profiles by _pool_account_identity, with a legacy-key fallback, rejects more than 32 effective groups, polls one Claude/Codex representative per group and distributes its status to aliases. Polling is sequential and deduplicated. Refresh is not always forced: _reserve skips manual challenges, attempts before the 3480-second minimum interval and retry deadlines; poll then returns cached summaries. Antigravity uses one shared refresh, with a default 900-second cache interval. Freshness requires valid observations within the source's age limit. The account count bounds sampling breadth; individual readers also have timeouts, rather than one global preflight deadline.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 147,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 8,
+            "end_line": 35
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 43,
+            "end_line": 85
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "_reserve",
+            "start_line": 99,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "poll",
+            "start_line": 119,
+            "end_line": 149
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "poll",
+            "start_line": 176,
+            "end_line": 176
+          },
+          {
+            "path": "skill/scripts/bt_agy.py",
+            "symbol": "refresh",
+            "start_line": 129,
+            "end_line": 153
+          },
+          {
+            "path": "skill/scripts/bt_subscription_sources.py",
+            "symbol": "read_claude",
+            "start_line": 156,
+            "end_line": 156
+          },
+          {
+            "path": "skill/scripts/bt_subscription_sources.py",
+            "symbol": "read_codex",
+            "start_line": 245,
+            "end_line": 249
+          },
+          {
+            "path": "skill/scripts/bt_agy.py",
+            "symbol": "read_usage",
+            "start_line": 80,
+            "end_line": 85
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "Unsupported providers are removed by pool_for and produce no _route_options. pool_for also checks project restrictions, executable availability and account prerequisites. For constructed candidates, _candidate_reasons rejects unauthorized profiles, unavailable/unknown sources, blocking capacity/cooldown reasons, invalid/unknown authentication, unavailable/unknown runtime and every quota status other than available, including stale, unknown and exhausted. _usage_facts derives authentication/quota freshness and exhaustion from observations. Failed preflight additionally changes affected routes to quota unknown. rank_with_route_policy calls rank_candidates first and only processes its eligible routes; quality cannot restore an excluded route.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "pool_for",
+            "start_line": 237,
+            "end_line": 255
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_route_options",
+            "start_line": 135,
+            "end_line": 138
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_usage_facts",
+            "start_line": 64,
+            "end_line": 77
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_apply_preflight",
+            "start_line": 63,
+            "end_line": 73
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_candidate_reasons",
+            "start_line": 176,
+            "end_line": 194
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 245,
+            "end_line": 285
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "History aggregation selects the first available level with at least five verified samples: exact_context, complexity_class, task_family, then route; otherwise baseline. Measurements compute 95% Wilson intervals from verified successes/failures. Policy accepts quality only for a matching route/schema, recognized selected level, exactly one selected measurement, observed source quality, sufficient verified samples, consistent success/failure counts and a finite ordered interval within [0,1]. Configured minimum samples cannot be below five. Quality ranks routes only when every remaining route has valid evidence and the same selected_level: higher lower bound first, then narrower interval. Configured risk quality floors separately exclude insufficient evidence or lower bounds below the floor; defaults configure none. preserve_baseline returns after hard filtering, before these objectives.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "MIN_VERIFIED_SAMPLES; HISTORY_LEVELS",
+            "start_line": 22,
+            "end_line": 27
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "_wilson_interval; _measurement",
+            "start_line": 198,
+            "end_line": 219
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "aggregate_performance_history",
+            "start_line": 303,
+            "end_line": 327
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "RoutePolicyConfig",
+            "start_line": 131,
+            "end_line": 144
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 269,
+            "end_line": 287
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_quality_interval; _quality_objective_is_comparable; _route_objective_key",
+            "start_line": 311,
+            "end_line": 356
+          }
+        ]
+      },
+      {
+        "id": "Q6",
+        "answer": "Without comparable quality, its key becomes equal across routes. The ascending lexicographic order is quota pressure, duration, comparable relative cost, reserved_for_higher_risk (false preferred), imminent limiting-window reset (true preferred), present baseline rank, baseline rank value, then route_id. Pressure uses the maximum supplied window, falling back to candidate pressure or infinity. Duration uses explicit evidence, otherwise sampled historical median, otherwise infinity; there is no cross-route duration comparability gate. Cost participates only if every eligible route supplies it on one common scale; missing or mixed-scale cost disables cost discrimination for all routes. preserve_baseline instead retains baseline ordering.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 272,
+            "end_line": 274
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 294,
+            "end_line": 305
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_route_objective_key",
+            "start_line": 349,
+            "end_line": 381
+          }
+        ]
+      },
+      {
+        "id": "Q7",
+        "answer": "No. DecisionAssignmentPort.plan delegates to plan_full_dag, which builds evidence through _route_evidence and passes it to batch persistence. That helper supplies only a current-pressure quota window and sampled historical duration. It supplies neither contextual quality assessments nor API prices/relative-cost scales; quality and cost therefore remain absent. Its reset time is also absent. Policy supports these optional facts, but this whole-plan wiring does not populate them. Audit tasks request baseline preservation.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.plan",
+            "start_line": 340,
+            "end_line": 345
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_route_evidence",
+            "start_line": 48,
+            "end_line": 60
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 179,
+            "end_line": 188
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "RoutePolicyEvidence",
+            "start_line": 105,
+            "end_line": 110
+          }
+        ]
+      },
+      {
+        "id": "Q8",
+        "answer": "Batch ranking retains the best ranked route per account_ref per task. Capacity is keyed by account_ref: min(free_slots, max_concurrent minus active_assignments), clamped at zero; absent explicit concurrency, capacity defaults to free_slots. Matching tries constrained tasks first and can move occupants to alternative accounts, stopping at the global slot limit. Aliases sharing account_ref cannot add capacity; upstream pool deduplication additionally collapses effective-account selectors. The legacy hash itself does not normalize every possible alias. Whole-plan persistence supplies no account_concurrency, so it does not incorporate live account occupancy. A persisted batch is an immutable allocation/replay record, not a durable execution reservation: persist computes the batch and stores its serialized result without claiming execution slots.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_rank_batch_routes",
+            "start_line": 232,
+            "end_line": 240
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_account_capacities; _match_batch_routes",
+            "start_line": 251,
+            "end_line": 304
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "pool_for",
+            "start_line": 239,
+            "end_line": 243
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 182,
+            "end_line": 188
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "BatchDecisionLedger.persist",
+            "start_line": 240,
+            "end_line": 256
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "BatchDecisionLedger.persist",
+            "start_line": 272,
+            "end_line": 295
+          }
+        ]
+      },
+      {
+        "id": "Q9",
+        "answer": "Source assertions cover medium risk staying at tier 0, high complexity/coupling/scope/duration raising floors, high risk/extreme/full-system reaching tier 2 and audit starting at 1. The preflight alias test mocks 40 aliases as two effective accounts and asserts only two representatives are polled. The batch capacity test gives two aliases one account_ref with one of two slots already occupied, asserting one assignment and one account_concurrency_exhausted result. These are unexecuted test assertions, not live quota evidence. The snapshot cannot establish actual account identities, authentication, quota pressure/reset times, freshness, active occupancy or provider availability.",
+        "evidence": [
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_sources.py",
+            "symbol": "test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion",
+            "start_line": 45,
+            "end_line": 64
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_quota_preflight.py",
+            "symbol": "test_limit_counts_effective_accounts_after_alias_deduplication",
+            "start_line": 95,
+            "end_line": 106
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_batch.py",
+            "symbol": "test_shared_account_capacity_counts_active_work_and_profile_aliases_once",
+            "start_line": 149,
+            "end_line": 165
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "Actual account configuration, credentials, quota observations, reset schedules, occupancy and runtime availability are not established by this source snapshot. Tests were read only; none were executed."
+    ]
+  },
+  "response_text": "{\"case\":\"E5\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"_candidate_rows calls _tier_for, which returns _tier_floor's tier. The floor starts with start_tier: architecture uses TOP (2); otherwise task kind and large complexity determine the starting tier. High complexity raises the minimum to 1; extreme complexity or full_system scope selects architecture. large_change/full_feature scope and medium/high coupling impose minimum 1. Integer duration excluding booleans imposes minimum 1 at 120 minutes and TOP at 240. High risk imposes TOP. Medium risk alone does not promote the tier. These are model-tier floors, distinct from optional statistical quality floors.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_tier_floor\",\"start_line\":80,\"end_line\":116},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"start_tier\",\"start_line\":89,\"end_line\":94},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_candidate_rows\",\"start_line\":220,\"end_line\":228}]},{\"id\":\"Q2\",\"answer\":\"_candidate_rows obtains the authorized pool, profiles, quota cache and task floor. _route_options enumerates configured model/effort rungs from that floor through TOP, validates provider/effort and removes duplicate pairs. Each Candidate includes provider, model, profile, effort and account_ref. candidate_route_id hashes provider/model/profile/effort; account_reference separately hashes account_key. Account identity is not simply provider: the legacy key includes sorted profile environment entries. Separately, _pool_account_identity deduplicates by provider and normalized account selectors, expanding profile environment values and supplying default account directories. These two identity representations are related but not identical.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_route_options\",\"start_line\":135,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_candidate_rows\",\"start_line\":235,\"end_line\":260},{\"path\":\"skill/scripts/bt_scheduler_decision/identity.py\",\"symbol\":\"candidate_route_id; account_reference\",\"start_line\":61,\"end_line\":69},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"account_key; _pool_account_identity\",\"start_line\":187,\"end_line\":212},{\"path\":\"skill/scripts/bt_profiles.py\",\"symbol\":\"env_of\",\"start_line\":99,\"end_line\":103}]},{\"id\":\"Q3\",\"answer\":\"plan_full_dag invokes quota preflight before creating candidates and timestamps requests after returned observations. refresh groups pool profiles by _pool_account_identity, with a legacy-key fallback, rejects more than 32 effective groups, polls one Claude/Codex representative per group and distributes its status to aliases. Polling is sequential and deduplicated. Refresh is not always forced: _reserve skips manual challenges, attempts before the 3480-second minimum interval and retry deadlines; poll then returns cached summaries. Antigravity uses one shared refresh, with a default 900-second cache interval. Freshness requires valid observations within the source's age limit. The account count bounds sampling breadth; individual readers also have timeouts, rather than one global preflight deadline.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":147,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":8,\"end_line\":35},{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":43,\"end_line\":85},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"_reserve\",\"start_line\":99,\"end_line\":116},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"poll\",\"start_line\":119,\"end_line\":149},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"poll\",\"start_line\":176,\"end_line\":176},{\"path\":\"skill/scripts/bt_agy.py\",\"symbol\":\"refresh\",\"start_line\":129,\"end_line\":153},{\"path\":\"skill/scripts/bt_subscription_sources.py\",\"symbol\":\"read_claude\",\"start_line\":156,\"end_line\":156},{\"path\":\"skill/scripts/bt_subscription_sources.py\",\"symbol\":\"read_codex\",\"start_line\":245,\"end_line\":249},{\"path\":\"skill/scripts/bt_agy.py\",\"symbol\":\"read_usage\",\"start_line\":80,\"end_line\":85}]},{\"id\":\"Q4\",\"answer\":\"Unsupported providers are removed by pool_for and produce no _route_options. pool_for also checks project restrictions, executable availability and account prerequisites. For constructed candidates, _candidate_reasons rejects unauthorized profiles, unavailable/unknown sources, blocking capacity/cooldown reasons, invalid/unknown authentication, unavailable/unknown runtime and every quota status other than available, including stale, unknown and exhausted. _usage_facts derives authentication/quota freshness and exhaustion from observations. Failed preflight additionally changes affected routes to quota unknown. rank_with_route_policy calls rank_candidates first and only processes its eligible routes; quality cannot restore an excluded route.\",\"evidence\":[{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"pool_for\",\"start_line\":237,\"end_line\":255},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_route_options\",\"start_line\":135,\"end_line\":138},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_usage_facts\",\"start_line\":64,\"end_line\":77},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_apply_preflight\",\"start_line\":63,\"end_line\":73},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_candidate_reasons\",\"start_line\":176,\"end_line\":194},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":245,\"end_line\":285}]},{\"id\":\"Q5\",\"answer\":\"History aggregation selects the first available level with at least five verified samples: exact_context, complexity_class, task_family, then route; otherwise baseline. Measurements compute 95% Wilson intervals from verified successes/failures. Policy accepts quality only for a matching route/schema, recognized selected level, exactly one selected measurement, observed source quality, sufficient verified samples, consistent success/failure counts and a finite ordered interval within [0,1]. Configured minimum samples cannot be below five. Quality ranks routes only when every remaining route has valid evidence and the same selected_level: higher lower bound first, then narrower interval. Configured risk quality floors separately exclude insufficient evidence or lower bounds below the floor; defaults configure none. preserve_baseline returns after hard filtering, before these objectives.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"MIN_VERIFIED_SAMPLES; HISTORY_LEVELS\",\"start_line\":22,\"end_line\":27},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"_wilson_interval; _measurement\",\"start_line\":198,\"end_line\":219},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"aggregate_performance_history\",\"start_line\":303,\"end_line\":327},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"RoutePolicyConfig\",\"start_line\":131,\"end_line\":144},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":269,\"end_line\":287},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_quality_interval; _quality_objective_is_comparable; _route_objective_key\",\"start_line\":311,\"end_line\":356}]},{\"id\":\"Q6\",\"answer\":\"Without comparable quality, its key becomes equal across routes. The ascending lexicographic order is quota pressure, duration, comparable relative cost, reserved_for_higher_risk (false preferred), imminent limiting-window reset (true preferred), present baseline rank, baseline rank value, then route_id. Pressure uses the maximum supplied window, falling back to candidate pressure or infinity. Duration uses explicit evidence, otherwise sampled historical median, otherwise infinity; there is no cross-route duration comparability gate. Cost participates only if every eligible route supplies it on one common scale; missing or mixed-scale cost disables cost discrimination for all routes. preserve_baseline instead retains baseline ordering.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":272,\"end_line\":274},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":294,\"end_line\":305},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_route_objective_key\",\"start_line\":349,\"end_line\":381}]},{\"id\":\"Q7\",\"answer\":\"No. DecisionAssignmentPort.plan delegates to plan_full_dag, which builds evidence through _route_evidence and passes it to batch persistence. That helper supplies only a current-pressure quota window and sampled historical duration. It supplies neither contextual quality assessments nor API prices/relative-cost scales; quality and cost therefore remain absent. Its reset time is also absent. Policy supports these optional facts, but this whole-plan wiring does not populate them. Audit tasks request baseline preservation.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.plan\",\"start_line\":340,\"end_line\":345},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_route_evidence\",\"start_line\":48,\"end_line\":60},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":179,\"end_line\":188},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"RoutePolicyEvidence\",\"start_line\":105,\"end_line\":110}]},{\"id\":\"Q8\",\"answer\":\"Batch ranking retains the best ranked route per account_ref per task. Capacity is keyed by account_ref: min(free_slots, max_concurrent minus active_assignments), clamped at zero; absent explicit concurrency, capacity defaults to free_slots. Matching tries constrained tasks first and can move occupants to alternative accounts, stopping at the global slot limit. Aliases sharing account_ref cannot add capacity; upstream pool deduplication additionally collapses effective-account selectors. The legacy hash itself does not normalize every possible alias. Whole-plan persistence supplies no account_concurrency, so it does not incorporate live account occupancy. A persisted batch is an immutable allocation/replay record, not a durable execution reservation: persist computes the batch and stores its serialized result without claiming execution slots.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_rank_batch_routes\",\"start_line\":232,\"end_line\":240},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_account_capacities; _match_batch_routes\",\"start_line\":251,\"end_line\":304},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"pool_for\",\"start_line\":239,\"end_line\":243},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":182,\"end_line\":188},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"BatchDecisionLedger.persist\",\"start_line\":240,\"end_line\":256},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"BatchDecisionLedger.persist\",\"start_line\":272,\"end_line\":295}]},{\"id\":\"Q9\",\"answer\":\"Source assertions cover medium risk staying at tier 0, high complexity/coupling/scope/duration raising floors, high risk/extreme/full-system reaching tier 2 and audit starting at 1. The preflight alias test mocks 40 aliases as two effective accounts and asserts only two representatives are polled. The batch capacity test gives two aliases one account_ref with one of two slots already occupied, asserting one assignment and one account_concurrency_exhausted result. These are unexecuted test assertions, not live quota evidence. The snapshot cannot establish actual account identities, authentication, quota pressure/reset times, freshness, active occupancy or provider availability.\",\"evidence\":[{\"path\":\"skill/scripts/tests/test_scheduler_decision_sources.py\",\"symbol\":\"test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion\",\"start_line\":45,\"end_line\":64},{\"path\":\"skill/scripts/tests/test_scheduler_quota_preflight.py\",\"symbol\":\"test_limit_counts_effective_accounts_after_alias_deduplication\",\"start_line\":95,\"end_line\":106},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_batch.py\",\"symbol\":\"test_shared_account_capacity_counts_active_work_and_profile_aliases_once\",\"start_line\":149,\"end_line\":165}]}],\"unknowns\":[\"Actual account configuration, credentials, quota observations, reset schedules, occupancy and runtime availability are not established by this source snapshot. Tests were read only; none were executed.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 349493,
+    "cached_input_tokens": 287744,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 4211,
+    "reasoning_output_tokens": 85
+  },
+  "observed_models": [],
+  "observed_tool_events": 8,
+  "response_words": 854,
+  "exit_code": 0,
+  "elapsed_seconds": 89.115,
+  "finished_at": 1792248300.1233182,
+  "tool_audit": [
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files repo'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n '\"'^(def|class) |floor|comparable|quality|price|effective_account'\"' repo/skill/scripts/bt_scheduler_plan_routing.py repo/skill/scripts/bt_scheduler_quota_preflight.py repo/skill/scripts/bt_scheduler_decision/{policy,engine,gates,identity,batch,quality_evidence}.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n '\"'^(def|class) |floor|account_key|Candidate'\"\\\\(' repo/skill/scripts/bt_scheduler_decision_adapter.py repo/skill/scripts/bt_scheduler_adapter.py repo/skill/scripts/bt_scheduler_plan_compat.py; nl -ba repo/skill/scripts/bt_scheduler_quota_preflight.py; nl -ba repo/skill/scripts/bt_scheduler_plan_routing.py | sed -n '1,250p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_decision_adapter.py | sed -n '47,154p;201,290p'; rg -n 'def (account_key|_pool_account_identity)|def poll|def refresh|TIMEOUT|MAX_AGE|force' repo/skill/scripts/bt_agents.py repo/skill/scripts/bt_subscriptions.py repo/skill/scripts/bt_agy.py; nl -ba repo/skill/scripts/bt_scheduler_decision/policy.py | sed -n '128,390p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_agents.py | sed -n '170,240p'; rg -n 'def start_tier|TOP =|def model_for' repo/skill/scripts/bt_agents.py; nl -ba repo/skill/scripts/bt_subscriptions.py | sed -n '119,200p'; nl -ba repo/skill/scripts/bt_agy.py | sed -n '125,180p'; nl -ba repo/skill/scripts/bt_scheduler_decision/batch.py | sed -n '170,305p;369,420p'; rg -n 'reservation|def persist|account_concurrency' repo/skill/scripts/bt_scheduler_decision/batch_ledger.py; rg -n 'floor|alias|capacity|effective|medium|quality|comparable' repo/skill/scripts/tests/test_scheduler*.py repo/skill/scripts/bt_scheduler_decision/tests/test_{batch,policy,candidates,identity,batch_ledger}.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_agents.py | sed -n '89,114p;235,266p'; nl -ba repo/skill/scripts/bt_scheduler_decision/identity.py | sed -n '61,71p'; nl -ba repo/skill/scripts/bt_subscriptions.py | sed -n '15,23p;96,118p'; nl -ba repo/skill/scripts/bt_scheduler_decision/policy.py | sed -n '14,44p;100,112p'; rg -n 'MIN_VERIFIED_SAMPLES|HISTORY_LEVELS|def assess|wilson|selected_level' repo/skill/scripts/bt_scheduler_decision/history.py; rg -n 'def persist|reservation|account_concurrency|plan_ready_batch' repo/skill/scripts/bt_scheduler_decision/batch_ledger.py; nl -ba repo/skill/scripts/bt_scheduler_decision/batch.py | sed -n '369,420p'; nl -ba repo/skill/scripts/bt_scheduler_decision/tests/test_batch.py | sed -n '149,170p'; nl -ba repo/skill/scripts/tests/test_scheduler_decision_sources.py | sed -n '45,65p'; rg -n 'alias|effective|dedup' repo/skill/scripts/tests/test*quota* repo/skill/scripts/tests/test*pool* repo/skill/scripts/tests/test_scheduler*preflight*\"",
+      "command_truncated": false,
+      "exit_code": 2
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_decision/batch_ledger.py | sed -n '240,305p'; nl -ba repo/skill/scripts/bt_scheduler_decision/history.py | sed -n '198,220p;277,328p'; nl -ba repo/skill/scripts/tests/test_scheduler_quota_preflight.py | sed -n '95,110p'; rg -n 'timeout|TIMEOUT|MAX_|def read_' repo/skill/scripts/bt_subscription_sources.py repo/skill/scripts/bt_agy.py; rg -n '_SOURCE_REASONS|_BLOCKING_SOURCE_REASONS|unsupported' repo/skill/scripts/bt_scheduler_decision/{policy,validation}.py; nl -ba repo/skill/scripts/bt_scheduler_adapter.py | sed -n '63,68p;356,380p'; rg -n 'ACCOUNT_VARS|def env_of' repo/skill/scripts/bt_profiles.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_decision/policy.py | sed -n '62,78p'; rg -n 'plan_full_dag|def plan' repo/skill/scripts/bt_scheduler_adapter.py; nl -ba repo/skill/scripts/bt_profiles.py | sed -n '99,120p'; rg -n 'def |reservation|reserve' repo/skill/scripts/bt_scheduler_core/reservation.py | head -45; nl -ba repo/skill/scripts/bt_scheduler_decision/batch.py | sed -n '298,306p'; nl -ba repo/skill/scripts/bt_scheduler_decision/history.py | sed -n '270,280p'; rg -n 'same|different|incomparable|sparse|hard' repo/skill/scripts/bt_scheduler_decision/tests/test_policy.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    }
+  ],
+  "event_shapes": {
+    "thread.started": [
+      "thread_id",
+      "type"
+    ],
+    "turn.started": [
+      "type"
+    ],
+    "item.completed": [
+      "item",
+      "type"
+    ],
+    "item.started": [
+      "item",
+      "type"
+    ],
+    "turn.completed": [
+      "type",
+      "usage"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248300.1588655,
+    "windows": {
+      "five_hour": {
+        "used_percent": 60.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

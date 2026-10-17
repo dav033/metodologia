@@ -1,0 +1,13 @@
+{
+  "schema_version": "candidate-1.0.0",
+  "case_id": "C5",
+  "state": "draft-not-frozen",
+  "items": [
+    {"id": "C5-01", "expectation": "Reuse the existing append-only `LeadStatusEvent` table/write path; build the missing read path without creating another table or backfilling invented history.", "basis": ["SPEC.md Entity and Scope", "source.tar: maros-nest/src/entities/lead-status-event.entity.ts:14-40", "source.tar: maros-nest/db/add-lead-sales-fields.sql:58-96"]},
+    {"id": "C5-02", "expectation": "Enforce both `leads:read` permission metadata and per-user lead-type scope after loading the lead; an unknown or out-of-scope lead must return 404, following `getLeadById`.", "basis": ["SPEC.md Security and Acceptance", "source.tar: maros-nest/src/modules/leads/lead-management/leads.service.ts:97-104"]},
+    {"id": "C5-03", "expectation": "Return the stated response contract with nullable `fromStatus`, plain string statuses, ISO timestamp, and nullable actor; left-join users so an event remains readable when its actor is absent/deleted.", "basis": ["SPEC.md Contract", "source.tar: maros-nest/src/entities/lead-status-event.entity.ts:28-40", "source.tar: maros-nest/db/add-lead-sales-fields.sql:65-87"]},
+    {"id": "C5-04", "expectation": "Order history chronologically by `changedAt` and then `id`; cover ties and nullable attribution, rather than relying on unspecified database order.", "basis": ["SPEC.md Contract"]},
+    {"id": "C5-05", "expectation": "Add the Historial tab with populated, empty, and error states while keeping out-of-scope event data inaccessible.", "basis": ["SPEC.md Scope, Security, and Acceptance", "source.tar: maros-next/src/features/leads/presentation/pages/LeadDetailsPage.tsx"]},
+    {"id": "C5-06", "expectation": "Verify `ON DELETE CASCADE` in a target test database and track the unknown production migration state; add no application-level deletion code and perform no production delete or historical backfill.", "basis": ["SPEC.md Unknowns and Acceptance", "source.tar: maros-nest/db/add-lead-sales-fields.sql:65-81"]}
+  ]
+}

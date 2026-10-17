@@ -1,0 +1,1187 @@
+[
+  {
+    "blind_id": "B01",
+    "case": "E1",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "C1 request deduplication",
+          "severity": "high",
+          "issue": "The fingerprint omits amount_minor, which R1 makes part of the immutable transfer identity. A retry with the same ID and a different amount is treated as a true retry.",
+          "evidence": "R1 lists amount_minor in the tuple. C1 hashes only (src_tenant, src_account, dst_tenant, dst_account, currency) and 'retries only compare fingerprint'. T1 does not test same ID with a new amount. G4 conflict rejection applies at the destination, but C1 returns prior.decision before then.",
+          "failure_scenario": "T1 accepted for 100. A retry of T1 with amount 1 gets the stored ACCEPTED decision instead of reject_conflict(). A client that believes it moved 1 receives a decision for 100.",
+          "fix": "Include amount_minor in the canonical_tuple fingerprint, or compare the full stored tuple including the amount. Add a same-ID/different-amount test."
+        },
+        {
+          "task": "C2 regional rights rebalance (receiver B)",
+          "severity": "critical",
+          "issue": "The receiver credits rights unconditionally, and the receipt insert is diagnostic only with its result ignored. Under at-least-once delivery, each duplicate delivery creates rights.",
+          "evidence": "R2 says rights moves must neither create nor destroy rights and that messages may be duplicated. G1 gives at-least-once delivery. C2 runs `rights[B] += amount` and then `insert_if_absent(move_id)` with the result ignored. T2 tests only one delivery.",
+          "failure_scenario": "A sends n=10 to B. The message is delivered twice. B gains 20, A lost 10, so the regional sum exceeds the available balance by 10. Over-spend is then possible even though the ordinary debit path checks rights >= amount.",
+          "fix": "In the same local transaction, run `if receipt_table.insert_if_absent(move_id): rights[B] += amount`. Otherwise do nothing and ack. Add a duplicate-delivery test."
+        },
+        {
+          "task": "C3 source transfer failover recovery",
+          "severity": "critical",
+          "issue": "The recovery append uses the current leader epoch as its idempotency scope. G2 makes ledger dedup per epoch only, so an old-epoch debit that was accepted but not receipted is not recognized. The ledger records the debit a second time.",
+          "evidence": "R1 requires debiting the source once. R2 requires that rediscovering an accepted transfer on a new leader be safe. G2 says append is idempotent on (leader_epoch, operation_key) within that epoch only. C3 says 'the ledger may have accepted the old-epoch debit while the receipt was lost'. T3 has no leader change.",
+          "failure_scenario": "Epoch 4 appends the debit for T1 and the worker dies before saving the receipt. Epoch 5 becomes leader and sees source_ledger_receipt is None. It appends (5, T1), which is a new key, so the source ledger holds two debits of the amount for one transfer.",
+          "fix": "Make ledger debit identity independent of epoch. Either look up the transfer_id across all epochs before appending, or persist the original (epoch, key) on the accepted row and reuse or query it. If the ledger cannot enforce transfer_id uniqueness across epochs, add such a global dedup. Add a failover test with a leader change between append and receipt."
+        },
+        {
+          "task": "C4 joint-configuration commit rule",
+          "severity": "critical",
+          "issue": "The rule requires a majority of the union of old and new servers. R3 requires a majority of old AND a majority of new. A union majority does not imply either one.",
+          "evidence": "R3: joint commit needs an old majority AND a new majority. C4 computes `len(ack&union) >= len(union)//2+1`. T4 uses only old={a,b,c}, new={b,c,d}, ACK={b,c,d}, where both rules agree, plus a full-union ACK.",
+          "failure_scenario": "Old={a,b,c}, new={b,c,d,e}, union size 5, so the union threshold is 3. ACK={b,d,e}: the union rule commits. The old side has only {b}, which is 1 of the 2 needed. The decision gets a certificate without an old majority and can be lost after reconfiguration.",
+          "fix": "Compute `len(ack&old) >= len(old)//2+1 and len(ack&new) >= len(new)//2+1` while the joint config is uncommitted. Add tests where the union majority is met but one side fails."
+        },
+        {
+          "task": "C5 prepare/commit coordinator",
+          "severity": "critical",
+          "issue": "The coordinator treats a locally appended COMMIT as a durable decision. It sends it to participants and returns accepted before await_commit certifies it.",
+          "evidence": "R3 says a locally appended entry is not yet committed. R4 requires a durable commit certificate. G2 says the certificate comes only from await_commit(index,digest). C5 sets durable_decision_index = index right after append_log, sends the COMMIT, and defers await_commit to the background. Participants trust the authenticated message. T5 never loses leadership.",
+          "failure_scenario": "The leader appends COMMIT at index 7 and sends it, so participants debit and credit. It then loses leadership and the suffix from index 7 is truncated. No certificate ever exists, and a new leader may decide ABORT or nothing. The transfer is applied at participants with no committed decision.",
+          "fix": "Call await_commit(index,digest) and obtain the certificate first. Only then set the durable decision, send COMMIT, and return accepted. If await_commit fails, leave the transaction UNKNOWN and do not send. This defect does not need C6 to cause harm."
+        },
+        {
+          "task": "C6 participant recovery sweeper",
+          "severity": "critical",
+          "issue": "The participant aborts a PREPARED transaction by local timeout alone, without consulting the coordinator's decision. A durably committed transaction can be aborted after a delayed commit message.",
+          "evidence": "R4: no transfer with a durable COMMIT may later abort, and replay can wait rather than fabricate a decision. C6 runs `rollback_prepare(); mark_aborted()` after 60s. The dossier says a participant may miss a delayed commit even while the coordinator has a certificate, and that no maximum delay exists. T6 covers only transactions with no coordinator decision.",
+          "failure_scenario": "The coordinator holds a certificate for COMMIT of T1, but the message to participant P2 is delayed 90s. The sweeper aborts and releases resources at P2. The delayed COMMIT then arrives, or P1 has already committed, so a durably committed transfer is aborted or split. This needs only C6 plus normal message delay. It does not depend on C5.",
+          "fix": "Resolve a stale PREPARED row by querying the coordinator's certified decision (using await_commit evidence). Apply COMMIT if there is a certificate. Abort only on an authenticated certified ABORT, or on proof that no COMMIT can ever be certified. Otherwise keep holding the prepare."
+        },
+        {
+          "task": "C7 recovery after snapshot install",
+          "severity": "high",
+          "issue": "The skip test compares config_number, a configuration dimension, with a log index, so the committed prefix can be skipped incorrectly.",
+          "evidence": "R3 and R4: the config number is separate from the log index, and a committed prefix must not be skipped. C7 tests `config_number >= remote_log_last_index`. The checkpoint holds its own committed_log_index, which C7 never uses. T7 uses equal config and log indices.",
+          "failure_scenario": "Checkpoint config_number=5, committed_log_index=2, remote last committed index=5. The test 5>=5 skips replay, so committed entries 3..5 are lost on this node.",
+          "fix": "Compare local_checkpoint.committed_log_index with the remote committed index. Verify the digest at that index on the same branch. Skip only if the local index is >= the remote committed index; otherwise replay from committed_log_index+1. Test with unequal config numbers and log indices."
+        },
+        {
+          "task": "C8 composite read endpoint",
+          "severity": "high",
+          "issue": "Components come from latest_component at independent indices, so the sum mixes states and the returned max index does not describe one snapshot.",
+          "evidence": "R5 requires ONE committed global snapshot index. G5 says latest_component may return values at different indices. C8 sums the latest values and returns max(global_index). An atomic transfer between requested accounts can commit between the reads. T8 reads a quiescent ledger.",
+          "failure_scenario": "A=100, B=0. C8 reads A=100. Then transfer A\u2192B of 100 commits. C8 reads B=100. The result is 200 at the larger index, a state that never existed (true total 100).",
+          "fix": "Pick one committed index I, such as the current committed global index. Compute every component with snapshot_component(a,I) and return I. Do the authorization at that read's linearization point. Add a concurrent-transfer test."
+        },
+        {
+          "task": "C9 signed historical read endpoint (cache before authorization)",
+          "severity": "high",
+          "issue": "A cache hit returns the payload before current_auth runs. A principal whose read access was revoked can still read cached data.",
+          "evidence": "R5: revocation applies to every new read, including cached responses and historical snapshots, and authorization is evaluated at the read's linearization point. G5: revocation does not purge caches. C9 does `cached=cache.get(...); if cached: return` before `require(current_auth(...))`. The cache is shared across principals of the tenant. T9 tests only a same-principal hit.",
+          "failure_scenario": "P reads token index 50 and fills the cache. P's read rights are revoked. P replays the token and gets the cached payload with no auth check.",
+          "fix": "Run `require(current_auth(principal,tenant))` first, before any cache lookup. Keep the cache shared across principals only if every hit is authorized first. Add a revoke-after-fill test."
+        },
+        {
+          "task": "C9 signed historical read endpoint (missing branch-digest check)",
+          "severity": "high",
+          "issue": "On a miss, the function never checks token.digest against the local branch digest at token.index. Only tenant, signature and index bound are checked. An identical integer index on a different branch is accepted.",
+          "evidence": "R6: a token cannot be used on a branch with a different digest even if the index is identical. The dossier says distinct branches at equal indices are possible after disaster recovery. C9 checks signature, tenant and `token.index <= local_committed_index`, then calls snapshot_component. The cache key is (tenant, token.index), also with no digest. T9 tests only valid tokens on the same branch.",
+          "failure_scenario": "The token is issued on branch X at index 100 with digest dX. The node serves branch Y, where index 100 has digest dY, and returns snapshot_component(account,100) from Y. A fork-mismatched response is returned and cached under (tenant,100), so a later valid-X token may get Y's payload.",
+          "fix": "On a miss, require `local_digest_at(token.index) == token.digest` before reading. Include token.digest in the cache key so a hit cannot cross branches. Add a different-branch same-index test."
+        },
+        {
+          "task": "C10 checkpoint and retention policy",
+          "severity": "critical",
+          "issue": "Completed transfer rows and the source dedup entries are deleted after 30 days, and the checkpoint keeps only ACTIVE rows. Retry safety is lost and the source treats an old retry as a new transfer.",
+          "evidence": "R1, R2 and R6 require indefinite retry safety and that dedup/decision obligations be preserved before compaction. The API never expires transfer IDs. C10 deletes COMPLETED rows and their source-ledger dedup entries. G4: the destination dedup is kept forever. G3: the caller chooses which obligations the checkpoint includes. T10 restores after 7 days only.",
+          "failure_scenario": "T1 (amount 100) completes on day 0. On day 31 the rows are deleted. A retry of T1 on a new leader finds nothing in C1's lookup_transfer, so the ordinary debit path debits 100 again. The destination rejects the second credit as a duplicate (G4). The source loses 100 that never arrives, and the original exact tuple is not checked either.",
+          "fix": "Keep a permanent compact tombstone per transfer_id (full tuple with amount, or its digest, plus decision) and include it in checkpoints. Delete only bulky payload data. Alternatively, never prune source dedup entries. Test a restore and retry after more than 30 days."
+        }
+      ],
+      "uncertainties": [
+        "C3: whether the ledger can still accept or look up an append under a prior epoch is unspecified. The fix therefore says to query across epochs, or to add global transfer_id dedup if the ledger lacks it.",
+        "C9: the dossier says to ignore omitted cache key fields, so the cache-hit branch risk from the missing digest depends on the actual outer key contents. The miss-path digest check is unaffected.",
+        "C4: what happens when a joint-config entry itself commits is not supplied. The fix assumes the single-config rule applies afterwards."
+      ]
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B02",
+    "case": "E1",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "C1 request deduplication",
+          "severity": "high",
+          "issue": "The fingerprint omits amount_minor. R1 makes the amount part of the immutable transfer identity, but a retry compares only the fingerprint.",
+          "evidence": "R1 lists amount_minor in the tuple. C1 hashes (src_tenant, src_account, dst_tenant, dst_account, currency). The row stores the amount, but the comparison ignores it. T1 does not test same ID with a new amount.",
+          "failure_scenario": "ID X is accepted for 10. A retry of X for 1000 with the same other fields matches the fingerprint and returns the prior ACCEPTED decision. A conflicting request is treated as a true retry instead of being rejected.",
+          "fix": "Include amount_minor in the canonical tuple fingerprint, or compare the full stored tuple. Add a same-ID/different-amount test."
+        },
+        {
+          "task": "C2 regional rights rebalance (receiver B)",
+          "severity": "critical",
+          "issue": "The receiver credit is not idempotent. The receipt insert is diagnostic only and its result is ignored, so every duplicate delivery adds the amount again.",
+          "evidence": "R2 requires reallocation to neither create nor destroy rights, and says delivery may duplicate or reorder. G1 gives at-least-once delivery. C2 runs `rights[B] += amount` unconditionally and ignores the insert_if_absent result. T2 tests only one delivery.",
+          "failure_scenario": "A sends move m for 5 and decrements by 5. The message is delivered twice. B's rights rise by 10, so regional rights sum to 5 more than the available balance and the extra rights can be spent.",
+          "fix": "In B's local transaction, call insert_if_absent(move_id) and apply `rights[B] += amount` only if the row was newly inserted. Keep receipts for as long as the sender can redeliver. Add a duplicate-delivery test."
+        },
+        {
+          "task": "C3 source failover recovery",
+          "severity": "critical",
+          "issue": "Recovery appends the debit with the current leader epoch. Ledger idempotency is per (epoch, key) only, so a new epoch re-appends a debit the old epoch may already hold.",
+          "evidence": "G2 says dedup is scoped to the epoch and different epochs have separate namespaces. C3 uses epoch=current_leader_epoch with operation_key=transfer_id. The old-epoch debit may exist while the receipt was lost. R1 and R2 require a single debit. T3 does not change leader.",
+          "failure_scenario": "T is accepted in epoch 4, (4,T) is appended, and the receipt is lost. After cutover to epoch 5, recovery appends (5,T). The ledger now holds two debits for T, while the destination credits once through global dedup.",
+          "fix": "Persist the epoch and operation key of the first debit append in the transfer row at acceptance, and reuse them on retry. If old-epoch appends are fenced, first look up an existing debit for transfer_id across epochs and adopt its receipt. Add a test that runs recovery across a leader change."
+        },
+        {
+          "task": "C4 joint-configuration commit",
+          "severity": "critical",
+          "issue": "The commit rule counts a majority of the union instead of a separate old majority AND a separate new majority.",
+          "evidence": "R3 requires both majorities during joint configuration. C4 uses len(ack & union) >= len(union)//2 + 1. T4 passes only because ACK={b,c,d} with old={a,b,c}, new={b,c,d} has both majorities anyway.",
+          "failure_scenario": "old={a,b,c}, new={c,d,e}, union size 5, threshold 3. ACK={a,b,d} meets the threshold. Old has 2 of 3 but new has only d (1 of 3). await_commit issues a certificate without a new majority, and a new-config leader can later lose that entry.",
+          "fix": "Use `len(ack & old) >= len(old)//2 + 1 and len(ack & new) >= len(new)//2 + 1` until the joint-config entry is committed. Add a test that ACKs a union majority lacking a new majority."
+        },
+        {
+          "task": "C5 prepare/commit coordinator",
+          "severity": "critical",
+          "issue": "The coordinator treats an appended COMMIT as a durable decision. It records it, sends it to participants and returns accepted before await_commit obtains a certificate.",
+          "evidence": "R3 says a local append is not committed. R4 requires a durable commit certificate. G2 says only await_commit(index,digest) yields one. C5 sets durable_decision_index=index, sends the commit and defers await_commit. Participants trust the message. T5 never loses leadership.",
+          "failure_scenario": "The coordinator appends COMMIT at index 10 and sends it. Participants credit and debit. The leader dies and the uncommitted suffix is truncated. A new leader finds no COMMIT, and recovery or timeout aborts. The participants already applied the commit.",
+          "fix": "Call await_commit(index, digest) and use the resulting certificate before recording the decision durable, before send_commit_to_participants and before returning accepted. If it does not complete, return an unknown or pending state. Add a test that truncates the suffix after the append."
+        },
+        {
+          "task": "C6 participant recovery sweeper",
+          "severity": "critical",
+          "issue": "A PREPARED participant unilaterally aborts after 60 seconds without learning the coordinator's decision, although no bound exists on commit-message delay.",
+          "evidence": "R4 says a durable COMMIT can never later abort and that uncertainty may wait. C6 aborts on a timer. The dossier says the participant may have missed a delayed commit while the coordinator holds a certificate. T6 covers only transactions with no coordinator decision.",
+          "failure_scenario": "Both participants are PREPARED and the coordinator has a durable certificate for COMMIT. The commit message to P2 is delayed more than 60 seconds. P2's sweeper rolls back and marks ABORTED, while P1 commits. Money is destroyed or lost.",
+          "fix": "Remove the timer-only abort. A PREPARED participant must query the coordinator's durable decision and apply COMMIT or ABORT as returned, holding resources while unknown. Abort only on a durable ABORT, or through a coordinator-fenced presumed-abort protocol. This witness needs no C5 defect. C5's truncation witness needs no C6 defect, and each is independently sufficient for a split outcome."
+        },
+        {
+          "task": "C7 recovery after snapshot install",
+          "severity": "high",
+          "issue": "The skip test compares config_number with a log index, which are independent dimensions. It ignores the checkpoint's committed_log_index and digest.",
+          "evidence": "R3 and R4 say config number is separate from log index and that a committed prefix must not be skipped. C7 tests local_checkpoint.config_number >= remote_log_last_index. The checkpoint has an exact committed_log_index that goes unused. T7 uses equal config and index values.",
+          "failure_scenario": "The local checkpoint has config_number=10 and committed_log_index=5. The remote committed log ends at 8. Since 10 >= 8, replay is skipped and entries 6-8 are never applied, so the transfers in them are lost.",
+          "fix": "Skip only if checkpoint.committed_log_index >= the remote committed last index and the digest at the checkpoint index matches the remote branch. Otherwise replay from checkpoint.committed_log_index+1. Use the remote committed index, not its raw last index. Add a test with unequal config and index."
+        },
+        {
+          "task": "C8 composite balance read",
+          "severity": "high",
+          "issue": "The read sums latest_component per account, which may come from different indices, and returns max(index) as if it were one snapshot.",
+          "evidence": "R5 requires ONE committed global snapshot index. G5 says latest_component may return values at different indices. C8 says an atomic transfer between requested accounts can commit between reads. T8 uses a quiescent ledger.",
+          "failure_scenario": "A=100 and B=0 at index 10. A transfer of 40 from A to B commits at index 11. C8 reads A at 10 (100), then B at 11 (40), and returns balance 140 with index 11. Neither snapshot ever held 140.",
+          "fix": "Choose one committed index I, for example the local committed index, and read every account with snapshot_component(a, I). Return I, and make sure the authorization check covers that read. Add a concurrent-transfer test."
+        },
+        {
+          "task": "C9 signed historical read \u2014 cache before authorization",
+          "severity": "high",
+          "issue": "The cache lookup precedes current_auth, so a cache hit skips authorization and revoked principals still read cached data.",
+          "evidence": "R5 requires revocation to apply to every new read, including historical snapshots, evaluated at the read's linearization point. G5 says revocation does not purge caches. C9 returns cached.payload before require(current_auth). The cache is shared by principals of the tenant, and T9 hits only with the same principal.",
+          "failure_scenario": "Principal P reads and the payload is cached under (tenant, 7). P is then revoked and presents a valid signed token. The cache hits and P receives the payload without any current_auth check.",
+          "fix": "Call require(current_auth(principal, tenant)) first on every request, then consult the cache. Add a test of revoke then cache hit."
+        },
+        {
+          "task": "C9 signed historical read \u2014 token digest unchecked on miss",
+          "severity": "high",
+          "issue": "On a cache miss the function checks index <= local_committed_index but never compares token.digest with the local branch digest at token.index, and then serves the local branch's snapshot.",
+          "evidence": "R6 says a token cannot be used on a branch with a different digest even at the same integer index. The dossier says distinct branches at equal indices are possible after disaster recovery. C9 verifies the signature, tenant and index only. T9 uses valid tokens on the same branch.",
+          "failure_scenario": "The token is signed for index 50 with digest D1. After disaster recovery the local branch has digest D2 at index 50. The signature is valid and 50 <= committed, so the miss path returns snapshot_component(account, 50) from branch D2 for a D1 token.",
+          "fix": "Before reading the snapshot, require that the local log digest at token.index equals token.digest. Add a test with a same-index, different-digest token."
+        },
+        {
+          "task": "C9 signed historical read \u2014 cache key omits branch digest",
+          "severity": "medium",
+          "issue": "The cache key is (tenant, token.index), so an entry filled on one branch is served to a token for another digest even if the miss path is fixed.",
+          "evidence": "R6 binds the token to a digest. C9 keys the cache by (tenant, token.index) and returns on a hit without digest comparison. The outer-key note covers the account and request digest, not the log digest. Branches can share an index after disaster recovery.",
+          "failure_scenario": "A payload cached for (tenant, 50) with digest D1 stays in the cache. After recovery, a token for (50, D2) hits that key and receives the D1-branch payload, even though a digest check on the miss path would have passed or rejected it.",
+          "fix": "Key the cache by (tenant, token.index, token.digest), or invalidate it on a branch change, and verify the digest before any hit is served. Add a cross-branch cache test."
+        },
+        {
+          "task": "C10 checkpoint and retention",
+          "severity": "high",
+          "issue": "Retention deletes COMPLETED transfer rows and source dedup entries after 30 days and omits them from the checkpoint, which breaks indefinite retry safety on the source.",
+          "evidence": "R1, R2 and R6 require retry safety indefinitely, and the API never expires transfer IDs. G4's destination dedup is retained forever, but source dedup (the C1 lookup row and the ledger operation-key entry) is deleted. G3 says the caller chooses which obligations the checkpoint includes. T10 tests restore after 7 days only.",
+          "failure_scenario": "Transfer X completes on day 0, and its row and dedup entry are deleted on day 31. A client retries X on a new leader. lookup_transfer finds nothing, so it is treated as new. The ordinary debit consumes the source's rights and balance again. Destination dedup rejects the second credit. The source is debited twice and the destination credited once. A different tuple under the same ID would also go undetected.",
+          "fix": "Never prune the (transfer_id -> full tuple or fingerprint including amount, decision, ledger receipt) record. Compact it to a minimal permanent record if needed, include it in checkpoints, and keep the ledger operation-key obligation. Add a test that retries after more than 30 days on a new leader."
+        }
+      ],
+      "uncertainties": [
+        "C3: the dossier does not say whether the ledger can look up a prior debit across epochs, or whether old-epoch appends are accepted after cutover. The recommended fix depends on which holds, but the double-debit witness does not.",
+        "C1: the dossier does not say whether lookup_transfer and the insert of the fingerprint row are atomic for concurrent first requests with the same ID. I make no claim about that race.",
+        "C10: the dossier does not say whether the source learns of destination credit rejections. The source double-debit is established regardless."
+      ]
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B03",
+    "case": "E2",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "B1 eligible versions",
+          "severity": "high",
+          "issue": "Version selection filters only on correction_effective_at <= C. It ignores recorded_at <= K, so the report is not a function of its pinned knowledge time.",
+          "evidence": "R1 requires effective_at <= C AND recorded_at <= K. B1 comments 'K stored in the report header but not consulted here'. G2 says all versions are stored, so later-recorded ones are visible. R1 also requires reproducibility after later corrections.",
+          "failure_scenario": "Order O has rev1 (gross 1000, recorded before K) and rev2 (gross 800, correction_effective_at <= C, recorded after K). B1 picks rev2, but the correct selection at K is rev1. If O has only a late-recorded rev1, it is wrongly included instead of omitted. Re-running the report after later ingestion gives different totals.",
+          "fix": "Filter candidates with v.correction_effective_at <= C and v.recorded_at <= K, then take the max revision. Keep omitting the order when no version qualifies."
+        },
+        {
+          "task": "B2 commission for selected order row",
+          "severity": "high",
+          "issue": "The commission version is chosen by report generation time instead of the order's effective_at.",
+          "evidence": "R2: the version is selected by ORDER effective_at, not report generation time. B2 calls policy_at(tenant, now_of_report_generation). G2 provides order_effective_at separately from correction_effective_at. G4 policies are queryable by effective timestamp.",
+          "failure_scenario": "The policy is p/q=1/10 at the order date and changes to 2/10 before generation. For gross 1000, B2 gives net 1000*8/10=800, but the correct net is 900. Regenerating later gives a different answer, which also breaks reproducibility.",
+          "fix": "Use policy_at(tenant, row.order_effective_at) and store the chosen policy_id in the evidence."
+        },
+        {
+          "task": "B3 amount aggregation",
+          "severity": "high",
+          "issue": "Each order net is rounded before summing. R2 requires summing exact rationals per tenant/currency and rounding the aggregate once.",
+          "evidence": "B3: rounded_order_nets=[half_away_to_integer(exact_net(row))...] then sum. R2: aggregate first, round ONCE, ties away from zero. The primitive is correct but its placement is wrong. The tests use integer nets only, so they cannot expose this.",
+          "failure_scenario": "Two orders in the same tenant/currency each have net 1/2. Per-row rounding gives 1+1=2. The aggregate is 1, so it rounds to 1. Reversals can also differ: nets -1/2 and -1/2 give -2 per-row versus -1 aggregate.",
+          "fix": "Group by (tenant, currency), sum exact Fractions, then call half_away_to_integer once per group."
+        },
+        {
+          "task": "B4 owner allocation",
+          "severity": "high",
+          "issue": "Negative N is allocated with floor toward -infinity, and the remainder is then distributed. This is not the 'allocate |N| then restore sign' rule, so reversal symmetry breaks and tie outcomes flip.",
+          "evidence": "R3: allocate |N| by floor plus largest remainders, then restore the sign, and reversing N must negate every owner's amount. B4 uses (N*num)//den directly on signed N. The tests cover only the sum and positive N.",
+          "failure_scenario": "Owners A and B each have weight 1/2. N=1 gives A=1, B=0. N=-1 gives base -1 each, missing=1, remainders tie, so A gets +1: A=0, B=-1. Negating the N=1 result gives A=-1, B=0, so the two disagree. The sum is conserved but the allocation is wrong.",
+          "fix": "Compute the allocation for abs(N) with the existing algorithm, then multiply every owner's amount by sign(N)."
+        },
+        {
+          "task": "B5 netting before payout selection",
+          "severity": "critical",
+          "issue": "Obligations are grouped by currency alone, so different tenants' credits and debits are netted against each other.",
+          "evidence": "R4 permits netting only within the same tenant/currency group. B5 uses group_by(lambda o: o.currency). apply_credit_offsets does not inspect tenant IDs. All tenants are in the batch. The tests use one tenant per currency. G4 says the caller may choose the wrong grouping arguments.",
+          "failure_scenario": "Tenant T1 owes +100 USD in payouts and tenant T2 has a -100 USD obligation. Grouping by USD alone cancels T1's payout with T2's credit. This crosses tenant boundaries and produces a wrong payout for T1.",
+          "fix": "Group by the verified (tenant, currency) key and apply offsets within each group only."
+        },
+        {
+          "task": "B6 optimizer",
+          "severity": "high",
+          "issue": "Greedy selection by cost, then net, never exchanges items. It does not achieve the secondary objective of maximum total net among maximum-count selections, nor the tertiary lexicographic tie-break.",
+          "evidence": "R4 requires an exact optimum: max count, then max net, then lexicographically smallest sorted ID list. B6 sorts by (cost,-net,id) and takes items while they fit. The tests use equal nets and uniform costs.",
+          "failure_scenario": "Capacity is 10. Payouts are A (cost 1, net 1), B (cost 5, net 1), C (cost 9, net 100). Greedy takes A (remaining 9), then B (remaining 4), and C does not fit, giving count 2 and net 2. {A,C} also has count 2, cost 10 and net 101, which is strictly better.",
+          "fix": "Replace it with an exact optimizer, such as a DP or knapsack over remaining capacity, with state (count, net, lexicographic ID order). Reconstruct the chosen set and handle zero-cost items. Optimize only over eligible payouts and the remaining reserved capacity."
+        },
+        {
+          "task": "B7 provider submit",
+          "severity": "critical",
+          "issue": "The request body is rebuilt from the latest report total on each attempt instead of being frozen at selection. A retry after a timeout can send a different body under the same idempotency key.",
+          "evidence": "R5: the amount is frozen at selection and a later correction may never change a possibly submitted request body. B7 sets amount_minor=latest_report_total_for(P) while P retains its original frozen amount. The provider is idempotent only for the same body and key, and rejects a conflicting body. The tests retry only with unchanged reports.",
+          "failure_scenario": "Attempt 1 submits body1 with amount 100 and times out, but the provider accepted it. A correction changes the latest total to 90. The retry submits body2 with amount 90 under the same key, which is rejected. Worse, if attempt 1 was never accepted, the provider is paid 90 instead of the frozen 100. The correction can also change the amount if no earlier request existed.",
+          "fix": "Persist the exact body (recipient, frozen amount, currency) at selection and reuse it byte-for-byte on every attempt. Corrections may only stop a payout that was never sent. After an UNKNOWN outcome, call lookup_by_key before any resubmission."
+        },
+        {
+          "task": "B8 unknown-acceptance timeout policy",
+          "severity": "critical",
+          "issue": "A payout in UNKNOWN is treated as rejected after 300 seconds and its money is released without reconciliation.",
+          "evidence": "R5: unknown remote acceptance must be reconciled before reusing its money, and a timeout is UNKNOWN, not rejection. Only an authoritative never_accepted may release. B8 never calls lookup_by_key. No provider auto-cancel TTL exists, and the released capacity can be reserved by another payout.",
+          "failure_scenario": "The provider accepted payout P, but the response was lost. After 301 seconds, P is CANCELLED and its 10 units of capacity are released. Payout Q reserves the same money. The worker later finds P accepted, so both P and Q are funded: a double spend or overcommit.",
+          "fix": "On the timeout path, call lookup_by_key outside the DB transaction. Release and cancel only on authoritative never_accepted, and mark the payout submitted/settled on authoritative accepted. Otherwise keep UNKNOWN and keep the reservation."
+        },
+        {
+          "task": "B9 immutable report evidence and cleanup",
+          "severity": "high",
+          "issue": "Account cleanup cascade-deletes owned reports, their input_evidence and allocations, including reports with submitted or settled payouts.",
+          "evidence": "R6: approved report inputs and financial facts are immutable, and deleting a principal must not erase audit evidence. B9 cascades the delete and runs automatically from account administration. Receipts keep only the provider key and aggregate amount, not the revisions or policies. B9 keeps no audit copies, and report.owner is bound to principal_id. The retained version IDs exist only in the evidence that is deleted. Tests delete principals only before report generation.",
+          "failure_scenario": "A principal who generated a settled report is deleted. The evidence listing C, K, version_ids and policy_ids and the allocations are removed. The surviving receipt shows only the aggregate, so the reported total cannot be reproduced or audited (R1, R6).",
+          "fix": "Do not cascade-delete reports with submitted or settled payouts, evidence or allocations. Keep the evidence immutable and tombstone or anonymize the principal reference instead of deleting it. Block cleanup, or keep a retained audit record, where financial facts exist."
+        },
+        {
+          "task": "B10 report release endpoint",
+          "severity": "high",
+          "issue": "Release checks only the stale planning-time authorization result and never the principal's current report-read privilege.",
+          "evidence": "R6: release must enforce current recipient authorization even if the report was planned under an earlier policy. B10 requires report.planning_auth_result == 'allowed' and returns report.output. Middleware authenticates and binds the tenant but does not authorize the report read. G3 says the current authorization check is correct when called, and B10 never calls it. Tests never revoke between planning and retrieval.",
+          "failure_scenario": "A principal is allowed at planning, then loses report-read privilege but stays a tenant member. They request the report and B10 still returns the output.",
+          "fix": "Before returning output, call the current authorization check for (principal, tenant, report read) and deny if it fails. Keep the planning result only as informational."
+        }
+      ],
+      "uncertainties": [
+        "B1: the dossier does not name the recorded_at field on version records explicitly. R1 and G2 imply it is stored, and the fix assumes it.",
+        "B3: whether selected_rows is already partitioned by tenant/currency is unspecified. The per-row rounding defect holds regardless, and the grouping must be (tenant, currency).",
+        "B9: if a separate audit store captured the full payloads, the severity would drop. The dossier says none is retained.",
+        "B6: the witness assumes the stated capacity of 10 and the shown costs are eligible. Risk classes are said to be already validated."
+      ]
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B04",
+    "case": "E1",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "C1",
+          "severity": "high",
+          "issue": "Retry identity comparison omits amount_minor, allowing a changed immutable transfer tuple.",
+          "evidence": "R1 includes amount_minor in transfer identity. C1 hashes only the tenants, accounts and currency, and does not compare the retained amount. T1 omits changed-amount retries.",
+          "failure_scenario": "Accept ID x for amount 10. Retry x with the same accounts and currency but amount 11. The fingerprint matches and C1 returns the previous decision instead of rejecting the conflict.",
+          "fix": "Include amount_minor in the canonical fingerprint, or compare the complete immutable tuple on every retry."
+        },
+        {
+          "task": "C2",
+          "severity": "high",
+          "issue": "The receiver increments rights on every delivery regardless of whether the move was already applied.",
+          "evidence": "R2 requires conservation under duplicate delivery; G1 guarantees only at-least-once transport. C2 ignores insert_if_absent's result. T2 exercises only one delivery.",
+          "failure_scenario": "Start with A=10 and B=0. Move 5: A becomes 5 and the first delivery makes B=5. A duplicate delivery makes B=10, creating 5 rights.",
+          "fix": "Atomically insert a durable move receipt and increment rights only if insertion succeeds. Retain sufficient move deduplication state for every possible replay."
+        },
+        {
+          "task": "C3",
+          "severity": "high",
+          "issue": "Recovery relies on ledger idempotency whose namespace changes across leader epochs.",
+          "evidence": "G2 deduplicates only within an epoch. C3 retries under current_leader_epoch when a receipt is missing. R1 requires exactly one source debit, and R2 explicitly requires safe rediscovery on a new leader. T3 excludes leader changes.",
+          "failure_scenario": "The debit for transfer x commits under epoch 7, but the worker dies before saving its receipt. Epoch 8 recovery appends x again. The two epoch/key pairs are distinct, so the ledger can record two debits. Rights are not decremented again, but duplicate source ledger debits still violate R1.",
+          "fix": "Use a durable debit identity that survives leader changes, with ledger-enforced cross-epoch deduplication, or reconcile the prior debit before permitting another append."
+        },
+        {
+          "task": "C4",
+          "severity": "critical",
+          "issue": "Union majority is substituted for the required separate old and new majorities.",
+          "evidence": "R3 requires both majorities while joint configuration remains active. C4 supplies its incorrect predicate to the certificate facility. Exact-digest ACKs do not repair the quorum error. T4 covers no ACK set that distinguishes these predicates.",
+          "failure_scenario": "Let old={a,b,c}, new={c,d,e}, and ACK={c,d,e}. C4 accepts three of five union members, although only one old member ACKed and the old majority requires two.",
+          "fix": "Require len(ACK intersect old) >= floor(len(old)/2)+1 AND the corresponding new-configuration majority throughout the required joint phase."
+        },
+        {
+          "task": "C5",
+          "severity": "critical",
+          "issue": "The coordinator releases participant effects and reports acceptance before obtaining a durable COMMIT certificate.",
+          "evidence": "R4 distinguishes durable commitment from append. G2 says only await_commit(index,digest) obtains a certificate. C5 sends COMMIT immediately after append, and leadership loss may truncate that entry. T5 excludes this interval.",
+          "failure_scenario": "Both participants prepare. C5 appends COMMIT and one participant applies the message. Leadership is lost before commitment, and the suffix is truncated. An irreversible participant effect now exists without a durable transaction decision. This witness does not require C6's timeout behavior.",
+          "fix": "Await and persist the exact COMMIT certificate before sending COMMIT or returning irrevocable acceptance. While certification is uncertain, retain prepared resources and reconcile."
+        },
+        {
+          "task": "C6",
+          "severity": "critical",
+          "issue": "Elapsed preparation time is treated as authority to abort an uncertain transaction.",
+          "evidence": "R4 forbids abort after durable COMMIT and permits waiting under uncertainty. C6 has neither a decision lease nor a maximum message delay. T6 tests only transactions without a coordinator decision.",
+          "failure_scenario": "A correct coordinator obtains a durable COMMIT certificate. One participant receives COMMIT; another remains PREPARED because its message is delayed beyond 60 seconds. C6 aborts the latter. This failure occurs even after C5 is corrected.",
+          "fix": "Reconcile against the durable transaction decision. Apply COMMIT when certified; abort only on an authoritative durable abort decision, and otherwise continue holding resources."
+        },
+        {
+          "task": "C7",
+          "severity": "high",
+          "issue": "Recovery compares configuration number with log index, allowing a committed suffix to be skipped.",
+          "evidence": "R3 makes these independent dimensions, and R4 forbids skipping a committed prefix. C7 ignores the checkpoint's exact committed_log_index. T7 uses equal configuration and log indices.",
+          "failure_scenario": "A checkpoint has config_number=100 and committed_log_index=10; the remote committed log extends through index 20. C7 evaluates 100 >= 20 and skips committed entries 11 through 20.",
+          "fix": "Compare checkpoint.committed_log_index with the remote committed extent and replay every missing committed entry."
+        },
+        {
+          "task": "C8",
+          "severity": "high",
+          "issue": "Independently reading latest components and labeling their sum with the maximum index does not produce one global snapshot.",
+          "evidence": "R5 requires one committed global snapshot index. G5 permits latest_component calls to return different indices. T8 excludes concurrent commits.",
+          "failure_scenario": "Initially A=10 and B=0. Read A=10, then an atomic transfer of 10 from A to B commits, then read B=10. C8 returns 20 at the newer index, although the actual total is 10 before and after the transfer.",
+          "fix": "Choose one committed global index and read every component using snapshot_component(account,index), returning that same index."
+        },
+        {
+          "task": "C9",
+          "severity": "high",
+          "issue": "A cache hit bypasses current principal authorization.",
+          "evidence": "R5 applies revocation to every new historical or cached read. G5 says revocation does not purge caches. C9 returns before current_auth, and its cache is shared across principals. Middleware verifies signatures, not current read authorization.",
+          "failure_scenario": "An authorized principal fills the cache, then loses tenant read permission. A new request with the same valid token hits the cache and receives the historical payload without an authorization check.",
+          "fix": "Enforce current principal authorization for every response, including cache hits, at the read's linearization point."
+        },
+        {
+          "task": "C9",
+          "severity": "high",
+          "issue": "Historical reads validate the token's integer index but never enforce its branch digest binding.",
+          "evidence": "R6 prohibits using a token on a different digest at the same index. C9 explicitly omits the digest comparison on misses. G2 guarantees monotonic indices only within a branch; distinct equal-index branches are possible. T9 tests only one branch.",
+          "failure_scenario": "A valid token names tenant T, index 50 and digest X. After disaster recovery, the local branch has digest Y at index 50 and is committed through at least 50. On a cache miss, C9 accepts the token and returns the local branch's snapshot despite X != Y.",
+          "fix": "Verify token.digest against authenticated local committed history at token.index before serving any response. Bind cached responses to the validated branch digest as well."
+        },
+        {
+          "task": "C10",
+          "severity": "high",
+          "issue": "Checkpoint selection and retention discard completed-transfer identity, decision and source deduplication obligations while retries remain valid indefinitely.",
+          "evidence": "R1 requires previous decisions for true retries; R2 and R6 require indefinite retry safety through pruning. C10 checkpoints only ACTIVE rows and later deletes completed rows and source operation-key dedup entries. G4 preserves only destination credit deduplication. T10 restores after just seven days.",
+          "failure_scenario": "Transfer x completes. After 30 days its source transfer row and ledger dedup entry are removed. A retry on a new source leader finds no prior transfer and can consume rights and debit again. The destination suppresses the duplicate credit, leaving an extra source debit.",
+          "fix": "Preserve completed transfer tuples, decisions and sufficient source debit identity indefinitely in durable checkpoint or retained lookup state. Consult that state before processing retries or recovering debits."
+        }
+      ],
+      "uncertainties": []
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B05",
+    "case": "E2",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "B1 version selection",
+          "severity": "high",
+          "issue": "Selection filters only on correction_effective_at <= C. It never applies recorded_at <= K, although R1 requires both and K is stored in the header.",
+          "evidence": "R1 requires effective_at <= C AND recorded_at <= K. The B1 comment says 'K stored in the report header but not consulted here'. G2 stores all versions and G4 stores K/C, so the data to filter is available.",
+          "failure_scenario": "Order O has rev1 (recorded 10:00, gross 100) and rev2 (correction_effective_at <= C, recorded 12:00, gross 80). With K=11:00 the correct row is rev1. B1 picks rev2, and a rerun after the late correction no longer reproduces the report. A late-arriving first version would also wrongly include an order that should be omitted.",
+          "fix": "candidates = [v for v in versions if v.correction_effective_at <= C and v.recorded_at <= K]. Keep max-revision-as-full-replacement and omit the order if the list is empty."
+        },
+        {
+          "task": "B2 commission policy lookup",
+          "severity": "high",
+          "issue": "The commission version is chosen by report generation time. R2 requires selection by the ORDER effective_at (order_effective_at).",
+          "evidence": "B2 calls policy_at(tenant, now_of_report_generation). R2 forbids selection by report generation or payment time. G2 states that snippets use order_effective_at for commission. G4 makes policies queryable by effective timestamp.",
+          "failure_scenario": "Policy 1/10 is effective from January and 2/10 from February. A January order with gross 1000 has correct net 1000*9/10 = 900. A report generated in March gives 1000*8/10 = 800. Rerunning the same report under a later policy changes the result again, so reproducibility is lost.",
+          "fix": "Use policy_at(tenant, row.order_effective_at), not the correction effective time, and record that policy ID in the evidence."
+        },
+        {
+          "task": "B3 aggregation rounding",
+          "severity": "high",
+          "issue": "Each order net is rounded to an integer before summing. R2 requires summing exact rationals per tenant/currency and rounding the aggregate once. The rounding primitive is correct, but its placement is wrong.",
+          "evidence": "B3: rounded_order_nets = [half_away_to_integer(exact_net(row)) ...]; sum(...). R2 says to aggregate eligible order nets first and round ONCE. Tests use integer nets only, so they never expose this.",
+          "failure_scenario": "p/q = 1/2 and three orders of gross 1 each have exact net 1/2. B3 gives 1+1+1 = 3. The correct result is round_half_away(3/2) = 2. Signed case: three reversals of gross -1 give -3 where -2 is correct.",
+          "fix": "Compute total = sum(exact Fractions) per (tenant, currency), then apply half_away_to_integer once to total."
+        },
+        {
+          "task": "B4 owner allocation for negative totals",
+          "severity": "medium",
+          "issue": "Floor and largest-remainder logic is applied directly to a signed N. Floor toward negative infinity plus a ranking by remainder breaks sign symmetry. R3 requires allocating |N| and then restoring the sign.",
+          "evidence": "B4 uses N*numerator//denominator with N signed. R3 requires reversing N to negate every owner's amount. The review notes say tests check only the sum and positive N.",
+          "failure_scenario": "Owners A and B, weights 1/2 each, tie broken by ascending ID. N=5 gives A=3, B=2. N=-5 gives floors -3, -3, missing = 1, remainders tied, so A gets +1: A=-2, B=-3. Negation of the N=5 result requires A=-3, B=-2. The sum is conserved but A and B are swapped.",
+          "fix": "s = -1 if N<0 else 1; allocate abs(N) with the existing floor and largest-remainder code; return {o: s*v for o,v in alloc.items()}."
+        },
+        {
+          "task": "B5 netting group key",
+          "severity": "critical",
+          "issue": "Obligations are grouped by currency only. All tenants are in the batch, but R4 allows netting only within the same tenant/currency group. This lets one tenant's negative obligations reduce another tenant's payouts.",
+          "evidence": "B5: group_by(lambda obligation: obligation.currency). R4 says netting is only 'in that same group' (per tenant/currency). apply_credit_offsets does not inspect tenant IDs. Tests have one tenant per currency. G4's verified grouping helpers exist, but the caller passes the wrong arguments.",
+          "failure_scenario": "Tenant A has +100 USD and tenant B has -100 USD. B5 puts both in the USD group, and A's payout is netted to 0 using B's credit. A is underpaid and B's credit is consumed, a cross-tenant financial leak.",
+          "fix": "Group by (tenant, currency) using the verified canonical grouping helper, then call apply_credit_offsets per group."
+        },
+        {
+          "task": "B6 optimizer",
+          "severity": "high",
+          "issue": "A greedy pass over items ranked by (cost, -net, id) does not find the exact optimum for the declared lexicographic objective. It never exchanges equal-cardinality selections, so it fails the secondary objective (and potentially the primary).",
+          "evidence": "B6 is a single greedy loop. R4 requires an exact optimum: max count, then max total net, then lexicographically smallest sorted ID list. The candidate 'never performs exchanges'. Tests use uniform costs and equal nets.",
+          "failure_scenario": "Capacity 10. Items: A(cost 4, net 1), B(cost 4, net 1), C(cost 5, net 100). Greedy takes A, B (remaining 2) and C does not fit, giving count 2 and net 2. {A,C} has cost 9, count 2 and net 101, so it is strictly better under the secondary objective.",
+          "fix": "Use exact DP or branch and bound over integer capacity 0..10. Compare states by (count, net, lexicographically smallest sorted ID list), for example by processing items in a fixed order with suffix DP and tuple comparison. Zero-cost items are handled naturally."
+        },
+        {
+          "task": "B7 provider request body",
+          "severity": "critical",
+          "issue": "The request body is rebuilt on each attempt from the latest report total instead of the amount frozen at selection. A retry under the same key can carry a different body than a possibly accepted first attempt. The body can also differ from the frozen payout amount on the first attempt.",
+          "evidence": "B7: amount_minor = latest_report_total_for(P) while P keeps its original frozen positive amount. R5 says the amount is frozen at selection, and that later correction may never change a possibly submitted body. The provider is idempotent only for the exact same body and rejects conflicts. Tests retry only with unchanged reports.",
+          "failure_scenario": "The first attempt submits {amount 100}, times out, and the provider accepted it. A correction then makes the latest total 90. The retry submits {amount 90} under the same key and is rejected. The local state may then treat the payout as failed while the provider paid 100. Even without a retry, a correction before the first send can submit a body that is not the frozen amount, or a value that is not positive.",
+          "fix": "Persist the exact request body (recipient, frozen amount, currency) at selection and always submit those stored bytes. Do not call latest_report_total_for at send time. Corrections may only block a payout that is provably unsent. After any UNKNOWN outcome, reconcile via lookup_by_key before a new submit."
+        },
+        {
+          "task": "B8 UNKNOWN timeout release",
+          "severity": "critical",
+          "issue": "After 300 seconds an UNKNOWN payout is cancelled and its money released without consulting the provider. R5 says a timeout is UNKNOWN and money may not be reused until lookup_by_key returns authoritative never_accepted.",
+          "evidence": "B8 sets CANCELLED and calls release_money_reservation with no lookup_by_key. R5 says unknown acceptance must be reconciled before reusing its money, and that no provider auto-cancel TTL exists. The review notes say tests assume timeout means no acceptance.",
+          "failure_scenario": "The payout of cost 10 is submitted at t0 and the response times out, but the provider accepted it. At t0+301 B8 releases the capacity and another payout reserves the 10 units. The provider then settles both, so capacity or funds are double-spent.",
+          "fix": "Never release on elapsed time. A reconciler calls lookup_by_key outside any DB transaction. On accepted it records acceptance and applies the payout locally. On authoritative never_accepted it releases and cancels in a serializable transaction. On a timeout or error it keeps UNKNOWN and keeps the reservation."
+        },
+        {
+          "task": "B9 principal cleanup cascade",
+          "severity": "high",
+          "issue": "Deleting a principal cascade-deletes reports, input_evidence and allocations, including those with submitted or settled payouts. R6 forbids erasing audit evidence on principal deletion or permission change.",
+          "evidence": "B9 cleanup deletes owned reports and their input_evidence (C, K, version_ids, policy_ids). It is called automatically by account administration. Receipts keep only the provider key and aggregate amount, so the order revisions and policies cannot be reconstructed. The version and policy tables stay queryable (G2/G4), but the ID list that identifies which rows were used is deleted with the report. Tests delete principals only before report generation.",
+          "failure_scenario": "A principal who generated a report with a settled payout is deleted. The report row, version_ids list and allocations are removed. Only a receipt with the key and aggregate amount remains. An auditor cannot show which order revisions or which commission policy versions produced the settled amount, and R1 reproducibility fails.",
+          "fix": "Do not cascade-delete evidence. Make the owner reference non-cascading (tombstone or pseudonymize the principal). Retain reports, evidence and allocations immutably. Never auto-delete reports that have submitted or settled payouts."
+        },
+        {
+          "task": "B10 report release authorization",
+          "severity": "high",
+          "issue": "Release checks only the stored planning-time authorization result and never the principal's current report-read privilege. R6 requires current authorization at release.",
+          "evidence": "B10: require(report.planning_auth_result == 'allowed'); return report.output. The middleware only authenticates and binds tenant, with no privilege check. G3 says the current authorization check is correct when called, but it is not called here. Tests never revoke between planning and retrieval.",
+          "failure_scenario": "The principal is allowed at planning time, then loses report-read while remaining a tenant member. The principal requests the release endpoint. The stored planning_auth_result is still 'allowed', so the output is returned.",
+          "fix": "In B10, call the verified current-authorization check for (principal, tenant, report/recipient) at request time and deny on failure. Keep the planning result only as informational."
+        }
+      ],
+      "uncertainties": [
+        "The dossier does not name the recorded_at field on versions explicitly, but R1/G2 imply versions carry a recording timestamp. B1's fix assumes it exists.",
+        "It is unspecified whether the B7 first attempt reaches the provider before any correction exists. The retry conflict is proven, and a first-attempt mismatch with the frozen amount occurs only if a correction precedes the send.",
+        "The dossier does not say which retained identifier (report or ledger) auditors would use after B9 tombstoning. The fix assumes immutable evidence stays keyed by report ID with a non-cascading owner reference.",
+        "The exact current-authorization API signature for B10 is not given, so the fix is stated at the call level."
+      ]
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B06",
+    "case": "E3",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "A1",
+          "severity": "high",
+          "issue": "The cache key omits output-affecting inputs: dependency content, compiler flags and the complete normalized environment allowlist.",
+          "evidence": "A1 hashes stable dependency IDs instead of artifact digests and excludes available flags/environment. R1 requires reused output to equal a fresh build; R2 requires dependency hashes to reflect content. Source/architecture-only tests miss these omissions.",
+          "failure_scenario": "Build A with dependency B's digest b1 and cache the output. Change B's content to digest b2 while retaining its ID, A's source and architecture. A1 returns the original output although a fresh build can differ. Changing an output-affecting flag or allowlisted variable gives the same failure.",
+          "fix": "Key reuse by the complete canonical build-input manifest, including resolved transitive dependency artifact digests, flags and the complete normalized allowlist. Test independent changes to each omitted input class."
+        },
+        {
+          "task": "A2",
+          "severity": "high",
+          "issue": "Import-only graph construction omits the link-time dependency from executable A to generated schema B.",
+          "evidence": "R2 explicitly includes generated schema edges without source imports. G3 verifies import scanning but states B has no import in A. Separate output paths provide no ordering guarantee.",
+          "failure_scenario": "B is rebuilding for the requested generation while its previous completed artifact remains available. With no predecessor edge, A becomes ready and can consume the previous schema, or fail because the requested schema is unavailable. It cannot reliably build against the requested generation.",
+          "fix": "Add declared command-line/link-time schema dependencies to the graph before DAG validation and scheduling. Require the requested completed immutable schema artifact before scheduling A; test concurrent rebuilding."
+        },
+        {
+          "task": "A3",
+          "severity": "high",
+          "issue": "Dependency resolution uses an unrelated global version maximum instead of each dependency's exact requested version.",
+          "evidence": "R1 makes versions comparable only within a node. A3 uses the legacy as-of API despite having an exact requested manifest. Equal-version tests conceal the mismatch.",
+          "failure_scenario": "The request specifies B2 and C100; completed artifacts include B2, B3 and C100. The global maximum is 100, so artifact_for(B,100) selects B3. A cold build therefore compiles against B3 instead of B2, even with a corrected cache key.",
+          "fix": "Resolve each dependency by its exact requested node/version and immutable digest. Wait if that exact version is incomplete; never substitute another completed version. Test the supplied unequal-version example."
+        },
+        {
+          "task": "A4",
+          "severity": "high",
+          "issue": "COMPLETE publication and the exact resolved-input manifest are committed separately, allowing visible success without durable provenance.",
+          "evidence": "R7 requires the exact manifest and output digest to be durable together whenever status is COMPLETE. G1 distinguishes readable blob upload from DB publication. Recovery in A4 reconstructs missing inputs from a mutable request.",
+          "failure_scenario": "Compile revision r1, upload output o1 and commit tx1. Crash before tx2. The request advances to r2. Recovery reuses the COMPLETE row and fills its manifest from r2, falsely associating o1 with r2 inputs.",
+          "fix": "After upload, atomically commit COMPLETE, output digest and the exact manifest captured for that compilation. Recovery must not reconstruct provenance from mutable requests. Test crashes between upload and publication."
+        },
+        {
+          "task": "A5",
+          "severity": "critical",
+          "issue": "The existing-blob fast path bypasses tenant ownership and current-policy authorization.",
+          "evidence": "R3 requires authorization before every byte retrieval, including dedup hits. A5 returns globally existing bytes before calling policy. Authentication and digest/tenant validation do not establish artifact read privilege.",
+          "failure_scenario": "Tenant X owns private blob d. An authenticated caller from tenant Y knows d but has no authorized reference. physical_blob_exists(d) succeeds and A5 returns X's bytes although the policy would deny access.",
+          "fix": "Authorize the caller against authoritative tenant ownership and current policy before returning any blob bytes, including physical dedup hits. Test cross-tenant digest knowledge and access after policy revocation."
+        },
+        {
+          "task": "A6",
+          "severity": "high",
+          "issue": "Activation checks signature validity and executable digest but does not bind the attested inputs to the approved deployment manifest.",
+          "evidence": "R4 requires equality for every attested deployment input. A6 ignores source revision, dependency/schema digests, environment/flags, architecture and generation after verification. Genuine signatures alone do not establish deployment approval.",
+          "failure_scenario": "An allowed builder signs executable digest x with schema b1 and generation g1. The approved deployment names executable x with schema b2 and generation g2. A6 accepts because the executable digest matches, despite the attested dependency and generation mismatch.",
+          "fix": "Compare every required attestation field with the authenticated approved manifest, including schema dependency digest and generation, before authorizing activation. Add valid-signature tests with mismatched fields."
+        },
+        {
+          "task": "A7",
+          "severity": "high",
+          "issue": "Separate immediate component updates expose a mixed executable/schema pair.",
+          "evidence": "R5 requires each accepted worker to serve a complete consistent pair. A7 changes components separately, while G2 provides atomic local pair activation. Its tests omit requests during the gap.",
+          "failure_scenario": "Starting from (Aold,Bold), the executable call succeeds. Before the schema call, a request executes Anew against incompatible Bold. Both activation calls can eventually succeed without repairing that already-served inconsistency.",
+          "fix": "Send one activate_pair((Anew,Bnew), deployment_id) command using the worker's atomic pair operation. Test requests across activation boundaries."
+        },
+        {
+          "task": "A8",
+          "severity": "high",
+          "issue": "Success is acknowledged before the durable authoritative activation transaction succeeds.",
+          "evidence": "R5 requires a successful ACK to imply authoritative durable activation. A8 acknowledges a remote acceptance before attempting its DB CAS, and explicitly returns without a DB change on CAS failure.",
+          "failure_scenario": "Epoch 11's remote activation returns accepted. Epoch 12 commits before epoch 11's CAS. A8 sends success for epoch 11, then its CAS fails; that operation never changed the authoritative active generation.",
+          "fix": "Send success only after the activation transaction successfully commits its epoch and pair. On CAS failure or uncertain remote outcome, reconcile or wait without reporting success. Test competing coordinators and crashes before commit."
+        },
+        {
+          "task": "A8",
+          "severity": "high",
+          "issue": "The global DB CAS does not fence stale commands at the remote worker.",
+          "evidence": "R5 distinguishes local fencing from remote state. G2 says different idempotency keys receive no global epoch checks. Moving the ACK after the CAS alone does not prevent an older command from changing an already-newer worker.",
+          "failure_scenario": "Epoch 11's command to worker W is delayed. Epoch 12 activates its pair on W and commits globally. The delayed epoch 11 command then arrives under its distinct key and replaces W's epoch 12 pair. Epoch 11's subsequent DB CAS fails, but W has already regressed.",
+          "fix": "Fence remote pair activation with a durable per-worker highest epoch checked atomically with pair replacement, rejecting older epochs. Alternatively, enforce command serialization that prevents older in-flight operations from completing after newer ones. Test delayed commands with distinct keys."
+        },
+        {
+          "task": "A9",
+          "severity": "high",
+          "issue": "Tombstone insertion does not recheck references atomically, so a stale root snapshot can delete an accepted activation's artifacts.",
+          "evidence": "R6 protects existing activation references. G4 makes pending references immediate roots. A9's insertion transaction has no reference recheck, and existing references do not automatically reject tombstones.",
+          "failure_scenario": "At t0, d is unreferenced and becomes a GC candidate. An activation then inserts a durable reference after checking that no tombstone exists. GC subsequently inserts a tombstone and deletes d despite that existing reference.",
+          "fix": "In the tombstone transaction, atomically verify that no protected reference or pin exists before committing the tombstone. Preserve the insertion-side tombstone check. Delete only after successful guarded tombstoning; test this interleaving."
+        },
+        {
+          "task": "A10",
+          "severity": "high",
+          "issue": "Rollback retention is anchored to creation and never extended, rather than lasting 24 hours after the latest deactivation.",
+          "evidence": "R6 defines retention from the last deactivation. A10 uses created_at plus 24 hours and ignores later deactivations. G4 protects active generations but does not rescue expired pins after deactivation.",
+          "failure_scenario": "G runs for three days, then deactivates. Its computed pin expired two days earlier, allowing immediate collection although rollback must remain available for another 24 hours. Reactivation and another deactivation also fail to renew protection.",
+          "fix": "On every deactivation, durably extend pin_until to at least that deactivation time plus 24 hours without shortening an existing later deadline. Test long-running generations and repeated activation/deactivation."
+        }
+      ],
+      "uncertainties": []
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B07",
+    "case": "E2",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "B1",
+          "severity": "high",
+          "issue": "Version selection ignores the pinned knowledge time K.",
+          "evidence": "R1 requires both correction_effective_at <= C and recorded_at <= K. B1 filters only effective time; G2 preserves all versions.",
+          "failure_scenario": "Let C be January 31 and K February 1. Revision 1 has correction_effective_at January 1, recorded_at January 2, and gross 100. Revision 2 has correction_effective_at January 15, recorded_at February 2, and gross 200. B1 selects revision 2 even though only revision 1 qualifies. Rerunning after revision 2 arrives also changes the result for the same C/K.",
+          "fix": "Filter by both correction_effective_at <= C and recorded_at <= K before selecting the greatest revision."
+        },
+        {
+          "task": "B2",
+          "severity": "high",
+          "issue": "Commission is selected at report generation time instead of the order's effective time.",
+          "evidence": "R2 selects commission by order effective_at. G2 distinguishes order_effective_at from correction_effective_at. B2 passes now_of_report_generation to policy_at.",
+          "failure_scenario": "An order effective January 1 has gross 100 and commission 0/1. Commission becomes 1/10 on February 1. Generating its report in March produces net 90 instead of the required 100, including when a later correction retains the January order_effective_at.",
+          "fix": "Select policy_at(tenant, row.order_effective_at) and retain that selected policy's ID."
+        },
+        {
+          "task": "B3",
+          "severity": "high",
+          "issue": "Rounding each order before aggregation changes the required group total.",
+          "evidence": "R2 requires exact aggregation by tenant/currency followed by one rounding operation. B3 applies the verified rounding primitive to individual orders; integer-only tests cannot expose this placement defect.",
+          "failure_scenario": "Two eligible orders in one tenant/currency each have gross 1 and commission 1/2, giving exact nets 1/2 and 1/2. B3 rounds each to 1 and returns 2. The exact aggregate is 1, whose required rounded value is 1.",
+          "fix": "Sum exact Fraction nets within each tenant/currency group, then call half_away_to_integer once on the aggregate."
+        },
+        {
+          "task": "B4",
+          "severity": "high",
+          "issue": "Applying floor allocation directly to negative N violates reversal symmetry.",
+          "evidence": "R3 requires allocating |N| and restoring the sign. B4 floors signed products; preserving the sum does not satisfy R3.",
+          "failure_scenario": "Owners a and b, ordered a before b by owner_sort_key, each have weight 1/2. For N=1, B4 returns a=1, b=0. For N=-1, both initial bases are -1, missing=1, and the tied extra unit goes to a, yielding a=0, b=-1. The required reversal is a=-1, b=0.",
+          "fix": "Compute floors and largest remainders using abs(N), retain owner_sort_key for ties, then multiply every allocation by N's sign."
+        },
+        {
+          "task": "B5",
+          "severity": "high",
+          "issue": "Currency-only grouping permits credit offsets across tenants.",
+          "evidence": "R4 permits netting only within tenant/currency. G4 verifies the grouping helpers, but B5 supplies only currency. apply_credit_offsets does not inspect tenant identity.",
+          "failure_scenario": "Tenant A has a USD obligation of +100 and tenant B has a USD obligation of -100. B5 puts them together and offsets A's payable amount to zero using B's credit. Separate tenant/currency groups would preserve A's +100 obligation.",
+          "fix": "Group obligations by the canonical tenant/currency pair before applying credit offsets."
+        },
+        {
+          "task": "B6",
+          "severity": "high",
+          "issue": "Greedy cost ordering does not optimize total net value among maximum-count selections.",
+          "evidence": "R4 requires the exact count/value/ID optimum. B6 never exchanges selected payouts, and its uniform-cost, equal-value tests do not establish the secondary objective.",
+          "failure_scenario": "With capacity 10 and no existing reservations, eligible payouts A, B, C have (cost, net) values (4,1), (5,2), and (6,100). B6 selects A and B, using cost 9 for count 2 and value 3. A and C use cost 10 for count 2 and value 101. Three payouts cost 15, so count 2 is optimal, but B6 fails the secondary objective.",
+          "fix": "Replace the greedy pass with an exact capacity-constrained optimizer comparing feasible selections by count, total integer net, then the canonical sorted payout-ID list. Handle zero-cost payouts without allowing an item to be reused."
+        },
+        {
+          "task": "B7",
+          "severity": "high",
+          "issue": "Request preparation substitutes a mutable report total for the frozen selected amount, allowing conflicting retry bodies.",
+          "evidence": "R5 freezes the amount at selection and permits idempotency only for an identical body and key. B7 reads latest_report_total_for(P) on every attempt despite P retaining its frozen amount. G4's collision-free keys do not protect changing bodies.",
+          "failure_scenario": "P is selected for 100. A correction changes the latest total to 120 before submission, so even the first request violates the frozen amount. Alternatively, an initial body for 100 is accepted but times out; a correction changes latest to 120, and retrying the same key with amount 120 causes the provider to reject the conflicting body.",
+          "fix": "Prepare and durably retain the request body from the frozen selected amount, recipient, and currency before submission; reuse that exact body and key on every retry. Later corrections may stop a definitely unsent payout but must not mutate a possibly submitted request."
+        },
+        {
+          "task": "B8",
+          "severity": "high",
+          "issue": "Elapsed time is treated as proof of nonacceptance, releasing money while remote acceptance remains unknown.",
+          "evidence": "R5 requires reconciliation before reusing money after unknown acceptance. B8 releases the reservation without lookup_by_key; the dossier explicitly excludes a provider auto-cancel TTL.",
+          "failure_scenario": "The provider accepts a payout for 100, but its response times out. After 301 seconds, B8 cancels locally and releases the 100 reservation. Another payout reserves and submits that same money. A later lookup discovers the first acceptance, leaving two accepted payouts backed by the same reserved funds.",
+          "fix": "Keep the money reserved while acceptance is UNKNOWN. Use lookup_by_key and release only after authoritative never_accepted; authoritative accepted must be applied through settlement reconciliation. Lookup timeouts must leave the reservation intact."
+        },
+        {
+          "task": "B9",
+          "severity": "high",
+          "issue": "Principal deletion cascades into immutable report evidence and allocations.",
+          "evidence": "R6 prohibits deleting audit evidence when a principal is deleted, and R1 requires retained inputs for reproducibility. G2/G4 make retained version and policy IDs sufficient, but B9's cleanup deletes those report references, including for settled payouts.",
+          "failure_scenario": "A settled report identifies order revision 2 and policy P. Deleting its owner removes the report, version/policy ID list, and allocations. The surviving receipt contains only a provider key and aggregate amount, so it cannot establish which revisions and policies produced that settlement despite their source records remaining queryable.",
+          "fix": "Remove the cascade from principal deletion to reports, evidence, and allocations. Preserve immutable audit records and references independently of principal lifecycle, using a retained identity reference or tombstone as needed."
+        },
+        {
+          "task": "B10",
+          "severity": "high",
+          "issue": "Release trusts historical planning authorization instead of checking current report-read permission.",
+          "evidence": "R6 requires current recipient authorization at release. B10 checks only planning_auth_result. Correct tenant binding and authentication do not establish current report-read privilege, and private storage does not compensate for this endpoint.",
+          "failure_scenario": "A principal is allowed when the report is planned, then loses report-read permission while remaining a tenant member. Middleware still accepts the principal and tenant binding; B10 sees the stored allowed result and returns the report.",
+          "fix": "Invoke the verified current authorization check for the authenticated principal and requested report at release before returning output."
+        }
+      ],
+      "uncertainties": []
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B08",
+    "case": "E3",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "A5 artifact GET",
+          "severity": "critical",
+          "issue": "The physical-blob existence check runs before the authorization check, so bytes are returned to any authenticated caller who knows the digest. This bypasses R3's per-retrieval authorization.",
+          "evidence": "A5 returns physical_blob(digest) before require(current_artifact_policy(...)). The dossier says object existence is global because of dedup, and that the policy would deny a caller with no tenant-owned reference. R3 says knowledge of a digest grants no read privilege. Tests only exercise owned blobs.",
+          "failure_scenario": "Tenant T1 owns digest D. Tenant T2 is authenticated and learns D. T2 calls GET D, physical_blob_exists(D) is true, and T2 receives T1's bytes without the policy ever being evaluated.",
+          "fix": "Call require(current_artifact_policy(principal, tenant, digest)) first. Read the blob only on success. Return the same not_found for a denial and for a missing blob, so existence is not revealed. Add a test with identical content owned by another tenant."
+        },
+        {
+          "task": "A6 attestation gate",
+          "severity": "critical",
+          "issue": "The gate checks the signature, the builder allowlist and the executable digest only. It does not compare source revision, resolved dependency digests (including the schema digest), env/flag digest, architecture or build generation against the approved manifest.",
+          "evidence": "A6 comments 'other fields kept for audit but not checked'. R4 requires all attested inputs to equal the approved manifest, and says a genuine signature for another build is insufficient. The schema digest is in the attestation's dependency list. Tests supply only matching manifests.",
+          "failure_scenario": "The approved manifest is (Anew, Bnew, gen 7, arch x86_64, flags F). A legitimate builder's attestation for Anew lists Bold, or a different flag digest, source revision, architecture or generation. It passes the signature, builder and Anew-digest checks, and approve_activation runs. An unapproved schema or build context is then deployed.",
+          "fix": "Before approve_activation, require exact equality between the attestation and the approved manifest on all of: artifact digest, source revision, the full resolved dependency digest set (schema included), env/flag digest, target arch, builder identity (allowed) and build generation. Also verify that the schema artifact digest itself is attested. Add negative tests, one per field."
+        },
+        {
+          "task": "A9 garbage collection",
+          "severity": "critical",
+          "issue": "The root snapshot is taken at t0, but the tombstone transaction does not recheck references. A blob that becomes referenced after t0 is still tombstoned and deleted. This is a TOCTOU race against activation.",
+          "evidence": "A9 takes roots at t0 and calls insert_tombstone(d) with 'no reference recheck in transaction'. New activations insert durable references after t0 and before the tombstone, and their insert only checks for an existing tombstone. G4 says a reference makes the artifact a root immediately, including while pending. R6 forbids deleting artifacts referenced by an in-progress activation. Tests never activate while collecting.",
+          "failure_scenario": "At t0, D is unreferenced and becomes a candidate. At t1 an activation commits a reference to D (no tombstone yet, so it succeeds). At t2 GC inserts the tombstone and deletes the blob. The pending or active deployment now points at a deleted artifact, and R6 availability is violated even though D could be rebuilt.",
+          "fix": "Make the tombstone insertion conditional in a single serializable transaction. If any active, pinned or pending reference to d exists, abort and skip. Otherwise insert the tombstone. Call delete_blob only after that commit. Later reference inserts then see the tombstone and are rejected."
+        },
+        {
+          "task": "A8 global activation completion",
+          "severity": "high",
+          "issue": "The success ACK is sent after the worker accepts the command but before the durable global epoch CAS. The remote worker's acceptance does not imply the authoritative active generation changed. A CAS failure leaves the ACK already sent and the worker holding the loser's pair.",
+          "evidence": "A8 sends send_success_ack_to_operator() before tx: CAS(active_epoch,...). On CAS failure it returns with no DB change. R5 says a successful ACK must imply a durable authoritative change and a stale worker must not overwrite newer state. G2 says the idempotency key does not check global epochs. The scenario of epoch 12 committing while the epoch-11 worker is paused is given in the dossier.",
+          "failure_scenario": "Coordinator 1 (epoch 11) gets accepted from the worker and pauses. Coordinator 2 commits epoch 12. Coordinator 1 resumes, sends the ACK, then its CAS(expected=10 -> 11) fails. The operator was told epoch 11 succeeded, the DB says 12, and the worker may be serving the epoch-11 pair.",
+          "fix": "Commit the durable transition first: the CAS on epoch, or a durable pending-activation record carrying the epoch, with the deployment reference already inserted. Include the epoch in the idempotency key. Send the ACK only after the CAS has committed and the worker has confirmed that epoch. A CAS loser must not dispatch. The dispatcher or reconciler should re-read the authoritative epoch and converge workers to it, so a late stale dispatch gets repaired. On an unknown result, wait or reconcile rather than ACK."
+        },
+        {
+          "task": "A7 dispatch activation",
+          "severity": "high",
+          "issue": "The executable and schema are activated through two independent worker calls, so a worker can run a mixed pair. The atomic activate_pair operation exists but is not used.",
+          "evidence": "A7 calls activate_executable then activate_schema. G2 says a worker can atomically activate a complete local pair and that activate_pair exists. R5 says every worker must run a complete pair from one approved generation. Aold/Bold and Anew/Bnew have incompatible schema layouts. Tests send no requests in the gap.",
+          "failure_scenario": "After activate_executable(Anew) succeeds and before activate_schema(Bnew), a request is served by (Anew, Bold). Because the layouts are incompatible, it fails or corrupts data.",
+          "fix": "Replace the two calls with one worker.activate_pair((Anew,Bnew), key). This is the same call A8 already uses. Add a test that sends requests between the calls."
+        },
+        {
+          "task": "A1 incremental cache key",
+          "severity": "high",
+          "issue": "The cache key omits build inputs: flags, the normalized env allowlist digest, and resolved dependency artifact content digests. It also hashes only direct dependency IDs (stable names), not the transitive resolved artifact digests. Cache reuse is therefore not bit-for-bit equal to a fresh build.",
+          "evidence": "A1 hashes (source_digest, tuple(d.id ...), target_arch) and leaves out flags, env and dependency content. R1 and R2 require key coverage of source bytes, resolved transitive artifact digests, flags, arch and the complete env allowlist, and say dependency hashes must reflect content, not path names. Tests vary only source and arch.",
+          "failure_scenario": "A is built with -O2 and cached. Later the same source and arch are requested with -O0, or with a changed allowlisted env var, or B's schema is rebuilt with new content under the same ID. The key is identical and the stale -O2 or old-B output is returned.",
+          "fix": "Key = hash(canonical typed tuple of source digest, sorted resolved transitive dependency artifact digests including generated schemas, flag digest, normalized-env-allowlist digest, target arch). Add tests that vary each factor."
+        },
+        {
+          "task": "A2 DAG edge construction",
+          "severity": "high",
+          "issue": "Edges come only from source imports, so the link-time A\u2192B generated-schema dependency is not an edge and A can become ready before B completes.",
+          "evidence": "A2 builds edges from generic_source_import_edges; the comment says A links to B via its command line and no import edge exists. R2 says dependency edges include link-time generated schemas. G3 says there is no import in A for B. A uses B's schema content in codegen. Tests start with B already built.",
+          "failure_scenario": "A and B are requested together while B is rebuilding. A has no predecessor, so nodes_with_completed_predecessors marks it ready. A compiles against the previous B schema or a missing one, and the result is cached or deployed with the wrong pair.",
+          "fix": "Add the explicit edge A\u2192B (from the command-line, link, or generated-schema input declaration) to the graph. Validate that the DAG is acyclic. Admit A only when B's required artifact is COMPLETE and immutable. Add a test where B is in-flight when A is requested."
+        },
+        {
+          "task": "A3 dependency output collection",
+          "severity": "high",
+          "issue": "The resolver picks a dependency artifact version using a max over all nodes' completed versions as an 'as of' bound, even though versions are monotonic only per node. The requested manifest's exact versions are ignored.",
+          "evidence": "A3 uses artifact_for(dep, version=max_completed_version_across_all_nodes), which returns the latest completed version <= v. R1 says versions are comparable only within a node and that only completed artifacts satisfy edges. The dossier example: B2 requested, C100 complete, B3 also complete. Tests use equal versions.",
+          "failure_scenario": "The build requests B2 and C100. The max is 100, so artifact_for(B, <=100) returns B3, and A is compiled against B3 instead of B2. With a cold cache this happens even after A1 is fixed.",
+          "fix": "Resolve each dependency by the exact version in the requested manifest, e.g. artifact_for_exact(dep, requested_version). Require COMPLETE status (never FAILED) and fail or wait if it is absent. Record the resolved digests as the build's inputs. Test with B2/B3/C100."
+        },
+        {
+          "task": "A4 publish successful build",
+          "severity": "high",
+          "issue": "COMPLETE and output_digest are committed in tx1, but the resolved input manifest is written in tx2. A crash between them leaves a COMPLETE row without its manifest, and recovery fills it from a mutable request record that may have changed.",
+          "evidence": "A4 shows tx1 (status/output) then tx2 (manifest), with a crash window and 'resolver's COMPLETE rows are immediately visible'. R7 requires status COMPLETE, the exact manifest and the output digest to be durable together. Tests stop workers only before compilation.",
+          "failure_scenario": "The worker builds output O from revision r1, uploads it, commits tx1 and dies. The request is then moved to revision r2. Recovery reuses the COMPLETE row and writes the manifest from r2. The row now claims O was built from r2, and the cache or dependents consume it.",
+          "fix": "Write status, output_digest and resolved_input_manifest in one serializable transaction, with the manifest captured from immutable build-start state. Keep rows non-COMPLETE and invisible to the resolver until that commit. Treat any pre-existing COMPLETE row with a missing manifest as invalid. Never backfill from the mutable request."
+        },
+        {
+          "task": "A10 rollback pin expiration",
+          "severity": "high",
+          "issue": "pin_until is computed from the generation's creation time on the first deactivation only and never extended. Rollback protection can already be expired at deactivation, or stay stale after later deactivations.",
+          "evidence": "A10 sets pin_until[G] = created_at[G] + 24h and leaves it unchanged on later deactivations. R6 says pins live 24h after the LAST deactivation. G4 protects active G only. Tests deactivate within a minute of creation.",
+          "failure_scenario": "G is created on day 0 and active until day 10, then deactivated. pin_until is day 1, which is already past, so GC may delete G's artifacts immediately and a rollback an hour later fails. Likewise, if G is reactivated and deactivated on day 20, pin_until is still day 1.",
+          "fix": "On every deactivation, in the same transaction, set pin_until[G] = max(existing, deactivation_time + 24h). Keep reactivated generations protected through the active reference. Add a test with a long-running generation."
+        }
+      ],
+      "uncertainties": [
+        "A8: the dossier does not say whether a paused coordinator that already committed its epoch can still send activate_pair to a worker after a newer epoch was applied. The worker API does not check global epochs. The proposed fix assumes the reconciler or dispatcher converges workers to the authoritative epoch; the dossier does not supply a worker-side fence for this.",
+        "A6: the dossier does not say whether the attestation's dependency list is the full resolved transitive set or only direct dependencies. The fix requires equality over whatever resolved set the approved manifest names.",
+        "A2/A3: the dossier does not say how the coordinator represents the A\u2192B link-time input, or whether B being 'rebuilding' creates a new version before completion. The fixes assume the requested manifest carries exact versions per dependency."
+      ]
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B09",
+    "case": "E3",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "A1 incremental cache key",
+          "severity": "high",
+          "issue": "The cache key omits build inputs that R1 requires: compiler flags, the normalized environment allowlist digest and resolved dependency artifact digests. It uses only dependency IDs, which are names.",
+          "evidence": "A1 hashes (source_digest, dependency IDs, target_arch). R1 requires reuse to be bit-for-bit equal to a fresh build. A1 states flags, env and dependency content digests are available but not keyed. R2 requires dependency hashes to reflect content, not paths or names. Tests vary only source and arch.",
+          "failure_scenario": "Build A with dependency B (id 'schema-b', digest D1), flags -O2. Then B's content changes to D2, or flags change to -O0. The key is unchanged, cache.has(key) is true, and the stale A built against D1/-O2 is returned. That differs from a fresh build.",
+          "fix": "Key = hash(canonical_tuple(source_digest, sorted (dep_id, resolved_dep_artifact_digest) pairs, flags_digest, normalized_env_allowlist_digest, target_arch)). Add tests that vary each of these inputs."
+        },
+        {
+          "task": "A2 DAG edge construction",
+          "severity": "high",
+          "issue": "The A->B edge for the link-time generated schema is missing because edges come only from source imports. A is therefore scheduled without waiting for B.",
+          "evidence": "A2 uses only generic_source_import_edges. A links to B via its command line, with no import. R2 says edges include link-time generated schemas. G3 says generic scanning is correct but B has no import in A. Tests start with B already built, which hides the gap.",
+          "failure_scenario": "B is requested at generation N+1 and is rebuilding. A has no predecessor, so it is ready and is built or bundled with B's generation-N schema or none. The deployment then mixes A(N+1) with B(N), or the build is nondeterministic.",
+          "fix": "Add explicit edges for command-line/link-time schema inputs (from build rules or the declared input trace) to the edge set and run the DAG validation. Add a test where B is rebuilding when A is requested."
+        },
+        {
+          "task": "A3 dependency output collection",
+          "severity": "high",
+          "issue": "Dependencies are resolved with version=max_completed_version_across_all_nodes. Versions are monotonic only per node, so this cross-node maximum is meaningless. It ignores the manifest's exact desired versions.",
+          "evidence": "A3 passes the same max to every dependency. R1 says the same version on different nodes has no ordering meaning. artifact_for returns the latest version <= v. The requested manifest holds exact versions. The A3 example has desired B2, B3 completed, and unrelated C at 100.",
+          "failure_scenario": "The node depends on B and C and the manifest asks B2 and C100. max=100, so artifact_for(B,100) returns B3, not B2. A is compiled with the wrong B even after A1 is fixed, on a cold cache.",
+          "fix": "For each dependency, fetch the exact manifest version (artifact_for_exact(dep, manifest[dep])). Require status COMPLETE with a durable manifest, and fail if it is absent. Drop the 'as of' lookup. Test with unequal per-node versions."
+        },
+        {
+          "task": "A4 publish successful build",
+          "severity": "high",
+          "issue": "COMPLETE and output_digest are committed in tx1 and resolved_input_manifest in tx2. A crash between them leaves a COMPLETE row without exact inputs. Recovery then fills the manifest from the mutable request record.",
+          "evidence": "R7 says COMPLETE implies the exact manifest and output digest are durable together. A4 says resolver COMPLETE rows are immediately visible, and recovery uses the then-current mutable request. G1 says finalize blob and DB COMPLETE are separate. Tests stop workers only before compilation.",
+          "failure_scenario": "The worker builds revision R1, uploads the output, commits tx1 and dies. The request moves to R2. Recovery writes R2's inputs as the manifest for the R1 output. Later reuse and dependents trust R1 bytes as R2 results.",
+          "fix": "Write status=COMPLETE, output_digest and resolved_input_manifest in one transaction, using the manifest captured at build start. Until then keep the row non-COMPLETE (e.g. STAGED/PENDING). Never backfill from the mutable request. Rows already COMPLETE without a manifest should be treated as invalid and rebuilt. Add a crash test between upload and commit."
+        },
+        {
+          "task": "A5 artifact GET",
+          "severity": "critical",
+          "issue": "The physical blob is returned before the policy check, so any authenticated caller who knows a digest reads another tenant's deduplicated content.",
+          "evidence": "A5 returns physical_blob(digest) if it exists, before require(current_artifact_policy). R3 says each retrieval authorizes first and that knowing a digest grants no privilege. Existence is global due to dedup. Tests use owned blobs only.",
+          "failure_scenario": "Tenant T1 stores blob X. Tenant T2 (authenticated) requests digest(X). The blob exists, so it is returned without a policy check.",
+          "fix": "Evaluate current_artifact_policy(principal, tenant, digest) first. Return identical not_found on denial or absence, so existence is not an oracle, and only then read the blob. Add a cross-tenant dedup test."
+        },
+        {
+          "task": "A6 attestation gate",
+          "severity": "critical",
+          "issue": "Only the signature, builder and executable digest are checked. Source revision, dependency digests (including the schema), env/flag digest, architecture and generation are not compared with the approved manifest.",
+          "evidence": "A6 says other fields are kept for audit but not checked. R4 requires all attested inputs to equal the approved manifest, and says a genuine signature for another build is insufficient. The schema digest is in the attestation's dependency list. Tests supply matching manifests only.",
+          "failure_scenario": "An allowed builder signed a build with the right executable digest but a different schema digest, or flags or arch. It passes the A6 checks, and activation proceeds against an unapproved build.",
+          "fix": "Before approve_activation, require equality of source revision, the full resolved dependency digest set (including schema B), env/flag digest, target arch, builder identity and build generation with the approved manifest and the deployment's executable and schema digests. Add mismatch tests per field."
+        },
+        {
+          "task": "A7 dispatch activation",
+          "severity": "high",
+          "issue": "The executable and schema are activated by two separate worker calls. A worker can serve a mixed pair between them.",
+          "evidence": "A7 calls activate_executable then activate_schema. The old pair is (Aold,Bold) and the layouts are incompatible. R5 requires every worker to run a complete pair from one generation. G2 says activate_pair exists and that workers don't need two commands. Tests send no requests during the gap.",
+          "failure_scenario": "After activate_executable(Anew) succeeds, a request arrives before activate_schema(Bnew). The worker serves Anew with Bold, which is an incompatible pair.",
+          "fix": "Use worker.activate_pair((Anew,Bnew), key=deployment_id) as a single call. Test with traffic between steps."
+        },
+        {
+          "task": "A8 global activation completion",
+          "severity": "critical",
+          "issue": "The ACK is sent when the remote worker accepts, before the durable epoch CAS. If the CAS fails, the operator has been told success, the authoritative state is unchanged, and the worker may hold an older pair.",
+          "evidence": "A8 does send_success_ack then CAS. R5 requires the ACK to imply the durable active generation changed, and a stale worker must not overwrite newer state. G2 says the worker idempotency key does not check global epochs. The scenario has epoch12 committed while epoch11 is paused.",
+          "failure_scenario": "Coordinator 11 dispatches and the worker accepts epoch11 pair. Coordinator 12 commits epoch12. Coordinator 11 resumes, sends the ACK, and its CAS(expected=old, new=11) fails with no further action. The operator sees success for a generation that is not active, and the worker serves 11 while the DB says 12.",
+          "fix": "Commit the durable CAS or epoch (and pending state) first and dispatch only if it succeeds. Send the ACK only after the commit succeeds. After the CAS, or on any failure or unknown result, reconcile the worker to the authoritative active pair under the newest epoch, using epoch-bearing keys. A stale coordinator abandons its work."
+        },
+        {
+          "task": "A9 garbage collection",
+          "severity": "critical",
+          "issue": "Roots are snapshotted at t0, but the tombstone transaction does not recheck references. A deployment that references a candidate after t0 still gets its blob tombstoned and deleted.",
+          "evidence": "A9 inserts the tombstone without a reference recheck, and the activation transaction checks only that the tombstone does not already exist. R6 forbids deleting artifacts referenced by active, pinned or in-progress activations. G4 says reference insertion immediately makes the artifacts roots. Tests never activate during collection.",
+          "failure_scenario": "t0: D is unreferenced and becomes a candidate. t1: the activation inserts a reference to D (no tombstone yet). t2: GC inserts the tombstone and deletes the blob. The pending or active deployment now references a deleted artifact.",
+          "fix": "In the same serializable transaction, check that the digest has no reference of any kind (active, rollback-pinned, pending) before inserting the tombstone, and abort or skip if one exists. Delete the blob only after the tombstone commits. Add a concurrent activate/GC test."
+        },
+        {
+          "task": "A10 rollback pin expiration",
+          "severity": "high",
+          "issue": "The pin is computed from created_at of G on the first deactivation only and is never refreshed. R6 requires 24h after the last deactivation.",
+          "evidence": "A10 sets pin_until=created_at+24h on first deactivation and leaves it unchanged on later ones. R6 says pins live 24h after the LAST deactivation that could need them. G may run for days and be reactivated.",
+          "failure_scenario": "G is created day 0, deactivated day 10. pin_until=day 1, so it is already expired and GC may delete G's artifacts immediately. A later rollback to G in the 24h window fails. The same applies after reactivation and a second deactivation on day 20.",
+          "fix": "On every deactivation set pin_until[G] = now (deactivation time) + 24h, never lowering it, and keep the pin while G is active. Add a test with a long-running G and with reactivation."
+        }
+      ],
+      "uncertainties": [
+        "A8: how a paused stale coordinator's worker command is superseded depends on worker behavior beyond the idempotency key, which the dossier doesn't specify. The reconciliation step in the fix assumes the coordinator can re-push the authoritative pair.",
+        "A5: whether an unauthorized caller should get a not_found response or an explicit denial is not specified. Both satisfy R3 so long as no bytes are revealed."
+      ]
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B10",
+    "case": "E3",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "A1",
+          "severity": "high",
+          "issue": "The cache key omits build inputs that can change output bytes.",
+          "evidence": "R1 requires flags, the complete normalized environment allowlist and resolved transitive dependency artifacts. A1 hashes only source, stable dependency IDs and architecture. G1's correct encoding and hashing cannot compensate for omitted inputs.",
+          "failure_scenario": "Build A with dependency B content digest b1, then request the same source and architecture with B content digest b2 under the same dependency ID. Both requests have the same key, although a fresh compilation can produce different bytes. Changes to flags or allowed environment values have the same defect.",
+          "fix": "Compute the key from source digest, exact resolved transitive artifact content digests, flags, the complete normalized environment allowlist and target architecture. Add regression cases varying the omitted inputs."
+        },
+        {
+          "task": "A2",
+          "severity": "high",
+          "issue": "Source-import edges omit a real link-time dependency, allowing A to run before its requested schema is complete.",
+          "evidence": "R2 explicitly includes generated schemas in dependency edges. G3 says B has no source import in A, while A2 constructs edges solely from source imports. Separate output paths provide no ordering guarantee.",
+          "failure_scenario": "B2 is rebuilding while B1 exists. With no B-to-A edge, A becomes ready and can consume B1 or fail because B2 is unavailable. The supplied tests conceal this by starting with the requested B already built.",
+          "fix": "Include declared link-time schema inputs in the dependency graph and resolved dependency manifest. Schedule A only after the exact requested B artifact is completed and immutable."
+        },
+        {
+          "task": "A3",
+          "severity": "high",
+          "issue": "An unrelated node's version maximum is incorrectly used to resolve each dependency through an as-of API.",
+          "evidence": "R1 makes versions comparable only within a node. A3 ignores the requested manifest's exact dependency versions. The legacy resolver returns the latest completed version at or below its supplied bound.",
+          "failure_scenario": "The request requires B2 and C100; B3 is also complete. The global maximum is 100, so artifact_for(B,100) selects B3. A cold-cache compilation therefore uses the wrong dependency even after A1 is fixed.",
+          "fix": "Resolve each dependency using its exact requested node/version and immutable artifact digest. Wait if that exact version is unfinished; do not substitute another completed version."
+        },
+        {
+          "task": "A4",
+          "severity": "high",
+          "issue": "COMPLETE is published separately from the exact resolved-input manifest, and recovery invents provenance from mutable state.",
+          "evidence": "R7 requires output digest and exact resolved inputs to become durable together. A4 exposes COMPLETE after tx1, before tx2. G4 protects published manifests from mutation but does not supply a missing manifest.",
+          "failure_scenario": "Compile revision r1 with B1 and upload D1. Commit tx1, then crash. The request changes to r2/B2 before recovery. Recovery fills the missing manifest with r2/B2, falsely associating D1 with inputs it never received. A resolver can also observe the incomplete COMPLETE row before recovery.",
+          "fix": "Persist the captured resolved-input manifest, output digest and COMPLETE status in one transaction after upload. Recovery must use durable captured inputs or rebuild, never reconstruct them from a changed request."
+        },
+        {
+          "task": "A5",
+          "severity": "high",
+          "issue": "The physical-blob hit path bypasses tenant authorization.",
+          "evidence": "R3 requires authorization on every retrieval, including deduplicated hits. A5 returns globally stored bytes before consulting current_artifact_policy. Authentication and digest syntax validation do not establish ownership.",
+          "failure_scenario": "Tenant T1 owns private artifact D. An authenticated T2 caller knows D but has no authorized tenant-owned reference. Since D physically exists, A5 returns its bytes even though the policy would deny access.",
+          "fix": "Check authoritative tenant ownership and current policy before returning any artifact bytes on every retrieval path, including physical deduplication hits. Test a known digest owned only by another tenant."
+        },
+        {
+          "task": "A6",
+          "severity": "high",
+          "issue": "A genuine signature and executable-digest match are treated as sufficient deployment authorization without checking approved build provenance.",
+          "evidence": "R4 requires all attested inputs to match the authenticated approved manifest. A6 checks only allowed builder and deployment.executable_digest, leaving revision, dependencies including schema, environment/flags, architecture and generation unchecked.",
+          "failure_scenario": "An allowed builder signs executable D for revision r1, schema B1 and generation 7. A deployment presents D with that genuine attestation, although its approved manifest requires r2, B2 and generation 8. Every shown gate passes despite the mismatches.",
+          "fix": "Compare the signed artifact and every required attested field against the approved deployment manifest, including schema/dependency digests and build generation. Reject any mismatch."
+        },
+        {
+          "task": "A7",
+          "severity": "high",
+          "issue": "Executable and schema are activated through separate immediately visible operations.",
+          "evidence": "R5 requires each accepted worker to serve a complete pair from one approved generation. A7 splits the update even though G2 provides atomic activate_pair.",
+          "failure_scenario": "The worker starts with (Aold,Bold). activate_executable succeeds, and a request arrives before activate_schema. It receives (Anew,Bold), whose schema layouts are incompatible. Both activation calls may eventually succeed.",
+          "fix": "Send the complete approved pair through activate_pair using one activation idempotency key. Verify requests cannot observe an intermediate mixed pair."
+        },
+        {
+          "task": "A8",
+          "severity": "high",
+          "issue": "Success is acknowledged before the durable authoritative activation transaction succeeds.",
+          "evidence": "R5 requires a successful ACK to imply durable authoritative activation. A8 sends the ACK after remote acceptance but before the global CAS; the supplied trace explicitly permits that CAS to fail.",
+          "failure_scenario": "Epoch 12 is already committed when the epoch 11 command returns accepted. A8 sends success for epoch 11, then its CAS fails and changes nothing. Alternatively, a crash immediately after the ACK leaves the authoritative generation unchanged.",
+          "fix": "Send success only after a successful durable activation transaction. On CAS failure or uncertain remote outcome, reconcile or wait without claiming activation success."
+        },
+        {
+          "task": "A8",
+          "severity": "high",
+          "issue": "The authoritative CAS does not prevent a delayed older command from overwriting newer remote worker state.",
+          "evidence": "R5 distinguishes local fencing from remote worker state. G2 says remote idempotency keys do not enforce global epochs across keys. A8 supplies a deployment key but no remote epoch fence.",
+          "failure_scenario": "Coordinator 11 pauses before its command reaches worker W. Coordinator 12 activates its complete pair on W and commits epoch 12. The delayed command with key 11 then activates generation 11 on that same worker. Coordinator 11's subsequent failed CAS cannot undo the remote regression. This remains possible after fixing ACK ordering.",
+          "fix": "Enforce activation epochs atomically where the worker applies a pair, rejecting older epochs. Alternatively, serialize commands per worker across coordinators, including recovery of unresolved commands, so an older command cannot apply after a newer activation."
+        },
+        {
+          "task": "A9",
+          "severity": "high",
+          "issue": "Garbage collection commits tombstones without rechecking references created after its root snapshot.",
+          "evidence": "R6 protects accepted pending activations and says tombstones only prevent new references after commitment. G4 makes pending deployment references immediate roots. A9's tombstone transaction does not check existing references.",
+          "failure_scenario": "At t0, D is unreferenced and becomes a collection candidate. At t1, activation inserts a durable reference after checking that no tombstone exists. At t2, GC inserts D's tombstone without checking that reference and deletes D, breaking the accepted activation's availability.",
+          "fix": "Atomically recheck all protecting references and insert the tombstone only if none exist. Serialize that decision with reference insertion, so either the reference protects D or the committed tombstone rejects the new reference."
+        },
+        {
+          "task": "A10",
+          "severity": "high",
+          "issue": "Rollback retention is anchored to creation time and never extended after later deactivations.",
+          "evidence": "R6 requires 24 hours after the latest relevant deactivation. A10 uses created_at plus 24 hours once. G4 protects active references but cannot protect an expired rollback pin after deactivation.",
+          "failure_scenario": "G is created on day 1 and runs until day 5. Its first deactivation sets an already-expired deadline on day 2, so GC may immediately remove its artifacts during the required rollback window. Reactivating and later deactivating G also fails to renew protection.",
+          "fix": "On every relevant deactivation, atomically extend pin_until to at least deactivation_time plus 24 hours. Test both long-running generations and repeated activation/deactivation."
+        }
+      ],
+      "uncertainties": []
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B11",
+    "case": "E2",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "B1",
+          "severity": "high",
+          "issue": "Version selection ignores the pinned knowledge time K.",
+          "evidence": "R1 requires both correction effective time <= C and recorded_at <= K. B1 filters only correction_effective_at, despite storing K.",
+          "failure_scenario": "Revision 1 is effective and recorded January 1. Revision 2 is effective January 2 but recorded January 10. With C January 5 and K January 6, B1 selects revision 2; only revision 1 qualifies. Regenerating after January 10 can therefore change the pinned report.",
+          "fix": "Filter by both correction_effective_at <= C and recorded_at <= K before selecting the greatest revision."
+        },
+        {
+          "task": "B2",
+          "severity": "high",
+          "issue": "Commission selection uses report generation time instead of the order's effective time.",
+          "evidence": "R2 selects commission by order effective_at. G2 distinguishes order_effective_at from correction_effective_at, but B2 queries policy_at using now_of_report_generation.",
+          "failure_scenario": "An order effective January 1 has gross 100. Commission is 0 through January and 1/10 from February 1. Generating its report in March produces net 90 instead of 100. A later correction does not justify changing the commission date.",
+          "fix": "Select policy_at(tenant, row.order_effective_at) and retain that policy's ID with the report."
+        },
+        {
+          "task": "B3",
+          "severity": "high",
+          "issue": "Rounding each order before aggregation changes the required tenant/currency total.",
+          "evidence": "R2 requires exact aggregation followed by one rounding operation. B3 invokes the verified rounding primitive separately for every order; integer-only tests cannot expose the placement error.",
+          "failure_scenario": "Two orders in one tenant/currency each have gross 1 and commission 1/2, giving exact nets 1/2 and 1/2. B3 returns 1 + 1 = 2; the required rounded aggregate is 1.",
+          "fix": "Sum exact Fraction nets within each tenant/currency group, then call half_away_to_integer once on that sum. Cover fractional aggregate cases."
+        },
+        {
+          "task": "B4",
+          "severity": "medium",
+          "issue": "Applying floor and remainder allocation directly to signed N violates reversal symmetry.",
+          "evidence": "R3 requires allocation of |N| followed by sign restoration. B4 floors negative weighted amounts and resolves their remainders directly. Conservation alone does not meet R3.",
+          "failure_scenario": "Owners A and B have weights 1/2, with A sorting first. N = 1 allocates (1, 0). For N = -1, bases are (-1, -1), missing is 1, and the tied remainder award goes to A, yielding (0, -1). The required reversal is (-1, 0).",
+          "fix": "Compute bases and largest remainders using abs(N), preserve owner_sort_key tie ordering, then multiply every allocation by N's sign. Test reversal symmetry."
+        },
+        {
+          "task": "B5",
+          "severity": "high",
+          "issue": "Netting groups omit tenant identity, allowing one tenant's negative obligation to offset another tenant's payout.",
+          "evidence": "R4 permits offsets only within the same tenant/currency group. B5 supplies currency-only groups to a helper that correctly processes its supplied group but does not inspect tenants.",
+          "failure_scenario": "Tenant A has a USD obligation of +100 and tenant B has a USD obligation of -100. B5 offsets them, removing A's positive obligation. Correct grouping leaves A's +100 payable and B's -100 separate.",
+          "fix": "Group obligations by the verified tenant/currency key before applying credit offsets. Include multiple tenants sharing a currency in verification."
+        },
+        {
+          "task": "B6",
+          "severity": "high",
+          "issue": "Greedy cost ordering fails the secondary optimization objective among maximum-cardinality selections.",
+          "evidence": "R4 requires the exact count/value/ID optimum. B6 commits to ascending cost and never exchanges selections; canonical ID comparisons do not repair this.",
+          "failure_scenario": "With capacity 10 and no existing reservations, eligible payout A has cost 1 and net 1; B has cost 10 and net 100. Both are positive and otherwise eligible. B6 selects A, leaving capacity 9. Maximum cardinality is one, but the required optimum selects B for value 100.",
+          "fix": "Use an exact capacity-based optimizer comparing feasible subsets by count, then total integer net, then the sorted payout-ID list. Handle zero-cost items once each and verify against this exchange counterexample."
+        },
+        {
+          "task": "B7",
+          "severity": "high",
+          "issue": "Request preparation replaces the frozen payout amount with a mutable report total, potentially changing an already submitted request body.",
+          "evidence": "R5 freezes amount at selection and requires identical bodies for retries with the same key. B7 recomputes latest on every attempt despite retaining P's frozen amount. G4's collision-free keys do not ensure body stability.",
+          "failure_scenario": "P is selected for 100. The provider accepts its 100 request but the caller times out. A correction changes latest to 80. Retrying submits 80 under the same key, which the provider rejects as conflicting. Even before the first attempt, using a changed latest value of 80 would violate the selected amount.",
+          "fix": "Persist the request body using P's frozen amount before submission and reuse that exact body for every attempt. Corrections may stop a definitely unsent payout; reconcile uncertain submissions without changing their body."
+        },
+        {
+          "task": "B8",
+          "severity": "high",
+          "issue": "Elapsed time is treated as proof of nonacceptance, releasing money while a provider obligation may exist.",
+          "evidence": "R5 requires reconciliation before reusing money after unknown acceptance. B8 releases reservations after 300 seconds without lookup_by_key; there is no provider cancellation TTL.",
+          "failure_scenario": "The provider accepts a payout for 100, but its response times out. After 301 seconds B8 releases the reserved 100. Another payout reserves and submits that money. Both provider payouts can be accepted, creating obligations of 200 against the original 100 reservation.",
+          "fix": "Keep the money reserved while acceptance is UNKNOWN. Use lookup_by_key; release only after authoritative never_accepted, or record authoritative acceptance and retain its financial obligation."
+        },
+        {
+          "task": "B9",
+          "severity": "high",
+          "issue": "Principal deletion cascades into deletion of immutable report and allocation evidence.",
+          "evidence": "R1 requires reproducibility from retained inputs, and R6 prohibits deleting audit evidence when a principal is deleted. B9 cleanup removes reports, version/policy references and allocations, including for settled payouts. Surviving receipts lack those references.",
+          "failure_scenario": "A report selects order revision 2 and policy P, allocates its total, and settles a payout. Deleting its principal removes the report and evidence. Although G2/G4 retain all source histories, the receipt's key and aggregate amount do not identify which revisions, policies or allocations supported that settlement.",
+          "fix": "Remove the destructive cascade for audit records and retain reports, input references and allocations independently of the principal's lifecycle, using a retained identity reference or tombstone. Payload snapshots are unnecessary under the supplied permanent-history guarantees."
+        },
+        {
+          "task": "B10",
+          "severity": "high",
+          "issue": "Report release relies on historical planning authorization instead of current read authorization.",
+          "evidence": "R6 requires current recipient authorization at release. B10 checks only planning_auth_result. The verified middleware authenticates and binds the tenant but does not establish current report-read privilege.",
+          "failure_scenario": "A principal is allowed at planning time, then loses report-read privilege while remaining a tenant member. The principal requests the report; middleware passes and the stored planning result remains allowed, so B10 returns the output.",
+          "fix": "Invoke the verified current authorization check for the authenticated principal and requested report at the release endpoint before returning output. Verify revocation between planning and retrieval."
+        }
+      ],
+      "uncertainties": []
+    },
+    "format_valid": true,
+    "status": "completed"
+  },
+  {
+    "blind_id": "B12",
+    "case": "E1",
+    "answer": {
+      "verdict": "needs_changes",
+      "findings": [
+        {
+          "task": "C1",
+          "severity": "high",
+          "issue": "Retry identity excludes amount_minor, allowing a conflicting transfer tuple to receive the original decision.",
+          "evidence": "R1 makes amount immutable. C1 stores amount but compares only a fingerprint of the other five fields. T1 omits same-ID, changed-amount retries.",
+          "failure_scenario": "Accept ID x for amount 10. Retry x with identical accounts, tenants and currency but amount 20. The fingerprints match, so C1 returns the previous decision instead of rejecting the conflict.",
+          "fix": "Include amount_minor in the canonical fingerprint, or compare the complete immutable tuple on every retry."
+        },
+        {
+          "task": "C2",
+          "severity": "high",
+          "issue": "The receiver increments rights even when the move has already been applied.",
+          "evidence": "R2 requires conservation under duplicate delivery; G1 guarantees only at-least-once transport. C2 ignores the receipt insertion result. T2 exercises one delivery.",
+          "failure_scenario": "Start with A=10 and B=0. Moving 5 decrements A to 5. Two deliveries increment B to 10, creating 5 rights.",
+          "fix": "Within the receiver's local transaction, insert the move receipt conditionally and increment rights only when that insertion succeeds."
+        },
+        {
+          "task": "C3",
+          "severity": "high",
+          "issue": "Recovery uses epoch-scoped ledger idempotency for an operation that must remain unique across leader epochs.",
+          "evidence": "R1 requires exactly one source debit and R2 requires safe rediscovery on a new leader. G2 deduplicates only within an epoch. T3 never changes leaders.",
+          "failure_scenario": "The debit for transfer x commits in epoch 7, but its receipt is lost. Epoch 8 recovery sees the accepted row without a receipt and appends another debit under a distinct namespace. Rights are not consumed again, but the source ledger records the debit twice.",
+          "fix": "Enforce durable source-ledger debit uniqueness by globally unique transfer ID across epochs, and have recovery retrieve the existing result. Preserve that uniqueness through retention and recovery."
+        },
+        {
+          "task": "C4",
+          "severity": "high",
+          "issue": "A majority of the configuration union does not establish the two majorities required during joint configuration.",
+          "evidence": "R3 requires an old majority AND a new majority. C4 feeds its weaker predicate into the certificate facility. T4's tested ACK sets satisfy both majorities and therefore do not distinguish the predicates.",
+          "failure_scenario": "Let old={a,b,c}, new={c,d,e}, and ACK={c,d,e}. C4 accepts 3 of 5 union members, although only one old member acknowledged and the old majority requires two.",
+          "fix": "Require independently counted majorities of old_servers and new_servers while the joint rule applies, including commitment of the joint-config entry."
+        },
+        {
+          "task": "C5",
+          "severity": "high",
+          "issue": "The coordinator exposes and applies COMMIT before obtaining its durable commit certificate.",
+          "evidence": "R4 distinguishes an irrevocable decision from an append. G2 says only await_commit supplies the certificate. C5 dispatches COMMIT and returns accepted before awaiting commitment; T5 excludes leadership loss in this interval.",
+          "failure_scenario": "Append COMMIT, deliver its message to one participant, and return accepted. Leadership then changes and truncates the uncommitted entry. A participant has applied an allegedly irrevocable decision that has no durable certificate. This failure does not require C6.",
+          "fix": "Await a valid commit certificate for the exact index and digest before marking the decision durable, sending actionable COMMIT messages, or returning accepted. Leave participants prepared while commitment is uncertain."
+        },
+        {
+          "task": "C6",
+          "severity": "high",
+          "issue": "Elapsed preparation time is treated as authority to abort an uncertain transaction.",
+          "evidence": "R4 forbids abort after durable COMMIT and permits waiting during uncertainty. C6 has no decision check, and the dossier supplies no maximum decision-message delay. T6 covers only transactions without a coordinator decision.",
+          "failure_scenario": "The coordinator correctly obtains a durable COMMIT certificate, independently of C5's defect. One participant misses the message for 61 seconds. C6 rolls back and marks it aborted despite the irrevocable COMMIT.",
+          "fix": "Resolve the authoritative durable decision before terminating preparation. Apply COMMIT when certified, abort only on an authoritative durable ABORT, and retain the prepared state while the outcome remains unknown."
+        },
+        {
+          "task": "C7",
+          "severity": "high",
+          "issue": "Recovery compares configuration number with log index, allowing an incomplete checkpoint to suppress committed replay.",
+          "evidence": "R3 defines independent configuration and log counters; R4 forbids skipping a committed prefix. C7 ignores the checkpoint's available committed_log_index. T7 makes the counters equal.",
+          "failure_scenario": "A checkpoint has config_number=100 and committed_log_index=40. The remote log contains committed entries through index 80. Because 100>=80, C7 skips entries 41 through 80.",
+          "fix": "Compare the checkpoint's committed_log_index with the remote committed boundary, and replay the required committed suffix beyond the checkpoint."
+        },
+        {
+          "task": "C8",
+          "severity": "high",
+          "issue": "Summing independently latest components and reporting their maximum index does not produce one committed snapshot.",
+          "evidence": "R5 requires one global snapshot index. G5 allows latest_component results from different indices. The dossier explicitly permits a transfer between component reads; T8 uses a quiescent ledger.",
+          "failure_scenario": "At index 10, A=100 and B=0. Read A, then commit a transfer of 10 from A to B at index 11, then read B=10. C8 returns 110 at index 11, although the combined balance is 100 at both indices.",
+          "fix": "Choose one committed global index and read every requested account with snapshot_component(account,index). Return that same index."
+        },
+        {
+          "task": "C9",
+          "severity": "high",
+          "issue": "Cache hits bypass current authorization, so cached historical responses survive read revocation.",
+          "evidence": "R5 applies revocation to every new read, including cached historical snapshots. G5 says revocation does not purge caches. C9 returns cached data before current_auth, and its cache is shared across principals. Signature middleware does not establish current authorization.",
+          "failure_scenario": "An authorized principal fills the cache using a valid token. Revoke that principal's read permission, then repeat the identical request. The cache hit returns the payload without consulting the changed policy.",
+          "fix": "Require authoritative authorization for every response, including cache hits, evaluated at the read's linearization point."
+        },
+        {
+          "task": "C9",
+          "severity": "high",
+          "issue": "A valid signed index is accepted without checking that its digest identifies the local branch.",
+          "evidence": "R6 prohibits using a token on a branch with a different digest at the same index. C9 checks only the index bound on misses. G2 guarantees index monotonicity within one branch, and the dossier explicitly permits distinct branches at equal indices.",
+          "failure_scenario": "A valid token names tenant T, index 50 and digest D1. After disaster recovery, the local branch has index 50 with digest D2. On a cache miss, all shown checks pass and C9 returns the local snapshot despite D1 differing from D2.",
+          "fix": "Before serving a response, verify that the token's digest matches the local committed branch at its index. Ensure cached responses are also bound to the validated branch and digest."
+        },
+        {
+          "task": "C10",
+          "severity": "high",
+          "issue": "Retention discards completed-transfer identity and decision obligations while the API continues accepting those IDs indefinitely.",
+          "evidence": "R1 requires conflict rejection and previous decisions on true retries; R2 and R6 require indefinite retry safety through pruning and checkpoints. C10 excludes completed rows and deletes their source dedup entries. G4 preserves only destination credit deduplication. T10 stops before the deletion threshold.",
+          "failure_scenario": "Complete transfer x for 10, then delete its row and source dedup entry after 30 days. With sufficient remaining rights, retry x. C1 finds no prior row and the ordinary path debits again, while destination dedup suppresses the second credit. This does not require C3's recovery path.",
+          "fix": "Retain durable completed-transfer records or equivalent permanent tombstones containing the complete immutable tuple, previous decision, and necessary source application obligations. Preserve these in checkpoints before deleting underlying records or log bytes."
+        }
+      ],
+      "uncertainties": []
+    },
+    "format_valid": true,
+    "status": "completed"
+  }
+]

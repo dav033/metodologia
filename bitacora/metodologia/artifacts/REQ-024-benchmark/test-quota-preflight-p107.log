@@ -1,0 +1,12 @@
+test_does_not_refresh_antigravity_outside_authorized_pool (test_scheduler_quota_preflight.QuotaPreflightTests.test_does_not_refresh_antigravity_outside_authorized_pool) ... ok
+test_limit_counts_effective_accounts_after_alias_deduplication (test_scheduler_quota_preflight.QuotaPreflightTests.test_limit_counts_effective_accounts_after_alias_deduplication) ... ok
+test_malformed_quota_pressure_never_reports_a_route_as_available (test_scheduler_quota_preflight.QuotaPreflightTests.test_malformed_quota_pressure_never_reports_a_route_as_available) ... ok
+test_missing_and_stale_observations_keep_distinct_states_and_safe_fields (test_scheduler_quota_preflight.QuotaPreflightTests.test_missing_and_stale_observations_keep_distinct_states_and_safe_fields) ... ok
+test_refreshes_only_authorized_pool_and_reports_unavailable_sources (test_scheduler_quota_preflight.QuotaPreflightTests.test_refreshes_only_authorized_pool_and_reports_unavailable_sources) ... ok
+test_refuses_an_oversized_account_pool_without_polling (test_scheduler_quota_preflight.QuotaPreflightTests.test_refuses_an_oversized_account_pool_without_polling) ... ok
+test_reports_subscription_poll_failure_explicitly (test_scheduler_quota_preflight.QuotaPreflightTests.test_reports_subscription_poll_failure_explicitly) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.008s
+
+OK

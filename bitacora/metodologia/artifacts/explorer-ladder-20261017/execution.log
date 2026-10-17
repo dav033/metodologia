@@ -1,0 +1,35 @@
+START E1-haiku claude-work medium
+START E1-luna codex-2 high
+START E1-gemini antigravity low
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/bitacora/metodologia/artifacts/explorer-ladder-20261017/run.py", line 168, in <module>
+    results=list(pool.map(lambda provider:lane(provider,cases),('codex','claude','antigravity')))
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 645, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 312, in _result_or_cancel
+    return fut.result(timeout)
+           ~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 454, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 396, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/home/david/dev/metodologia/bitacora/metodologia/artifacts/explorer-ladder-20261017/run.py", line 168, in <lambda>
+    results=list(pool.map(lambda provider:lane(provider,cases),('codex','claude','antigravity')))
+                                          ~~~~^^^^^^^^^^^^^^^^
+  File "/home/david/dev/metodologia/bitacora/metodologia/artifacts/explorer-ladder-20261017/run.py", line 147, in lane
+    if not run_one(c,r):return {'provider':provider,'status':'stopped','case':c['id'],'route':r['id']}
+           ~~~~~~~^^^^^
+  File "/home/david/dev/metodologia/bitacora/metodologia/artifacts/explorer-ladder-20261017/run.py", line 129, in run_one
+    record.update(parsed,audit(provider,stdout),answer=obj,format_valid=valid,response_words=len(parsed['response_text'].split()),
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                  exit_code=p.returncode,status='timeout' if timed_out else 'completed' if p.returncode==0 else 'cli_error',
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                  elapsed_seconds=round(time.monotonic()-started,3),finished_at=time.time())
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: update expected at most 1 argument, got 2

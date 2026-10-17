@@ -1,0 +1,12 @@
+{
+  "schema_version": "candidate-1.0.0",
+  "case_id": "C3",
+  "state": "draft-not-frozen",
+  "items": [
+    {"id": "C3-01", "expectation": "Migrate and verify all existing project and asset data using both row counts and content hashes; preserve JSON validity, relationships, unique external keys, and revision values.", "basis": ["SPEC.md R1", "source.tar: apps/api/src/db/database.ts:24-46"]},
+    {"id": "C3-02", "expectation": "Preserve client behavior and revision-conflict semantics under concurrent updates; verification must exercise the conflict path, not only compare happy-path responses.", "basis": ["SPEC.md R2", "source.tar: apps/api/src/repositories/project-repository.ts:47-49,64-87"]},
+    {"id": "C3-03", "expectation": "Specify a cutover strategy that addresses writes during migration, data reconciliation, availability, and fail-closed behavior when verification fails; do not leave operators to invent the migration safety protocol.", "basis": ["SPEC.md introduction and R1", "source.tar: apps/api/src/db/database.ts:7-14,17-23"]},
+    {"id": "C3-04", "expectation": "Replace SQLite-specific backup assumptions with a PostgreSQL backup-and-restore path that also preserves asset files, checksums, and a tested rollback after post-cutover writes.", "basis": ["SPEC.md R3", "source.tar: apps/api/src/backup.ts:7-22"]},
+    {"id": "C3-05", "expectation": "Cover Docker/EC2 deployment changes from a mounted SQLite file to PostgreSQL connectivity, including configuration, readiness, and secret handling without embedding credentials.", "basis": ["SPEC.md introduction", "source.tar: apps/api/Dockerfile:1-24", "source.tar: apps/api/src/db/database.ts:7-14"]}
+  ]
+}

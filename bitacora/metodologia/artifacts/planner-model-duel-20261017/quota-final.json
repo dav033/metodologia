@@ -1,0 +1,38 @@
+[
+  {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792246657.8161297,
+    "windows": {
+      "five_hour": {
+        "used_percent": 54.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792246658.588818,
+    "windows": {
+      "five_hour": {
+        "used_percent": 17.0,
+        "resets_at": 1792262399.891188,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792277999.891206,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+]

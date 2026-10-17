@@ -1,0 +1,737 @@
+{
+  "schema_version": 1,
+  "oracle_sha256": "a3d9f7b9386ec04c4918d2f993db71d6fcd9ff477d9b8e05834d840ec3c14902",
+  "method": "Coordinator mapped route-hidden shuffled answers before this unblinding; style can still identify models. Single run per cell; no statistical ranking.",
+  "cells": [
+    {
+      "record": "E1-sonnet-medium.json",
+      "blind_id": "B01",
+      "case": "E1",
+      "route": {
+        "id": "sonnet-medium",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-sonnet-5-5",
+        "effort": "medium"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "seeded_found": [
+        "E1-D1",
+        "E1-D10",
+        "E1-D11",
+        "E1-D2",
+        "E1-D3",
+        "E1-D4",
+        "E1-D5",
+        "E1-D6",
+        "E1-D7",
+        "E1-D8",
+        "E1-D9"
+      ],
+      "seeded_expected": 11,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [
+        "Finding 11: the primary permanent transfer-tombstone fix is sound, but the alternative of merely never pruning source ledger operation-key dedup is insufficient under G2's epoch namespace if completed transfer rows are still removed. A retry in a new epoch can consume rights again. The counterexample in correction-checks.json assumes no unmentioned global lookup/uniqueness mechanism; retaining one would repair this alternative.",
+        "Finding 3: an across-epoch lookup alone must not be interpreted as atomic uniqueness or proof that no delayed prior append can still succeed. The explicit global-dedup option is sound; original-epoch reuse is conditional on the ledger accepting/reconciling that namespace, which the answer acknowledges."
+      ],
+      "format_valid": true,
+      "elapsed_seconds": 52.529,
+      "usage": {
+        "input_including_cache": 7956,
+        "cached_read_subset": 5839,
+        "output_including_thinking": 6862,
+        "thinking_subset": 2505,
+        "total_tokens": 14818
+      }
+    },
+    {
+      "record": "E1-sol-medium.json",
+      "blind_id": "B04",
+      "case": "E1",
+      "route": {
+        "id": "sol-medium",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "seeded_found": [
+        "E1-D1",
+        "E1-D10",
+        "E1-D11",
+        "E1-D2",
+        "E1-D3",
+        "E1-D4",
+        "E1-D5",
+        "E1-D6",
+        "E1-D7",
+        "E1-D8",
+        "E1-D9"
+      ],
+      "seeded_expected": 11,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [],
+      "format_valid": true,
+      "elapsed_seconds": 42.072,
+      "usage": {
+        "input_including_cache": 17394,
+        "cached_read_subset": 12288,
+        "output_including_thinking": 2463,
+        "thinking_subset": 516,
+        "total_tokens": 19857
+      }
+    },
+    {
+      "record": "E1-sol-high.json",
+      "blind_id": "B12",
+      "case": "E1",
+      "route": {
+        "id": "sol-high",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "seeded_found": [
+        "E1-D1",
+        "E1-D10",
+        "E1-D11",
+        "E1-D2",
+        "E1-D3",
+        "E1-D4",
+        "E1-D5",
+        "E1-D6",
+        "E1-D7",
+        "E1-D8",
+        "E1-D9"
+      ],
+      "seeded_expected": 11,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [],
+      "format_valid": true,
+      "elapsed_seconds": 78.386,
+      "usage": {
+        "input_including_cache": 17398,
+        "cached_read_subset": 12288,
+        "output_including_thinking": 4211,
+        "thinking_subset": 2265,
+        "total_tokens": 21609
+      }
+    },
+    {
+      "record": "E1-sonnet-high.json",
+      "blind_id": "B02",
+      "case": "E1",
+      "route": {
+        "id": "sonnet-high",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-sonnet-5-5",
+        "effort": "high"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        10,
+        11
+      ],
+      "seeded_found": [
+        "E1-D1",
+        "E1-D10",
+        "E1-D11",
+        "E1-D2",
+        "E1-D3",
+        "E1-D4",
+        "E1-D5",
+        "E1-D6",
+        "E1-D7",
+        "E1-D8",
+        "E1-D9"
+      ],
+      "seeded_expected": 11,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [
+        "Findings 10 and 11 separately discuss miss-path and cache-path branch binding. Both count once toward frozen root E1-D10; the cache recommendation adds useful repair detail without increasing seeded coverage."
+      ],
+      "format_valid": true,
+      "elapsed_seconds": 66.495,
+      "usage": {
+        "input_including_cache": 7957,
+        "cached_read_subset": 1662,
+        "output_including_thinking": 8459,
+        "thinking_subset": 4104,
+        "total_tokens": 16416
+      }
+    },
+    {
+      "record": "E2-sonnet-medium.json",
+      "blind_id": "B03",
+      "case": "E2",
+      "route": {
+        "id": "sonnet-medium",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-sonnet-5-5",
+        "effort": "medium"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "seeded_found": [
+        "E2-D1",
+        "E2-D10",
+        "E2-D2",
+        "E2-D3",
+        "E2-D4",
+        "E2-D5",
+        "E2-D6",
+        "E2-D7",
+        "E2-D8",
+        "E2-D9"
+      ],
+      "seeded_expected": 10,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [
+        "Finding 8 correctly establishes unsafe reuse of money, but its witness describes release of daily resource capacity. B8 releases money, and G1 independently guarantees resource-capacity accounting. State the witness in monetary units; daily capacity release is not established by the snippet."
+      ],
+      "format_valid": true,
+      "elapsed_seconds": 38.813,
+      "usage": {
+        "input_including_cache": 8017,
+        "cached_read_subset": 1662,
+        "output_including_thinking": 5085,
+        "thinking_subset": 1424,
+        "total_tokens": 13102
+      }
+    },
+    {
+      "record": "E2-sonnet-high.json",
+      "blind_id": "B05",
+      "case": "E2",
+      "route": {
+        "id": "sonnet-high",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-sonnet-5-5",
+        "effort": "high"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "seeded_found": [
+        "E2-D1",
+        "E2-D10",
+        "E2-D2",
+        "E2-D3",
+        "E2-D4",
+        "E2-D5",
+        "E2-D6",
+        "E2-D7",
+        "E2-D8",
+        "E2-D9"
+      ],
+      "seeded_expected": 10,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [
+        "Finding 6's parenthetical claim that cheapest-first can potentially fail the primary cardinality objective is unsupported under the complete independent eligible list and nonnegative costs. It does maximize count; the secondary-net counterexample is correct and still establishes the frozen root. See the minimal-prefix proof in correction-checks.json.",
+        "Finding 8 correctly identifies premature money release, but its witness conflates a resource cost of 10 with released monetary funds/capacity. B8 does not establish resource-capacity release; use a separate concrete monetary reservation witness."
+      ],
+      "format_valid": true,
+      "elapsed_seconds": 47.623,
+      "usage": {
+        "input_including_cache": 8019,
+        "cached_read_subset": 5901,
+        "output_including_thinking": 6186,
+        "thinking_subset": 2281,
+        "total_tokens": 14205
+      }
+    },
+    {
+      "record": "E2-sol-medium.json",
+      "blind_id": "B07",
+      "case": "E2",
+      "route": {
+        "id": "sol-medium",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "seeded_found": [
+        "E2-D1",
+        "E2-D10",
+        "E2-D2",
+        "E2-D3",
+        "E2-D4",
+        "E2-D5",
+        "E2-D6",
+        "E2-D7",
+        "E2-D8",
+        "E2-D9"
+      ],
+      "seeded_expected": 10,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [],
+      "format_valid": true,
+      "elapsed_seconds": 41.292,
+      "usage": {
+        "input_including_cache": 17410,
+        "cached_read_subset": 12288,
+        "output_including_thinking": 2230,
+        "thinking_subset": 322,
+        "total_tokens": 19640
+      }
+    },
+    {
+      "record": "E2-sol-high.json",
+      "blind_id": "B11",
+      "case": "E2",
+      "route": {
+        "id": "sol-high",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "seeded_found": [
+        "E2-D1",
+        "E2-D10",
+        "E2-D2",
+        "E2-D3",
+        "E2-D4",
+        "E2-D5",
+        "E2-D6",
+        "E2-D7",
+        "E2-D8",
+        "E2-D9"
+      ],
+      "seeded_expected": 10,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [],
+      "format_valid": true,
+      "elapsed_seconds": 49.221,
+      "usage": {
+        "input_including_cache": 16933,
+        "cached_read_subset": 12288,
+        "output_including_thinking": 2585,
+        "thinking_subset": 750,
+        "total_tokens": 19518
+      }
+    },
+    {
+      "record": "E3-sol-medium.json",
+      "blind_id": "B06",
+      "case": "E3",
+      "route": {
+        "id": "sol-medium",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        "remote-epoch-fence",
+        9,
+        10
+      ],
+      "seeded_found": [
+        "E3-D1",
+        "E3-D10",
+        "E3-D2",
+        "E3-D3",
+        "E3-D4",
+        "E3-D5",
+        "E3-D6",
+        "E3-D7",
+        "E3-D8",
+        "E3-D9"
+      ],
+      "seeded_expected": 10,
+      "seeded_missed": [],
+      "extras": [
+        {
+          "finding": 9,
+          "extra": "remote-epoch-fence"
+        }
+      ],
+      "notes": [
+        "Finding 9 supplies a supported additional failure independent of ACK ordering: distinct-key delayed older remote activation can overwrite a newer worker epoch. Its worker-side atomic epoch fence/complete serialization fix addresses the supplied R5 constraint. Kept separate from the frozen denominator."
+      ],
+      "format_valid": true,
+      "elapsed_seconds": 41.563,
+      "usage": {
+        "input_including_cache": 17036,
+        "cached_read_subset": 12288,
+        "output_including_thinking": 2307,
+        "thinking_subset": 248,
+        "total_tokens": 19343
+      }
+    },
+    {
+      "record": "E3-sol-high.json",
+      "blind_id": "B10",
+      "case": "E3",
+      "route": {
+        "id": "sol-high",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        "remote-epoch-fence",
+        9,
+        10
+      ],
+      "seeded_found": [
+        "E3-D1",
+        "E3-D10",
+        "E3-D2",
+        "E3-D3",
+        "E3-D4",
+        "E3-D5",
+        "E3-D6",
+        "E3-D7",
+        "E3-D8",
+        "E3-D9"
+      ],
+      "seeded_expected": 10,
+      "seeded_missed": [],
+      "extras": [
+        {
+          "finding": 9,
+          "extra": "remote-epoch-fence"
+        }
+      ],
+      "notes": [
+        "Finding 9 supplies the same supported additional remote-fencing root with a concrete delayed-command trace and sound epoch fence or serialization fix. This remains separate from frozen E3-D8 (ACK-before-CAS)."
+      ],
+      "format_valid": true,
+      "elapsed_seconds": 66.106,
+      "usage": {
+        "input_including_cache": 17038,
+        "cached_read_subset": 12288,
+        "output_including_thinking": 3326,
+        "thinking_subset": 1295,
+        "total_tokens": 20364
+      }
+    },
+    {
+      "record": "E3-sonnet-high.json",
+      "blind_id": "B08",
+      "case": "E3",
+      "route": {
+        "id": "sonnet-high",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-sonnet-5-5",
+        "effort": "high"
+      },
+      "status": "completed",
+      "finding_map": [
+        5,
+        6,
+        9,
+        8,
+        7,
+        1,
+        2,
+        3,
+        4,
+        10
+      ],
+      "seeded_found": [
+        "E3-D1",
+        "E3-D10",
+        "E3-D2",
+        "E3-D3",
+        "E3-D4",
+        "E3-D5",
+        "E3-D6",
+        "E3-D7",
+        "E3-D8",
+        "E3-D9"
+      ],
+      "seeded_expected": 10,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [
+        "Finding 4 repairs ACK ordering, but its wider CAS-before-dispatch/epoch-bearing-key/eventual-reconciliation recommendation does not guarantee R5's remote monotonicity. Coordinator 11 can win its CAS, pause, then dispatch after coordinator 12 has committed and activated; distinct keys do not fence this. The uncertainty acknowledges the missing worker fence but does not present it as the independently proven extra. Preserve this limit rather than treating eventual convergence as prevention."
+      ],
+      "format_valid": true,
+      "elapsed_seconds": 51.903,
+      "usage": {
+        "input_including_cache": 8159,
+        "cached_read_subset": 1662,
+        "output_including_thinking": 6750,
+        "thinking_subset": 2412,
+        "total_tokens": 14909
+      }
+    },
+    {
+      "record": "E3-sonnet-medium.json",
+      "blind_id": "B09",
+      "case": "E3",
+      "route": {
+        "id": "sonnet-medium",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-sonnet-5-5",
+        "effort": "medium"
+      },
+      "status": "completed",
+      "finding_map": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "seeded_found": [
+        "E3-D1",
+        "E3-D10",
+        "E3-D2",
+        "E3-D3",
+        "E3-D4",
+        "E3-D5",
+        "E3-D6",
+        "E3-D7",
+        "E3-D8",
+        "E3-D9"
+      ],
+      "seeded_expected": 10,
+      "seeded_missed": [],
+      "extras": [],
+      "notes": [
+        "Finding 8 repairs the local ACK issue, but epoch-bearing keys and re-pushing authoritative state alone do not prevent a delayed previously winning coordinator from remotely overwriting a newer activation. The answer leaves this as uncertainty despite the supplied API semantics permitting the counterexample. A worker-side fence or complete per-worker command serialization is needed for the separate R5 remote invariant."
+      ],
+      "format_valid": true,
+      "elapsed_seconds": 37.204,
+      "usage": {
+        "input_including_cache": 8161,
+        "cached_read_subset": 6043,
+        "output_including_thinking": 4921,
+        "thinking_subset": 1226,
+        "total_tokens": 13082
+      }
+    }
+  ],
+  "summaries": [
+    {
+      "route": {
+        "id": "sol-medium",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "seeded_found": 31,
+      "seeded_expected": 31,
+      "valid_json": 3,
+      "elapsed_seconds": 124.927,
+      "usage": {
+        "input_including_cache": 51840,
+        "cached_read_subset": 36864,
+        "output_including_thinking": 7000,
+        "thinking_subset": 1086,
+        "total_tokens": 58840
+      },
+      "notes": 1
+    },
+    {
+      "route": {
+        "id": "sol-high",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      },
+      "seeded_found": 31,
+      "seeded_expected": 31,
+      "valid_json": 3,
+      "elapsed_seconds": 193.713,
+      "usage": {
+        "input_including_cache": 51369,
+        "cached_read_subset": 36864,
+        "output_including_thinking": 10122,
+        "thinking_subset": 4310,
+        "total_tokens": 61491
+      },
+      "notes": 1
+    },
+    {
+      "route": {
+        "id": "sonnet-medium",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-sonnet-5-5",
+        "effort": "medium"
+      },
+      "seeded_found": 31,
+      "seeded_expected": 31,
+      "valid_json": 3,
+      "elapsed_seconds": 128.546,
+      "usage": {
+        "input_including_cache": 24134,
+        "cached_read_subset": 13544,
+        "output_including_thinking": 16868,
+        "thinking_subset": 5155,
+        "total_tokens": 41002
+      },
+      "notes": 4
+    },
+    {
+      "route": {
+        "id": "sonnet-high",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-sonnet-5-5",
+        "effort": "high"
+      },
+      "seeded_found": 31,
+      "seeded_expected": 31,
+      "valid_json": 3,
+      "elapsed_seconds": 166.021,
+      "usage": {
+        "input_including_cache": 24135,
+        "cached_read_subset": 9225,
+        "output_including_thinking": 21395,
+        "thinking_subset": 8797,
+        "total_tokens": 45530
+      },
+      "notes": 4
+    }
+  ],
+  "limitations": [
+    "Seeded recall does not guarantee every fix is sound; notes preserve counterexamples and conditional extras.",
+    "Effort is explicitly requested, not independently attested by final metadata.",
+    "Quota is account-level, rounded and lagged; interleaved efforts prevent exact effort-level attribution."
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "schema_version": "1.2.0",
+  "plan_id": "REQ-EXAMPLE",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Base",
+      "acceptance_criteria": [
+        "API meets contract"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Next",
+      "acceptance_criteria": [
+        "Done"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Fix session validation",
+      "objective": "Reject expired sessions without touching valid ones",
+      "repository": "backend",
+      "after": [],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 25,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Localised change, sensitive because it touches auth",
+      "expected_paths": [
+        "src/auth/**",
+        "tests/auth/**"
+      ],
+      "shared_resources": [
+        "auth-session-contract"
+      ],
+      "acceptance_criteria": [
+        "Expired sessions are rejected",
+        "Valid sessions keep working"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "pytest tests/auth -q",
+          "purpose": "reject/accept sessions",
+          "category": "functional"
+        }
+      ],
+      "covers": ["AUTH-1"],
+      "kind": "implement",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Short pure function change with a clear failing case, no design choices to make",
+          "evidence": [
+            "file:src/auth/session.py",
+            "file:tests/auth/test_session.py"
+          ]
+        },
+        "scope": {
+          "justification": "Only the expiry branch of one validator changes; callers and the API surface stay as they are",
+          "evidence": [
+            "file:src/auth/session.py"
+          ]
+        },
+        "duration": {
+          "justification": "Comparable to the earlier token-expiry fix: read, patch, add two cases, run the auth tests",
+          "evidence": [
+            "precedent:REQ-EXAMPLE-0/T3",
+            "command:pytest tests/auth -q -> 31 passed in 2s"
+          ]
+        },
+        "risk": {
+          "justification": "A wrong check either locks valid users out or lets expired sessions through, so it is security sensitive",
+          "evidence": [
+            "spec:SPEC.md#security"
+          ]
+        },
+        "coupling": {
+          "justification": "Both clients read the session contract, so the change must keep its shape and a task consumes it",
+          "evidence": [
+            "task:T2",
+            "spec:SPEC.md#contract"
+          ]
+        },
+        "confidence": {
+          "justification": "The code and its tests were read and the same change was made before in this module",
+          "evidence": [
+            "file:src/auth/session.py",
+            "precedent:REQ-EXAMPLE-0/T3"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M2",
+      "title": "Document the session contract",
+      "objective": "Document session expiry behaviour for API consumers",
+      "repository": "backend",
+      "after": [
+        "T1"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 20,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Prose only; behaviour already fixed in T1",
+      "expected_paths": [
+        "docs/auth.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The doc states expired sessions are rejected"
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "read docs/auth.md",
+          "purpose": "check the contract is described",
+          "expected": "expiry behaviour is stated",
+          "category": "product"
+        }
+      ],
+      "covers": ["AUTH-2"],
+      "kind": "docs",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Prose only; the behaviour it describes is already fixed by the previous task",
+          "evidence": [
+            "task:T1"
+          ]
+        },
+        "scope": {
+          "justification": "A single document changes and nothing else in the repository is touched",
+          "evidence": [
+            "file:docs/auth.md"
+          ]
+        },
+        "duration": {
+          "justification": "Short page edit comparable to the other docs pages, reviewed by reading the diff",
+          "evidence": [
+            "file:docs/auth.md"
+          ]
+        },
+        "risk": {
+          "justification": "Documentation error is cosmetic, easy to correct and not user-facing in production",
+          "evidence": [
+            "file:docs/auth.md"
+          ]
+        },
+        "coupling": {
+          "justification": "The page describes the contract T1 changes, but it only reads it and is ordered after it",
+          "evidence": [
+            "task:T1"
+          ]
+        },
+        "confidence": {
+          "justification": "The document exists and the described behaviour is exactly what T1 delivers",
+          "evidence": [
+            "file:docs/auth.md",
+            "task:T1"
+          ]
+        }
+      }
+    }
+  ],
+  "requirements": ["AUTH-1", "AUTH-2"],
+  "interfaces": [
+    {
+      "id": "IF-1",
+      "title": "Session expiry documentation",
+      "owner": "backend session contract",
+      "producer_task": "T1",
+      "consumer_tasks": ["T2"],
+      "inputs": ["validated session expiry behavior"],
+      "outputs": ["documented expiry contract"],
+      "invariants": ["valid sessions remain accepted"],
+      "integration_criteria": ["docs describe the behavior implemented by T1"]
+    }
+  ]
+}

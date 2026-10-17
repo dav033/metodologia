@@ -1,0 +1,17 @@
+{
+  "target_calls_completed": 25,
+  "actual_model_calls": 27,
+  "oracle_roots_per_model": 20,
+  "same_prompt_hashes_across_models": 5,
+  "effective_Haiku_ID_confirmations": 5,
+  "structured_output_pass": 24,
+  "structured_output_failures": [
+    "C5-claude-work.json"
+  ],
+  "observed_tool_events": 0,
+  "json_files_parsed": 36,
+  "python_files_AST_parsed": 4,
+  "trailing_whitespace": "none",
+  "final_quota_status": "3/3 ok, observed >120s after last call",
+  "product_tests": "not applicable; only synthetic provider review calls executed"
+}

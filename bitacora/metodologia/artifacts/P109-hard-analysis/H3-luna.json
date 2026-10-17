@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "case": "H3",
+  "route": {
+    "id": "luna",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6-luna",
+    "effort": "max"
+  },
+  "status": "completed",
+  "prompt_sha256": "1dc22f79a703521af19309e4e29224762a0428696279bcffed40988df573d7bb",
+  "prompt_characters": 13061,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209637.9977689,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209638.7161095,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "E4",
+        "severity": "critical",
+        "issue": "SQL precedence leaves the keyset cursor's second branch outside the tenant predicate.",
+        "evidence": "R3 requires tenant scoping under both keyset branches and says the export role has no RLS protection. E4's WHERE clause has AND/OR without parentheses; project IDs can be shared across tenants. T3 tests only one tenant.",
+        "failure_scenario": "For a cursor at (event_ts=t,id=i) in tenant A, a tenant B row with the same project ID, event_ts=t, and id>i satisfies the second OR branch and is returned.",
+        "fix": "Make the predicate `tenant_id=:tenant AND ((event_ts>:cursor_ts) OR (event_ts=:cursor_ts AND id>:cursor_id))`."
+      },
+      {
+        "task": "E2",
+        "severity": "high",
+        "issue": "The cache-hit path skips current project authorization.",
+        "evidence": "R1 requires authorization on every read and immediate effect for revocations. E2 returns from cache before `authorize_current`; G3 confirms the cache key does not include policy revision and remains usable after grant revocation. T2 only tests hits without policy changes.",
+        "failure_scenario": "A user reads an export, loses the project grant, then requests the same cursor; signature and revocation checks pass and the cached response is returned without checking the removed grant.",
+        "fix": "Call `authorize_current(user,cursor.project)` on every read before returning a cache hit."
+      },
+      {
+        "task": "E3",
+        "severity": "high",
+        "issue": "Query equivalence is checked against an untrusted client claim rather than the effective server-built query.",
+        "evidence": "R2 requires hashing the canonicalized validated effective query. G2 says `req.query_hash` is arbitrary client input and request filters and columns are not equated with the cursor's approved values. E3 compares only that field to the cursor hash; T2's benign hash test does not cover a false claim.",
+        "failure_scenario": "A cursor approves query A. The client submits broader filters or columns for query B but sets `req.query_hash` to A's signed hash. E3 accepts the comparison and runs B.",
+        "fix": "Build and validate `q`, compute `sha256(canonical_query(q))` on the server, and compare that result to `cursor.query_hash`; ignore the client hash for authorization."
+      },
+      {
+        "task": "E5",
+        "severity": "high",
+        "issue": "A crash can cause a retry to encrypt changed plaintext with a nonce already used under the same export key.",
+        "evidence": "R4 forbids nonce reuse for different plaintext under a key and says changed AAD does not make reuse safe. G4 says the key and nonce prefix persist across attempts and a crash can occur after upload but before checkpoint persistence. E5 resumes from the persisted index and re-queries the current snapshot; T3 omits this crash and changed-content case.",
+        "failure_scenario": "Chunk index k is uploaded with plaintext P, then the process crashes before persisting k+1. A retry uses the same key, prefix, and k for changed plaintext Q. The old ciphertext remains observable; the changed attempt snapshot in AAD does not prevent nonce reuse.",
+        "fix": "Durably reserve a unique nonce/index before each encryption so crashes consume it, or allocate a fresh nonce for every invocation under the key."
+      },
+      {
+        "task": "E6",
+        "severity": "high",
+        "issue": "The signature does not bind chunk cardinality, and odd-level duplication makes different list lengths produce the same root.",
+        "evidence": "R5 requires binding ordered chunks and count. G5 says the signature omits `chunk_count`, which is unsigned, and the verifier accepts supplied lists without rejecting duplicate references. T4 tests exactly four chunks, missing the odd-length case.",
+        "failure_scenario": "For leaf hashes a,b,c, the three-leaf tree pairs c with itself. The four-leaf list a,b,c,c has the same root. Repeating the valid c entry and setting the unsigned count to four passes signature and root checks, then decrypts four entries.",
+        "fix": "Bind the count into the signed commitment and require it to equal the supplied list length; use a length-bound tree encoding or signed ordered chunk descriptors so the commitment has one unambiguous sequence length."
+      },
+      {
+        "task": "E7",
+        "severity": "high",
+        "issue": "Lexical containment checks do not stop writes through existing symlinks or path replacement races.",
+        "evidence": "R6 requires containment through intermediate components despite local symlinks and races. G6 says `absolute()` and `is_relative_to` are lexical, and permissions outside the root do not help. E7 checks the path string before following it during directory creation and writing; T5's ordinary-directory test does not exercise this.",
+        "failure_scenario": "With `/restore/link` symlinked to `/outside`, the valid relative name `link/file` passes the lexical check and `write_bytes` creates `/outside/file`. Replacing a checked component with a symlink before the write creates the same escape.",
+        "fix": "Perform directory traversal and file creation using an OS-enforced beneath-root operation anchored to a root handle, with symlink rejection and atomic constrained creation; isolate extraction if the platform cannot provide that guarantee."
+      },
+      {
+        "task": "E8",
+        "severity": "medium",
+        "issue": "Verification keys are deleted before tokens issued near the end of their signing window expire.",
+        "evidence": "R7 requires verification retention through the longest possible token expiry. G7 allows signing for 8 hours and tokens for 24 hours from issuance. E8 deletes at key creation plus 24 hours.",
+        "failure_scenario": "A token issued just before the key's 8-hour signing window ends expires nearly 32 hours after key creation. Cleanup at 24 hours deletes its verification key while the token is still legitimate and unexpired.",
+        "fix": "Retain the key through the last possible issuance time plus 24 hours (up to creation plus 32 hours), or track the maximum expiry of tokens issued under that key."
+      },
+      {
+        "task": "E9",
+        "severity": "medium",
+        "issue": "Formula detection misses executable prefixes preceded by whitespace that the specified reader skips.",
+        "evidence": "R8 says the reader skips leading spaces, tabs, and carriage returns before detecting formula prefixes, and CSV quoting does not change that. E9 checks only `value[0]`; T5 tests formulas starting directly with `=`.",
+        "failure_scenario": "The data value `\" \\t=1+1\"` is emitted unchanged. After CSV parsing, SheetReader skips the leading whitespace and treats `=` as a formula.",
+        "fix": "Check the first character after skipping leading spaces, tabs, and carriage returns; prefix an apostrophe when that character is `=`, `+`, `-`, or `@`."
+      }
+    ],
+    "uncertainties": [
+      "E5 uses a 32-bit chunk index, but the dossier gives no maximum export size or overflow behavior. The crash-retry nonce collision is proven at ordinary indexes; whether overflow can cause reuse is unspecified."
+    ]
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"E4\",\n      \"severity\": \"critical\",\n      \"issue\": \"SQL precedence leaves the keyset cursor's second branch outside the tenant predicate.\",\n      \"evidence\": \"R3 requires tenant scoping under both keyset branches and says the export role has no RLS protection. E4's WHERE clause has AND/OR without parentheses; project IDs can be shared across tenants. T3 tests only one tenant.\",\n      \"failure_scenario\": \"For a cursor at (event_ts=t,id=i) in tenant A, a tenant B row with the same project ID, event_ts=t, and id>i satisfies the second OR branch and is returned.\",\n      \"fix\": \"Make the predicate `tenant_id=:tenant AND ((event_ts>:cursor_ts) OR (event_ts=:cursor_ts AND id>:cursor_id))`.\"\n    },\n    {\n      \"task\": \"E2\",\n      \"severity\": \"high\",\n      \"issue\": \"The cache-hit path skips current project authorization.\",\n      \"evidence\": \"R1 requires authorization on every read and immediate effect for revocations. E2 returns from cache before `authorize_current`; G3 confirms the cache key does not include policy revision and remains usable after grant revocation. T2 only tests hits without policy changes.\",\n      \"failure_scenario\": \"A user reads an export, loses the project grant, then requests the same cursor; signature and revocation checks pass and the cached response is returned without checking the removed grant.\",\n      \"fix\": \"Call `authorize_current(user,cursor.project)` on every read before returning a cache hit.\"\n    },\n    {\n      \"task\": \"E3\",\n      \"severity\": \"high\",\n      \"issue\": \"Query equivalence is checked against an untrusted client claim rather than the effective server-built query.\",\n      \"evidence\": \"R2 requires hashing the canonicalized validated effective query. G2 says `req.query_hash` is arbitrary client input and request filters and columns are not equated with the cursor's approved values. E3 compares only that field to the cursor hash; T2's benign hash test does not cover a false claim.\",\n      \"failure_scenario\": \"A cursor approves query A. The client submits broader filters or columns for query B but sets `req.query_hash` to A's signed hash. E3 accepts the comparison and runs B.\",\n      \"fix\": \"Build and validate `q`, compute `sha256(canonical_query(q))` on the server, and compare that result to `cursor.query_hash`; ignore the client hash for authorization.\"\n    },\n    {\n      \"task\": \"E5\",\n      \"severity\": \"high\",\n      \"issue\": \"A crash can cause a retry to encrypt changed plaintext with a nonce already used under the same export key.\",\n      \"evidence\": \"R4 forbids nonce reuse for different plaintext under a key and says changed AAD does not make reuse safe. G4 says the key and nonce prefix persist across attempts and a crash can occur after upload but before checkpoint persistence. E5 resumes from the persisted index and re-queries the current snapshot; T3 omits this crash and changed-content case.\",\n      \"failure_scenario\": \"Chunk index k is uploaded with plaintext P, then the process crashes before persisting k+1. A retry uses the same key, prefix, and k for changed plaintext Q. The old ciphertext remains observable; the changed attempt snapshot in AAD does not prevent nonce reuse.\",\n      \"fix\": \"Durably reserve a unique nonce/index before each encryption so crashes consume it, or allocate a fresh nonce for every invocation under the key.\"\n    },\n    {\n      \"task\": \"E6\",\n      \"severity\": \"high\",\n      \"issue\": \"The signature does not bind chunk cardinality, and odd-level duplication makes different list lengths produce the same root.\",\n      \"evidence\": \"R5 requires binding ordered chunks and count. G5 says the signature omits `chunk_count`, which is unsigned, and the verifier accepts supplied lists without rejecting duplicate references. T4 tests exactly four chunks, missing the odd-length case.\",\n      \"failure_scenario\": \"For leaf hashes a,b,c, the three-leaf tree pairs c with itself. The four-leaf list a,b,c,c has the same root. Repeating the valid c entry and setting the unsigned count to four passes signature and root checks, then decrypts four entries.\",\n      \"fix\": \"Bind the count into the signed commitment and require it to equal the supplied list length; use a length-bound tree encoding or signed ordered chunk descriptors so the commitment has one unambiguous sequence length.\"\n    },\n    {\n      \"task\": \"E7\",\n      \"severity\": \"high\",\n      \"issue\": \"Lexical containment checks do not stop writes through existing symlinks or path replacement races.\",\n      \"evidence\": \"R6 requires containment through intermediate components despite local symlinks and races. G6 says `absolute()` and `is_relative_to` are lexical, and permissions outside the root do not help. E7 checks the path string before following it during directory creation and writing; T5's ordinary-directory test does not exercise this.\",\n      \"failure_scenario\": \"With `/restore/link` symlinked to `/outside`, the valid relative name `link/file` passes the lexical check and `write_bytes` creates `/outside/file`. Replacing a checked component with a symlink before the write creates the same escape.\",\n      \"fix\": \"Perform directory traversal and file creation using an OS-enforced beneath-root operation anchored to a root handle, with symlink rejection and atomic constrained creation; isolate extraction if the platform cannot provide that guarantee.\"\n    },\n    {\n      \"task\": \"E8\",\n      \"severity\": \"medium\",\n      \"issue\": \"Verification keys are deleted before tokens issued near the end of their signing window expire.\",\n      \"evidence\": \"R7 requires verification retention through the longest possible token expiry. G7 allows signing for 8 hours and tokens for 24 hours from issuance. E8 deletes at key creation plus 24 hours.\",\n      \"failure_scenario\": \"A token issued just before the key's 8-hour signing window ends expires nearly 32 hours after key creation. Cleanup at 24 hours deletes its verification key while the token is still legitimate and unexpired.\",\n      \"fix\": \"Retain the key through the last possible issuance time plus 24 hours (up to creation plus 32 hours), or track the maximum expiry of tokens issued under that key.\"\n    },\n    {\n      \"task\": \"E9\",\n      \"severity\": \"medium\",\n      \"issue\": \"Formula detection misses executable prefixes preceded by whitespace that the specified reader skips.\",\n      \"evidence\": \"R8 says the reader skips leading spaces, tabs, and carriage returns before detecting formula prefixes, and CSV quoting does not change that. E9 checks only `value[0]`; T5 tests formulas starting directly with `=`.\",\n      \"failure_scenario\": \"The data value `\\\" \\\\t=1+1\\\"` is emitted unchanged. After CSV parsing, SheetReader skips the leading whitespace and treats `=` as a formula.\",\n      \"fix\": \"Check the first character after skipping leading spaces, tabs, and carriage returns; prefix an apostrophe when that character is `=`, `+`, `-`, or `@`.\"\n    }\n  ],\n  \"uncertainties\": [\n    \"E5 uses a 32-bit chunk index, but the dossier gives no maximum export size or overflow behavior. The crash-retry nonce collision is proven at ordinary indexes; whether overflow can cause reuse is unspecified.\"\n  ]\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 16473,
+    "cached_input_tokens": 11648,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 10441,
+    "reasoning_output_tokens": 8840
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 1005,
+  "exit_code": 0,
+  "elapsed_seconds": 82.238,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209720.955181,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

@@ -1,0 +1,798 @@
+{
+  "schema_version": 1,
+  "case": "CP3",
+  "route": {
+    "id": "opus",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "ee5b86e305f505867b75f8ef7a59b8bedbc06778c3069065b3a534c6908938e2",
+  "prompt_characters": 69508,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792245305.5204744,
+    "windows": {
+      "five_hour": {
+        "used_percent": 8.0,
+        "resets_at": 1792262399.758203,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 89.0,
+        "resets_at": 1792277999.758222,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792245305.85754,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-opus-5-5",
+    "--effort",
+    "high",
+    "--safe-mode",
+    "--restricted",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "plan",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "answer": null,
+  "response_text": "```PLAN.md\n---\nstatus: draft\n---\n# REQ-CP3 — Show the PLAN.json quality summary where the plan is reviewed (DRAFT, revision 1)\n\nDraft for owner review. Nothing here is approved, frozen or launched. No commands were run while planning, and every estimate is a guess with no comparable execution history behind it.\n\n## Scope\n- **Goal (SPEC.md):** when the owner reviews a plan, they should see its critical path, widest level and low-confidence tasks. Today `bt_planner report` only exposes these through a module command.\n- **In scope:** R1 terminal summary through the adapter (`bitacora.py plan-json report REQ-NNN`); R2 summary block on the web **Plan** tab when `PLAN.json` exists; R3 plans without `PLAN.json` render byte-for-byte as before.\n- **Out of scope:** changing `bt_planner` analysis (`quality.analyze`); changing the approval or launch gates (`publishable_problem`, `launch_problem`); the post-execution **Revisar** tab (`bt_page_review.py`); changing `bitacora.py plan review` output (see D3); any scheduling or provider choices.\n\n## Inspected findings (provenance)\n1. **R1 appears to work already, but nothing tests its output.** `skill/scripts/bt_cli_plan.py:15` accepts `report`. `adapter.run_cli` forwards it to `planner_cli.run` (`skill/scripts/bt_plan_adapter.py:98-102`). The `report` branch prints `json.dumps(quality.analyze(plan))` after a `pc.validate` gate, and an invalid or missing PLAN.json gets exit 2 and `INVALID` (`skill/scripts/bt_planner/cli.py:97-104`). `skill/scripts/tests/test_plan_integration.py:220` checks only the exit code, not the content.\n2. **`quality.analyze` already returns the values R2 needs:** `critical_path {tasks, minutes}`, `widest_level` and `low_confidence` (`skill/scripts/bt_planner/quality.py:184-232`). `bt_planner/__init__.py` does not re-export `quality`. The adapter already imports submodules this way (`from bt_planner import cli`).\n3. **The web plan review page is `plan_panel`** in `skill/scripts/bt_page_req.py:99-115`. It renders `md(\"doc\", read(plan)) + form` and is reached from `req_page` tab `plan` (`bt_page_req.py:36-38`), which is served by `bt_server.py:112`. Approval goes through `bt_rounds.plan_decide` (`bt_rounds.py:116-133`). The terminal review is `bitacora.py plan review|approve` (`bt_cli_flows.py:52-63`).\n4. **Boundary rule:** only `bt_plan_adapter.py` (plus listed tests) may import `bt_planner`. Even a string constant starting with `bt_planner` in another file fails `skill/scripts/tests/test_plan_boundary.py:38-60`. So the page must use the adapter.\n5. **The adapter's full `check` is too heavy for a page render.** It uses `repo_roots`/`ref_verifier`, which can spawn `git` subprocesses (`bt_plan_adapter.py:39-95`).\n6. **No test exists for `bt_page_req`.** Page tests elsewhere call the page function directly and assert on the HTML (`skill/scripts/tests/test_metrics_page.py`). `skill/scripts/tests/` is not a package, so the commands use `discover -p`.\n\n## Decision gates, assumptions, unknowns\n- **D1 (product, recommended):** the web summary uses the same structural gate as `plan-json report` (`pc.validate`), not the full `check`. That keeps the terminal and web consistent with each other and keeps the page free of subprocesses. Alternative: full `check` (slower, needs the repository). T2 follows D1.\n- **D2 (product, recommended):** if PLAN.json exists but is invalid or unreadable, the Plan tab shows a warning with at most 5 errors and the hint `bitacora.py plan-json check REQ-NNN`, and the plan prose still renders. Alternative: hide the block silently. T3 follows D2.\n- **D3 (product, assumption):** \"in the terminal\" is met by R1 alone. `bitacora.py plan review` output (`{plan, url}` JSON) stays unchanged. If the owner wants the summary there too, a new requirement and task are needed.\n- **A1:** the summary shows for any plan status whenever PLAN.json exists, because R2 has no status condition.\n- **A2:** UI labels are in Spanish, like the rest of `bt_page_req.py`.\n- **A3:** \"exactly as before\" (R3) means byte-identical HTML from `plan_panel` and `req_page(tab=\"plan\")` when PLAN.json is absent, for every status.\n- **Unknown:** whether the owner also wants the other analysis fields shown, such as distributions and `without_command_verification`. Kept out of scope.\n\n## Milestones and tasks\n\n### M1 — Adapter summary contract\nAcceptance: `plan-json report` output is locked by tests, and `adapter.quality_summary` follows IF-1 for the legacy, valid and invalid cases.\n- [ ] T1 — Lock the plan-json report CLI output · repo: repository · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py` · files: skill/scripts/tests/test_plan_integration.py · covers: R1 · kind: test\n- [ ] T2 — Add adapter quality_summary for display · repo: repository · after: T1 · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_boundary.py` · files: skill/scripts/bt_plan_adapter.py, skill/scripts/tests/test_plan_integration.py · resources: plan-quality-summary-contract · covers: R2, R3 · kind: implement\n\n### M2 — Plan tab summary\nAcceptance: the Plan tab shows critical path, widest level and low-confidence tasks for a valid PLAN.json, a warning for an invalid one, and unchanged HTML without one.\n- [ ] T3 — Render the summary block in plan_panel · repo: repository · after: T2 · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_review_page.py` · files: skill/scripts/bt_page_req.py, skill/scripts/tests/test_plan_review_page.py · resources: plan-quality-summary-contract · covers: R2, R3 · kind: implement\n- [ ] T4 — Integration and regression check of the Plan tab · repo: repository · after: T3 · verify: `cd skill/scripts && python3 -m unittest discover -s tests` · files: skill/scripts/tests/test_plan_integration.py · resources: plan-quality-summary-contract · covers: R1, R2, R3 · kind: test\n\n### M3 — Documentation\nAcceptance: the plan-contract reference says where the owner sees the summary (terminal and web).\n- [ ] T5 — Document where the summary is shown · repo: repository · after: T4 · files: skill/references/plan-contract.md · covers: R1, R2 · kind: docs\n\nDependencies: T1 → T2 → T3 → T4 → T5. The order is strictly linear because T1, T2 and T4 all edit `test_plan_integration.py`, and T3 and T4 consume IF-1.\n\n## Task behavior\n\n**T1 (R1).** Add Cli cases to `test_plan_integration.py`:\n- For a valid plan (`good_plan()`), `dispatch(report)` stdout is valid JSON with `critical_path.tasks` (list), `critical_path.minutes` (int), `widest_level` (int) and `low_confidence` (list).\n- With no PLAN.json, exit is 2 and output contains `INVALID`.\n\nIf either fails, fix only the plumbing in `bt_cli_plan.py` or `bt_plan_adapter.run_cli`. Do not touch module analysis.\n\n**T2 (IF-1 producer).** `quality_summary(rdir) -> None | dict`:\n- (1) If `rdir/PLAN.json` does not exist, return `None` and do no other I/O.\n- (2) Read it with the planner reader. Unreadable, a non-object, or `validate` errors → `{\"ok\": False, \"errors\": [<=5 strings]}`.\n- (3) Valid → `{\"ok\": True, \"summary\": quality.analyze(plan)}`, identical to the `plan-json report` JSON (D1).\n- (4) Any unexpected exception → `{\"ok\": False, \"errors\": [\"PLAN.json could not be summarised (<ExcType>)\"]}`. It never raises.\n- It never writes, never calls `repo_roots`/`ref_verifier`/subprocess, and leaves existing adapter functions unchanged. This is display only, not a gate.\n- Add tests for the three states and a parity test: `summary == json.loads(report stdout)`.\n\n**T3 (IF-1 consumer).**\n- First, add a characterization test in the new `tests/test_plan_review_page.py`. It captures the current `plan_panel` HTML for statuses `draft`, `review` and `approved` without PLAN.json, using a temporary `PLAN.md`.\n- Then change `plan_panel` to call `bt_plan_adapter.quality_summary(plan.parent)`:\n  - `None` → return exactly the previous string (R3).\n  - `ok` → insert a block before the form with critical path task IDs joined by `→` plus minutes, widest level, and low-confidence IDs (or `ninguna`).\n  - not ok → warning per D2.\n- HTML-escape every value with `e()`.\n- Page tests patch the adapter. Keep the signatures of `plan_panel` and `req_page`. No string in this file may start with `bt_planner`.\n\n**T4.** Add to `test_plan_integration.py`:\n- With the real adapter and `good_plan()`, `plan_panel` output contains the critical-path IDs and the widest-level value from `json.loads(report stdout)`.\n- A skeleton (invalid) PLAN.json gives the warning.\n- No PLAN.json leaves the HTML unchanged.\n\nThen run the full `skill/scripts/tests` suite and a manual product check on the local web UI.\n\n**T5.** Add one or two sentences near `plan-json report` in `skill/references/plan-contract.md`. They should say that the web Plan tab shows critical path, widest level and low-confidence tasks when PLAN.json exists, and that the summary is not an approval verdict.\n\n## Verification (planned, none executed)\n- Static: `test_plan_boundary.py` (adapter-only import) after T2 and T3.\n- Functional: T1 CLI cases; T2 adapter state tests; T3 page tests (new file created by T3).\n- Integration: T4 real adapter → page, plus report/summary parity.\n- Regression: full `python3 -m unittest discover -s tests` from `skill/scripts`; T3 golden HTML for R3.\n- Product: manual check of the Plan tab with and without PLAN.json. A passing test is not product acceptance.\n\n## Risks\n- **Plausible risk:** a page change alters legacy HTML, breaking R3. Mitigation: the T3 characterization test is written first.\n- **Plausible risk:** a string that starts with `bt_planner` in page code trips the boundary test (`test_plan_boundary.py:55-58`). Mitigation: T2 and T3 verify with that test.\n- **Plausible risk:** an invalid PLAN.json raises inside the page and breaks the review tab. Mitigation: T2 never raises.\n- **Fact:** R1 behaviour already exists (`bt_planner/cli.py:97-104`). T1 is mostly a regression lock, not new behaviour.\n\n## Self-review note\nI reviewed this plan against the code myself in the same session. That is not an independent approval, and host validation runs after capture.\n```\n```PLAN.json\n{\n  \"schema_version\": \"1.2.0\",\n  \"plan_id\": \"REQ-CP3\",\n  \"revision\": 1,\n  \"spec_ref\": \"SPEC.md\",\n  \"requirements\": [\"R1\", \"R2\", \"R3\"],\n  \"milestones\": [\n    {\n      \"id\": \"M1\",\n      \"title\": \"Adapter summary contract\",\n      \"acceptance_criteria\": [\n        \"plan-json report output keys are asserted by tests\",\n        \"adapter quality_summary returns None, ok summary, or error dict as declared in IF-1\"\n      ]\n    },\n    {\n      \"id\": \"M2\",\n      \"title\": \"Plan tab summary\",\n      \"acceptance_criteria\": [\n        \"Plan tab shows critical path, widest level and low-confidence tasks for a valid PLAN.json\",\n        \"Plan tab HTML is byte-identical to the previous output when PLAN.json is absent\"\n      ]\n    },\n    {\n      \"id\": \"M3\",\n      \"title\": \"Documentation\",\n      \"acceptance_criteria\": [\n        \"plan-contract reference names both places where the summary is shown\"\n      ]\n    }\n  ],\n  \"tasks\": [\n    {\n      \"id\": \"T1\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Lock the plan-json report CLI output\",\n      \"objective\": \"Tests prove bitacora plan-json report prints the quality summary JSON through the adapter and refuses a missing PLAN.json\",\n      \"repository\": \"repository\",\n      \"after\": [],\n      \"complexity\": \"low\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 30,\n      \"risk\": \"low\",\n      \"coupling\": \"low\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Existing Cli test class and good_plan helper already exercise report exit code; only content assertions are added\",\n      \"expected_paths\": [\"skill/scripts/tests/test_plan_integration.py\"],\n      \"shared_resources\": [],\n      \"acceptance_criteria\": [\n        \"report stdout for a valid plan parses as JSON containing critical_path, widest_level and low_confidence\",\n        \"report without PLAN.json exits 2 and prints INVALID\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py\",\n          \"purpose\": \"new Cli report content cases and existing integration cases\",\n          \"category\": \"functional\",\n          \"created_by\": \"T1\"\n        }\n      ],\n      \"covers\": [\"R1\"],\n      \"kind\": \"test\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"The report path already exists end to end; the task only asserts its printed JSON keys\",\n          \"evidence\": [\"file:skill/scripts/bt_planner/cli.py\", \"file:skill/scripts/bt_cli_plan.py\"]\n        },\n        \"scope\": {\n          \"justification\": \"Adds assertions inside the existing Cli test class of one integration test file\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_integration.py\"]\n        },\n        \"duration\": {\n          \"justification\": \"Half an hour covers writing two test cases with the existing good_plan helper and running the file\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_integration.py\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"Only test code changes, so a mistake shows up as a failing test, not a behaviour regression\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_integration.py\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Edits a test file that later tasks also touch, but they are ordered after it\",\n          \"evidence\": [\"task:T2\", \"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"The CLI report branch and adapter forwarding were read directly in the module source\",\n          \"evidence\": [\"file:skill/scripts/bt_plan_adapter.py\", \"file:skill/scripts/bt_planner/cli.py\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T2\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Add adapter quality_summary for display\",\n      \"objective\": \"The adapter exposes quality_summary(rdir) returning None without PLAN.json, the analyze summary when valid, or a bounded error list, never raising\",\n      \"repository\": \"repository\",\n      \"after\": [\"T1\"],\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 45,\n      \"risk\": \"medium\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"One adapter function reusing the existing reader, validate and analyze, plus three state tests and one parity test\",\n      \"expected_paths\": [\"skill/scripts/bt_plan_adapter.py\", \"skill/scripts/tests/test_plan_integration.py\"],\n      \"shared_resources\": [\"plan-quality-summary-contract\"],\n      \"acceptance_criteria\": [\n        \"quality_summary returns None when PLAN.json does not exist\",\n        \"quality_summary summary equals the plan-json report JSON for the same valid plan\",\n        \"quality_summary returns ok False with at most five errors for an invalid PLAN.json and never raises\",\n        \"quality_summary spawns no subprocess and writes no file\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_boundary.py\",\n          \"purpose\": \"only the adapter imports the planner module\",\n          \"category\": \"static\"\n        },\n        {\n          \"type\": \"command\",\n          \"value\": \"cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py\",\n          \"purpose\": \"quality_summary states and parity with report output\",\n          \"category\": \"functional\",\n          \"created_by\": \"T2\"\n        }\n      ],\n      \"covers\": [\"R2\", \"R3\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Needs choosing the structural gate over full check to avoid git subprocesses during page rendering\",\n          \"evidence\": [\"file:skill/scripts/bt_plan_adapter.py\", \"file:skill/scripts/bt_planner/sync.py\", \"file:skill/scripts/bt_planner/quality.py\"]\n        },\n        \"scope\": {\n          \"justification\": \"A single new public function in the adapter and its tests; existing gate functions stay unchanged\",\n          \"evidence\": [\"file:skill/scripts/bt_plan_adapter.py\"]\n        },\n        \"duration\": {\n          \"justification\": \"Forty-five minutes for the function, three state tests, one parity test and the boundary run\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_integration.py\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"The adapter is the sole planner boundary; a leaked import or raising helper would break pages or boundary tests\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_boundary.py\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Produces the IF-1 summary contract consumed by the Plan tab rendering and integration test\",\n          \"evidence\": [\"task:T3\", \"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Reader, validator and analyze were inspected; D1 gate choice remains an unapproved owner decision\",\n          \"evidence\": [\"file:skill/scripts/bt_planner/cli.py\", \"assumption:owner accepts D1 structural validate gate\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T3\",\n      \"milestone_id\": \"M2\",\n      \"title\": \"Render the summary block in plan_panel\",\n      \"objective\": \"The web Plan tab shows critical path, widest level and low-confidence tasks when PLAN.json exists while legacy plans keep identical HTML\",\n      \"repository\": \"repository\",\n      \"after\": [\"T2\"],\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 45,\n      \"risk\": \"medium\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"One page function changes; a characterization test is written first, then three render branches\",\n      \"expected_paths\": [\"skill/scripts/bt_page_req.py\", \"skill/scripts/tests/test_plan_review_page.py\"],\n      \"shared_resources\": [\"plan-quality-summary-contract\"],\n      \"acceptance_criteria\": [\n        \"With a valid PLAN.json the Plan tab lists critical path task ids with minutes, widest level and low-confidence task ids\",\n        \"Without PLAN.json plan_panel output equals the captured golden HTML for draft, review and approved statuses\",\n        \"An invalid PLAN.json shows a warning with the plan-json check hint and the plan prose still renders\",\n        \"Hostile task ids in PLAN.json appear HTML-escaped\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_review_page.py\",\n          \"purpose\": \"golden legacy HTML, summary, warning and escaping branches\",\n          \"category\": \"regression\",\n          \"created_by\": \"T3\"\n        },\n        {\n          \"type\": \"command\",\n          \"value\": \"cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_boundary.py\",\n          \"purpose\": \"page code reaches the planner only through the adapter\",\n          \"category\": \"static\"\n        }\n      ],\n      \"covers\": [\"R2\", \"R3\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Three display branches plus byte-identical legacy output demand a characterization test before editing\",\n          \"evidence\": [\"file:skill/scripts/bt_page_req.py\", \"file:skill/scripts/bt_pages.py\"]\n        },\n        \"scope\": {\n          \"justification\": \"Only plan_panel changes and one new page test file is added; req_page routing stays\",\n          \"evidence\": [\"file:skill/scripts/bt_page_req.py\"]\n        },\n        \"duration\": {\n          \"justification\": \"Comparable in size to the metrics page tests plus a short HTML block in one function\",\n          \"evidence\": [\"file:skill/scripts/tests/test_metrics_page.py\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"The Plan tab hosts the approval form, so a rendering error or legacy drift affects owner approval\",\n          \"evidence\": [\"file:skill/scripts/bt_server.py\", \"spec:SPEC.md#requirements\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Consumes the adapter quality_summary contract and is followed by the integration test task\",\n          \"evidence\": [\"task:T2\", \"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Page function and helpers were read; exact labels depend on assumption A2 and decision D2\",\n          \"evidence\": [\"file:skill/scripts/bt_page_req.py\", \"assumption:owner accepts D2 warning for invalid PLAN.json\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T4\",\n      \"milestone_id\": \"M2\",\n      \"title\": \"Integration and regression check of the Plan tab\",\n      \"objective\": \"A real PLAN.json flows through the adapter into the Plan tab with values matching plan-json report, and the full suite still passes\",\n      \"repository\": \"repository\",\n      \"after\": [\"T3\"],\n      \"complexity\": \"low\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 45,\n      \"risk\": \"low\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Reuses good_plan and skeleton helpers for three cases, then a full suite run and a manual browser check\",\n      \"expected_paths\": [\"skill/scripts/tests/test_plan_integration.py\"],\n      \"shared_resources\": [\"plan-quality-summary-contract\"],\n      \"acceptance_criteria\": [\n        \"plan_panel with a real valid PLAN.json contains the critical path ids and widest level printed by plan-json report\",\n        \"plan_panel with a skeleton PLAN.json shows the invalid-plan warning\",\n        \"plan_panel without PLAN.json keeps the legacy HTML\",\n        \"Full skill/scripts test suite passes after the change\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"command\",\n          \"value\": \"cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py\",\n          \"purpose\": \"real adapter to page integration cases\",\n          \"category\": \"integration\",\n          \"created_by\": \"T4\"\n        },\n        {\n          \"type\": \"command\",\n          \"value\": \"cd skill/scripts && python3 -m unittest discover -s tests\",\n          \"purpose\": \"methodology suite regression\",\n          \"category\": \"regression\"\n        },\n        {\n          \"type\": \"manual\",\n          \"value\": \"open the local web UI Plan tab for a requirement with PLAN.json and one without\",\n          \"purpose\": \"owner-visible summary and unchanged legacy view\",\n          \"expected\": \"summary block with critical path, widest level and low-confidence tasks appears only for the PLAN.json requirement\",\n          \"category\": \"product\"\n        }\n      ],\n      \"covers\": [\"R1\", \"R2\", \"R3\"],\n      \"kind\": \"test\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Straight assertions over existing helpers comparing report JSON with rendered HTML values\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_integration.py\"]\n        },\n        \"scope\": {\n          \"justification\": \"Adds integration cases to one allowed test file without production code changes\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_boundary.py\"]\n        },\n        \"duration\": {\n          \"justification\": \"Three cases, one full-suite run and a short manual browser look fit within an hour\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_integration.py\", \"assumption:no comparable execution history available\"]\n        },\n        \"risk\": {\n          \"justification\": \"Test-only work; a wrong assertion fails visibly and cannot alter runtime behaviour\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_integration.py\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Exercises the summary contract produced by T2 and rendered by T3 together\",\n          \"evidence\": [\"task:T2\", \"task:T3\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Helpers good_plan and write_skeleton usage were inspected in the existing integration tests\",\n          \"evidence\": [\"file:skill/scripts/tests/test_plan_integration.py\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T5\",\n      \"milestone_id\": \"M3\",\n      \"title\": \"Document where the summary is shown\",\n      \"objective\": \"The plan-contract reference tells owners the summary appears in plan-json report and on the web Plan tab and is not a verdict\",\n      \"repository\": \"repository\",\n      \"after\": [\"T4\"],\n      \"complexity\": \"low\",\n      \"scope\": \"isolated_fix\",\n      \"estimated_minutes\": 15,\n      \"risk\": \"low\",\n      \"coupling\": \"low\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"One or two sentences next to the existing plan-json report mention\",\n      \"expected_paths\": [\"skill/references/plan-contract.md\"],\n      \"shared_resources\": [],\n      \"acceptance_criteria\": [\n        \"plan-contract.md states that the web Plan tab shows critical path, widest level and low-confidence tasks when PLAN.json exists\",\n        \"plan-contract.md states the summary is not an approval verdict\"\n      ],\n      \"verification\": [\n        {\n          \"type\": \"manual\",\n          \"value\": \"read skill/references/plan-contract.md near the plan-json report sentence\",\n          \"purpose\": \"documentation names both review surfaces\",\n          \"expected\": \"terminal command and web Plan tab are both described without claiming acceptance\",\n          \"category\": \"product\"\n        }\n      ],\n      \"covers\": [\"R1\", \"R2\"],\n      \"kind\": \"docs\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Prose describing behaviour already delivered and verified by the earlier tasks\",\n          \"evidence\": [\"task:T4\"]\n        },\n        \"scope\": {\n          \"justification\": \"A single reference document paragraph is edited and nothing else changes\",\n          \"evidence\": [\"file:skill/references/plan-contract.md\"]\n        },\n        \"duration\": {\n          \"justification\": \"Short wording edit beside the existing report mention, reviewed by reading the diff\",\n          \"evidence\": [\"file:skill/references/plan-contract.md\"]\n        },\n        \"risk\": {\n          \"justification\": \"A documentation slip is cosmetic and trivially corrected in a later edit\",\n          \"evidence\": [\"file:skill/references/plan-contract.md\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Only describes the outcome of the ordered predecessor and touches a separate file\",\n          \"evidence\": [\"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"The target paragraph mentioning plan-json report was located in the reference file\",\n          \"evidence\": [\"file:skill/references/plan-contract.md\"]\n        }\n      }\n    }\n  ],\n  \"interfaces\": [\n    {\n      \"id\": \"IF-1\",\n      \"title\": \"Adapter plan quality summary for display\",\n      \"owner\": \"skill/scripts/bt_plan_adapter.py (planner boundary)\",\n      \"producer_task\": \"T2\",\n      \"consumer_tasks\": [\"T3\", \"T4\"],\n      \"integration_task\": \"T4\",\n      \"inputs\": [\"requirement folder path rdir containing PLAN.md and optionally PLAN.json\"],\n      \"outputs\": [\n        \"None when rdir/PLAN.json does not exist\",\n        \"{ok: true, summary: quality.analyze(plan)} for a structurally valid plan\",\n        \"{ok: false, errors: up to five strings} for unreadable or invalid PLAN.json or unexpected failure\"\n      ],\n      \"invariants\": [\n        \"never raises, never writes files, never spawns subprocesses\",\n        \"summary equals the JSON printed by plan-json report for the same PLAN.json\",\n        \"only the adapter imports the planner module\"\n      ],\n      \"integration_criteria\": [\n        \"Plan tab values match plan-json report output for the same real PLAN.json\",\n        \"Plan tab HTML is unchanged when the adapter returns None\"\n      ]\n    }\n  ]\n}\n```",
+  "format_valid": false,
+  "usage_reported": {
+    "input_tokens": 28,
+    "cache_creation_input_tokens": 77785,
+    "cache_read_input_tokens": 752146,
+    "output_tokens": 19861,
+    "output_tokens_details": {
+      "thinking_tokens": 6188
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 77785,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-opus-5-5"
+  ],
+  "observed_tool_events": 28,
+  "tool_audit": [
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/request/SPEC.md"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "pattern": "planner-resources/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/planner-resources/plan.example.json"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "pattern": "repo/**/*.py"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "pattern": "repo/skill/scripts/bt_plan*.py"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "pattern": "repo/skill/scripts/bt_planner/**"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "pattern": "repo/skill/scripts/bt_*{web,review,rounds,cli}*.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_plan_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_cli_plan.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_planner/cli.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts",
+        "pattern": "bt_cli_plan|plan-json",
+        "glob": "*.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_planner/quality.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/tests/test_plan_integration.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_page_review.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts",
+        "pattern": "plan_decide|def plan_panel|def .*plan.*\\(|Aprobar plan|approve",
+        "glob": "bt_{page,pages,web,rounds,server}*.py"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "pattern": "repo/skill/scripts/bt_page*.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_page_req.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_rounds.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo",
+        "pattern": "plan_panel|req_page\\(|bt_page_req"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bitacora.py",
+        "pattern": "\"plan\"|plan_review|plan_decide|a\\.cmd == \"plan\""
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_cli_flows.py",
+        "pattern": "plan"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_planner/__init__.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/tests/test_plan_boundary.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_planner/sync.py",
+        "pattern": "def read_plan"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/tests/test_metrics_page.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/references/plan-contract.md",
+        "pattern": "report"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "pattern": "repo/skill/scripts/tests/__init__.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP3/opus/repo/skill/scripts/bt_pages.py"
+      }
+    }
+  ],
+  "model_usage_reported": {
+    "claude-opus-5-5": {
+      "inputTokens": 28,
+      "outputTokens": 19861,
+      "cacheReadInputTokens": 752146,
+      "cacheCreationInputTokens": 77785,
+      "webSearchRequests": 0,
+      "costUSD": 1.1700412,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 6188
+    }
+  },
+  "exit_code": 0,
+  "block_contract_valid": true,
+  "plan": {
+    "schema_version": "1.2.0",
+    "plan_id": "REQ-CP3",
+    "revision": 1,
+    "spec_ref": "SPEC.md",
+    "requirements": [
+      "R1",
+      "R2",
+      "R3"
+    ],
+    "milestones": [
+      {
+        "id": "M1",
+        "title": "Adapter summary contract",
+        "acceptance_criteria": [
+          "plan-json report output keys are asserted by tests",
+          "adapter quality_summary returns None, ok summary, or error dict as declared in IF-1"
+        ]
+      },
+      {
+        "id": "M2",
+        "title": "Plan tab summary",
+        "acceptance_criteria": [
+          "Plan tab shows critical path, widest level and low-confidence tasks for a valid PLAN.json",
+          "Plan tab HTML is byte-identical to the previous output when PLAN.json is absent"
+        ]
+      },
+      {
+        "id": "M3",
+        "title": "Documentation",
+        "acceptance_criteria": [
+          "plan-contract reference names both places where the summary is shown"
+        ]
+      }
+    ],
+    "tasks": [
+      {
+        "id": "T1",
+        "milestone_id": "M1",
+        "title": "Lock the plan-json report CLI output",
+        "objective": "Tests prove bitacora plan-json report prints the quality summary JSON through the adapter and refuses a missing PLAN.json",
+        "repository": "repository",
+        "after": [],
+        "complexity": "low",
+        "scope": "small_change",
+        "estimated_minutes": 30,
+        "risk": "low",
+        "coupling": "low",
+        "confidence": "medium",
+        "estimate_rationale": "Existing Cli test class and good_plan helper already exercise report exit code; only content assertions are added",
+        "expected_paths": [
+          "skill/scripts/tests/test_plan_integration.py"
+        ],
+        "shared_resources": [],
+        "acceptance_criteria": [
+          "report stdout for a valid plan parses as JSON containing critical_path, widest_level and low_confidence",
+          "report without PLAN.json exits 2 and prints INVALID"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py",
+            "purpose": "new Cli report content cases and existing integration cases",
+            "category": "functional",
+            "created_by": "T1"
+          }
+        ],
+        "covers": [
+          "R1"
+        ],
+        "kind": "test",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "The report path already exists end to end; the task only asserts its printed JSON keys",
+            "evidence": [
+              "file:skill/scripts/bt_planner/cli.py",
+              "file:skill/scripts/bt_cli_plan.py"
+            ]
+          },
+          "scope": {
+            "justification": "Adds assertions inside the existing Cli test class of one integration test file",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_integration.py"
+            ]
+          },
+          "duration": {
+            "justification": "Half an hour covers writing two test cases with the existing good_plan helper and running the file",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_integration.py",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "Only test code changes, so a mistake shows up as a failing test, not a behaviour regression",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_integration.py"
+            ]
+          },
+          "coupling": {
+            "justification": "Edits a test file that later tasks also touch, but they are ordered after it",
+            "evidence": [
+              "task:T2",
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "The CLI report branch and adapter forwarding were read directly in the module source",
+            "evidence": [
+              "file:skill/scripts/bt_plan_adapter.py",
+              "file:skill/scripts/bt_planner/cli.py"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T2",
+        "milestone_id": "M1",
+        "title": "Add adapter quality_summary for display",
+        "objective": "The adapter exposes quality_summary(rdir) returning None without PLAN.json, the analyze summary when valid, or a bounded error list, never raising",
+        "repository": "repository",
+        "after": [
+          "T1"
+        ],
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 45,
+        "risk": "medium",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "One adapter function reusing the existing reader, validate and analyze, plus three state tests and one parity test",
+        "expected_paths": [
+          "skill/scripts/bt_plan_adapter.py",
+          "skill/scripts/tests/test_plan_integration.py"
+        ],
+        "shared_resources": [
+          "plan-quality-summary-contract"
+        ],
+        "acceptance_criteria": [
+          "quality_summary returns None when PLAN.json does not exist",
+          "quality_summary summary equals the plan-json report JSON for the same valid plan",
+          "quality_summary returns ok False with at most five errors for an invalid PLAN.json and never raises",
+          "quality_summary spawns no subprocess and writes no file"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_boundary.py",
+            "purpose": "only the adapter imports the planner module",
+            "category": "static"
+          },
+          {
+            "type": "command",
+            "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py",
+            "purpose": "quality_summary states and parity with report output",
+            "category": "functional",
+            "created_by": "T2"
+          }
+        ],
+        "covers": [
+          "R2",
+          "R3"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Needs choosing the structural gate over full check to avoid git subprocesses during page rendering",
+            "evidence": [
+              "file:skill/scripts/bt_plan_adapter.py",
+              "file:skill/scripts/bt_planner/sync.py",
+              "file:skill/scripts/bt_planner/quality.py"
+            ]
+          },
+          "scope": {
+            "justification": "A single new public function in the adapter and its tests; existing gate functions stay unchanged",
+            "evidence": [
+              "file:skill/scripts/bt_plan_adapter.py"
+            ]
+          },
+          "duration": {
+            "justification": "Forty-five minutes for the function, three state tests, one parity test and the boundary run",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_integration.py",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "The adapter is the sole planner boundary; a leaked import or raising helper would break pages or boundary tests",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_boundary.py"
+            ]
+          },
+          "coupling": {
+            "justification": "Produces the IF-1 summary contract consumed by the Plan tab rendering and integration test",
+            "evidence": [
+              "task:T3",
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "Reader, validator and analyze were inspected; D1 gate choice remains an unapproved owner decision",
+            "evidence": [
+              "file:skill/scripts/bt_planner/cli.py",
+              "assumption:owner accepts D1 structural validate gate"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T3",
+        "milestone_id": "M2",
+        "title": "Render the summary block in plan_panel",
+        "objective": "The web Plan tab shows critical path, widest level and low-confidence tasks when PLAN.json exists while legacy plans keep identical HTML",
+        "repository": "repository",
+        "after": [
+          "T2"
+        ],
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 45,
+        "risk": "medium",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "One page function changes; a characterization test is written first, then three render branches",
+        "expected_paths": [
+          "skill/scripts/bt_page_req.py",
+          "skill/scripts/tests/test_plan_review_page.py"
+        ],
+        "shared_resources": [
+          "plan-quality-summary-contract"
+        ],
+        "acceptance_criteria": [
+          "With a valid PLAN.json the Plan tab lists critical path task ids with minutes, widest level and low-confidence task ids",
+          "Without PLAN.json plan_panel output equals the captured golden HTML for draft, review and approved statuses",
+          "An invalid PLAN.json shows a warning with the plan-json check hint and the plan prose still renders",
+          "Hostile task ids in PLAN.json appear HTML-escaped"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_review_page.py",
+            "purpose": "golden legacy HTML, summary, warning and escaping branches",
+            "category": "regression",
+            "created_by": "T3"
+          },
+          {
+            "type": "command",
+            "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_boundary.py",
+            "purpose": "page code reaches the planner only through the adapter",
+            "category": "static"
+          }
+        ],
+        "covers": [
+          "R2",
+          "R3"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Three display branches plus byte-identical legacy output demand a characterization test before editing",
+            "evidence": [
+              "file:skill/scripts/bt_page_req.py",
+              "file:skill/scripts/bt_pages.py"
+            ]
+          },
+          "scope": {
+            "justification": "Only plan_panel changes and one new page test file is added; req_page routing stays",
+            "evidence": [
+              "file:skill/scripts/bt_page_req.py"
+            ]
+          },
+          "duration": {
+            "justification": "Comparable in size to the metrics page tests plus a short HTML block in one function",
+            "evidence": [
+              "file:skill/scripts/tests/test_metrics_page.py",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "The Plan tab hosts the approval form, so a rendering error or legacy drift affects owner approval",
+            "evidence": [
+              "file:skill/scripts/bt_server.py",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "coupling": {
+            "justification": "Consumes the adapter quality_summary contract and is followed by the integration test task",
+            "evidence": [
+              "task:T2",
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "Page function and helpers were read; exact labels depend on assumption A2 and decision D2",
+            "evidence": [
+              "file:skill/scripts/bt_page_req.py",
+              "assumption:owner accepts D2 warning for invalid PLAN.json"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T4",
+        "milestone_id": "M2",
+        "title": "Integration and regression check of the Plan tab",
+        "objective": "A real PLAN.json flows through the adapter into the Plan tab with values matching plan-json report, and the full suite still passes",
+        "repository": "repository",
+        "after": [
+          "T3"
+        ],
+        "complexity": "low",
+        "scope": "small_change",
+        "estimated_minutes": 45,
+        "risk": "low",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "Reuses good_plan and skeleton helpers for three cases, then a full suite run and a manual browser check",
+        "expected_paths": [
+          "skill/scripts/tests/test_plan_integration.py"
+        ],
+        "shared_resources": [
+          "plan-quality-summary-contract"
+        ],
+        "acceptance_criteria": [
+          "plan_panel with a real valid PLAN.json contains the critical path ids and widest level printed by plan-json report",
+          "plan_panel with a skeleton PLAN.json shows the invalid-plan warning",
+          "plan_panel without PLAN.json keeps the legacy HTML",
+          "Full skill/scripts test suite passes after the change"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_plan_integration.py",
+            "purpose": "real adapter to page integration cases",
+            "category": "integration",
+            "created_by": "T4"
+          },
+          {
+            "type": "command",
+            "value": "cd skill/scripts && python3 -m unittest discover -s tests",
+            "purpose": "methodology suite regression",
+            "category": "regression"
+          },
+          {
+            "type": "manual",
+            "value": "open the local web UI Plan tab for a requirement with PLAN.json and one without",
+            "purpose": "owner-visible summary and unchanged legacy view",
+            "expected": "summary block with critical path, widest level and low-confidence tasks appears only for the PLAN.json requirement",
+            "category": "product"
+          }
+        ],
+        "covers": [
+          "R1",
+          "R2",
+          "R3"
+        ],
+        "kind": "test",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Straight assertions over existing helpers comparing report JSON with rendered HTML values",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_integration.py"
+            ]
+          },
+          "scope": {
+            "justification": "Adds integration cases to one allowed test file without production code changes",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_boundary.py"
+            ]
+          },
+          "duration": {
+            "justification": "Three cases, one full-suite run and a short manual browser look fit within an hour",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_integration.py",
+              "assumption:no comparable execution history available"
+            ]
+          },
+          "risk": {
+            "justification": "Test-only work; a wrong assertion fails visibly and cannot alter runtime behaviour",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_integration.py"
+            ]
+          },
+          "coupling": {
+            "justification": "Exercises the summary contract produced by T2 and rendered by T3 together",
+            "evidence": [
+              "task:T2",
+              "task:T3"
+            ]
+          },
+          "confidence": {
+            "justification": "Helpers good_plan and write_skeleton usage were inspected in the existing integration tests",
+            "evidence": [
+              "file:skill/scripts/tests/test_plan_integration.py"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T5",
+        "milestone_id": "M3",
+        "title": "Document where the summary is shown",
+        "objective": "The plan-contract reference tells owners the summary appears in plan-json report and on the web Plan tab and is not a verdict",
+        "repository": "repository",
+        "after": [
+          "T4"
+        ],
+        "complexity": "low",
+        "scope": "isolated_fix",
+        "estimated_minutes": 15,
+        "risk": "low",
+        "coupling": "low",
+        "confidence": "medium",
+        "estimate_rationale": "One or two sentences next to the existing plan-json report mention",
+        "expected_paths": [
+          "skill/references/plan-contract.md"
+        ],
+        "shared_resources": [],
+        "acceptance_criteria": [
+          "plan-contract.md states that the web Plan tab shows critical path, widest level and low-confidence tasks when PLAN.json exists",
+          "plan-contract.md states the summary is not an approval verdict"
+        ],
+        "verification": [
+          {
+            "type": "manual",
+            "value": "read skill/references/plan-contract.md near the plan-json report sentence",
+            "purpose": "documentation names both review surfaces",
+            "expected": "terminal command and web Plan tab are both described without claiming acceptance",
+            "category": "product"
+          }
+        ],
+        "covers": [
+          "R1",
+          "R2"
+        ],
+        "kind": "docs",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Prose describing behaviour already delivered and verified by the earlier tasks",
+            "evidence": [
+              "task:T4"
+            ]
+          },
+          "scope": {
+            "justification": "A single reference document paragraph is edited and nothing else changes",
+            "evidence": [
+              "file:skill/references/plan-contract.md"
+            ]
+          },
+          "duration": {
+            "justification": "Short wording edit beside the existing report mention, reviewed by reading the diff",
+            "evidence": [
+              "file:skill/references/plan-contract.md"
+            ]
+          },
+          "risk": {
+            "justification": "A documentation slip is cosmetic and trivially corrected in a later edit",
+            "evidence": [
+              "file:skill/references/plan-contract.md"
+            ]
+          },
+          "coupling": {
+            "justification": "Only describes the outcome of the ordered predecessor and touches a separate file",
+            "evidence": [
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "The target paragraph mentioning plan-json report was located in the reference file",
+            "evidence": [
+              "file:skill/references/plan-contract.md"
+            ]
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "id": "IF-1",
+        "title": "Adapter plan quality summary for display",
+        "owner": "skill/scripts/bt_plan_adapter.py (planner boundary)",
+        "producer_task": "T2",
+        "consumer_tasks": [
+          "T3",
+          "T4"
+        ],
+        "integration_task": "T4",
+        "inputs": [
+          "requirement folder path rdir containing PLAN.md and optionally PLAN.json"
+        ],
+        "outputs": [
+          "None when rdir/PLAN.json does not exist",
+          "{ok: true, summary: quality.analyze(plan)} for a structurally valid plan",
+          "{ok: false, errors: up to five strings} for unreadable or invalid PLAN.json or unexpected failure"
+        ],
+        "invariants": [
+          "never raises, never writes files, never spawns subprocesses",
+          "summary equals the JSON printed by plan-json report for the same PLAN.json",
+          "only the adapter imports the planner module"
+        ],
+        "integration_criteria": [
+          "Plan tab values match plan-json report output for the same real PLAN.json",
+          "Plan tab HTML is unchanged when the adapter returns None"
+        ]
+      }
+    ]
+  },
+  "elapsed_seconds": 197.7,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792245503.638314,
+    "windows": {
+      "five_hour": {
+        "used_percent": 15.0,
+        "resets_at": 1792262399.881779,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792277999.881831,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

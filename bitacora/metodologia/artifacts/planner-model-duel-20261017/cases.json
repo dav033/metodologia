@@ -1,0 +1,142 @@
+[
+  {
+    "id": "CP1",
+    "plan_id": "REQ-CP1",
+    "corpus_source": "C2",
+    "archive": "/home/david/dev/metodologia/bitacora/metodologia/artifacts/REQ-024-benchmark/corpus-candidates/C2-source.tar",
+    "archive_sha256": "6db119a8c91a562921905b9c13b504176358dc0e26e37e1f30c417c9e246c788",
+    "spec": "# TRAIN-3 \u2014 `GET /v1/projects` returns list items, paginated\n\n`GET /v1/projects` returns every project as a full snapshot (including `data_json`), while the web client types the\nresult as `ProjectListItem` (id, externalKey, name, revision, updatedAt). Return only list items with cursor pagination.\nAn MCP client in another repository (`trainingApp-mcp`, not part of this workspace) may read the same endpoint.\n\n## Requirements\n- R1. The response contains `projects` (list items only) and `nextCursor`.\n- R2. Existing web screens keep working.\n- R3. No consumer outside this repository is broken without notice.\n",
+    "spec_sha256": "351acf4f0b07834bfe7ad6ce2d220eb11e690cc735b59b90ff2d05cd211d9902",
+    "oracle": [
+      {
+        "id": "C2-01",
+        "expectation": "The paginated list response returns only `ProjectListItem` fields (`id`, `externalKey`, `name`, `revision`, `updatedAt`), not the full project snapshot or its `data` payload.",
+        "basis": [
+          "SPEC.md R1",
+          "source.tar: apps/api/src/app.ts:30",
+          "source.tar: apps/api/src/repositories/project-repository.ts:14-19,33-36",
+          "source.tar: apps/web/lib/api/client.ts:3-4,24"
+        ]
+      },
+      {
+        "id": "C2-02",
+        "expectation": "Surface and resolve the unspecified ordering, tie-break, and cursor-boundary semantics before implementation; if the chosen design supports concurrent mutations, state whether pagination is snapshot-consistent or best-effort and test that behavior. Do not invent a page-size policy.",
+        "basis": [
+          "SPEC.md R1",
+          "source.tar: apps/api/src/repositories/project-repository.ts:33-35"
+        ]
+      },
+      {
+        "id": "C2-03",
+        "expectation": "Treat the `trainingApp-mcp` consumer as unknown and external: identify the contract-breaking risk and require an explicit compatibility/version/notification decision before relying on it remaining unaffected.",
+        "basis": [
+          "SPEC.md R3"
+        ]
+      },
+      {
+        "id": "C2-04",
+        "expectation": "Preserve existing web screens and test the actual API-to-client contract, including cursor progression and the terminal `nextCursor` behavior.",
+        "basis": [
+          "SPEC.md R1-R2",
+          "source.tar: apps/api/src/app.ts:30",
+          "source.tar: apps/web/lib/api/client.ts:24"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "CP2",
+    "plan_id": "REQ-CP2",
+    "corpus_source": "C3",
+    "archive": "/home/david/dev/metodologia/bitacora/metodologia/artifacts/REQ-024-benchmark/corpus-candidates/C3-source.tar",
+    "archive_sha256": "6db119a8c91a562921905b9c13b504176358dc0e26e37e1f30c417c9e246c788",
+    "spec": "# TRAIN-6 \u2014 Move the Training API persistence from SQLite to PostgreSQL\n\nThe API stores projects and assets in SQLite through `better-sqlite3` (synchronous), with schema migration by\n`PRAGMA user_version`, JSON validity enforced by a CHECK, consistent copies taken with `db.backup`, and a Docker/EC2\ndeployment that mounts the database file. Move persistence to PostgreSQL without losing data or availability.\n\n## Requirements\n- R1. All existing data is migrated and verified (row counts and content hashes).\n- R2. The API behaves identically for clients, including revision conflicts.\n- R3. Backups and rollback keep working on the new store.\n",
+    "spec_sha256": "f8b69be8f02e1b73cbef73e4cac291c5456257c25abfc561b3c5f5fb3ce3bc51",
+    "oracle": [
+      {
+        "id": "C3-01",
+        "expectation": "Migrate and verify all existing project and asset data using both row counts and content hashes; preserve JSON validity, relationships, unique external keys, and revision values.",
+        "basis": [
+          "SPEC.md R1",
+          "source.tar: apps/api/src/db/database.ts:24-46"
+        ]
+      },
+      {
+        "id": "C3-02",
+        "expectation": "Preserve client behavior and revision-conflict semantics under concurrent updates; verification must exercise the conflict path, not only compare happy-path responses.",
+        "basis": [
+          "SPEC.md R2",
+          "source.tar: apps/api/src/repositories/project-repository.ts:47-49,64-87"
+        ]
+      },
+      {
+        "id": "C3-03",
+        "expectation": "Specify a cutover strategy that addresses writes during migration, data reconciliation, availability, and fail-closed behavior when verification fails; do not leave operators to invent the migration safety protocol.",
+        "basis": [
+          "SPEC.md introduction and R1",
+          "source.tar: apps/api/src/db/database.ts:7-14,17-23"
+        ]
+      },
+      {
+        "id": "C3-04",
+        "expectation": "Replace SQLite-specific backup assumptions with a PostgreSQL backup-and-restore path that also preserves asset files, checksums, and a tested rollback after post-cutover writes.",
+        "basis": [
+          "SPEC.md R3",
+          "source.tar: apps/api/src/backup.ts:7-22"
+        ]
+      },
+      {
+        "id": "C3-05",
+        "expectation": "Cover Docker/EC2 deployment changes from a mounted SQLite file to PostgreSQL connectivity, including configuration, readiness, and secret handling without embedding credentials.",
+        "basis": [
+          "SPEC.md introduction",
+          "source.tar: apps/api/Dockerfile:1-24",
+          "source.tar: apps/api/src/db/database.ts:7-14"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "CP3",
+    "plan_id": "REQ-CP3",
+    "corpus_source": "C4",
+    "archive": "/home/david/dev/metodologia/bitacora/metodologia/artifacts/REQ-024-benchmark/corpus-candidates/C4-source.tar",
+    "archive_sha256": "8c51fa66fd92fcb63512ee3a1f204a68fe06ddcf9954c61fa2ac4ae8ab82b6a2",
+    "spec": "# METH-4 \u2014 Show the PLAN.json quality summary where the plan is reviewed\n\nThe owner approves plans on the web review page and in the terminal but cannot see classification, critical path or\nevidence gaps there; `bt_planner report` exists only as a module command. Show the summary in both places.\n\n## Requirements\n- R1. `bitacora.py plan-json report REQ-NNN` prints the summary through the adapter.\n- R2. The web plan review page shows critical path, widest level and low-confidence tasks when PLAN.json exists.\n- R3. Plans without PLAN.json render exactly as before.\n",
+    "spec_sha256": "6f87c6ab9661e33f1427d8d2aab4da8df2df6ff9652cddaa55e23be55bd04a14",
+    "oracle": [
+      {
+        "id": "C4-01",
+        "expectation": "Route `bitacora.py plan-json report REQ-NNN` through the existing adapter/report owner; do not duplicate PLAN.json quality calculations in the CLI or web layer.",
+        "basis": [
+          "SPEC.md R1",
+          "source.tar: skill/scripts/bt_plan_adapter.py",
+          "source.tar: skill/scripts/bt_planner/cli.py"
+        ]
+      },
+      {
+        "id": "C4-02",
+        "expectation": "When PLAN.json exists, the web review page displays critical path, widest level, and low-confidence tasks from the report contract.",
+        "basis": [
+          "SPEC.md R2",
+          "source.tar: skill/scripts/bt_page_review.py",
+          "source.tar: skill/scripts/bt_planner/cli.py"
+        ]
+      },
+      {
+        "id": "C4-03",
+        "expectation": "When PLAN.json is absent, the review page renders exactly as before; verify the observable fallback rather than only testing a helper or parser.",
+        "basis": [
+          "SPEC.md R3"
+        ]
+      },
+      {
+        "id": "C4-04",
+        "expectation": "Separate adapter/CLI verification from web integration and regression evidence, covering both present and absent PLAN.json states with real repository commands.",
+        "basis": [
+          "SPEC.md R1-R3"
+        ]
+      }
+    ]
+  }
+]

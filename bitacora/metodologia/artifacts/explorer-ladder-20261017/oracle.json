@@ -1,0 +1,362 @@
+[
+  {
+    "case": "E1",
+    "question": "Q1",
+    "path_hint": "skill/scripts/bt_cli_plan.py",
+    "anchor": "add_parser",
+    "expected": "report action registered; dispatch handles plan-json",
+    "hint_exists": true,
+    "anchor_line": 13
+  },
+  {
+    "case": "E1",
+    "question": "Q2",
+    "path_hint": "skill/scripts/bt_plan_adapter.py",
+    "anchor": "def run_cli",
+    "expected": "dispatch calls adapter.run_cli then planner_cli.run; report implementation exists",
+    "hint_exists": true,
+    "anchor_line": 157
+  },
+  {
+    "case": "E1",
+    "question": "Q3",
+    "path_hint": "skill/scripts/bt_planner/tests/test_report.py",
+    "anchor": null,
+    "expected": "real report test and actual assertion, not an invented test",
+    "hint_exists": true,
+    "anchor_line": null
+  },
+  {
+    "case": "E2",
+    "question": "Q1",
+    "path_hint": "skill/scripts/bt_page_req.py",
+    "anchor": "def plan_panel",
+    "expected": "requirement plan tab calls plan_panel; renders PLAN.md",
+    "hint_exists": true,
+    "anchor_line": 100
+  },
+  {
+    "case": "E2",
+    "question": "Q2",
+    "path_hint": "skill/scripts/bt_page_req.py",
+    "anchor": "return md(\"doc\", read(plan)) + form",
+    "expected": "no structured report in plan_panel; markdown plus form only",
+    "hint_exists": true,
+    "anchor_line": 116
+  },
+  {
+    "case": "E2",
+    "question": "Q3",
+    "path_hint": "skill/scripts/bt_page_review.py",
+    "anchor": null,
+    "expected": "executor report and merge/review stage distinct from plan approval/Planner report",
+    "hint_exists": true,
+    "anchor_line": null
+  },
+  {
+    "case": "E2",
+    "question": "Q4",
+    "path_hint": "skill/scripts/bt_planner/cli.py",
+    "anchor": "if action == \"report\"",
+    "expected": "quality.analyze plus schema-gated coverage/interfaces/verification projections; adapter boundary for UI",
+    "hint_exists": true,
+    "anchor_line": 95
+  },
+  {
+    "case": "E3",
+    "question": "Q1",
+    "path_hint": "skill/scripts/bt_cli_plan.py",
+    "anchor": "if action == \"history\"",
+    "expected": "history separate branch rejects req/force and requires kind; project_history",
+    "hint_exists": true,
+    "anchor_line": 34
+  },
+  {
+    "case": "E3",
+    "question": "Q2",
+    "path_hint": "skill/scripts/bt_plan_history.py",
+    "anchor": "CONTEXT_FIELDS",
+    "expected": "complexity/scope/risk/coupling and bt_agents.KINDS; stable invalid errors",
+    "hint_exists": true,
+    "anchor_line": 14
+  },
+  {
+    "case": "E3",
+    "question": "Q3",
+    "path_hint": "skill/scripts/bt_plan_history.py",
+    "anchor": "metrics = {",
+    "expected": "all four unknown/null, not 0 or estimates",
+    "hint_exists": true,
+    "anchor_line": 63
+  },
+  {
+    "case": "E3",
+    "question": "Q4",
+    "path_hint": "skill/scripts/bt_plan_history.py",
+    "anchor": "Current M2 quality evidence",
+    "expected": "route scoped quality, absent applied M6 correlation and incompatible token units prevent cross-route claims",
+    "hint_exists": true,
+    "anchor_line": 49
+  },
+  {
+    "case": "E3",
+    "question": "Q5",
+    "path_hint": "skill/scripts/tests/test_plan_history.py",
+    "anchor": null,
+    "expected": "actual tests of unknown/redaction; no live performance inference",
+    "hint_exists": true,
+    "anchor_line": null
+  },
+  {
+    "case": "E4",
+    "question": "Q1",
+    "path_hint": "skill/scripts/bt_scheduler_core/scheduler.py",
+    "anchor": "def _plan_all_routes",
+    "expected": "start asks port.plan for every plan task before reconciliation; dependency and criteria passed",
+    "hint_exists": true,
+    "anchor_line": 124
+  },
+  {
+    "case": "E4",
+    "question": "Q2",
+    "path_hint": "skill/scripts/bt_scheduler_plan_routing.py",
+    "anchor": "def plan_full_dag",
+    "expected": "DecisionAssignmentPort.plan -> plan_full_dag -> one batch persist, task/matrix bounds",
+    "hint_exists": true,
+    "anchor_line": 136
+  },
+  {
+    "case": "E4",
+    "question": "Q3",
+    "path_hint": "skill/scripts/bt_scheduler_core/scheduler.py",
+    "anchor": "routing_complete",
+    "expected": "state planned metadata/reasons, routing_complete guards restart",
+    "hint_exists": true,
+    "anchor_line": 127
+  },
+  {
+    "case": "E4",
+    "question": "Q4",
+    "path_hint": "skill/scripts/bt_scheduler_core/reservation.py",
+    "anchor": "def claim",
+    "expected": "map nonreserving; M1 claim transaction owns holds, attempt, start outbox",
+    "hint_exists": true,
+    "anchor_line": 34
+  },
+  {
+    "case": "E4",
+    "question": "Q5",
+    "path_hint": "skill/scripts/bt_scheduler_adapter.py",
+    "anchor": "def propose",
+    "expected": "propose refreshes and rebuilds candidates then persists batch and typed decision; no blind planned route reuse",
+    "hint_exists": true,
+    "anchor_line": 347
+  },
+  {
+    "case": "E4",
+    "question": "Q6",
+    "path_hint": "skill/scripts/bt_scheduler_plan_routing.py",
+    "anchor": "def quota_aware_requested_at",
+    "expected": "preflight failure disqualifies affected candidates; requested_at >= observation and current wall time",
+    "hint_exists": true,
+    "anchor_line": 29
+  },
+  {
+    "case": "E4",
+    "question": "Q7",
+    "path_hint": "skill/scripts/tests/test_scheduler_decision_integration.py",
+    "anchor": "def test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation",
+    "expected": "actual full-plan/revalidation/nonreservation test, not a claimed live provider run",
+    "hint_exists": true,
+    "anchor_line": 401
+  },
+  {
+    "case": "E5",
+    "question": "Q1",
+    "path_hint": "skill/scripts/bt_scheduler_decision_adapter.py",
+    "anchor": "def _tier_floor",
+    "expected": "floor rules incl 120/240 duration, coupling medium/high tier1; medium risk alone no bump",
+    "hint_exists": true,
+    "anchor_line": 80
+  },
+  {
+    "case": "E5",
+    "question": "Q2",
+    "path_hint": "skill/scripts/bt_scheduler_decision_adapter.py",
+    "anchor": "def _candidate_rows",
+    "expected": "route options and profile-specific candidate IDs, account_reference(account_key), not provider-only",
+    "hint_exists": true,
+    "anchor_line": 220
+  },
+  {
+    "case": "E5",
+    "question": "Q3",
+    "path_hint": "skill/scripts/bt_scheduler_quota_preflight.py",
+    "anchor": "def refresh",
+    "expected": "effective identity grouping, one leader, max32 accounts, poll due-only not forced",
+    "hint_exists": true,
+    "anchor_line": 11
+  },
+  {
+    "case": "E5",
+    "question": "Q4",
+    "path_hint": "skill/scripts/bt_scheduler_decision/policy.py",
+    "anchor": "def _candidate_reasons",
+    "expected": "hard filters precede optional quality ranking; no bypass",
+    "hint_exists": true,
+    "anchor_line": 176
+  },
+  {
+    "case": "E5",
+    "question": "Q5",
+    "path_hint": "skill/scripts/bt_scheduler_decision/policy.py",
+    "anchor": "def _quality_objective_is_comparable",
+    "expected": "validated observed interval/sample evidence for every eligible candidate at same selected level; otherwise skip quality objective",
+    "hint_exists": true,
+    "anchor_line": 335
+  },
+  {
+    "case": "E5",
+    "question": "Q6",
+    "path_hint": "skill/scripts/bt_scheduler_decision/policy.py",
+    "anchor": "def _route_objective_key",
+    "expected": "quota then measured duration then comparable relative cost, reserve/reset/baseline/stable id; missing uses infinity",
+    "hint_exists": true,
+    "anchor_line": 349
+  },
+  {
+    "case": "E5",
+    "question": "Q7",
+    "path_hint": "skill/scripts/bt_scheduler_plan_routing.py",
+    "anchor": "def _route_evidence",
+    "expected": "whole-plan evidence currently quota windows/duration, no quality_assessment or relative_cost supplied",
+    "hint_exists": true,
+    "anchor_line": 48
+  },
+  {
+    "case": "E5",
+    "question": "Q8",
+    "path_hint": "skill/scripts/bt_scheduler_decision/batch.py",
+    "anchor": "def _rank_batch_routes",
+    "expected": "dedup options by account_ref, account capacities and matching, recommendations not reservations",
+    "hint_exists": true,
+    "anchor_line": 210
+  },
+  {
+    "case": "E5",
+    "question": "Q9",
+    "path_hint": "skill/scripts/tests/test_scheduler_decision_sources.py",
+    "anchor": null,
+    "expected": "real floor/account tests; no credentials or live quota conclusions from source",
+    "hint_exists": true,
+    "anchor_line": null
+  },
+  {
+    "case": "E6",
+    "question": "Q1",
+    "path_hint": "skill/scripts/bt_scheduler_core/reservation.py",
+    "anchor": "def claim",
+    "expected": "M1 atomic attempt/hold/outbox commit then Dispatcher external start, CoreExecutionPort translates, M3 ledger acceptance",
+    "hint_exists": true,
+    "anchor_line": 34
+  },
+  {
+    "case": "E6",
+    "question": "Q2",
+    "path_hint": "skill/scripts/bt_scheduler_core/dispatch.py",
+    "anchor": "if kind == \"start\" and before > 0",
+    "expected": "write-ahead delivery count, query before resend, M3 by_key replay and KEY_CONFLICT",
+    "hint_exists": true,
+    "anchor_line": 68
+  },
+  {
+    "case": "E6",
+    "question": "Q3",
+    "path_hint": "skill/scripts/bt_scheduler_core/recovery.py",
+    "anchor": "def apply_observation",
+    "expected": "lease schedules reconcile; unknown -> UNCERTAIN keeps task ACTIVE/holds and no automatic duplicate retry",
+    "hint_exists": true,
+    "anchor_line": 96
+  },
+  {
+    "case": "E6",
+    "question": "Q4",
+    "path_hint": "skill/scripts/bt_scheduler_core/recovery.py",
+    "anchor": "elif verdict == \"not_found\"",
+    "expected": "pending start RESERVED/UNCERTAIN resets RESERVED/redeliver; otherwise FAILED lost",
+    "hint_exists": true,
+    "anchor_line": 125
+  },
+  {
+    "case": "E6",
+    "question": "Q5",
+    "path_hint": "skill/scripts/bt_scheduler_core/events.py",
+    "anchor": "def apply_verdict",
+    "expected": "finished -> VERIFYING + verify outbox, independent accepted verdict with evidence completes/promotes; exit not acceptance",
+    "hint_exists": true,
+    "anchor_line": 118
+  },
+  {
+    "case": "E6",
+    "question": "Q6",
+    "path_hint": "skill/scripts/bt_scheduler_core/recovery.py",
+    "anchor": "verifying_is_settled_by_verdict",
+    "expected": "ignore failed/not_found/cancelled/unknown while VERIFYING unless manual",
+    "hint_exists": true,
+    "anchor_line": 107
+  },
+  {
+    "case": "E6",
+    "question": "Q7",
+    "path_hint": "skill/scripts/bt_scheduler_core/events.py",
+    "anchor": "def _preflight",
+    "expected": "wrong plan invalid, duplicate seen, mismatch stale, superseded stale; INCIDENT_OBSERVED allow_superseded and incident dedup",
+    "hint_exists": true,
+    "anchor_line": 46
+  },
+  {
+    "case": "E6",
+    "question": "Q8",
+    "path_hint": "skill/scripts/bt_scheduler_core/operations.py",
+    "anchor": "def cancel",
+    "expected": "unsent RESERVED start can close/cancel; running/uncertain sends cancel retains holds until authoritative terminal, no new starts",
+    "hint_exists": true,
+    "anchor_line": 35
+  },
+  {
+    "case": "E6",
+    "question": "Q9",
+    "path_hint": "skill/scripts/bt_scheduler_executor/recovery.py",
+    "anchor": null,
+    "expected": "actual persisted launch/result/process identity recovery; uncertain physical outcome not blind respawn",
+    "hint_exists": true,
+    "anchor_line": null
+  },
+  {
+    "case": "E6",
+    "question": "Q10",
+    "path_hint": "skill/scripts/bt_scheduler_executor_adapter.py",
+    "anchor": "def check_context",
+    "expected": "M2 ledger lookup plan/revision/hash/task and resolver/account gates, no silent legacy fallback for failed M2 ref",
+    "hint_exists": true,
+    "anchor_line": 168
+  },
+  {
+    "case": "E6",
+    "question": "Q11",
+    "path_hint": "skill/scripts/bt_scheduler_core/tests/test_dispatch.py",
+    "anchor": null,
+    "expected": "actual tests from dispatch/restart/recovery/events asserting the named behaviors",
+    "hint_exists": true,
+    "anchor_line": null
+  },
+  {
+    "case": "E6",
+    "question": "Q12",
+    "path_hint": "skill/scripts/bt_scheduler_executor/executor.py",
+    "anchor": null,
+    "expected": "idempotent local acceptance is not arbitrary remote exactly-once; verifier independent; source cannot prove quota/live auth",
+    "hint_exists": true,
+    "anchor_line": null
+  }
+]

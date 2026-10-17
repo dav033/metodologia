@@ -1,0 +1,91 @@
+{
+  "case": "C2",
+  "profile": "codex-2",
+  "provider": "codex",
+  "requested_model": "gpt-6-luna",
+  "requested_effort": "max",
+  "variant": "codex-2-luna",
+  "prompt_sha256": "61aade8d5e2b90b9eee1044aed7f25e1ccc04968a91123f0729926a6a5b4258a",
+  "prompt_characters": 2774,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206629.402258,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206630.3353765,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "The dependency graph contains a cycle.",
+        "evidence": "T1 is after T3, T3 is after T2, and T2 is after T1.",
+        "failure_scenario": "No task order can satisfy these dependencies, so execution is blocked.",
+        "fix": "Remove or redirect an edge so the dependency graph is acyclic."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "T2 and T4 edit the same contract file without an ordering path or merge owner.",
+        "evidence": "Both tasks write packages/contracts/order.ts; both depend on T1, and the plan says no merge owner exists. The order-contract resource label does not lock tasks.",
+        "failure_scenario": "The edits can conflict or leave producer and consumer using different contract definitions.",
+        "fix": "Add an explicit dependency path between T2 and T4, or assign a named merge owner; ensure both compile against the resulting final contract."
+      },
+      {
+        "task": "T5",
+        "severity": "medium",
+        "issue": "The verification command short-circuits, so it cannot guarantee all three checks run or record each exit status.",
+        "evidence": "The command uses 'npm run lint && npm run typecheck && npm run test:unit', while acceptance requires all three statuses even if lint fails.",
+        "failure_scenario": "If lint exits nonzero, typecheck and unit tests do not run and their statuses are absent.",
+        "fix": "Run each check independently, capture its exit status, and record all three results."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T1\",\"severity\":\"high\",\"issue\":\"The dependency graph contains a cycle.\",\"evidence\":\"T1 is after T3, T3 is after T2, and T2 is after T1.\",\"failure_scenario\":\"No task order can satisfy these dependencies, so execution is blocked.\",\"fix\":\"Remove or redirect an edge so the dependency graph is acyclic.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"T2 and T4 edit the same contract file without an ordering path or merge owner.\",\"evidence\":\"Both tasks write packages/contracts/order.ts; both depend on T1, and the plan says no merge owner exists. The order-contract resource label does not lock tasks.\",\"failure_scenario\":\"The edits can conflict or leave producer and consumer using different contract definitions.\",\"fix\":\"Add an explicit dependency path between T2 and T4, or assign a named merge owner; ensure both compile against the resulting final contract.\"},{\"task\":\"T5\",\"severity\":\"medium\",\"issue\":\"The verification command short-circuits, so it cannot guarantee all three checks run or record each exit status.\",\"evidence\":\"The command uses 'npm run lint && npm run typecheck && npm run test:unit', while acceptance requires all three statuses even if lint fails.\",\"failure_scenario\":\"If lint exits nonzero, typecheck and unit tests do not run and their statuses are absent.\",\"fix\":\"Run each check independently, capture its exit status, and record all three results.\"}],\"uncertainties\":[]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 14927,
+    "cached_input_tokens": 11648,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1379,
+    "reasoning_output_tokens": 1057
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 14.49,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206644.8251405,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

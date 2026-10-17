@@ -1,0 +1,155 @@
+{
+  "record": "E3-haiku.json",
+  "native_output_changed": false,
+  "strict_format_valid": false,
+  "repair": "Close Q5 object and answers array before top-level unknowns; only missing structural delimiters inserted for semantic grading.",
+  "answer": {
+    "case": "E3",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "Entry is `bitacora.py` line 393, which calls `bt_cli_plan.dispatch`. For `action == \"history\"`, `dispatch` checks in order: a non-None `req` returns exit 2 (\"does not accept REQ-NNN\"), `force` returns exit 2, and a missing `kind` returns exit 2. It then calls `bt_plan_history.project_history(kind, context)`, catches `PlanningHistoryInputError` (exit 2), and prints the JSON report (exit 0). REQ-NNN is rejected only by presence: any positional value sets `req` and is refused. The format is not validated. For non-history actions, `kind` or any context flag returns exit 2 before the REQ check. `project_history` has no other caller in the snapshot.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bitacora.py",
+            "symbol": "main dispatch (plan-json branch)",
+            "start_line": 393,
+            "end_line": 394
+          },
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "dispatch",
+            "start_line": 27,
+            "end_line": 50
+          },
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "dispatch",
+            "start_line": 51,
+            "end_line": 53
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "Task kinds are `bt_agents.KINDS` = implement, test, docs, audit, research. Context values: complexity low/medium/high/extreme; scope isolated_fix/small_change/large_change/full_feature/full_system; risk and coupling low/medium/high. Context keys are limited to complexity, scope, risk, coupling. Missing fields become null. Via the CLI, argparse `choices` rejects invalid values and unknown flags before dispatch (argparse default behavior; no custom handling). Programmatic calls raise `history_kind_invalid`, `history_context_invalid` (non-mapping or non-string key), `history_context_invalid:field` (unknown key), or `history_context_invalid:<field>` (bad value). Error text does not echo caller values.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "KINDS",
+            "start_line": 28,
+            "end_line": 28
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/contracts.py",
+            "symbol": "COMPLEXITY_VALUES, SCOPE_VALUES, LEVEL_VALUES",
+            "start_line": 9,
+            "end_line": 11
+          },
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "CONTEXT_FIELDS, CONTEXT_VALUES",
+            "start_line": 13,
+            "end_line": 21
+          },
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "_context_value",
+            "start_line": 28,
+            "end_line": 33
+          },
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "project_history",
+            "start_line": 53,
+            "end_line": 61
+          },
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "add_parser",
+            "start_line": 19,
+            "end_line": 24
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "The returned measurements are quality (samples, successes, failures, observed_rate, uncertainty_interval_95), duration (samples, unit \"seconds\", median, range), retries (samples, count), and consumption (samples, unit, median, range, coverage). None is an observed number: every field is literal None (unit is \"seconds\" only as a label), and each metric's status is \"unknown\" with source_quality \"unknown\" and comparability_key None. Reasons are fixed strings.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "_unknown_metric",
+            "start_line": 36,
+            "end_line": 43
+          },
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "project_history",
+            "start_line": 63,
+            "end_line": 88
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "Existing telemetry is keyed to routes and cannot feed these buckets. Audit quality rows carry the auditor's agent, model, and effort plus milestone attribution; they are route-scoped and not joined to planner context dimensions or task kind. Attempt rows carry agent, profile, model, effort, seconds, and per-provider usage. The projection itself records (in its docstring) that M2 quality is route-scoped, attempt telemetry is not correlated to applied M6 outcomes, and token conventions differ by provider. No code in the snapshot reads defects or attempt events into `project_history`.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_quality.py",
+            "symbol": "record_audit_verdict",
+            "start_line": 123,
+            "end_line": 129
+          },
+          {
+            "path": "skill/scripts/bt_events.py",
+            "symbol": "record_attempt",
+            "start_line": 241,
+            "end_line": 251
+          },
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "project_history",
+            "start_line": 46,
+            "end_line": 52
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "Tests asserting unknown output: `test_projection_keeps_all_metrics_unknown_without_cross_route_sources` checks status, source_quality, null comparability keys, and null measurement fields. `test_serialized_projection_contains_no_route_or_account_fields` checks that route, provider, model, account, effort, and quota key names are absent. Invalid-input tests assert that errors do not echo values. CLI tests assert JSON output, exit codes, and the REQ-NNN and --kind rejections. They do not establish live performance: they do not test any real history source, values, correlation with M6 outcomes, or planner consumption. The key-name test does not check values, and these tests were read only, not executed.",
+        "evidence": [
+          {
+            "path": "skill/scripts/tests/test_plan_history.py",
+            "symbol": "PlanningHistoryProjectionTests.test_projection_keeps_all_metrics_unknown_without_cross_route_sources",
+            "start_line": 19,
+            "end_line": 40
+          },
+          {
+            "path": "skill/scripts/tests/test_plan_history.py",
+            "symbol": "PlanningHistoryProjectionTests.test_projection_rejects_invalid_external_context_without_echoing_values",
+            "start_line": 42,
+            "end_line": 48
+          },
+          {
+            "path": "skill/scripts/tests/test_plan_history.py",
+            "symbol": "PlanningHistoryProjectionTests.test_serialized_projection_contains_no_route_or_account_fields",
+            "start_line": 50,
+            "end_line": 64
+          },
+          {
+            "path": "skill/scripts/tests/test_plan_history.py",
+            "symbol": "PlanningHistoryProjectionTests.test_cli_rejects_missing_kind_and_requirement_id_for_other_actions",
+            "start_line": 80,
+            "end_line": 103
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "Whether bitacora.py performs any argument preprocessing before dispatch; only the plan-json branch was read.",
+      "No live history source, planner consumer, or runtime behavior was inspected; only static code and tests were read, and nothing was executed.",
+      "Argparse rejection of unknown flags is inferred from its default behavior, not from code in the snapshot.",
+      "Only the first 100 of 575 grep hits were scanned for route telemetry; a wider wiring path could exist outside the searched names."
+    ]
+  }
+}

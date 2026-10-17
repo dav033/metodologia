@@ -1,0 +1,1907 @@
+{
+  "schema_version": 1,
+  "case": "E6",
+  "route": {
+    "id": "haiku",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "909d6b76b183f20223377b3ca5950608e45e4a746be0a6edcc589861f6c0cdd2",
+  "prompt_characters": 4259,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248651.45228,
+    "windows": {
+      "five_hour": {
+        "used_percent": 26.0,
+        "resets_at": 1792262399.700666,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 91.0,
+        "resets_at": 1792277999.700686,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248651.7947745,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-haiku-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "plan",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "answer": {
+    "case": "E6",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "READY selection is a read-only transaction that filters eligible READY tasks, then calls the assignment port outside any transaction (FifoAssignment is the default when none is wired). Each proposal goes through reservation.claim in its own write transaction, which atomically creates a RESERVED attempt, the resource hold, the ACTIVE task state and a 'start' outbox intent. Delivery is write-ahead: a transaction increments deliveries, the port call runs outside any transaction with the idempotency key (CoreExecutionPort.start -> AgentExecutor.start), and the ack is recorded in another transaction (RESERVED -> DISPATCHED). M3 acceptance is the durable QUEUED ledger row, committed by Ledger.insert in a BEGIN IMMEDIATE transaction, and an 'accepted' receipt returned after commit. order.json and route.json are written after commit, and their failures are only logged. Launch is later and separate: QUEUED -> PREPARING, then external work (brief, worktree, driver.prepare, shim spawn) outside ledger transactions, then RUNNING with the started event in one transaction.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._assign",
+            "start_line": 289,
+            "end_line": 328
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.__init__",
+            "start_line": 81,
+            "end_line": 83
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "claim",
+            "start_line": 34,
+            "end_line": 71
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._deliver_one",
+            "start_line": 36,
+            "end_line": 76
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._record_ack",
+            "start_line": 110,
+            "end_line": 129
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "CoreExecutionPort.start",
+            "start_line": 303,
+            "end_line": 328
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "AgentExecutor.start",
+            "start_line": 141,
+            "end_line": 186
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/ledger.py",
+            "symbol": "Ledger.insert",
+            "start_line": 164,
+            "end_line": 203
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/spawn.py",
+            "symbol": "SpawnMixin._launch",
+            "start_line": 34,
+            "end_line": 84
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/sqlite_repository.py",
+            "symbol": "SqliteRepository.transaction",
+            "start_line": 99,
+            "end_line": 103
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "SchedulerCore.start calls reconcile(everything=True) after binding, so every live attempt is queried before dispatch. A pending start with deliveries>0 is queried before any resend (_deliver_one). If the executor reports running or queued (the adapter maps queued/preparing/running/settling to running), the start item is marked delivered and no resend happens. If it reports unknown, the attempt becomes UNCERTAIN and no resend happens. Only not_found while the attempt is still RESERVED with the start still pending leads to one redelivery. Same-key protection in M3: the ledger's idem_key is UNIQUE, and Ledger.insert returns the stored row for the same key or raises KEY_CONFLICT for a different order. AgentExecutor.start checks the key before resolving the route, and _replay answers duplicate without a second writer.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.start",
+            "start_line": 107,
+            "end_line": 122
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher.reconcile",
+            "start_line": 143,
+            "end_line": 165
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._deliver_one",
+            "start_line": 68,
+            "end_line": 72
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/recovery.py",
+            "symbol": "apply_observation",
+            "start_line": 113,
+            "end_line": 130
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "CoreExecutionPort.query",
+            "start_line": 334,
+            "end_line": 336
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "STATE_OF",
+            "start_line": 68,
+            "end_line": 69
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/ledger.py",
+            "symbol": "Ledger.insert",
+            "start_line": 164,
+            "end_line": 178
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "AgentExecutor.start",
+            "start_line": 149,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "AgentExecutor._replay",
+            "start_line": 196,
+            "end_line": 203
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_dispatch.py",
+            "symbol": "CrashPoints.test_crash_after_delivery_but_before_the_ack_was_recorded",
+            "start_line": 92,
+            "end_line": 103
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/tests/test_reconcile.py",
+            "symbol": "Reconcile.test_an_accepted_but_never_started_order_is_started_exactly_once_by_the_new_executor",
+            "start_line": 88,
+            "end_line": 96
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "An expired lease only sets needs_reconcile (SchedulerCore._refresh). The reconcile query returning unknown goes to apply_observation's final branch, which sets UNCERTAIN and shortens the lease to min(lease, reconcile interval). No end_attempt runs, so holds stay in state.holds, the task stays ACTIVE and still occupies a slot in free_slots, and the task is never RECOVERING. recovery.pending therefore never sees it, so no retry is considered and the attempt budget is unchanged. The run stops only when every active task is uncertain, which requires an operator (resolve_attempt).",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._refresh",
+            "start_line": 265,
+            "end_line": 273
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/recovery.py",
+            "symbol": "apply_observation",
+            "start_line": 109,
+            "end_line": 135
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "free_slots",
+            "start_line": 30,
+            "end_line": 31
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/recovery.py",
+            "symbol": "pending",
+            "start_line": 39,
+            "end_line": 50
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._stalled",
+            "start_line": 363,
+            "end_line": 373
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_restart.py",
+            "symbol": "Reconciliation.test_unavailable_executor_at_restart_makes_running_attempts_uncertain_and_others_keep_going",
+            "start_line": 157,
+            "end_line": 167
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "A pending unsent start (deliveries 0) is skipped by reconcile and sent by the normal path. Not_found with deliveries>0 while the attempt is RESERVED and the start is still pending logs reconcile_redeliver, and _still_unsent then allows exactly one resend, which is safe because the executor has no record. Not_found after delivery (start item already delivered, or attempt already DISPATCHED) takes the else branch: end_attempt FAILED with cause 'lost', the hold is released, and the task goes to RECOVERING, where the retry or block policy decides. That is the loss: the attempt is recorded as lost, and any executor-side work is not tracked. The core test shows the safe redelivery.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/recovery.py",
+            "symbol": "apply_observation",
+            "start_line": 125,
+            "end_line": 132
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._still_unsent",
+            "start_line": 79,
+            "end_line": 82
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._deliver_one",
+            "start_line": 68,
+            "end_line": 75
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher.reconcile",
+            "start_line": 155,
+            "end_line": 156
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/transitions.py",
+            "symbol": "end_attempt",
+            "start_line": 131,
+            "end_line": 147
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_dispatch.py",
+            "symbol": "PortFailures.test_an_unavailable_executor_keeps_the_intent_and_does_not_raise",
+            "start_line": 107,
+            "end_line": 115
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_restart.py",
+            "symbol": "Reconciliation.test_the_executor_that_never_heard_of_a_running_attempt_makes_it_lost_and_the_task_recovers",
+            "start_line": 148,
+            "end_line": 155
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "Clean exit is not enough. M3 maps a zero-exit run with provider end-of-turn evidence to FINISHED. A zero exit without that evidence is FAILED (incomplete_output), and a failed handoff turns FINISHED into FAILED. report.json is recorded only as a claim. The terminal event goes through CoreEventSink into SchedulerCore.ingest. apply_event moves the attempt to VERIFYING and queues a verify order, but the task is not completed. Only apply_verdict (accepted, non-empty verifier, verifier differs from the executor label when require_independent_verifier is set, evidence present) sets the attempt ACCEPTED and the task COMPLETED. The independent verifier, via submit_verdict, is the only party that may accept the work.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_executor/classify.py",
+            "symbol": "outcome",
+            "start_line": 62,
+            "end_line": 65
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/settle.py",
+            "symbol": "SettleMixin._settle_once",
+            "start_line": 88,
+            "end_line": 96
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/settle.py",
+            "symbol": "SettleMixin._outcome_for",
+            "start_line": 42,
+            "end_line": 47
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "CoreEventSink.deliver",
+            "start_line": 349,
+            "end_line": 360
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "apply_event",
+            "start_line": 95,
+            "end_line": 98
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "request_verification",
+            "start_line": 107,
+            "end_line": 115
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "apply_verdict",
+            "start_line": 127,
+            "end_line": 146
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quality_adapter.py",
+            "symbol": "QualityVerificationPort._deliver_one",
+            "start_line": 301,
+            "end_line": 312
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "test_the_executors_own_label_cannot_accept_its_work",
+            "start_line": 57,
+            "end_line": 62
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_executor_integration.py",
+            "symbol": "test_an_agent_that_says_it_finished_is_not_a_completed_task_until_the_verifier_says_so",
+            "start_line": 101,
+            "end_line": 110
+          }
+        ]
+      },
+      {
+        "id": "Q6",
+        "answer": "No, reconciliation does not override the verifier. While an attempt is VERIFYING, apply_observation ignores failed, not_found, cancelled and unknown and logs observation_ignored. Running and finished are still processed, and finished does not create a duplicate verify order. The operator exception is resolve_attempt (SchedulerCore.resolve_attempt -> operations.resolve_attempt), which passes manual=True into apply_observation and may set failed, finished, cancelled or running. Read-only observation: the ignore branch returns before needs_reconcile is cleared, and reconcile counts every queried target as progress, so run() would not sleep on a repeatedly ignored VERIFYING attempt. This was not executed.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/recovery.py",
+            "symbol": "apply_observation",
+            "start_line": 96,
+            "end_line": 109
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/operations.py",
+            "symbol": "resolve_attempt",
+            "start_line": 72,
+            "end_line": 83
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.resolve_attempt",
+            "start_line": 249,
+            "end_line": 252
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher.reconcile",
+            "start_line": 160,
+            "end_line": 164
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.run",
+            "start_line": 352,
+            "end_line": 354
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_hardening.py",
+            "symbol": "VerifyingIsSettledByVerdict.test_an_unknown_observation_does_not_pull_a_verifying_attempt_back_to_uncertain",
+            "start_line": 256,
+            "end_line": 264
+          }
+        ]
+      },
+      {
+        "id": "Q7",
+        "answer": "events._preflight runs in this order: wrong plan or revision is invalid, and not remembered (_reject). The incident_observed exception allows a superseded attempt and an already-seen event id to be audited as duplicate. Other duplicates return duplicate. An unknown attempt or task mismatch is invalid. A token mismatch or an old attempt for the task is stale. apply_event then handles terminal attempts: incident_observed is audited and remembered before the terminal check, with no lease change, so it can apply to a closed attempt; other events on a closed attempt are stale attempt_closed. Only applied messages are remembered. Heartbeat refreshes the lease and returns noop. The incident exception is therefore a separate audit path, not a blanket rule.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "_preflight",
+            "start_line": 46,
+            "end_line": 63
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "_reject",
+            "start_line": 34,
+            "end_line": 43
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "apply_event",
+            "start_line": 66,
+            "end_line": 83
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "apply_event",
+            "start_line": 95,
+            "end_line": 104
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "Idempotency.test_the_same_event_twice_equals_once",
+            "start_line": 107,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "Stale.test_a_late_event_of_an_old_attempt_cannot_touch_the_current_one",
+            "start_line": 163,
+            "end_line": 171
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "Stale.test_a_wrong_fencing_token_is_stale",
+            "start_line": 178,
+            "end_line": 181
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_incident_contract.py",
+            "symbol": "test_incident_reference_audits_without_changing_task_attempt_or_lease",
+            "start_line": 36,
+            "end_line": 46
+          }
+        ]
+      },
+      {
+        "id": "Q8",
+        "answer": "Before delivery (deliveries 0, start still pending), cancel ends the attempt CANCELLED at once through end_attempt, which releases the hold and voids the outbox. The task becomes CANCELLED because cancel_requested is set. A prepare step also voids a start if cancel_requested is set. If the start may already have been sent (deliveries>0 or delivered), cancel voids the pending start, adds a cancel order and does not release the hold. The attempt stays live, and the hold is released only when the attempt closes through an event, an ack or reconciliation. So holds are discarded immediately only in the pre-delivery case.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/operations.py",
+            "symbol": "cancel",
+            "start_line": 35,
+            "end_line": 57
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/transitions.py",
+            "symbol": "end_attempt",
+            "start_line": 131,
+            "end_line": 147
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/transitions.py",
+            "symbol": "release",
+            "start_line": 69,
+            "end_line": 71
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._deliver_one",
+            "start_line": 47,
+            "end_line": 50
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._record_ack",
+            "start_line": 125,
+            "end_line": 126
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_operations.py",
+            "symbol": "Cancel.test_an_attempt_not_yet_sent_is_cancelled_without_ever_reaching_the_executor",
+            "start_line": 71,
+            "end_line": 77
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_operations.py",
+            "symbol": "Cancel.test_unstarted_work_is_cancelled_at_once_and_running_work_gets_a_cancel_order",
+            "start_line": 62,
+            "end_line": 69
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_operations.py",
+            "symbol": "Cancel.test_cancellation_is_resolved_by_reconciliation_when_the_event_is_lost",
+            "start_line": 79,
+            "end_line": 86
+          }
+        ]
+      },
+      {
+        "id": "Q9",
+        "answer": "On restart RecoverMixin._recover reattaches RUNNING attempts with a non-acting watch. It settles an attempt when exit.json exists, keeps it when the recorded shim pid and identity are alive, or settles it as lost with adopt_orphan when neither holds. PREPARING goes through _reconcile_preparing, which reads shim.json and exit.json, searches for an unrecorded shim by argv, and aborts or kills it. It adopts a live shim or agent into RUNNING, settles from exit.json if the shim exited, and only otherwise prepares again. SETTLING is settled again. Persisted facts checked: shim pid and start identity, child pid and identity, exit.json, workspace and ledger state. Uncertain: an agent whose shim died before shim.json was written has no record and cannot be identified by identity (declared limit). Descendant sampling is best-effort. M1 sees PREPARING as running, so it does not resend.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_executor/recovery.py",
+            "symbol": "RecoverMixin._recover",
+            "start_line": 14,
+            "end_line": 25
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/recovery.py",
+            "symbol": "RecoverMixin._reconcile_preparing",
+            "start_line": 27,
+            "end_line": 58
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/recovery.py",
+            "symbol": "RecoverMixin._adopt_running",
+            "start_line": 60,
+            "end_line": 70
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "AgentExecutor._watch",
+            "start_line": 346,
+            "end_line": 369
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "AgentExecutor.query",
+            "start_line": 237,
+            "end_line": 256
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/tests/test_reconcile.py",
+            "symbol": "Reconcile.test_an_attempt_whose_shim_started_but_was_never_recorded_as_running_is_adopted_not_duplicated",
+            "start_line": 108,
+            "end_line": 115
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/tests/test_reconcile.py",
+            "symbol": "Reconcile.test_an_attempt_stuck_in_preparing_with_no_process_is_prepared_again_once",
+            "start_line": 98,
+            "end_line": 106
+          }
+        ]
+      },
+      {
+        "id": "Q10",
+        "answer": "The M2 reference travels as the assignment's executor label into the start order. RouteResolver.resolve accepts only m2:v1:/route: references resolved by the M2 lookup, which returns None unless M2 selected that route. check_context then requires matching plan_id, revision, task_id and plan_sha256, refuses superseded decisions, and requires fresh quota. validate_route runs again at launch in MethodologyDriver.prepare. Unknown references give ROUTE_UNRESOLVABLE and mismatches give ROUTE_INVALID; neither defaults. direct: references are refused when a lookup is configured. Both codes are non-transient, so the core records a rejected start and fails the attempt, which spends budget. Silent-fallback caveat: the account_ref check runs only when the expected account is non-empty, and m2_account_ref returns empty when M2 cannot be imported.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "RouteResolver.resolve",
+            "start_line": 146,
+            "end_line": 165
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "RouteResolver.check_context",
+            "start_line": 167,
+            "end_line": 180
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "m2_ledger_lookup",
+            "start_line": 199,
+            "end_line": 222
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "validate_route",
+            "start_line": 120,
+            "end_line": 123
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "m2_account_ref",
+            "start_line": 126,
+            "end_line": 131
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "MethodologyDriver.prepare",
+            "start_line": 232,
+            "end_line": 233
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "TRANSIENT",
+            "start_line": 288,
+            "end_line": 288
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "CoreExecutionPort.start",
+            "start_line": 324,
+            "end_line": 325
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._record_ack",
+            "start_line": 117,
+            "end_line": 121
+          }
+        ]
+      },
+      {
+        "id": "Q11",
+        "answer": "Lost-ack restart (core): CrashPoints.test_crash_after_delivery_but_before_the_ack_was_recorded sets the item back to pending, restarts, and asserts only one start delivery, because the executor is queried first. CrashPoints.test_crash_after_the_executor_took_the_order_never_starts_a_second_writer asserts one start key and one started order, with the attempt running. Executor side: Reconcile.test_an_accepted_but_never_started_order_is_started_exactly_once_by_the_new_executor asserts one run after restart. Unknown-hold retention: Reconciliation.test_unavailable_executor_at_restart... asserts UNCERTAIN for T1 and T3 and that both holds remain (sorted holds equal the two attempts), then that an event resolves it. Stale/duplicate/verifier: the same-event test asserts a duplicate event leaves snapshot and audit length unchanged. The late-event test asserts stale results and unchanged holds. The own-label test asserts verifier_not_independent. VerifyingIsSettledByVerdict asserts an unknown observation leaves the attempt VERIFYING. Not executed.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_dispatch.py",
+            "symbol": "CrashPoints.test_crash_after_delivery_but_before_the_ack_was_recorded",
+            "start_line": 92,
+            "end_line": 103
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_dispatch.py",
+            "symbol": "CrashPoints.test_crash_after_the_executor_took_the_order_never_starts_a_second_writer",
+            "start_line": 54,
+            "end_line": 64
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/tests/test_reconcile.py",
+            "symbol": "Reconcile.test_an_accepted_but_never_started_order_is_started_exactly_once_by_the_new_executor",
+            "start_line": 88,
+            "end_line": 96
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_restart.py",
+            "symbol": "Reconciliation.test_unavailable_executor_at_restart_makes_running_attempts_uncertain_and_others_keep_going",
+            "start_line": 157,
+            "end_line": 167
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "Idempotency.test_the_same_event_twice_equals_once",
+            "start_line": 107,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "Stale.test_a_late_event_of_an_old_attempt_cannot_touch_the_current_one",
+            "start_line": 163,
+            "end_line": 171
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_events.py",
+            "symbol": "test_the_executors_own_label_cannot_accept_its_work",
+            "start_line": 57,
+            "end_line": 61
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_hardening.py",
+            "symbol": "VerifyingIsSettledByVerdict.test_an_unknown_observation_does_not_pull_a_verifying_attempt_back_to_uncertain",
+            "start_line": 256,
+            "end_line": 264
+          }
+        ]
+      },
+      {
+        "id": "Q12",
+        "answer": "The source supports: at most one start order per attempt key delivered by M1 (write-ahead, query before resend); one local process per M3 attempt; idempotent core ingestion; and no completion without a verdict. It does not prove exactly-once effects at an external provider: the idempotency key stops at M3, and provider invocation carries the prompt and model, not the key. Automatic quality acceptance is not established: the core accepts only a verdict with a named verifier and evidence, and the M6 path builds it from a store resolution whose producers (ReviewerPort implementations) were not fully traced. Live availability is not established: the tests use fakes and simulators, and the module declares POSIX-only, same-user, no-sandbox limits.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_executor_adapter.py",
+            "symbol": "MethodologyDriver.prepare",
+            "start_line": 254,
+            "end_line": 255
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor/executor.py",
+            "symbol": "AgentExecutor._watch",
+            "start_line": 346,
+            "end_line": 369
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._deliver_one",
+            "start_line": 68,
+            "end_line": 75
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quality_adapter.py",
+            "symbol": "QualityVerificationPort._deliver_one",
+            "start_line": 280,
+            "end_line": 311
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/events.py",
+            "symbol": "apply_verdict",
+            "start_line": 130,
+            "end_line": 142
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "No tests or code were executed; all statements about passing or failing behaviour come from reading assertions only.",
+      "The M6 quality path (ReviewerPort implementations and how PASS/FAIL resolutions are produced) was not fully traced, so whether any acceptance is automatic is unresolved.",
+      "The live wiring in skill/scripts/bt_scheduler_adapter.py (including on_accepted_attempt and the event sink bind) was not read, so the end-to-end composition is inferred from the module boundaries.",
+      "The Q6 observation that an ignored VERIFYING observation leaves needs_reconcile set, causing repeated queries without sleeping, is inferred from reading the code and was not run.",
+      "The account_ref check in validate_route is skipped when the expected account is empty; whether that state occurs in production is unknown.",
+      "The M3 ledger's retention or pruning of old rows is not established, so whether a not_found can arise from pruning rather than loss is unknown.",
+      "No evidence on real provider CLI behaviour, duplicate provider-side effects, or account availability; the repository snapshot cannot establish these."
+    ]
+  },
+  "response_text": "{\"case\":\"E6\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"READY selection is a read-only transaction that filters eligible READY tasks, then calls the assignment port outside any transaction (FifoAssignment is the default when none is wired). Each proposal goes through reservation.claim in its own write transaction, which atomically creates a RESERVED attempt, the resource hold, the ACTIVE task state and a 'start' outbox intent. Delivery is write-ahead: a transaction increments deliveries, the port call runs outside any transaction with the idempotency key (CoreExecutionPort.start -> AgentExecutor.start), and the ack is recorded in another transaction (RESERVED -> DISPATCHED). M3 acceptance is the durable QUEUED ledger row, committed by Ledger.insert in a BEGIN IMMEDIATE transaction, and an 'accepted' receipt returned after commit. order.json and route.json are written after commit, and their failures are only logged. Launch is later and separate: QUEUED -> PREPARING, then external work (brief, worktree, driver.prepare, shim spawn) outside ledger transactions, then RUNNING with the started event in one transaction.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._assign\",\"start_line\":289,\"end_line\":328},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.__init__\",\"start_line\":81,\"end_line\":83},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"claim\",\"start_line\":34,\"end_line\":71},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._deliver_one\",\"start_line\":36,\"end_line\":76},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._record_ack\",\"start_line\":110,\"end_line\":129},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"CoreExecutionPort.start\",\"start_line\":303,\"end_line\":328},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"AgentExecutor.start\",\"start_line\":141,\"end_line\":186},{\"path\":\"skill/scripts/bt_scheduler_executor/ledger.py\",\"symbol\":\"Ledger.insert\",\"start_line\":164,\"end_line\":203},{\"path\":\"skill/scripts/bt_scheduler_executor/spawn.py\",\"symbol\":\"SpawnMixin._launch\",\"start_line\":34,\"end_line\":84},{\"path\":\"skill/scripts/bt_scheduler_core/sqlite_repository.py\",\"symbol\":\"SqliteRepository.transaction\",\"start_line\":99,\"end_line\":103}]},{\"id\":\"Q2\",\"answer\":\"SchedulerCore.start calls reconcile(everything=True) after binding, so every live attempt is queried before dispatch. A pending start with deliveries>0 is queried before any resend (_deliver_one). If the executor reports running or queued (the adapter maps queued/preparing/running/settling to running), the start item is marked delivered and no resend happens. If it reports unknown, the attempt becomes UNCERTAIN and no resend happens. Only not_found while the attempt is still RESERVED with the start still pending leads to one redelivery. Same-key protection in M3: the ledger's idem_key is UNIQUE, and Ledger.insert returns the stored row for the same key or raises KEY_CONFLICT for a different order. AgentExecutor.start checks the key before resolving the route, and _replay answers duplicate without a second writer.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.start\",\"start_line\":107,\"end_line\":122},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher.reconcile\",\"start_line\":143,\"end_line\":165},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._deliver_one\",\"start_line\":68,\"end_line\":72},{\"path\":\"skill/scripts/bt_scheduler_core/recovery.py\",\"symbol\":\"apply_observation\",\"start_line\":113,\"end_line\":130},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"CoreExecutionPort.query\",\"start_line\":334,\"end_line\":336},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"STATE_OF\",\"start_line\":68,\"end_line\":69},{\"path\":\"skill/scripts/bt_scheduler_executor/ledger.py\",\"symbol\":\"Ledger.insert\",\"start_line\":164,\"end_line\":178},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"AgentExecutor.start\",\"start_line\":149,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"AgentExecutor._replay\",\"start_line\":196,\"end_line\":203},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_dispatch.py\",\"symbol\":\"CrashPoints.test_crash_after_delivery_but_before_the_ack_was_recorded\",\"start_line\":92,\"end_line\":103},{\"path\":\"skill/scripts/bt_scheduler_executor/tests/test_reconcile.py\",\"symbol\":\"Reconcile.test_an_accepted_but_never_started_order_is_started_exactly_once_by_the_new_executor\",\"start_line\":88,\"end_line\":96}]},{\"id\":\"Q3\",\"answer\":\"An expired lease only sets needs_reconcile (SchedulerCore._refresh). The reconcile query returning unknown goes to apply_observation's final branch, which sets UNCERTAIN and shortens the lease to min(lease, reconcile interval). No end_attempt runs, so holds stay in state.holds, the task stays ACTIVE and still occupies a slot in free_slots, and the task is never RECOVERING. recovery.pending therefore never sees it, so no retry is considered and the attempt budget is unchanged. The run stops only when every active task is uncertain, which requires an operator (resolve_attempt).\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._refresh\",\"start_line\":265,\"end_line\":273},{\"path\":\"skill/scripts/bt_scheduler_core/recovery.py\",\"symbol\":\"apply_observation\",\"start_line\":109,\"end_line\":135},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"free_slots\",\"start_line\":30,\"end_line\":31},{\"path\":\"skill/scripts/bt_scheduler_core/recovery.py\",\"symbol\":\"pending\",\"start_line\":39,\"end_line\":50},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._stalled\",\"start_line\":363,\"end_line\":373},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_restart.py\",\"symbol\":\"Reconciliation.test_unavailable_executor_at_restart_makes_running_attempts_uncertain_and_others_keep_going\",\"start_line\":157,\"end_line\":167}]},{\"id\":\"Q4\",\"answer\":\"A pending unsent start (deliveries 0) is skipped by reconcile and sent by the normal path. Not_found with deliveries>0 while the attempt is RESERVED and the start is still pending logs reconcile_redeliver, and _still_unsent then allows exactly one resend, which is safe because the executor has no record. Not_found after delivery (start item already delivered, or attempt already DISPATCHED) takes the else branch: end_attempt FAILED with cause 'lost', the hold is released, and the task goes to RECOVERING, where the retry or block policy decides. That is the loss: the attempt is recorded as lost, and any executor-side work is not tracked. The core test shows the safe redelivery.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/recovery.py\",\"symbol\":\"apply_observation\",\"start_line\":125,\"end_line\":132},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._still_unsent\",\"start_line\":79,\"end_line\":82},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._deliver_one\",\"start_line\":68,\"end_line\":75},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher.reconcile\",\"start_line\":155,\"end_line\":156},{\"path\":\"skill/scripts/bt_scheduler_core/transitions.py\",\"symbol\":\"end_attempt\",\"start_line\":131,\"end_line\":147},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_dispatch.py\",\"symbol\":\"PortFailures.test_an_unavailable_executor_keeps_the_intent_and_does_not_raise\",\"start_line\":107,\"end_line\":115},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_restart.py\",\"symbol\":\"Reconciliation.test_the_executor_that_never_heard_of_a_running_attempt_makes_it_lost_and_the_task_recovers\",\"start_line\":148,\"end_line\":155}]},{\"id\":\"Q5\",\"answer\":\"Clean exit is not enough. M3 maps a zero-exit run with provider end-of-turn evidence to FINISHED. A zero exit without that evidence is FAILED (incomplete_output), and a failed handoff turns FINISHED into FAILED. report.json is recorded only as a claim. The terminal event goes through CoreEventSink into SchedulerCore.ingest. apply_event moves the attempt to VERIFYING and queues a verify order, but the task is not completed. Only apply_verdict (accepted, non-empty verifier, verifier differs from the executor label when require_independent_verifier is set, evidence present) sets the attempt ACCEPTED and the task COMPLETED. The independent verifier, via submit_verdict, is the only party that may accept the work.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_executor/classify.py\",\"symbol\":\"outcome\",\"start_line\":62,\"end_line\":65},{\"path\":\"skill/scripts/bt_scheduler_executor/settle.py\",\"symbol\":\"SettleMixin._settle_once\",\"start_line\":88,\"end_line\":96},{\"path\":\"skill/scripts/bt_scheduler_executor/settle.py\",\"symbol\":\"SettleMixin._outcome_for\",\"start_line\":42,\"end_line\":47},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"CoreEventSink.deliver\",\"start_line\":349,\"end_line\":360},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"apply_event\",\"start_line\":95,\"end_line\":98},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"request_verification\",\"start_line\":107,\"end_line\":115},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"apply_verdict\",\"start_line\":127,\"end_line\":146},{\"path\":\"skill/scripts/bt_scheduler_quality_adapter.py\",\"symbol\":\"QualityVerificationPort._deliver_one\",\"start_line\":301,\"end_line\":312},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"test_the_executors_own_label_cannot_accept_its_work\",\"start_line\":57,\"end_line\":62},{\"path\":\"skill/scripts/tests/test_scheduler_executor_integration.py\",\"symbol\":\"test_an_agent_that_says_it_finished_is_not_a_completed_task_until_the_verifier_says_so\",\"start_line\":101,\"end_line\":110}]},{\"id\":\"Q6\",\"answer\":\"No, reconciliation does not override the verifier. While an attempt is VERIFYING, apply_observation ignores failed, not_found, cancelled and unknown and logs observation_ignored. Running and finished are still processed, and finished does not create a duplicate verify order. The operator exception is resolve_attempt (SchedulerCore.resolve_attempt -> operations.resolve_attempt), which passes manual=True into apply_observation and may set failed, finished, cancelled or running. Read-only observation: the ignore branch returns before needs_reconcile is cleared, and reconcile counts every queried target as progress, so run() would not sleep on a repeatedly ignored VERIFYING attempt. This was not executed.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/recovery.py\",\"symbol\":\"apply_observation\",\"start_line\":96,\"end_line\":109},{\"path\":\"skill/scripts/bt_scheduler_core/operations.py\",\"symbol\":\"resolve_attempt\",\"start_line\":72,\"end_line\":83},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.resolve_attempt\",\"start_line\":249,\"end_line\":252},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher.reconcile\",\"start_line\":160,\"end_line\":164},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.run\",\"start_line\":352,\"end_line\":354},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_hardening.py\",\"symbol\":\"VerifyingIsSettledByVerdict.test_an_unknown_observation_does_not_pull_a_verifying_attempt_back_to_uncertain\",\"start_line\":256,\"end_line\":264}]},{\"id\":\"Q7\",\"answer\":\"events._preflight runs in this order: wrong plan or revision is invalid, and not remembered (_reject). The incident_observed exception allows a superseded attempt and an already-seen event id to be audited as duplicate. Other duplicates return duplicate. An unknown attempt or task mismatch is invalid. A token mismatch or an old attempt for the task is stale. apply_event then handles terminal attempts: incident_observed is audited and remembered before the terminal check, with no lease change, so it can apply to a closed attempt; other events on a closed attempt are stale attempt_closed. Only applied messages are remembered. Heartbeat refreshes the lease and returns noop. The incident exception is therefore a separate audit path, not a blanket rule.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"_preflight\",\"start_line\":46,\"end_line\":63},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"_reject\",\"start_line\":34,\"end_line\":43},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"apply_event\",\"start_line\":66,\"end_line\":83},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"apply_event\",\"start_line\":95,\"end_line\":104},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"Idempotency.test_the_same_event_twice_equals_once\",\"start_line\":107,\"end_line\":116},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"Stale.test_a_late_event_of_an_old_attempt_cannot_touch_the_current_one\",\"start_line\":163,\"end_line\":171},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"Stale.test_a_wrong_fencing_token_is_stale\",\"start_line\":178,\"end_line\":181},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_incident_contract.py\",\"symbol\":\"test_incident_reference_audits_without_changing_task_attempt_or_lease\",\"start_line\":36,\"end_line\":46}]},{\"id\":\"Q8\",\"answer\":\"Before delivery (deliveries 0, start still pending), cancel ends the attempt CANCELLED at once through end_attempt, which releases the hold and voids the outbox. The task becomes CANCELLED because cancel_requested is set. A prepare step also voids a start if cancel_requested is set. If the start may already have been sent (deliveries>0 or delivered), cancel voids the pending start, adds a cancel order and does not release the hold. The attempt stays live, and the hold is released only when the attempt closes through an event, an ack or reconciliation. So holds are discarded immediately only in the pre-delivery case.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/operations.py\",\"symbol\":\"cancel\",\"start_line\":35,\"end_line\":57},{\"path\":\"skill/scripts/bt_scheduler_core/transitions.py\",\"symbol\":\"end_attempt\",\"start_line\":131,\"end_line\":147},{\"path\":\"skill/scripts/bt_scheduler_core/transitions.py\",\"symbol\":\"release\",\"start_line\":69,\"end_line\":71},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._deliver_one\",\"start_line\":47,\"end_line\":50},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._record_ack\",\"start_line\":125,\"end_line\":126},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_operations.py\",\"symbol\":\"Cancel.test_an_attempt_not_yet_sent_is_cancelled_without_ever_reaching_the_executor\",\"start_line\":71,\"end_line\":77},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_operations.py\",\"symbol\":\"Cancel.test_unstarted_work_is_cancelled_at_once_and_running_work_gets_a_cancel_order\",\"start_line\":62,\"end_line\":69},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_operations.py\",\"symbol\":\"Cancel.test_cancellation_is_resolved_by_reconciliation_when_the_event_is_lost\",\"start_line\":79,\"end_line\":86}]},{\"id\":\"Q9\",\"answer\":\"On restart RecoverMixin._recover reattaches RUNNING attempts with a non-acting watch. It settles an attempt when exit.json exists, keeps it when the recorded shim pid and identity are alive, or settles it as lost with adopt_orphan when neither holds. PREPARING goes through _reconcile_preparing, which reads shim.json and exit.json, searches for an unrecorded shim by argv, and aborts or kills it. It adopts a live shim or agent into RUNNING, settles from exit.json if the shim exited, and only otherwise prepares again. SETTLING is settled again. Persisted facts checked: shim pid and start identity, child pid and identity, exit.json, workspace and ledger state. Uncertain: an agent whose shim died before shim.json was written has no record and cannot be identified by identity (declared limit). Descendant sampling is best-effort. M1 sees PREPARING as running, so it does not resend.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_executor/recovery.py\",\"symbol\":\"RecoverMixin._recover\",\"start_line\":14,\"end_line\":25},{\"path\":\"skill/scripts/bt_scheduler_executor/recovery.py\",\"symbol\":\"RecoverMixin._reconcile_preparing\",\"start_line\":27,\"end_line\":58},{\"path\":\"skill/scripts/bt_scheduler_executor/recovery.py\",\"symbol\":\"RecoverMixin._adopt_running\",\"start_line\":60,\"end_line\":70},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"AgentExecutor._watch\",\"start_line\":346,\"end_line\":369},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"AgentExecutor.query\",\"start_line\":237,\"end_line\":256},{\"path\":\"skill/scripts/bt_scheduler_executor/tests/test_reconcile.py\",\"symbol\":\"Reconcile.test_an_attempt_whose_shim_started_but_was_never_recorded_as_running_is_adopted_not_duplicated\",\"start_line\":108,\"end_line\":115},{\"path\":\"skill/scripts/bt_scheduler_executor/tests/test_reconcile.py\",\"symbol\":\"Reconcile.test_an_attempt_stuck_in_preparing_with_no_process_is_prepared_again_once\",\"start_line\":98,\"end_line\":106}]},{\"id\":\"Q10\",\"answer\":\"The M2 reference travels as the assignment's executor label into the start order. RouteResolver.resolve accepts only m2:v1:/route: references resolved by the M2 lookup, which returns None unless M2 selected that route. check_context then requires matching plan_id, revision, task_id and plan_sha256, refuses superseded decisions, and requires fresh quota. validate_route runs again at launch in MethodologyDriver.prepare. Unknown references give ROUTE_UNRESOLVABLE and mismatches give ROUTE_INVALID; neither defaults. direct: references are refused when a lookup is configured. Both codes are non-transient, so the core records a rejected start and fails the attempt, which spends budget. Silent-fallback caveat: the account_ref check runs only when the expected account is non-empty, and m2_account_ref returns empty when M2 cannot be imported.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"RouteResolver.resolve\",\"start_line\":146,\"end_line\":165},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"RouteResolver.check_context\",\"start_line\":167,\"end_line\":180},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"m2_ledger_lookup\",\"start_line\":199,\"end_line\":222},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"validate_route\",\"start_line\":120,\"end_line\":123},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"m2_account_ref\",\"start_line\":126,\"end_line\":131},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"MethodologyDriver.prepare\",\"start_line\":232,\"end_line\":233},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"TRANSIENT\",\"start_line\":288,\"end_line\":288},{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"CoreExecutionPort.start\",\"start_line\":324,\"end_line\":325},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._record_ack\",\"start_line\":117,\"end_line\":121}]},{\"id\":\"Q11\",\"answer\":\"Lost-ack restart (core): CrashPoints.test_crash_after_delivery_but_before_the_ack_was_recorded sets the item back to pending, restarts, and asserts only one start delivery, because the executor is queried first. CrashPoints.test_crash_after_the_executor_took_the_order_never_starts_a_second_writer asserts one start key and one started order, with the attempt running. Executor side: Reconcile.test_an_accepted_but_never_started_order_is_started_exactly_once_by_the_new_executor asserts one run after restart. Unknown-hold retention: Reconciliation.test_unavailable_executor_at_restart... asserts UNCERTAIN for T1 and T3 and that both holds remain (sorted holds equal the two attempts), then that an event resolves it. Stale/duplicate/verifier: the same-event test asserts a duplicate event leaves snapshot and audit length unchanged. The late-event test asserts stale results and unchanged holds. The own-label test asserts verifier_not_independent. VerifyingIsSettledByVerdict asserts an unknown observation leaves the attempt VERIFYING. Not executed.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_dispatch.py\",\"symbol\":\"CrashPoints.test_crash_after_delivery_but_before_the_ack_was_recorded\",\"start_line\":92,\"end_line\":103},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_dispatch.py\",\"symbol\":\"CrashPoints.test_crash_after_the_executor_took_the_order_never_starts_a_second_writer\",\"start_line\":54,\"end_line\":64},{\"path\":\"skill/scripts/bt_scheduler_executor/tests/test_reconcile.py\",\"symbol\":\"Reconcile.test_an_accepted_but_never_started_order_is_started_exactly_once_by_the_new_executor\",\"start_line\":88,\"end_line\":96},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_restart.py\",\"symbol\":\"Reconciliation.test_unavailable_executor_at_restart_makes_running_attempts_uncertain_and_others_keep_going\",\"start_line\":157,\"end_line\":167},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"Idempotency.test_the_same_event_twice_equals_once\",\"start_line\":107,\"end_line\":116},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"Stale.test_a_late_event_of_an_old_attempt_cannot_touch_the_current_one\",\"start_line\":163,\"end_line\":171},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_events.py\",\"symbol\":\"test_the_executors_own_label_cannot_accept_its_work\",\"start_line\":57,\"end_line\":61},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_hardening.py\",\"symbol\":\"VerifyingIsSettledByVerdict.test_an_unknown_observation_does_not_pull_a_verifying_attempt_back_to_uncertain\",\"start_line\":256,\"end_line\":264}]},{\"id\":\"Q12\",\"answer\":\"The source supports: at most one start order per attempt key delivered by M1 (write-ahead, query before resend); one local process per M3 attempt; idempotent core ingestion; and no completion without a verdict. It does not prove exactly-once effects at an external provider: the idempotency key stops at M3, and provider invocation carries the prompt and model, not the key. Automatic quality acceptance is not established: the core accepts only a verdict with a named verifier and evidence, and the M6 path builds it from a store resolution whose producers (ReviewerPort implementations) were not fully traced. Live availability is not established: the tests use fakes and simulators, and the module declares POSIX-only, same-user, no-sandbox limits.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_executor_adapter.py\",\"symbol\":\"MethodologyDriver.prepare\",\"start_line\":254,\"end_line\":255},{\"path\":\"skill/scripts/bt_scheduler_executor/executor.py\",\"symbol\":\"AgentExecutor._watch\",\"start_line\":346,\"end_line\":369},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._deliver_one\",\"start_line\":68,\"end_line\":75},{\"path\":\"skill/scripts/bt_scheduler_quality_adapter.py\",\"symbol\":\"QualityVerificationPort._deliver_one\",\"start_line\":280,\"end_line\":311},{\"path\":\"skill/scripts/bt_scheduler_core/events.py\",\"symbol\":\"apply_verdict\",\"start_line\":130,\"end_line\":142}]}],\"unknowns\":[\"No tests or code were executed; all statements about passing or failing behaviour come from reading assertions only.\",\"The M6 quality path (ReviewerPort implementations and how PASS/FAIL resolutions are produced) was not fully traced, so whether any acceptance is automatic is unresolved.\",\"The live wiring in skill/scripts/bt_scheduler_adapter.py (including on_accepted_attempt and the event sink bind) was not read, so the end-to-end composition is inferred from the module boundaries.\",\"The Q6 observation that an ignored VERIFYING observation leaves needs_reconcile set, causing repeated queries without sleeping, is inferred from reading the code and was not run.\",\"The account_ref check in validate_route is skipped when the expected account is empty; whether that state occurs in production is unknown.\",\"The M3 ledger's retention or pruning of old rows is not established, so whether a not_found can arise from pruning rather than loss is unknown.\",\"No evidence on real provider CLI behaviour, duplicate provider-side effects, or account availability; the repository snapshot cannot establish these.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 62,
+    "cache_creation_input_tokens": 155196,
+    "cache_read_input_tokens": 2731520,
+    "output_tokens": 44021,
+    "output_tokens_details": {
+      "thinking_tokens": 25545
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 155196,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 50,
+  "response_words": 1486,
+  "exit_code": 0,
+  "elapsed_seconds": 211.769,
+  "finished_at": 1792248863.564348,
+  "tool_audit": [
+    {
+      "tool": "Glob",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo",
+        "pattern": "**/*"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo",
+        "pattern": "execution_finished|not_found|fencing|fence|lease|VERIFYING|PREPARING|SETTLING|unknown"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku",
+        "pattern": "repo/skill/scripts/bt_scheduler_*/**/*.{py,md}"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/README.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/README.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/dispatch.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/scheduler.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/reservation.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/recovery.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/events.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/transitions.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/operations.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/states.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/contracts.py",
+        "pattern": "EXEC_STATES|class ExecutionStatus|class Verdict|def verdict_problem|class Ack|ACK\\b|class StartOrder|class Event\\b|incident"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/contracts.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor_adapter.py",
+        "pattern": "def start|def cancel|def query|def _start|ROUTE_UNRESOLVABLE|def resolve|class .*Route|def _route|lookup|account_ref|quota"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/executor.py",
+        "pattern": "def |class "
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/executor.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor_adapter.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/ledger.py",
+        "pattern": "def |UNIQUE|idempotency_key|KEY_CONFLICT|QUEUE_FULL|PRAGMA|BEGIN"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/recovery.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/ledger.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor",
+        "pattern": "def _launch_job|def _submit_settle|def _settle|def _abort_spawn|transition\\(|ledger\\.update|PREPARING|launch|driver\\.prepare|spawn\\(|def _spawn"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/spawn.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/settle.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/classify.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts",
+        "pattern": "submit_verdict|class .*VerificationPort|def request\\(",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_quality_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_quality_adapter.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests",
+        "pattern": "def test_(crash|lost|unknown|uncertain|not_found|wrong_fencing|a_wrong|late_event|the_same_event|the_executors_own|verifying|stale|duplicate|cancel|incident|the_same_verdict|wrong_plan|old_attempt|a_late)\\w*"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_dispatch.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_restart.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_events.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_operations.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests",
+        "pattern": "observation_ignored|verifying|manual=True|resolve_attempt\\(.*verif|settled by a verdict"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts",
+        "pattern": "def resolve_executor_binding|superseded_by|class ExecutorBinding|def has_incident_event",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_hardening.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_incident_contract.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/tests",
+        "pattern": "def test_(an_accepted_but_never|the_same_order_twice|the_same_key_with|a_replay_is_answered|a_recycled|an_attempt_stuck_in_preparing|a_cancel_that_arrives_while|cancel_racing|a_wrong_token)\\w*"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/tests/test_reconcile.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/tests/test_start.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/tests/test_cancel.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core",
+        "pattern": "BEGIN IMMEDIATE|def has_incident_event|def transaction|def read_transaction"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_restart.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts",
+        "pattern": "def test_(finished_means_the_agent_stopped|an_agent_that_says_it_finished|a_clean_exit_without_end_of_turn|the_child_gets|cancelling_the_run_stops|an_executor_restart_in_the_middle)\\w*"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/tests/test_scheduler_executor_integration.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_executor/tests/test_executor.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_operations.py",
+        "pattern": "def test_\\w+"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_operations.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E6/haiku/repo/skill/scripts",
+        "pattern": "^class |    def _deliver_one|    def _deliver\\w*\\(",
+        "glob": "{bt_scheduler_executor/ledger.py,bt_scheduler_quality_adapter.py,bt_scheduler_executor/tests/test_reconcile.py,bt_scheduler_core/tests/test_restart.py,bt_scheduler_core/tests/test_hardening.py}"
+      }
+    }
+  ],
+  "event_shapes": {
+    "system": [
+      "estimated_tokens",
+      "estimated_tokens_delta",
+      "session_id",
+      "subtype",
+      "type",
+      "uuid"
+    ],
+    "assistant": [
+      "message",
+      "parent_tool_use_id",
+      "request_id",
+      "session_id",
+      "timestamp",
+      "type",
+      "uuid"
+    ],
+    "rate_limit_event": [
+      "rate_limit_info",
+      "session_id",
+      "type",
+      "uuid"
+    ],
+    "user": [
+      "message",
+      "parent_tool_use_id",
+      "session_id",
+      "timestamp",
+      "tool_result_meta",
+      "tool_use_result",
+      "type",
+      "uuid"
+    ],
+    "result": [
+      "api_error_status",
+      "duration_api_ms",
+      "duration_ms",
+      "fast_mode_disabled_reason",
+      "fast_mode_state",
+      "first_content_frame_ms",
+      "is_error",
+      "modelUsage",
+      "num_turns",
+      "permission_denials",
+      "queued_turn_count",
+      "result",
+      "result_index",
+      "safety_stops",
+      "session_id",
+      "stop_reason",
+      "subagent_stats",
+      "subtype",
+      "terminal_reason",
+      "time_to_request_ms",
+      "total_cost_usd",
+      "ttft_ms",
+      "ttft_stream_ms",
+      "type",
+      "usage",
+      "uuid"
+    ]
+  },
+  "per_message_usage": [
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3842,
+      "cache_read_input_tokens": 5016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3842
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3842,
+      "cache_read_input_tokens": 5016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3842
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2742,
+      "cache_read_input_tokens": 8858,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2742
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2742,
+      "cache_read_input_tokens": 8858,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2742
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3484,
+      "cache_read_input_tokens": 11600,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3484
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3484,
+      "cache_read_input_tokens": 11600,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3484
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3053,
+      "cache_read_input_tokens": 15084,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3053
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3053,
+      "cache_read_input_tokens": 15084,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3053
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3053,
+      "cache_read_input_tokens": 15084,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3053
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 17893,
+      "cache_read_input_tokens": 18137,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 17893
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 17893,
+      "cache_read_input_tokens": 18137,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 17893
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 17893,
+      "cache_read_input_tokens": 18137,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 17893
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 11493,
+      "cache_read_input_tokens": 36030,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 11493
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 11493,
+      "cache_read_input_tokens": 36030,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 11493
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 11493,
+      "cache_read_input_tokens": 36030,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 11493
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 11493,
+      "cache_read_input_tokens": 36030,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 11493
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8842,
+      "cache_read_input_tokens": 47523,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8842
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8842,
+      "cache_read_input_tokens": 47523,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8842
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8842,
+      "cache_read_input_tokens": 47523,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8842
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5324,
+      "cache_read_input_tokens": 56365,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5324
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5324,
+      "cache_read_input_tokens": 56365,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5324
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5324,
+      "cache_read_input_tokens": 56365,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5324
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3553,
+      "cache_read_input_tokens": 61689,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3553
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2780,
+      "cache_read_input_tokens": 65242,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2780
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2780,
+      "cache_read_input_tokens": 65242,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2780
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2780,
+      "cache_read_input_tokens": 65242,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2780
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2542,
+      "cache_read_input_tokens": 68022,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2542
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5337,
+      "cache_read_input_tokens": 70564,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5337
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5337,
+      "cache_read_input_tokens": 70564,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5337
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 10155,
+      "cache_read_input_tokens": 75901,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 10155
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 10155,
+      "cache_read_input_tokens": 75901,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 10155
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 10155,
+      "cache_read_input_tokens": 75901,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 10155
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4341,
+      "cache_read_input_tokens": 86056,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4341
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4341,
+      "cache_read_input_tokens": 86056,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4341
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4341,
+      "cache_read_input_tokens": 86056,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4341
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 12666,
+      "cache_read_input_tokens": 90397,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 12666
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 12666,
+      "cache_read_input_tokens": 90397,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 12666
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 12666,
+      "cache_read_input_tokens": 90397,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 12666
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4322,
+      "cache_read_input_tokens": 103063,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4322
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4322,
+      "cache_read_input_tokens": 103063,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4322
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2129,
+      "cache_read_input_tokens": 107385,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2129
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2129,
+      "cache_read_input_tokens": 107385,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2129
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1299,
+      "cache_read_input_tokens": 109514,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1299
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1299,
+      "cache_read_input_tokens": 109514,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1299
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2856,
+      "cache_read_input_tokens": 110813,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2856
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2856,
+      "cache_read_input_tokens": 110813,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2856
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2148,
+      "cache_read_input_tokens": 113669,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2148
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2148,
+      "cache_read_input_tokens": 113669,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2148
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3813,
+      "cache_read_input_tokens": 115817,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3813
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3813,
+      "cache_read_input_tokens": 115817,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3813
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3813,
+      "cache_read_input_tokens": 115817,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3813
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8309,
+      "cache_read_input_tokens": 119630,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8309
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8309,
+      "cache_read_input_tokens": 119630,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8309
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8309,
+      "cache_read_input_tokens": 119630,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8309
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2113,
+      "cache_read_input_tokens": 127939,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2113
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2113,
+      "cache_read_input_tokens": 127939,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2113
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2572,
+      "cache_read_input_tokens": 130052,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2572
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2572,
+      "cache_read_input_tokens": 130052,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2572
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1326,
+      "cache_read_input_tokens": 132624,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1326
+      },
+      "output_tokens": 14
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1326,
+      "cache_read_input_tokens": 132624,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1326
+      },
+      "output_tokens": 14
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1326,
+      "cache_read_input_tokens": 132624,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1326
+      },
+      "output_tokens": 14
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2802,
+      "cache_read_input_tokens": 133950,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2802
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2802,
+      "cache_read_input_tokens": 133950,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2802
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2802,
+      "cache_read_input_tokens": 133950,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2802
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4599,
+      "cache_read_input_tokens": 136752,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4599
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4599,
+      "cache_read_input_tokens": 136752,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4599
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 898,
+      "cache_read_input_tokens": 141351,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 898
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 898,
+      "cache_read_input_tokens": 141351,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 898
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1858,
+      "cache_read_input_tokens": 142249,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1858
+      },
+      "output_tokens": 2
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1858,
+      "cache_read_input_tokens": 142249,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1858
+      },
+      "output_tokens": 2
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1858,
+      "cache_read_input_tokens": 142249,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1858
+      },
+      "output_tokens": 2
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2014,
+      "cache_read_input_tokens": 144107,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2014
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2014,
+      "cache_read_input_tokens": 144107,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2014
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 14091,
+      "cache_read_input_tokens": 146121,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 14091
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 14091,
+      "cache_read_input_tokens": 146121,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 14091
+      },
+      "output_tokens": 5
+    }
+  ],
+  "model_usage_reported": {
+    "claude-haiku-5-5": {
+      "inputTokens": 62,
+      "outputTokens": 44021,
+      "cacheReadInputTokens": 2731520,
+      "cacheCreationInputTokens": 155196,
+      "webSearchRequests": 0,
+      "costUSD": 0.29441402000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 25545
+    }
+  },
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248863.6034672,
+    "windows": {
+      "five_hour": {
+        "used_percent": 28.0,
+        "resets_at": 1792262399.853967,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 91.0,
+        "resets_at": 1792277999.853987,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

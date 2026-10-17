@@ -1,0 +1,43 @@
+{
+  "schema_version": "t15-antigravity-diagnostic/1",
+  "source": {
+    "log": "~/.gemini/antigravity-cli/log/cli-20261016_191728.log",
+    "sha256": "1916e970274b745188f85ed54b5783b84e101b6b10206ed2427573a560a75906"
+  },
+  "runtime": {
+    "provider": "antigravity",
+    "profile": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "cli_version": "1.4.0",
+    "started_at_local": "2026-10-16T19:17:28-05:00"
+  },
+  "observed": {
+    "silent_authentication_succeeded": true,
+    "exit_status": 3,
+    "response_received": false,
+    "failure_class": "agent_tool_not_registered",
+    "error": "failed to construct executor: failed to resolve components: unknown component: tool \"find_file\" not found in registry",
+    "canonical_tool": "Glob",
+    "generated_tool_before_fix": "find_file",
+    "deprecated_tool_warning": "multi_replace_file_content was deprecated and had no effect"
+  },
+  "correction": {
+    "canonical_mapping": "Glob -> find_by_name",
+    "deprecated_tool_removed": true,
+    "nested_planner_skills_added_to_wheel": 4,
+    "marker_owned_profile_reinstalled": true
+  },
+  "verification": {
+    "source_and_wheel_installer_parity": "passed",
+    "wheel_contains_all_four_planner_skills": "passed",
+    "installed_tool_names_and_skill_files": "passed",
+    "agy_agent_lists_planner": "passed",
+    "live_model_retest_after_fix": "pending_separate_owner_authorization_under_D-059"
+  },
+  "redaction": {
+    "raw_log_copied": false,
+    "account_identity_retained": false,
+    "conversation_ids_retained": false,
+    "credentials_retained": false
+  }
+}

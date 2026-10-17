@@ -1,0 +1,31 @@
+{
+  "scope": "Post-hoc concrete contract counterexamples; no production data or PostgreSQL integration instance used. Does not expand the 13 oracle items.",
+  "integer_narrowing": {
+    "sqlite_integer_roundtrip": 2147483648,
+    "postgres_int4_max": 2147483647,
+    "trigger": "A source revision valid for SQLite/JS safe-integer semantics exceeds int4. This is a permitted-input witness, not observed production data."
+  },
+  "absent_key_import_trace": [
+    "Transactions A/B both lookup external key K: absent.",
+    "A/B both SELECT FOR UPDATE WHERE external_key=K: no retrieved row to row-lock.",
+    "A inserts K revision1 and commits.",
+    "B attempts INSERT K and receives unique violation.",
+    "Without absent-key serialization/re-read logic, the proposed plain create Error maps to500 instead of the serialized upsert-import stale-revision409."
+  ],
+  "backup_asset_trace": [
+    "Dump snapshot contains asset row R referencing file F.",
+    "After that snapshot, a live delete removes F and then its metadata.",
+    "The later filesystem copy omits F; per-file checksums of copied files can still pass.",
+    "Restoring the dump restores R but no F; mutation exclusion or equivalent snapshot retention is required."
+  ],
+  "lossy_sqlite_rollback": {
+    "accepted_postgres_revision": 2,
+    "stale_sqlite_revision": 1,
+    "loss_if_stale_store_is_reactivated": true
+  },
+  "official_sources": [
+    "https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-ROWS",
+    "https://www.postgresql.org/docs/current/datatype-numeric.html",
+    "https://www.postgresql.org/docs/current/transaction-iso.html"
+  ]
+}

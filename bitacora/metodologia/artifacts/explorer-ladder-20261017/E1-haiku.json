@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "case": "E1",
+  "route": {
+    "id": "haiku",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "effort": "medium"
+  },
+  "status": "collector_error",
+  "prompt_sha256": "6a5221c1621d10e863abe7edbab8630c99384d22d65b8503d506fcac3d60ba17",
+  "prompt_characters": 2253,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792247859.1591125,
+    "windows": {
+      "five_hour": {
+        "used_percent": 17.0,
+        "resets_at": 1792262399.625886,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792277999.625918,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792247859.7714672,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-haiku-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "plan",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "error": "TypeError: dict.update received two positional mappings after native CLI returned; stdout/usage were not retained",
+  "usage_reported": null,
+  "elapsed_seconds": null,
+  "included_in_comparison": false
+}

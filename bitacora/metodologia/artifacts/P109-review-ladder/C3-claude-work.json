@@ -1,0 +1,118 @@
+{
+  "case": "C3",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "sonnet",
+  "requested_effort": "high",
+  "prompt_sha256": "f607c6548fa9cd09445d9705da124b7a0755c2645ecb983e0aac81ab11b4e905",
+  "prompt_characters": 3391,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206322.756414,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792213800.014088,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.014108,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206323.0973113,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "The read endpoint lets request.query.tenant replace the session tenant (owner = query.tenant ?? session.tenant_id). Any authenticated user can therefore read another tenant's documents, which breaks tenant isolation. The tests do not cover cross-tenant access, so acceptance='tenant isolation preserved' cannot detect this.",
+        "evidence": "\"owner=request.query.tenant ?? session.tenant_id; SELECT ... WHERE tenant_id=owner\"; \"middleware authenticates user but does not authorize query tenant\"; \"API may accept a tenant query filter but it must never widen the server session tenant\"; tests cover only \"own documents and malformed tenant\".",
+        "failure_scenario": "User in tenant A sends ?tenant=<tenant B UUID>, which is a valid UUID, and receives tenant B's documents.",
+        "fix": "Always query with tenant_id = session.tenant_id. If a query tenant is supplied and differs from the session tenant, return 403 or an empty result, never a wider scope. Add tests for a foreign tenant UUID and for a matching tenant UUID."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "The backfill orders by (created_at, id) but its cursor predicate is id > :cursor. UUIDv4 values are not chronological, so a cursor taken from the last row of a created_at-ordered batch skips or repeats rows. The planned test uses IDs already in lexical and creation order, which hides the defect.",
+        "evidence": "\"WHERE id > :cursor ORDER BY created_at ASC,id ASC LIMIT 100\"; \"UUID comparison is lexicographic\"; snapshot order 10,90,20,80, batch size 2, first batch [10,90], cursor=90, so 20 and 80 never satisfy id > 90; \"Test resume with IDs already in lexical and creation order\".",
+        "failure_scenario": "After the first batch the cursor is 90, so rows 20 and 80 are never selected. They keep NULL tenant_id, and T6's NOT NULL assertion fails or those documents become unreachable by tenant_id.",
+        "fix": "Make the sort key and cursor agree. Either ORDER BY id with id > :cursor, or persist a composite cursor (created_at, id) and use (created_at,id) > (:c_ts,:c_id). Add a test with random non-chronological IDs, such as the 10,90,20,80 case, and verify zero NULL tenant_id rows afterward."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "The purge deletes rows with age >= 30 days, but the policy keeps age <= 30 days and only age > 30 days is purgeable. Documents exactly 30 days old are deleted incorrectly. The tests at 29 and 31 days miss the boundary.",
+        "evidence": "\"deletes where age>=30days\"; \"Retention policy keeps documents whose age is <=30 days; only age >30 days is purgeable\"; \"Test age=29days and age=31days; acceptance='keep <=30days'\".",
+        "failure_scenario": "A document exactly 30 days old is permanently deleted, violating retention, and the planned tests still pass.",
+        "fix": "Change the predicate to age > 30 days (created_at < now - 30d). Add a test at exactly 30 days that asserts the document is kept."
+      },
+      {
+        "task": "T5",
+        "severity": "critical",
+        "issue": "Dropping legacy_owner_tenant and the trigger at 12:15 destroys the rollback path 23h45m before the 24-hour window ends. The old binary fails without that column, and the plan allows no restore, recreation or reverse backfill. The documented 'redeploy old binary at any point until next-day 12:00' is therefore not executable.",
+        "evidence": "\"old binary reads only legacy_owner_tenant, and fails if that column is absent\"; \"drop legacy_owner_tenant and the trigger at 12:15\"; \"Rollback documented as redeploy old binary at any point until next-day 12:00; no database restore is allowed, and no recreation/reverse backfill is provided\"; mission requires \"a 24-hour executable rollback window after first new-version traffic\".",
+        "failure_scenario": "At 14:00 a defect is found in the new binary. Redeploying the old binary crashes on the missing column, and there is no supported way to restore the data, so the outage is unrecoverable.",
+        "fix": "Keep the column and trigger through the full 24-hour window. Move the drop to a separate later step gated on the window having elapsed (at or after next-day 12:00) and on explicit approval. Keep rollback documented as binary redeploy only until then."
+      },
+      {
+        "task": "T5",
+        "severity": "medium",
+        "issue": "T6 (NOT NULL assertion, migration and API tests, captured results) has no dependency edge to T5, and T5 does not depend on T6. The 100% traffic switch can therefore occur before backfill completeness is asserted and before the tests have run.",
+        "evidence": "\"T5 after T2,T3,T4\"; T6 has no stated dependency; \"assert tenant_id NOT NULL only after backfill, run independent migration and API tests, capture results\".",
+        "failure_scenario": "Traffic switches at 12:00 while some rows still have NULL tenant_id, or while the T2 isolation flaw is untested. Those documents are missing or exposed for the first 15 minutes of verification and beyond.",
+        "fix": "Make T6 depend on T3 and T2, and make T5 depend on T6. Require the zero-NULL check, the NOT NULL constraint and green captured tests before the traffic switch."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"The read endpoint lets request.query.tenant replace the session tenant (owner = query.tenant ?? session.tenant_id). Any authenticated user can therefore read another tenant's documents, which breaks tenant isolation. The tests do not cover cross-tenant access, so acceptance='tenant isolation preserved' cannot detect this.\",\"evidence\":\"\\\"owner=request.query.tenant ?? session.tenant_id; SELECT ... WHERE tenant_id=owner\\\"; \\\"middleware authenticates user but does not authorize query tenant\\\"; \\\"API may accept a tenant query filter but it must never widen the server session tenant\\\"; tests cover only \\\"own documents and malformed tenant\\\".\",\"failure_scenario\":\"User in tenant A sends ?tenant=<tenant B UUID>, which is a valid UUID, and receives tenant B's documents.\",\"fix\":\"Always query with tenant_id = session.tenant_id. If a query tenant is supplied and differs from the session tenant, return 403 or an empty result, never a wider scope. Add tests for a foreign tenant UUID and for a matching tenant UUID.\"},{\"task\":\"T3\",\"severity\":\"high\",\"issue\":\"The backfill orders by (created_at, id) but its cursor predicate is id > :cursor. UUIDv4 values are not chronological, so a cursor taken from the last row of a created_at-ordered batch skips or repeats rows. The planned test uses IDs already in lexical and creation order, which hides the defect.\",\"evidence\":\"\\\"WHERE id > :cursor ORDER BY created_at ASC,id ASC LIMIT 100\\\"; \\\"UUID comparison is lexicographic\\\"; snapshot order 10,90,20,80, batch size 2, first batch [10,90], cursor=90, so 20 and 80 never satisfy id > 90; \\\"Test resume with IDs already in lexical and creation order\\\".\",\"failure_scenario\":\"After the first batch the cursor is 90, so rows 20 and 80 are never selected. They keep NULL tenant_id, and T6's NOT NULL assertion fails or those documents become unreachable by tenant_id.\",\"fix\":\"Make the sort key and cursor agree. Either ORDER BY id with id > :cursor, or persist a composite cursor (created_at, id) and use (created_at,id) > (:c_ts,:c_id). Add a test with random non-chronological IDs, such as the 10,90,20,80 case, and verify zero NULL tenant_id rows afterward.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"The purge deletes rows with age >= 30 days, but the policy keeps age <= 30 days and only age > 30 days is purgeable. Documents exactly 30 days old are deleted incorrectly. The tests at 29 and 31 days miss the boundary.\",\"evidence\":\"\\\"deletes where age>=30days\\\"; \\\"Retention policy keeps documents whose age is <=30 days; only age >30 days is purgeable\\\"; \\\"Test age=29days and age=31days; acceptance='keep <=30days'\\\".\",\"failure_scenario\":\"A document exactly 30 days old is permanently deleted, violating retention, and the planned tests still pass.\",\"fix\":\"Change the predicate to age > 30 days (created_at < now - 30d). Add a test at exactly 30 days that asserts the document is kept.\"},{\"task\":\"T5\",\"severity\":\"critical\",\"issue\":\"Dropping legacy_owner_tenant and the trigger at 12:15 destroys the rollback path 23h45m before the 24-hour window ends. The old binary fails without that column, and the plan allows no restore, recreation or reverse backfill. The documented 'redeploy old binary at any point until next-day 12:00' is therefore not executable.\",\"evidence\":\"\\\"old binary reads only legacy_owner_tenant, and fails if that column is absent\\\"; \\\"drop legacy_owner_tenant and the trigger at 12:15\\\"; \\\"Rollback documented as redeploy old binary at any point until next-day 12:00; no database restore is allowed, and no recreation/reverse backfill is provided\\\"; mission requires \\\"a 24-hour executable rollback window after first new-version traffic\\\".\",\"failure_scenario\":\"At 14:00 a defect is found in the new binary. Redeploying the old binary crashes on the missing column, and there is no supported way to restore the data, so the outage is unrecoverable.\",\"fix\":\"Keep the column and trigger through the full 24-hour window. Move the drop to a separate later step gated on the window having elapsed (at or after next-day 12:00) and on explicit approval. Keep rollback documented as binary redeploy only until then.\"},{\"task\":\"T5\",\"severity\":\"medium\",\"issue\":\"T6 (NOT NULL assertion, migration and API tests, captured results) has no dependency edge to T5, and T5 does not depend on T6. The 100% traffic switch can therefore occur before backfill completeness is asserted and before the tests have run.\",\"evidence\":\"\\\"T5 after T2,T3,T4\\\"; T6 has no stated dependency; \\\"assert tenant_id NOT NULL only after backfill, run independent migration and API tests, capture results\\\".\",\"failure_scenario\":\"Traffic switches at 12:00 while some rows still have NULL tenant_id, or while the T2 isolation flaw is untested. Those documents are missing or exposed for the first 15 minutes of verification and beyond.\",\"fix\":\"Make T6 depend on T3 and T2, and make T5 depend on T6. Require the zero-NULL check, the NOT NULL constraint and green captured tests before the traffic switch.\"}],\"uncertainties\":[]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 3514,
+    "cache_read_input_tokens": 1662,
+    "output_tokens": 2991,
+    "output_tokens_details": {
+      "thinking_tokens": 1083
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3514,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 23.098,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206346.1958232,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792213799.613583,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.613603,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

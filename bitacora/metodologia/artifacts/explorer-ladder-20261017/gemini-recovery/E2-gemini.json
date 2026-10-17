@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "case": "E2",
+  "route": {
+    "id": "gemini",
+    "profile": "antigravity",
+    "provider": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "effort": "low"
+  },
+  "status": "completed",
+  "prompt_sha256": "0282ccec49b6b755dfffd78f4902495e44b7ac2c39a1154194fd79c329837f85",
+  "prompt_characters": 2471,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "AssertionError",
+    "observed_at": 1792248249.7941816,
+    "windows": {}
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248249.7942016,
+  "argv": [
+    "agy",
+    "--model",
+    "gemini-3.8-flash-low",
+    "--effort",
+    "low",
+    "--mode",
+    "plan",
+    "--sandbox",
+    "--disable-slash-commands",
+    "--output-format",
+    "stream-json",
+    "--print-timeout",
+    "900s",
+    "--print=<shared hashed prompt>"
+  ],
+  "answer": {
+    "case": "E2",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "The plan before approval is rendered in the requirement page by function `plan_panel` on the 'plan' tab of `req_page`. Its direct caller is `req_page` when `tab == 'plan'`, and `req_page` is invoked by the HTTP request handler `BitacoraServer.do_GET` when handling requirement paths (`kind == 'req' and len(rest) == 2`).",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "plan_panel",
+            "start_line": 100,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "req_page",
+            "start_line": 15,
+            "end_line": 55
+          },
+          {
+            "path": "skill/scripts/bt_server.py",
+            "symbol": "BitacoraServer.do_GET",
+            "start_line": 111,
+            "end_line": 112
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "No, `plan_panel` does not include the structured Planner report. Its render path strictly reads only `plan` (`PLAN.md`) via `read(plan)`, parses it with `md('doc', ...)`, appends approval form HTML or status notice, and completely ignores `PLAN.json` and planner reports.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "plan_panel",
+            "start_line": 100,
+            "end_line": 116
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "They represent different lifecycle stages. `REPORT.md` and the 'Review' tab (`review_panel`) represent post-execution review, where the executor finishes running tasks and generates `REPORT.md` along with git commit and diff review before merging changes. In contrast, the Planner report (`quality.analyze` / `bt_planner report`) is a pre-execution planning quality report on `PLAN.json` assessing task graph coherence, critical path, and classifications.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_page_review.py",
+            "symbol": "review_panel",
+            "start_line": 13,
+            "end_line": 55
+          },
+          {
+            "path": "skill/scripts/bt_page_req.py",
+            "symbol": "req_page",
+            "start_line": 27,
+            "end_line": 42
+          },
+          {
+            "path": "skill/scripts/bt_planner/quality.py",
+            "symbol": "analyze",
+            "start_line": 1,
+            "end_line": 6
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "The presentation-independent reusable report producer is `quality.analyze(plan)` in `bt_planner.quality` (extended in `bt_planner.cli.run` under action `'report'`), returning a dictionary containing metrics such as `tasks`, `critical_path`, `widest_level`, `distribution`, and diagnostics. The boundary a future UI would use is `bt_plan_adapter` (specifically invoked via `bt_plan_adapter.run_cli` or adding a dedicated function in `bt_plan_adapter.py`), which isolates methodology consumers from importing `bt_planner` directly.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_planner/quality.py",
+            "symbol": "analyze",
+            "start_line": 221,
+            "end_line": 234
+          },
+          {
+            "path": "skill/scripts/bt_planner/cli.py",
+            "symbol": "run",
+            "start_line": 95,
+            "end_line": 108
+          },
+          {
+            "path": "skill/scripts/bt_plan_adapter.py",
+            "symbol": "run_cli",
+            "start_line": 1,
+            "end_line": 6
+          },
+          {
+            "path": "skill/scripts/tests/test_plan_boundary.py",
+            "symbol": "TestPlanBoundary.test_only_adapter_imports_module",
+            "start_line": 58,
+            "end_line": 60
+          }
+        ]
+      }
+    ],
+    "unknowns": []
+  },
+  "response_text": "{\"case\":\"E2\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"The plan before approval is rendered in the requirement page by function `plan_panel` on the 'plan' tab of `req_page`. Its direct caller is `req_page` when `tab == 'plan'`, and `req_page` is invoked by the HTTP request handler `BitacoraServer.do_GET` when handling requirement paths (`kind == 'req' and len(rest) == 2`).\",\"evidence\":[{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"plan_panel\",\"start_line\":100,\"end_line\":116},{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"req_page\",\"start_line\":15,\"end_line\":55},{\"path\":\"skill/scripts/bt_server.py\",\"symbol\":\"BitacoraServer.do_GET\",\"start_line\":111,\"end_line\":112}]},{\"id\":\"Q2\",\"answer\":\"No, `plan_panel` does not include the structured Planner report. Its render path strictly reads only `plan` (`PLAN.md`) via `read(plan)`, parses it with `md('doc', ...)`, appends approval form HTML or status notice, and completely ignores `PLAN.json` and planner reports.\",\"evidence\":[{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"plan_panel\",\"start_line\":100,\"end_line\":116}]},{\"id\":\"Q3\",\"answer\":\"They represent different lifecycle stages. `REPORT.md` and the 'Review' tab (`review_panel`) represent post-execution review, where the executor finishes running tasks and generates `REPORT.md` along with git commit and diff review before merging changes. In contrast, the Planner report (`quality.analyze` / `bt_planner report`) is a pre-execution planning quality report on `PLAN.json` assessing task graph coherence, critical path, and classifications.\",\"evidence\":[{\"path\":\"skill/scripts/bt_page_review.py\",\"symbol\":\"review_panel\",\"start_line\":13,\"end_line\":55},{\"path\":\"skill/scripts/bt_page_req.py\",\"symbol\":\"req_page\",\"start_line\":27,\"end_line\":42},{\"path\":\"skill/scripts/bt_planner/quality.py\",\"symbol\":\"analyze\",\"start_line\":1,\"end_line\":6}]},{\"id\":\"Q4\",\"answer\":\"The presentation-independent reusable report producer is `quality.analyze(plan)` in `bt_planner.quality` (extended in `bt_planner.cli.run` under action `'report'`), returning a dictionary containing metrics such as `tasks`, `critical_path`, `widest_level`, `distribution`, and diagnostics. The boundary a future UI would use is `bt_plan_adapter` (specifically invoked via `bt_plan_adapter.run_cli` or adding a dedicated function in `bt_plan_adapter.py`), which isolates methodology consumers from importing `bt_planner` directly.\",\"evidence\":[{\"path\":\"skill/scripts/bt_planner/quality.py\",\"symbol\":\"analyze\",\"start_line\":221,\"end_line\":234},{\"path\":\"skill/scripts/bt_planner/cli.py\",\"symbol\":\"run\",\"start_line\":95,\"end_line\":108},{\"path\":\"skill/scripts/bt_plan_adapter.py\",\"symbol\":\"run_cli\",\"start_line\":1,\"end_line\":6},{\"path\":\"skill/scripts/tests/test_plan_boundary.py\",\"symbol\":\"TestPlanBoundary.test_only_adapter_imports_module\",\"start_line\":58,\"end_line\":60}]}],\"unknowns\":[]}\n",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 130144,
+    "output_tokens": 2855,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 779691,
+    "total_tokens": 132999
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 198,
+  "exit_code": 0,
+  "elapsed_seconds": 354.976,
+  "finished_at": 1792248604.7702272,
+  "tool_audit": [],
+  "event_shapes": {
+    "init": [
+      "conversation_id",
+      "event",
+      "init"
+    ],
+    "step_update": [
+      "event",
+      "step_update"
+    ],
+    "result": [
+      "event",
+      "result"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": "SUCCESS",
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "antigravity",
+    "status": "AssertionError",
+    "observed_at": 1792248604.8038943,
+    "windows": {}
+  }
+}

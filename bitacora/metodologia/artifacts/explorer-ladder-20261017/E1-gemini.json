@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "case": "E1",
+  "route": {
+    "id": "gemini",
+    "profile": "antigravity",
+    "provider": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "effort": "low"
+  },
+  "status": "collector_error",
+  "prompt_sha256": "6a5221c1621d10e863abe7edbab8630c99384d22d65b8503d506fcac3d60ba17",
+  "prompt_characters": 2253,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792247864.185237,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 0.0,
+        "resets_at": 1792265863.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792852663.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792265863.0,
+        "window_minutes": 300
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792247864.1852648,
+  "argv": [
+    "agy",
+    "--model",
+    "gemini-3.8-flash-low",
+    "--effort",
+    "low",
+    "--mode",
+    "plan",
+    "--sandbox",
+    "--disable-slash-commands",
+    "--output-format",
+    "stream-json",
+    "--print-timeout",
+    "900s",
+    "--print=<shared hashed prompt>"
+  ],
+  "error": "TypeError: dict.update received two positional mappings after native CLI returned; stdout/usage were not retained",
+  "usage_reported": null,
+  "elapsed_seconds": null,
+  "included_in_comparison": false
+}

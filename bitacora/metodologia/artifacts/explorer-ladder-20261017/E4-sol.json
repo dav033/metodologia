@@ -1,0 +1,426 @@
+{
+  "schema_version": 1,
+  "case": "E4",
+  "route": {
+    "id": "sol",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "0ac10fbb9cfc9957e86d70321328b53a9cc147a94fac9ea56073b3df7bf9d23c",
+  "prompt_characters": 2969,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248043.5671422,
+    "windows": {
+      "five_hour": {
+        "used_percent": 54.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248044.2294428,
+  "argv": [
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "--json",
+    "-"
+  ],
+  "answer": {
+    "case": "E4",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "SchedulerCore.start creates PENDING task records and promotes eligible tasks, or verifies the existing run binding; it then calls _plan_all_routes before reconciliation. _plan_all_routes constructs TaskViews from every self.plan.tasks entry, carrying dependencies without filtering by task state. Thus dependent tasks still PENDING are included, not merely READY tasks. Routing is skipped if no routing port exists or routing_complete is already true. Concrete wiring supplies the assignment object as the routing port when it exposes callable plan().",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.start",
+            "start_line": 107,
+            "end_line": 122
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._plan_all_routes",
+            "start_line": 124,
+            "end_line": 141
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_executor_wiring.py",
+            "symbol": "wire",
+            "start_line": 79,
+            "end_line": 86
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "The runtime constructs DecisionAssignmentPort; its plan() delegates to plan_full_dag. That function builds one DecisionRequest per task but submits the entire tuple through one ledger.batch_decisions.persist call. BatchDecisionStore.persist invokes plan_ready_batch once: despite that name, this caller supplies the whole DAG and uses len(tasks) as its free_slots planning bound. The joint algorithm ranks routes, computes account capacities and matches tasks across accounts. Bounds are 128 tasks and 4096 candidates. AccountConcurrency is supported by the batch API, but this whole-plan caller supplies none; default account capacity consequently equals the planning free_slots. This is one batch allocation, not independent engine.decide calls per task.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_run.py",
+            "symbol": "_wire",
+            "start_line": 39,
+            "end_line": 46
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.plan",
+            "start_line": 340,
+            "end_line": 345
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 160,
+            "end_line": 188
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "BatchDecisionStore.persist",
+            "start_line": 240,
+            "end_line": 256
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "MAX_BATCH_TASKS / MAX_BATCH_CANDIDATES",
+            "start_line": 36,
+            "end_line": 38
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_account_capacities",
+            "start_line": 251,
+            "end_line": 264
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_plan_prepared_batch",
+            "start_line": 388,
+            "end_line": 401
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "_plan_all_routes persists each result in TaskRec.route_metadata, route_status (recommended or unavailable), and route_reason inside a repository transaction. It skips task records that already have attempts, then sets RunState.routing_complete. RunState serialization includes both task records and this flag; SqliteRepository.transaction commits that document to the state table. On restart, _plan_all_routes checks the restored flag before calling M2. All-unavailable results still complete the map; routing exceptions or invalid coverage raise before persistence and permit a later retry. Separately, M2 stores the immutable batch payload in batch_decisions, with exact-input replay returning its existing record.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._plan_all_routes",
+            "start_line": 124,
+            "end_line": 128
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._plan_all_routes",
+            "start_line": 139,
+            "end_line": 173
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/model.py",
+            "symbol": "RunState.to_dict",
+            "start_line": 93,
+            "end_line": 103
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/model.py",
+            "symbol": "RunState.from_dict",
+            "start_line": 107,
+            "end_line": 118
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/sqlite_repository.py",
+            "symbol": "SqliteRepository.transaction",
+            "start_line": 99,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "BatchDecisionStore.persist",
+            "start_line": 272,
+            "end_line": 295
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "Whole-plan mapping writes recommendations and evidence; it creates neither executor reservations nor start orders. The actual M1 reservation path is SchedulerCore._assign → SchedulerCore.claim → reservation.claim, under a write transaction. claim rechecks READY state, active attempts, free capacity and resource conflicts, then creates a RESERVED attempt, resource holds, ACTIVE task state and a start outbox entry. SchedulerCore.step subsequently delivers pending orders; Dispatcher._send calls execution.start. SchedulerCore.start is run initialization/reconciliation, distinct from that executor start call. Batch account-capacity calculations are advisory matching inputs, not durable executor reservations.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._plan_all_routes",
+            "start_line": 156,
+            "end_line": 173
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.claim",
+            "start_line": 229,
+            "end_line": 231
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.step",
+            "start_line": 255,
+            "end_line": 263
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._assign",
+            "start_line": 321,
+            "end_line": 328
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "claim",
+            "start_line": 43,
+            "end_line": 71
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "_refusal",
+            "start_line": 74,
+            "end_line": 86
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/dispatch.py",
+            "symbol": "Dispatcher._send",
+            "start_line": 84,
+            "end_line": 101
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "The planned model/profile is not blindly reused. _assign builds a new request from READY tasks without resource conflicts and current M1 free slots; it does not copy stored route_metadata into TaskViews. DecisionAssignmentPort.propose refreshes quota, rebuilds candidates using the updated request timestamp and marks affected provider candidates unknown when preflight is unavailable. It jointly allocates the READY batch, then calls engine.decide for each selected candidate and emits a fresh executor reference and metadata. Successful reservation overwrites the earlier recommendation with assigned metadata. Assignment-port failures return no claims; actual reservation still rechecks scheduler constraints.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._assign",
+            "start_line": 289,
+            "end_line": 320
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.propose",
+            "start_line": 347,
+            "end_line": 385
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.propose",
+            "start_line": 396,
+            "end_line": 422
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "claim",
+            "start_line": 53,
+            "end_line": 56
+          }
+        ]
+      },
+      {
+        "id": "Q6",
+        "answer": "bt_scheduler_quota_preflight.refresh catches subscription polling errors and emits unavailable facts with refresh_failed/quota_refresh_failed; it also classifies missing, malformed and stale observations. Antigravity refresh exceptions likewise produce unavailable refresh_failed facts. At the whole-plan and READY boundaries, refresh exceptions become a wildcard unavailable/quota_refresh_failed fact. Whole-plan _apply_preflight and READY propose turn claude/codex/antigravity candidates lacking an available profile result into quota_status='unknown', preventing cached availability from surviving a failed refresh. _quota_evidence preserves the failure classification. Both paths call quota_aware_requested_at after refresh: it returns the maximum of the original request time, current wall time and finite observed_at values returned by refresh, then uses that timestamp for candidate construction and DecisionRequests.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 34,
+            "end_line": 80
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 82,
+            "end_line": 107
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 147,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_apply_preflight",
+            "start_line": 63,
+            "end_line": 73
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_quota_evidence",
+            "start_line": 90,
+            "end_line": 108
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "quota_aware_requested_at",
+            "start_line": 29,
+            "end_line": 38
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.propose",
+            "start_line": 355,
+            "end_line": 385
+          }
+        ]
+      },
+      {
+        "id": "Q7",
+        "answer": "DecisionAssignmentIntegration.test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation explicitly calls port.plan with initial synthetic quota, then creates a one-task SchedulerCore with assignment=port and no routing or execution port. It changes quota so claude-personal becomes stale and codex-luis available, then steps M1. Source assertions require two refreshes, an initial profile other than codex-luis, exactly one claimed attempt, ACTIVE task state, and an executor reference resolving to codex-luis/codex/gpt-6.1-sol/high. This tests changed-quota selection and M1 reservation, not an actual process launch or automatic start-time routing. Complementarily, FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor wires both ports: assertions cover a PENDING dependent task receiving a recommendation, READY T1 changing from Sonnet to Haiku, dependent T2 retaining Sonnet, and one pending outbox order without an executor. These are source assertions, not executed results.",
+        "evidence": [
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_integration.py",
+            "symbol": "DecisionAssignmentIntegration.test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation",
+            "start_line": 401,
+            "end_line": 445
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_routing.py",
+            "symbol": "FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor",
+            "start_line": 53,
+            "end_line": 80
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "Live account quota, executor availability and process-launch outcomes cannot be established from this snapshot. Tests were read only; no checks were executed."
+    ]
+  },
+  "response_text": "{\"case\":\"E4\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"SchedulerCore.start creates PENDING task records and promotes eligible tasks, or verifies the existing run binding; it then calls _plan_all_routes before reconciliation. _plan_all_routes constructs TaskViews from every self.plan.tasks entry, carrying dependencies without filtering by task state. Thus dependent tasks still PENDING are included, not merely READY tasks. Routing is skipped if no routing port exists or routing_complete is already true. Concrete wiring supplies the assignment object as the routing port when it exposes callable plan().\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.start\",\"start_line\":107,\"end_line\":122},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._plan_all_routes\",\"start_line\":124,\"end_line\":141},{\"path\":\"skill/scripts/bt_scheduler_executor_wiring.py\",\"symbol\":\"wire\",\"start_line\":79,\"end_line\":86}]},{\"id\":\"Q2\",\"answer\":\"The runtime constructs DecisionAssignmentPort; its plan() delegates to plan_full_dag. That function builds one DecisionRequest per task but submits the entire tuple through one ledger.batch_decisions.persist call. BatchDecisionStore.persist invokes plan_ready_batch once: despite that name, this caller supplies the whole DAG and uses len(tasks) as its free_slots planning bound. The joint algorithm ranks routes, computes account capacities and matches tasks across accounts. Bounds are 128 tasks and 4096 candidates. AccountConcurrency is supported by the batch API, but this whole-plan caller supplies none; default account capacity consequently equals the planning free_slots. This is one batch allocation, not independent engine.decide calls per task.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_run.py\",\"symbol\":\"_wire\",\"start_line\":39,\"end_line\":46},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.plan\",\"start_line\":340,\"end_line\":345},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":160,\"end_line\":188},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"BatchDecisionStore.persist\",\"start_line\":240,\"end_line\":256},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"MAX_BATCH_TASKS / MAX_BATCH_CANDIDATES\",\"start_line\":36,\"end_line\":38},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_account_capacities\",\"start_line\":251,\"end_line\":264},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_plan_prepared_batch\",\"start_line\":388,\"end_line\":401}]},{\"id\":\"Q3\",\"answer\":\"_plan_all_routes persists each result in TaskRec.route_metadata, route_status (recommended or unavailable), and route_reason inside a repository transaction. It skips task records that already have attempts, then sets RunState.routing_complete. RunState serialization includes both task records and this flag; SqliteRepository.transaction commits that document to the state table. On restart, _plan_all_routes checks the restored flag before calling M2. All-unavailable results still complete the map; routing exceptions or invalid coverage raise before persistence and permit a later retry. Separately, M2 stores the immutable batch payload in batch_decisions, with exact-input replay returning its existing record.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._plan_all_routes\",\"start_line\":124,\"end_line\":128},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._plan_all_routes\",\"start_line\":139,\"end_line\":173},{\"path\":\"skill/scripts/bt_scheduler_core/model.py\",\"symbol\":\"RunState.to_dict\",\"start_line\":93,\"end_line\":103},{\"path\":\"skill/scripts/bt_scheduler_core/model.py\",\"symbol\":\"RunState.from_dict\",\"start_line\":107,\"end_line\":118},{\"path\":\"skill/scripts/bt_scheduler_core/sqlite_repository.py\",\"symbol\":\"SqliteRepository.transaction\",\"start_line\":99,\"end_line\":116},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"BatchDecisionStore.persist\",\"start_line\":272,\"end_line\":295}]},{\"id\":\"Q4\",\"answer\":\"Whole-plan mapping writes recommendations and evidence; it creates neither executor reservations nor start orders. The actual M1 reservation path is SchedulerCore._assign → SchedulerCore.claim → reservation.claim, under a write transaction. claim rechecks READY state, active attempts, free capacity and resource conflicts, then creates a RESERVED attempt, resource holds, ACTIVE task state and a start outbox entry. SchedulerCore.step subsequently delivers pending orders; Dispatcher._send calls execution.start. SchedulerCore.start is run initialization/reconciliation, distinct from that executor start call. Batch account-capacity calculations are advisory matching inputs, not durable executor reservations.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._plan_all_routes\",\"start_line\":156,\"end_line\":173},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.claim\",\"start_line\":229,\"end_line\":231},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.step\",\"start_line\":255,\"end_line\":263},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._assign\",\"start_line\":321,\"end_line\":328},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"claim\",\"start_line\":43,\"end_line\":71},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"_refusal\",\"start_line\":74,\"end_line\":86},{\"path\":\"skill/scripts/bt_scheduler_core/dispatch.py\",\"symbol\":\"Dispatcher._send\",\"start_line\":84,\"end_line\":101}]},{\"id\":\"Q5\",\"answer\":\"The planned model/profile is not blindly reused. _assign builds a new request from READY tasks without resource conflicts and current M1 free slots; it does not copy stored route_metadata into TaskViews. DecisionAssignmentPort.propose refreshes quota, rebuilds candidates using the updated request timestamp and marks affected provider candidates unknown when preflight is unavailable. It jointly allocates the READY batch, then calls engine.decide for each selected candidate and emits a fresh executor reference and metadata. Successful reservation overwrites the earlier recommendation with assigned metadata. Assignment-port failures return no claims; actual reservation still rechecks scheduler constraints.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._assign\",\"start_line\":289,\"end_line\":320},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.propose\",\"start_line\":347,\"end_line\":385},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.propose\",\"start_line\":396,\"end_line\":422},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"claim\",\"start_line\":53,\"end_line\":56}]},{\"id\":\"Q6\",\"answer\":\"bt_scheduler_quota_preflight.refresh catches subscription polling errors and emits unavailable facts with refresh_failed/quota_refresh_failed; it also classifies missing, malformed and stale observations. Antigravity refresh exceptions likewise produce unavailable refresh_failed facts. At the whole-plan and READY boundaries, refresh exceptions become a wildcard unavailable/quota_refresh_failed fact. Whole-plan _apply_preflight and READY propose turn claude/codex/antigravity candidates lacking an available profile result into quota_status='unknown', preventing cached availability from surviving a failed refresh. _quota_evidence preserves the failure classification. Both paths call quota_aware_requested_at after refresh: it returns the maximum of the original request time, current wall time and finite observed_at values returned by refresh, then uses that timestamp for candidate construction and DecisionRequests.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":34,\"end_line\":80},{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":82,\"end_line\":107},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":147,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_apply_preflight\",\"start_line\":63,\"end_line\":73},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_quota_evidence\",\"start_line\":90,\"end_line\":108},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"quota_aware_requested_at\",\"start_line\":29,\"end_line\":38},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.propose\",\"start_line\":355,\"end_line\":385}]},{\"id\":\"Q7\",\"answer\":\"DecisionAssignmentIntegration.test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation explicitly calls port.plan with initial synthetic quota, then creates a one-task SchedulerCore with assignment=port and no routing or execution port. It changes quota so claude-personal becomes stale and codex-luis available, then steps M1. Source assertions require two refreshes, an initial profile other than codex-luis, exactly one claimed attempt, ACTIVE task state, and an executor reference resolving to codex-luis/codex/gpt-6.1-sol/high. This tests changed-quota selection and M1 reservation, not an actual process launch or automatic start-time routing. Complementarily, FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor wires both ports: assertions cover a PENDING dependent task receiving a recommendation, READY T1 changing from Sonnet to Haiku, dependent T2 retaining Sonnet, and one pending outbox order without an executor. These are source assertions, not executed results.\",\"evidence\":[{\"path\":\"skill/scripts/tests/test_scheduler_decision_integration.py\",\"symbol\":\"DecisionAssignmentIntegration.test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation\",\"start_line\":401,\"end_line\":445},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_routing.py\",\"symbol\":\"FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor\",\"start_line\":53,\"end_line\":80}]}],\"unknowns\":[\"Live account quota, executor availability and process-launch outcomes cannot be established from this snapshot. Tests were read only; no checks were executed.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 289102,
+    "cached_input_tokens": 221312,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 3523,
+    "reasoning_output_tokens": 116
+  },
+  "observed_models": [],
+  "observed_tool_events": 8,
+  "response_words": 671,
+  "exit_code": 0,
+  "elapsed_seconds": 57.756,
+  "finished_at": 1792248101.9863946,
+  "tool_audit": [
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg --files repo -g 'AGENTS.md' -g '*scheduler*' -g '*routing*' -g '*quota*' -g '*allocation*' -g '*test*' -g 'SKILL.md'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n 'plan_rout|map_plan|whole|def start|def .*assign|reserve' repo/skill/scripts/bt_scheduler_core/scheduler.py repo/skill/scripts/bt_scheduler_plan_routing.py repo/skill/scripts/bt_scheduler_decision_adapter.py repo/skill/scripts/bt_scheduler_quota_preflight.py repo/skill/scripts/tests/test_scheduler_route_resolution.py repo/skill/scripts/tests/test_scheduler_decision_integration.py; rg --files repo -g AGENTS.md\"",
+      "command_truncated": false,
+      "exit_code": 1
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_core/scheduler.py | sed -n '1,340p'; nl -ba repo/skill/scripts/bt_scheduler_plan_routing.py | sed -n '1,300p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n 'class |def |plan_full_dag|quota_aware|refresh_quota|routing=|routing =' repo/skill/scripts/bt_scheduler_decision_adapter.py repo/skill/scripts/bt_scheduler_adapter.py repo/skill/scripts/bt_scheduler_quota_preflight.py repo/skill/scripts/bt_scheduler_decision/batch.py repo/skill/scripts/bt_scheduler_decision/batch_ledger.py repo/skill/scripts/bt_scheduler_core/repository.py repo/skill/scripts/bt_scheduler_core/model.py repo/skill/scripts/tests/test_scheduler_decision_integration.py\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_adapter.py | sed -n '281,425p'; nl -ba repo/skill/scripts/bt_scheduler_quota_preflight.py | sed -n '1,220p'; nl -ba repo/skill/scripts/bt_scheduler_core/reservation.py | sed -n '1,210p'; nl -ba repo/skill/scripts/bt_scheduler_core/model.py | sed -n '20,140p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n 'routing=|\\\\.routing =|DecisionAssignmentPort\\\\(|def transaction|state.to_dict|execution.start|def .*start|MAX_BATCH|MAX_.*ROUTE|plan_ready_batch|_plan_prepared_batch' repo/skill/scripts/bt_scheduler_executor_wiring.py repo/skill/scripts/bt_scheduler_run.py repo/skill/scripts/bt_scheduler_core/sqlite* repo/skill/scripts/bt_scheduler_core/dispatch.py repo/skill/scripts/bt_scheduler_decision/batch.py repo/skill/scripts/bt_scheduler_decision/batch_ledger.py; nl -ba repo/skill/scripts/tests/test_scheduler_decision_integration.py | sed -n '214,249p;401,485p'; nl -ba repo/skill/scripts/bt_scheduler_decision/batch.py | sed -n '25,49p;127,153p;251,306p;369,430p'; nl -ba repo/skill/scripts/bt_scheduler_decision/batch_ledger.py | sed -n '240,306p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_scheduler_run.py | sed -n '30,64p'; nl -ba repo/skill/scripts/bt_scheduler_executor_wiring.py | sed -n '55,89p'; nl -ba repo/skill/scripts/bt_scheduler_core/sqlite_repository.py | sed -n '98,124p'; rg -n 'port.start|\\\\.start\\\\(|def _deliver|def deliver' repo/skill/scripts/bt_scheduler_core/dispatch.py; nl -ba repo/skill/scripts/bt_scheduler_core/dispatch.py | sed -n '30,125p'; nl -ba repo/skill/scripts/bt_scheduler_decision/quota.py | sed -n '1,140p'; rg -n 'quota_status|unknown' repo/skill/scripts/bt_scheduler_decision/candidates.py repo/skill/scripts/bt_scheduler_decision/batch.py\"",
+      "command_truncated": false,
+      "exit_code": 2
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n 'quota_status|quota_unknown' repo/skill/scripts/bt_scheduler_decision/eligibility.py; nl -ba repo/skill/scripts/bt_scheduler_decision/batch.py | sed -n '210,249p'; nl -ba repo/skill/scripts/bt_scheduler_core/dispatch.py | sed -n '79,102p'; rg -n 'routing_complete|restart|route' repo/skill/scripts/bt_scheduler_core/tests/test_routing.py; nl -ba repo/skill/scripts/bt_scheduler_core/tests/test_routing.py | sed -n '1,165p'\"",
+      "command_truncated": false,
+      "exit_code": 0
+    }
+  ],
+  "event_shapes": {
+    "thread.started": [
+      "thread_id",
+      "type"
+    ],
+    "turn.started": [
+      "type"
+    ],
+    "item.completed": [
+      "item",
+      "type"
+    ],
+    "item.started": [
+      "item",
+      "type"
+    ],
+    "turn.completed": [
+      "type",
+      "usage"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248102.02633,
+    "windows": {
+      "five_hour": {
+        "used_percent": 57.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

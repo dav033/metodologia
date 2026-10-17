@@ -1,0 +1,148 @@
+{
+  "case": "C3",
+  "profile": "antigravity",
+  "provider": "antigravity",
+  "requested_model": "gemini-3.8-flash-high",
+  "requested_effort": "high",
+  "prompt_sha256": "f607c6548fa9cd09445d9705da124b7a0755c2645ecb983e0aac81ab11b4e905",
+  "prompt_characters": 3391,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792206326.5898993,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792811125.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792224325.0,
+        "window_minutes": 300
+      }
+    }
+  },
+  "started_at": 1792206326.590188,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "Read endpoint resolves owner from unvalidated query parameter, widening session tenant scope.",
+        "evidence": "new read endpoint resolves owner=request.query.tenant ?? session.tenant_id; SELECT ... WHERE tenant_id=owner. Input tenant is a validated UUID; middleware authenticates user but does not authorize query tenant.",
+        "failure_scenario": "An authenticated user supplies another tenant's UUID in request.query.tenant; the endpoint queries that tenant_id without authorization, allowing unauthorized cross-tenant data access.",
+        "fix": "Do not allow request.query.tenant to override session.tenant_id unless explicitly authorized, or enforce owner = session.tenant_id."
+      },
+      {
+        "task": "T2",
+        "severity": "high",
+        "issue": "Acceptance testing does not verify tenant isolation against foreign tenant UUIDs.",
+        "evidence": "Test authenticated access to own documents and malformed tenant; acceptance='tenant isolation preserved'.",
+        "failure_scenario": "Tests pass by checking only own documents and malformed UUIDs, masking the authorization bypass when querying a valid foreign tenant UUID.",
+        "fix": "Add a test case with an authenticated user querying a valid foreign tenant UUID and assert that access is denied or scoped strictly to session.tenant_id."
+      },
+      {
+        "task": "T3",
+        "severity": "critical",
+        "issue": "Pagination cursor filters by id while sorting by created_at, skipping records out of lexical order.",
+        "evidence": "SELECT id,created_at FROM documents WHERE id > :cursor ORDER BY created_at ASC,id ASC LIMIT 100; update tenant_id from legacy_owner_tenant for selected rows; transactionally persist cursor=selected[-1].id... All document UUIDs are random UUIDv4, not chronological.",
+        "failure_scenario": "For snapshot IDs [10, 90, 20, 80], the first batch processes [10, 90] and sets cursor=90. Subsequent query WHERE id > '90' skips IDs 20 and 80, leaving documents unmigrated with NULL tenant_id.",
+        "fix": "Align cursor condition with order by either ordering strictly by id ASC (ORDER BY id ASC) or using composite pagination WHERE (created_at, id) > (:cursor_created_at, :cursor_id)."
+      },
+      {
+        "task": "T3",
+        "severity": "medium",
+        "issue": "Resume test dataset uses monotonically sorted IDs, masking pagination cursor skipping.",
+        "evidence": "Test resume with IDs already in lexical and creation order.",
+        "failure_scenario": "Because test data is pre-sorted in both lexical and creation order, the query failure on non-chronological random UUIDv4s is never triggered during testing.",
+        "fix": "Test resume behavior using datasets with random UUIDs where lexical order diverges from creation order."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "Purge criteria deletes documents at exactly 30 days age, violating the retention policy.",
+        "evidence": "Retention policy keeps documents whose age is <=30 days; only age >30 days is purgeable. versus T4: deletes where age>=30days",
+        "failure_scenario": "Documents with age exactly equal to 30 days are purged rather than kept, causing premature data loss.",
+        "fix": "Change deletion predicate to age > 30days."
+      },
+      {
+        "task": "T4",
+        "severity": "medium",
+        "issue": "Retention verification omits the exact 30-day retention boundary.",
+        "evidence": "Test age=29days and age=31days; acceptance='keep <=30days'.",
+        "failure_scenario": "Testing only age=29days and age=31days succeeds while missing the off-by-one boundary failure where age=30days documents are deleted.",
+        "fix": "Add a test case verifying that documents with age=30days are kept."
+      },
+      {
+        "task": "T5",
+        "severity": "critical",
+        "issue": "Dropping legacy column and dual-write trigger after 15 minutes invalidates the 24-hour rollback window.",
+        "evidence": "switch 100% traffic to new binary at 12:00 UTC; verify for 15 minutes, then drop legacy_owner_tenant and the trigger at 12:15. Rollback documented as redeploy old binary at any point until next-day 12:00; no database restore is allowed, and no recreation/reverse backfill is provided. and BASELINE: old binary reads only legacy_owner_tenant, and fails if that column is absent.",
+        "failure_scenario": "Redeploying the old binary after 12:15 UTC causes immediate application failure because legacy_owner_tenant is absent and interim writes were not mirrored.",
+        "fix": "Retain legacy_owner_tenant and the dual-write trigger until the full 24-hour rollback window expires after next-day 12:00 UTC."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Production cutover lacks dependency on schema constraint enforcement and validation tests in T6.",
+        "evidence": "T5 after T2,T3,T4: switch 100% traffic to new binary at 12:00 UTC... T6: assert tenant_id NOT NULL only after backfill, run independent migration and API tests, capture results",
+        "failure_scenario": "Traffic is fully shifted to the new binary and the legacy column is dropped before migration tests run and before the NOT NULL constraint verifies backfill completeness.",
+        "fix": "Update T5 dependencies to require T6 (T5 after T2, T3, T4, T6) or execute T6 before T5 cutover."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"Read endpoint resolves owner from unvalidated query parameter, widening session tenant scope.\",\"evidence\":\"new read endpoint resolves owner=request.query.tenant ?? session.tenant_id; SELECT ... WHERE tenant_id=owner. Input tenant is a validated UUID; middleware authenticates user but does not authorize query tenant.\",\"failure_scenario\":\"An authenticated user supplies another tenant's UUID in request.query.tenant; the endpoint queries that tenant_id without authorization, allowing unauthorized cross-tenant data access.\",\"fix\":\"Do not allow request.query.tenant to override session.tenant_id unless explicitly authorized, or enforce owner = session.tenant_id.\"},{\"task\":\"T2\",\"severity\":\"high\",\"issue\":\"Acceptance testing does not verify tenant isolation against foreign tenant UUIDs.\",\"evidence\":\"Test authenticated access to own documents and malformed tenant; acceptance='tenant isolation preserved'.\",\"failure_scenario\":\"Tests pass by checking only own documents and malformed UUIDs, masking the authorization bypass when querying a valid foreign tenant UUID.\",\"fix\":\"Add a test case with an authenticated user querying a valid foreign tenant UUID and assert that access is denied or scoped strictly to session.tenant_id.\"},{\"task\":\"T3\",\"severity\":\"critical\",\"issue\":\"Pagination cursor filters by id while sorting by created_at, skipping records out of lexical order.\",\"evidence\":\"SELECT id,created_at FROM documents WHERE id > :cursor ORDER BY created_at ASC,id ASC LIMIT 100; update tenant_id from legacy_owner_tenant for selected rows; transactionally persist cursor=selected[-1].id... All document UUIDs are random UUIDv4, not chronological.\",\"failure_scenario\":\"For snapshot IDs [10, 90, 20, 80], the first batch processes [10, 90] and sets cursor=90. Subsequent query WHERE id > '90' skips IDs 20 and 80, leaving documents unmigrated with NULL tenant_id.\",\"fix\":\"Align cursor condition with order by either ordering strictly by id ASC (ORDER BY id ASC) or using composite pagination WHERE (created_at, id) > (:cursor_created_at, :cursor_id).\"},{\"task\":\"T3\",\"severity\":\"medium\",\"issue\":\"Resume test dataset uses monotonically sorted IDs, masking pagination cursor skipping.\",\"evidence\":\"Test resume with IDs already in lexical and creation order.\",\"failure_scenario\":\"Because test data is pre-sorted in both lexical and creation order, the query failure on non-chronological random UUIDv4s is never triggered during testing.\",\"fix\":\"Test resume behavior using datasets with random UUIDs where lexical order diverges from creation order.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"Purge criteria deletes documents at exactly 30 days age, violating the retention policy.\",\"evidence\":\"Retention policy keeps documents whose age is <=30 days; only age >30 days is purgeable. versus T4: deletes where age>=30days\",\"failure_scenario\":\"Documents with age exactly equal to 30 days are purged rather than kept, causing premature data loss.\",\"fix\":\"Change deletion predicate to age > 30days.\"},{\"task\":\"T4\",\"severity\":\"medium\",\"issue\":\"Retention verification omits the exact 30-day retention boundary.\",\"evidence\":\"Test age=29days and age=31days; acceptance='keep <=30days'.\",\"failure_scenario\":\"Testing only age=29days and age=31days succeeds while missing the off-by-one boundary failure where age=30days documents are deleted.\",\"fix\":\"Add a test case verifying that documents with age=30days are kept.\"},{\"task\":\"T5\",\"severity\":\"critical\",\"issue\":\"Dropping legacy column and dual-write trigger after 15 minutes invalidates the 24-hour rollback window.\",\"evidence\":\"switch 100% traffic to new binary at 12:00 UTC; verify for 15 minutes, then drop legacy_owner_tenant and the trigger at 12:15. Rollback documented as redeploy old binary at any point until next-day 12:00; no database restore is allowed, and no recreation/reverse backfill is provided. and BASELINE: old binary reads only legacy_owner_tenant, and fails if that column is absent.\",\"failure_scenario\":\"Redeploying the old binary after 12:15 UTC causes immediate application failure because legacy_owner_tenant is absent and interim writes were not mirrored.\",\"fix\":\"Retain legacy_owner_tenant and the dual-write trigger until the full 24-hour rollback window expires after next-day 12:00 UTC.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"Production cutover lacks dependency on schema constraint enforcement and validation tests in T6.\",\"evidence\":\"T5 after T2,T3,T4: switch 100% traffic to new binary at 12:00 UTC... T6: assert tenant_id NOT NULL only after backfill, run independent migration and API tests, capture results\",\"failure_scenario\":\"Traffic is fully shifted to the new binary and the legacy column is dropped before migration tests run and before the NOT NULL constraint verifies backfill completeness.\",\"fix\":\"Update T5 dependencies to require T6 (T5 after T2, T3, T4, T6) or execute T6 before T5 cutover.\"}],\"uncertainties\":[]}\n",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 12649,
+    "output_tokens": 10934,
+    "thinking_tokens": 9756,
+    "cache_read_tokens": 0,
+    "total_tokens": 23583
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 80.485,
+  "quota_after": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792206411.6001456,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792811210.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792224410.0,
+        "window_minutes": 300
+      }
+    }
+  }
+}

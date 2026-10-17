@@ -1,0 +1,11 @@
+{
+  "schema_version": "candidate-1.0.0",
+  "case_id": "C2",
+  "state": "draft-not-frozen",
+  "items": [
+    {"id": "C2-01", "expectation": "The paginated list response returns only `ProjectListItem` fields (`id`, `externalKey`, `name`, `revision`, `updatedAt`), not the full project snapshot or its `data` payload.", "basis": ["SPEC.md R1", "source.tar: apps/api/src/app.ts:30", "source.tar: apps/api/src/repositories/project-repository.ts:14-19,33-36", "source.tar: apps/web/lib/api/client.ts:3-4,24"]},
+    {"id": "C2-02", "expectation": "Surface and resolve the unspecified ordering, tie-break, and cursor-boundary semantics before implementation; if the chosen design supports concurrent mutations, state whether pagination is snapshot-consistent or best-effort and test that behavior. Do not invent a page-size policy.", "basis": ["SPEC.md R1", "source.tar: apps/api/src/repositories/project-repository.ts:33-35"]},
+    {"id": "C2-03", "expectation": "Treat the `trainingApp-mcp` consumer as unknown and external: identify the contract-breaking risk and require an explicit compatibility/version/notification decision before relying on it remaining unaffected.", "basis": ["SPEC.md R3"]},
+    {"id": "C2-04", "expectation": "Preserve existing web screens and test the actual API-to-client contract, including cursor progression and the terminal `nextCursor` behavior.", "basis": ["SPEC.md R1-R2", "source.tar: apps/api/src/app.ts:30", "source.tar: apps/web/lib/api/client.ts:24"]}
+  ]
+}

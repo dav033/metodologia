@@ -1,0 +1,12 @@
+{
+  "scope": "Post-hoc semantic counterexample; not an implementation test or a new oracle point",
+  "page_limit": 50,
+  "first_page_items": 50,
+  "anchor_updated": 51,
+  "unseen_project_new_updated": 110,
+  "next_page_items": 0,
+  "terminal_cursor": null,
+  "saved_project_still_exists": true,
+  "legacy_tab_pruned": true,
+  "safe_alternative": "Confirm actual deletion through detail GET or provide snapshot-consistent traversal."
+}

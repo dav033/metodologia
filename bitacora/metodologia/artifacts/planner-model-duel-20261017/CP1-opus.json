@@ -1,0 +1,1028 @@
+{
+  "schema_version": 1,
+  "case": "CP1",
+  "route": {
+    "id": "opus",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "859ecdf03c96d0b61e3bd5a53e8559891a78483ff01385742f67e847d78d08d0",
+  "prompt_characters": 69508,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "http_401",
+    "observed_at": null,
+    "windows": {}
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792244716.2626598,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-opus-5-5",
+    "--effort",
+    "high",
+    "--safe-mode",
+    "--restricted",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "plan",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "answer": null,
+  "response_text": "```PLAN.md\n---\nplan_id: REQ-CP1\nrevision: 1\nstatus: draft\nspec_ref: SPEC.md\n---\n\n# REQ-CP1 — `GET /v1/projects` returns paginated list items (DRAFT)\n\n**Status: DRAFT for owner review.** Not approved, frozen or launched. No owner Q&A happened. Decision gates D1–D3 below are still open, and the assumptions are revisable. Provider, model, account, effort and worker assignments belong to the caller or scheduler and are not decided here.\n\n## Scope\n\n- **Goal:** `GET /v1/projects` returns `{ projects: ProjectListItem[], nextCursor: string | null }`. Each list item has only `id`, `externalKey`, `name`, `revision` and `updatedAt`. The endpoint uses cursor pagination (R1).\n- **In scope:** a shared list contract in `@training/contracts`, a keyset-paginated repository query, the route and its HTTP test, a web client that follows the cursor so the existing screens keep working (R2), API documentation with a breaking-change notice, and a release gate for the external MCP consumer (R3).\n- **Out of scope:** a pagination UI (\"load more\") in the web screens, a new DB index or schema migration, changes to the other `/v1/projects/*` routes, the WebSocket, auth or the import contract JSON schema, and any edit to the `trainingApp-mcp` repository (it is outside this workspace).\n\n## Inspected findings (observed facts, with provenance)\n\n- `apps/api/src/app.ts:30`: the route returns `{ projects: repository.list() }` behind `requireAuth`, which accepts a browser session or the MCP bearer token (`apps/api/src/http/auth.ts:66-75`).\n- `apps/api/src/repositories/project-repository.ts:33-36`: `list()` runs `SELECT *` ordered by `updated_at DESC` with no tie-breaker. It maps each row through `snapshot()` (lines 14-20), which parses `data_json` into `data` and adds `description`, `schemaVersion` and `createdAt`. **Correction to SPEC:** the response carries the parsed `data` object, not the raw `data_json` column. The intent is the same.\n- `list()` has exactly one caller (`app.ts:30`). `apps/api/src/ws/server.ts:14` uses only `getById`.\n- `apps/web/lib/api/client.ts:4,24`: `ProjectListItem = Pick<ProjectSnapshot, id|externalKey|name|revision|updatedAt>`, and `listProjects()` is typed as `{ projects: ProjectListItem[] }`.\n- Web consumers:\n  - `apps/web/components/project-list.tsx:27,58-87` renders `name`, `externalKey`, `revision` and `updatedAt`.\n  - `apps/web/components/project-tabs-bar.tsx:23,33-41` uses the **whole** list to prune open tabs whose project no longer exists. If the client sees only the first page (or a partial list), it will silently close tabs for projects on later pages. This is the main R2 risk.\n- `apps/api/src/db/database.ts:5,17-53`: schema `user_version` 1 and no index on `updated_at`. Adding one would need a schema-version migration.\n- `docs/architecture.md:5-6`: `trainingApp-mcp` is a separate HTTP-only adapter that calls the API with a bearer token. `scripts/check-contract-drift.mjs:6` reads `../trainingApp-mcp/...`, a sibling checkout that is not in this workspace. That makes `npm run contracts:check` unusable as a gate here.\n- `packages/contracts/src/generate-schema.ts:7-8` generates only `ProjectImportSchema`. New list schemas do not change `contracts/project-import.v1.schema.json`.\n- Existing commands:\n  - `npm run test -w @training/api` (`node --import tsx --test test/*.test.ts`) and `npm run test -w @training/contracts`\n  - `typecheck` in all three workspaces\n  - `npm run lint -w @training/web`\n  - The web workspace has no test files.\n- Errors: `ZodError` maps to 400 `VALIDATION_ERROR` (`app.ts:68`).\n\n## Unknowns, assumptions and decision gates\n\n- **U1 (blocking for release, not for implementation):** whether `trainingApp-mcp` calls `GET /v1/projects`, and whether it reads `data`, `description`, `createdAt` or `schemaVersion` from list items. It cannot be inspected here.\n- **U2:** production project count. This affects whether an index is ever needed (deferred, see A4).\n- **D1 (owner decision, gates T7/release):** how to handle the external-consumer transition.\n  - **Recommended:** break with notice. One shape for every caller, as R1 says, plus a documented migration path (fetch full snapshots with `GET /v1/projects/:id` or `/by-external-key/:key`) and a confirmed MCP update or notification before deploy.\n  - **Alternative:** a temporary opt-in full-snapshot mode or a new endpoint. Choosing it requires **revision 2** of T3/T6.\n- **D2 (owner decision, does not change the graph):** page size. **A2:** default `limit` 50, maximum 100. Out-of-range or non-integer values return 400 `VALIDATION_ERROR` rather than being clamped.\n- **D3 (owner decision):** whether the web gets a pagination UI. **A3:** no. The web client follows `nextCursor` to the end, so both screens keep receiving the complete list (needed by the tab pruning in `project-tabs-bar.tsx:33`).\n- **A1:** the cursor is opaque to clients (for example base64url of `[updatedAt, id]`). Its validity does not depend on the referenced row still existing.\n- **A4:** no new index or migration in this revision, given the current single-table SQLite deployment. Revisit if U2 shows large volumes.\n- **A5:** if a project is updated while someone is paging, it can move ahead of the cursor and be missed in that traversal, but nothing is duplicated. Both web screens refetch on `PROJECTS_CHANGED_EVENT` and on navigation. This is accepted and will be documented.\n\n## Behavior contract (fixed for implementers)\n\n- **Request:** `GET /v1/projects?limit=<int 1..100, default 50>&cursor=<opaque, optional>`. Auth is unchanged: 401 without a session or a valid bearer token.\n- **Response 200:** `{ projects, nextCursor }`.\n  - Each item has exactly the keys `id`, `externalKey`, `name`, `revision`, `updatedAt`.\n  - Order is `updated_at DESC, id DESC`.\n  - `nextCursor` is non-null only when more rows exist.\n  - An empty DB returns `{ projects: [], nextCursor: null }`.\n  - Without concurrent writes, following cursors until `null` returns every project exactly once.\n- **Next page condition:** `updated_at < c.updatedAt OR (updated_at = c.updatedAt AND id < c.id)`. The query fetches `limit + 1` rows and selects only the list columns, never `data_json`.\n- **Errors:** a malformed cursor, bad `limit` or undecodable cursor returns 400 with `error.code = \"VALIDATION_ERROR\"`.\n- **Web client:** `listProjects()` keeps returning `{ projects: ProjectListItem[] }` with the complete list. Any page failure, repeated cursor or page-count overrun throws. A partial list is never returned.\n\n## Milestones and tasks\n\n### M1 — List contract and paginated API\n\n- [ ] T1 — Add list item and page schemas to contracts · repo: repository · verify: `npm run test -w @training/contracts` · files: packages/contracts/src/project.ts, packages/contracts/test/project.test.ts · resources: project-list-contract · covers: R1 · kind: implement\n- [ ] T2 — Keyset-paginated project listing in the repository · repo: repository · after: T1 · verify: `npm run test -w @training/api` · files: apps/api/src/repositories/project-repository.ts, apps/api/test/repository.test.ts · resources: project-list-contract · covers: R1 · kind: implement\n- [ ] T3 — Paginated GET /v1/projects route with HTTP test · repo: repository · after: T2 · verify: `npm run test -w @training/api` · files: apps/api/src/app.ts, apps/api/test/projects-route.test.ts · resources: project-list-contract, projects-list-http-contract · covers: R1, R3 · kind: implement\n\n### M2 — Web screens keep working\n\n- [ ] T4 — Web client follows nextCursor and returns the complete list · repo: repository · after: T3 · verify: `npm run typecheck -w @training/web` · files: apps/web/lib/api/client.ts · resources: projects-list-http-contract, web-project-list-screens · covers: R2 · kind: implement\n- [ ] T5 — Manual multi-page regression of project list and tabs bar · repo: repository · after: T4 · resources: web-project-list-screens · covers: R2 · kind: test\n\n### M3 — External consumer notice and release gate\n\n- [ ] T6 — Document the list contract and breaking-change notice · repo: repository · after: T3 · files: docs/api-contract.md · resources: projects-list-http-contract · covers: R3 · kind: docs\n- [ ] T7 — Decision-gated release check for trainingApp-mcp (D1) · repo: repository · after: T5, T6 · resources: projects-list-http-contract · covers: R2, R3 · kind: audit\n\n## Task behavior and acceptance\n\n- **T1**\n  - Add `ProjectListItemSchema`, a strict object with exactly the five list fields, and `ProjectListPageSchema` (`{ projects, nextCursor: string|null }`, strict), with their inferred types. Export them through `packages/contracts/src/index.ts` (already `export *`).\n  - The generated import JSON schema must not change.\n  - New tests reject an item that carries `data`.\n- **T2**\n  - Add `listPage({ limit, cursor })`, which returns `{ projects, nextCursor }` per the contract above. It selects only the list columns and uses deterministic ordering with an `id` tie-breaker.\n  - A cursor decode failure raises an error that T3 maps to 400.\n  - `list()` may be removed once T3 no longer calls it; there is no other caller.\n  - Tests cover: an empty DB, an exact page boundary, equal `updated_at` values, a cursor pointing to a deleted row, and a full traversal visiting every project once.\n- **T3**\n  - Validate the query and call `listPage`. Respond with the page shape.\n  - The new HTTP test starts `createApp` on port 0 with a test config (including `mcpToken`) and checks:\n    - the bearer and anonymous (401) paths\n    - item keys\n    - `nextCursor` chaining\n    - 400 `VALIDATION_ERROR` for a bad `limit` or cursor\n  - The existing repository test must still pass.\n- **T4**\n  - Loop `/v1/projects` and then `?cursor=` until `null`, and aggregate the results.\n  - Guard against a repeated cursor and a page-count overrun by throwing.\n  - Keep the call sites in `project-list.tsx:27` and `project-tabs-bar.tsx:23` unchanged.\n  - Lint and typecheck must pass.\n- **T5**\n  - With more projects than one page (create them, or temporarily use a small `limit` in the client), the `/projects` list shows all of them with name, key, revision and relative time.\n  - Open tabs for projects that are not on the first page stay open after a refresh.\n  - Deleting a project removes its tab.\n- **T6**\n  - `docs/api-contract.md` describes the query parameters, response shape, ordering, cursor opacity, errors, the A5 limitation, and a breaking-change notice with the full-snapshot migration path for MCP callers.\n- **T7**\n  - Gate: the owner records the D1 choice.\n  - Before deploy, either `trainingApp-mcp` usage of `GET /v1/projects` is confirmed compatible or updated, or its owner has acknowledged the notice in T6.\n  - If D1 is not \"break with notice\", stop and open revision 2. Nothing is deployed by this plan.\n\n## Interfaces\n\n- **IF-1 Project list contract schemas.** Producer T1. Consumers T2, T3, T4. Integration task T3.\n- **IF-2 HTTP `GET /v1/projects` page response.** Producer T3. Consumers T4, T6, T7. Integration task T5.\n\n## Verification (planned, none executed)\n\n- **Static:**\n  - `npm run typecheck -w @training/contracts`\n  - `npm run typecheck -w @training/api`\n  - `npm run typecheck -w @training/web`\n  - `npm run lint -w @training/web`\n- **Functional:**\n  - `npm run test -w @training/contracts` (new cases created by T1)\n  - `npm run test -w @training/api` (repository cases created by T2)\n- **Integration:** `npm run test -w @training/api`, including `apps/api/test/projects-route.test.ts` created by T3.\n- **Regression:**\n  - the existing `apps/api/test/repository.test.ts` keeps passing\n  - the import JSON schema and its sha256 sidecar are unchanged\n  - T5 manual web checks\n- **Product:** T5 (web) and T7 (external consumer gate) are manual checks. A green test does not prove that R3 is accepted.\n- `npm run contracts:check` is not used, because it needs the absent sibling `../trainingApp-mcp`.\n\n## Risks\n\n- **Plausible risk:** tab pruning closes tabs if the client returns only a first or partial page (`project-tabs-bar.tsx:33`). Mitigated by T4's all-or-throw behavior and checked in T5.\n- **Plausible risk:** the external MCP consumer breaks silently (U1). Mitigated by T6 and T7 and gated by D1.\n- **Plausible risk:** full traversal costs N/limit requests and still has no index (A4). Acceptable for the current scale, which is unverified (U2).\n- **Fact:** the current list order has no tie-breaker (`project-repository.ts:34`). Fixed by T2's ordering.\n\n## Self-review note\n\nThis is a same-context semantic self-review, not an independent approval. Every requirement is covered: R1 by T1–T3, R2 by T4, T5 and T7, and R3 by T3, T6 and T7. All `after` edges point to earlier or same-milestone tasks, and the graph has no cycles. Estimates are unverified guesses; no comparable execution history was available.\n```\n\n```PLAN.json\n{\n  \"schema_version\": \"1.2.0\",\n  \"plan_id\": \"REQ-CP1\",\n  \"revision\": 1,\n  \"spec_ref\": \"SPEC.md\",\n  \"requirements\": [\"R1\", \"R2\", \"R3\"],\n  \"milestones\": [\n    {\n      \"id\": \"M1\",\n      \"title\": \"List contract and paginated API\",\n      \"acceptance_criteria\": [\n        \"GET /v1/projects returns projects containing only id, externalKey, name, revision and updatedAt plus a nextCursor field\",\n        \"Following nextCursor until null visits every project exactly once in updated_at DESC, id DESC order\",\n        \"Invalid limit or cursor values return 400 with error code VALIDATION_ERROR\"\n      ]\n    },\n    {\n      \"id\": \"M2\",\n      \"title\": \"Web screens keep working\",\n      \"acceptance_criteria\": [\n        \"The projects page lists every project even when more than one page exists\",\n        \"Open tabs for projects beyond the first page are not pruned after refresh\"\n      ]\n    },\n    {\n      \"id\": \"M3\",\n      \"title\": \"External consumer notice and release gate\",\n      \"acceptance_criteria\": [\n        \"docs/api-contract.md documents the paginated list contract and the breaking-change migration path\",\n        \"The owner decision D1 and the trainingApp-mcp compatibility or notice outcome are recorded before any deploy\"\n      ]\n    }\n  ],\n  \"tasks\": [\n    {\n      \"id\": \"T1\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Add list item and page schemas to contracts\",\n      \"objective\": \"Shared strict ProjectListItem and ProjectListPage schemas and types exist in @training/contracts without changing the generated import schema\",\n      \"repository\": \"repository\",\n      \"after\": [],\n      \"complexity\": \"low\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 30,\n      \"risk\": \"medium\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Two small zod schemas next to existing ProjectSnapshotSchema plus a couple of test cases; no comparable execution history, so this is an unmeasured estimate\",\n      \"expected_paths\": [\"packages/contracts/src/project.ts\", \"packages/contracts/test/project.test.ts\"],\n      \"shared_resources\": [\"project-list-contract\"],\n      \"acceptance_criteria\": [\n        \"ProjectListItemSchema accepts exactly id, externalKey, name, revision and updatedAt and rejects an item carrying data\",\n        \"ProjectListPageSchema requires projects and a nextCursor that is a string or null\",\n        \"contracts/project-import.v1.schema.json and its sha256 sidecar are unchanged after regeneration\"\n      ],\n      \"verification\": [\n        {\"type\": \"command\", \"value\": \"npm run test -w @training/contracts\", \"purpose\": \"list schema accept and reject cases\", \"category\": \"functional\", \"created_by\": \"T1\"},\n        {\"type\": \"command\", \"value\": \"npm run typecheck -w @training/contracts\", \"purpose\": \"contracts package types compile with new exports\", \"category\": \"static\"},\n        {\"type\": \"manual\", \"value\": \"run npm run contracts:generate and compare contracts/project-import.v1.schema.json.sha256 with its previous content\", \"purpose\": \"import contract is untouched\", \"expected\": \"sha256 sidecar content is identical to before the change\", \"category\": \"regression\"}\n      ],\n      \"covers\": [\"R1\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Mirrors the existing strict ProjectSnapshotSchema pattern with a field subset, no design choice left open\",\n          \"evidence\": [\"file:packages/contracts/src/project.ts\", \"file:apps/web/lib/api/client.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"One source file and its test file change; the generator only emits ProjectImportSchema so generated artifacts stay as they are\",\n          \"evidence\": [\"file:packages/contracts/src/generate-schema.ts\", \"file:packages/contracts/src/index.ts\"]\n        },\n        \"duration\": {\n          \"justification\": \"Adding two schema declarations and two node test cases in an existing test file is a short edit\",\n          \"evidence\": [\"file:packages/contracts/test/project.test.ts\", \"assumption:no comparable execution history in this sandbox\"]\n        },\n        \"risk\": {\n          \"justification\": \"The schema becomes the shared list contract consumed by API and web, so a wrong field set propagates\",\n          \"evidence\": [\"spec:SPEC.md#requirements\", \"task:T3\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Repository, route and web client consume this contract through the project-list-contract resource\",\n          \"evidence\": [\"task:T2\", \"task:T3\", \"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"The contracts package layout, exports and tests were read directly, but no timing history exists\",\n          \"evidence\": [\"file:packages/contracts/package.json\", \"file:packages/contracts/src/project.ts\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T2\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Keyset-paginated project listing in the repository\",\n      \"objective\": \"ProjectRepository exposes listPage returning list items and nextCursor with deterministic keyset pagination that never reads data_json\",\n      \"repository\": \"repository\",\n      \"after\": [\"T1\"],\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 60,\n      \"risk\": \"medium\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Keyset SQL with tie-breaker, opaque cursor encode/decode and boundary tests in an existing better-sqlite3 test harness; estimate is unmeasured\",\n      \"expected_paths\": [\"apps/api/src/repositories/project-repository.ts\", \"apps/api/test/repository.test.ts\"],\n      \"shared_resources\": [\"project-list-contract\"],\n      \"acceptance_criteria\": [\n        \"listPage orders by updated_at DESC then id DESC and returns at most limit items\",\n        \"nextCursor is null exactly when no further rows exist and an empty database returns an empty page\",\n        \"Full traversal over rows with equal updated_at values returns every project exactly once\",\n        \"A cursor whose referenced project was deleted still yields the correct next page\",\n        \"A malformed cursor raises a typed error instead of returning rows\"\n      ],\n      \"verification\": [\n        {\"type\": \"command\", \"value\": \"npm run test -w @training/api\", \"purpose\": \"repository pagination boundary and traversal cases\", \"category\": \"functional\", \"created_by\": \"T2\"},\n        {\"type\": \"command\", \"value\": \"npm run typecheck -w @training/api\", \"purpose\": \"repository compiles against contract types\", \"category\": \"static\"}\n      ],\n      \"covers\": [\"R1\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Requires choosing a stable keyset predicate with an id tie-breaker because current ordering has none\",\n          \"evidence\": [\"file:apps/api/src/repositories/project-repository.ts\", \"file:apps/api/src/db/database.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"Only the repository listing method and its tests change; mutation paths and snapshot mapping stay untouched\",\n          \"evidence\": [\"file:apps/api/src/repositories/project-repository.ts\", \"file:apps/api/test/repository.test.ts\"]\n        },\n        \"duration\": {\n          \"justification\": \"SQL plus cursor helper plus five boundary test cases in the existing temp-database test style\",\n          \"evidence\": [\"file:apps/api/test/repository.test.ts\", \"assumption:no comparable execution history in this sandbox\"]\n        },\n        \"risk\": {\n          \"justification\": \"A wrong predicate skips or duplicates projects across pages, a functional regression for every list caller\",\n          \"evidence\": [\"spec:SPEC.md#requirements\", \"file:apps/web/components/project-tabs-bar.tsx\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Implements the project-list-contract shape from T1 and is consumed directly by the route task\",\n          \"evidence\": [\"task:T1\", \"task:T3\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Schema, current query and sole caller were inspected; cursor edge cases may add test time\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/api/src/repositories/project-repository.ts\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T3\",\n      \"milestone_id\": \"M1\",\n      \"title\": \"Paginated GET /v1/projects route with HTTP test\",\n      \"objective\": \"GET /v1/projects validates limit and cursor and responds with the projects plus nextCursor page shape for browser and bearer callers\",\n      \"repository\": \"repository\",\n      \"after\": [\"T2\"],\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 60,\n      \"risk\": \"high\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Route change is one line plus query validation; most time is a new HTTP test booting createApp on an ephemeral port; unmeasured estimate\",\n      \"expected_paths\": [\"apps/api/src/app.ts\", \"apps/api/test/projects-route.test.ts\"],\n      \"shared_resources\": [\"project-list-contract\", \"projects-list-http-contract\"],\n      \"acceptance_criteria\": [\n        \"A bearer-authenticated request returns 200 with items containing only the five list fields and a nextCursor\",\n        \"Requests without session or token still return 401 UNAUTHENTICATED\",\n        \"limit outside 1..100, non-integer limit or malformed cursor return 400 with error code VALIDATION_ERROR\",\n        \"Chaining nextCursor through the HTTP endpoint returns all seeded projects once\",\n        \"The existing repository revision test keeps passing\"\n      ],\n      \"verification\": [\n        {\"type\": \"command\", \"value\": \"npm run test -w @training/api\", \"purpose\": \"HTTP list contract, auth and validation cases plus existing tests\", \"category\": \"integration\", \"created_by\": \"T3\"},\n        {\"type\": \"command\", \"value\": \"npm run typecheck -w @training/api\", \"purpose\": \"route compiles with new repository method\", \"category\": \"static\"}\n      ],\n      \"covers\": [\"R1\", \"R3\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Query validation must map into the existing VALIDATION_ERROR handler while keeping auth middleware unchanged\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/api/src/http/auth.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"A single route handler changes and one new test file is added; other project routes are untouched\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/api/package.json\"]\n        },\n        \"duration\": {\n          \"justification\": \"New HTTP test needs a test AppConfig with mcpToken and an ephemeral server, more setup than unit tests\",\n          \"evidence\": [\"file:apps/api/src/config.ts\", \"file:apps/api/src/server.ts\", \"assumption:no comparable execution history in this sandbox\"]\n        },\n        \"risk\": {\n          \"justification\": \"Changes a public response shape read by the external trainingApp-mcp bearer client, a compatibility hazard\",\n          \"evidence\": [\"file:docs/architecture.md\", \"spec:SPEC.md#requirements\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Produces the projects-list-http-contract consumed by the web client, docs and release gate tasks\",\n          \"evidence\": [\"task:T4\", \"task:T6\", \"task:T7\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Route, error handler and auth were read; the HTTP harness does not exist yet and adds uncertainty\",\n          \"evidence\": [\"file:apps/api/src/app.ts\", \"file:apps/api/test/repository.test.ts\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T4\",\n      \"milestone_id\": \"M2\",\n      \"title\": \"Web client follows nextCursor and returns the complete list\",\n      \"objective\": \"listProjects aggregates every page into the unchanged projects array or throws, so existing screens never receive a partial list\",\n      \"repository\": \"repository\",\n      \"after\": [\"T3\"],\n      \"complexity\": \"low\",\n      \"scope\": \"isolated_fix\",\n      \"estimated_minutes\": 45,\n      \"risk\": \"medium\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"One client function rewritten as a bounded loop with a typed page response; both call sites stay unchanged; unmeasured estimate\",\n      \"expected_paths\": [\"apps/web/lib/api/client.ts\"],\n      \"shared_resources\": [\"projects-list-http-contract\", \"web-project-list-screens\"],\n      \"acceptance_criteria\": [\n        \"listProjects returns all projects across pages in API order with the existing return shape\",\n        \"A failed page, a repeated cursor or exceeding the page guard throws instead of returning partial results\",\n        \"project-list.tsx and project-tabs-bar.tsx compile without changes to their listProjects call sites\"\n      ],\n      \"verification\": [\n        {\"type\": \"command\", \"value\": \"npm run typecheck -w @training/web\", \"purpose\": \"client and consumers type-check against the page response\", \"category\": \"static\"},\n        {\"type\": \"command\", \"value\": \"npm run lint -w @training/web\", \"purpose\": \"web lint stays clean\", \"category\": \"static\"}\n      ],\n      \"covers\": [\"R2\"],\n      \"kind\": \"implement\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"A bounded cursor-following loop over the existing request helper is a known localized pattern\",\n          \"evidence\": [\"file:apps/web/lib/api/client.ts\"]\n        },\n        \"scope\": {\n          \"justification\": \"Only listProjects and its response type change while both component call sites remain as they are\",\n          \"evidence\": [\"file:apps/web/components/project-list.tsx\", \"file:apps/web/components/project-tabs-bar.tsx\"]\n        },\n        \"duration\": {\n          \"justification\": \"Small function rewrite plus typecheck and lint, no web test harness to extend\",\n          \"evidence\": [\"file:apps/web/package.json\", \"assumption:no comparable execution history in this sandbox\"]\n        },\n        \"risk\": {\n          \"justification\": \"Returning a partial list would make the tabs bar prune open tabs for projects on later pages\",\n          \"evidence\": [\"file:apps/web/components/project-tabs-bar.tsx\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Consumes the projects-list-http-contract produced by the route task and feeds both web list screens\",\n          \"evidence\": [\"task:T3\", \"task:T5\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Client code and both consumers were read; behavior is only verifiable manually because web has no tests\",\n          \"evidence\": [\"file:apps/web/lib/api/client.ts\", \"file:apps/web/package.json\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T5\",\n      \"milestone_id\": \"M2\",\n      \"title\": \"Manual multi-page regression of project list and tabs bar\",\n      \"objective\": \"Both web screens are confirmed to behave as before when the project count exceeds one API page\",\n      \"repository\": \"repository\",\n      \"after\": [\"T4\"],\n      \"complexity\": \"low\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 30,\n      \"risk\": \"medium\",\n      \"coupling\": \"low\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"Seeding more projects than one page and clicking through two screens locally; unmeasured estimate\",\n      \"expected_paths\": [],\n      \"shared_resources\": [\"web-project-list-screens\"],\n      \"acceptance_criteria\": [\n        \"The projects page shows every seeded project with name, externalKey, revision and relative update time\",\n        \"An open tab for a project beyond the first page remains open after navigation refresh\",\n        \"Deleting a project removes it from the list and closes its tab\"\n      ],\n      \"verification\": [\n        {\"type\": \"manual\", \"value\": \"run API and web locally with more projects than one page and exercise /projects and the tabs bar\", \"purpose\": \"web screens keep working with pagination\", \"expected\": \"all projects listed, later-page tabs stay open, deleted project tab closes\", \"category\": \"product\"},\n        {\"type\": \"manual\", \"value\": \"compare project card fields and ordering against the pre-change behavior\", \"purpose\": \"no visible regression in list rendering\", \"expected\": \"same fields and most-recently-updated-first ordering\", \"category\": \"regression\"}\n      ],\n      \"covers\": [\"R2\"],\n      \"kind\": \"test\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Scripted manual walk-through of two known screens with no investigation required\",\n          \"evidence\": [\"file:apps/web/components/project-list.tsx\", \"file:apps/web/components/project-tabs-bar.tsx\"]\n        },\n        \"scope\": {\n          \"justification\": \"Verification only; no repository files are expected to change during this pass\",\n          \"evidence\": [\"task:T4\"]\n        },\n        \"duration\": {\n          \"justification\": \"Creating enough projects through the UI or API and checking the two screens takes a short session\",\n          \"evidence\": [\"file:apps/web/app/projects/page.tsx\", \"assumption:local dev stack starts without extra setup\"]\n        },\n        \"risk\": {\n          \"justification\": \"Missing a tab-pruning regression would close user tabs silently in production\",\n          \"evidence\": [\"file:apps/web/components/project-tabs-bar.tsx\", \"spec:SPEC.md#requirements\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Only reads the web-project-list-screens resource after T4 and edits nothing shared\",\n          \"evidence\": [\"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"Screens were inspected, but local environment readiness for manual testing is unverified\",\n          \"evidence\": [\"file:apps/web/.env.example\", \"assumption:local API and web can run together on ports 4100 and 3000\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T6\",\n      \"milestone_id\": \"M3\",\n      \"title\": \"Document the list contract and breaking-change notice\",\n      \"objective\": \"API documentation states the paginated list contract and tells external callers how to migrate to full snapshots\",\n      \"repository\": \"repository\",\n      \"after\": [\"T3\"],\n      \"complexity\": \"low\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 30,\n      \"risk\": \"low\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"medium\",\n      \"estimate_rationale\": \"One short documentation section derived from the T3 behavior; unmeasured estimate\",\n      \"expected_paths\": [\"docs/api-contract.md\"],\n      \"shared_resources\": [\"projects-list-http-contract\"],\n      \"acceptance_criteria\": [\n        \"docs/api-contract.md lists limit and cursor parameters, the response shape, ordering and VALIDATION_ERROR cases\",\n        \"The doc states the cursor is opaque and that concurrent updates can skip a project during one traversal\",\n        \"The doc contains a breaking-change notice directing MCP callers to GET /v1/projects/:id or by-external-key for full snapshots\"\n      ],\n      \"verification\": [\n        {\"type\": \"manual\", \"value\": \"read docs/api-contract.md against the behavior asserted by apps/api/test/projects-route.test.ts\", \"purpose\": \"documentation matches implemented contract\", \"expected\": \"every documented parameter, field and error matches the route test\", \"category\": \"product\"}\n      ],\n      \"covers\": [\"R3\"],\n      \"kind\": \"docs\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Prose describing behavior already fixed by the route task and its test\",\n          \"evidence\": [\"task:T3\", \"file:docs/api-contract.md\"]\n        },\n        \"scope\": {\n          \"justification\": \"A single existing documentation page gains one section and nothing else changes\",\n          \"evidence\": [\"file:docs/api-contract.md\"]\n        },\n        \"duration\": {\n          \"justification\": \"Short page edit comparable in size to the existing fifteen-line contract document\",\n          \"evidence\": [\"file:docs/api-contract.md\"]\n        },\n        \"risk\": {\n          \"justification\": \"A documentation mistake is reversible and does not change runtime behavior\",\n          \"evidence\": [\"file:docs/api-contract.md\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Describes the projects-list-http-contract and is unordered relative to the web client work that also consumes it\",\n          \"evidence\": [\"task:T3\", \"task:T4\"]\n        },\n        \"confidence\": {\n          \"justification\": \"The target document and the external consumer description were read directly\",\n          \"evidence\": [\"file:docs/api-contract.md\", \"file:docs/architecture.md\"]\n        }\n      }\n    },\n    {\n      \"id\": \"T7\",\n      \"milestone_id\": \"M3\",\n      \"title\": \"Decision-gated release check for trainingApp-mcp (D1)\",\n      \"objective\": \"Before any deploy, the owner D1 choice and the trainingApp-mcp compatibility or acknowledged notice are recorded, or the plan is revised\",\n      \"repository\": \"repository\",\n      \"after\": [\"T5\", \"T6\"],\n      \"complexity\": \"medium\",\n      \"scope\": \"small_change\",\n      \"estimated_minutes\": 30,\n      \"risk\": \"high\",\n      \"coupling\": \"medium\",\n      \"confidence\": \"low\",\n      \"estimate_rationale\": \"Depends on owner availability and access to the external repository, neither of which is known here\",\n      \"expected_paths\": [],\n      \"shared_resources\": [\"projects-list-http-contract\"],\n      \"acceptance_criteria\": [\n        \"The owner D1 decision between break-with-notice and a compatibility mode is recorded\",\n        \"trainingApp-mcp usage of GET /v1/projects is confirmed compatible or updated, or its owner acknowledged the notice\",\n        \"If D1 selects a compatibility mode, release is stopped and a plan revision 2 is requested instead\"\n      ],\n      \"verification\": [\n        {\"type\": \"manual\", \"value\": \"review the recorded D1 decision and the trainingApp-mcp compatibility or acknowledgement evidence before deploy\", \"purpose\": \"no external consumer is broken without notice\", \"expected\": \"a recorded decision plus confirmation or acknowledgement exists before the release SHA is deployed\", \"category\": \"product\"},\n        {\"type\": \"manual\", \"value\": \"re-check web list and tabs behavior from T5 on the release candidate build\", \"purpose\": \"existing web screens still work at release\", \"expected\": \"same results as T5 on the release candidate\", \"category\": \"regression\"}\n      ],\n      \"covers\": [\"R2\", \"R3\"],\n      \"kind\": \"audit\",\n      \"classification_evidence\": {\n        \"complexity\": {\n          \"justification\": \"Requires judging an external consumer that cannot be inspected from this workspace\",\n          \"evidence\": [\"file:docs/architecture.md\", \"file:scripts/check-contract-drift.mjs\"]\n        },\n        \"scope\": {\n          \"justification\": \"Records a decision and a compatibility outcome; it changes no code in this repository\",\n          \"evidence\": [\"spec:SPEC.md#requirements\"]\n        },\n        \"duration\": {\n          \"justification\": \"Reviewing a recorded decision is short, but waiting on external owners is unbounded\",\n          \"evidence\": [\"assumption:owner and trainingApp-mcp maintainer respond within the release window\"]\n        },\n        \"risk\": {\n          \"justification\": \"Releasing without this gate could break the bearer-authenticated MCP integration in production\",\n          \"evidence\": [\"file:apps/api/src/http/auth.ts\", \"file:docs/deployment.md\"]\n        },\n        \"coupling\": {\n          \"justification\": \"Consumes the projects-list-http-contract and the documentation notice produced earlier\",\n          \"evidence\": [\"task:T6\", \"task:T3\"]\n        },\n        \"confidence\": {\n          \"justification\": \"External repository usage is unknown, so the estimate is preliminary\",\n          \"evidence\": [\"assumption:trainingApp-mcp list usage is unverified\", \"file:docs/architecture.md\"]\n        }\n      }\n    }\n  ],\n  \"interfaces\": [\n    {\n      \"id\": \"IF-1\",\n      \"title\": \"Project list contract schemas\",\n      \"owner\": \"@training/contracts package\",\n      \"producer_task\": \"T1\",\n      \"consumer_tasks\": [\"T2\", \"T3\", \"T4\"],\n      \"integration_task\": \"T3\",\n      \"inputs\": [\"existing ProjectSnapshot field definitions\"],\n      \"outputs\": [\"ProjectListItemSchema with id, externalKey, name, revision, updatedAt\", \"ProjectListPageSchema with projects and nextCursor string or null\"],\n      \"invariants\": [\"list items never contain data, description, schemaVersion or createdAt\", \"project-import.v1 JSON schema remains unchanged\"],\n      \"integration_criteria\": [\"HTTP route test validates responses against the page schema shape\"]\n    },\n    {\n      \"id\": \"IF-2\",\n      \"title\": \"HTTP GET /v1/projects page response\",\n      \"owner\": \"apps/api route layer\",\n      \"producer_task\": \"T3\",\n      \"consumer_tasks\": [\"T4\", \"T6\", \"T7\"],\n      \"integration_task\": \"T5\",\n      \"inputs\": [\"optional limit integer 1..100 default 50\", \"optional opaque cursor string\"],\n      \"outputs\": [\"200 with projects list items and nextCursor\", \"400 VALIDATION_ERROR on invalid limit or cursor\", \"401 UNAUTHENTICATED without session or bearer\"],\n      \"invariants\": [\"order is updated_at DESC then id DESC\", \"nextCursor null exactly when no further rows exist\", \"auth behavior unchanged for browser and MCP callers\"],\n      \"integration_criteria\": [\"web screens list every project across pages and keep later-page tabs open\", \"docs describe the same parameters, fields and errors\"]\n    }\n  ]\n}\n```",
+  "format_valid": false,
+  "usage_reported": {
+    "input_tokens": 22,
+    "cache_creation_input_tokens": 66877,
+    "cache_read_input_tokens": 473998,
+    "output_tokens": 24216,
+    "output_tokens_details": {
+      "thinking_tokens": 7139
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 66877,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-opus-5-5"
+  ],
+  "observed_tool_events": 30,
+  "tool_audit": [
+    {
+      "tool": "Glob",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/request",
+        "pattern": "**/*"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/planner-resources",
+        "pattern": "**/*"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/request/SPEC.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/planner-resources/plan.example.json"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo",
+        "pattern": "**/*"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/api/src/app.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/api/src/repositories/project-repository.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/web/lib/api/client.ts"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo",
+        "pattern": "listProjects|ProjectListItem|/v1/projects|nextCursor|cursor",
+        "glob": "!package-lock.json"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/packages/contracts/src/project.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/api/test/repository.test.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/docs/api-contract.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/api/src/db/database.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/package.json"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/api/package.json"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/web/package.json"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/packages/contracts/package.json"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/web/components/project-list.tsx"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/web/components/project-tabs-bar.tsx"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/api/src/http/auth.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/docs/architecture.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/scripts/check-contract-drift.mjs"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/packages/contracts/src/index.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/packages/contracts/test/project.test.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/packages/contracts/src/generate-schema.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/README.md"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/api/src/server.ts"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/apps/api/src/config.ts"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo",
+        "pattern": "repository\\.|listProjects|v1/projects",
+        "glob": "{apps/api/src/ws/**,apps/web/app/**,apps/web/hooks/**,docs/**,ops/**}"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-planner-duel-20261017-ptfkg1ba/CP1/opus/repo/docs/deployment.md"
+      }
+    }
+  ],
+  "model_usage_reported": {
+    "claude-opus-5-5": {
+      "inputTokens": 22,
+      "outputTokens": 24216,
+      "cacheReadInputTokens": 473998,
+      "cacheCreationInputTokens": 66877,
+      "webSearchRequests": 0,
+      "costUSD": 1.1142236,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 7139
+    }
+  },
+  "exit_code": 0,
+  "block_contract_valid": true,
+  "plan": {
+    "schema_version": "1.2.0",
+    "plan_id": "REQ-CP1",
+    "revision": 1,
+    "spec_ref": "SPEC.md",
+    "requirements": [
+      "R1",
+      "R2",
+      "R3"
+    ],
+    "milestones": [
+      {
+        "id": "M1",
+        "title": "List contract and paginated API",
+        "acceptance_criteria": [
+          "GET /v1/projects returns projects containing only id, externalKey, name, revision and updatedAt plus a nextCursor field",
+          "Following nextCursor until null visits every project exactly once in updated_at DESC, id DESC order",
+          "Invalid limit or cursor values return 400 with error code VALIDATION_ERROR"
+        ]
+      },
+      {
+        "id": "M2",
+        "title": "Web screens keep working",
+        "acceptance_criteria": [
+          "The projects page lists every project even when more than one page exists",
+          "Open tabs for projects beyond the first page are not pruned after refresh"
+        ]
+      },
+      {
+        "id": "M3",
+        "title": "External consumer notice and release gate",
+        "acceptance_criteria": [
+          "docs/api-contract.md documents the paginated list contract and the breaking-change migration path",
+          "The owner decision D1 and the trainingApp-mcp compatibility or notice outcome are recorded before any deploy"
+        ]
+      }
+    ],
+    "tasks": [
+      {
+        "id": "T1",
+        "milestone_id": "M1",
+        "title": "Add list item and page schemas to contracts",
+        "objective": "Shared strict ProjectListItem and ProjectListPage schemas and types exist in @training/contracts without changing the generated import schema",
+        "repository": "repository",
+        "after": [],
+        "complexity": "low",
+        "scope": "small_change",
+        "estimated_minutes": 30,
+        "risk": "medium",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "Two small zod schemas next to existing ProjectSnapshotSchema plus a couple of test cases; no comparable execution history, so this is an unmeasured estimate",
+        "expected_paths": [
+          "packages/contracts/src/project.ts",
+          "packages/contracts/test/project.test.ts"
+        ],
+        "shared_resources": [
+          "project-list-contract"
+        ],
+        "acceptance_criteria": [
+          "ProjectListItemSchema accepts exactly id, externalKey, name, revision and updatedAt and rejects an item carrying data",
+          "ProjectListPageSchema requires projects and a nextCursor that is a string or null",
+          "contracts/project-import.v1.schema.json and its sha256 sidecar are unchanged after regeneration"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm run test -w @training/contracts",
+            "purpose": "list schema accept and reject cases",
+            "category": "functional",
+            "created_by": "T1"
+          },
+          {
+            "type": "command",
+            "value": "npm run typecheck -w @training/contracts",
+            "purpose": "contracts package types compile with new exports",
+            "category": "static"
+          },
+          {
+            "type": "manual",
+            "value": "run npm run contracts:generate and compare contracts/project-import.v1.schema.json.sha256 with its previous content",
+            "purpose": "import contract is untouched",
+            "expected": "sha256 sidecar content is identical to before the change",
+            "category": "regression"
+          }
+        ],
+        "covers": [
+          "R1"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Mirrors the existing strict ProjectSnapshotSchema pattern with a field subset, no design choice left open",
+            "evidence": [
+              "file:packages/contracts/src/project.ts",
+              "file:apps/web/lib/api/client.ts"
+            ]
+          },
+          "scope": {
+            "justification": "One source file and its test file change; the generator only emits ProjectImportSchema so generated artifacts stay as they are",
+            "evidence": [
+              "file:packages/contracts/src/generate-schema.ts",
+              "file:packages/contracts/src/index.ts"
+            ]
+          },
+          "duration": {
+            "justification": "Adding two schema declarations and two node test cases in an existing test file is a short edit",
+            "evidence": [
+              "file:packages/contracts/test/project.test.ts",
+              "assumption:no comparable execution history in this sandbox"
+            ]
+          },
+          "risk": {
+            "justification": "The schema becomes the shared list contract consumed by API and web, so a wrong field set propagates",
+            "evidence": [
+              "spec:SPEC.md#requirements",
+              "task:T3"
+            ]
+          },
+          "coupling": {
+            "justification": "Repository, route and web client consume this contract through the project-list-contract resource",
+            "evidence": [
+              "task:T2",
+              "task:T3",
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "The contracts package layout, exports and tests were read directly, but no timing history exists",
+            "evidence": [
+              "file:packages/contracts/package.json",
+              "file:packages/contracts/src/project.ts"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T2",
+        "milestone_id": "M1",
+        "title": "Keyset-paginated project listing in the repository",
+        "objective": "ProjectRepository exposes listPage returning list items and nextCursor with deterministic keyset pagination that never reads data_json",
+        "repository": "repository",
+        "after": [
+          "T1"
+        ],
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 60,
+        "risk": "medium",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "Keyset SQL with tie-breaker, opaque cursor encode/decode and boundary tests in an existing better-sqlite3 test harness; estimate is unmeasured",
+        "expected_paths": [
+          "apps/api/src/repositories/project-repository.ts",
+          "apps/api/test/repository.test.ts"
+        ],
+        "shared_resources": [
+          "project-list-contract"
+        ],
+        "acceptance_criteria": [
+          "listPage orders by updated_at DESC then id DESC and returns at most limit items",
+          "nextCursor is null exactly when no further rows exist and an empty database returns an empty page",
+          "Full traversal over rows with equal updated_at values returns every project exactly once",
+          "A cursor whose referenced project was deleted still yields the correct next page",
+          "A malformed cursor raises a typed error instead of returning rows"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm run test -w @training/api",
+            "purpose": "repository pagination boundary and traversal cases",
+            "category": "functional",
+            "created_by": "T2"
+          },
+          {
+            "type": "command",
+            "value": "npm run typecheck -w @training/api",
+            "purpose": "repository compiles against contract types",
+            "category": "static"
+          }
+        ],
+        "covers": [
+          "R1"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Requires choosing a stable keyset predicate with an id tie-breaker because current ordering has none",
+            "evidence": [
+              "file:apps/api/src/repositories/project-repository.ts",
+              "file:apps/api/src/db/database.ts"
+            ]
+          },
+          "scope": {
+            "justification": "Only the repository listing method and its tests change; mutation paths and snapshot mapping stay untouched",
+            "evidence": [
+              "file:apps/api/src/repositories/project-repository.ts",
+              "file:apps/api/test/repository.test.ts"
+            ]
+          },
+          "duration": {
+            "justification": "SQL plus cursor helper plus five boundary test cases in the existing temp-database test style",
+            "evidence": [
+              "file:apps/api/test/repository.test.ts",
+              "assumption:no comparable execution history in this sandbox"
+            ]
+          },
+          "risk": {
+            "justification": "A wrong predicate skips or duplicates projects across pages, a functional regression for every list caller",
+            "evidence": [
+              "spec:SPEC.md#requirements",
+              "file:apps/web/components/project-tabs-bar.tsx"
+            ]
+          },
+          "coupling": {
+            "justification": "Implements the project-list-contract shape from T1 and is consumed directly by the route task",
+            "evidence": [
+              "task:T1",
+              "task:T3"
+            ]
+          },
+          "confidence": {
+            "justification": "Schema, current query and sole caller were inspected; cursor edge cases may add test time",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/api/src/repositories/project-repository.ts"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T3",
+        "milestone_id": "M1",
+        "title": "Paginated GET /v1/projects route with HTTP test",
+        "objective": "GET /v1/projects validates limit and cursor and responds with the projects plus nextCursor page shape for browser and bearer callers",
+        "repository": "repository",
+        "after": [
+          "T2"
+        ],
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 60,
+        "risk": "high",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "Route change is one line plus query validation; most time is a new HTTP test booting createApp on an ephemeral port; unmeasured estimate",
+        "expected_paths": [
+          "apps/api/src/app.ts",
+          "apps/api/test/projects-route.test.ts"
+        ],
+        "shared_resources": [
+          "project-list-contract",
+          "projects-list-http-contract"
+        ],
+        "acceptance_criteria": [
+          "A bearer-authenticated request returns 200 with items containing only the five list fields and a nextCursor",
+          "Requests without session or token still return 401 UNAUTHENTICATED",
+          "limit outside 1..100, non-integer limit or malformed cursor return 400 with error code VALIDATION_ERROR",
+          "Chaining nextCursor through the HTTP endpoint returns all seeded projects once",
+          "The existing repository revision test keeps passing"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm run test -w @training/api",
+            "purpose": "HTTP list contract, auth and validation cases plus existing tests",
+            "category": "integration",
+            "created_by": "T3"
+          },
+          {
+            "type": "command",
+            "value": "npm run typecheck -w @training/api",
+            "purpose": "route compiles with new repository method",
+            "category": "static"
+          }
+        ],
+        "covers": [
+          "R1",
+          "R3"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Query validation must map into the existing VALIDATION_ERROR handler while keeping auth middleware unchanged",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/api/src/http/auth.ts"
+            ]
+          },
+          "scope": {
+            "justification": "A single route handler changes and one new test file is added; other project routes are untouched",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/api/package.json"
+            ]
+          },
+          "duration": {
+            "justification": "New HTTP test needs a test AppConfig with mcpToken and an ephemeral server, more setup than unit tests",
+            "evidence": [
+              "file:apps/api/src/config.ts",
+              "file:apps/api/src/server.ts",
+              "assumption:no comparable execution history in this sandbox"
+            ]
+          },
+          "risk": {
+            "justification": "Changes a public response shape read by the external trainingApp-mcp bearer client, a compatibility hazard",
+            "evidence": [
+              "file:docs/architecture.md",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "coupling": {
+            "justification": "Produces the projects-list-http-contract consumed by the web client, docs and release gate tasks",
+            "evidence": [
+              "task:T4",
+              "task:T6",
+              "task:T7"
+            ]
+          },
+          "confidence": {
+            "justification": "Route, error handler and auth were read; the HTTP harness does not exist yet and adds uncertainty",
+            "evidence": [
+              "file:apps/api/src/app.ts",
+              "file:apps/api/test/repository.test.ts"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T4",
+        "milestone_id": "M2",
+        "title": "Web client follows nextCursor and returns the complete list",
+        "objective": "listProjects aggregates every page into the unchanged projects array or throws, so existing screens never receive a partial list",
+        "repository": "repository",
+        "after": [
+          "T3"
+        ],
+        "complexity": "low",
+        "scope": "isolated_fix",
+        "estimated_minutes": 45,
+        "risk": "medium",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "One client function rewritten as a bounded loop with a typed page response; both call sites stay unchanged; unmeasured estimate",
+        "expected_paths": [
+          "apps/web/lib/api/client.ts"
+        ],
+        "shared_resources": [
+          "projects-list-http-contract",
+          "web-project-list-screens"
+        ],
+        "acceptance_criteria": [
+          "listProjects returns all projects across pages in API order with the existing return shape",
+          "A failed page, a repeated cursor or exceeding the page guard throws instead of returning partial results",
+          "project-list.tsx and project-tabs-bar.tsx compile without changes to their listProjects call sites"
+        ],
+        "verification": [
+          {
+            "type": "command",
+            "value": "npm run typecheck -w @training/web",
+            "purpose": "client and consumers type-check against the page response",
+            "category": "static"
+          },
+          {
+            "type": "command",
+            "value": "npm run lint -w @training/web",
+            "purpose": "web lint stays clean",
+            "category": "static"
+          }
+        ],
+        "covers": [
+          "R2"
+        ],
+        "kind": "implement",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "A bounded cursor-following loop over the existing request helper is a known localized pattern",
+            "evidence": [
+              "file:apps/web/lib/api/client.ts"
+            ]
+          },
+          "scope": {
+            "justification": "Only listProjects and its response type change while both component call sites remain as they are",
+            "evidence": [
+              "file:apps/web/components/project-list.tsx",
+              "file:apps/web/components/project-tabs-bar.tsx"
+            ]
+          },
+          "duration": {
+            "justification": "Small function rewrite plus typecheck and lint, no web test harness to extend",
+            "evidence": [
+              "file:apps/web/package.json",
+              "assumption:no comparable execution history in this sandbox"
+            ]
+          },
+          "risk": {
+            "justification": "Returning a partial list would make the tabs bar prune open tabs for projects on later pages",
+            "evidence": [
+              "file:apps/web/components/project-tabs-bar.tsx"
+            ]
+          },
+          "coupling": {
+            "justification": "Consumes the projects-list-http-contract produced by the route task and feeds both web list screens",
+            "evidence": [
+              "task:T3",
+              "task:T5"
+            ]
+          },
+          "confidence": {
+            "justification": "Client code and both consumers were read; behavior is only verifiable manually because web has no tests",
+            "evidence": [
+              "file:apps/web/lib/api/client.ts",
+              "file:apps/web/package.json"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T5",
+        "milestone_id": "M2",
+        "title": "Manual multi-page regression of project list and tabs bar",
+        "objective": "Both web screens are confirmed to behave as before when the project count exceeds one API page",
+        "repository": "repository",
+        "after": [
+          "T4"
+        ],
+        "complexity": "low",
+        "scope": "small_change",
+        "estimated_minutes": 30,
+        "risk": "medium",
+        "coupling": "low",
+        "confidence": "medium",
+        "estimate_rationale": "Seeding more projects than one page and clicking through two screens locally; unmeasured estimate",
+        "expected_paths": [],
+        "shared_resources": [
+          "web-project-list-screens"
+        ],
+        "acceptance_criteria": [
+          "The projects page shows every seeded project with name, externalKey, revision and relative update time",
+          "An open tab for a project beyond the first page remains open after navigation refresh",
+          "Deleting a project removes it from the list and closes its tab"
+        ],
+        "verification": [
+          {
+            "type": "manual",
+            "value": "run API and web locally with more projects than one page and exercise /projects and the tabs bar",
+            "purpose": "web screens keep working with pagination",
+            "expected": "all projects listed, later-page tabs stay open, deleted project tab closes",
+            "category": "product"
+          },
+          {
+            "type": "manual",
+            "value": "compare project card fields and ordering against the pre-change behavior",
+            "purpose": "no visible regression in list rendering",
+            "expected": "same fields and most-recently-updated-first ordering",
+            "category": "regression"
+          }
+        ],
+        "covers": [
+          "R2"
+        ],
+        "kind": "test",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Scripted manual walk-through of two known screens with no investigation required",
+            "evidence": [
+              "file:apps/web/components/project-list.tsx",
+              "file:apps/web/components/project-tabs-bar.tsx"
+            ]
+          },
+          "scope": {
+            "justification": "Verification only; no repository files are expected to change during this pass",
+            "evidence": [
+              "task:T4"
+            ]
+          },
+          "duration": {
+            "justification": "Creating enough projects through the UI or API and checking the two screens takes a short session",
+            "evidence": [
+              "file:apps/web/app/projects/page.tsx",
+              "assumption:local dev stack starts without extra setup"
+            ]
+          },
+          "risk": {
+            "justification": "Missing a tab-pruning regression would close user tabs silently in production",
+            "evidence": [
+              "file:apps/web/components/project-tabs-bar.tsx",
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "coupling": {
+            "justification": "Only reads the web-project-list-screens resource after T4 and edits nothing shared",
+            "evidence": [
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "Screens were inspected, but local environment readiness for manual testing is unverified",
+            "evidence": [
+              "file:apps/web/.env.example",
+              "assumption:local API and web can run together on ports 4100 and 3000"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T6",
+        "milestone_id": "M3",
+        "title": "Document the list contract and breaking-change notice",
+        "objective": "API documentation states the paginated list contract and tells external callers how to migrate to full snapshots",
+        "repository": "repository",
+        "after": [
+          "T3"
+        ],
+        "complexity": "low",
+        "scope": "small_change",
+        "estimated_minutes": 30,
+        "risk": "low",
+        "coupling": "medium",
+        "confidence": "medium",
+        "estimate_rationale": "One short documentation section derived from the T3 behavior; unmeasured estimate",
+        "expected_paths": [
+          "docs/api-contract.md"
+        ],
+        "shared_resources": [
+          "projects-list-http-contract"
+        ],
+        "acceptance_criteria": [
+          "docs/api-contract.md lists limit and cursor parameters, the response shape, ordering and VALIDATION_ERROR cases",
+          "The doc states the cursor is opaque and that concurrent updates can skip a project during one traversal",
+          "The doc contains a breaking-change notice directing MCP callers to GET /v1/projects/:id or by-external-key for full snapshots"
+        ],
+        "verification": [
+          {
+            "type": "manual",
+            "value": "read docs/api-contract.md against the behavior asserted by apps/api/test/projects-route.test.ts",
+            "purpose": "documentation matches implemented contract",
+            "expected": "every documented parameter, field and error matches the route test",
+            "category": "product"
+          }
+        ],
+        "covers": [
+          "R3"
+        ],
+        "kind": "docs",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Prose describing behavior already fixed by the route task and its test",
+            "evidence": [
+              "task:T3",
+              "file:docs/api-contract.md"
+            ]
+          },
+          "scope": {
+            "justification": "A single existing documentation page gains one section and nothing else changes",
+            "evidence": [
+              "file:docs/api-contract.md"
+            ]
+          },
+          "duration": {
+            "justification": "Short page edit comparable in size to the existing fifteen-line contract document",
+            "evidence": [
+              "file:docs/api-contract.md"
+            ]
+          },
+          "risk": {
+            "justification": "A documentation mistake is reversible and does not change runtime behavior",
+            "evidence": [
+              "file:docs/api-contract.md"
+            ]
+          },
+          "coupling": {
+            "justification": "Describes the projects-list-http-contract and is unordered relative to the web client work that also consumes it",
+            "evidence": [
+              "task:T3",
+              "task:T4"
+            ]
+          },
+          "confidence": {
+            "justification": "The target document and the external consumer description were read directly",
+            "evidence": [
+              "file:docs/api-contract.md",
+              "file:docs/architecture.md"
+            ]
+          }
+        }
+      },
+      {
+        "id": "T7",
+        "milestone_id": "M3",
+        "title": "Decision-gated release check for trainingApp-mcp (D1)",
+        "objective": "Before any deploy, the owner D1 choice and the trainingApp-mcp compatibility or acknowledged notice are recorded, or the plan is revised",
+        "repository": "repository",
+        "after": [
+          "T5",
+          "T6"
+        ],
+        "complexity": "medium",
+        "scope": "small_change",
+        "estimated_minutes": 30,
+        "risk": "high",
+        "coupling": "medium",
+        "confidence": "low",
+        "estimate_rationale": "Depends on owner availability and access to the external repository, neither of which is known here",
+        "expected_paths": [],
+        "shared_resources": [
+          "projects-list-http-contract"
+        ],
+        "acceptance_criteria": [
+          "The owner D1 decision between break-with-notice and a compatibility mode is recorded",
+          "trainingApp-mcp usage of GET /v1/projects is confirmed compatible or updated, or its owner acknowledged the notice",
+          "If D1 selects a compatibility mode, release is stopped and a plan revision 2 is requested instead"
+        ],
+        "verification": [
+          {
+            "type": "manual",
+            "value": "review the recorded D1 decision and the trainingApp-mcp compatibility or acknowledgement evidence before deploy",
+            "purpose": "no external consumer is broken without notice",
+            "expected": "a recorded decision plus confirmation or acknowledgement exists before the release SHA is deployed",
+            "category": "product"
+          },
+          {
+            "type": "manual",
+            "value": "re-check web list and tabs behavior from T5 on the release candidate build",
+            "purpose": "existing web screens still work at release",
+            "expected": "same results as T5 on the release candidate",
+            "category": "regression"
+          }
+        ],
+        "covers": [
+          "R2",
+          "R3"
+        ],
+        "kind": "audit",
+        "classification_evidence": {
+          "complexity": {
+            "justification": "Requires judging an external consumer that cannot be inspected from this workspace",
+            "evidence": [
+              "file:docs/architecture.md",
+              "file:scripts/check-contract-drift.mjs"
+            ]
+          },
+          "scope": {
+            "justification": "Records a decision and a compatibility outcome; it changes no code in this repository",
+            "evidence": [
+              "spec:SPEC.md#requirements"
+            ]
+          },
+          "duration": {
+            "justification": "Reviewing a recorded decision is short, but waiting on external owners is unbounded",
+            "evidence": [
+              "assumption:owner and trainingApp-mcp maintainer respond within the release window"
+            ]
+          },
+          "risk": {
+            "justification": "Releasing without this gate could break the bearer-authenticated MCP integration in production",
+            "evidence": [
+              "file:apps/api/src/http/auth.ts",
+              "file:docs/deployment.md"
+            ]
+          },
+          "coupling": {
+            "justification": "Consumes the projects-list-http-contract and the documentation notice produced earlier",
+            "evidence": [
+              "task:T6",
+              "task:T3"
+            ]
+          },
+          "confidence": {
+            "justification": "External repository usage is unknown, so the estimate is preliminary",
+            "evidence": [
+              "assumption:trainingApp-mcp list usage is unverified",
+              "file:docs/architecture.md"
+            ]
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "id": "IF-1",
+        "title": "Project list contract schemas",
+        "owner": "@training/contracts package",
+        "producer_task": "T1",
+        "consumer_tasks": [
+          "T2",
+          "T3",
+          "T4"
+        ],
+        "integration_task": "T3",
+        "inputs": [
+          "existing ProjectSnapshot field definitions"
+        ],
+        "outputs": [
+          "ProjectListItemSchema with id, externalKey, name, revision, updatedAt",
+          "ProjectListPageSchema with projects and nextCursor string or null"
+        ],
+        "invariants": [
+          "list items never contain data, description, schemaVersion or createdAt",
+          "project-import.v1 JSON schema remains unchanged"
+        ],
+        "integration_criteria": [
+          "HTTP route test validates responses against the page schema shape"
+        ]
+      },
+      {
+        "id": "IF-2",
+        "title": "HTTP GET /v1/projects page response",
+        "owner": "apps/api route layer",
+        "producer_task": "T3",
+        "consumer_tasks": [
+          "T4",
+          "T6",
+          "T7"
+        ],
+        "integration_task": "T5",
+        "inputs": [
+          "optional limit integer 1..100 default 50",
+          "optional opaque cursor string"
+        ],
+        "outputs": [
+          "200 with projects list items and nextCursor",
+          "400 VALIDATION_ERROR on invalid limit or cursor",
+          "401 UNAUTHENTICATED without session or bearer"
+        ],
+        "invariants": [
+          "order is updated_at DESC then id DESC",
+          "nextCursor null exactly when no further rows exist",
+          "auth behavior unchanged for browser and MCP callers"
+        ],
+        "integration_criteria": [
+          "web screens list every project across pages and keep later-page tabs open",
+          "docs describe the same parameters, fields and errors"
+        ]
+      }
+    ]
+  },
+  "elapsed_seconds": 236.474,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792244952.7934287,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792262400.009915,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792278000.009936,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

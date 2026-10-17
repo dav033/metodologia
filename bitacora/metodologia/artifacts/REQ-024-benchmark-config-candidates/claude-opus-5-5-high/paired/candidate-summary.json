@@ -1,0 +1,37 @@
+{
+  "arms": [
+    {
+      "agent_config_sha256": "785dc627f6bdf92069d95e3a3ee51858f422eef1735505628497d4a6df184977",
+      "arm_id": "current-v2",
+      "prompt_bytes": 60713,
+      "prompt_sha256": "7f998d455f9cbeb9525c87db6c16b363064ca8e7b3fa65b39d3bb93b7c319c76",
+      "source_count": 9
+    },
+    {
+      "agent_config_sha256": "a9eadf49b8278b506501faeaf417ed07cd02e85e683697a649d11d99787f705e",
+      "arm_id": "improved-v2",
+      "prompt_bytes": 67214,
+      "prompt_sha256": "02741e8eb47a4279ad93d1c1d0357b3750bfa5b35c03e254bd6372b6ab4b2751",
+      "source_count": 9
+    }
+  ],
+  "benchmark_manifest_created": false,
+  "blockers": [
+    "T15 Antigravity live revalidation P-108",
+    "P-109 independent reviewer identity decision",
+    "Claude restricted-mode runtime combination not exercised"
+  ],
+  "cli_help_parse_exit_by_arm": {
+    "current-v2": 0,
+    "improved-v2": 0
+  },
+  "format": "req024-matched-arm-candidates/v1",
+  "profile_id": null,
+  "provider_calls_made": 0,
+  "reason": "This first paired candidate granted Write/Edit and acceptEdits, contradicting the owner-approved REQ-024 controls (Read/Grep/Glob and permission mode plan).",
+  "runtime_combination_verified": false,
+  "runtime_version": null,
+  "status": "superseded_unapproved_controls",
+  "superseded_by": "../paired-readonly/",
+  "task_prompt_template_sha256": "47f1b3114682df2fbb214f25bc1a0d9601224f0e4f633da32eb8c0037f3e6f4c"
+}

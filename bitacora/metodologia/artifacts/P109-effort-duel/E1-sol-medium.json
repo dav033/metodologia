@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "case": "E1",
+  "route": {
+    "id": "sol-medium",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "c6fcc49647cf78ffabe835f1b3207b51d1ced11ea55057f36d961d6bd5ab59e9",
+  "prompt_characters": 12027,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792211968.3563914,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792211969.0900602,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "C1",
+        "severity": "high",
+        "issue": "Retry identity comparison omits amount_minor, allowing a changed immutable transfer tuple.",
+        "evidence": "R1 includes amount_minor in transfer identity. C1 hashes only the tenants, accounts and currency, and does not compare the retained amount. T1 omits changed-amount retries.",
+        "failure_scenario": "Accept ID x for amount 10. Retry x with the same accounts and currency but amount 11. The fingerprint matches and C1 returns the previous decision instead of rejecting the conflict.",
+        "fix": "Include amount_minor in the canonical fingerprint, or compare the complete immutable tuple on every retry."
+      },
+      {
+        "task": "C2",
+        "severity": "high",
+        "issue": "The receiver increments rights on every delivery regardless of whether the move was already applied.",
+        "evidence": "R2 requires conservation under duplicate delivery; G1 guarantees only at-least-once transport. C2 ignores insert_if_absent's result. T2 exercises only one delivery.",
+        "failure_scenario": "Start with A=10 and B=0. Move 5: A becomes 5 and the first delivery makes B=5. A duplicate delivery makes B=10, creating 5 rights.",
+        "fix": "Atomically insert a durable move receipt and increment rights only if insertion succeeds. Retain sufficient move deduplication state for every possible replay."
+      },
+      {
+        "task": "C3",
+        "severity": "high",
+        "issue": "Recovery relies on ledger idempotency whose namespace changes across leader epochs.",
+        "evidence": "G2 deduplicates only within an epoch. C3 retries under current_leader_epoch when a receipt is missing. R1 requires exactly one source debit, and R2 explicitly requires safe rediscovery on a new leader. T3 excludes leader changes.",
+        "failure_scenario": "The debit for transfer x commits under epoch 7, but the worker dies before saving its receipt. Epoch 8 recovery appends x again. The two epoch/key pairs are distinct, so the ledger can record two debits. Rights are not decremented again, but duplicate source ledger debits still violate R1.",
+        "fix": "Use a durable debit identity that survives leader changes, with ledger-enforced cross-epoch deduplication, or reconcile the prior debit before permitting another append."
+      },
+      {
+        "task": "C4",
+        "severity": "critical",
+        "issue": "Union majority is substituted for the required separate old and new majorities.",
+        "evidence": "R3 requires both majorities while joint configuration remains active. C4 supplies its incorrect predicate to the certificate facility. Exact-digest ACKs do not repair the quorum error. T4 covers no ACK set that distinguishes these predicates.",
+        "failure_scenario": "Let old={a,b,c}, new={c,d,e}, and ACK={c,d,e}. C4 accepts three of five union members, although only one old member ACKed and the old majority requires two.",
+        "fix": "Require len(ACK intersect old) >= floor(len(old)/2)+1 AND the corresponding new-configuration majority throughout the required joint phase."
+      },
+      {
+        "task": "C5",
+        "severity": "critical",
+        "issue": "The coordinator releases participant effects and reports acceptance before obtaining a durable COMMIT certificate.",
+        "evidence": "R4 distinguishes durable commitment from append. G2 says only await_commit(index,digest) obtains a certificate. C5 sends COMMIT immediately after append, and leadership loss may truncate that entry. T5 excludes this interval.",
+        "failure_scenario": "Both participants prepare. C5 appends COMMIT and one participant applies the message. Leadership is lost before commitment, and the suffix is truncated. An irreversible participant effect now exists without a durable transaction decision. This witness does not require C6's timeout behavior.",
+        "fix": "Await and persist the exact COMMIT certificate before sending COMMIT or returning irrevocable acceptance. While certification is uncertain, retain prepared resources and reconcile."
+      },
+      {
+        "task": "C6",
+        "severity": "critical",
+        "issue": "Elapsed preparation time is treated as authority to abort an uncertain transaction.",
+        "evidence": "R4 forbids abort after durable COMMIT and permits waiting under uncertainty. C6 has neither a decision lease nor a maximum message delay. T6 tests only transactions without a coordinator decision.",
+        "failure_scenario": "A correct coordinator obtains a durable COMMIT certificate. One participant receives COMMIT; another remains PREPARED because its message is delayed beyond 60 seconds. C6 aborts the latter. This failure occurs even after C5 is corrected.",
+        "fix": "Reconcile against the durable transaction decision. Apply COMMIT when certified; abort only on an authoritative durable abort decision, and otherwise continue holding resources."
+      },
+      {
+        "task": "C7",
+        "severity": "high",
+        "issue": "Recovery compares configuration number with log index, allowing a committed suffix to be skipped.",
+        "evidence": "R3 makes these independent dimensions, and R4 forbids skipping a committed prefix. C7 ignores the checkpoint's exact committed_log_index. T7 uses equal configuration and log indices.",
+        "failure_scenario": "A checkpoint has config_number=100 and committed_log_index=10; the remote committed log extends through index 20. C7 evaluates 100 >= 20 and skips committed entries 11 through 20.",
+        "fix": "Compare checkpoint.committed_log_index with the remote committed extent and replay every missing committed entry."
+      },
+      {
+        "task": "C8",
+        "severity": "high",
+        "issue": "Independently reading latest components and labeling their sum with the maximum index does not produce one global snapshot.",
+        "evidence": "R5 requires one committed global snapshot index. G5 permits latest_component calls to return different indices. T8 excludes concurrent commits.",
+        "failure_scenario": "Initially A=10 and B=0. Read A=10, then an atomic transfer of 10 from A to B commits, then read B=10. C8 returns 20 at the newer index, although the actual total is 10 before and after the transfer.",
+        "fix": "Choose one committed global index and read every component using snapshot_component(account,index), returning that same index."
+      },
+      {
+        "task": "C9",
+        "severity": "high",
+        "issue": "A cache hit bypasses current principal authorization.",
+        "evidence": "R5 applies revocation to every new historical or cached read. G5 says revocation does not purge caches. C9 returns before current_auth, and its cache is shared across principals. Middleware verifies signatures, not current read authorization.",
+        "failure_scenario": "An authorized principal fills the cache, then loses tenant read permission. A new request with the same valid token hits the cache and receives the historical payload without an authorization check.",
+        "fix": "Enforce current principal authorization for every response, including cache hits, at the read's linearization point."
+      },
+      {
+        "task": "C9",
+        "severity": "high",
+        "issue": "Historical reads validate the token's integer index but never enforce its branch digest binding.",
+        "evidence": "R6 prohibits using a token on a different digest at the same index. C9 explicitly omits the digest comparison on misses. G2 guarantees monotonic indices only within a branch; distinct equal-index branches are possible. T9 tests only one branch.",
+        "failure_scenario": "A valid token names tenant T, index 50 and digest X. After disaster recovery, the local branch has digest Y at index 50 and is committed through at least 50. On a cache miss, C9 accepts the token and returns the local branch's snapshot despite X != Y.",
+        "fix": "Verify token.digest against authenticated local committed history at token.index before serving any response. Bind cached responses to the validated branch digest as well."
+      },
+      {
+        "task": "C10",
+        "severity": "high",
+        "issue": "Checkpoint selection and retention discard completed-transfer identity, decision and source deduplication obligations while retries remain valid indefinitely.",
+        "evidence": "R1 requires previous decisions for true retries; R2 and R6 require indefinite retry safety through pruning. C10 checkpoints only ACTIVE rows and later deletes completed rows and source operation-key dedup entries. G4 preserves only destination credit deduplication. T10 restores after just seven days.",
+        "failure_scenario": "Transfer x completes. After 30 days its source transfer row and ledger dedup entry are removed. A retry on a new source leader finds no prior transfer and can consume rights and debit again. The destination suppresses the duplicate credit, leaving an extra source debit.",
+        "fix": "Preserve completed transfer tuples, decisions and sufficient source debit identity indefinitely in durable checkpoint or retained lookup state. Consult that state before processing retries or recovering debits."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"C1\",\n      \"severity\": \"high\",\n      \"issue\": \"Retry identity comparison omits amount_minor, allowing a changed immutable transfer tuple.\",\n      \"evidence\": \"R1 includes amount_minor in transfer identity. C1 hashes only the tenants, accounts and currency, and does not compare the retained amount. T1 omits changed-amount retries.\",\n      \"failure_scenario\": \"Accept ID x for amount 10. Retry x with the same accounts and currency but amount 11. The fingerprint matches and C1 returns the previous decision instead of rejecting the conflict.\",\n      \"fix\": \"Include amount_minor in the canonical fingerprint, or compare the complete immutable tuple on every retry.\"\n    },\n    {\n      \"task\": \"C2\",\n      \"severity\": \"high\",\n      \"issue\": \"The receiver increments rights on every delivery regardless of whether the move was already applied.\",\n      \"evidence\": \"R2 requires conservation under duplicate delivery; G1 guarantees only at-least-once transport. C2 ignores insert_if_absent's result. T2 exercises only one delivery.\",\n      \"failure_scenario\": \"Start with A=10 and B=0. Move 5: A becomes 5 and the first delivery makes B=5. A duplicate delivery makes B=10, creating 5 rights.\",\n      \"fix\": \"Atomically insert a durable move receipt and increment rights only if insertion succeeds. Retain sufficient move deduplication state for every possible replay.\"\n    },\n    {\n      \"task\": \"C3\",\n      \"severity\": \"high\",\n      \"issue\": \"Recovery relies on ledger idempotency whose namespace changes across leader epochs.\",\n      \"evidence\": \"G2 deduplicates only within an epoch. C3 retries under current_leader_epoch when a receipt is missing. R1 requires exactly one source debit, and R2 explicitly requires safe rediscovery on a new leader. T3 excludes leader changes.\",\n      \"failure_scenario\": \"The debit for transfer x commits under epoch 7, but the worker dies before saving its receipt. Epoch 8 recovery appends x again. The two epoch/key pairs are distinct, so the ledger can record two debits. Rights are not decremented again, but duplicate source ledger debits still violate R1.\",\n      \"fix\": \"Use a durable debit identity that survives leader changes, with ledger-enforced cross-epoch deduplication, or reconcile the prior debit before permitting another append.\"\n    },\n    {\n      \"task\": \"C4\",\n      \"severity\": \"critical\",\n      \"issue\": \"Union majority is substituted for the required separate old and new majorities.\",\n      \"evidence\": \"R3 requires both majorities while joint configuration remains active. C4 supplies its incorrect predicate to the certificate facility. Exact-digest ACKs do not repair the quorum error. T4 covers no ACK set that distinguishes these predicates.\",\n      \"failure_scenario\": \"Let old={a,b,c}, new={c,d,e}, and ACK={c,d,e}. C4 accepts three of five union members, although only one old member ACKed and the old majority requires two.\",\n      \"fix\": \"Require len(ACK intersect old) >= floor(len(old)/2)+1 AND the corresponding new-configuration majority throughout the required joint phase.\"\n    },\n    {\n      \"task\": \"C5\",\n      \"severity\": \"critical\",\n      \"issue\": \"The coordinator releases participant effects and reports acceptance before obtaining a durable COMMIT certificate.\",\n      \"evidence\": \"R4 distinguishes durable commitment from append. G2 says only await_commit(index,digest) obtains a certificate. C5 sends COMMIT immediately after append, and leadership loss may truncate that entry. T5 excludes this interval.\",\n      \"failure_scenario\": \"Both participants prepare. C5 appends COMMIT and one participant applies the message. Leadership is lost before commitment, and the suffix is truncated. An irreversible participant effect now exists without a durable transaction decision. This witness does not require C6's timeout behavior.\",\n      \"fix\": \"Await and persist the exact COMMIT certificate before sending COMMIT or returning irrevocable acceptance. While certification is uncertain, retain prepared resources and reconcile.\"\n    },\n    {\n      \"task\": \"C6\",\n      \"severity\": \"critical\",\n      \"issue\": \"Elapsed preparation time is treated as authority to abort an uncertain transaction.\",\n      \"evidence\": \"R4 forbids abort after durable COMMIT and permits waiting under uncertainty. C6 has neither a decision lease nor a maximum message delay. T6 tests only transactions without a coordinator decision.\",\n      \"failure_scenario\": \"A correct coordinator obtains a durable COMMIT certificate. One participant receives COMMIT; another remains PREPARED because its message is delayed beyond 60 seconds. C6 aborts the latter. This failure occurs even after C5 is corrected.\",\n      \"fix\": \"Reconcile against the durable transaction decision. Apply COMMIT when certified; abort only on an authoritative durable abort decision, and otherwise continue holding resources.\"\n    },\n    {\n      \"task\": \"C7\",\n      \"severity\": \"high\",\n      \"issue\": \"Recovery compares configuration number with log index, allowing a committed suffix to be skipped.\",\n      \"evidence\": \"R3 makes these independent dimensions, and R4 forbids skipping a committed prefix. C7 ignores the checkpoint's exact committed_log_index. T7 uses equal configuration and log indices.\",\n      \"failure_scenario\": \"A checkpoint has config_number=100 and committed_log_index=10; the remote committed log extends through index 20. C7 evaluates 100 >= 20 and skips committed entries 11 through 20.\",\n      \"fix\": \"Compare checkpoint.committed_log_index with the remote committed extent and replay every missing committed entry.\"\n    },\n    {\n      \"task\": \"C8\",\n      \"severity\": \"high\",\n      \"issue\": \"Independently reading latest components and labeling their sum with the maximum index does not produce one global snapshot.\",\n      \"evidence\": \"R5 requires one committed global snapshot index. G5 permits latest_component calls to return different indices. T8 excludes concurrent commits.\",\n      \"failure_scenario\": \"Initially A=10 and B=0. Read A=10, then an atomic transfer of 10 from A to B commits, then read B=10. C8 returns 20 at the newer index, although the actual total is 10 before and after the transfer.\",\n      \"fix\": \"Choose one committed global index and read every component using snapshot_component(account,index), returning that same index.\"\n    },\n    {\n      \"task\": \"C9\",\n      \"severity\": \"high\",\n      \"issue\": \"A cache hit bypasses current principal authorization.\",\n      \"evidence\": \"R5 applies revocation to every new historical or cached read. G5 says revocation does not purge caches. C9 returns before current_auth, and its cache is shared across principals. Middleware verifies signatures, not current read authorization.\",\n      \"failure_scenario\": \"An authorized principal fills the cache, then loses tenant read permission. A new request with the same valid token hits the cache and receives the historical payload without an authorization check.\",\n      \"fix\": \"Enforce current principal authorization for every response, including cache hits, at the read's linearization point.\"\n    },\n    {\n      \"task\": \"C9\",\n      \"severity\": \"high\",\n      \"issue\": \"Historical reads validate the token's integer index but never enforce its branch digest binding.\",\n      \"evidence\": \"R6 prohibits using a token on a different digest at the same index. C9 explicitly omits the digest comparison on misses. G2 guarantees monotonic indices only within a branch; distinct equal-index branches are possible. T9 tests only one branch.\",\n      \"failure_scenario\": \"A valid token names tenant T, index 50 and digest X. After disaster recovery, the local branch has digest Y at index 50 and is committed through at least 50. On a cache miss, C9 accepts the token and returns the local branch's snapshot despite X != Y.\",\n      \"fix\": \"Verify token.digest against authenticated local committed history at token.index before serving any response. Bind cached responses to the validated branch digest as well.\"\n    },\n    {\n      \"task\": \"C10\",\n      \"severity\": \"high\",\n      \"issue\": \"Checkpoint selection and retention discard completed-transfer identity, decision and source deduplication obligations while retries remain valid indefinitely.\",\n      \"evidence\": \"R1 requires previous decisions for true retries; R2 and R6 require indefinite retry safety through pruning. C10 checkpoints only ACTIVE rows and later deletes completed rows and source operation-key dedup entries. G4 preserves only destination credit deduplication. T10 restores after just seven days.\",\n      \"failure_scenario\": \"Transfer x completes. After 30 days its source transfer row and ledger dedup entry are removed. A retry on a new source leader finds no prior transfer and can consume rights and debit again. The destination suppresses the duplicate credit, leaving an extra source debit.\",\n      \"fix\": \"Preserve completed transfer tuples, decisions and sufficient source debit identity indefinitely in durable checkpoint or retained lookup state. Consult that state before processing retries or recovering debits.\"\n    }\n  ],\n  \"uncertainties\": []\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 17394,
+    "cached_input_tokens": 12288,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2463,
+    "reasoning_output_tokens": 516
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 1206,
+  "exit_code": 0,
+  "elapsed_seconds": 42.072,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792212011.1629813,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

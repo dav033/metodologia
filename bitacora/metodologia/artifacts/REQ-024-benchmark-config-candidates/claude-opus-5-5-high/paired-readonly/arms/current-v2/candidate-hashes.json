@@ -1,0 +1,68 @@
+{
+  "arm_id": "current-v2",
+  "effort": "high",
+  "format": "req024-readonly-arm-candidate/v1",
+  "invocation_config_sha256": "dad909f6949511094abbd24a3b5e00a5cc0eeffa1e4fac6fdbb32827beb5297b",
+  "model": "claude-opus-5-5",
+  "permission_mode": "plan",
+  "profile_id": null,
+  "prompt_bundle_sha256": "fa1fa70e418e761bcec575650a7fdc61ed4da4af9a3dda23df334b8e373466f0",
+  "runtime_behavior_verified": false,
+  "runtime_candidate": "Claude Code --safe-mode --restricted with appended hash-pinned prompt",
+  "runtime_id": "claude-code",
+  "runtime_version": null,
+  "source_revision": "baseline-196196ef427ab1f066d22faaeece2a40f8aa182c",
+  "sources": [
+    {
+      "bytes": 5199,
+      "path": "baseline/current-v2-source/planner.md",
+      "sha256": "07024910720a6f9dd757ce2469d685310d364e810d431af02a4514767f8bcde1"
+    },
+    {
+      "bytes": 1813,
+      "path": "baseline/current-v2-source/skills/skills/socratic-elicitation/SKILL.md",
+      "sha256": "1d6415f0b5aa11da7f4ed91f30558201b02a930c770b71cfa59e5a3b9ff567eb"
+    },
+    {
+      "bytes": 3545,
+      "path": "baseline/current-v2-source/skills/skills/wbs-dag-decomposition/SKILL.md",
+      "sha256": "82561b67f3d192be09bc2405325b6154e77b02d49d380b939c9478839f7b839b"
+    },
+    {
+      "bytes": 1081,
+      "path": "baseline/current-v2-source/skills/skills/plan-mermaid-view/SKILL.md",
+      "sha256": "3edc5c2fe464694cc20c99e40b15fba191361ed109a6939384b46f5731fb3705"
+    },
+    {
+      "bytes": 2514,
+      "path": "baseline/current-v2-source/skills/skills/adversarial-plan-review/SKILL.md",
+      "sha256": "c084bcf9e9df52ec116ce84c240f343e7d38cd3eec7e61e92b85e82e9dc44ba3"
+    },
+    {
+      "bytes": 17120,
+      "path": "git:196196ef427ab1f066d22faaeece2a40f8aa182c:skill/references/requirements.md",
+      "sha256": "b92e43437415f2cb41b7debfc8bc5d74108b0e88056cd55ce5d9b5fb9d2662b0"
+    },
+    {
+      "bytes": 6547,
+      "path": "git:196196ef427ab1f066d22faaeece2a40f8aa182c:skill/references/plan-contract.md",
+      "sha256": "54f28022ff7ad4577e5fc960c00ff4f1babe68aaed9a04767076503c970cab79"
+    },
+    {
+      "bytes": 17577,
+      "path": "baseline/current-v2-source/bt_planner/README.md",
+      "sha256": "50da44eb9d9d889eb292bd5ffe05e2f34752c417736c8f20056cb99177706f26"
+    },
+    {
+      "bytes": 5679,
+      "path": "baseline/current-v2-source/bt_planner/data/plan.schema.json",
+      "sha256": "8679ee13c2fc17b038fe56f88d732e3f49aebe161345b45641418ccbc6f7d8f9"
+    }
+  ],
+  "status": "candidate_not_frozen",
+  "tools": [
+    "Read",
+    "Grep",
+    "Glob"
+  ]
+}

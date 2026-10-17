@@ -1,0 +1,126 @@
+{
+  "case": "C4",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "sonnet",
+  "requested_effort": "high",
+  "prompt_sha256": "d9ad8244767bc360cc6385109aa23865b1be8e417e76aee5f7fd57befbaca4b3",
+  "prompt_characters": 4030,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206411.6018202,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792213799.855989,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.856024,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206411.9482157,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "Rounding is applied per unit price before multiplying by quantity. This differs from the contract, which sums unit_price*quantity first and rounds the invoice total once.",
+        "evidence": "Plan: cents_per_unit=round_half_up(unit_price*100), invoice_cents=sum(cents_per_unit*quantity). Contract: total = round_half_up(sum(unit_price_decimal*quantity),2). Fixture: price=0.335, quantity=3.",
+        "failure_scenario": "0.335 rounds to 34 cents per unit, so the plan charges 102 cents. The contract gives 1.005, which rounds to 1.01, or 101 cents. The customer is overcharged by 1 cent, and the amount disagrees with the invoice total.",
+        "fix": "Compute total = sum(Decimal(unit_price)*quantity) in Decimal, quantize once to 0.01 with ROUND_HALF_UP, then convert to integer cents (total*100). Add the 0.335×3 → 101 fixture as an assertion."
+      },
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "Each provider attempt uses a fresh random idempotency key. Retrying after a timeout therefore creates a new charge identity instead of repeating the same one.",
+        "evidence": "Plan: key=random_uuid(); on timeout retry at most twice, generating a fresh key for each attempt. Contract: provider guarantees at-most-one charge PER idempotency key; a timeout may occur after the charge succeeded; retrying the SAME key is safe; the provider has no lookup by invoice metadata.",
+        "failure_scenario": "The first call charges successfully but the response times out. The retry uses a new key and charges again. Fixed invoice_id metadata does not deduplicate, because the provider cannot look it up. The customer is double or triple charged.",
+        "fix": "Generate one key per invoice (derive it deterministically from invoice_id, or persist it in the reserved charge row before the first call). Reuse that same key for every retry and after any crash or restart. Never rotate the key within the 72h window."
+      },
+      {
+        "task": "T3",
+        "severity": "critical",
+        "issue": "The inbox marker is committed in transaction A, separate from the business update in transaction B. A crash between them leaves a processed marker with no business update, and redelivery is then skipped.",
+        "evidence": "Plan: transaction A inserts event_id into inbox and commits. Then transaction B updates charge status and creates outbox row. If inbox event_id already exists, respond 200 immediately without transaction B. A crash can occur between A and B. Contract: a processed inbox marker must imply the corresponding business update committed.",
+        "failure_scenario": "The process crashes after A. The provider redelivers the webhook, finds the inbox row, and returns 200 without running B. The charge never becomes paid and no outbox row is created, so the payment notification is permanently lost.",
+        "fix": "Insert the inbox row, update the charge, and insert the outbox row in a single transaction. On a unique violation for event_id, treat the event as a duplicate: roll back and return 200. The marker then exists only if the business update committed."
+      },
+      {
+        "task": "T4",
+        "severity": "critical",
+        "issue": "Job finalization has no generation or owner predicate. A stale worker that resumes after losing its lease can overwrite the current owner's state and result.",
+        "evidence": "Plan: UPDATE jobs SET state='completed',result=:result WHERE id=:id; no generation/owner predicate. Job B acquires generation 8 while A (generation 7) is paused, and A may later resume and finalize. Contract: completed state and result must belong to the current lease generation. Baseline: lease acquisition atomically increments generation.",
+        "failure_scenario": "A resumes after 60s and completes the job with a stale result, overwriting or racing B's generation-8 work. The job ends up completed with a result from a superseded lease.",
+        "fix": "Finalize with UPDATE jobs SET state='completed',result=:result WHERE id=:id AND generation=:my_generation AND state='running'. Check that rowcount is 1 and discard the result if it is 0. Apply the same generation predicate to lease renewal."
+      },
+      {
+        "task": "T5",
+        "severity": "critical",
+        "issue": "The outbox row is marked sent=true and committed before the broker publish. A crash after that commit loses the notification, because restart only scans sent=false rows.",
+        "evidence": "Plan: dispatcher transactionally sets sent=true, commits; then publishes with immutable event ID and waits for broker ack. Restart scans WHERE sent=false. No reconciliation scans sent rows. Contract: a committed payment must eventually produce exactly one logical notification despite process crashes. Baseline: publish is safe to retry with an unchanged event ID, and the consumer deduplicates by event ID.",
+        "failure_scenario": "The dispatcher commits sent=true and crashes before publishing. On restart the row is no longer sent=false, so it is never published and the notification is lost permanently.",
+        "fix": "Publish with the immutable event ID first, and set sent=true only after the broker ack. On crash or lost ack, the row stays sent=false and is retried. The consumer's existing dedup by event ID gives exactly-one logical delivery. No additional dedup layer or reconciliation of sent rows is needed."
+      },
+      {
+        "task": "T6",
+        "severity": "high",
+        "issue": "The test matrix covers only happy paths or benign failures. It omits the crash and race scenarios behind the other defects, so those defects would pass verification.",
+        "evidence": "Plan: simulate ordinary success, duplicate webhook, timeout-before-provider-execution, lease renewal with no pause, and broker success. Contract and plan risks: timeout after charge success, a crash between A and B, a paused worker resuming after another acquired the job, a crash after the outbox commit, and a lost broker ack.",
+        "failure_scenario": "The suite passes while the double charge on timeout-after-success, the lost webhook update, the stale-worker overwrite and the lost notification all remain. Timeout-before-execution is the only timeout case and is safe under any key policy.",
+        "fix": "Add tests for: (1) timeout after provider success, with the same key reused and exactly one charge; (2) a crash injected mid-webhook-handling, then redelivery, with the charge and outbox updated exactly once; (3) a paused worker A (generation 7) finalizing after B acquires generation 8, with A's update rejected (rowcount 0); (4) a crash between outbox commit and publish, and a lost ack followed by republish with the same event ID; (5) the 0.335×3 → 101 cents fixture."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T1\",\"severity\":\"high\",\"issue\":\"Rounding is applied per unit price before multiplying by quantity. This differs from the contract, which sums unit_price*quantity first and rounds the invoice total once.\",\"evidence\":\"Plan: cents_per_unit=round_half_up(unit_price*100), invoice_cents=sum(cents_per_unit*quantity). Contract: total = round_half_up(sum(unit_price_decimal*quantity),2). Fixture: price=0.335, quantity=3.\",\"failure_scenario\":\"0.335 rounds to 34 cents per unit, so the plan charges 102 cents. The contract gives 1.005, which rounds to 1.01, or 101 cents. The customer is overcharged by 1 cent, and the amount disagrees with the invoice total.\",\"fix\":\"Compute total = sum(Decimal(unit_price)*quantity) in Decimal, quantize once to 0.01 with ROUND_HALF_UP, then convert to integer cents (total*100). Add the 0.335×3 → 101 fixture as an assertion.\"},{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"Each provider attempt uses a fresh random idempotency key. Retrying after a timeout therefore creates a new charge identity instead of repeating the same one.\",\"evidence\":\"Plan: key=random_uuid(); on timeout retry at most twice, generating a fresh key for each attempt. Contract: provider guarantees at-most-one charge PER idempotency key; a timeout may occur after the charge succeeded; retrying the SAME key is safe; the provider has no lookup by invoice metadata.\",\"failure_scenario\":\"The first call charges successfully but the response times out. The retry uses a new key and charges again. Fixed invoice_id metadata does not deduplicate, because the provider cannot look it up. The customer is double or triple charged.\",\"fix\":\"Generate one key per invoice (derive it deterministically from invoice_id, or persist it in the reserved charge row before the first call). Reuse that same key for every retry and after any crash or restart. Never rotate the key within the 72h window.\"},{\"task\":\"T3\",\"severity\":\"critical\",\"issue\":\"The inbox marker is committed in transaction A, separate from the business update in transaction B. A crash between them leaves a processed marker with no business update, and redelivery is then skipped.\",\"evidence\":\"Plan: transaction A inserts event_id into inbox and commits. Then transaction B updates charge status and creates outbox row. If inbox event_id already exists, respond 200 immediately without transaction B. A crash can occur between A and B. Contract: a processed inbox marker must imply the corresponding business update committed.\",\"failure_scenario\":\"The process crashes after A. The provider redelivers the webhook, finds the inbox row, and returns 200 without running B. The charge never becomes paid and no outbox row is created, so the payment notification is permanently lost.\",\"fix\":\"Insert the inbox row, update the charge, and insert the outbox row in a single transaction. On a unique violation for event_id, treat the event as a duplicate: roll back and return 200. The marker then exists only if the business update committed.\"},{\"task\":\"T4\",\"severity\":\"critical\",\"issue\":\"Job finalization has no generation or owner predicate. A stale worker that resumes after losing its lease can overwrite the current owner's state and result.\",\"evidence\":\"Plan: UPDATE jobs SET state='completed',result=:result WHERE id=:id; no generation/owner predicate. Job B acquires generation 8 while A (generation 7) is paused, and A may later resume and finalize. Contract: completed state and result must belong to the current lease generation. Baseline: lease acquisition atomically increments generation.\",\"failure_scenario\":\"A resumes after 60s and completes the job with a stale result, overwriting or racing B's generation-8 work. The job ends up completed with a result from a superseded lease.\",\"fix\":\"Finalize with UPDATE jobs SET state='completed',result=:result WHERE id=:id AND generation=:my_generation AND state='running'. Check that rowcount is 1 and discard the result if it is 0. Apply the same generation predicate to lease renewal.\"},{\"task\":\"T5\",\"severity\":\"critical\",\"issue\":\"The outbox row is marked sent=true and committed before the broker publish. A crash after that commit loses the notification, because restart only scans sent=false rows.\",\"evidence\":\"Plan: dispatcher transactionally sets sent=true, commits; then publishes with immutable event ID and waits for broker ack. Restart scans WHERE sent=false. No reconciliation scans sent rows. Contract: a committed payment must eventually produce exactly one logical notification despite process crashes. Baseline: publish is safe to retry with an unchanged event ID, and the consumer deduplicates by event ID.\",\"failure_scenario\":\"The dispatcher commits sent=true and crashes before publishing. On restart the row is no longer sent=false, so it is never published and the notification is lost permanently.\",\"fix\":\"Publish with the immutable event ID first, and set sent=true only after the broker ack. On crash or lost ack, the row stays sent=false and is retried. The consumer's existing dedup by event ID gives exactly-one logical delivery. No additional dedup layer or reconciliation of sent rows is needed.\"},{\"task\":\"T6\",\"severity\":\"high\",\"issue\":\"The test matrix covers only happy paths or benign failures. It omits the crash and race scenarios behind the other defects, so those defects would pass verification.\",\"evidence\":\"Plan: simulate ordinary success, duplicate webhook, timeout-before-provider-execution, lease renewal with no pause, and broker success. Contract and plan risks: timeout after charge success, a crash between A and B, a paused worker resuming after another acquired the job, a crash after the outbox commit, and a lost broker ack.\",\"failure_scenario\":\"The suite passes while the double charge on timeout-after-success, the lost webhook update, the stale-worker overwrite and the lost notification all remain. Timeout-before-execution is the only timeout case and is safe under any key policy.\",\"fix\":\"Add tests for: (1) timeout after provider success, with the same key reused and exactly one charge; (2) a crash injected mid-webhook-handling, then redelivery, with the charge and outbox updated exactly once; (3) a paused worker A (generation 7) finalizing after B acquires generation 8, with A's update rejected (rowcount 0); (4) a crash between outbox commit and publish, and a lost ack followed by republish with the same event ID; (5) the 0.335×3 → 101 cents fixture.\"}],\"uncertainties\":[]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 3697,
+    "cache_read_input_tokens": 1662,
+    "output_tokens": 3156,
+    "output_tokens_details": {
+      "thinking_tokens": 933
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3697,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 24.192,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206436.140403,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792213800.363587,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.36361,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

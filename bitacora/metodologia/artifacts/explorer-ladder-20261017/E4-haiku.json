@@ -1,0 +1,987 @@
+{
+  "schema_version": 1,
+  "case": "E4",
+  "route": {
+    "id": "haiku",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "0ac10fbb9cfc9957e86d70321328b53a9cc147a94fac9ea56073b3df7bf9d23c",
+  "prompt_characters": 2969,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248142.8394153,
+    "windows": {
+      "five_hour": {
+        "used_percent": 19.0,
+        "resets_at": 1792262400.071948,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792278000.071969,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248143.1656227,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-haiku-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "plan",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "answer": {
+    "case": "E4",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "Scheduler.start() (scheduler.py:107-122) binds or creates the run, then calls _plan_all_routes() (line 120) before dispatcher reconciliation. _plan_all_routes builds the M2 request from every entry in self.plan.tasks, including dependencies, acceptance criteria and verification, with no state filter (lines 130-137). Blocked and PENDING tasks are therefore included. The READY filter exists only in _assign's eligible() (scheduler.py:295-297), which is the execution-time path. The core test asserts that T1, T2 and T3 are all sent to M2 and that the dependent T2 stays 'pending' (test_routing.py:53-68).",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.start",
+            "start_line": 107,
+            "end_line": 122
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._plan_all_routes",
+            "start_line": 124,
+            "end_line": 139
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._assign",
+            "start_line": 295,
+            "end_line": 298
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_routing.py",
+            "symbol": "FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor",
+            "start_line": 53,
+            "end_line": 68
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "One batch operation for the map. The bridge is SchedulerCore._plan_all_routes calling port.plan (scheduler.py:141), implemented by DecisionAssignmentPort.plan (bt_scheduler_adapter.py:340-345), which delegates to plan_full_dag. plan_full_dag builds one DecisionRequest per task (per-task candidates and evidence, lines 160-180), then calls port.ledger.batch_decisions.persist once with all requests (lines 182-188). The joint allocation happens in plan_ready_batch and _match_batch_routes, an augmenting-path matching over all tasks; the plan path sets free_slots to len(tasks) (line 172). This path does not call engine.decide, so there is no per-task decision.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 136,
+            "end_line": 198
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.plan",
+            "start_line": 340,
+            "end_line": 345
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "plan_ready_batch",
+            "start_line": 369,
+            "end_line": 385
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_match_batch_routes",
+            "start_line": 267,
+            "end_line": 304
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "Two stores. (a) The Scheduler RunState keeps route_metadata, route_status and route_reason on each TaskRec and routing_complete on RunState (model.py:29-31, 79). These are serialized in to_dict (model.py:97, with tasks via vars at line 100) and validated in from_dict (model.py:111-130). _plan_all_routes writes them in persist (scheduler.py:156-173). (b) The M2 batch is stored immutably in the batch_decisions table (batch_ledger.py:240-299). Restart protection: start() calls _plan_all_routes again, which returns early when routing_complete is set (scheduler.py:127), and persist re-checks that flag (line 157). Tasks that already have attempts are skipped (lines 162-163). An identical batch input replays the stored result (batch_ledger.py:273-282). The repository's storage medium and write atomicity were not inspected.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/model.py",
+            "symbol": "TaskRec",
+            "start_line": 22,
+            "end_line": 31
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/model.py",
+            "symbol": "RunState.from_dict",
+            "start_line": 106,
+            "end_line": 130
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._plan_all_routes",
+            "start_line": 156,
+            "end_line": 173
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "BatchDecisionStore.persist",
+            "start_line": 240,
+            "end_line": 299
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "No. Whole-plan mapping does not reserve executor capacity or launch work. The only reservation is reservation.claim (lines 34-71), reached via SchedulerCore.claim (scheduler.py:229-231) from _assign (line 325). The plan path writes only route fields and the routing_complete flag in the RunState (scheduler.py:156-173), plus a durable but non-capacity batch_decisions row. The adapter docstring says 'without reserving capacity' (bt_scheduler_adapter.py:341). The integration test patches engine.decide to raise and asserts zero decision_records rows and one batch (test_scheduler_decision_integration.py:214-248). One caveat: batch.py:375 says 'without creating durable reservations', but the batch row is durable audit data, not a capacity hold.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "claim",
+            "start_line": 34,
+            "end_line": 71
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.claim",
+            "start_line": 229,
+            "end_line": 231
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._assign",
+            "start_line": 313,
+            "end_line": 327
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_integration.py",
+            "symbol": "test_full_plan_routing_recommends_every_task_without_batch_reservations",
+            "start_line": 214,
+            "end_line": 248
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "Not blindly reused. _assign's eligible() builds an AssignmentRequest from READY tasks only, and its TaskView carries spec data and the attempt count, not the planned route (scheduler.py:295-307). DecisionAssignmentPort.propose refreshes quota again (adapter line 357), recomputes requested_at (361), rebuilds candidates from _candidate_rows (371), marks candidates from non-available preflight profiles as unknown (372-380), persists a new batch (396-399), and runs engine.decide on the selected assignment (410). claim then overwrites route_metadata and sets route_status to 'assigned' (reservation.py:54-56). The integration test shows the initial plan choosing a profile other than codex-luis, then a changed quota at step() leading to a claim on codex-luis (test lines 401-445). Caveat: the planned route stays visible in the snapshot until a successful claim.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._assign",
+            "start_line": 289,
+            "end_line": 309
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.propose",
+            "start_line": 347,
+            "end_line": 422
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "claim",
+            "start_line": 53,
+            "end_line": 66
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_integration.py",
+            "symbol": "test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation",
+            "start_line": 401,
+            "end_line": 445
+          }
+        ]
+      },
+      {
+        "id": "Q6",
+        "answer": "Conversion happens at several points. In refresh(): a poll exception sets poll_failed (bt_scheduler_quota_preflight.py:35-40), which yields refresh_failed (59-60). Other statuses map to malformed, stale, refresh_failed or missing (61-75). An item is 'available' only when fresh (76-80). Antigravity errors fail closed (100-101). Account-limit overflow returns a '*' sentinel (28-29). In plan_full_dag, a refresh exception becomes a '*' sentinel (bt_scheduler_plan_routing.py:147-150). _apply_preflight marks any non-available candidate as unknown (63-73), and _quota_evidence maps reasons to states (76-109). Timestamps: quota_aware_requested_at (29-38) is evaluated after the refresh and returns the max of request.now, time.time() at that moment, and every finite observed_at in the result. The planning and ready paths both call it (lines 151 and adapter 361). Caveat: it does not filter by status, so a non-fresh row with a future observed_at still moves requested_at. It uses time.time(), not the injected clock. Tests assert requested_at >= observed_at for a fresh injected observation (test_scheduler_decision_integration.py:284-310, 312-335) and fail-closed refresh_failed evidence (267-282).",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 11,
+            "end_line": 80
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "quota_aware_requested_at",
+            "start_line": 29,
+            "end_line": 38
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 147,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_apply_preflight",
+            "start_line": 63,
+            "end_line": 73
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_integration.py",
+            "symbol": "test_full_plan_fails_closed_when_preflight_fails_despite_fresh_cached_candidate",
+            "start_line": 267,
+            "end_line": 282
+          }
+        ]
+      },
+      {
+        "id": "Q7",
+        "answer": "The best integration test is test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation (test_scheduler_decision_integration.py:401-445). Scenario: a frozen REQ-017 task. Quota starts with claude-personal available and codex-luis unavailable. A direct port.plan call (line 427) produces a route that is not codex-luis (line 437). The SchedulerCore is built with Ports(assignment=port) and no routing port, so start() does not remap (lines 428-432). The task becomes READY, quota changes (434), and step() refreshes again (refresh_calls asserted at 438). It makes exactly one claim (439-442) that resolves via ledger lookup to codex-luis, gpt-6.1-sol, high (443-445). The core stub test test_routing.py:53-80 separately asserts a plan route of sonnet being replaced by a haiku ready route, with no executor. Its M2 is a stub, not the real adapter.",
+        "evidence": [
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_integration.py",
+            "symbol": "test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation",
+            "start_line": 401,
+            "end_line": 445
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_routing.py",
+            "symbol": "FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor",
+            "start_line": 53,
+            "end_line": 80
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "Repository implementation (StateRepository transaction durability and file or database storage) was not inspected, so write atomicity between RunState route fields and the batch ledger is unverified.",
+      "Production wiring: bt_scheduler_run.py:41-45 passes the DecisionAssignmentPort through composition.wire, and bt_scheduler_executor_wiring.py:82-83 passes it as routing when it has a callable plan. The intermediate hop was not fully traced.",
+      "Account-capacity defaults in _account_capacities and the route policy internals were not traced in depth.",
+      "The integration test starts the scheduler without a routing port, so it does not exercise start-time plan mapping together with a READY revalidation in one run.",
+      "Freshness thresholds depend on bt_subscriptions.MAX_AGE_SECONDS and bt_agy.MAX_AGE_SEC, which were not inspected.",
+      "No test was executed; all test statements are source assertions only, and no check is claimed to have passed."
+    ]
+  },
+  "response_text": "{\"case\":\"E4\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"Scheduler.start() (scheduler.py:107-122) binds or creates the run, then calls _plan_all_routes() (line 120) before dispatcher reconciliation. _plan_all_routes builds the M2 request from every entry in self.plan.tasks, including dependencies, acceptance criteria and verification, with no state filter (lines 130-137). Blocked and PENDING tasks are therefore included. The READY filter exists only in _assign's eligible() (scheduler.py:295-297), which is the execution-time path. The core test asserts that T1, T2 and T3 are all sent to M2 and that the dependent T2 stays 'pending' (test_routing.py:53-68).\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.start\",\"start_line\":107,\"end_line\":122},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._plan_all_routes\",\"start_line\":124,\"end_line\":139},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._assign\",\"start_line\":295,\"end_line\":298},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_routing.py\",\"symbol\":\"FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor\",\"start_line\":53,\"end_line\":68}]},{\"id\":\"Q2\",\"answer\":\"One batch operation for the map. The bridge is SchedulerCore._plan_all_routes calling port.plan (scheduler.py:141), implemented by DecisionAssignmentPort.plan (bt_scheduler_adapter.py:340-345), which delegates to plan_full_dag. plan_full_dag builds one DecisionRequest per task (per-task candidates and evidence, lines 160-180), then calls port.ledger.batch_decisions.persist once with all requests (lines 182-188). The joint allocation happens in plan_ready_batch and _match_batch_routes, an augmenting-path matching over all tasks; the plan path sets free_slots to len(tasks) (line 172). This path does not call engine.decide, so there is no per-task decision.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":136,\"end_line\":198},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.plan\",\"start_line\":340,\"end_line\":345},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"plan_ready_batch\",\"start_line\":369,\"end_line\":385},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_match_batch_routes\",\"start_line\":267,\"end_line\":304}]},{\"id\":\"Q3\",\"answer\":\"Two stores. (a) The Scheduler RunState keeps route_metadata, route_status and route_reason on each TaskRec and routing_complete on RunState (model.py:29-31, 79). These are serialized in to_dict (model.py:97, with tasks via vars at line 100) and validated in from_dict (model.py:111-130). _plan_all_routes writes them in persist (scheduler.py:156-173). (b) The M2 batch is stored immutably in the batch_decisions table (batch_ledger.py:240-299). Restart protection: start() calls _plan_all_routes again, which returns early when routing_complete is set (scheduler.py:127), and persist re-checks that flag (line 157). Tasks that already have attempts are skipped (lines 162-163). An identical batch input replays the stored result (batch_ledger.py:273-282). The repository's storage medium and write atomicity were not inspected.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/model.py\",\"symbol\":\"TaskRec\",\"start_line\":22,\"end_line\":31},{\"path\":\"skill/scripts/bt_scheduler_core/model.py\",\"symbol\":\"RunState.from_dict\",\"start_line\":106,\"end_line\":130},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._plan_all_routes\",\"start_line\":156,\"end_line\":173},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"BatchDecisionStore.persist\",\"start_line\":240,\"end_line\":299}]},{\"id\":\"Q4\",\"answer\":\"No. Whole-plan mapping does not reserve executor capacity or launch work. The only reservation is reservation.claim (lines 34-71), reached via SchedulerCore.claim (scheduler.py:229-231) from _assign (line 325). The plan path writes only route fields and the routing_complete flag in the RunState (scheduler.py:156-173), plus a durable but non-capacity batch_decisions row. The adapter docstring says 'without reserving capacity' (bt_scheduler_adapter.py:341). The integration test patches engine.decide to raise and asserts zero decision_records rows and one batch (test_scheduler_decision_integration.py:214-248). One caveat: batch.py:375 says 'without creating durable reservations', but the batch row is durable audit data, not a capacity hold.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"claim\",\"start_line\":34,\"end_line\":71},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.claim\",\"start_line\":229,\"end_line\":231},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._assign\",\"start_line\":313,\"end_line\":327},{\"path\":\"skill/scripts/tests/test_scheduler_decision_integration.py\",\"symbol\":\"test_full_plan_routing_recommends_every_task_without_batch_reservations\",\"start_line\":214,\"end_line\":248}]},{\"id\":\"Q5\",\"answer\":\"Not blindly reused. _assign's eligible() builds an AssignmentRequest from READY tasks only, and its TaskView carries spec data and the attempt count, not the planned route (scheduler.py:295-307). DecisionAssignmentPort.propose refreshes quota again (adapter line 357), recomputes requested_at (361), rebuilds candidates from _candidate_rows (371), marks candidates from non-available preflight profiles as unknown (372-380), persists a new batch (396-399), and runs engine.decide on the selected assignment (410). claim then overwrites route_metadata and sets route_status to 'assigned' (reservation.py:54-56). The integration test shows the initial plan choosing a profile other than codex-luis, then a changed quota at step() leading to a claim on codex-luis (test lines 401-445). Caveat: the planned route stays visible in the snapshot until a successful claim.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._assign\",\"start_line\":289,\"end_line\":309},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.propose\",\"start_line\":347,\"end_line\":422},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"claim\",\"start_line\":53,\"end_line\":66},{\"path\":\"skill/scripts/tests/test_scheduler_decision_integration.py\",\"symbol\":\"test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation\",\"start_line\":401,\"end_line\":445}]},{\"id\":\"Q6\",\"answer\":\"Conversion happens at several points. In refresh(): a poll exception sets poll_failed (bt_scheduler_quota_preflight.py:35-40), which yields refresh_failed (59-60). Other statuses map to malformed, stale, refresh_failed or missing (61-75). An item is 'available' only when fresh (76-80). Antigravity errors fail closed (100-101). Account-limit overflow returns a '*' sentinel (28-29). In plan_full_dag, a refresh exception becomes a '*' sentinel (bt_scheduler_plan_routing.py:147-150). _apply_preflight marks any non-available candidate as unknown (63-73), and _quota_evidence maps reasons to states (76-109). Timestamps: quota_aware_requested_at (29-38) is evaluated after the refresh and returns the max of request.now, time.time() at that moment, and every finite observed_at in the result. The planning and ready paths both call it (lines 151 and adapter 361). Caveat: it does not filter by status, so a non-fresh row with a future observed_at still moves requested_at. It uses time.time(), not the injected clock. Tests assert requested_at >= observed_at for a fresh injected observation (test_scheduler_decision_integration.py:284-310, 312-335) and fail-closed refresh_failed evidence (267-282).\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":11,\"end_line\":80},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"quota_aware_requested_at\",\"start_line\":29,\"end_line\":38},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":147,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_apply_preflight\",\"start_line\":63,\"end_line\":73},{\"path\":\"skill/scripts/tests/test_scheduler_decision_integration.py\",\"symbol\":\"test_full_plan_fails_closed_when_preflight_fails_despite_fresh_cached_candidate\",\"start_line\":267,\"end_line\":282}]},{\"id\":\"Q7\",\"answer\":\"The best integration test is test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation (test_scheduler_decision_integration.py:401-445). Scenario: a frozen REQ-017 task. Quota starts with claude-personal available and codex-luis unavailable. A direct port.plan call (line 427) produces a route that is not codex-luis (line 437). The SchedulerCore is built with Ports(assignment=port) and no routing port, so start() does not remap (lines 428-432). The task becomes READY, quota changes (434), and step() refreshes again (refresh_calls asserted at 438). It makes exactly one claim (439-442) that resolves via ledger lookup to codex-luis, gpt-6.1-sol, high (443-445). The core stub test test_routing.py:53-80 separately asserts a plan route of sonnet being replaced by a haiku ready route, with no executor. Its M2 is a stub, not the real adapter.\",\"evidence\":[{\"path\":\"skill/scripts/tests/test_scheduler_decision_integration.py\",\"symbol\":\"test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation\",\"start_line\":401,\"end_line\":445},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_routing.py\",\"symbol\":\"FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor\",\"start_line\":53,\"end_line\":80}]}],\"unknowns\":[\"Repository implementation (StateRepository transaction durability and file or database storage) was not inspected, so write atomicity between RunState route fields and the batch ledger is unverified.\",\"Production wiring: bt_scheduler_run.py:41-45 passes the DecisionAssignmentPort through composition.wire, and bt_scheduler_executor_wiring.py:82-83 passes it as routing when it has a callable plan. The intermediate hop was not fully traced.\",\"Account-capacity defaults in _account_capacities and the route policy internals were not traced in depth.\",\"The integration test starts the scheduler without a routing port, so it does not exercise start-time plan mapping together with a READY revalidation in one run.\",\"Freshness thresholds depend on bt_subscriptions.MAX_AGE_SECONDS and bt_agy.MAX_AGE_SEC, which were not inspected.\",\"No test was executed; all test statements are source assertions only, and no check is claimed to have passed.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 34,
+    "cache_creation_input_tokens": 73984,
+    "cache_read_input_tokens": 801841,
+    "output_tokens": 18726,
+    "output_tokens_details": {
+      "thinking_tokens": 9804
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 73984,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 27,
+  "response_words": 846,
+  "exit_code": 0,
+  "elapsed_seconds": 99.139,
+  "finished_at": 1792248242.3050988,
+  "tool_audit": [
+    {
+      "tool": "Glob",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo",
+        "pattern": "**/*.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo",
+        "pattern": "class Scheduler|def start|READY|route|quota|reserve|planned"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts",
+        "pattern": "def start\\b|def plan_routes|def map_|def _route|def route_|unavailable|def reserve|class .*Reserv|READY",
+        "glob": "bt_scheduler_core/*.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_plan_routing.py",
+        "pattern": "def |^class "
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_core/scheduler.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_plan_routing.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts",
+        "pattern": "plan_full_dag|PlanRoutingPort|def plan\\(|ROUTING_CONTRACT_VERSION =|routing_complete|batch_decisions|persist\\(|refresh_quota\\b|def refresh_quota|def _refresh_quota",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_core/reservation.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_core/scheduler.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts",
+        "pattern": "route_metadata|route_status|route_reason|routing_complete",
+        "glob": "bt_scheduler_*/**/*.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_core/model.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_core/tests/test_routing.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_quota_preflight.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_decision_adapter.py",
+        "pattern": "def _candidate_rows|def task_facts|quota_status|quota_observed_at|now"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/tests/test_scheduler_route_resolution.py",
+        "pattern": "def test_|def setUp|quota_refresh|refresh_quota|requested_at|reserv"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts",
+        "pattern": "\\.plan\\(|plan_full_dag|routing_complete|route_status|refresh_quota_preflight|quota_refresh_failed|quota_aware_requested_at",
+        "glob": "**/test*.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/tests/test_scheduler_decision_integration.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_decision/batch_ledger.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_decision/batch.py",
+        "pattern": "^def |^class |MAX_BATCH_TASKS|reserv|route_matrix|candidate_limit"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_decision/batch.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_decision/batch.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts",
+        "pattern": "DecisionAssignmentPort\\(|Ports\\(",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_run.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/haiku/repo/skill/scripts/bt_scheduler_executor_wiring.py",
+        "pattern": "routing\\b"
+      }
+    }
+  ],
+  "event_shapes": {
+    "system": [
+      "estimated_tokens",
+      "estimated_tokens_delta",
+      "session_id",
+      "subtype",
+      "type",
+      "uuid"
+    ],
+    "assistant": [
+      "message",
+      "parent_tool_use_id",
+      "request_id",
+      "session_id",
+      "timestamp",
+      "type",
+      "uuid"
+    ],
+    "user": [
+      "message",
+      "parent_tool_use_id",
+      "session_id",
+      "timestamp",
+      "tool_result_meta",
+      "tool_use_result",
+      "type",
+      "uuid"
+    ],
+    "rate_limit_event": [
+      "rate_limit_info",
+      "session_id",
+      "type",
+      "uuid"
+    ],
+    "result": [
+      "api_error_status",
+      "duration_api_ms",
+      "duration_ms",
+      "fast_mode_disabled_reason",
+      "fast_mode_state",
+      "first_content_frame_ms",
+      "is_error",
+      "modelUsage",
+      "num_turns",
+      "permission_denials",
+      "queued_turn_count",
+      "result",
+      "result_index",
+      "safety_stops",
+      "session_id",
+      "stop_reason",
+      "subagent_stats",
+      "subtype",
+      "terminal_reason",
+      "time_to_request_ms",
+      "total_cost_usd",
+      "ttft_ms",
+      "ttft_stream_ms",
+      "type",
+      "usage",
+      "uuid"
+    ]
+  },
+  "per_message_usage": [
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3403,
+      "cache_read_input_tokens": 5016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3403
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3403,
+      "cache_read_input_tokens": 5016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3403
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3403,
+      "cache_read_input_tokens": 5016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3403
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9829,
+      "cache_read_input_tokens": 8419,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9829
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9829,
+      "cache_read_input_tokens": 8419,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9829
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9829,
+      "cache_read_input_tokens": 8419,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9829
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2578,
+      "cache_read_input_tokens": 18248,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2578
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2578,
+      "cache_read_input_tokens": 18248,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2578
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8761,
+      "cache_read_input_tokens": 20826,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8761
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8761,
+      "cache_read_input_tokens": 20826,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8761
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4499,
+      "cache_read_input_tokens": 29587,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4499
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4499,
+      "cache_read_input_tokens": 29587,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4499
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4717,
+      "cache_read_input_tokens": 34086,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4717
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4717,
+      "cache_read_input_tokens": 34086,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4717
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4717,
+      "cache_read_input_tokens": 34086,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4717
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4717,
+      "cache_read_input_tokens": 34086,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4717
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6619,
+      "cache_read_input_tokens": 38803,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6619
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6619,
+      "cache_read_input_tokens": 38803,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6619
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6619,
+      "cache_read_input_tokens": 38803,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6619
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5714,
+      "cache_read_input_tokens": 45422,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5714
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5714,
+      "cache_read_input_tokens": 45422,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5714
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5714,
+      "cache_read_input_tokens": 45422,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5714
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4928,
+      "cache_read_input_tokens": 51136,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4928
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4928,
+      "cache_read_input_tokens": 51136,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4928
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4928,
+      "cache_read_input_tokens": 51136,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4928
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2729,
+      "cache_read_input_tokens": 56064,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2729
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2729,
+      "cache_read_input_tokens": 56064,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2729
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3726,
+      "cache_read_input_tokens": 58793,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3726
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6432,
+      "cache_read_input_tokens": 62519,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6432
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6432,
+      "cache_read_input_tokens": 62519,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6432
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6432,
+      "cache_read_input_tokens": 62519,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6432
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3606,
+      "cache_read_input_tokens": 68951,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3606
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3606,
+      "cache_read_input_tokens": 68951,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3606
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3606,
+      "cache_read_input_tokens": 68951,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3606
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2118,
+      "cache_read_input_tokens": 72557,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2118
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2118,
+      "cache_read_input_tokens": 72557,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2118
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3423,
+      "cache_read_input_tokens": 74675,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3423
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 543,
+      "cache_read_input_tokens": 78098,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 543
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 543,
+      "cache_read_input_tokens": 78098,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 543
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 359,
+      "cache_read_input_tokens": 78641,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 359
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 359,
+      "cache_read_input_tokens": 78641,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 359
+      },
+      "output_tokens": 8
+    }
+  ],
+  "model_usage_reported": {
+    "claude-haiku-5-5": {
+      "inputTokens": 34,
+      "outputTokens": 18726,
+      "cacheReadInputTokens": 801841,
+      "cacheCreationInputTokens": 73984,
+      "webSearchRequests": 0,
+      "costUSD": 0.03218161,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 9804
+    }
+  },
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248242.3404493,
+    "windows": {
+      "five_hour": {
+        "used_percent": 19.0,
+        "resets_at": 1792262399.56784,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792277999.567856,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

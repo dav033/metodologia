@@ -1,0 +1,99 @@
+{
+  "case": "C3",
+  "profile": "codex-2",
+  "provider": "codex",
+  "requested_model": "gpt-6-luna",
+  "requested_effort": "max",
+  "variant": "codex-2-luna",
+  "prompt_sha256": "f607c6548fa9cd09445d9705da124b7a0755c2645ecb983e0aac81ab11b4e905",
+  "prompt_characters": 3391,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792207036.7890253,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792207037.4975488,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "high",
+        "issue": "The endpoint lets a validated query tenant replace the authenticated session tenant, so the query filter can widen access across tenants.",
+        "evidence": "T2 sets `owner=request.query.tenant ?? session.tenant_id`; middleware authenticates but does not authorize the query tenant. The mission says a tenant query filter must never widen the server session tenant.",
+        "failure_scenario": "An authenticated user supplies another tenant’s valid UUID and reads that tenant’s documents.",
+        "fix": "Always constrain reads to `session.tenant_id`; reject a query tenant that differs, or apply it only as an additional filter within the session tenant."
+      },
+      {
+        "task": "T3",
+        "severity": "medium",
+        "issue": "The backfill orders by `(created_at,id)` but filters and resumes using only `id`, so its cursor does not match its scan order and can skip rows.",
+        "evidence": "T3 selects `WHERE id > :cursor ORDER BY created_at ASC,id ASC` and persists the last selected ID. The supplied snapshot order is IDs 10, 90, 20, 80; the first batch ends at 90.",
+        "failure_scenario": "After processing 10 and 90, the next query excludes IDs 20 and 80 because they are not greater than 90, leaving their `tenant_id` values unset.",
+        "fix": "Use and persist a composite `(created_at,id)` cursor matching the ordering, or order and filter solely by ID. Test with IDs whose creation order differs from lexical order."
+      },
+      {
+        "task": "T4",
+        "severity": "medium",
+        "issue": "The purge condition deletes documents exactly 30 days old, contrary to the retention boundary.",
+        "evidence": "The mission says age `<=30 days` must be kept and only age `>30 days` is purgeable; T4 deletes where `age>=30days`.",
+        "failure_scenario": "A document exactly 30 days old is purged even though the policy requires retaining it; the 29-day and 31-day tests do not catch this boundary error.",
+        "fix": "Use a strict `age > 30 days` condition and test the exact 30-day boundary."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Dropping the legacy column 15 minutes after cutover makes the promised 24-hour rollback to the old binary impossible.",
+        "evidence": "The old binary reads only `legacy_owner_tenant` and fails if it is absent. T5 drops that column at 12:15 but documents rollback until next-day 12:00; no recreation, reverse backfill, or database restore is provided.",
+        "failure_scenario": "A rollback requested after 12:15 redeploys a binary that fails because its required column no longer exists.",
+        "fix": "Keep the legacy column and verified trigger through the full rollback window, and drop them only after it expires."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"high\",\"issue\":\"The endpoint lets a validated query tenant replace the authenticated session tenant, so the query filter can widen access across tenants.\",\"evidence\":\"T2 sets `owner=request.query.tenant ?? session.tenant_id`; middleware authenticates but does not authorize the query tenant. The mission says a tenant query filter must never widen the server session tenant.\",\"failure_scenario\":\"An authenticated user supplies another tenant’s valid UUID and reads that tenant’s documents.\",\"fix\":\"Always constrain reads to `session.tenant_id`; reject a query tenant that differs, or apply it only as an additional filter within the session tenant.\"},{\"task\":\"T3\",\"severity\":\"medium\",\"issue\":\"The backfill orders by `(created_at,id)` but filters and resumes using only `id`, so its cursor does not match its scan order and can skip rows.\",\"evidence\":\"T3 selects `WHERE id > :cursor ORDER BY created_at ASC,id ASC` and persists the last selected ID. The supplied snapshot order is IDs 10, 90, 20, 80; the first batch ends at 90.\",\"failure_scenario\":\"After processing 10 and 90, the next query excludes IDs 20 and 80 because they are not greater than 90, leaving their `tenant_id` values unset.\",\"fix\":\"Use and persist a composite `(created_at,id)` cursor matching the ordering, or order and filter solely by ID. Test with IDs whose creation order differs from lexical order.\"},{\"task\":\"T4\",\"severity\":\"medium\",\"issue\":\"The purge condition deletes documents exactly 30 days old, contrary to the retention boundary.\",\"evidence\":\"The mission says age `<=30 days` must be kept and only age `>30 days` is purgeable; T4 deletes where `age>=30days`.\",\"failure_scenario\":\"A document exactly 30 days old is purged even though the policy requires retaining it; the 29-day and 31-day tests do not catch this boundary error.\",\"fix\":\"Use a strict `age > 30 days` condition and test the exact 30-day boundary.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"Dropping the legacy column 15 minutes after cutover makes the promised 24-hour rollback to the old binary impossible.\",\"evidence\":\"The old binary reads only `legacy_owner_tenant` and fails if it is absent. T5 drops that column at 12:15 but documents rollback until next-day 12:00; no recreation, reverse backfill, or database restore is provided.\",\"failure_scenario\":\"A rollback requested after 12:15 redeploys a binary that fails because its required column no longer exists.\",\"fix\":\"Keep the legacy column and verified trigger through the full rollback window, and drop them only after it expires.\"}],\"uncertainties\":[]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 15069,
+    "cached_input_tokens": 11648,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2740,
+    "reasoning_output_tokens": 2144
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 23.883,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792207061.3806472,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "bundle_path": "prompt-bundle.md",
+  "bundle_sha256": "1532e4a609c09671716880cb57092ed7130bf0f25d06750c1684cbb1ed1dac5e",
+  "effort": "high",
+  "format": "planner-prompt-bundle-candidate/v1",
+  "generation": "UTF-8; YAML frontmatter removed; role followed by four canonical Planner skills in profile reference order",
+  "limitations": [
+    "This first-pass bundle omitted methodology references required by the Planner role.",
+    "It did not define how planning files are produced and validated when the session has only read tools.",
+    "Do not use it as a T17 arm."
+  ],
+  "model": "claude-opus-5-5",
+  "provider": "claude",
+  "sources": [
+    {
+      "body_sha256": "fb4baf85f24b7966da40a218a236f583d79fbcbc5cd9974057c04b005fe9b8f4",
+      "path": "skill/agents/planner.md",
+      "source_sha256": "35f57956e537d59b407b14c2feecb54610ed4775eb7a3d3720ce94673f42f3ad"
+    },
+    {
+      "body_sha256": "ed9fe3a202c3f45559adf6e3bbe868158e5e0defec935f70b1bb9b0b4d4730f3",
+      "path": "skill/agents/planner/skills/socratic-elicitation/SKILL.md",
+      "source_sha256": "15e351d457a6c532fbedba767b1e1bcc6e42168593f9c1d65370d9ae3216e483"
+    },
+    {
+      "body_sha256": "57b258c22d30375fbb597f7b1a5adb016ea4c405fa05f66785763dc784b78f9c",
+      "path": "skill/agents/planner/skills/wbs-dag-decomposition/SKILL.md",
+      "source_sha256": "ab4db5ed691816c03ee1f5dd29989ebe16dd31b75e8ea77f1e6f5adbef0d7da5"
+    },
+    {
+      "body_sha256": "5e19566a6fb13d17cc0ab9fc37fe65b757d51006c8b62ba75611fd0252dc2868",
+      "path": "skill/agents/planner/skills/plan-mermaid-view/SKILL.md",
+      "source_sha256": "fbeba097608772d45ae454b58ab578c6d7bd3e66fccbd77f1278ddb3e153ce1d"
+    },
+    {
+      "body_sha256": "b834afabb81f72d4a5c3f4bec0c453f45d1f81cff19c0e65ce68b76e6ba507da",
+      "path": "skill/agents/planner/skills/adversarial-plan-review/SKILL.md",
+      "source_sha256": "944e4eab07cae1b15a6ba7436e50c0c825acf5a08286d461593bb789c7cfb947"
+    }
+  ],
+  "status": "superseded_incomplete",
+  "superseded_by": "paired/"
+}

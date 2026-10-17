@@ -1,143 +1,56 @@
-# REQ-007 switch dossier: GUIADA_MOTOR `python` → `3d` (draft for the owner)
+# REQ-007 switch dossier — guided 3D engine status (no new switch)
 
-Date: 2026-10-09 · Branch: `feat/dossier-guiada` @ e08dcb43 (origin/main merged, engine globos3d 1.2.2) · Status: **draft, nothing switched.**
-`GUIADA_MOTOR` stays `python` everywhere. Evidence: `PARIDAD-2026-10-09b.md` (+ csv), `scripts/test/test-motor-guiada-integracion.ts`.
+Date: 2026-10-16 · Evidence branch: `feat/req-014-72h-marathon-autonomous-product-developm` at `75c87497` · Local engine: `globos3d` 1.2.7 · Status: documentary update only; T58 made no production setting change.
 
-## 1. Decision asked
+## 1. Decision and current runtime context
 
-Whether the guided customer chat (`/asistente`, guided path) creates new plans with the 3D engine (`3d`) instead of
-the Python resolver (`python`), under D-024 and D-026.
+- D-039 records that `ajustes_runtime.guiada_motor` was set to `3d` for all customers. That later owner decision supersedes the original marathon brief's earlier “no switch during 72 hours” answer. D-038 now requires one quote for the same plan on every surface.
+- No production flag was changed or re-read during T58. This dossier does not claim that its local drill changed production. Do not perform another switch as part of this task; keep the recorded D-039 runtime decision until the owner chooses otherwise.
+- D-026 remains the package policy: Sempertex standard presentations, the Python resolver's combination-selection policy (`python`), and one 8% reserve for the whole plan, first covered by leftovers. The informational parity report's `mas_barato` column is not used as the D-026 price result below.
 
-**Blocker: graceful rollback does not exist yet (§4).** Until it does, the switch cannot be reverted without breaking
-open customer plans. This blocks the switch on its own, whatever the evidence in §2 says.
+## 2. Counts and parity evidence
 
-## 2. What switching changes for customers
+Source: [PARIDAD-2026-10-16.md](PARIDAD-2026-10-16.md) and its CSV. The report used the included crosswalk snapshot `products_catalog:13a9033d8c72f30fa60f75c825358c21537fd869bf0e666d659d7be047f0ce42`, Python's in-process domain resolver, and engine 1.2.7. It made no Neon, local-service, or paid-provider calls.
 
-- **Counts, in total and per idea.** On the 26 ideas the engine fully builds, the total is 2,173 against Python's 2,170
-  (×1.00). That total hides offsetting errors: 18 of 26 ideas are within ±15 % of Python, and 8 are not: classic arches
-  01, 02, 14 (−22 %), 09 (−17 %), 25 (−19 %), 12 (+17 %), 30 (+20 %) and 31 (+40 %). Organic pieces keep 20–28 % of
-  balloons in R-5, as Python does. Classic arches follow the official 5 quartets per metre (owner question, §5).
-  Customers see "cantidades del motor" (owner ruling Q2).
-- **Prices (D-026, Sempertex standard presentations, `python` policy).** Over the 26 ideas with a stored price, the
-  engine's bill is 0.70 of the stored Python price in total (median 0.68). 21 ideas get cheaper; 5 cost the same or
-  more (08 = 1.00, 29 = 1.07, 12 = 1.11, 13 = 1.13, 31 = 1.24). Most of the drop is packaging: the stored plans buy
-  50-packs. Priced with Python's own counts under the same policy, the engine is 1.18× dearer. **The cause of that 1.18×
-  is not verified** (the likely candidate is the size mix, but the material-value column was not recomputed). The owner
-  must accept the price movement explicitly before customers see it.
-- **Views.** (a) Read-only 3D render of the plan, "lightly modified" from the customer's 2D (Phase 3, D-019).
-  (b) Realistic FLUX image from the same geometry (Phase 4). (c) Customer edits (Phase 5, D-020): AI requests, colour
-  references, colour proportions, size proportions. No drag, create or select in the viewer.
-- **Built as approximations (`aproximada`; the customer is told the difference).** Classic rings with more colours
-  than the trenza takes (up to 4 per weave band), `arco_no_denso` and `columna_no_densa` (built organic with fewer
-  balloons), and a wall with more than four colours (`pared_densa`), which keeps only the first four.
-- **Not built (falls back to Python per plan):** figure, centre table, partial hoop, organic wall (`pared_organica`),
-  light wall (`pared_no_densa`). Photo-inspired plans stay on Python.
+- Scope: 28 saved ideas plus 18 official structures at three sizes each (54 cases), 82 count comparisons available.
+- Across the 28 saved-idea outputs, Python totals 2,601 balloons and the engine output totals 2,400 (0.923×). The exact total matches in 2/28 ideas; 18/28 are within ±15%. Direction: 11 lower, 2 equal, 15 higher. Three engine outputs contain a non-representable piece, so the all-idea aggregate includes partial engine output and is not a complete-build parity claim.
+- On the 25 fully representable saved ideas, Python totals 2,204 and the engine 2,241 (1.017×); 2/25 are exact and 17/25 are within ±15%. Direction: 9 lower, 2 equal, 14 higher.
+- Across all 82 comparisons, 12 counts are exact; colour equality is 54/82 and size-mix equality 8/82. These are descriptive results, not acceptance thresholds.
 
-## 3. Failure modes and where the text goes
+## 3. D-026 pricing comparison
 
-When the 3D path fails, the server returns a typed failure (`fallback.razon`) and the view resolves the plan with
-Python. **The customer does not see the sentences below.** They go to the failure log and the audit trail
-(`registrarFallo`, `regla:motor_guiada`). The customer gets the Python plan silently, with its usual price.
+The reproducible source is `scripts/motor/paridad-ideas.ts`; per-idea rows are archived in [paridad-ideas-d026.csv](artifacts/t58-2026-10-16/paridad-ideas-d026.csv). Python's resolved counts and engine counts are each repriced with D-026's `python` package policy on the same included catalog crosswalk.
 
-| Reason | Log / audit sentence | Customer sees | Path afterwards |
-|---|---|---|---|
-| `bandera_python` | "Este plan se arma con el motor de siempre." | the Python plan | Python |
-| `no_representable` | "Alguna pieza de este plan todavía no la arma el motor 3D." | the Python plan | Python |
-| `sin_cobertura` | "La tienda no vende algún globo de este plan en esa talla o color." | the Python plan | Python |
-| `precio_fallido` | "No pude cotizar los materiales de este plan." | the Python plan | Python |
-| `sin_plan_guardado` | "Esa idea no tiene un plan guardado." | the Python plan | Python |
-| `tope_de_piezas` | "Sumar esa idea pasaría del máximo de piezas de un plan." | the Python plan | Python |
-| `sobre_invalido` | "No pude armar el plan con el motor 3D." | the Python plan | Python |
+- Same-policy set: 23/28 ideas. Python counts re-priced under D-026 total COP 1,629,555; engine counts under D-026 total COP 1,904,347. Weighted ratio: 1.169 (+16.9%); median per-idea ratio: 1.085 (+8.5%). Engine totals are lower on 7 ideas, equal on 2, and higher on 14.
+- Excluded from this comparison: three non-representable pieces (`EST_03_CENTRO_MESA`, `EST_01_ARO_CIRCULAR`, and `EST_02_FIGURA`); two catalog crosswalk gaps (deco-real-09: R-5/R-12 crema; deco-real-25: R-12 multicolor).
+- A separate 25-idea comparison against stored Python prices totals COP 2,692,412 stored vs COP 1,985,039 for engine output (0.737×). It mixes historical stored-plan allowances with current D-026 package selection, so it is not an apples-to-apples estimate of the policy change. The 23-idea same-policy comparison above isolates count/mix differences more directly.
+- D-038's same-plan price invariant is not contradicted by this result: these are different count plans for the same saved idea, repriced with the same package policy.
 
-Edits are different: a refused edit is shown to the customer as `No pude: …`, translated from the engine reason. Size
-over the piece's limit → "esa pieza quedaría demasiado grande para el plan"; colour not made in that piece → "ese color
-no se puede armar en esa pieza"; measure → "esa medida no se puede armar"; anything else → "esa pieza no se puede
-armar con ese cambio". Limit: 60 edits per hour per browser (429 `LIMITE_EDICIONES`).
+## 4. Desktop and phone evidence
 
-**Known gaps found by the integration test (46 cases, 3 edits each; counts are per piece):**
-- Enlarging a piece 10 % and then shrinking it 10 % does not return the same size: largest drift 7.2 %, which is inside
-  one step (the test fails above one step, so a doubled step would be caught). An "undo" built as the inverse edit moves
-  the piece.
-- Replacing a colour by name is not always reversible: 15 piece-level round trips return another code (530 "Metal
-  Verde" comes back as 030), and 12 piece-level round trips merge two colours into one. An undo should restore the stored
-  spec, not apply the inverse edit.
-- Ideas that fall back today are pinned by name in the test: a new fallback fails the test.
+Playwright opened the real `/asistente` UI on local port 3015 (not 3010 or 8000). It restored a deterministic fixture generated by `scripts/test/datos-vista-motor3d.ts`: engine 1.2.7, two asymmetric columns, 74 balloons, COP 59,404. The browser used the actual UI components and the fixture's recorded `/api/guiada/motor/armada` responses. All `/api/*` requests were intercepted; external origins were blocked. No model, image provider, production service, or production database was called.
 
-## 4. Rollback: graceful (P-045, branch `feat/guiada-rollback-ordenado` @ bf4a6c62 — in review, not on main yet)
+- [Desktop screenshot, 1440×1100](artifacts/t58-2026-10-16/t58-desktop-2026-10-16.png)
+- [Phone screenshot, 390×844](artifacts/t58-2026-10-16/t58-phone-2026-10-16.png)
+- One armada fixture response was served per viewport; Playwright reported zero browser errors. The local plan is explicitly titled “Plan de prueba”; these are representative UI captures, not customer data or a product-judge score.
 
-Flag priority: cookie `guiada_motor` (admin only) > kill switch `guiada_motor_corte` (row in `ajustes_runtime`, else env
-`GUIADA_MOTOR_CORTE`; `activo|inactivo`) > row `guiada_motor` > env `GUIADA_MOTOR` > `python`; rows cached 30 s per
-instance. **The flag decides only new plans.** A plan carries its engine in its signed token, so an open 3D plan keeps
-being edited, extended with ideas and redone by the 3D engine at the same price until the conversation ends (token lifetime
-24 h), even if the flag returns to `python` or flips mid-conversation; the audit records `bandera: python, efectivo: 3d,
-conserva_motor: plan_3d_abierto`. **Normal rollback = flag to `python`**: no customer sees a price change. **Emergency kill
-= `guiada_motor_corte = 'activo'`** (an engine that counts or prices wrongly): every plan goes to Python; the server never
-touches or quotes an open 3D plan (409 `MOTOR_3D_CORTADO`). An edit is refused with a plain-Spanish «No pude: … tengo que
-volver a calcular tu plan completo… las cantidades y el precio pueden cambiar»; a redo or added idea first shows the same
-notice and keeps the plan, and only when the customer asks again is the plan recalculated with Python. The admin cookie
-still overrides the kill. Known gaps: the reverse switch (an open Python plan redone after a python→3d flip becomes a 3D
-plan without notice, ≈×0.7 price), and non-kill 3D failures on a redo are told after the recalculation, not before.
-Verify the kill: `GET /api/guiada/motor` returns `{motor: "python", fuente: "corte"}`. A Neon read error keeps each instance's last good value; to survive restarts during a database outage also set `GUIADA_MOTOR_CORTE=activo` in the env. 3D plans older than 24 h (from the first plan, `origenEn`) are not honoured while the flag is python (409 `PLAN_3D_VENCIDO`, customer told first). **Roll back with the flag or the kill switch, never with a code revert** (the token schema is strict and saved sessions with new states would be dropped). Notices are shown in a visible banner («Antes de cambiar tu plan» → «Recalcular mi plan») and a line on the recalculated plan card.
+## 5. Failure modes and rollback behavior
 
-Flip steps (work for new plans; open plans keep their engine once P-045 is merged):
+| Condition | Behavior |
+|---|---|
+| New-plan flag is `python` or the browser cannot obtain an effective 3D flag | A new plan uses the Python resolver. Once created, a plan retains its recorded motor during ordinary edits; changing the flag does not silently reprice an open plan. |
+| The 3D engine cannot represent a piece, the catalog has no required product, pricing fails, the piece cap is exceeded, or the signed plan envelope is rejected | The route returns a typed reason and the guided flow records it; a new/redo plan is built through Python where that fallback applies. |
+| Emergency `guiada_motor_corte=activo` | New plans use Python. Requests to render or edit open 3D plans return 409 `MOTOR_3D_CORTADO`; the existing plan is preserved and the customer is asked to recalculate rather than silently changing its quantities or price. |
+| A 3D edit is unsupported, out of bounds, uncovered, or unpriceable | The edit is rejected (typically 422) with a customer-facing “No pude: …”; the previous plan remains intact. Expired plans use 409 `PLAN_3D_VENCIDO` and the recalculation path. |
 
-1. **Owner, one browser (no customers).** Signed in as admin on the site, DevTools console:
-   `fetch('/api/guiada/motor', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({motor: '3d'})})`.
-   This sets `guiada_motor` (HttpOnly, 7 days, SameSite=Strict, same origin). `{motor: 'defecto'}` clears it. Other
-   visitors never read it.
-2. **All customers.** Neon SQL console:
-   `INSERT INTO ajustes_runtime (clave, valor, actualizado_por) VALUES ('guiada_motor', '3d', 'dueño') ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor, actualizado_en = now(), actualizado_por = EXCLUDED.actualizado_por;`
-   Back to `python`: the same statement with `'python'`, or `DELETE FROM ajustes_runtime WHERE clave = 'guiada_motor';`
-   (then the env var decides). Kill switch: the same statement with `('guiada_motor_corte', 'activo', 'dueño')`; release with `'inactivo'` or `DELETE`. Each instance picks it up within 30 s. A row that says `3d` overrides the env var, so
-   changing the env var alone does not roll back.
-3. **Env var (default when no row exists).** On the VPS, set `GUIADA_MOTOR=python` in `/etc/demo-decoracion/demo.env`
-   (the `web` service's `env_file`). Then recreate the container with `docker compose -f compose.vps.yml up -d web`.
-   **A plain restart does not reread `env_file`.** `.env.example` documents the variable.
-4. **Verify.** `GET /api/guiada/motor` shows the effective motor and its source (cookie, ajuste, env or defecto). In a
-   private window, a new guided plan must show the Python plan. The audit line `regla:motor_guiada` records `bandera`,
-   `fuente` and `efectivo`.
-5. **No schema rollback is needed.** Migration 032 only creates the table; the app tolerates its absence.
+Flag precedence is admin cookie → emergency cut → `ajustes_runtime.guiada_motor` → `GUIADA_MOTOR` → `python`; database settings cache for 30 seconds per instance. Normal rollback means setting the flag to `python` for new plans. The emergency cut is intentionally different because it also stops edits to open 3D plans.
 
-**Drill status: not done.** Steps 2 and 4 have not been run on the deployed app.
+## 6. Rollback drill
 
-## 5. Evidence still missing
+The production rollback drill dated 2026-10-11 remains historical evidence: [SIMULACRO-ROLLBACK-2026-10-11.md](../../research/ciclo/SIMULACRO-ROLLBACK-2026-10-11.md). T58 also completed the requested local database flip and restore using the actual resolver: [rollback-local.md](artifacts/t58-2026-10-16/rollback-local.md). The disposable database ended with `guiada_motor=python` and was removed; production was untouched. The local drill proves flag precedence and restoration, not production propagation or cache timing.
 
-- **Graceful rollback** (§4), built and tested. This is the blocker.
-- **Product judge (D-028/D-030).** Desktop and phone screenshots of the guided plan on 3D, scored ≥ 8. Customer-visible,
-  so before the switch, not after.
-- **Live Python price check.** This dossier uses an offline replica (`planearCompra`, `python` policy). Needed: one live
-  `lista-materiales` call per idea on the current catalogue snapshot, compared with the replica. The owner confirms the
-  Python service call.
-- **Rollback drill** (§4, steps 2 and 4) on the deployed app, with timing.
-- **Owner cookie test** (PLAN Phase 7, first step), including the classic arch inflation question: R-12 in classic arches
-  at 25 cm gives 5 quartets per metre (engine); 6.6 per metre would need about 19 cm. The engine is about 22 % under Python here.
-- **Cause of the 1.18× counting effect** on prices (§2): recompute the material-value column before attributing it.
-- **Stored price check** for ideas 30 and 31, which both carry $57,603 (see PARIDAD-2026-10-09b §5).
-- **Undo semantics** for customer edits (§3 gaps): decide between stored-spec undo and inverse edits.
-- **Visual review.** No dev server was run, so the look of lujosa and sencilla pieces has not been seen in the browser.
-- **One-week watch after the switch:** fallback rate per reason, `armar` p95, 422s from pricing, image failures and cost
-  per plan, edits rejected.
+## 7. Recommendation and remaining evidence
 
-## 6. Recommendation
+**Recommendation: no new switch or production mutation from T58.** Keep D-039's recorded 3D rollout unless the owner later decides to reverse it. Treat the 23-idea D-026 delta as a count/mix difference to disclose and monitor, not a price-policy mismatch.
 
-**Do not switch yet.** Switch only when the blocker and the four items pass: (0) graceful rollback, with the flag governing
-only new plans and open 3D plans still editable; (a) product judge ≥ 8 on desktop and phone; (b) live Python price check
-on the 26 ideas with the deviation agreed in writing; (c) rollback drill with timing ≤ 30 s; (d) owner cookie test, plus
-the owner's explicit acceptance of the price movement in §2. The total count is at parity, but the per-idea errors in §2
-are real and the owner should see them. The decisions left are prices and the classic arch size. Then switch with the
-one-week watch in §5, and keep `python` as the one-step rollback for new plans.
-
-Automated verification for this draft: `test-motor-guiada-integracion` (46 cases; four independent categories: build,
-price, counts, edits), `-golden`, `-fronteras`, `-precio` pass; full typecheck shows only the known `LayoutProps` artefact
-in `src/app/layout.tsx`.
-
-## Rollback drill — 2026-10-11
-
-Evidence: [SIMULACRO-ROLLBACK-2026-10-11.md](../../research/ciclo/SIMULACRO-ROLLBACK-2026-10-11.md) (timeline, screenshots, restore confirmation). It closes the "Rollback drill" item of §5, steps 2 and 4 of §4, on production (app `6274a079ca55`), with no customer traffic.
-
-- **Flag to `python`:** read by new requests in 0–10 s (first) and 0–30 s (all instances); a new plan comes from Python; an open 3D plan keeps editing in 3D (audit `bandera=python, efectivo=3d`), no crash, conversation intact. PASS.
-- **Back to `3d`:** 5–20 s; new plans 3D, open plan editable. PASS.
-- **Kill switch `guiada_motor_corte=activo`:** 5–30 s; armada, imagen and plan answer 409 `MOTOR_3D_CORTADO` before any spend; an edit of the open plan is refused with "No pude… Tu plan sigue como estaba"; reloading shows "Tu plan necesita recalcularse" with "Recalcular mi plan"; new plans use Python. Release 15–30 s. PASS.
-- **Timing vs the ≤ 30 s criterion (§6 c):** met at the 30 s cache bound (5 s polling resolution); instances disagree inside the window.
-- **Spend:** 2 chat turns, 0 paid calls. **Restore:** `ajustes_runtime` equal to the "before" rows, no `guiada_motor_corte` row.
-- **Open finding:** the client gives up on the flag read after 1 s (`usarMotorGuiada.ts:16`), so a new plan can silently come from Python with the flag on `3d` ($117,655 instead of $176,591 for the same idea; seen once). Detail in the drill file.
+The desktop and phone captures establish that the current local 3D plan card renders and displays its D-026 price summary. This task did not run a product judge or score the screenshots, query the current production flag, perform per-idea live price calls, or measure the one-week production watch. No such result is claimed here.

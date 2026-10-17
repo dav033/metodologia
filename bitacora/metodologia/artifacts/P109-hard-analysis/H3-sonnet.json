@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "case": "H3",
+  "route": {
+    "id": "sonnet",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "1dc22f79a703521af19309e4e29224762a0428696279bcffed40988df573d7bb",
+  "prompt_characters": 13061,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "http_429",
+    "observed_at": null,
+    "windows": {}
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209380.0277486,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "E2 read_export / T2",
+        "severity": "critical",
+        "issue": "The cache lookup and return happen before authorize_current, so a cache hit skips live project authorization. Signature validity plus cache-key identity is treated as permission, which is the superseded 2025-04 memo's rule.",
+        "evidence": "R1 requires current authorization on every read, including cache hits. G3 says the cache key is (tenant,user,export_id,content_version), has no policy revision, and the same user may still request that key after revocation. E2 returns `cache[key]` before calling `authorize_current`. The T2 test covers only a cache miss then hit with no policy change.",
+        "failure_scenario": "User U has a grant on project P and reads export X, which populates cache[(t,U,X,v)]. An admin revokes U's grant and the revocation commits. U replays the same valid cursor and E2 returns the cached bytes without calling authorize_current. This violates R1's immediate revocation.",
+        "fix": "Call authorize_current(user,cursor.project) after authenticate and cursor verification, before any cache access. Deny on failure, and only then consult the cache. Add a regression test that reads, revokes, and reads again, expecting denial."
+      },
+      {
+        "task": "E3 build_export / E2 cache key / T2",
+        "severity": "high",
+        "issue": "The query-equivalence check compares cursor.query_hash with the client-supplied req.query_hash. It never hashes the effective validated query, so the client can claim the approved hash while sending different filters, columns or order. The cache key also omits the effective query.",
+        "evidence": "R2 says the claimed hash is untrusted and the server must hash the canonicalized validated effective query. G2 says req.filter and req.columns are not equated to the cursor's approved values and that canonical_query/sha256 are correct. E3 builds q from req.filters/columns/order and checks only `cursor.query_hash != req.query_hash`. The T2 test sends the hash of the query it actually executes, which passes by construction.",
+        "failure_scenario": "The cursor approved dates D1 and columns {a}. The client replays the cursor's own query_hash with filters covering D1..D2 and columns {a,b,secret}. The check passes, validate_query accepts the request, and the export widens beyond the approved query. Because the cache key lacks the query, a later request with different filters under the same cursor can also receive another query's cached result.",
+        "fix": "After validate_query, compute h = sha256(canonical_query(q)). Compare it to cursor.query_hash with a constant-time comparison and reject on mismatch. Ignore req.query_hash. Include h (and the cursor position, if the cursor carries one) in the cache key. Add a negative test with the correct claimed hash and widened columns or filters."
+      },
+      {
+        "task": "E4 keyset SQL / T3",
+        "severity": "critical",
+        "issue": "The WHERE clause lacks parentheses, so `tenant AND ts> OR ts= AND id>` parses as `(tenant AND ts>) OR (ts= AND id>)`. The equal-timestamp branch has no tenant predicate, and no outer tenant predicate exists.",
+        "evidence": "R3 says AND binds tighter than OR and that tenant scoping must hold under both keyset branches. The export role reads across tenants with no RLS. The comment in E4 says the outer wrapper has no tenant predicate. R3 adds that project IDs are tenant-local and timestamps can be shared across tenants, so the outer project predicate does not isolate tenants. T3 tests only a single tenant with distinct timestamps, which never reaches the second branch with foreign rows.",
+        "failure_scenario": "Tenant A's cursor is (ts=T,id=100). Tenant B has a row with ts=T, id=150 and the same project ID as A's project. The second branch matches that row regardless of tenant_id. The outer project and filter wrapper passes it, and tenant B's payload goes into tenant A's encrypted export.",
+        "fix": "Rewrite the predicate as `WHERE tenant_id=:tenant AND (event_ts>:cursor_ts OR (event_ts=:cursor_ts AND id>:cursor_id))`. Add a two-tenant test with equal timestamps and shared project IDs, where the foreign ID is greater than the cursor ID."
+      },
+      {
+        "task": "E5 encrypt_next / G4 / T3, T6",
+        "severity": "high",
+        "issue": "The nonce is the per-export prefix plus chunk_index under a per-export key reused across retries. A crash after upload but before persist_next_index makes the retry re-encrypt the same chunk_index, possibly with changed plaintext, under the same key and nonce.",
+        "evidence": "R4 requires that different plaintexts under one key never share a nonce, and says changing AAD does not make nonce reuse safe. R4 also allows a retry to use a new approved snapshot with changed content. G4 says the key and prefix are reused on a new attempt, a crash can occur between upload and checkpoint, and old object versions stay observable. E5 resumes at the last persisted next_index. T3 and T6 inject no crash and keep the content unchanged, so nothing exercises this.",
+        "failure_scenario": "Attempt 1 uploads chunk 5 with nonce P||5 over plaintext M1 and crashes before persist(6). Retry attempt 2 has snapshot S2 with retractions, so chunk 5 is M2. It resumes at 5 and encrypts with the same key and nonce P||5, and both blobs stay observable. An observer computes C1 xor C2 = M1 xor M2, and the repeated GCM nonce also exposes the GHASH authentication key.",
+        "fix": "Make nonce uniqueness independent of chunk_index and of the checkpoint. Option A: durably reserve a monotonic invocation counter before each encryption and use nonce = prefix||counter. Option B: derive a fresh subkey per attempt, for example HKDF(export_key, attempt_snapshot, attempt_id), and keep the counter nonce under that subkey. Option C: write a durable intent record before upload and never reuse an index whose upload may exist. Add a crash-injection test with changed content on retry."
+      },
+      {
+        "task": "E6 finalize/verify, G5 / T4",
+        "severity": "high",
+        "issue": "The signature covers only tenant, export, snapshot and root, and the Merkle tree duplicates the last odd node. The verifier does not check chunk_count, indexes or duplicates. A three-chunk manifest and its four-chunk extension with the last chunk repeated therefore share a root and a valid signature.",
+        "evidence": "R5 requires the signature to bind the ordered sequence and cardinality, and says a three-chunk export must not become four chunks by repeating a chunk. G5 says the signature does not bind chunk_count or the manifest, that odd levels duplicate the last node, that duplicate indexes and references are not rejected, and that each entry decrypts using its own chunk_index. E6 verify checks only the signature and the recomputed root. The T4 test uses exactly four chunks (no odd-level duplication) and tampers only a leaf digest.",
+        "failure_scenario": "The signed manifest is [A,B,C], with leaves L_A, L_B, L_C. The attacker submits [A,B,C,C'] where C' is a copy of C's entry. The tree for 4 leaves is node(node(A,B),node(C,C)), which is identical to the 3-leaf tree after duplication, so the root matches and the signature verifies. The verifier decrypts four entries and the export now has C twice.",
+        "fix": "Add chunk_count to the signed canonical tuple, or domain-separate it into the root. Verify len(chunks)==signed_count and that each entry's index equals its list position (0..n-1, unique). Optionally bind the index into each leaf. Add tests with 3 chunks plus a repeated tail, an out-of-order list, and mismatched indexes."
+      },
+      {
+        "task": "E7 restore / T5",
+        "severity": "high",
+        "issue": "The containment check is purely lexical, via absolute() and is_relative_to. mkdir(parents) and write_bytes then follow existing symlinks in intermediate or final components, so writes escape selected_root. Archive-entry validation cannot see symlinks already on disk.",
+        "evidence": "R6 requires containment even with existing symlinks and path-replacement races. G6 says absolute() does not resolve symlinks, is_relative_to compares lexical components, and directories outside selected_root give no protection. Archive validation covers only the entry names and types. T5 tests only forbidden strings, archive symlinks and ordinary existing directories.",
+        "failure_scenario": "Another local process creates root/out -> /home/user/.ssh. An archive entry 'out/authorized_keys' is lexically inside root, so the check passes. mkdir(exist_ok) accepts the symlinked directory and write_bytes writes through it outside root. A symlink swapped in after the check has the same result.",
+        "fix": "Walk components with directory file descriptors: open root, then for each component use openat with O_DIRECTORY|O_NOFOLLOW (mkdirat when missing). Create the final file with O_CREAT|O_EXCL|O_NOFOLLOW relative to the final dirfd. Do not rely on a pre-check. Add tests with a symlinked intermediate directory, a symlinked final component, and a swap race."
+      },
+      {
+        "task": "E8 cleanup_keys / G7 / T4",
+        "severity": "high",
+        "issue": "Retention is computed from key creation (created_at+24h), but a key signs for 8h and tokens issued at the end of that window live 24h more. The key is deleted up to 8h before its last legitimate tokens expire.",
+        "evidence": "R7 requires retention to cover the longest token expiry possible under that key and says unexpired tokens must stay verifiable. G7 says a key signs for 8h after creation and a token can be issued right before the key stops signing, with exp = issue+24h. E8 deletes at `created_at+24h <= now`. The T4 test issues tokens only at key creation time, which expire exactly at the deletion time and miss the gap.",
+        "failure_scenario": "Key K is created at t=0 and signs until t=8h. A token is issued at t=7h59 and expires at t=31h59. E8 deletes K at t=24h, so for the next ~8h the unrevoked, unexpired token fails with an unknown-key error (fail closed per G1).",
+        "fix": "Retain until stops_signing_at+24h, which is created_at+32h with the 8h signing window. Delete only when `now >= signing_end + 24h`, keeping the boundary consistent with the expiry-check semantics (not specified; see uncertainties). Add a test that issues a token at the end of the signing window and verifies it just before its expiry."
+      },
+      {
+        "task": "E9 csv_cell / T5",
+        "severity": "medium",
+        "issue": "The formula guard inspects only value[0]. SheetReader skips leading spaces, tabs and carriage returns before checking for = + - @, so values like ' =cmd' or '\\t@x' are left unneutralized. RFC CSV quoting does not change the consumer rule.",
+        "evidence": "R8 gives the SheetReader rule: skip leading space, tab and CR, then treat =,+,-,@ as formulas. It adds that RFC quoting does not alter this and that a leading apostrophe makes the cell literal. G6 says the CSV writer is correct, so only the caller's prefixing is at fault. T5 tests only strings that start directly with '='.",
+        "failure_scenario": "The data value is '  =HYPERLINK(...)'. E9 sees value[0]==' ' and returns it unchanged. The quoted CSV preserves the leading spaces, SheetReader skips them and executes the formula.",
+        "fix": "Find the first character after skipping [ \\t\\r]* and, if it is in {=,+,-,@}, prefix an apostrophe to the whole value. Add tests with leading space, tab and CR followed by each trigger character, with and without RFC quoting."
+      }
+    ],
+    "uncertainties": [
+      "Whether the cursor carries the keyset position (cursor_ts/cursor_id), and so whether the E2 cache key (which omits it) can return the wrong page on continuation, is not specified. If it does, the cache key needs the position or page hash.",
+      "E8's exact boundary depends on whether expiry is inclusive or exclusive (G1 says only that expiry checks use UTC). The 8h-retention-gap defect holds regardless.",
+      "The dossier does not say if attempt_snapshot values are unique per distinct plaintext, which affects whether a per-attempt subkey derived from the snapshot alone suffices for the nonce fix. A durable counter or an attempt-unique ID avoids the question.",
+      "The 32-bit chunk_index counter bounds chunks per export at 2^32. The dossier gives no chunk size or limit, so no overflow failure is asserted."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"E2 read_export / T2\",\"severity\":\"critical\",\"issue\":\"The cache lookup and return happen before authorize_current, so a cache hit skips live project authorization. Signature validity plus cache-key identity is treated as permission, which is the superseded 2025-04 memo's rule.\",\"evidence\":\"R1 requires current authorization on every read, including cache hits. G3 says the cache key is (tenant,user,export_id,content_version), has no policy revision, and the same user may still request that key after revocation. E2 returns `cache[key]` before calling `authorize_current`. The T2 test covers only a cache miss then hit with no policy change.\",\"failure_scenario\":\"User U has a grant on project P and reads export X, which populates cache[(t,U,X,v)]. An admin revokes U's grant and the revocation commits. U replays the same valid cursor and E2 returns the cached bytes without calling authorize_current. This violates R1's immediate revocation.\",\"fix\":\"Call authorize_current(user,cursor.project) after authenticate and cursor verification, before any cache access. Deny on failure, and only then consult the cache. Add a regression test that reads, revokes, and reads again, expecting denial.\"},{\"task\":\"E3 build_export / E2 cache key / T2\",\"severity\":\"high\",\"issue\":\"The query-equivalence check compares cursor.query_hash with the client-supplied req.query_hash. It never hashes the effective validated query, so the client can claim the approved hash while sending different filters, columns or order. The cache key also omits the effective query.\",\"evidence\":\"R2 says the claimed hash is untrusted and the server must hash the canonicalized validated effective query. G2 says req.filter and req.columns are not equated to the cursor's approved values and that canonical_query/sha256 are correct. E3 builds q from req.filters/columns/order and checks only `cursor.query_hash != req.query_hash`. The T2 test sends the hash of the query it actually executes, which passes by construction.\",\"failure_scenario\":\"The cursor approved dates D1 and columns {a}. The client replays the cursor's own query_hash with filters covering D1..D2 and columns {a,b,secret}. The check passes, validate_query accepts the request, and the export widens beyond the approved query. Because the cache key lacks the query, a later request with different filters under the same cursor can also receive another query's cached result.\",\"fix\":\"After validate_query, compute h = sha256(canonical_query(q)). Compare it to cursor.query_hash with a constant-time comparison and reject on mismatch. Ignore req.query_hash. Include h (and the cursor position, if the cursor carries one) in the cache key. Add a negative test with the correct claimed hash and widened columns or filters.\"},{\"task\":\"E4 keyset SQL / T3\",\"severity\":\"critical\",\"issue\":\"The WHERE clause lacks parentheses, so `tenant AND ts> OR ts= AND id>` parses as `(tenant AND ts>) OR (ts= AND id>)`. The equal-timestamp branch has no tenant predicate, and no outer tenant predicate exists.\",\"evidence\":\"R3 says AND binds tighter than OR and that tenant scoping must hold under both keyset branches. The export role reads across tenants with no RLS. The comment in E4 says the outer wrapper has no tenant predicate. R3 adds that project IDs are tenant-local and timestamps can be shared across tenants, so the outer project predicate does not isolate tenants. T3 tests only a single tenant with distinct timestamps, which never reaches the second branch with foreign rows.\",\"failure_scenario\":\"Tenant A's cursor is (ts=T,id=100). Tenant B has a row with ts=T, id=150 and the same project ID as A's project. The second branch matches that row regardless of tenant_id. The outer project and filter wrapper passes it, and tenant B's payload goes into tenant A's encrypted export.\",\"fix\":\"Rewrite the predicate as `WHERE tenant_id=:tenant AND (event_ts>:cursor_ts OR (event_ts=:cursor_ts AND id>:cursor_id))`. Add a two-tenant test with equal timestamps and shared project IDs, where the foreign ID is greater than the cursor ID.\"},{\"task\":\"E5 encrypt_next / G4 / T3, T6\",\"severity\":\"high\",\"issue\":\"The nonce is the per-export prefix plus chunk_index under a per-export key reused across retries. A crash after upload but before persist_next_index makes the retry re-encrypt the same chunk_index, possibly with changed plaintext, under the same key and nonce.\",\"evidence\":\"R4 requires that different plaintexts under one key never share a nonce, and says changing AAD does not make nonce reuse safe. R4 also allows a retry to use a new approved snapshot with changed content. G4 says the key and prefix are reused on a new attempt, a crash can occur between upload and checkpoint, and old object versions stay observable. E5 resumes at the last persisted next_index. T3 and T6 inject no crash and keep the content unchanged, so nothing exercises this.\",\"failure_scenario\":\"Attempt 1 uploads chunk 5 with nonce P||5 over plaintext M1 and crashes before persist(6). Retry attempt 2 has snapshot S2 with retractions, so chunk 5 is M2. It resumes at 5 and encrypts with the same key and nonce P||5, and both blobs stay observable. An observer computes C1 xor C2 = M1 xor M2, and the repeated GCM nonce also exposes the GHASH authentication key.\",\"fix\":\"Make nonce uniqueness independent of chunk_index and of the checkpoint. Option A: durably reserve a monotonic invocation counter before each encryption and use nonce = prefix||counter. Option B: derive a fresh subkey per attempt, for example HKDF(export_key, attempt_snapshot, attempt_id), and keep the counter nonce under that subkey. Option C: write a durable intent record before upload and never reuse an index whose upload may exist. Add a crash-injection test with changed content on retry.\"},{\"task\":\"E6 finalize/verify, G5 / T4\",\"severity\":\"high\",\"issue\":\"The signature covers only tenant, export, snapshot and root, and the Merkle tree duplicates the last odd node. The verifier does not check chunk_count, indexes or duplicates. A three-chunk manifest and its four-chunk extension with the last chunk repeated therefore share a root and a valid signature.\",\"evidence\":\"R5 requires the signature to bind the ordered sequence and cardinality, and says a three-chunk export must not become four chunks by repeating a chunk. G5 says the signature does not bind chunk_count or the manifest, that odd levels duplicate the last node, that duplicate indexes and references are not rejected, and that each entry decrypts using its own chunk_index. E6 verify checks only the signature and the recomputed root. The T4 test uses exactly four chunks (no odd-level duplication) and tampers only a leaf digest.\",\"failure_scenario\":\"The signed manifest is [A,B,C], with leaves L_A, L_B, L_C. The attacker submits [A,B,C,C'] where C' is a copy of C's entry. The tree for 4 leaves is node(node(A,B),node(C,C)), which is identical to the 3-leaf tree after duplication, so the root matches and the signature verifies. The verifier decrypts four entries and the export now has C twice.\",\"fix\":\"Add chunk_count to the signed canonical tuple, or domain-separate it into the root. Verify len(chunks)==signed_count and that each entry's index equals its list position (0..n-1, unique). Optionally bind the index into each leaf. Add tests with 3 chunks plus a repeated tail, an out-of-order list, and mismatched indexes.\"},{\"task\":\"E7 restore / T5\",\"severity\":\"high\",\"issue\":\"The containment check is purely lexical, via absolute() and is_relative_to. mkdir(parents) and write_bytes then follow existing symlinks in intermediate or final components, so writes escape selected_root. Archive-entry validation cannot see symlinks already on disk.\",\"evidence\":\"R6 requires containment even with existing symlinks and path-replacement races. G6 says absolute() does not resolve symlinks, is_relative_to compares lexical components, and directories outside selected_root give no protection. Archive validation covers only the entry names and types. T5 tests only forbidden strings, archive symlinks and ordinary existing directories.\",\"failure_scenario\":\"Another local process creates root/out -> /home/user/.ssh. An archive entry 'out/authorized_keys' is lexically inside root, so the check passes. mkdir(exist_ok) accepts the symlinked directory and write_bytes writes through it outside root. A symlink swapped in after the check has the same result.\",\"fix\":\"Walk components with directory file descriptors: open root, then for each component use openat with O_DIRECTORY|O_NOFOLLOW (mkdirat when missing). Create the final file with O_CREAT|O_EXCL|O_NOFOLLOW relative to the final dirfd. Do not rely on a pre-check. Add tests with a symlinked intermediate directory, a symlinked final component, and a swap race.\"},{\"task\":\"E8 cleanup_keys / G7 / T4\",\"severity\":\"high\",\"issue\":\"Retention is computed from key creation (created_at+24h), but a key signs for 8h and tokens issued at the end of that window live 24h more. The key is deleted up to 8h before its last legitimate tokens expire.\",\"evidence\":\"R7 requires retention to cover the longest token expiry possible under that key and says unexpired tokens must stay verifiable. G7 says a key signs for 8h after creation and a token can be issued right before the key stops signing, with exp = issue+24h. E8 deletes at `created_at+24h <= now`. The T4 test issues tokens only at key creation time, which expire exactly at the deletion time and miss the gap.\",\"failure_scenario\":\"Key K is created at t=0 and signs until t=8h. A token is issued at t=7h59 and expires at t=31h59. E8 deletes K at t=24h, so for the next ~8h the unrevoked, unexpired token fails with an unknown-key error (fail closed per G1).\",\"fix\":\"Retain until stops_signing_at+24h, which is created_at+32h with the 8h signing window. Delete only when `now >= signing_end + 24h`, keeping the boundary consistent with the expiry-check semantics (not specified; see uncertainties). Add a test that issues a token at the end of the signing window and verifies it just before its expiry.\"},{\"task\":\"E9 csv_cell / T5\",\"severity\":\"medium\",\"issue\":\"The formula guard inspects only value[0]. SheetReader skips leading spaces, tabs and carriage returns before checking for = + - @, so values like ' =cmd' or '\\\\t@x' are left unneutralized. RFC CSV quoting does not change the consumer rule.\",\"evidence\":\"R8 gives the SheetReader rule: skip leading space, tab and CR, then treat =,+,-,@ as formulas. It adds that RFC quoting does not alter this and that a leading apostrophe makes the cell literal. G6 says the CSV writer is correct, so only the caller's prefixing is at fault. T5 tests only strings that start directly with '='.\",\"failure_scenario\":\"The data value is '  =HYPERLINK(...)'. E9 sees value[0]==' ' and returns it unchanged. The quoted CSV preserves the leading spaces, SheetReader skips them and executes the formula.\",\"fix\":\"Find the first character after skipping [ \\\\t\\\\r]* and, if it is in {=,+,-,@}, prefix an apostrophe to the whole value. Add tests with leading space, tab and CR followed by each trigger character, with and without RFC quoting.\"}],\"uncertainties\":[\"Whether the cursor carries the keyset position (cursor_ts/cursor_id), and so whether the E2 cache key (which omits it) can return the wrong page on continuation, is not specified. If it does, the cache key needs the position or page hash.\",\"E8's exact boundary depends on whether expiry is inclusive or exclusive (G1 says only that expiry checks use UTC). The 8h-retention-gap defect holds regardless.\",\"The dossier does not say if attempt_snapshot values are unique per distinct plaintext, which affects whether a per-attempt subkey derived from the snapshot alone suffices for the nonce fix. A durable counter or an attempt-unique ID avoids the question.\",\"The 32-bit chunk_index counter bounds chunks per export at 2^32. The dossier gives no chunk size or limit, so no overflow failure is asserted.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 6796,
+    "cache_read_input_tokens": 1662,
+    "output_tokens": 7161,
+    "output_tokens_details": {
+      "thinking_tokens": 2874
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6796,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "response_words": 1741,
+  "exit_code": 0,
+  "elapsed_seconds": 55.731,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "http_429",
+    "observed_at": null,
+    "windows": {}
+  }
+}

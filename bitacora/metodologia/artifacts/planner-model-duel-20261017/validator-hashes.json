@@ -1,0 +1,18 @@
+{
+  "bt_planner/__init__.py": "e5bba21a890eaf33295592edca7a5e92e286e3787c931f472afd569af7a77db1",
+  "bt_planner/__main__.py": "13a1a5b340cdcfc1902b62be90e508c7c71886000d5bf087e7854aadf09fb35e",
+  "bt_planner/_lock.py": "2832a2b3de5b235cb659bd48a849e93572cf12716c82b38930381a378f7e6eb4",
+  "bt_planner/cli.py": "8006e22c570b718a5cde20dbf1137d4612576689664d5d6d8b598c1a7418de24",
+  "bt_planner/markdown.py": "6e05ea42cb162f9bc31aab441f39e691ffde5f45af3c7bdceb472bf502ca6170",
+  "bt_planner/resources.py": "1cd8eefa82a58a4cec6f6fae1d871ce86a829ccd86a997e7eb5314d9c7e69586",
+  "bt_planner/README.md": "c51c4285727877dbf8a95c7be6078f1e71269bab454e18b78bbfebd770096901",
+  "bt_planner/contract.py": "7f41346b0f4963e971a8364406d61b87a1010a75f0dec916ceaa7a55c27a9282",
+  "bt_planner/evidence.py": "997ec69cdfff14c6eb54931d35f39ee2ce98af9f19dedd9516c359fc1646f8c6",
+  "bt_planner/quality.py": "2a4d9cce5c637b8043b310a4fee8f2c815019e24dc049b34be13a21cdaddb641",
+  "bt_planner/revisions.py": "cb560ef3ef918be5824fcb2d066477a6551b580f83a218bd5abaace2656fe08a",
+  "bt_planner/sync.py": "5e4a4d29a9677ff952b8f75107f1a0b69f61e8f76cc34b0660340918b74aed76",
+  "bt_planner/traceability.py": "7a297709b4e17158d32229d9c07cf01c1232bf0b0169502b0f731cccdfaef898",
+  "bt_planner/interfaces.py": "297fa5f08079a352cc69a30013463125d892fe86c4fdbbfe751c4e06efa820c4",
+  "bt_planner/data/plan.example.json": "0d4963cf1543a6494c45911af679b0c1df1a7c96a182d2efe47b66c1ca854335",
+  "bt_planner/data/plan.schema.json": "92d291bb44c400fbcf568aa059e80ca45572413fcc2c8eed4713cf07682a0cb7"
+}

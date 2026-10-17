@@ -1,0 +1,31 @@
+{
+  "oracle_sha256": "89191bd81ed11151889cd62d5dfcc94111be3cbf5a281af869889c3558853e15",
+  "checks": {
+    "H1-D1": true,
+    "H1-D2": true,
+    "H1-D3": true,
+    "H1-D4": true,
+    "H1-D5": true,
+    "H1-D6": true,
+    "H1-D7": true,
+    "H1-D8": true,
+    "H2-D1": true,
+    "H2-D2": true,
+    "H2-D3": true,
+    "H2-D4": true,
+    "H2-D5": true,
+    "H2-D6": true,
+    "H2-D7": true,
+    "H2-D8": true,
+    "H3-D1": true,
+    "H3-D2": true,
+    "H3-D3": true,
+    "H3-D4": true,
+    "H3-D5": true,
+    "H3-D6": true,
+    "H3-D7": true,
+    "H3-D8": true
+  },
+  "passed": 24,
+  "method": "Executable arithmetic/logic witnesses plus explicitly modeled lifecycle traces; not production integration tests."
+}

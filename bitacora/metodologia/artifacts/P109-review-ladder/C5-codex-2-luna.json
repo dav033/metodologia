@@ -1,0 +1,123 @@
+{
+  "case": "C5",
+  "profile": "codex-2",
+  "provider": "codex",
+  "requested_model": "gpt-6-luna",
+  "requested_effort": "max",
+  "variant": "codex-2-luna",
+  "prompt_sha256": "5f5f4a347c4b41bc40e3fc40564023b518a938af2baa96e7deaaf83ed677323d",
+  "prompt_characters": 4990,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792207460.9194705,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792207461.541093,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "high",
+        "issue": "Capacity is bucketed by profile alias, so aliases for one effective account can exceed its concurrency limit.",
+        "evidence": "T2 keys buckets by profile_id. The baseline says pA and pB both resolve to acct-X, whose per-account concurrency is 1.",
+        "failure_scenario": "M2 recommends one task on each alias in the same batch, and M1 reserves against separate alias buckets, allowing two jobs on acct-X concurrently.",
+        "fix": "Key both recommendation capacity and M1 reservations by resolved account_ref."
+      },
+      {
+        "task": "T3",
+        "severity": "medium",
+        "issue": "Stale or otherwise non-fresh quota is treated as eligible with zero usage.",
+        "evidence": "The contract says stale readings are ineligible and fresh quota requires observed_at within 120s, status=ok, both windows present, and future reset times. T3 substitutes zero-valued windows otherwise. The baseline marks observed_at=700 stale when now=1000.",
+        "failure_scenario": "An account with stale or unknown quota is scored as having no usage and may be recommended despite being ineligible.",
+        "fix": "Exclude candidates without a reading that meets every freshness requirement."
+      },
+      {
+        "task": "T3",
+        "severity": "medium",
+        "issue": "Quota ranking sums percentages from different windows instead of using the required bottleneck score.",
+        "evidence": "The contract defines bottleneck=max(5h_used,7d_used) and says percentages from different windows must not be added. T3 scores 5h_used+7d_used. The baseline says this selects acct-Y (50) over acct-X (60), while the required bottleneck rule favors acct-X (30<50).",
+        "failure_scenario": "For the supplied quota fixtures, the recommender chooses acct-Y even though acct-X has the lower required bottleneck.",
+        "fix": "Rank eligible candidates by max(5h_used,7d_used), preserving the capability and quality floor."
+      },
+      {
+        "task": "T4",
+        "severity": "medium",
+        "issue": "The write transaction remains open during provider I/O.",
+        "evidence": "The contract says no DB write transaction may span provider I/O. T4 begins an immediate transaction, fetches quota over HTTP with a 20-second deadline, then commits.",
+        "failure_scenario": "A slow quota request holds the write lock and blocks other M1 reservation or dispatch writes until the request finishes or times out.",
+        "fix": "Fetch quota outside the write transaction, then open a short transaction to recheck reservations and persist the decision atomically."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Dispatch overwrites frozen startup-map evidence and its original hash instead of appending a new decision.",
+        "evidence": "The contract requires a frozen map to be append-only evidence with its original hash preserved. T5 replaces the recommendation in the existing row and recomputes its hash; it states no prior copy/history exists.",
+        "failure_scenario": "After dispatch, the original recommendation and its verifiable hash are irretrievably lost, so the startup evidence cannot be audited.",
+        "fix": "Preserve the original map bytes and hash, and append a separate dispatch-time decision."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "The dispatch-time revalidation list omits budget revalidation.",
+        "evidence": "The contract requires M1 to revalidate READY predecessors, budget, and reservations at dispatch. T5 lists current quota, predecessors, and reservation availability, but not budget.",
+        "failure_scenario": "If the applicable budget changes or is exhausted after startup recommendation, M1 may dispatch without checking the required budget condition.",
+        "fix": "Revalidate the applicable budget in M1 at dispatch and prevent dispatch when it fails."
+      },
+      {
+        "task": "T6",
+        "severity": "high",
+        "issue": "Resume deletes prior reservations and redispatches RUNNING work without reconciling live executor jobs.",
+        "evidence": "The contract says live executor jobs may survive coordinator restart and their reservations must be reconciled before replacement dispatch. T6 unconditionally deletes prior-PID reservations, increments generation, and redispatches RUNNING work without executor query, cancellation, or reconciliation. The baseline says each new generation is a distinct permitted external job and executors do not deduplicate across generations.",
+        "failure_scenario": "A delayed report makes an already-running task appear incomplete; resume launches a second generation while the first executor is still applying side effects, potentially duplicating effects and exceeding account capacity.",
+        "fix": "Reconcile live jobs and their reservations before dispatching replacements; only create a new generation after confirming the prior job is no longer active."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"high\",\"issue\":\"Capacity is bucketed by profile alias, so aliases for one effective account can exceed its concurrency limit.\",\"evidence\":\"T2 keys buckets by profile_id. The baseline says pA and pB both resolve to acct-X, whose per-account concurrency is 1.\",\"failure_scenario\":\"M2 recommends one task on each alias in the same batch, and M1 reserves against separate alias buckets, allowing two jobs on acct-X concurrently.\",\"fix\":\"Key both recommendation capacity and M1 reservations by resolved account_ref.\"},{\"task\":\"T3\",\"severity\":\"medium\",\"issue\":\"Stale or otherwise non-fresh quota is treated as eligible with zero usage.\",\"evidence\":\"The contract says stale readings are ineligible and fresh quota requires observed_at within 120s, status=ok, both windows present, and future reset times. T3 substitutes zero-valued windows otherwise. The baseline marks observed_at=700 stale when now=1000.\",\"failure_scenario\":\"An account with stale or unknown quota is scored as having no usage and may be recommended despite being ineligible.\",\"fix\":\"Exclude candidates without a reading that meets every freshness requirement.\"},{\"task\":\"T3\",\"severity\":\"medium\",\"issue\":\"Quota ranking sums percentages from different windows instead of using the required bottleneck score.\",\"evidence\":\"The contract defines bottleneck=max(5h_used,7d_used) and says percentages from different windows must not be added. T3 scores 5h_used+7d_used. The baseline says this selects acct-Y (50) over acct-X (60), while the required bottleneck rule favors acct-X (30<50).\",\"failure_scenario\":\"For the supplied quota fixtures, the recommender chooses acct-Y even though acct-X has the lower required bottleneck.\",\"fix\":\"Rank eligible candidates by max(5h_used,7d_used), preserving the capability and quality floor.\"},{\"task\":\"T4\",\"severity\":\"medium\",\"issue\":\"The write transaction remains open during provider I/O.\",\"evidence\":\"The contract says no DB write transaction may span provider I/O. T4 begins an immediate transaction, fetches quota over HTTP with a 20-second deadline, then commits.\",\"failure_scenario\":\"A slow quota request holds the write lock and blocks other M1 reservation or dispatch writes until the request finishes or times out.\",\"fix\":\"Fetch quota outside the write transaction, then open a short transaction to recheck reservations and persist the decision atomically.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"Dispatch overwrites frozen startup-map evidence and its original hash instead of appending a new decision.\",\"evidence\":\"The contract requires a frozen map to be append-only evidence with its original hash preserved. T5 replaces the recommendation in the existing row and recomputes its hash; it states no prior copy/history exists.\",\"failure_scenario\":\"After dispatch, the original recommendation and its verifiable hash are irretrievably lost, so the startup evidence cannot be audited.\",\"fix\":\"Preserve the original map bytes and hash, and append a separate dispatch-time decision.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"The dispatch-time revalidation list omits budget revalidation.\",\"evidence\":\"The contract requires M1 to revalidate READY predecessors, budget, and reservations at dispatch. T5 lists current quota, predecessors, and reservation availability, but not budget.\",\"failure_scenario\":\"If the applicable budget changes or is exhausted after startup recommendation, M1 may dispatch without checking the required budget condition.\",\"fix\":\"Revalidate the applicable budget in M1 at dispatch and prevent dispatch when it fails.\"},{\"task\":\"T6\",\"severity\":\"high\",\"issue\":\"Resume deletes prior reservations and redispatches RUNNING work without reconciling live executor jobs.\",\"evidence\":\"The contract says live executor jobs may survive coordinator restart and their reservations must be reconciled before replacement dispatch. T6 unconditionally deletes prior-PID reservations, increments generation, and redispatches RUNNING work without executor query, cancellation, or reconciliation. The baseline says each new generation is a distinct permitted external job and executors do not deduplicate across generations.\",\"failure_scenario\":\"A delayed report makes an already-running task appear incomplete; resume launches a second generation while the first executor is still applying side effects, potentially duplicating effects and exceeding account capacity.\",\"fix\":\"Reconcile live jobs and their reservations before dispatching replacements; only create a new generation after confirming the prior job is no longer active.\"}],\"uncertainties\":[]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 15373,
+    "cached_input_tokens": 11648,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 3745,
+    "reasoning_output_tokens": 2815
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 30.58,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792207492.1214576,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

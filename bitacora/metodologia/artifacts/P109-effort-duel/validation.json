@@ -1,0 +1,42 @@
+{
+  "checks": {
+    "oracle_sha256": true,
+    "runner_sha256": true,
+    "base_harness_hash": true,
+    "pre_call_witnesses31": true,
+    "E1_sol-medium_input_route": true,
+    "E1_sol-high_input_route": true,
+    "E1_sonnet-medium_input_route": true,
+    "E1_sonnet-high_input_route": true,
+    "E2_sol-medium_input_route": true,
+    "E2_sol-high_input_route": true,
+    "E2_sonnet-medium_input_route": true,
+    "E2_sonnet-high_input_route": true,
+    "E3_sol-medium_input_route": true,
+    "E3_sol-high_input_route": true,
+    "E3_sonnet-medium_input_route": true,
+    "E3_sonnet-high_input_route": true,
+    "12_successful_native_calls": true,
+    "12_valid_json_verdict_tool_free": true,
+    "six_effective_claude_ids": true,
+    "frozen_root_denominator31": true,
+    "usage_subsets_consistent": true,
+    "no_overlapping_calls_codex-2": true,
+    "effort_order_codex-2": true,
+    "no_overlapping_calls_claude-work": true,
+    "effort_order_claude-work": true,
+    "two_delayed_quota_reads_ok": true,
+    "judgements_saved_before_unblinding": true,
+    "artifact_whitespace": true
+  },
+  "json_files_parsed_before_validation_creation": 23,
+  "python_files_ast_parsed": 7,
+  "provider_calls_completed": 12,
+  "quota_read_failures": [],
+  "known_limits": [
+    "Requested effort is not independently attested by response metadata",
+    "Quota is account-level; interleaved efforts and reporting lag preclude exact effort attribution",
+    "Single run per configuration/case; synthetic dossier ceiling may hide difficulty above this sample"
+  ],
+  "scope": "Only benchmark artifact/evidence checks. No product suite or source implementation."
+}

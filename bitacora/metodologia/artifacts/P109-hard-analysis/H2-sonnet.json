@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "case": "H2",
+  "route": {
+    "id": "sonnet",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "b860c77bcf845e195c065b4c6e80048d1a9cc507fb153bb03b260997f4d76ef4",
+  "prompt_characters": 12371,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792209319.5178015,
+    "windows": {
+      "five_hour": {
+        "used_percent": 7.0,
+        "resets_at": 1792213799.739302,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.73932,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209319.818059,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "S2 assign / T2 (keep greedy)",
+        "severity": "high",
+        "issue": "Greedy per-task cheapest-route assignment does not maximize cardinality. R1 requires max cardinality first, then min total cost, then deterministic ID ties. The code optimizes cost per task in ID order and consumes shared capacity.",
+        "evidence": "G2 fixture: J1 can use A or B, J2 only A, capacity 1 each, costs J1/A=1, J1/B=2, J2/A=1. S2 handles J1 first, and A is its cheapest route. T2 says to 'preserve S2' and use greedy assignment. The 2025 'cheapest route' memo is superseded by R1.",
+        "failure_scenario": "S2 gives J1->A (cost 1); A's capacity drops to 0, so J2 is deferred. Result: 1 task assigned. The feasible assignment J1->B, J2->A assigns 2 tasks at cost 3. J2 is deferred even though a feasible assignment including it exists with higher cardinality, which violates R1.",
+        "fix": "Replace S2 with an exact assignment solver (min-cost max-flow or Hungarian-style on capacity-expanded accounts) that uses a lexicographic objective: maximize assigned count, then minimize total cost. Break ties deterministically, for example by fixing tasks in ID order and picking the smallest account ID that preserves the optimum. Drop the greedy and memo wording from T2."
+      },
+      {
+        "task": "S3 at_reservation_or_dispatch / T3",
+        "severity": "high",
+        "issue": "The freshness check compares the quota's observed_at with request.now, the time captured at route-request time, not the current time at the reservation or dispatch gate. A request can therefore pass a gate long after the quota has gone stale. Quota is never re-observed at the later gate.",
+        "evidence": "R2 requires observed_at <= current_time <= observed_at+120 at recommendation, commit and dispatch, and says queue stalls up to 300s are valid. G3: observed_at=900, request_now=1000, gate at 1100. S3 reads request.now. Readings are not refreshed. S5 and S6 show no quota call at all.",
+        "failure_scenario": "Gate at current_time=1100 with the quota still observed_at=900. S3 evaluates 900<=1000<=1020, which is true, so it passes. The correct check is 1100<=1020, which is false. The task is reserved and launched on 200s-old quota data.",
+        "fix": "Have the gate read the injected clock at reservation commit and again at dispatch, and evaluate status, both windows, future resets and observed_at <= now <= observed_at+120 against that current time and a current quota observation. If the observation is stale or missing, fail closed: re-route or defer, or take a new validated snapshot. Never reuse the request-time snapshot. Call this gate explicitly from the S5/S6 dispatch paths."
+      },
+      {
+        "task": "S4 price",
+        "severity": "medium",
+        "issue": "Cached tokens are charged twice. input_tokens already includes cached_input_tokens, but the formula charges the full input at the input rate and then charges cache again as an additive bucket. This follows the superseded memo.",
+        "evidence": "R3: input includes cached, cost = (input - cached)*input_rate + cached*cache_rate + output*output_rate. Fixture rates: 20, 2, 100. The T6 'uncached input' test cannot catch this because cache=0.",
+        "failure_scenario": "input=1000, cached=800, output=0. S4 gives 1000*20+800*2=21600. Correct: 200*20+800*2=5600. Cost is overstated by 16000 microcredits (about 3.9x), which skews routing and budget gates.",
+        "fix": "Compute (input-cached)*rates.input + cached*rates.cache + output*rates.output. Output stays as is because it already includes reasoning. Validate 0<=cache<=input and 0<=reasoning<=output, and reject the usage otherwise. Add a cached-input test."
+      },
+      {
+        "task": "S5 execute (provider key with generation) / trace A",
+        "severity": "critical",
+        "issue": "The provider idempotency key embeds job.generation, but the provider deduplicates per (effective_account, key) and does not know local generations. A takeover therefore sends a different key and produces a second external side effect. The S5 owner check and the DB CAS fence do not stop the paused worker's outgoing call.",
+        "evidence": "R4 and G4: same effective account across both generations; the fence is DB-only. G5: remote.launch executes once per distinct key and never consults M1. Trace A: W1 passes the check at t10 and pauses; W2 (generation 2) launches at t71; W1 resumes at t80 with no reconciliation.",
+        "failure_scenario": "At t71 W2 sends key 'run:task:2' and launches. At t80 W1 sends 'run:task:1' to the same account. These are two distinct keys, so the provider runs both: two external jobs for one logical task. W1's later finalization is rejected, but the duplicate side effect has already happened.",
+        "fix": "Derive the provider key from the logical task only (run:task, or a durable task-level token), never from generation or owner. Pin the effective account to the task, so a reroute cannot change the dedup scope. Record launch intent durably before sending. After takeover, adopt or reconcile any existing result for that key. Keep generation only for local DB CAS."
+      },
+      {
+        "task": "S6 dispatch and cancel / T5",
+        "severity": "critical",
+        "issue": "The R5 guarantee, that no new job starts after the cancel ACK, cannot be provided by a local check-then-send plus a local cancel commit. The local cancelled check is not atomic with the remote start, and cancel neither drains in-flight sends nor fences the provider. T5 promises the guarantee anyway within a 50ms ACK budget.",
+        "evidence": "R5: delayed network operations can start remotely after local decisions, and no remote admission fence exists. S6 cancel has no in-flight drain or fencing. Trace B: dispatcher passes the check at t20, cancel ACKs at t21, remote launch starts at t22.",
+        "failure_scenario": "t20 dispatch passes run_is_cancelled=false and its request is queued locally. t21 cancel commits and returns ACK. t22 the provider starts a new job. This is exactly the post-ACK start that R5 forbids. Re-checking local state before sending reproduces the same race.",
+        "fix": "Report the contract conflict. Local controls alone cannot meet R5 with the chosen boundaries. Either (a) add a provider-side admission fence or cancel token that rejects starts, or (b) weaken the ACK semantics. For (b), the cancel returns 'pending' immediately. A final ACK is issued only after M1 has durably registered every in-flight send (written before the call), each send has reached a terminal or known state, and the sends have been reconciled. This means the 50ms ACK budget cannot carry the no-new-start promise. Remove the R5 claim from T5 until one of these is chosen. A durable 'sending' state plus a local timeout does not prove that a delayed request will not start."
+      },
+      {
+        "task": "S7 map_row / T3",
+        "severity": "high",
+        "issue": "The frozen map row lacks the decision inputs. It stores only the quota source path, which is a file refreshed in place with no history, and omits the quota observation, injected time and policy version. Hashing the output bytes does not make the decision reproducible.",
+        "evidence": "R6 requires the quota observation used, injected time and policy version, within the existing allowlist. S7: quota_source='/cache/quotas.json'; the injected time and policy version live only in process memory, although the schema allows persisting them. G6: the cache is refreshed in place and older contents are not retained.",
+        "failure_scenario": "The cache is rewritten after the freeze. Replaying the stored row cannot recover the observation (for example observed_at=900 and its window data), so the routes cannot be reproduced or audited. The row hash still verifies, because it only covers path and routes.",
+        "fix": "Add to map_row, before hashing, a version-bumped record with the allowlisted per-account quota observation fields (account_ref, status, window usage and resets, observed_at), the injected now and the policy version. Do not rely on the path. Never persist credentials or complete provider payloads. Leave version-1 rows unchanged and add the new fields only in the new version."
+      },
+      {
+        "task": "S8 on_reserve / cleanup / T4",
+        "severity": "high",
+        "issue": "Reservation expiry is driven by the estimate (+5s) and cleanup does not check live job state, so a still-running job's capacity slot is freed. R7 treats the estimate as planning data only, and live leases and heartbeats can run longer.",
+        "evidence": "Trace C: estimate 60, reservation at t0 gives expires_at=65. Lease renewals at t50 (to 110) and t80 (to 140) show a healthy worker still working at t90. Cleanup at t66 deletes the reservation. S8 cleanup never queries job or executor state. The account limit is 1 and another READY task exists.",
+        "failure_scenario": "At t66 the reservation is deleted. The next READY task for the same limit-1 account reserves and dispatches while the first job is still running until about t90 or later. Two jobs run simultaneously against a limit of 1, violating R7.",
+        "fix": "Release a reservation only when its job is terminal, or its lease has expired and the remote execution is reconciled as finished or absent. Treat expired-lease-but-unreconciled as uncertain, which still occupies the slot. Alternatively, tie the reservation expiry to the lease: extend it in the same CAS as on_executor_heartbeat. Never delete based on estimated_seconds alone."
+      },
+      {
+        "task": "S9 on_usage / final bill",
+        "severity": "high",
+        "issue": "The charge for every distinct event_id is appended as an amount, but those values are cumulative snapshots of one attempt. The final bill is SUM over appended charges, which double-counts. Receipt deduplication handles only redelivery of the same event_id.",
+        "evidence": "R8: cumulative per attempt, final spend = latest total, not the sum of snapshots. Trace D: u1 (attempt X, cumulative 10) and u2 (attempt X, cumulative 25) have distinct IDs. S9 appends both. The tests cover only redelivery of the same event.",
+        "failure_scenario": "The bill is 10+25=35 for attempt X, but the true spend is 25: an overcharge of 10 that grows with every additional snapshot.",
+        "fix": "In the same transaction as the receipt insert, keep a per-attempt high-water mark. Append the delta max(0, cumulative - last) and update the mark, or store the per-attempt latest and bill SUM over attempts of that latest value. Receipts stay unchanged. Handle out-of-order delivery through monotonic max. Flag a decreasing cumulative as a protocol violation instead of reducing the bill."
+      }
+    ],
+    "uncertainties": [
+      "The dossier does not say what the provider returns for a duplicate (account,key): the original result or an error. The S5 fix needs the takeover worker to adopt the existing result, and that behavior is unspecified.",
+      "The provider key that S6 passes (intent.provider_key) is not defined. If it includes generation, S6 has the same duplicate-key defect as S5. G5 says intents are deduplicated by task/run/generation, which suggests this risk.",
+      "S5 and S6 show no call to the S3 quota gate at dispatch. The dossier does not show whether dispatch elsewhere re-evaluates quota. If it does, the S3 current-time defect still applies.",
+      "R5 enforcement depends on unspecified provider facts: whether any send deadline or start-bound semantics exist. Without them, no local drain proves that an in-flight request cannot start, so the cancel conflict has no local-only resolution."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"S2 assign / T2 (keep greedy)\",\"severity\":\"high\",\"issue\":\"Greedy per-task cheapest-route assignment does not maximize cardinality. R1 requires max cardinality first, then min total cost, then deterministic ID ties. The code optimizes cost per task in ID order and consumes shared capacity.\",\"evidence\":\"G2 fixture: J1 can use A or B, J2 only A, capacity 1 each, costs J1/A=1, J1/B=2, J2/A=1. S2 handles J1 first, and A is its cheapest route. T2 says to 'preserve S2' and use greedy assignment. The 2025 'cheapest route' memo is superseded by R1.\",\"failure_scenario\":\"S2 gives J1->A (cost 1); A's capacity drops to 0, so J2 is deferred. Result: 1 task assigned. The feasible assignment J1->B, J2->A assigns 2 tasks at cost 3. J2 is deferred even though a feasible assignment including it exists with higher cardinality, which violates R1.\",\"fix\":\"Replace S2 with an exact assignment solver (min-cost max-flow or Hungarian-style on capacity-expanded accounts) that uses a lexicographic objective: maximize assigned count, then minimize total cost. Break ties deterministically, for example by fixing tasks in ID order and picking the smallest account ID that preserves the optimum. Drop the greedy and memo wording from T2.\"},{\"task\":\"S3 at_reservation_or_dispatch / T3\",\"severity\":\"high\",\"issue\":\"The freshness check compares the quota's observed_at with request.now, the time captured at route-request time, not the current time at the reservation or dispatch gate. A request can therefore pass a gate long after the quota has gone stale. Quota is never re-observed at the later gate.\",\"evidence\":\"R2 requires observed_at <= current_time <= observed_at+120 at recommendation, commit and dispatch, and says queue stalls up to 300s are valid. G3: observed_at=900, request_now=1000, gate at 1100. S3 reads request.now. Readings are not refreshed. S5 and S6 show no quota call at all.\",\"failure_scenario\":\"Gate at current_time=1100 with the quota still observed_at=900. S3 evaluates 900<=1000<=1020, which is true, so it passes. The correct check is 1100<=1020, which is false. The task is reserved and launched on 200s-old quota data.\",\"fix\":\"Have the gate read the injected clock at reservation commit and again at dispatch, and evaluate status, both windows, future resets and observed_at <= now <= observed_at+120 against that current time and a current quota observation. If the observation is stale or missing, fail closed: re-route or defer, or take a new validated snapshot. Never reuse the request-time snapshot. Call this gate explicitly from the S5/S6 dispatch paths.\"},{\"task\":\"S4 price\",\"severity\":\"medium\",\"issue\":\"Cached tokens are charged twice. input_tokens already includes cached_input_tokens, but the formula charges the full input at the input rate and then charges cache again as an additive bucket. This follows the superseded memo.\",\"evidence\":\"R3: input includes cached, cost = (input - cached)*input_rate + cached*cache_rate + output*output_rate. Fixture rates: 20, 2, 100. The T6 'uncached input' test cannot catch this because cache=0.\",\"failure_scenario\":\"input=1000, cached=800, output=0. S4 gives 1000*20+800*2=21600. Correct: 200*20+800*2=5600. Cost is overstated by 16000 microcredits (about 3.9x), which skews routing and budget gates.\",\"fix\":\"Compute (input-cached)*rates.input + cached*rates.cache + output*rates.output. Output stays as is because it already includes reasoning. Validate 0<=cache<=input and 0<=reasoning<=output, and reject the usage otherwise. Add a cached-input test.\"},{\"task\":\"S5 execute (provider key with generation) / trace A\",\"severity\":\"critical\",\"issue\":\"The provider idempotency key embeds job.generation, but the provider deduplicates per (effective_account, key) and does not know local generations. A takeover therefore sends a different key and produces a second external side effect. The S5 owner check and the DB CAS fence do not stop the paused worker's outgoing call.\",\"evidence\":\"R4 and G4: same effective account across both generations; the fence is DB-only. G5: remote.launch executes once per distinct key and never consults M1. Trace A: W1 passes the check at t10 and pauses; W2 (generation 2) launches at t71; W1 resumes at t80 with no reconciliation.\",\"failure_scenario\":\"At t71 W2 sends key 'run:task:2' and launches. At t80 W1 sends 'run:task:1' to the same account. These are two distinct keys, so the provider runs both: two external jobs for one logical task. W1's later finalization is rejected, but the duplicate side effect has already happened.\",\"fix\":\"Derive the provider key from the logical task only (run:task, or a durable task-level token), never from generation or owner. Pin the effective account to the task, so a reroute cannot change the dedup scope. Record launch intent durably before sending. After takeover, adopt or reconcile any existing result for that key. Keep generation only for local DB CAS.\"},{\"task\":\"S6 dispatch and cancel / T5\",\"severity\":\"critical\",\"issue\":\"The R5 guarantee, that no new job starts after the cancel ACK, cannot be provided by a local check-then-send plus a local cancel commit. The local cancelled check is not atomic with the remote start, and cancel neither drains in-flight sends nor fences the provider. T5 promises the guarantee anyway within a 50ms ACK budget.\",\"evidence\":\"R5: delayed network operations can start remotely after local decisions, and no remote admission fence exists. S6 cancel has no in-flight drain or fencing. Trace B: dispatcher passes the check at t20, cancel ACKs at t21, remote launch starts at t22.\",\"failure_scenario\":\"t20 dispatch passes run_is_cancelled=false and its request is queued locally. t21 cancel commits and returns ACK. t22 the provider starts a new job. This is exactly the post-ACK start that R5 forbids. Re-checking local state before sending reproduces the same race.\",\"fix\":\"Report the contract conflict. Local controls alone cannot meet R5 with the chosen boundaries. Either (a) add a provider-side admission fence or cancel token that rejects starts, or (b) weaken the ACK semantics. For (b), the cancel returns 'pending' immediately. A final ACK is issued only after M1 has durably registered every in-flight send (written before the call), each send has reached a terminal or known state, and the sends have been reconciled. This means the 50ms ACK budget cannot carry the no-new-start promise. Remove the R5 claim from T5 until one of these is chosen. A durable 'sending' state plus a local timeout does not prove that a delayed request will not start.\"},{\"task\":\"S7 map_row / T3\",\"severity\":\"high\",\"issue\":\"The frozen map row lacks the decision inputs. It stores only the quota source path, which is a file refreshed in place with no history, and omits the quota observation, injected time and policy version. Hashing the output bytes does not make the decision reproducible.\",\"evidence\":\"R6 requires the quota observation used, injected time and policy version, within the existing allowlist. S7: quota_source='/cache/quotas.json'; the injected time and policy version live only in process memory, although the schema allows persisting them. G6: the cache is refreshed in place and older contents are not retained.\",\"failure_scenario\":\"The cache is rewritten after the freeze. Replaying the stored row cannot recover the observation (for example observed_at=900 and its window data), so the routes cannot be reproduced or audited. The row hash still verifies, because it only covers path and routes.\",\"fix\":\"Add to map_row, before hashing, a version-bumped record with the allowlisted per-account quota observation fields (account_ref, status, window usage and resets, observed_at), the injected now and the policy version. Do not rely on the path. Never persist credentials or complete provider payloads. Leave version-1 rows unchanged and add the new fields only in the new version.\"},{\"task\":\"S8 on_reserve / cleanup / T4\",\"severity\":\"high\",\"issue\":\"Reservation expiry is driven by the estimate (+5s) and cleanup does not check live job state, so a still-running job's capacity slot is freed. R7 treats the estimate as planning data only, and live leases and heartbeats can run longer.\",\"evidence\":\"Trace C: estimate 60, reservation at t0 gives expires_at=65. Lease renewals at t50 (to 110) and t80 (to 140) show a healthy worker still working at t90. Cleanup at t66 deletes the reservation. S8 cleanup never queries job or executor state. The account limit is 1 and another READY task exists.\",\"failure_scenario\":\"At t66 the reservation is deleted. The next READY task for the same limit-1 account reserves and dispatches while the first job is still running until about t90 or later. Two jobs run simultaneously against a limit of 1, violating R7.\",\"fix\":\"Release a reservation only when its job is terminal, or its lease has expired and the remote execution is reconciled as finished or absent. Treat expired-lease-but-unreconciled as uncertain, which still occupies the slot. Alternatively, tie the reservation expiry to the lease: extend it in the same CAS as on_executor_heartbeat. Never delete based on estimated_seconds alone.\"},{\"task\":\"S9 on_usage / final bill\",\"severity\":\"high\",\"issue\":\"The charge for every distinct event_id is appended as an amount, but those values are cumulative snapshots of one attempt. The final bill is SUM over appended charges, which double-counts. Receipt deduplication handles only redelivery of the same event_id.\",\"evidence\":\"R8: cumulative per attempt, final spend = latest total, not the sum of snapshots. Trace D: u1 (attempt X, cumulative 10) and u2 (attempt X, cumulative 25) have distinct IDs. S9 appends both. The tests cover only redelivery of the same event.\",\"failure_scenario\":\"The bill is 10+25=35 for attempt X, but the true spend is 25: an overcharge of 10 that grows with every additional snapshot.\",\"fix\":\"In the same transaction as the receipt insert, keep a per-attempt high-water mark. Append the delta max(0, cumulative - last) and update the mark, or store the per-attempt latest and bill SUM over attempts of that latest value. Receipts stay unchanged. Handle out-of-order delivery through monotonic max. Flag a decreasing cumulative as a protocol violation instead of reducing the bill.\"}],\"uncertainties\":[\"The dossier does not say what the provider returns for a duplicate (account,key): the original result or an error. The S5 fix needs the takeover worker to adopt the existing result, and that behavior is unspecified.\",\"The provider key that S6 passes (intent.provider_key) is not defined. If it includes generation, S6 has the same duplicate-key defect as S5. G5 says intents are deduplicated by task/run/generation, which suggests this risk.\",\"S5 and S6 show no call to the S3 quota gate at dispatch. The dossier does not show whether dispatch elsewhere re-evaluates quota. If it does, the S3 current-time defect still applies.\",\"R5 enforcement depends on unspecified provider facts: whether any send deadline or start-bound semantics exist. Without them, no local drain proves that an in-flight request cannot start, so the cancel conflict has no local-only resolution.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 6617,
+    "cache_read_input_tokens": 1662,
+    "output_tokens": 7343,
+    "output_tokens_details": {
+      "thinking_tokens": 3396
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6617,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "response_words": 1616,
+  "exit_code": 0,
+  "elapsed_seconds": 59.999,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "http_429",
+    "observed_at": null,
+    "windows": {}
+  }
+}

@@ -1,0 +1,354 @@
+{
+  "schema_version": "1.2.0",
+  "plan_id": "REQ-CP3",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "requirements": ["R1", "R2", "R3"],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Preserve reporting and expose structured analysis",
+      "acceptance_criteria": [
+        "Terminal report contents and exit behavior have regression coverage.",
+        "The adapter distinguishes ready, absent and invalid summaries without changing requirement artifacts."
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Show and verify the review summary",
+      "acceptance_criteria": [
+        "The Plan approval page displays critical path, widest level and low-confidence tasks from the adapter.",
+        "Missing PLAN.json preserves complete legacy panel output and controls.",
+        "Integrated reads preserve artifact bytes and existing approval and launch behavior."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Expose read-only summary through the adapter",
+      "objective": "Provide a structured quality_summary(rdir) adapter result for the web consumer while preserving the already implemented terminal report and its JSON output.",
+      "repository": "repository",
+      "after": [],
+      "covers": ["R1", "R2", "R3"],
+      "kind": "implement",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Estimate for one adapter helper and focused regression cases using inspected loading, analysis and integration fixtures. No comparable execution history is available; the invalid-data policy remains proposed.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Adapter loading must distinguish expected failures while reusing existing report analysis rather than duplicating graph calculations.",
+          "evidence": [
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_planner/contract.py",
+            "file:skill/scripts/bt_planner/quality.py"
+          ]
+        },
+        "scope": {
+          "justification": "The summary helper and regression cases fit within the existing adapter and integration test files.",
+          "evidence": [
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/tests/test_plan_integration.py"
+          ]
+        },
+        "duration": {
+          "justification": "Existing validated loading and report fixtures bound the adapter work to one helper and a small error matrix.",
+          "evidence": [
+            "file:skill/scripts/bt_planner/contract.py",
+            "file:skill/scripts/tests/test_plan_integration.py",
+            "assumption:Seventy-five minutes is an unmeasured planning estimate including local verification."
+          ]
+        },
+        "risk": {
+          "justification": "Incorrect summary errors could hide invalid plans or regress the existing terminal report contract.",
+          "evidence": [
+            "file:skill/scripts/bt_planner/cli.py",
+            "file:skill/scripts/bt_cli_plan.py"
+          ]
+        },
+        "coupling": {
+          "justification": "The plan-quality-summary interface supplies T2 rendering and T3 parity checks through the adapter boundary.",
+          "evidence": [
+            "task:T2",
+            "task:T3",
+            "file:skill/scripts/tests/test_plan_boundary.py"
+          ]
+        },
+        "confidence": {
+          "justification": "The adapter and report implementation were inspected but the proposed invalid-data policy has no owner decision.",
+          "evidence": [
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_planner/cli.py",
+            "assumption:D1 proposes an unavailable warning for invalid data and silence for absence."
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_plan_adapter.py",
+        "skill/scripts/tests/test_plan_integration.py"
+      ],
+      "shared_resources": ["plan-quality-summary"],
+      "acceptance_criteria": [
+        "D1 remains a proposed decision gate; adopt or revise the invalid-data contract before implementing its dependent behavior.",
+        "quality_summary returns a ready result containing the existing analyzer output for valid PLAN.json.",
+        "A missing file, including removal before loading completes, produces absent; malformed, invalid, unreadable and oversized inputs produce invalid with safe diagnostics and no metrics.",
+        "Loading and analysis occur through the adapter without subprocesses, evidence execution, workspace discovery, approval, freezing or launch.",
+        "Existing report dispatch retains its JSON shape and success or failure exit behavior; new tests assert actual summary contents.",
+        "Summary and terminal report reads leave requirement files, runtime files and revision artifacts unchanged."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s skill/scripts/tests -v",
+          "purpose": "Exercise new adapter state and terminal report content tests alongside existing integration coverage.",
+          "category": "functional",
+          "created_by": "T1"
+        },
+        {
+          "type": "manual",
+          "value": "Review adapter changes against the existing CLI report branch and IF-1.",
+          "purpose": "Verify analysis reuse and absence of approval, workspace or runtime side effects.",
+          "expected": "The helper only loads, validates and analyzes; the existing terminal route and JSON formatting remain intact.",
+          "category": "static"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M2",
+      "title": "Render the summary on the Plan approval tab",
+      "objective": "Display the required quality metrics before the plan document through IF-1 while retaining exact legacy rendering when PLAN.json is absent.",
+      "repository": "repository",
+      "after": ["T1"],
+      "covers": ["R2", "R3"],
+      "kind": "implement",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Estimate covers the compact server-rendered section, escaping and a legacy-output matrix. Existing styles and panel structure are inspected; D1 and D2 presentation choices remain proposed, and no historical timing is available.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "The Plan panel needs three summary branches while preserving status-dependent forms and escaping dynamic content.",
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py",
+            "file:skill/scripts/bt_pages.py"
+          ]
+        },
+        "scope": {
+          "justification": "Rendering changes stay in the existing requirement page with one new focused page test file.",
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py",
+            "file:skill/assets/style.css",
+            "file:skill/scripts/tests/test_metrics_page.py"
+          ]
+        },
+        "duration": {
+          "justification": "Existing panel markup and styles reduce construction work but exact legacy-output cases still require deliberate fixtures.",
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py",
+            "file:skill/assets/style.css",
+            "assumption:Seventy-five minutes estimates rendering work and verification without comparable historical samples."
+          ]
+        },
+        "risk": {
+          "justification": "The approval page could regress controls or expose unescaped diagnostics if summary rendering is incorrect.",
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py",
+            "file:skill/scripts/tests/test_metrics_page.py"
+          ]
+        },
+        "coupling": {
+          "justification": "T2 consumes T1 through plan-quality-summary and supplies plan-review-rendering to the final integration tests.",
+          "evidence": [
+            "task:T1",
+            "task:T3"
+          ]
+        },
+        "confidence": {
+          "justification": "The correct page and existing presentation conventions are known, while error copy and metric placement are proposed.",
+          "evidence": [
+            "file:skill/scripts/bt_page_req.py",
+            "file:skill/scripts/bt_pages.py",
+            "assumption:D2 proposes a compact Spanish summary before the plan document."
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_page_req.py",
+        "skill/scripts/tests/test_plan_summary_page.py"
+      ],
+      "shared_resources": [
+        "plan-quality-summary",
+        "plan-review-rendering"
+      ],
+      "acceptance_criteria": [
+        "D1 and D2 remain decision gates; resolve their proposed presentation behavior before implementing dependent branches.",
+        "A ready summary displays critical-path IDs and estimated minutes, widest level in tasks, and low-confidence IDs or an explicit none state.",
+        "Metrics are labeled as planning information and do not imply measured runtime, execution allocation, approval or verified evidence.",
+        "An absent summary returns exactly the former document-plus-form output for draft, review, approved, launched, in-progress and done.",
+        "Invalid data displays an escaped unavailable warning without fabricated metrics while retaining the original document and controls.",
+        "The page uses only the adapter, escapes every dynamic summary value, and preserves form action, token, fields and status behavior.",
+        "The existing no-PLAN.md page branch remains unchanged."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s skill/scripts/tests -v",
+          "purpose": "Exercise new renderer tests for summary states, escaping and exact legacy output.",
+          "category": "functional",
+          "created_by": "T2"
+        },
+        {
+          "type": "manual",
+          "value": "Compare the new absent-summary path with the pre-change plan_panel output and approval form.",
+          "purpose": "Check that R3 preserves the complete legacy panel rather than selected text fragments.",
+          "expected": "No extra wrapper, placeholder, changed form field or altered status notice appears when PLAN.json is absent.",
+          "category": "regression"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Verify CLI and review-page parity and legacy behavior",
+      "objective": "Prove the actual CLI dispatch and Plan page consume consistent summary data, preserve legacy output and perform no artifact mutations.",
+      "repository": "repository",
+      "after": ["T2"],
+      "covers": ["R1", "R2", "R3"],
+      "kind": "test",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Estimate covers isolated cross-surface fixtures, artifact comparisons and visual review using existing test infrastructure. No comparable timing samples or executed results are available.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Parity tests span CLI dispatch, adapter results and actual page composition with isolated filesystem state.",
+          "evidence": [
+            "file:skill/scripts/bt_cli_plan.py",
+            "file:skill/scripts/bt_page_req.py",
+            "file:skill/scripts/tests/test_plan_integration.py"
+          ]
+        },
+        "scope": {
+          "justification": "Additional integration cases reuse the existing plan tests and the page tests created by T2.",
+          "evidence": [
+            "file:skill/scripts/tests/test_plan_integration.py",
+            "task:T2"
+          ]
+        },
+        "duration": {
+          "justification": "Existing branching-analysis assertions and isolated fixtures provide concrete starting points for the parity matrix.",
+          "evidence": [
+            "file:skill/scripts/bt_planner/tests/test_evidence.py",
+            "file:skill/scripts/tests/test_00_isolation.py",
+            "assumption:Sixty minutes estimates fixture expansion and verification without measured execution history."
+          ]
+        },
+        "risk": {
+          "justification": "Test-only changes are reversible and confined to isolated fixtures without changing approval behavior.",
+          "evidence": [
+            "file:skill/scripts/tests/test_plan_integration.py",
+            "file:skill/scripts/tests/test_00_isolation.py"
+          ]
+        },
+        "coupling": {
+          "justification": "Final tests consume T1 summary behavior and T2 page rendering and revisit their test files after completion.",
+          "evidence": [
+            "task:T1",
+            "task:T2"
+          ]
+        },
+        "confidence": {
+          "justification": "Existing test patterns support the proposed checks but browser presentation and runtime outcomes remain unverified.",
+          "evidence": [
+            "file:skill/scripts/tests/test_plan_integration.py",
+            "file:skill/scripts/tests/test_metrics_page.py",
+            "file:skill/scripts/tests/test_plan_launch_paths.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_plan_integration.py",
+        "skill/scripts/tests/test_plan_summary_page.py"
+      ],
+      "shared_resources": [
+        "plan-quality-summary",
+        "plan-review-rendering"
+      ],
+      "acceptance_criteria": [
+        "A shared fixture with T1 at 30 minutes, T2 at 60 after T1 and low-confidence T3 at 20 after T1 yields path T1 to T2 at 90 minutes, width 2 and low-confidence T3 in CLI, adapter and page.",
+        "Real CLI dispatch and req_page with the Plan tab are exercised using isolated requirement roots.",
+        "Missing, malformed, unreadable and invalid PLAN.json cases preserve their distinct outcomes without showing unavailable metrics as zero.",
+        "Complete legacy page output and no-PLAN.md behavior retain their baseline expectations.",
+        "Read operations preserve requirement and runtime file bytes, revision artifacts and directory entries.",
+        "The adapter-only import boundary and existing approval and launch regression coverage remain intact without allowlist expansion.",
+        "Visual inspection finds readable metric labels and task lists at narrow and wide widths without submitting approval."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s skill/scripts/tests -v",
+          "purpose": "Verify integrated CLI-page parity, exact legacy behavior, artifact immutability and existing approval regressions.",
+          "category": "integration",
+          "created_by": "T3"
+        },
+        {
+          "type": "command",
+          "value": "PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s skill/scripts/tests -p test_plan_boundary.py -v",
+          "purpose": "Enforce the existing adapter-only dependency boundary without broadening its exceptions.",
+          "category": "static"
+        },
+        {
+          "type": "manual",
+          "value": "Inspect isolated ready, absent and invalid Plan pages at narrow and wide viewport widths without submitting forms.",
+          "purpose": "Assess whether approval-time users can read the required metrics and distinguish missing or invalid data.",
+          "expected": "Required values are readable; estimates and unavailable states are explicit; legacy controls remain usable and no approval action occurs.",
+          "category": "product"
+        }
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "IF-1",
+      "title": "Read-only plan quality summary",
+      "owner": "repository: skill/scripts/bt_plan_adapter.py",
+      "producer_task": "T1",
+      "consumer_tasks": ["T2", "T3"],
+      "integration_task": "T3",
+      "inputs": [
+        "A resolved requirement directory containing an optional PLAN.json."
+      ],
+      "outputs": [
+        "quality_summary(rdir) returns an envelope with state, summary and errors.",
+        "ready carries the unmodified existing quality analyzer dictionary and an empty errors list.",
+        "absent carries no summary and an empty errors list.",
+        "invalid carries no summary and safe diagnostic strings without absolute paths."
+      ],
+      "invariants": [
+        "Use validated module loading and its existing analyzer; do not recompute graph metrics in the web layer.",
+        "Only missing PLAN.json produces absent; malformed, invalid, unreadable and oversized files produce invalid.",
+        "Do not mutate files, execute verification commands, resolve workspaces or invoke approval, freeze or launch operations.",
+        "Only the adapter imports the planner module.",
+        "The existing terminal report JSON and exit behavior remain unchanged.",
+        "D1 is a proposed error-policy decision, not recorded owner approval."
+      ],
+      "integration_criteria": [
+        "The branching fixture produces identical critical path, widest level and low-confidence IDs through CLI, adapter and actual Plan page.",
+        "Absent produces exact legacy rendering and invalid produces the proposed escaped unavailable warning without metrics.",
+        "Artifact comparisons demonstrate no writes from summary reads."
+      ]
+    }
+  ]
+}

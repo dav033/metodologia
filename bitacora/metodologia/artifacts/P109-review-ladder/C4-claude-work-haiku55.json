@@ -1,0 +1,138 @@
+{
+  "case": "C4",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "claude-haiku-5-5",
+  "requested_effort": "max",
+  "variant": "claude-work-haiku55",
+  "prompt_sha256": "d9ad8244767bc360cc6385109aa23865b1be8e417e76aee5f7fd57befbaca4b3",
+  "prompt_characters": 4030,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792207238.577307,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792213799.953071,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.953095,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792207239.0330613,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "The idempotency key is random, regenerated on every retry, and never persisted, so retries are not the same key and the provider's per-key guarantee does not apply. Metadata cannot dedupe.",
+        "evidence": "call provider outside the DB transaction with key=random_uuid(); on timeout retry at most twice, generating a fresh key for each attempt. Contract: Provider guarantees at-most-one charge PER idempotency key for 72h; a timeout may occur after the charge succeeded.",
+        "failure_scenario": "Attempt 1 charges and times out; attempt 2 charges again under a new key. A crash after the call loses the key and repeats the double charge.",
+        "fix": "Derive one key per invoice from the immutable invoice ID, or store one generated key in the reserved charge row in the same commit; reuse it on every retry, restart, and takeover. Leave exhausted attempts pending, not failed, and resolve via same-key retry within 72h or the webhook."
+      },
+      {
+        "task": "T3",
+        "severity": "critical",
+        "issue": "The inbox marker commits before the business update, so a processed marker can exist without the charge update or outbox row.",
+        "evidence": "transaction A inserts event_id into inbox and commits. Then transaction B updates charge status and creates outbox row. A crash can occur between A and B. Contract: A processed inbox marker must imply the corresponding business update committed.",
+        "failure_scenario": "Crash after A; redelivery finds the event_id, returns 200 without transaction B, so the charge is never updated and no notification is created.",
+        "fix": "Put the inbox insert, charge update, and outbox insert in one transaction; the existing unique constraint on inbox.event_id makes duplicates roll back and return 200."
+      },
+      {
+        "task": "T5",
+        "severity": "critical",
+        "issue": "sent=true is committed before publishing, so a crash or failed publish leaves the row permanently outside the sent=false restart scan.",
+        "evidence": "outbox dispatcher transactionally sets sent=true, commits; then publishes with immutable event ID and waits for broker ack. Restart scans WHERE sent=false. No reconciliation scans sent rows. Contract: A committed payment must eventually produce exactly one logical notification, despite process crashes.",
+        "failure_scenario": "A crash between commit and publish means the event is never published and the committed payment never notifies.",
+        "fix": "Publish with the immutable event ID, await ack under the deadline, then set sent=true WHERE id=:id AND sent=false. Restart republishes unacked rows; consumers deduplicate by event ID."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "Finalization lacks a generation or owner predicate and renewal's predicate is unstated, so a superseded worker can overwrite completed state and result. T4 is also sequenced after T2, whose provider path needs fencing.",
+        "evidence": "UPDATE jobs SET state='completed',result=:result WHERE id=:id; no generation/owner predicate. Job B can acquire generation 8 when worker A generation 7 pauses longer than 60s. Contract: Completed state and result must belong to current lease generation.",
+        "failure_scenario": "Worker A resumes after B holds generation 8 and marks the job completed with its stale result while B is still running.",
+        "fix": "Add generation and owner to the finalization and renewal WHERE clauses; zero rows affected means lost lease, so discard the result. Apply the same predicate to post-provider charge writes and schedule fencing before the T2 provider path."
+      },
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "Each unit price is rounded to cents before multiplying by quantity, not the total, violating the contract's total rounding.",
+        "evidence": "compute cents_per_unit=round_half_up(unit_price*100), invoice_cents=sum(cents_per_unit*quantity). Contract: Invoice total equals round_half_up(sum(unit_price_decimal * quantity),2). Fixture price=0.335 quantity=3.",
+        "failure_scenario": "The fixture yields round_half_up(33.5)=34, so 34*3=102 cents; the contract yields round_half_up(1.005,2)=1.01, i.e. 101 cents. Each affected invoice is overcharged by one cent.",
+        "fix": "Sum Decimal(unit_price)*quantity exactly, quantize the total to Decimal('0.01') with ROUND_HALF_UP, then invoice_cents=int(total*100); drop cents_per_unit; the fixture asserts 101."
+      },
+      {
+        "task": "T6",
+        "severity": "medium",
+        "issue": "Tests omit the highlighted failure modes, so the plan can pass with the defects above still present.",
+        "evidence": "simulate ordinary success, duplicate webhook, timeout-before-provider-execution, lease renewal with no pause, and broker success.",
+        "failure_scenario": "A timeout after provider success double-charges and a crash between commits drops notifications, yet every listed test passes.",
+        "fix": "Add: timeout after provider success with a fake enforcing per-key at-most-once (expect one charge); a crash at each commit point; a worker paused over 60s then resumed (stale finalize rejected); a lost broker ack (same event ID redelivered); the 0.335x3 fixture asserting 101."
+      },
+      {
+        "task": "T6",
+        "severity": "medium",
+        "issue": "Rollback does not define handling for sent=false outbox rows, unknown-outcome charges, or jobs older than the 72h key window.",
+        "evidence": "Rollback disables the new worker while keeping existing durable jobs. Contract: Provider guarantees at-most-one charge PER idempotency key for 72h.",
+        "failure_scenario": "If the dispatcher is disabled, committed payments stay unnotified; a job resumed after 72h with its original key can charge again.",
+        "fix": "Drain the outbox and resolve in-flight charges before disabling; never resubmit a key older than 72h; route those to manual reconciliation."
+      }
+    ],
+    "uncertainties": [
+      "The lease renewal interval relative to the 60-second lease is not stated; an interval at or above 60 seconds lets a live worker lose its lease.",
+      "The per-attempt provider deadline is not stated; three attempts may exceed the 60-second lease, letting another worker take over mid-call (safe only after the T2 and T4 fixes)."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"The idempotency key is random, regenerated on every retry, and never persisted, so retries are not the same key and the provider's per-key guarantee does not apply. Metadata cannot dedupe.\",\"evidence\":\"call provider outside the DB transaction with key=random_uuid(); on timeout retry at most twice, generating a fresh key for each attempt. Contract: Provider guarantees at-most-one charge PER idempotency key for 72h; a timeout may occur after the charge succeeded.\",\"failure_scenario\":\"Attempt 1 charges and times out; attempt 2 charges again under a new key. A crash after the call loses the key and repeats the double charge.\",\"fix\":\"Derive one key per invoice from the immutable invoice ID, or store one generated key in the reserved charge row in the same commit; reuse it on every retry, restart, and takeover. Leave exhausted attempts pending, not failed, and resolve via same-key retry within 72h or the webhook.\"},{\"task\":\"T3\",\"severity\":\"critical\",\"issue\":\"The inbox marker commits before the business update, so a processed marker can exist without the charge update or outbox row.\",\"evidence\":\"transaction A inserts event_id into inbox and commits. Then transaction B updates charge status and creates outbox row. A crash can occur between A and B. Contract: A processed inbox marker must imply the corresponding business update committed.\",\"failure_scenario\":\"Crash after A; redelivery finds the event_id, returns 200 without transaction B, so the charge is never updated and no notification is created.\",\"fix\":\"Put the inbox insert, charge update, and outbox insert in one transaction; the existing unique constraint on inbox.event_id makes duplicates roll back and return 200.\"},{\"task\":\"T5\",\"severity\":\"critical\",\"issue\":\"sent=true is committed before publishing, so a crash or failed publish leaves the row permanently outside the sent=false restart scan.\",\"evidence\":\"outbox dispatcher transactionally sets sent=true, commits; then publishes with immutable event ID and waits for broker ack. Restart scans WHERE sent=false. No reconciliation scans sent rows. Contract: A committed payment must eventually produce exactly one logical notification, despite process crashes.\",\"failure_scenario\":\"A crash between commit and publish means the event is never published and the committed payment never notifies.\",\"fix\":\"Publish with the immutable event ID, await ack under the deadline, then set sent=true WHERE id=:id AND sent=false. Restart republishes unacked rows; consumers deduplicate by event ID.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"Finalization lacks a generation or owner predicate and renewal's predicate is unstated, so a superseded worker can overwrite completed state and result. T4 is also sequenced after T2, whose provider path needs fencing.\",\"evidence\":\"UPDATE jobs SET state='completed',result=:result WHERE id=:id; no generation/owner predicate. Job B can acquire generation 8 when worker A generation 7 pauses longer than 60s. Contract: Completed state and result must belong to current lease generation.\",\"failure_scenario\":\"Worker A resumes after B holds generation 8 and marks the job completed with its stale result while B is still running.\",\"fix\":\"Add generation and owner to the finalization and renewal WHERE clauses; zero rows affected means lost lease, so discard the result. Apply the same predicate to post-provider charge writes and schedule fencing before the T2 provider path.\"},{\"task\":\"T1\",\"severity\":\"high\",\"issue\":\"Each unit price is rounded to cents before multiplying by quantity, not the total, violating the contract's total rounding.\",\"evidence\":\"compute cents_per_unit=round_half_up(unit_price*100), invoice_cents=sum(cents_per_unit*quantity). Contract: Invoice total equals round_half_up(sum(unit_price_decimal * quantity),2). Fixture price=0.335 quantity=3.\",\"failure_scenario\":\"The fixture yields round_half_up(33.5)=34, so 34*3=102 cents; the contract yields round_half_up(1.005,2)=1.01, i.e. 101 cents. Each affected invoice is overcharged by one cent.\",\"fix\":\"Sum Decimal(unit_price)*quantity exactly, quantize the total to Decimal('0.01') with ROUND_HALF_UP, then invoice_cents=int(total*100); drop cents_per_unit; the fixture asserts 101.\"},{\"task\":\"T6\",\"severity\":\"medium\",\"issue\":\"Tests omit the highlighted failure modes, so the plan can pass with the defects above still present.\",\"evidence\":\"simulate ordinary success, duplicate webhook, timeout-before-provider-execution, lease renewal with no pause, and broker success.\",\"failure_scenario\":\"A timeout after provider success double-charges and a crash between commits drops notifications, yet every listed test passes.\",\"fix\":\"Add: timeout after provider success with a fake enforcing per-key at-most-once (expect one charge); a crash at each commit point; a worker paused over 60s then resumed (stale finalize rejected); a lost broker ack (same event ID redelivered); the 0.335x3 fixture asserting 101.\"},{\"task\":\"T6\",\"severity\":\"medium\",\"issue\":\"Rollback does not define handling for sent=false outbox rows, unknown-outcome charges, or jobs older than the 72h key window.\",\"evidence\":\"Rollback disables the new worker while keeping existing durable jobs. Contract: Provider guarantees at-most-one charge PER idempotency key for 72h.\",\"failure_scenario\":\"If the dispatcher is disabled, committed payments stay unnotified; a job resumed after 72h with its original key can charge again.\",\"fix\":\"Drain the outbox and resolve in-flight charges before disabling; never resubmit a key older than 72h; route those to manual reconciliation.\"}],\"uncertainties\":[\"The lease renewal interval relative to the 60-second lease is not stated; an interval at or above 60 seconds lets a live worker lose its lease.\",\"The per-attempt provider deadline is not stated; three attempts may exceed the 60-second lease, letting another worker take over mid-call (safe only after the T2 and T4 fixes).\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 3696,
+    "cache_read_input_tokens": 2442,
+    "output_tokens": 57761,
+    "output_tokens_details": {
+      "thinking_tokens": 55661
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3696,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 221.553,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792207460.5862901,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792213799.823279,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.823298,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

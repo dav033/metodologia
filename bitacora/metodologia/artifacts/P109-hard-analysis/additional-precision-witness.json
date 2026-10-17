@@ -1,0 +1,9 @@
+{
+  "source": "H1-luna finding 4, post-hoc additional witness; not part of frozen 24-root oracle",
+  "context_precision": 28,
+  "rate": "200.000000000000000000000000004",
+  "rounded_contribution": "0.01500000000000000000000000000",
+  "candidate_cents": 2,
+  "exact_cents": 1,
+  "interpretation": "Concrete failure under a Decimal context precision allowed by the dossier; actual configured precision and accepted precision bounds are unspecified. Sol and Sonnet flagged the precision question as uncertainty; Luna supplied this witness. Do not silently expand seeded recall denominator."
+}

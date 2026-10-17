@@ -1,0 +1,24 @@
+{
+  "retained_epoch_dedup_alternative": {
+    "old_dedup_retained": true,
+    "transfer_row_deleted": true,
+    "retry_new_epoch_key": [
+      8,
+      "x"
+    ],
+    "source_rights_after_retry": 80,
+    "destination_credit_reapplied": false,
+    "unsafe": true
+  },
+  "remote_epoch_fencing": {
+    "db_epoch": 12,
+    "worker_epoch": 11,
+    "unsafe_despite_cas_before_dispatch": true,
+    "why": "Distinct epoch-bearing idempotency keys prevent duplicate same-command effects, not application of an older command after a newer one. Eventual reconciliation does not prevent the forbidden regression."
+  },
+  "cheapest_first_cardinality": {
+    "always_maximum_under_dossier": true,
+    "proof": "For nonnegative independent costs, the k cheapest items have no greater total cost than any other k-item subset. A cost-sorted greedy scan accepts the longest feasible cheapest prefix (including every zero-cost item); no later cheaper item exists after the first nonfitting item. Thus any larger feasible subset would contradict the minimal-prefix cost. Its secondary net and tertiary ID objectives can still fail."
+  },
+  "scope": "Post-hoc correction/extra checks, separate from 31 frozen roots; no production integration."
+}

@@ -1,0 +1,710 @@
+{
+  "schema_version": 1,
+  "rates": {
+    "opus": {
+      "input": 4,
+      "cache": 0.2,
+      "write5m": 5,
+      "write1h": 8,
+      "output": 20
+    },
+    "sol": {
+      "input": 2,
+      "cache": 0.1,
+      "write": 2.5,
+      "output": 10
+    },
+    "astra": {
+      "input": 10,
+      "cache": 1,
+      "write": 12.5,
+      "output": 50
+    }
+  },
+  "records": [
+    {
+      "record": "CP1-astra.json",
+      "case": "CP1",
+      "route": {
+        "id": "astra",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6-astra",
+        "effort": "high"
+      },
+      "status": "completed",
+      "elapsed_seconds": 381.585,
+      "block_contract_valid": true,
+      "tool_calls": 13,
+      "usage": {
+        "input_including_cache": 201871,
+        "cache_read_subset": 143616,
+        "cache_write_subset": 0,
+        "uncached_input": 58255,
+        "output_including_thinking": 14991,
+        "thinking_subset": 4048,
+        "total_tokens": 216862,
+        "illustrative_standard_api_usd": 1.475716,
+        "api_equivalent_known": true,
+        "api_rate_source": "planner-model-research-20261017.md; rates checked 2026-10-17; no tool/long-context/speed surcharge inferred"
+      },
+      "quota_before": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792244929.970204,
+        "windows": {
+          "five_hour": {
+            "used_percent": 3.0,
+            "resets_at": 1792262722.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 2.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792245312.24722,
+        "windows": {
+          "five_hour": {
+            "used_percent": 18.0,
+            "resets_at": 1792262723.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 4.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "workspace_changes": []
+    },
+    {
+      "record": "CP1-opus.json",
+      "case": "CP1",
+      "route": {
+        "id": "opus",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-opus-5-5",
+        "effort": "high"
+      },
+      "status": "completed",
+      "elapsed_seconds": 236.474,
+      "block_contract_valid": true,
+      "tool_calls": 30,
+      "usage": {
+        "input_including_cache": 540897,
+        "cache_read_subset": 473998,
+        "cache_write_subset": 66877,
+        "uncached_input": 22,
+        "output_including_thinking": 24216,
+        "thinking_subset": 7139,
+        "total_tokens": 565113,
+        "illustrative_standard_api_usd": 1.114224,
+        "api_equivalent_known": true,
+        "api_rate_source": "planner-model-research-20261017.md; rates checked 2026-10-17; no tool/long-context/speed surcharge inferred"
+      },
+      "quota_before": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "http_401",
+        "observed_at": null,
+        "windows": {}
+      },
+      "quota_after": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792244952.7934287,
+        "windows": {
+          "five_hour": {
+            "used_percent": 4.0,
+            "resets_at": 1792262400.009915,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 88.0,
+            "resets_at": 1792278000.009936,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "workspace_changes": []
+    },
+    {
+      "record": "CP1-sol.json",
+      "case": "CP1",
+      "route": {
+        "id": "sol",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      },
+      "status": "completed",
+      "elapsed_seconds": 212.573,
+      "block_contract_valid": true,
+      "tool_calls": 6,
+      "usage": {
+        "input_including_cache": 197472,
+        "cache_read_subset": 150912,
+        "cache_write_subset": 0,
+        "uncached_input": 46560,
+        "output_including_thinking": 11223,
+        "thinking_subset": 2049,
+        "total_tokens": 208695,
+        "illustrative_standard_api_usd": 0.220441,
+        "api_equivalent_known": true,
+        "api_rate_source": "planner-model-research-20261017.md; rates checked 2026-10-17; no tool/long-context/speed surcharge inferred"
+      },
+      "quota_before": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792244716.0535767,
+        "windows": {
+          "five_hour": {
+            "used_percent": 0.0,
+            "resets_at": 1792262716.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 1.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792244929.322518,
+        "windows": {
+          "five_hour": {
+            "used_percent": 3.0,
+            "resets_at": 1792262722.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 2.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "workspace_changes": []
+    },
+    {
+      "record": "CP2-astra.json",
+      "case": "CP2",
+      "route": {
+        "id": "astra",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6-astra",
+        "effort": "high"
+      },
+      "status": "completed",
+      "elapsed_seconds": 363.838,
+      "block_contract_valid": true,
+      "tool_calls": 15,
+      "usage": {
+        "input_including_cache": 288252,
+        "cache_read_subset": 235136,
+        "cache_write_subset": 0,
+        "uncached_input": 53116,
+        "output_including_thinking": 13583,
+        "thinking_subset": 1461,
+        "total_tokens": 301835,
+        "illustrative_standard_api_usd": 1.445446,
+        "api_equivalent_known": true,
+        "api_rate_source": "planner-model-research-20261017.md; rates checked 2026-10-17; no tool/long-context/speed surcharge inferred"
+      },
+      "quota_before": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792245313.2571614,
+        "windows": {
+          "five_hour": {
+            "used_percent": 18.0,
+            "resets_at": 1792262722.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 4.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792245677.8313987,
+        "windows": {
+          "five_hour": {
+            "used_percent": 32.0,
+            "resets_at": 1792262722.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 6.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "workspace_changes": []
+    },
+    {
+      "record": "CP2-opus.json",
+      "case": "CP2",
+      "route": {
+        "id": "opus",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-opus-5-5",
+        "effort": "high"
+      },
+      "status": "completed",
+      "elapsed_seconds": 351.594,
+      "block_contract_valid": true,
+      "tool_calls": 33,
+      "usage": {
+        "input_including_cache": 377785,
+        "cache_read_subset": 321719,
+        "cache_write_subset": 56050,
+        "uncached_input": 16,
+        "output_including_thinking": 38550,
+        "thinking_subset": 16758,
+        "total_tokens": 416335,
+        "illustrative_standard_api_usd": 1.283808,
+        "api_equivalent_known": true,
+        "api_rate_source": "planner-model-research-20261017.md; rates checked 2026-10-17; no tool/long-context/speed surcharge inferred"
+      },
+      "quota_before": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792244953.1234868,
+        "windows": {
+          "five_hour": {
+            "used_percent": 4.0,
+            "resets_at": 1792262400.355144,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 88.0,
+            "resets_at": 1792278000.355163,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792245305.093517,
+        "windows": {
+          "five_hour": {
+            "used_percent": 8.0,
+            "resets_at": 1792262400.36429,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 89.0,
+            "resets_at": 1792278000.364306,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "workspace_changes": []
+    },
+    {
+      "record": "CP2-sol.json",
+      "case": "CP2",
+      "route": {
+        "id": "sol",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      },
+      "status": "completed",
+      "elapsed_seconds": 363.348,
+      "block_contract_valid": true,
+      "tool_calls": 21,
+      "usage": {
+        "input_including_cache": 263738,
+        "cache_read_subset": 198272,
+        "cache_write_subset": 0,
+        "uncached_input": 65466,
+        "output_including_thinking": 15716,
+        "thinking_subset": 3047,
+        "total_tokens": 279454,
+        "illustrative_standard_api_usd": 0.307919,
+        "api_equivalent_known": true,
+        "api_rate_source": "planner-model-research-20261017.md; rates checked 2026-10-17; no tool/long-context/speed surcharge inferred"
+      },
+      "quota_before": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792245678.5163705,
+        "windows": {
+          "five_hour": {
+            "used_percent": 32.0,
+            "resets_at": 1792262722.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 6.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792246042.53389,
+        "windows": {
+          "five_hour": {
+            "used_percent": 36.0,
+            "resets_at": 1792262722.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 7.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "workspace_changes": []
+    },
+    {
+      "record": "CP3-astra.json",
+      "case": "CP3",
+      "route": {
+        "id": "astra",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6-astra",
+        "effort": "high"
+      },
+      "status": "completed",
+      "elapsed_seconds": 209.487,
+      "block_contract_valid": true,
+      "tool_calls": 12,
+      "usage": {
+        "input_including_cache": 369230,
+        "cache_read_subset": 301952,
+        "cache_write_subset": 0,
+        "uncached_input": 67278,
+        "output_including_thinking": 7666,
+        "thinking_subset": 875,
+        "total_tokens": 376896,
+        "illustrative_standard_api_usd": 1.358032,
+        "api_equivalent_known": true,
+        "api_rate_source": "planner-model-research-20261017.md; rates checked 2026-10-17; no tool/long-context/speed surcharge inferred"
+      },
+      "quota_before": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792246294.0855076,
+        "windows": {
+          "five_hour": {
+            "used_percent": 40.0,
+            "resets_at": 1792262723.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 7.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792246506.3714063,
+        "windows": {
+          "five_hour": {
+            "used_percent": 54.0,
+            "resets_at": 1792262722.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 10.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "workspace_changes": []
+    },
+    {
+      "record": "CP3-opus.json",
+      "case": "CP3",
+      "route": {
+        "id": "opus",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-opus-5-5",
+        "effort": "high"
+      },
+      "status": "completed",
+      "elapsed_seconds": 197.7,
+      "block_contract_valid": true,
+      "tool_calls": 28,
+      "usage": {
+        "input_including_cache": 829959,
+        "cache_read_subset": 752146,
+        "cache_write_subset": 77785,
+        "uncached_input": 28,
+        "output_including_thinking": 19861,
+        "thinking_subset": 6188,
+        "total_tokens": 849820,
+        "illustrative_standard_api_usd": 1.170041,
+        "api_equivalent_known": true,
+        "api_rate_source": "planner-model-research-20261017.md; rates checked 2026-10-17; no tool/long-context/speed surcharge inferred"
+      },
+      "quota_before": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792245305.5204744,
+        "windows": {
+          "five_hour": {
+            "used_percent": 8.0,
+            "resets_at": 1792262399.758203,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 89.0,
+            "resets_at": 1792277999.758222,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "claude-work",
+        "provider": "claude",
+        "status": "ok",
+        "observed_at": 1792245503.638314,
+        "windows": {
+          "five_hour": {
+            "used_percent": 15.0,
+            "resets_at": 1792262399.881779,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 90.0,
+            "resets_at": 1792277999.881831,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "workspace_changes": []
+    },
+    {
+      "record": "CP3-sol.json",
+      "case": "CP3",
+      "route": {
+        "id": "sol",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      },
+      "status": "completed",
+      "elapsed_seconds": 249.466,
+      "block_contract_valid": true,
+      "tool_calls": 17,
+      "usage": {
+        "input_including_cache": 432798,
+        "cache_read_subset": 354048,
+        "cache_write_subset": 0,
+        "uncached_input": 78750,
+        "output_including_thinking": 10968,
+        "thinking_subset": 3188,
+        "total_tokens": 443766,
+        "illustrative_standard_api_usd": 0.302585,
+        "api_equivalent_known": true,
+        "api_rate_source": "planner-model-research-20261017.md; rates checked 2026-10-17; no tool/long-context/speed surcharge inferred"
+      },
+      "quota_before": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792246043.2740793,
+        "windows": {
+          "five_hour": {
+            "used_percent": 36.0,
+            "resets_at": 1792262722.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 7.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "quota_after": {
+        "profile": "codex-2",
+        "provider": "codex",
+        "status": "ok",
+        "observed_at": 1792246293.4676073,
+        "windows": {
+          "five_hour": {
+            "used_percent": 40.0,
+            "resets_at": 1792262722.0,
+            "window_minutes": 300.0
+          },
+          "seven_day": {
+            "used_percent": 7.0,
+            "resets_at": 1792810059.0,
+            "window_minutes": 10080.0
+          }
+        }
+      },
+      "workspace_changes": []
+    }
+  ],
+  "summaries": [
+    {
+      "route": {
+        "id": "opus",
+        "profile": "claude-work",
+        "provider": "claude",
+        "model": "claude-opus-5-5",
+        "effort": "high"
+      },
+      "calls_finished": 3,
+      "usage_missing_calls": 0,
+      "elapsed_seconds": 785.768,
+      "tool_calls": 91,
+      "valid_output_blocks": 3,
+      "usage": {
+        "input_including_cache": 1748641,
+        "cache_read_subset": 1547863,
+        "cache_write_subset": 200712,
+        "uncached_input": 66,
+        "output_including_thinking": 82627,
+        "thinking_subset": 30085,
+        "total_tokens": 1831268,
+        "illustrative_standard_api_usd": 3.568073
+      }
+    },
+    {
+      "route": {
+        "id": "sol",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      },
+      "calls_finished": 3,
+      "usage_missing_calls": 0,
+      "elapsed_seconds": 825.387,
+      "tool_calls": 44,
+      "valid_output_blocks": 3,
+      "usage": {
+        "input_including_cache": 894008,
+        "cache_read_subset": 703232,
+        "cache_write_subset": 0,
+        "uncached_input": 190776,
+        "output_including_thinking": 37907,
+        "thinking_subset": 8284,
+        "total_tokens": 931915,
+        "illustrative_standard_api_usd": 0.830945
+      }
+    },
+    {
+      "route": {
+        "id": "astra",
+        "profile": "codex-2",
+        "provider": "codex",
+        "model": "gpt-6-astra",
+        "effort": "high"
+      },
+      "calls_finished": 3,
+      "usage_missing_calls": 0,
+      "elapsed_seconds": 954.91,
+      "tool_calls": 40,
+      "valid_output_blocks": 3,
+      "usage": {
+        "input_including_cache": 859353,
+        "cache_read_subset": 680704,
+        "cache_write_subset": 0,
+        "uncached_input": 178649,
+        "output_including_thinking": 36240,
+        "thinking_subset": 6384,
+        "total_tokens": 895593,
+        "illustrative_standard_api_usd": 4.279194
+      }
+    }
+  ],
+  "observed_quota_deltas": [
+    {
+      "route": "opus",
+      "scope": "Sum of observed within-cell percentage-point changes, not exact causal subscription cost. Excludes later unassigned lag changes.",
+      "five_hour": {
+        "known_observed_change_points": 0,
+        "unknown_cells": 3,
+        "complete_observed_sum_points": null
+      },
+      "seven_day": {
+        "known_observed_change_points": 0,
+        "unknown_cells": 3,
+        "complete_observed_sum_points": null
+      }
+    },
+    {
+      "route": "sol",
+      "scope": "Sum of observed within-cell percentage-point changes, not exact causal subscription cost. Excludes later unassigned lag changes.",
+      "five_hour": {
+        "known_observed_change_points": 8.0,
+        "unknown_cells": 1,
+        "complete_observed_sum_points": null
+      },
+      "seven_day": {
+        "known_observed_change_points": 2.0,
+        "unknown_cells": 0,
+        "complete_observed_sum_points": 2.0
+      }
+    },
+    {
+      "route": "astra",
+      "scope": "Sum of observed within-cell percentage-point changes, not exact causal subscription cost. Excludes later unassigned lag changes.",
+      "five_hour": {
+        "known_observed_change_points": 14.0,
+        "unknown_cells": 2,
+        "complete_observed_sum_points": null
+      },
+      "seven_day": {
+        "known_observed_change_points": 7.0,
+        "unknown_cells": 0,
+        "complete_observed_sum_points": 7.0
+      }
+    }
+  ],
+  "limits": "Raw totals include repeated/cache inputs and output thinking. API equivalents are hypothetical based on recorded classes at Standard rates, not billed subscription dollars; service tier not independently attested. No exact per-task quota cost is inferred."
+}

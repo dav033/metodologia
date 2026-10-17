@@ -1,0 +1,73 @@
+{
+  "case": "C5",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "sonnet",
+  "requested_effort": "high",
+  "prompt_sha256": "5f5f4a347c4b41bc40e3fc40564023b518a938af2baa96e7deaaf83ed677323d",
+  "prompt_characters": 4990,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206465.1414354,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792213800.365614,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.365633,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206465.4443066,
+  "answer": null,
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"Capacity buckets are keyed by profile_id, not by effective account. M2 and M1 both use these buckets, so aliases of one account get separate limit=1 slots.\",\"evidence\":\"\\\"construct capacity buckets keyed by profile_id, each with limit=1; M2 can recommend one READY task on pA and one on pB in same batch\\\"; baseline: \\\"pA and pB resolve to account_ref=acct-X, with per-account concurrency=1\\\"; contract: \\\"Effective account, not profile alias, is the capacity unit.\\\"\",\"failure_scenario\":\"Two READY tasks are recommended and reserved on pA and pB in one batch. Both run concurrently on acct-X, exceeding its concurrency of 1, and M1's reservation check passes because it uses the same wrong keys.\",\"fix\":\"Key buckets, reservation counts and candidate de-duplication by resolved account_ref (limit=1 for acct-X). Keep pA and pB only as CLI-selection aliases that map to the same bucket.\"}]\n,\"uncertainties\":[]}\n\nCorrection: the object above is incomplete. The complete JSON follows.\n\n{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"Capacity buckets are keyed by profile_id, not by effective account. M2 and M1 both use these buckets, so aliases of one account get separate limit=1 slots.\",\"evidence\":\"\\\"construct capacity buckets keyed by profile_id, each with limit=1; M2 can recommend one READY task on pA and one on pB in same batch\\\"; baseline: \\\"pA and pB resolve to account_ref=acct-X, with per-account concurrency=1\\\"; contract: \\\"Effective account, not profile alias, is the capacity unit.\\\"\",\"failure_scenario\":\"Two READY tasks are recommended and reserved on pA and pB in one batch. Both run concurrently on acct-X, exceeding its concurrency of 1, and M1's reservation check passes because it uses the same wrong keys.\",\"fix\":\"Key buckets, reservation counts and candidate de-duplication by resolved account_ref (limit=1 for acct-X). Keep pA and pB only as CLI-selection aliases that map to the same bucket.\"},{\"task\":\"T3\",\"severity\":\"high\",\"issue\":\"Stale or unknown quota samples are replaced with zero usage, which makes them the most attractive candidates instead of ineligible ones.\",\"evidence\":\"\\\"use sample if fresh; otherwise substitute {five_hour:0,seven_day:0} to avoid blocking progress\\\"; contract: \\\"Unknown/stale readings are ineligible\\\"; baseline: \\\"a stale sample observed_at=700 is specifically ineligible regardless of percentage\\\" (now=1000, so the age is 300s, beyond the 120s limit).\",\"failure_scenario\":\"An account with a stale reading at observed_at=700, or with a missing or unknown window, scores 0 and wins ranking. Work is routed to an account whose real capacity is unknown or exhausted.\",\"fix\":\"Filter out candidates that lack status=ok, both windows, future resets, or observed_at within 120s of the injected now. If none remain, return no recommendation and let M1 block or defer; never substitute defaults.\"},{\"task\":\"T3\",\"severity\":\"high\",\"issue\":\"The ranking score sums the 5h and 7d percentages, which are different windows. The contract requires the bottleneck, max(5h_used, 7d_used).\",\"evidence\":\"\\\"Score=5h_used+7d_used ascending\\\"; contract: \\\"choose lowest bottleneck=max(5h_used,7d_used); percentages from different windows must not be added\\\"; fixtures: acct-X bottleneck 30 (sum 60), acct-Y bottleneck 50 (sum 50).\",\"failure_scenario\":\"With the fixtures, the plan picks acct-Y (50<60). The correct choice is acct-X (30<50), so the task goes to the account with the higher bottleneck usage.\",\"fix\":\"Score = max(five_hour_used, seven_day_used) ascending, then stable account ID. Apply it per effective account after the capability/quality floor.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"A BEGIN IMMEDIATE write transaction stays open across a bounded HTTP quota fetch of up to 20s.\",\"evidence\":\"\\\"BEGIN IMMEDIATE; load reservation counts; fetch latest quota via bounded HTTP request (deadline 20s); ... COMMIT. This path holds the write transaction during fetch.\\\"; contract: \\\"No DB write transaction may span provider I/O.\\\"\",\"failure_scenario\":\"A slow or hung quota endpoint blocks every other writer, including dispatch, outbox and reservation release, for up to 20s per batch. This risks lock timeouts and stalled lifecycle handling. Reservation counts loaded before the fetch can also be stale at commit.\",\"fix\":\"Fetch and validate quota outside any transaction. Then BEGIN IMMEDIATE, reload reservation counts, recheck freshness against the injected now, write the decision and reservations, and COMMIT with no I/O inside.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"The frozen startup map is updated in place and its hash is recomputed. This destroys the original evidence, which the contract requires to be append-only.\",\"evidence\":\"\\\"replaces the recommendation inside the existing startup map row and recomputes its hash so dashboards always show the latest route. No prior copy/history exists.\\\"; contract: \\\"A frozen map is append-only evidence with its original hash; revalidation must append a new decision, preserving prior bytes/hash.\\\"\",\"failure_scenario\":\"After a dispatch revalidation changes the route, the original recommendation and SHA-256 are gone. Audit cannot show what was originally recommended or why M1 diverged, and the hash no longer proves the original frozen map.\",\"fix\":\"Keep the map row immutable. Append a new revalidation decision row (v2) that references the original map hash and carries its own hash. Dashboards read the latest appended decision.\"},{\"task\":\"T6\",\"severity\":\"critical\",\"issue\":\"Resume releases the previous coordinator's reservations unconditionally, bumps the generation, and redispatches RUNNING tasks, all without reconciling live executors.\",\"evidence\":\"\\\"unconditionally deletes reservations belonging to the previous coordinator PID; increments task generation, then dispatches tasks not marked completed. ... RUNNING is treated as not completed and is redispatched. No executor cancel/query or reservation reconciliation occurs before replacement dispatch. A previous executor can still be applying its side effects.\\\"; baseline: each new generation is a distinct permitted external job and the executor does not dedup across generations; contract: live jobs may still run and must be reconciled before replacement dispatch.\",\"failure_scenario\":\"The coordinator restarts while the generation-1 job is still running on acct-X and its reports are delayed. The plan frees its reservation and starts generation 2. Both jobs run concurrently on acct-X, exceeding concurrency=1 and applying duplicate side effects.\",\"fix\":\"On resume, treat non-terminal tasks as in-doubt and keep their reservations. Query the executor for each job (or cancel it and confirm it stopped) and reconcile outcomes first. Release the reservation and bump the generation only after the prior generation is confirmed terminal or fenced.\"},{\"task\":\"T7\",\"severity\":\"medium\",\"issue\":\"The verification set misses every defect above, and T7 has no dependency on the implementation tasks. The restart test only covers clean shutdown after all executors have stopped.\",\"evidence\":\"\\\"offline tests cover schema versions, authenticated profile resolution, DAG predecessor gate, ordinary dispatch and clean shutdown/resume after all executors have stopped; all reported success.\\\"\",\"failure_scenario\":\"The suite passes while alias over-reservation, stale-to-zero substitution, sum-versus-bottleneck ranking, transactions spanning HTTP, map overwrite and live-executor duplicate dispatch all ship undetected. Green results give false assurance.\",\"fix\":\"Make T7 depend on T2–T6 and add offline tests using the stated fixtures: (1) pA and pB cannot both be reserved; (2) the stale sample at observed_at=700 with now=1000 is ineligible and never scored as 0; (3) acct-X wins over acct-Y by bottleneck; (4) no DB write transaction is open during the fetch (injected fake that asserts this); (5) revalidation appends a new decision and the original bytes and hash are unchanged; (6) resume with a live RUNNING executor keeps the reservation and creates no replacement dispatch before reconciliation.\"}],\"uncertainties\":[\"T4 writes reservations in the same step as the M2 recommendation batch. It is unclear whether that step runs under M1 ownership. If it runs inside M2, it violates the rule that M2 is non-reserving and M1 alone owns durable reservations.\"]}",
+  "format_valid": false,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 4020,
+    "cache_read_input_tokens": 1662,
+    "output_tokens": 4141,
+    "output_tokens_details": {
+      "thinking_tokens": 1098
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4020,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 29.72,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206495.1648018,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792213799.573,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.573018,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

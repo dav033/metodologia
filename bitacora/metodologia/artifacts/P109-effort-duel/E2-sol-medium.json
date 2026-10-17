@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "case": "E2",
+  "route": {
+    "id": "sol-medium",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "75a8db7013420856ab11cbd0b591bbe30fd36162bddc3d7630308d1ac7be8bd8",
+  "prompt_characters": 12009,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792212142.5492887,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792212143.346531,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "B1",
+        "severity": "high",
+        "issue": "Version selection ignores the pinned knowledge time K.",
+        "evidence": "R1 requires both correction_effective_at <= C and recorded_at <= K. B1 filters only effective time; G2 preserves all versions.",
+        "failure_scenario": "Let C be January 31 and K February 1. Revision 1 has correction_effective_at January 1, recorded_at January 2, and gross 100. Revision 2 has correction_effective_at January 15, recorded_at February 2, and gross 200. B1 selects revision 2 even though only revision 1 qualifies. Rerunning after revision 2 arrives also changes the result for the same C/K.",
+        "fix": "Filter by both correction_effective_at <= C and recorded_at <= K before selecting the greatest revision."
+      },
+      {
+        "task": "B2",
+        "severity": "high",
+        "issue": "Commission is selected at report generation time instead of the order's effective time.",
+        "evidence": "R2 selects commission by order effective_at. G2 distinguishes order_effective_at from correction_effective_at. B2 passes now_of_report_generation to policy_at.",
+        "failure_scenario": "An order effective January 1 has gross 100 and commission 0/1. Commission becomes 1/10 on February 1. Generating its report in March produces net 90 instead of the required 100, including when a later correction retains the January order_effective_at.",
+        "fix": "Select policy_at(tenant, row.order_effective_at) and retain that selected policy's ID."
+      },
+      {
+        "task": "B3",
+        "severity": "high",
+        "issue": "Rounding each order before aggregation changes the required group total.",
+        "evidence": "R2 requires exact aggregation by tenant/currency followed by one rounding operation. B3 applies the verified rounding primitive to individual orders; integer-only tests cannot expose this placement defect.",
+        "failure_scenario": "Two eligible orders in one tenant/currency each have gross 1 and commission 1/2, giving exact nets 1/2 and 1/2. B3 rounds each to 1 and returns 2. The exact aggregate is 1, whose required rounded value is 1.",
+        "fix": "Sum exact Fraction nets within each tenant/currency group, then call half_away_to_integer once on the aggregate."
+      },
+      {
+        "task": "B4",
+        "severity": "high",
+        "issue": "Applying floor allocation directly to negative N violates reversal symmetry.",
+        "evidence": "R3 requires allocating |N| and restoring the sign. B4 floors signed products; preserving the sum does not satisfy R3.",
+        "failure_scenario": "Owners a and b, ordered a before b by owner_sort_key, each have weight 1/2. For N=1, B4 returns a=1, b=0. For N=-1, both initial bases are -1, missing=1, and the tied extra unit goes to a, yielding a=0, b=-1. The required reversal is a=-1, b=0.",
+        "fix": "Compute floors and largest remainders using abs(N), retain owner_sort_key for ties, then multiply every allocation by N's sign."
+      },
+      {
+        "task": "B5",
+        "severity": "high",
+        "issue": "Currency-only grouping permits credit offsets across tenants.",
+        "evidence": "R4 permits netting only within tenant/currency. G4 verifies the grouping helpers, but B5 supplies only currency. apply_credit_offsets does not inspect tenant identity.",
+        "failure_scenario": "Tenant A has a USD obligation of +100 and tenant B has a USD obligation of -100. B5 puts them together and offsets A's payable amount to zero using B's credit. Separate tenant/currency groups would preserve A's +100 obligation.",
+        "fix": "Group obligations by the canonical tenant/currency pair before applying credit offsets."
+      },
+      {
+        "task": "B6",
+        "severity": "high",
+        "issue": "Greedy cost ordering does not optimize total net value among maximum-count selections.",
+        "evidence": "R4 requires the exact count/value/ID optimum. B6 never exchanges selected payouts, and its uniform-cost, equal-value tests do not establish the secondary objective.",
+        "failure_scenario": "With capacity 10 and no existing reservations, eligible payouts A, B, C have (cost, net) values (4,1), (5,2), and (6,100). B6 selects A and B, using cost 9 for count 2 and value 3. A and C use cost 10 for count 2 and value 101. Three payouts cost 15, so count 2 is optimal, but B6 fails the secondary objective.",
+        "fix": "Replace the greedy pass with an exact capacity-constrained optimizer comparing feasible selections by count, total integer net, then the canonical sorted payout-ID list. Handle zero-cost payouts without allowing an item to be reused."
+      },
+      {
+        "task": "B7",
+        "severity": "high",
+        "issue": "Request preparation substitutes a mutable report total for the frozen selected amount, allowing conflicting retry bodies.",
+        "evidence": "R5 freezes the amount at selection and permits idempotency only for an identical body and key. B7 reads latest_report_total_for(P) on every attempt despite P retaining its frozen amount. G4's collision-free keys do not protect changing bodies.",
+        "failure_scenario": "P is selected for 100. A correction changes the latest total to 120 before submission, so even the first request violates the frozen amount. Alternatively, an initial body for 100 is accepted but times out; a correction changes latest to 120, and retrying the same key with amount 120 causes the provider to reject the conflicting body.",
+        "fix": "Prepare and durably retain the request body from the frozen selected amount, recipient, and currency before submission; reuse that exact body and key on every retry. Later corrections may stop a definitely unsent payout but must not mutate a possibly submitted request."
+      },
+      {
+        "task": "B8",
+        "severity": "high",
+        "issue": "Elapsed time is treated as proof of nonacceptance, releasing money while remote acceptance remains unknown.",
+        "evidence": "R5 requires reconciliation before reusing money after unknown acceptance. B8 releases the reservation without lookup_by_key; the dossier explicitly excludes a provider auto-cancel TTL.",
+        "failure_scenario": "The provider accepts a payout for 100, but its response times out. After 301 seconds, B8 cancels locally and releases the 100 reservation. Another payout reserves and submits that same money. A later lookup discovers the first acceptance, leaving two accepted payouts backed by the same reserved funds.",
+        "fix": "Keep the money reserved while acceptance is UNKNOWN. Use lookup_by_key and release only after authoritative never_accepted; authoritative accepted must be applied through settlement reconciliation. Lookup timeouts must leave the reservation intact."
+      },
+      {
+        "task": "B9",
+        "severity": "high",
+        "issue": "Principal deletion cascades into immutable report evidence and allocations.",
+        "evidence": "R6 prohibits deleting audit evidence when a principal is deleted, and R1 requires retained inputs for reproducibility. G2/G4 make retained version and policy IDs sufficient, but B9's cleanup deletes those report references, including for settled payouts.",
+        "failure_scenario": "A settled report identifies order revision 2 and policy P. Deleting its owner removes the report, version/policy ID list, and allocations. The surviving receipt contains only a provider key and aggregate amount, so it cannot establish which revisions and policies produced that settlement despite their source records remaining queryable.",
+        "fix": "Remove the cascade from principal deletion to reports, evidence, and allocations. Preserve immutable audit records and references independently of principal lifecycle, using a retained identity reference or tombstone as needed."
+      },
+      {
+        "task": "B10",
+        "severity": "high",
+        "issue": "Release trusts historical planning authorization instead of checking current report-read permission.",
+        "evidence": "R6 requires current recipient authorization at release. B10 checks only planning_auth_result. Correct tenant binding and authentication do not establish current report-read privilege, and private storage does not compensate for this endpoint.",
+        "failure_scenario": "A principal is allowed when the report is planned, then loses report-read permission while remaining a tenant member. Middleware still accepts the principal and tenant binding; B10 sees the stored allowed result and returns the report.",
+        "fix": "Invoke the verified current authorization check for the authenticated principal and requested report at release before returning output."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"B1\",\n      \"severity\": \"high\",\n      \"issue\": \"Version selection ignores the pinned knowledge time K.\",\n      \"evidence\": \"R1 requires both correction_effective_at <= C and recorded_at <= K. B1 filters only effective time; G2 preserves all versions.\",\n      \"failure_scenario\": \"Let C be January 31 and K February 1. Revision 1 has correction_effective_at January 1, recorded_at January 2, and gross 100. Revision 2 has correction_effective_at January 15, recorded_at February 2, and gross 200. B1 selects revision 2 even though only revision 1 qualifies. Rerunning after revision 2 arrives also changes the result for the same C/K.\",\n      \"fix\": \"Filter by both correction_effective_at <= C and recorded_at <= K before selecting the greatest revision.\"\n    },\n    {\n      \"task\": \"B2\",\n      \"severity\": \"high\",\n      \"issue\": \"Commission is selected at report generation time instead of the order's effective time.\",\n      \"evidence\": \"R2 selects commission by order effective_at. G2 distinguishes order_effective_at from correction_effective_at. B2 passes now_of_report_generation to policy_at.\",\n      \"failure_scenario\": \"An order effective January 1 has gross 100 and commission 0/1. Commission becomes 1/10 on February 1. Generating its report in March produces net 90 instead of the required 100, including when a later correction retains the January order_effective_at.\",\n      \"fix\": \"Select policy_at(tenant, row.order_effective_at) and retain that selected policy's ID.\"\n    },\n    {\n      \"task\": \"B3\",\n      \"severity\": \"high\",\n      \"issue\": \"Rounding each order before aggregation changes the required group total.\",\n      \"evidence\": \"R2 requires exact aggregation by tenant/currency followed by one rounding operation. B3 applies the verified rounding primitive to individual orders; integer-only tests cannot expose this placement defect.\",\n      \"failure_scenario\": \"Two eligible orders in one tenant/currency each have gross 1 and commission 1/2, giving exact nets 1/2 and 1/2. B3 rounds each to 1 and returns 2. The exact aggregate is 1, whose required rounded value is 1.\",\n      \"fix\": \"Sum exact Fraction nets within each tenant/currency group, then call half_away_to_integer once on the aggregate.\"\n    },\n    {\n      \"task\": \"B4\",\n      \"severity\": \"high\",\n      \"issue\": \"Applying floor allocation directly to negative N violates reversal symmetry.\",\n      \"evidence\": \"R3 requires allocating |N| and restoring the sign. B4 floors signed products; preserving the sum does not satisfy R3.\",\n      \"failure_scenario\": \"Owners a and b, ordered a before b by owner_sort_key, each have weight 1/2. For N=1, B4 returns a=1, b=0. For N=-1, both initial bases are -1, missing=1, and the tied extra unit goes to a, yielding a=0, b=-1. The required reversal is a=-1, b=0.\",\n      \"fix\": \"Compute floors and largest remainders using abs(N), retain owner_sort_key for ties, then multiply every allocation by N's sign.\"\n    },\n    {\n      \"task\": \"B5\",\n      \"severity\": \"high\",\n      \"issue\": \"Currency-only grouping permits credit offsets across tenants.\",\n      \"evidence\": \"R4 permits netting only within tenant/currency. G4 verifies the grouping helpers, but B5 supplies only currency. apply_credit_offsets does not inspect tenant identity.\",\n      \"failure_scenario\": \"Tenant A has a USD obligation of +100 and tenant B has a USD obligation of -100. B5 puts them together and offsets A's payable amount to zero using B's credit. Separate tenant/currency groups would preserve A's +100 obligation.\",\n      \"fix\": \"Group obligations by the canonical tenant/currency pair before applying credit offsets.\"\n    },\n    {\n      \"task\": \"B6\",\n      \"severity\": \"high\",\n      \"issue\": \"Greedy cost ordering does not optimize total net value among maximum-count selections.\",\n      \"evidence\": \"R4 requires the exact count/value/ID optimum. B6 never exchanges selected payouts, and its uniform-cost, equal-value tests do not establish the secondary objective.\",\n      \"failure_scenario\": \"With capacity 10 and no existing reservations, eligible payouts A, B, C have (cost, net) values (4,1), (5,2), and (6,100). B6 selects A and B, using cost 9 for count 2 and value 3. A and C use cost 10 for count 2 and value 101. Three payouts cost 15, so count 2 is optimal, but B6 fails the secondary objective.\",\n      \"fix\": \"Replace the greedy pass with an exact capacity-constrained optimizer comparing feasible selections by count, total integer net, then the canonical sorted payout-ID list. Handle zero-cost payouts without allowing an item to be reused.\"\n    },\n    {\n      \"task\": \"B7\",\n      \"severity\": \"high\",\n      \"issue\": \"Request preparation substitutes a mutable report total for the frozen selected amount, allowing conflicting retry bodies.\",\n      \"evidence\": \"R5 freezes the amount at selection and permits idempotency only for an identical body and key. B7 reads latest_report_total_for(P) on every attempt despite P retaining its frozen amount. G4's collision-free keys do not protect changing bodies.\",\n      \"failure_scenario\": \"P is selected for 100. A correction changes the latest total to 120 before submission, so even the first request violates the frozen amount. Alternatively, an initial body for 100 is accepted but times out; a correction changes latest to 120, and retrying the same key with amount 120 causes the provider to reject the conflicting body.\",\n      \"fix\": \"Prepare and durably retain the request body from the frozen selected amount, recipient, and currency before submission; reuse that exact body and key on every retry. Later corrections may stop a definitely unsent payout but must not mutate a possibly submitted request.\"\n    },\n    {\n      \"task\": \"B8\",\n      \"severity\": \"high\",\n      \"issue\": \"Elapsed time is treated as proof of nonacceptance, releasing money while remote acceptance remains unknown.\",\n      \"evidence\": \"R5 requires reconciliation before reusing money after unknown acceptance. B8 releases the reservation without lookup_by_key; the dossier explicitly excludes a provider auto-cancel TTL.\",\n      \"failure_scenario\": \"The provider accepts a payout for 100, but its response times out. After 301 seconds, B8 cancels locally and releases the 100 reservation. Another payout reserves and submits that same money. A later lookup discovers the first acceptance, leaving two accepted payouts backed by the same reserved funds.\",\n      \"fix\": \"Keep the money reserved while acceptance is UNKNOWN. Use lookup_by_key and release only after authoritative never_accepted; authoritative accepted must be applied through settlement reconciliation. Lookup timeouts must leave the reservation intact.\"\n    },\n    {\n      \"task\": \"B9\",\n      \"severity\": \"high\",\n      \"issue\": \"Principal deletion cascades into immutable report evidence and allocations.\",\n      \"evidence\": \"R6 prohibits deleting audit evidence when a principal is deleted, and R1 requires retained inputs for reproducibility. G2/G4 make retained version and policy IDs sufficient, but B9's cleanup deletes those report references, including for settled payouts.\",\n      \"failure_scenario\": \"A settled report identifies order revision 2 and policy P. Deleting its owner removes the report, version/policy ID list, and allocations. The surviving receipt contains only a provider key and aggregate amount, so it cannot establish which revisions and policies produced that settlement despite their source records remaining queryable.\",\n      \"fix\": \"Remove the cascade from principal deletion to reports, evidence, and allocations. Preserve immutable audit records and references independently of principal lifecycle, using a retained identity reference or tombstone as needed.\"\n    },\n    {\n      \"task\": \"B10\",\n      \"severity\": \"high\",\n      \"issue\": \"Release trusts historical planning authorization instead of checking current report-read permission.\",\n      \"evidence\": \"R6 requires current recipient authorization at release. B10 checks only planning_auth_result. Correct tenant binding and authentication do not establish current report-read privilege, and private storage does not compensate for this endpoint.\",\n      \"failure_scenario\": \"A principal is allowed when the report is planned, then loses report-read permission while remaining a tenant member. Middleware still accepts the principal and tenant binding; B10 sees the stored allowed result and returns the report.\",\n      \"fix\": \"Invoke the verified current authorization check for the authenticated principal and requested report at release before returning output.\"\n    }\n  ],\n  \"uncertainties\": []\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 17410,
+    "cached_input_tokens": 12288,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2230,
+    "reasoning_output_tokens": 322
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 1161,
+  "exit_code": 0,
+  "elapsed_seconds": 41.292,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792212184.6392548,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

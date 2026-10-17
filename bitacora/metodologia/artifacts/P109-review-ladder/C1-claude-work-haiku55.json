@@ -1,0 +1,130 @@
+{
+  "case": "C1",
+  "profile": "claude-work",
+  "provider": "claude",
+  "requested_model": "claude-haiku-5-5",
+  "requested_effort": "max",
+  "variant": "claude-work-haiku55",
+  "prompt_sha256": "2d8a2108915cc803a5a4c00f12f0effd16ce2e9a1b1cb187ae98bedc51429e4f",
+  "prompt_characters": 2413,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206792.4388626,
+    "windows": {
+      "five_hour": {
+        "used_percent": 5.0,
+        "resets_at": 1792213799.738712,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792277999.738727,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206792.8357081,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "The guard uses truthiness, so max_price=0 is treated as absent and no price filter is applied. R1 requires zero to mean only free products.",
+        "evidence": "T1: if limit: return [p for p in items if p.price_cents <= limit]; otherwise return items. Baseline: parseOptionalNonnegativeInt distinguishes missing (None) and zero. R1: zero means only free products.",
+        "failure_scenario": "A request with max_price=0 returns every tenant product, including products priced above zero.",
+        "fix": "Use 'if limit is not None:' so None means no bound and 0 keeps only products with price_cents <= 0."
+      },
+      {
+        "task": "T2",
+        "severity": "high",
+        "issue": "Filtering runs after pagination, so max_price applies only within one page. R2 requires filtering the entire tenant catalog before sorting and pagination.",
+        "evidence": "R2: Filter the entire tenant's catalog, sort by immutable product ID ascending, THEN paginate. T2: page=paginate(rows, offset, size); return filter(page, max_price).",
+        "failure_scenario": "With IDs in order p1=2000, p2=3000, p3=100, p4=100, size=2 and max_price=500, offset=0 returns an empty page although p3 and p4 match. A client that stops at the first empty page never receives them. Page sizes also vary, and offsets count unfiltered rows.",
+        "fix": "Filter the full catalog first: rows=filter(findAllForTenant(session.tenant_id), max_price); rows=sortById(rows); return paginate(rows, offset, size). Requires the T1 fix."
+      },
+      {
+        "task": "T3",
+        "severity": "medium",
+        "issue": "The test list omits the max_price=0 boundary, so the T1 defect would pass verification.",
+        "evidence": "T3: test missing limit, limit=1500, negative, decimal and tenant isolation. R1: zero means only free products.",
+        "failure_scenario": "The suite passes while max_price=0 returns the full catalog, so the zero boundary of the optional maximum price is never exercised.",
+        "fix": "Add a max_price=0 case with at least one free and one priced product, and assert that only the free product is returned."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "The only fixture places all four products on one page, so the T2 ordering defect cannot fail. No test checks ascending ID order or an offset window, and the baseline does not cover sortById.",
+        "evidence": "T3: Test data has two matching products and two expensive ones, all within a single page. Baseline covers findAllForTenant, parseOptionalNonnegativeInt and paginate; sortById is not listed.",
+        "failure_scenario": "The described tests pass with the R2 defect. Clients that stop at the first empty page miss matches on later pages, and an incorrect sortById direction would go undetected.",
+        "fix": "Add a case where matches fall beyond the first page (for example, size=2 with matches at sorted positions 3 and 4). Assert that IDs ascend and that all pages together return the filtered set exactly once."
+      },
+      {
+        "task": "T3",
+        "severity": "medium",
+        "issue": "The tenant isolation test describes no other-tenant products, so it cannot fail on a leak.",
+        "evidence": "T3: test missing limit, limit=1500, negative, decimal and tenant isolation. Test data has two matching products and two expensive ones, all within a single page.",
+        "failure_scenario": "A regression that returns another tenant's products under the price bound passes the suite, so 'no tenant data leaks' is reported as met without evidence.",
+        "fix": "Seed a second tenant with products at or below max_price and assert that none of them appear in the session tenant's responses."
+      },
+      {
+        "task": "T3",
+        "severity": "low",
+        "issue": "Acceptance covers only the price filter and tenant isolation. It does not cover R2 ordering and pagination or R4 400 responses.",
+        "evidence": "Acceptance: optional maximum price works and no tenant data leaks.",
+        "failure_scenario": "The work can be accepted while pagination order or the 400 response for invalid max_price is broken.",
+        "fix": "Extend acceptance to require ascending-ID paging with the filter applied before pagination, and a 400 response for negative or decimal max_price."
+      }
+    ],
+    "uncertainties": [
+      "R4 refers to 'limits' without defining them. The plan validates only max_price, and T2 uses offset and size with no stated validation. Confirm whether R4 covers pagination parameters.",
+      "The input does not state how parseOptionalNonnegativeInt signals rejection or that the endpoint maps it to HTTP 400, and T3 does not specify asserted status codes."
+    ]
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"T1\",\n      \"severity\": \"high\",\n      \"issue\": \"The guard uses truthiness, so max_price=0 is treated as absent and no price filter is applied. R1 requires zero to mean only free products.\",\n      \"evidence\": \"T1: if limit: return [p for p in items if p.price_cents <= limit]; otherwise return items. Baseline: parseOptionalNonnegativeInt distinguishes missing (None) and zero. R1: zero means only free products.\",\n      \"failure_scenario\": \"A request with max_price=0 returns every tenant product, including products priced above zero.\",\n      \"fix\": \"Use 'if limit is not None:' so None means no bound and 0 keeps only products with price_cents <= 0.\"\n    },\n    {\n      \"task\": \"T2\",\n      \"severity\": \"high\",\n      \"issue\": \"Filtering runs after pagination, so max_price applies only within one page. R2 requires filtering the entire tenant catalog before sorting and pagination.\",\n      \"evidence\": \"R2: Filter the entire tenant's catalog, sort by immutable product ID ascending, THEN paginate. T2: page=paginate(rows, offset, size); return filter(page, max_price).\",\n      \"failure_scenario\": \"With IDs in order p1=2000, p2=3000, p3=100, p4=100, size=2 and max_price=500, offset=0 returns an empty page although p3 and p4 match. A client that stops at the first empty page never receives them. Page sizes also vary, and offsets count unfiltered rows.\",\n      \"fix\": \"Filter the full catalog first: rows=filter(findAllForTenant(session.tenant_id), max_price); rows=sortById(rows); return paginate(rows, offset, size). Requires the T1 fix.\"\n    },\n    {\n      \"task\": \"T3\",\n      \"severity\": \"medium\",\n      \"issue\": \"The test list omits the max_price=0 boundary, so the T1 defect would pass verification.\",\n      \"evidence\": \"T3: test missing limit, limit=1500, negative, decimal and tenant isolation. R1: zero means only free products.\",\n      \"failure_scenario\": \"The suite passes while max_price=0 returns the full catalog, so the zero boundary of the optional maximum price is never exercised.\",\n      \"fix\": \"Add a max_price=0 case with at least one free and one priced product, and assert that only the free product is returned.\"\n    },\n    {\n      \"task\": \"T3\",\n      \"severity\": \"high\",\n      \"issue\": \"The only fixture places all four products on one page, so the T2 ordering defect cannot fail. No test checks ascending ID order or an offset window, and the baseline does not cover sortById.\",\n      \"evidence\": \"T3: Test data has two matching products and two expensive ones, all within a single page. Baseline covers findAllForTenant, parseOptionalNonnegativeInt and paginate; sortById is not listed.\",\n      \"failure_scenario\": \"The described tests pass with the R2 defect. Clients that stop at the first empty page miss matches on later pages, and an incorrect sortById direction would go undetected.\",\n      \"fix\": \"Add a case where matches fall beyond the first page (for example, size=2 with matches at sorted positions 3 and 4). Assert that IDs ascend and that all pages together return the filtered set exactly once.\"\n    },\n    {\n      \"task\": \"T3\",\n      \"severity\": \"medium\",\n      \"issue\": \"The tenant isolation test describes no other-tenant products, so it cannot fail on a leak.\",\n      \"evidence\": \"T3: test missing limit, limit=1500, negative, decimal and tenant isolation. Test data has two matching products and two expensive ones, all within a single page.\",\n      \"failure_scenario\": \"A regression that returns another tenant's products under the price bound passes the suite, so 'no tenant data leaks' is reported as met without evidence.\",\n      \"fix\": \"Seed a second tenant with products at or below max_price and assert that none of them appear in the session tenant's responses.\"\n    },\n    {\n      \"task\": \"T3\",\n      \"severity\": \"low\",\n      \"issue\": \"Acceptance covers only the price filter and tenant isolation. It does not cover R2 ordering and pagination or R4 400 responses.\",\n      \"evidence\": \"Acceptance: optional maximum price works and no tenant data leaks.\",\n      \"failure_scenario\": \"The work can be accepted while pagination order or the 400 response for invalid max_price is broken.\",\n      \"fix\": \"Extend acceptance to require ascending-ID paging with the filter applied before pagination, and a 400 response for negative or decimal max_price.\"\n    }\n  ],\n  \"uncertainties\": [\n    \"R4 refers to 'limits' without defining them. The plan validates only max_price, and T2 uses offset and size with no stated validation. Confirm whether R4 covers pagination parameters.\",\n    \"The input does not state how parseOptionalNonnegativeInt signals rejection or that the endpoint maps it to HTTP 400, and T3 does not specify asserted status codes.\"\n  ]\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 5586,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 27692,
+    "output_tokens_details": {
+      "thinking_tokens": 26010
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5586,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 115.154,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792206907.989564,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792213800.242915,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.242936,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

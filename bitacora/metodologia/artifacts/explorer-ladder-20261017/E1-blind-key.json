@@ -1,0 +1,14 @@
+[
+  {
+    "label": "E1-A",
+    "record": "E1-luna-a2.json"
+  },
+  {
+    "label": "E1-B",
+    "record": "E1-haiku-a2.json"
+  },
+  {
+    "label": "E1-C",
+    "record": "gemini-recovery/E1-gemini-a2.json"
+  }
+]

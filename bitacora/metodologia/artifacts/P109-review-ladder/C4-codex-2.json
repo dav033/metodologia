@@ -1,0 +1,106 @@
+{
+  "case": "C4",
+  "profile": "codex-2",
+  "provider": "codex",
+  "requested_model": "gpt-6.1-sol",
+  "requested_effort": "high",
+  "prompt_sha256": "d9ad8244767bc360cc6385109aa23865b1be8e417e76aee5f7fd57befbaca4b3",
+  "prompt_characters": 4030,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206411.601611,
+    "windows": {
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206412.2435756,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "Rounding each unit price before summing violates the required invoice-level rounding formula.",
+        "evidence": "Contract: \"Invoice total equals round_half_up(sum(unit_price_decimal * quantity),2)\". T1: \"compute cents_per_unit=round_half_up(unit_price*100), invoice_cents=sum(cents_per_unit*quantity)\".",
+        "failure_scenario": "For price 0.335 and quantity 3, the contractual total is round_half_up(1.005,2)=1.01, or 101 cents. T1 produces 34*3=102 cents.",
+        "fix": "Sum the unrounded Decimal price-times-quantity values, round the invoice total once with ROUND_HALF_UP to two decimal places, then convert to integer cents. Assert that the supplied fixture produces 101 cents."
+      },
+      {
+        "task": "T2",
+        "severity": "high",
+        "issue": "Generating a fresh provider key for each attempt defeats idempotency for the same logical invoice charge.",
+        "evidence": "Provider guarantees \"at-most-one charge PER idempotency key for 72h\" and \"a timeout may occur after the charge succeeded\". T2 retries while \"generating a fresh key for each attempt\"; the provider has no lookup by invoice metadata.",
+        "failure_scenario": "The provider successfully charges the invoice but its response times out. The next attempt uses a new key and creates another charge. The unique charge.invoice_id constraint cannot prevent these external duplicate charges.",
+        "fix": "Persist one provider idempotency key in the reserved invoice charge row before calling the provider, and reuse it across retries, restarts and competing executions. Keep automatic retries within the provider's 72-hour guarantee; do not blindly retry an unresolved charge after that guarantee expires. Test timeout-after-success and restart recovery."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "The inbox marker commits independently of the business update, so it can permanently suppress unfinished processing.",
+        "evidence": "T3 commits transaction A containing the inbox event_id before transaction B updates the charge and creates the outbox row. \"If inbox event_id already exists, respond 200 immediately without transaction B.\"",
+        "failure_scenario": "A crash after A commits and before B commits leaves an inbox marker without the charge update or notification event. Every redelivery returns 200, so the missing business update is never recovered.",
+        "fix": "Insert the inbox marker, update the charge and create the outbox event in one database transaction. Return the duplicate response only when the existing marker represents committed processing. Test a crash at the former A/B boundary and successful redelivery."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "Finalization does not fence stale lease generations from overwriting job state and results.",
+        "evidence": "T4 finalizes with \"UPDATE jobs SET state='completed',result=:result WHERE id=:id; no generation/owner predicate\". Worker A can resume with generation 7 after B acquires generation 8.",
+        "failure_scenario": "A resumes after its lease expires and writes its stale result while generation 8 belongs to B, potentially overwriting B's result or prematurely completing B's job.",
+        "fix": "Condition the atomic finalization update on the acquired generation matching the job's current generation, and treat zero affected rows as loss of ownership. Test A pausing beyond lease expiry, B acquiring generation 8, and A attempting finalization."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Marking an outbox event sent before publishing creates a permanent notification-loss window.",
+        "evidence": "T5 \"sets sent=true, commits; then publishes\". Restart scans \"WHERE sent=false\" and \"No reconciliation scans sent rows.\"",
+        "failure_scenario": "The dispatcher crashes after committing sent=true but before publishing. Restart never selects that event, so a committed payment never produces its required logical notification.",
+        "fix": "Publish using the persisted immutable event ID, wait for acknowledgment, then mark the event sent. On a crash or lost acknowledgment, retry the unchanged event ID using the guaranteed consumer deduplication. Test crashes before publish, after broker acceptance and before marking sent, plus acknowledgment loss."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"T1\",\n      \"severity\": \"high\",\n      \"issue\": \"Rounding each unit price before summing violates the required invoice-level rounding formula.\",\n      \"evidence\": \"Contract: \\\"Invoice total equals round_half_up(sum(unit_price_decimal * quantity),2)\\\". T1: \\\"compute cents_per_unit=round_half_up(unit_price*100), invoice_cents=sum(cents_per_unit*quantity)\\\".\",\n      \"failure_scenario\": \"For price 0.335 and quantity 3, the contractual total is round_half_up(1.005,2)=1.01, or 101 cents. T1 produces 34*3=102 cents.\",\n      \"fix\": \"Sum the unrounded Decimal price-times-quantity values, round the invoice total once with ROUND_HALF_UP to two decimal places, then convert to integer cents. Assert that the supplied fixture produces 101 cents.\"\n    },\n    {\n      \"task\": \"T2\",\n      \"severity\": \"high\",\n      \"issue\": \"Generating a fresh provider key for each attempt defeats idempotency for the same logical invoice charge.\",\n      \"evidence\": \"Provider guarantees \\\"at-most-one charge PER idempotency key for 72h\\\" and \\\"a timeout may occur after the charge succeeded\\\". T2 retries while \\\"generating a fresh key for each attempt\\\"; the provider has no lookup by invoice metadata.\",\n      \"failure_scenario\": \"The provider successfully charges the invoice but its response times out. The next attempt uses a new key and creates another charge. The unique charge.invoice_id constraint cannot prevent these external duplicate charges.\",\n      \"fix\": \"Persist one provider idempotency key in the reserved invoice charge row before calling the provider, and reuse it across retries, restarts and competing executions. Keep automatic retries within the provider's 72-hour guarantee; do not blindly retry an unresolved charge after that guarantee expires. Test timeout-after-success and restart recovery.\"\n    },\n    {\n      \"task\": \"T3\",\n      \"severity\": \"high\",\n      \"issue\": \"The inbox marker commits independently of the business update, so it can permanently suppress unfinished processing.\",\n      \"evidence\": \"T3 commits transaction A containing the inbox event_id before transaction B updates the charge and creates the outbox row. \\\"If inbox event_id already exists, respond 200 immediately without transaction B.\\\"\",\n      \"failure_scenario\": \"A crash after A commits and before B commits leaves an inbox marker without the charge update or notification event. Every redelivery returns 200, so the missing business update is never recovered.\",\n      \"fix\": \"Insert the inbox marker, update the charge and create the outbox event in one database transaction. Return the duplicate response only when the existing marker represents committed processing. Test a crash at the former A/B boundary and successful redelivery.\"\n    },\n    {\n      \"task\": \"T4\",\n      \"severity\": \"high\",\n      \"issue\": \"Finalization does not fence stale lease generations from overwriting job state and results.\",\n      \"evidence\": \"T4 finalizes with \\\"UPDATE jobs SET state='completed',result=:result WHERE id=:id; no generation/owner predicate\\\". Worker A can resume with generation 7 after B acquires generation 8.\",\n      \"failure_scenario\": \"A resumes after its lease expires and writes its stale result while generation 8 belongs to B, potentially overwriting B's result or prematurely completing B's job.\",\n      \"fix\": \"Condition the atomic finalization update on the acquired generation matching the job's current generation, and treat zero affected rows as loss of ownership. Test A pausing beyond lease expiry, B acquiring generation 8, and A attempting finalization.\"\n    },\n    {\n      \"task\": \"T5\",\n      \"severity\": \"high\",\n      \"issue\": \"Marking an outbox event sent before publishing creates a permanent notification-loss window.\",\n      \"evidence\": \"T5 \\\"sets sent=true, commits; then publishes\\\". Restart scans \\\"WHERE sent=false\\\" and \\\"No reconciliation scans sent rows.\\\"\",\n      \"failure_scenario\": \"The dispatcher crashes after committing sent=true but before publishing. Restart never selects that event, so a committed payment never produces its required logical notification.\",\n      \"fix\": \"Publish using the persisted immutable event ID, wait for acknowledgment, then mark the event sent. On a crash or lost acknowledgment, retry the unchanged event ID using the guaranteed consumer deduplication. Test crashes before publish, after broker acceptance and before marking sent, plus acknowledgment loss.\"\n    }\n  ],\n  \"uncertainties\": []\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 15355,
+    "cached_input_tokens": 12288,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1341,
+    "reasoning_output_tokens": 368
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 31.938,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206444.1819983,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

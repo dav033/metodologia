@@ -1,0 +1,90 @@
+{
+  "case": "C2",
+  "profile": "codex-2",
+  "provider": "codex",
+  "requested_model": "gpt-6.1-sol",
+  "requested_effort": "high",
+  "prompt_sha256": "61aade8d5e2b90b9eee1044aed7f25e1ccc04968a91123f0729926a6a5b4258a",
+  "prompt_characters": 2774,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206281.2155044,
+    "windows": {
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206281.9921389,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T1",
+        "severity": "high",
+        "issue": "The dependency graph contains a cycle: T1 → T2 → T3 → T1.",
+        "evidence": "T1 after=[T3]; T2 after=[T1]; T3 after=[T2].",
+        "failure_scenario": "None of T1, T2 or T3 can start while respecting its prerequisites, blocking implementation and final verification.",
+        "fix": "Remove T3 from T1's prerequisites. Retain T1 → T2 → T3; the derived snapshot is explicitly not a deployment prerequisite."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "T2 and T4 modify the same checked-in contract without a dependency path or named merge owner.",
+        "evidence": "Both tasks write packages/contracts/order.ts and declare resources=[order-contract]. T2 and T4 both have after=[T1]. No merge owner exists.",
+        "failure_scenario": "Concurrent contract edits can conflict or overwrite one another, leaving producer and consumer changes based on different definitions.",
+        "fix": "Add T2 as a prerequisite of T4 so its contract patch follows generation, then verify both producer and consumer compile against the final checked-in definition."
+      },
+      {
+        "task": "T5",
+        "severity": "medium",
+        "issue": "The verification command short-circuits on failure and does not explicitly capture each check's exit status.",
+        "evidence": "command='npm run lint && npm run typecheck && npm run test:unit'; acceptance='record the exit status of all three checks, including if lint fails'.",
+        "failure_scenario": "If lint fails, typecheck and unit tests never execute; if typecheck fails, unit tests never execute. The required three exit statuses cannot be recorded.",
+        "fix": "Run all three checks independently, capture and record each exit status immediately, and report overall failure if any check fails."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"T1\",\n      \"severity\": \"high\",\n      \"issue\": \"The dependency graph contains a cycle: T1 → T2 → T3 → T1.\",\n      \"evidence\": \"T1 after=[T3]; T2 after=[T1]; T3 after=[T2].\",\n      \"failure_scenario\": \"None of T1, T2 or T3 can start while respecting its prerequisites, blocking implementation and final verification.\",\n      \"fix\": \"Remove T3 from T1's prerequisites. Retain T1 → T2 → T3; the derived snapshot is explicitly not a deployment prerequisite.\"\n    },\n    {\n      \"task\": \"T4\",\n      \"severity\": \"high\",\n      \"issue\": \"T2 and T4 modify the same checked-in contract without a dependency path or named merge owner.\",\n      \"evidence\": \"Both tasks write packages/contracts/order.ts and declare resources=[order-contract]. T2 and T4 both have after=[T1]. No merge owner exists.\",\n      \"failure_scenario\": \"Concurrent contract edits can conflict or overwrite one another, leaving producer and consumer changes based on different definitions.\",\n      \"fix\": \"Add T2 as a prerequisite of T4 so its contract patch follows generation, then verify both producer and consumer compile against the final checked-in definition.\"\n    },\n    {\n      \"task\": \"T5\",\n      \"severity\": \"medium\",\n      \"issue\": \"The verification command short-circuits on failure and does not explicitly capture each check's exit status.\",\n      \"evidence\": \"command='npm run lint && npm run typecheck && npm run test:unit'; acceptance='record the exit status of all three checks, including if lint fails'.\",\n      \"failure_scenario\": \"If lint fails, typecheck and unit tests never execute; if typecheck fails, unit tests never execute. The required three exit statuses cannot be recorded.\",\n      \"fix\": \"Run all three checks independently, capture and record each exit status immediately, and report overall failure if any check fails.\"\n    }\n  ],\n  \"uncertainties\": []\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 15142,
+    "cached_input_tokens": 12288,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 629,
+    "reasoning_output_tokens": 168
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 14.478,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206296.47,
+    "windows": {
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

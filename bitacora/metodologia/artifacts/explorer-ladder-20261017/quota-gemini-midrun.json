@@ -1,0 +1,30 @@
+{
+  "scope": "Supplemental mid-run sample; per-cell repaired AGY quota reads failed because the wrapper asserted a relative executable while the quota reader uses an absolute path. No native model call was made by this read. Do not treat this sample as the first repaired cell baseline.",
+  "sample": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792248375.073141,
+    "windows": {
+      "seven_day": {
+        "used_percent": 2.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792265867.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792853174.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792266374.0,
+        "window_minutes": 300
+      }
+    }
+  }
+}

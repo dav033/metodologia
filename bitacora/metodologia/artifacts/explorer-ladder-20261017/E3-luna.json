@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "case": "E3",
+  "route": {
+    "id": "luna",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "8708ced3629ff6fb60e5a3d6c1a9a37ea80acef82d39c770840e47c186aa3916",
+  "prompt_characters": 2669,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248003.282352,
+    "windows": {
+      "five_hour": {
+        "used_percent": 54.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248003.9434035,
+  "argv": [
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "--json",
+    "-"
+  ],
+  "answer": {
+    "case": "E3",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "`plan-json history` accepts an optional positional `req`, but `dispatch` rejects any non-None value with status 2 before checking `--force` or `--kind`. With no REQ, it then rejects `--force`, then missing `--kind`, and otherwise calls `project_history`; producer input errors are also returned as status 2. The CLI test asserts that history needs `--kind` and other actions need a REQ.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "add_parser",
+            "start_line": 13,
+            "end_line": 24
+          },
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "dispatch",
+            "start_line": 27,
+            "end_line": 49
+          },
+          {
+            "path": "skill/scripts/tests/test_plan_history.py",
+            "symbol": "PlanningHistoryProjectionTests.test_cli_rejects_missing_kind_and_requirement_id_for_other_actions",
+            "start_line": 80,
+            "end_line": 103
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "Accepted kinds are `implement`, `test`, `docs`, `audit`, and `research`. Context fields are `complexity` (`low`, `medium`, `high`, `extreme`), `scope` (`isolated_fix`, `small_change`, `large_change`, `full_feature`, `full_system`), and `risk`/`coupling` (`low`, `medium`, `high`). Omitted dimensions are returned as `null`. Unknown context keys, non-string keys, non-mapping context, invalid values, and invalid kinds raise redacted `PlanningHistoryInputError`s; CLI `choices` also reject unsupported values during argument parsing.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "KINDS",
+            "start_line": 27,
+            "end_line": 30
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/contracts.py",
+            "symbol": "COMPLEXITY_VALUES",
+            "start_line": 7,
+            "end_line": 13
+          },
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "CONTEXT_FIELDS",
+            "start_line": 13,
+            "end_line": 21
+          },
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "project_history",
+            "start_line": 53,
+            "end_line": 61
+          },
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "add_parser",
+            "start_line": 19,
+            "end_line": 24
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "The result includes four metrics, all with `status` and `source_quality` set to `unknown`, a null `comparability_key`, and a reason. Quality has `samples`, `successes`, `failures`, `observed_rate`, and `uncertainty_interval_95` all null. Duration has null `samples`, `median`, and `range`, with unit `seconds`. Retries has null `samples` and `count`. Consumption has null `samples`, `unit`, `median`, `range`, and `coverage`. These are schema placeholders, not observed numbers.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "_unknown_metric",
+            "start_line": 36,
+            "end_line": 43
+          },
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "project_history",
+            "start_line": 63,
+            "end_line": 87
+          },
+          {
+            "path": "skill/scripts/tests/test_plan_history.py",
+            "symbol": "PlanningHistoryProjectionTests.test_projection_keeps_all_metrics_unknown_without_cross_route_sources",
+            "start_line": 19,
+            "end_line": 40
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "The history projection directly constructs unknown metrics; its caller passes only kind and normalized context, and it does not load or aggregate telemetry. Nearby M2 route snapshots are keyed by provider/model/profile/effort/kind and wired into route candidates. A separate M2 performance-history aggregator requires a route ID, correlated eligible outcomes, and context data. Attempt rows expose route and duration/token details, but the projection’s stated rationale is that attempts are not correlated to applied M6 outcomes and token units differ across providers. Those route-scoped or differently correlated inputs therefore do not automatically become this cross-route projection’s measurements.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_cli_plan.py",
+            "symbol": "dispatch",
+            "start_line": 41,
+            "end_line": 49
+          },
+          {
+            "path": "skill/scripts/bt_plan_history.py",
+            "symbol": "project_history",
+            "start_line": 46,
+            "end_line": 51
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_history_snapshot",
+            "start_line": 154,
+            "end_line": 180
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_candidate_rows",
+            "start_line": 233,
+            "end_line": 259
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "aggregate_performance_history",
+            "start_line": 273,
+            "end_line": 301
+          },
+          {
+            "path": "skill/scripts/bt_events.py",
+            "symbol": "record_attempt",
+            "start_line": 232,
+            "end_line": 257
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "The tests assert that all projection metrics remain unknown with null measurements, and recursively check serialized output for the keys `route`, `route_id`, `provider`, `model`, `account`, `effort`, and `quota`. They also assert the report can be JSON-serialized. These source assertions do not measure live performance, inspect live telemetry, or establish whether any route has enough observed samples.",
+        "evidence": [
+          {
+            "path": "skill/scripts/tests/test_plan_history.py",
+            "symbol": "PlanningHistoryProjectionTests.test_projection_keeps_all_metrics_unknown_without_cross_route_sources",
+            "start_line": 19,
+            "end_line": 40
+          },
+          {
+            "path": "skill/scripts/tests/test_plan_history.py",
+            "symbol": "PlanningHistoryProjectionTests.test_serialized_projection_contains_no_route_or_account_fields",
+            "start_line": 50,
+            "end_line": 64
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "The source and assertions establish the projection contract, but do not establish live telemetry contents or current performance."
+    ]
+  },
+  "response_text": "{\"case\":\"E3\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"`plan-json history` accepts an optional positional `req`, but `dispatch` rejects any non-None value with status 2 before checking `--force` or `--kind`. With no REQ, it then rejects `--force`, then missing `--kind`, and otherwise calls `project_history`; producer input errors are also returned as status 2. The CLI test asserts that history needs `--kind` and other actions need a REQ.\",\"evidence\":[{\"path\":\"skill/scripts/bt_cli_plan.py\",\"symbol\":\"add_parser\",\"start_line\":13,\"end_line\":24},{\"path\":\"skill/scripts/bt_cli_plan.py\",\"symbol\":\"dispatch\",\"start_line\":27,\"end_line\":49},{\"path\":\"skill/scripts/tests/test_plan_history.py\",\"symbol\":\"PlanningHistoryProjectionTests.test_cli_rejects_missing_kind_and_requirement_id_for_other_actions\",\"start_line\":80,\"end_line\":103}]},{\"id\":\"Q2\",\"answer\":\"Accepted kinds are `implement`, `test`, `docs`, `audit`, and `research`. Context fields are `complexity` (`low`, `medium`, `high`, `extreme`), `scope` (`isolated_fix`, `small_change`, `large_change`, `full_feature`, `full_system`), and `risk`/`coupling` (`low`, `medium`, `high`). Omitted dimensions are returned as `null`. Unknown context keys, non-string keys, non-mapping context, invalid values, and invalid kinds raise redacted `PlanningHistoryInputError`s; CLI `choices` also reject unsupported values during argument parsing.\",\"evidence\":[{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"KINDS\",\"start_line\":27,\"end_line\":30},{\"path\":\"skill/scripts/bt_scheduler_decision/contracts.py\",\"symbol\":\"COMPLEXITY_VALUES\",\"start_line\":7,\"end_line\":13},{\"path\":\"skill/scripts/bt_plan_history.py\",\"symbol\":\"CONTEXT_FIELDS\",\"start_line\":13,\"end_line\":21},{\"path\":\"skill/scripts/bt_plan_history.py\",\"symbol\":\"project_history\",\"start_line\":53,\"end_line\":61},{\"path\":\"skill/scripts/bt_cli_plan.py\",\"symbol\":\"add_parser\",\"start_line\":19,\"end_line\":24}]},{\"id\":\"Q3\",\"answer\":\"The result includes four metrics, all with `status` and `source_quality` set to `unknown`, a null `comparability_key`, and a reason. Quality has `samples`, `successes`, `failures`, `observed_rate`, and `uncertainty_interval_95` all null. Duration has null `samples`, `median`, and `range`, with unit `seconds`. Retries has null `samples` and `count`. Consumption has null `samples`, `unit`, `median`, `range`, and `coverage`. These are schema placeholders, not observed numbers.\",\"evidence\":[{\"path\":\"skill/scripts/bt_plan_history.py\",\"symbol\":\"_unknown_metric\",\"start_line\":36,\"end_line\":43},{\"path\":\"skill/scripts/bt_plan_history.py\",\"symbol\":\"project_history\",\"start_line\":63,\"end_line\":87},{\"path\":\"skill/scripts/tests/test_plan_history.py\",\"symbol\":\"PlanningHistoryProjectionTests.test_projection_keeps_all_metrics_unknown_without_cross_route_sources\",\"start_line\":19,\"end_line\":40}]},{\"id\":\"Q4\",\"answer\":\"The history projection directly constructs unknown metrics; its caller passes only kind and normalized context, and it does not load or aggregate telemetry. Nearby M2 route snapshots are keyed by provider/model/profile/effort/kind and wired into route candidates. A separate M2 performance-history aggregator requires a route ID, correlated eligible outcomes, and context data. Attempt rows expose route and duration/token details, but the projection’s stated rationale is that attempts are not correlated to applied M6 outcomes and token units differ across providers. Those route-scoped or differently correlated inputs therefore do not automatically become this cross-route projection’s measurements.\",\"evidence\":[{\"path\":\"skill/scripts/bt_cli_plan.py\",\"symbol\":\"dispatch\",\"start_line\":41,\"end_line\":49},{\"path\":\"skill/scripts/bt_plan_history.py\",\"symbol\":\"project_history\",\"start_line\":46,\"end_line\":51},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_history_snapshot\",\"start_line\":154,\"end_line\":180},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_candidate_rows\",\"start_line\":233,\"end_line\":259},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"aggregate_performance_history\",\"start_line\":273,\"end_line\":301},{\"path\":\"skill/scripts/bt_events.py\",\"symbol\":\"record_attempt\",\"start_line\":232,\"end_line\":257}]},{\"id\":\"Q5\",\"answer\":\"The tests assert that all projection metrics remain unknown with null measurements, and recursively check serialized output for the keys `route`, `route_id`, `provider`, `model`, `account`, `effort`, and `quota`. They also assert the report can be JSON-serialized. These source assertions do not measure live performance, inspect live telemetry, or establish whether any route has enough observed samples.\",\"evidence\":[{\"path\":\"skill/scripts/tests/test_plan_history.py\",\"symbol\":\"PlanningHistoryProjectionTests.test_projection_keeps_all_metrics_unknown_without_cross_route_sources\",\"start_line\":19,\"end_line\":40},{\"path\":\"skill/scripts/tests/test_plan_history.py\",\"symbol\":\"PlanningHistoryProjectionTests.test_serialized_projection_contains_no_route_or_account_fields\",\"start_line\":50,\"end_line\":64}]}],\"unknowns\":[\"The source and assertions establish the projection contract, but do not establish live telemetry contents or current performance.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 288910,
+    "cached_input_tokens": 252800,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 3485,
+    "reasoning_output_tokens": 1006
+  },
+  "observed_models": [],
+  "observed_tool_events": 7,
+  "response_words": 340,
+  "exit_code": 0,
+  "elapsed_seconds": 38.92,
+  "finished_at": 1792248042.8643427,
+  "tool_audit": [
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files skill/scripts'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"plan-json history|history --kind|plan_history|history.*kind|REQ-[0-9]\" skill/scripts/bt_cli_plan.py skill/scripts/bt_plan_history.py skill/scripts/tests/test_plan_history.py skill/scripts/tests/test_plan* skill/scripts/bt_scheduler*'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'nl -ba skill/scripts/bt_cli_plan.py && nl -ba skill/scripts/bt_plan_history.py && nl -ba skill/scripts/tests/test_plan_history.py'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg -n \"quality|attempt|retry|duration|consumption|tokens|history\" skill/scripts/bt_scheduler_decision_adapter.py skill/scripts/bt_scheduler_quality_adapter.py skill/scripts/bt_scheduler_decision skill/scripts/tests/test_scheduler_decision_metric_history.py skill/scripts/tests/test_scheduler_m2_live_experiment.py skill/scripts/tests/test_attempt_detail.py skill/scripts/tests/test_quality_metrics.py skill/scripts/tests/test_plan_history.py'",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba skill/scripts/bt_scheduler_decision_adapter.py | sed -n '140,215p'; nl -ba skill/scripts/bt_scheduler_decision/history.py | sed -n '273,330p'; nl -ba skill/scripts/bt_events.py | sed -n '90,145p;210,285p;295,325p'; rg -n \\\"bt_plan_history|project_history\\\" skill/scripts\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg -n \\\"KINDS =|COMPLEXITY_VALUES|SCOPE_VALUES|LEVEL_VALUES|_history_snapshot\\\\(\\\" skill/scripts/bt_agents.py skill/scripts/bt_scheduler_decision/contracts.py skill/scripts/bt_scheduler_decision_adapter.py; nl -ba skill/scripts/bt_agents.py | sed -n '1,75p'; nl -ba skill/scripts/bt_scheduler_decision/contracts.py | sed -n '1,65p'; rg -n \\\"_history_snapshot|history_snapshot\\\" skill/scripts/bt_scheduler_decision_adapter.py skill/scripts/tests/test_scheduler*\"",
+      "command_truncated": false,
+      "exit_code": 0
+    },
+    {
+      "tool": "command_execution",
+      "command": "/usr/bin/bash -lc \"nl -ba skill/scripts/bt_scheduler_decision/history.py | sed -n '230,310p'; nl -ba skill/scripts/bt_scheduler_decision_adapter.py | sed -n '154,182p;230,260p'; nl -ba skill/scripts/bt_plan_history.py | sed -n '13,21p;46,88p';\"",
+      "command_truncated": false,
+      "exit_code": 0
+    }
+  ],
+  "event_shapes": {
+    "thread.started": [
+      "thread_id",
+      "type"
+    ],
+    "turn.started": [
+      "type"
+    ],
+    "item.completed": [
+      "item",
+      "type"
+    ],
+    "item.started": [
+      "item",
+      "type"
+    ],
+    "turn.completed": [
+      "type",
+      "usage"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792248042.89979,
+    "windows": {
+      "five_hour": {
+        "used_percent": 54.0,
+        "resets_at": 1792262722.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "case": "H1",
+  "route": {
+    "id": "sol",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "08b234531046b26b06ebd5f1563c071c0405df8e29d9a04520d6141c37f91491",
+  "prompt_characters": 9983,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209272.9881382,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209274.1288657,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "B2",
+        "severity": "high",
+        "issue": "Delimiter concatenation does not uniquely encode the ordered invoice identity.",
+        "evidence": "R1 requires distinct postings for distinct (tenant_id, invoice_id) tuples, and IDs may contain colons. G4 supplies a verified canonical tuple encoder. T2 preserves B2 unchanged.",
+        "failure_scenario": "The invoices ('a:b', 'c') and ('a', 'b:c') both hash the bytes for 'a:b:c'. Posting both within seven days lets provider deduplication suppress one legitimate invoice.",
+        "fix": "Hash canonical_tuple_bytes((tenant, invoice)) using the verified helper. Add a regression covering these two identities."
+      },
+      {
+        "task": "B3",
+        "severity": "high",
+        "issue": "The inclusive revision filter reapplies the event already represented at the snapshot boundary.",
+        "evidence": "R2 says snapshots include all events with revision <= through_revision. B3 accepts revision >= through_revision. T2's historical memo cannot override R2; T6 excludes exact-boundary events.",
+        "failure_scenario": "A snapshot through revision 10 contains EUR 100, including a EUR 5 event at revision 10. Rebuilding with that event returns EUR 105 instead of EUR 100.",
+        "fix": "Apply only events whose revision is strictly greater than snapshot.through_revision, preserving revision order. Include an exact-boundary regression."
+      },
+      {
+        "task": "B4",
+        "severity": "high",
+        "issue": "Event conversion uses the latest FX revision instead of the event's immutable FX revision.",
+        "evidence": "R3 requires e.fx_revision; R2 requires replay independent of current date. G3 guarantees get_rate retrieves the requested immutable revision, but B4 requests latest_rate_revision(). T2 retains this behavior; T6 uses equal historical/current rates.",
+        "failure_scenario": "An event has USD 100 and fx_revision pointing to 2 USD/EUR. Its contribution must be EUR 50. After a rate of 4 is published, the same event contributes EUR 25.",
+        "fix": "Fetch get_rate(e.fx_revision). Test differing historical/current rates and replay after publication of another revision; preserve registry immutability."
+      },
+      {
+        "task": "B4",
+        "severity": "medium",
+        "issue": "Cent quantization inherits half-even rounding instead of the required half-away-from-zero rounding.",
+        "evidence": "R3 specifies half away from zero. G3 explicitly sets the active context to ROUND_HALF_EVEN, and cents supplies no rounding override. T6 excludes half-cent ties.",
+        "failure_scenario": "An exact aggregate of EUR -0.005 quantizes to -0.00 and produces 0 cents. R3 requires -1 cent. Positive EUR 0.005 likewise produces 0 instead of 1.",
+        "fix": "Quantize the aggregate once with an explicit ROUND_HALF_UP override, then convert to integer cents. Cover positive and negative half-cent ties."
+      },
+      {
+        "task": "B5",
+        "severity": "high",
+        "issue": "The administrative UPDATE omits tenant identity and can overwrite other tenants' invoices.",
+        "evidence": "R1 requires every migration write to preserve tuple identity. G1 says the worker bypasses RLS and only its SELECT is scoped. G2 permits shared invoice IDs across tenants. T6 uses globally distinct invoice IDs and checks isolation through the ordinary API role.",
+        "failure_scenario": "Tenants A and B both have invoice 'x' with NULL migration_epoch. Loading A/'x' correctly and applying B5 updates both rows with A's balance, source revision and completion marker.",
+        "fix": "Add tenant_id=:tenant to the UPDATE predicate and bind tenant. Test shared invoice IDs using the actual administrative worker role."
+      },
+      {
+        "task": "B5",
+        "severity": "high",
+        "issue": "The completion marker does not prevent a stale backfill from replacing a newer live result.",
+        "evidence": "R4 says live writers leave migration_epoch unchanged and forbids stale replacement. G5 permits live commits between source read and target write. T3 relies on atomic UPDATE plus the marker; T6 has no concurrent live writer.",
+        "failure_scenario": "Backfill reads revision 5 with balance 500 cents. A live transaction commits revision 6 with balance_v2=600 and source_revision_v2=6, leaving migration_epoch NULL. B5 then writes 500 and source_revision_v2=5 and marks completion.",
+        "fix": "Add an atomic revision predicate proving the captured result is still current, such as ledger_revision=:source_rev for a reconstruction through that revision. On mismatch, reload/recompute or retain the newer live result with appropriate completion handling. Test this interleaving."
+      },
+      {
+        "task": "B6",
+        "severity": "high",
+        "issue": "Summing partition positions lets progress in one partition conceal a deficit in another.",
+        "evidence": "R5 requires every named partition to reach its own required position and forbids cross-partition numerical comparison. G5 already handles epoch matching, and B6 correctly checks required-partition presence. T4 nevertheless uses B6 for certification; T6 advances all partitions together.",
+        "failure_scenario": "For the same epoch, required={A:100, B:100} and applied={A:200, B:0} pass B6 because both sums equal 200. Partition B has not reached its required position.",
+        "fix": "Retain the epoch and presence checks, then require all(applied_positions[p] >= required_positions[p] for p in required_positions). Test independently lagging partitions."
+      },
+      {
+        "task": "B7",
+        "severity": "high",
+        "issue": "Unknown-outcome retries remain eligible after the provider's deduplication guarantee expires.",
+        "evidence": "R6 limits deduplication to seven days and permits holding manually reconciled unknowns. B7 checks receipt and attempt count but ignores first_attempt_at and now. T5 retains jobs for 30 days and permits late resume; T6 tests retries only within 60 seconds.",
+        "failure_scenario": "The provider accepts the first posting on day 0, but its response times out. The job retains no receipt and has fewer than 100 attempts. On day 30, an operator resumes it; the provider has forgotten the key and accepts a duplicate.",
+        "fix": "Persist and enforce an unknown-outcome retry policy on every resume path. Hold for reconciliation whenever provider deduplication can no longer guarantee safety, using first_attempt_at conservatively. Retry only when acceptance is guaranteed within the protected window; otherwise retain the unknown. Test late DLQ resume."
+      }
+    ],
+    "uncertainties": [
+      "Decimal precision and accepted USD value types/ranges are unspecified. Beyond the demonstrated rounding-mode defect, the supplied evidence does not establish exact aggregation for arbitrary amounts and FX rates, including nonterminating decimal quotients."
+    ]
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"B2\",\n      \"severity\": \"high\",\n      \"issue\": \"Delimiter concatenation does not uniquely encode the ordered invoice identity.\",\n      \"evidence\": \"R1 requires distinct postings for distinct (tenant_id, invoice_id) tuples, and IDs may contain colons. G4 supplies a verified canonical tuple encoder. T2 preserves B2 unchanged.\",\n      \"failure_scenario\": \"The invoices ('a:b', 'c') and ('a', 'b:c') both hash the bytes for 'a:b:c'. Posting both within seven days lets provider deduplication suppress one legitimate invoice.\",\n      \"fix\": \"Hash canonical_tuple_bytes((tenant, invoice)) using the verified helper. Add a regression covering these two identities.\"\n    },\n    {\n      \"task\": \"B3\",\n      \"severity\": \"high\",\n      \"issue\": \"The inclusive revision filter reapplies the event already represented at the snapshot boundary.\",\n      \"evidence\": \"R2 says snapshots include all events with revision <= through_revision. B3 accepts revision >= through_revision. T2's historical memo cannot override R2; T6 excludes exact-boundary events.\",\n      \"failure_scenario\": \"A snapshot through revision 10 contains EUR 100, including a EUR 5 event at revision 10. Rebuilding with that event returns EUR 105 instead of EUR 100.\",\n      \"fix\": \"Apply only events whose revision is strictly greater than snapshot.through_revision, preserving revision order. Include an exact-boundary regression.\"\n    },\n    {\n      \"task\": \"B4\",\n      \"severity\": \"high\",\n      \"issue\": \"Event conversion uses the latest FX revision instead of the event's immutable FX revision.\",\n      \"evidence\": \"R3 requires e.fx_revision; R2 requires replay independent of current date. G3 guarantees get_rate retrieves the requested immutable revision, but B4 requests latest_rate_revision(). T2 retains this behavior; T6 uses equal historical/current rates.\",\n      \"failure_scenario\": \"An event has USD 100 and fx_revision pointing to 2 USD/EUR. Its contribution must be EUR 50. After a rate of 4 is published, the same event contributes EUR 25.\",\n      \"fix\": \"Fetch get_rate(e.fx_revision). Test differing historical/current rates and replay after publication of another revision; preserve registry immutability.\"\n    },\n    {\n      \"task\": \"B4\",\n      \"severity\": \"medium\",\n      \"issue\": \"Cent quantization inherits half-even rounding instead of the required half-away-from-zero rounding.\",\n      \"evidence\": \"R3 specifies half away from zero. G3 explicitly sets the active context to ROUND_HALF_EVEN, and cents supplies no rounding override. T6 excludes half-cent ties.\",\n      \"failure_scenario\": \"An exact aggregate of EUR -0.005 quantizes to -0.00 and produces 0 cents. R3 requires -1 cent. Positive EUR 0.005 likewise produces 0 instead of 1.\",\n      \"fix\": \"Quantize the aggregate once with an explicit ROUND_HALF_UP override, then convert to integer cents. Cover positive and negative half-cent ties.\"\n    },\n    {\n      \"task\": \"B5\",\n      \"severity\": \"high\",\n      \"issue\": \"The administrative UPDATE omits tenant identity and can overwrite other tenants' invoices.\",\n      \"evidence\": \"R1 requires every migration write to preserve tuple identity. G1 says the worker bypasses RLS and only its SELECT is scoped. G2 permits shared invoice IDs across tenants. T6 uses globally distinct invoice IDs and checks isolation through the ordinary API role.\",\n      \"failure_scenario\": \"Tenants A and B both have invoice 'x' with NULL migration_epoch. Loading A/'x' correctly and applying B5 updates both rows with A's balance, source revision and completion marker.\",\n      \"fix\": \"Add tenant_id=:tenant to the UPDATE predicate and bind tenant. Test shared invoice IDs using the actual administrative worker role.\"\n    },\n    {\n      \"task\": \"B5\",\n      \"severity\": \"high\",\n      \"issue\": \"The completion marker does not prevent a stale backfill from replacing a newer live result.\",\n      \"evidence\": \"R4 says live writers leave migration_epoch unchanged and forbids stale replacement. G5 permits live commits between source read and target write. T3 relies on atomic UPDATE plus the marker; T6 has no concurrent live writer.\",\n      \"failure_scenario\": \"Backfill reads revision 5 with balance 500 cents. A live transaction commits revision 6 with balance_v2=600 and source_revision_v2=6, leaving migration_epoch NULL. B5 then writes 500 and source_revision_v2=5 and marks completion.\",\n      \"fix\": \"Add an atomic revision predicate proving the captured result is still current, such as ledger_revision=:source_rev for a reconstruction through that revision. On mismatch, reload/recompute or retain the newer live result with appropriate completion handling. Test this interleaving.\"\n    },\n    {\n      \"task\": \"B6\",\n      \"severity\": \"high\",\n      \"issue\": \"Summing partition positions lets progress in one partition conceal a deficit in another.\",\n      \"evidence\": \"R5 requires every named partition to reach its own required position and forbids cross-partition numerical comparison. G5 already handles epoch matching, and B6 correctly checks required-partition presence. T4 nevertheless uses B6 for certification; T6 advances all partitions together.\",\n      \"failure_scenario\": \"For the same epoch, required={A:100, B:100} and applied={A:200, B:0} pass B6 because both sums equal 200. Partition B has not reached its required position.\",\n      \"fix\": \"Retain the epoch and presence checks, then require all(applied_positions[p] >= required_positions[p] for p in required_positions). Test independently lagging partitions.\"\n    },\n    {\n      \"task\": \"B7\",\n      \"severity\": \"high\",\n      \"issue\": \"Unknown-outcome retries remain eligible after the provider's deduplication guarantee expires.\",\n      \"evidence\": \"R6 limits deduplication to seven days and permits holding manually reconciled unknowns. B7 checks receipt and attempt count but ignores first_attempt_at and now. T5 retains jobs for 30 days and permits late resume; T6 tests retries only within 60 seconds.\",\n      \"failure_scenario\": \"The provider accepts the first posting on day 0, but its response times out. The job retains no receipt and has fewer than 100 attempts. On day 30, an operator resumes it; the provider has forgotten the key and accepts a duplicate.\",\n      \"fix\": \"Persist and enforce an unknown-outcome retry policy on every resume path. Hold for reconciliation whenever provider deduplication can no longer guarantee safety, using first_attempt_at conservatively. Retry only when acceptance is guaranteed within the protected window; otherwise retain the unknown. Test late DLQ resume.\"\n    }\n  ],\n  \"uncertainties\": [\n    \"Decimal precision and accepted USD value types/ranges are unspecified. Beyond the demonstrated rounding-mode defect, the supplied evidence does not establish exact aggregation for arbitrary amounts and FX rates, including nonterminating decimal quotients.\"\n  ]\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 17025,
+    "cached_input_tokens": 12288,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 3450,
+    "reasoning_output_tokens": 1924
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 897,
+  "exit_code": 0,
+  "elapsed_seconds": 62.168,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209336.297386,
+    "windows": {
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

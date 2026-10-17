@@ -1,0 +1,75 @@
+{
+  "scope": "Same E4\u2013E6 for all four models; Gemini excluded here because E6 not run.",
+  "quality_method": "Coordinator judgement of 28 frozen question-level behavioral criteria, not independent defects or a universal intelligence score. Some grading route-hidden, final follow-up route-known. Content and strict JSON contract separate.",
+  "rows": [
+    {
+      "model": "luna",
+      "cases": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "tokens_total_including_cache": 2051248,
+      "wall_seconds_sum": 166.533,
+      "quality_full": 27,
+      "quality_partial": 1,
+      "quality_missing": 0,
+      "quality_denominator": 28,
+      "strict_contract_valid": 2,
+      "api_equivalent_usd": "0.04930520"
+    },
+    {
+      "model": "haiku",
+      "cases": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "tokens_total_including_cache": 6346257,
+      "wall_seconds_sum": 494.035,
+      "quality_full": 25,
+      "quality_partial": 3,
+      "quality_missing": 0,
+      "quality_denominator": 28,
+      "strict_contract_valid": 3,
+      "api_equivalent_usd": "0.51431944000000007"
+    },
+    {
+      "model": "sol",
+      "cases": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "tokens_total_including_cache": 1273732,
+      "wall_seconds_sum": 262.468,
+      "quality_full": 28,
+      "quality_partial": 0,
+      "quality_missing": 0,
+      "quality_denominator": 28,
+      "strict_contract_valid": 3,
+      "api_equivalent_usd": "0.6697216"
+    },
+    {
+      "model": "sonnet",
+      "cases": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "tokens_total_including_cache": 1852460,
+      "wall_seconds_sum": 281.534,
+      "quality_full": 28,
+      "quality_partial": 0,
+      "quality_missing": 0,
+      "quality_denominator": 28,
+      "strict_contract_valid": 2,
+      "api_equivalent_usd": "1.3581729"
+    }
+  ],
+  "format_notes": {
+    "E4-sonnet": "Extra citation object in answers array; content correct, strict contract failed.",
+    "E6-luna": "Returned case E1 instead of E6; content answers E6, metadata/strict contract failed."
+  },
+  "limits": "One sample per cell. API-equivalent estimates, not subscription invoice/quota. Nine excluded operational attempts not included. Full six-case report and Gemini continuation still pending."
+}

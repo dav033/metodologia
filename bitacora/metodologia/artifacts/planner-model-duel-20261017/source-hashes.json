@@ -1,0 +1,52 @@
+{
+  "planner_bundle_sha256": "bb8d1d2994ce4f56126e08aae00292c4fea59af0159ca27f4d465c724c56aa73",
+  "canonical_sources": [
+    {
+      "bytes": 5559,
+      "path": "skill/agents/planner.md",
+      "sha256": "35f57956e537d59b407b14c2feecb54610ed4775eb7a3d3720ce94673f42f3ad"
+    },
+    {
+      "bytes": 2073,
+      "path": "skill/agents/planner/skills/socratic-elicitation/SKILL.md",
+      "sha256": "15e351d457a6c532fbedba767b1e1bcc6e42168593f9c1d65370d9ae3216e483"
+    },
+    {
+      "bytes": 3806,
+      "path": "skill/agents/planner/skills/wbs-dag-decomposition/SKILL.md",
+      "sha256": "ab4db5ed691816c03ee1f5dd29989ebe16dd31b75e8ea77f1e6f5adbef0d7da5"
+    },
+    {
+      "bytes": 1390,
+      "path": "skill/agents/planner/skills/plan-mermaid-view/SKILL.md",
+      "sha256": "fbeba097608772d45ae454b58ab578c6d7bd3e66fccbd77f1278ddb3e153ce1d"
+    },
+    {
+      "bytes": 2975,
+      "path": "skill/agents/planner/skills/adversarial-plan-review/SKILL.md",
+      "sha256": "944e4eab07cae1b15a6ba7436e50c0c825acf5a08286d461593bb789c7cfb947"
+    },
+    {
+      "bytes": 17120,
+      "path": "skill/references/requirements.md",
+      "sha256": "b92e43437415f2cb41b7debfc8bc5d74108b0e88056cd55ce5d9b5fb9d2662b0"
+    },
+    {
+      "bytes": 7115,
+      "path": "skill/references/plan-contract.md",
+      "sha256": "bcf790074d51853d16dcc11881088282405b95f022bc67045616a1ea85e48df8"
+    },
+    {
+      "bytes": 19499,
+      "path": "skill/scripts/bt_planner/README.md",
+      "sha256": "c51c4285727877dbf8a95c7be6078f1e71269bab454e18b78bbfebd770096901"
+    },
+    {
+      "bytes": 8077,
+      "path": "skill/scripts/bt_planner/data/plan.schema.json",
+      "sha256": "92d291bb44c400fbcf568aa059e80ca45572413fcc2c8eed4713cf07682a0cb7"
+    }
+  ],
+  "schema_sha256": "92d291bb44c400fbcf568aa059e80ca45572413fcc2c8eed4713cf07682a0cb7",
+  "cases_sha256": "da880ee7019efaa6cf3b48b75e8409c586122865ee9491b52a43f114b871ec1f"
+}

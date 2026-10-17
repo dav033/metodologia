@@ -1,0 +1,27 @@
+[
+  {
+    "case": "E1",
+    "status": "completed",
+    "format_valid": true
+  },
+  {
+    "case": "E2",
+    "status": "completed",
+    "format_valid": true
+  },
+  {
+    "case": "E3",
+    "status": "completed",
+    "format_valid": true
+  },
+  {
+    "case": "E4",
+    "status": "completed",
+    "format_valid": true
+  },
+  {
+    "case": "E5",
+    "status": "completed",
+    "format_valid": false
+  }
+]

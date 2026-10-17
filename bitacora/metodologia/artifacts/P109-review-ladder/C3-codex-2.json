@@ -1,0 +1,98 @@
+{
+  "case": "C3",
+  "profile": "codex-2",
+  "provider": "codex",
+  "requested_model": "gpt-6.1-sol",
+  "requested_effort": "high",
+  "prompt_sha256": "f607c6548fa9cd09445d9705da124b7a0755c2645ecb983e0aac81ab11b4e905",
+  "prompt_characters": 3391,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206322.7561774,
+    "windows": {
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "started_at": 1792206323.4990094,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "high",
+        "issue": "The query tenant replaces the authenticated session tenant without authorization, allowing cross-tenant reads.",
+        "evidence": "owner=request.query.tenant ?? session.tenant_id; SELECT ... WHERE tenant_id=owner. Middleware authenticates the user but does not authorize the query tenant.",
+        "failure_scenario": "An authenticated tenant A user supplies tenant B's valid UUID and receives tenant B's documents. The own-document and malformed-tenant tests do not detect this.",
+        "fix": "Always constrain reads to session.tenant_id. Treat an optional query tenant as an additional constraint or reject it when it differs from the session tenant. Add an authenticated cross-tenant access test."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "The cursor predicate uses UUID order while batching uses creation order, so the backfill can permanently skip rows.",
+        "evidence": "The query uses WHERE id > :cursor ORDER BY created_at ASC,id ASC and persists selected[-1].id. The supplied snapshot has creation-ordered IDs 10,90,20,80, with first batch [10,90].",
+        "failure_scenario": "After persisting cursor=90, both remaining IDs 20 and 80 fail id>90. Their tenant_id values remain unfilled, making documents unavailable through the new endpoint and preventing the NOT NULL constraint.",
+        "fix": "Use ORDER BY id ASC with the existing UUID cursor, or persist and compare the complete (created_at,id) ordering tuple. Test the supplied nonmonotonic snapshot through interruption and resume."
+      },
+      {
+        "task": "T4",
+        "severity": "medium",
+        "issue": "The purge predicate deletes documents at exactly 30 days, violating the inclusive retention boundary.",
+        "evidence": "The mission keeps documents whose age is <=30 days, while T4 deletes where age>=30days and tests only ages 29 and 31 days.",
+        "failure_scenario": "A document exactly 30 days old is deleted even though the retention policy requires keeping it.",
+        "fix": "Delete only where age>30days and add an exact-30-day retention test."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Dropping the legacy owner column after 15 minutes makes the documented 24-hour rollback impossible.",
+        "evidence": "First new-version traffic starts at 12:00 UTC; the legacy column and trigger are dropped at 12:15. The old binary fails if that column is absent, and no database restore, recreation, or reverse backfill is available.",
+        "failure_scenario": "A rollback at 13:00 redeploys the old binary, which fails because legacy_owner_tenant has already been removed.",
+        "fix": "Retain legacy_owner_tenant and the verified dual-write trigger throughout the rollback window ending next-day 12:00 UTC. Schedule their removal afterward and verify that old-binary rollback remains executable during the window."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\n  \"verdict\": \"needs_changes\",\n  \"findings\": [\n    {\n      \"task\": \"T2\",\n      \"severity\": \"high\",\n      \"issue\": \"The query tenant replaces the authenticated session tenant without authorization, allowing cross-tenant reads.\",\n      \"evidence\": \"owner=request.query.tenant ?? session.tenant_id; SELECT ... WHERE tenant_id=owner. Middleware authenticates the user but does not authorize the query tenant.\",\n      \"failure_scenario\": \"An authenticated tenant A user supplies tenant B's valid UUID and receives tenant B's documents. The own-document and malformed-tenant tests do not detect this.\",\n      \"fix\": \"Always constrain reads to session.tenant_id. Treat an optional query tenant as an additional constraint or reject it when it differs from the session tenant. Add an authenticated cross-tenant access test.\"\n    },\n    {\n      \"task\": \"T3\",\n      \"severity\": \"high\",\n      \"issue\": \"The cursor predicate uses UUID order while batching uses creation order, so the backfill can permanently skip rows.\",\n      \"evidence\": \"The query uses WHERE id > :cursor ORDER BY created_at ASC,id ASC and persists selected[-1].id. The supplied snapshot has creation-ordered IDs 10,90,20,80, with first batch [10,90].\",\n      \"failure_scenario\": \"After persisting cursor=90, both remaining IDs 20 and 80 fail id>90. Their tenant_id values remain unfilled, making documents unavailable through the new endpoint and preventing the NOT NULL constraint.\",\n      \"fix\": \"Use ORDER BY id ASC with the existing UUID cursor, or persist and compare the complete (created_at,id) ordering tuple. Test the supplied nonmonotonic snapshot through interruption and resume.\"\n    },\n    {\n      \"task\": \"T4\",\n      \"severity\": \"medium\",\n      \"issue\": \"The purge predicate deletes documents at exactly 30 days, violating the inclusive retention boundary.\",\n      \"evidence\": \"The mission keeps documents whose age is <=30 days, while T4 deletes where age>=30days and tests only ages 29 and 31 days.\",\n      \"failure_scenario\": \"A document exactly 30 days old is deleted even though the retention policy requires keeping it.\",\n      \"fix\": \"Delete only where age>30days and add an exact-30-day retention test.\"\n    },\n    {\n      \"task\": \"T5\",\n      \"severity\": \"high\",\n      \"issue\": \"Dropping the legacy owner column after 15 minutes makes the documented 24-hour rollback impossible.\",\n      \"evidence\": \"First new-version traffic starts at 12:00 UTC; the legacy column and trigger are dropped at 12:15. The old binary fails if that column is absent, and no database restore, recreation, or reverse backfill is available.\",\n      \"failure_scenario\": \"A rollback at 13:00 redeploys the old binary, which fails because legacy_owner_tenant has already been removed.\",\n      \"fix\": \"Retain legacy_owner_tenant and the verified dual-write trigger throughout the rollback window ending next-day 12:00 UTC. Schedule their removal afterward and verify that old-binary rollback remains executable during the window.\"\n    }\n  ],\n  \"uncertainties\": []\n}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 15284,
+    "cached_input_tokens": 12288,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 893,
+    "reasoning_output_tokens": 206
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 22.013,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792206345.511904,
+    "windows": {
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

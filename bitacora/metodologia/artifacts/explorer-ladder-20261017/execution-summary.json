@@ -1,0 +1,14 @@
+[
+  {
+    "provider": "codex",
+    "status": "complete"
+  },
+  {
+    "provider": "claude",
+    "status": "complete"
+  },
+  {
+    "provider": "antigravity",
+    "status": "complete"
+  }
+]

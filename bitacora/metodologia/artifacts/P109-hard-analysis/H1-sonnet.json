@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "case": "H1",
+  "route": {
+    "id": "sonnet",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "08b234531046b26b06ebd5f1563c071c0405df8e29d9a04520d6141c37f91491",
+  "prompt_characters": 9983,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792209272.9882855,
+    "windows": {
+      "five_hour": {
+        "used_percent": 7.0,
+        "resets_at": 1792213800.307506,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.30753,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209273.405104,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "B2 posting_key (used by B7/T5)",
+        "severity": "high",
+        "issue": "The key is sha256(tenant + ':' + invoice). IDs may contain ':', so the concatenation is ambiguous and different (tenant, invoice) tuples can produce the same pre-image and the same key.",
+        "evidence": "R1 requires postings to be distinct across tenants. The IDs section says IDs may contain a colon, and the verified length-prefixed canonical_tuple_bytes(parts) is available (G4) but unused. G2 says invoice_id is unique only per tenant.",
+        "failure_scenario": "('a:b','c') and ('a','b:c') both hash 'a:b:c'. The provider treats the second invoice as a duplicate of the first and drops or merges the posting. T6 never uses colon-containing IDs, so it does not catch this.",
+        "fix": "Use sha256(canonical_tuple_bytes([tenant, invoice])).hexdigest(), optionally with a constant domain-separation part. Add a colon-collision fixture."
+      },
+      {
+        "task": "B3 rebuild",
+        "severity": "high",
+        "issue": "The replay filter uses revision >= through_revision. A snapshot already includes events with revision <= through_revision, so the boundary event is applied twice.",
+        "evidence": "R2 says to apply only later events, once. The memo's 'inclusive resume is simpler' is historical and does not override R2. T6 uses fixtures with no event at the exact boundary, so it cannot detect this.",
+        "failure_scenario": "The snapshot has through_revision=5 and balance 100.00 EUR. Event 5 contributes +10.00 EUR, which is already in the snapshot. The rebuild returns 11000 cents instead of 10000.",
+        "fix": "Change the condition to e.revision > snapshot.through_revision. Add boundary fixtures for revisions N-1, N and N+1."
+      },
+      {
+        "task": "B4 contribution",
+        "severity": "high",
+        "issue": "The rate comes from get_rate(latest_rate_revision()) instead of the event's own fx_revision. The result changes when a new FX revision is published, so replay depends on when it runs.",
+        "evidence": "R3 says to use the rate from the event's fx_revision. R2 says replay must be independent of the current date. G3 says get_rate(r) fetches exactly that revision and latest_rate_revision() reads the latest published one. T6 uses fixtures where old and current rates are equal, which hides the defect.",
+        "failure_scenario": "The event has fx_revision=7 with rate 1.10 and is exported while the latest revision is 8 with rate 1.25. The USD 110 event gives 100 EUR under revision 7 but 88 EUR under revision 8. Re-running after revision 9 changes it again.",
+        "fix": "Use get_rate(e.fx_revision).usd_per_eur. Add fixtures where old and latest rates differ and the latest revision advances between runs."
+      },
+      {
+        "task": "B4 cents",
+        "severity": "medium",
+        "issue": "quantize(Decimal('0.01')) has no explicit rounding mode, so it inherits the active context's ROUND_HALF_EVEN. R3 requires half away from zero.",
+        "evidence": "G3 says the active context is ROUND_HALF_EVEN. R3 requires a single rounding of the aggregate, half away from zero, and says negative adjustments are legal. T6 uses fixtures with no half-cent ties.",
+        "failure_scenario": "The aggregate 0.125 gives 12 cents instead of 13. The aggregate -0.125 gives -12 instead of -13. The aggregate 0.135 gives 14, which happens to match.",
+        "fix": "Use quantize(Decimal('0.01'), rounding=ROUND_HALF_UP), which rounds ties away from zero in Decimal. Do not rely on the context default. Add positive and negative tie fixtures."
+      },
+      {
+        "task": "B5 apply_backfill (tenant scoping)",
+        "severity": "critical",
+        "issue": "The UPDATE filters only on invoice_id and migration_epoch IS NULL, with no tenant_id. The migration worker has BYPASSRLS, so nothing else restricts the write to one tenant.",
+        "evidence": "G1 says the worker's SELECT is scoped but its writes are not constrained by RLS. G2 says invoice_id has no global uniqueness. R1 and R8 forbid cross-tenant writes. The code comment 'load_invoice already used tenant' confuses the read scope with the write scope. T6 uses globally distinct fixture invoice IDs, so it cannot show the problem.",
+        "failure_scenario": "Tenants A and B both have invoice 'INV-1' with migration_epoch NULL. Backfilling A/INV-1 writes A's balance, revision and epoch into B/INV-1 as well, corrupting B's data and marking it as migrated. Repairing it would need cross-tenant correction, which R8 limits.",
+        "fix": "Add AND tenant_id = :tenant to the WHERE clause and bind the parameter. Assert that rowcount is at most 1. Add a test with the same invoice_id in two tenants."
+      },
+      {
+        "task": "B5 apply_backfill (concurrency guard)",
+        "severity": "critical",
+        "issue": "The guard migration_epoch IS NULL is not a staleness check. Live writers deliberately leave migration_epoch unchanged, so NULL does not mean the ledger has not advanced. The snapshot is read in a separate transaction before the write.",
+        "evidence": "R4 says a backfill must not overwrite a newer live result and that a NULL marker is not evidence of no advancement. G5 says live commits may occur between the source read and the target write. T3 relies on 'atomic UPDATE + completion marker' as its concurrency argument. T6 runs with no concurrent live writer.",
+        "failure_scenario": "The backfill reads revision 5 and computes balance X. A live transaction commits revision 6 and sets balance_v2=Y and source_revision_v2=6, leaving the marker NULL. The backfill UPDATE still matches and writes X with source revision 5. It also sets the marker, so the row is skipped on retry and the live revision-6 result is lost.",
+        "fix": "Make the write a compare-and-set against the revision that was read, for example AND ledger_revision = :source_rev (or source_revision_v2 is NULL or below :rev, whichever matches the intended semantics). If rowcount is 0, do not set the marker; re-read and recompute. Add a test with a live commit between the read and the write."
+      },
+      {
+        "task": "B6 ready",
+        "severity": "high",
+        "issue": "The check compares the sum of applied offsets with the sum of required offsets instead of checking each partition. A lagging partition can be masked by another partition that is ahead.",
+        "evidence": "R5 says a consumer is ready only if its applied position reaches every required partition, and that offsets have no meaning across partitions. G5 says only vectors from the same epoch reach B6, so the epoch is already handled. T6 barrier fixtures advance all partitions together, which hides the defect.",
+        "failure_scenario": "required={p0:10,p1:10}. applied={p0:20,p1:0}. The sums are 20 and 20, so ready returns True while p1 is 10 behind. Readers cut over before the data is complete.",
+        "fix": "Return all(p in applied_positions and applied_positions[p] >= required_positions[p] for p in required_positions). Add skewed-partition fixtures."
+      },
+      {
+        "task": "B7 resume_post / T5",
+        "severity": "critical",
+        "issue": "Resuming a job with no receipt calls the provider again with the same key regardless of how long ago the first attempt was. The provider forgets keys 7 days after first acceptance, and the DLQ keeps jobs for 30 days. The 'now' argument is unused.",
+        "evidence": "R6 says there must be no duplicate even when a job resumes much later, and that a timeout is an unknown outcome. The provider has no lookup API and manual holds are allowed. B7's comment says first_attempt_at survives restart. T5 says a timed-out original may have completed, and T6 only tests retries within 60 seconds.",
+        "failure_scenario": "Attempt 1 times out, but the provider accepted it at day 0. An operator resumes the job at day 10. The provider has forgotten the key and accepts it again, producing a duplicate posting.",
+        "fix": "Before calling the provider, check that no receipt exists, that attempts > 0 and that now - first_attempt_at >= 7 days minus a safety margin. In that case return a held, manual-reconciliation state and make no provider call. Persist attempts and first_attempt_at before each send. Add resume tests at day 6 and day 8."
+      }
+    ],
+    "uncertainties": [
+      "If a live writer's incremental balance_v2 update uses a NULL or unbackfilled base, a row skipped because live advanced it needs a fresh re-backfill. The dossier does not say how live writers treat a NULL balance_v2. The compare-and-set fix in B5 retries until a snapshot matches the current revision.",
+      "Decimal division by the rate is non-terminating and is limited by the context's 28-digit precision. The dossier does not specify the precision requirement for 'exact' contributions. Only a tie within that precision could be affected, so this is not asserted as a defect.",
+      "B6 returns True for an empty required_positions. R5 says missing required partitions block cutover, but the dossier does not say whether an empty certificate can be issued. This is not asserted as a defect.",
+      "B4 assumes e.usd_amount is a string or Decimal. G4 says payloads are runtime validated, but the dossier does not show that float values are excluded."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"B2 posting_key (used by B7/T5)\",\"severity\":\"high\",\"issue\":\"The key is sha256(tenant + ':' + invoice). IDs may contain ':', so the concatenation is ambiguous and different (tenant, invoice) tuples can produce the same pre-image and the same key.\",\"evidence\":\"R1 requires postings to be distinct across tenants. The IDs section says IDs may contain a colon, and the verified length-prefixed canonical_tuple_bytes(parts) is available (G4) but unused. G2 says invoice_id is unique only per tenant.\",\"failure_scenario\":\"('a:b','c') and ('a','b:c') both hash 'a:b:c'. The provider treats the second invoice as a duplicate of the first and drops or merges the posting. T6 never uses colon-containing IDs, so it does not catch this.\",\"fix\":\"Use sha256(canonical_tuple_bytes([tenant, invoice])).hexdigest(), optionally with a constant domain-separation part. Add a colon-collision fixture.\"},{\"task\":\"B3 rebuild\",\"severity\":\"high\",\"issue\":\"The replay filter uses revision >= through_revision. A snapshot already includes events with revision <= through_revision, so the boundary event is applied twice.\",\"evidence\":\"R2 says to apply only later events, once. The memo's 'inclusive resume is simpler' is historical and does not override R2. T6 uses fixtures with no event at the exact boundary, so it cannot detect this.\",\"failure_scenario\":\"The snapshot has through_revision=5 and balance 100.00 EUR. Event 5 contributes +10.00 EUR, which is already in the snapshot. The rebuild returns 11000 cents instead of 10000.\",\"fix\":\"Change the condition to e.revision > snapshot.through_revision. Add boundary fixtures for revisions N-1, N and N+1.\"},{\"task\":\"B4 contribution\",\"severity\":\"high\",\"issue\":\"The rate comes from get_rate(latest_rate_revision()) instead of the event's own fx_revision. The result changes when a new FX revision is published, so replay depends on when it runs.\",\"evidence\":\"R3 says to use the rate from the event's fx_revision. R2 says replay must be independent of the current date. G3 says get_rate(r) fetches exactly that revision and latest_rate_revision() reads the latest published one. T6 uses fixtures where old and current rates are equal, which hides the defect.\",\"failure_scenario\":\"The event has fx_revision=7 with rate 1.10 and is exported while the latest revision is 8 with rate 1.25. The USD 110 event gives 100 EUR under revision 7 but 88 EUR under revision 8. Re-running after revision 9 changes it again.\",\"fix\":\"Use get_rate(e.fx_revision).usd_per_eur. Add fixtures where old and latest rates differ and the latest revision advances between runs.\"},{\"task\":\"B4 cents\",\"severity\":\"medium\",\"issue\":\"quantize(Decimal('0.01')) has no explicit rounding mode, so it inherits the active context's ROUND_HALF_EVEN. R3 requires half away from zero.\",\"evidence\":\"G3 says the active context is ROUND_HALF_EVEN. R3 requires a single rounding of the aggregate, half away from zero, and says negative adjustments are legal. T6 uses fixtures with no half-cent ties.\",\"failure_scenario\":\"The aggregate 0.125 gives 12 cents instead of 13. The aggregate -0.125 gives -12 instead of -13. The aggregate 0.135 gives 14, which happens to match.\",\"fix\":\"Use quantize(Decimal('0.01'), rounding=ROUND_HALF_UP), which rounds ties away from zero in Decimal. Do not rely on the context default. Add positive and negative tie fixtures.\"},{\"task\":\"B5 apply_backfill (tenant scoping)\",\"severity\":\"critical\",\"issue\":\"The UPDATE filters only on invoice_id and migration_epoch IS NULL, with no tenant_id. The migration worker has BYPASSRLS, so nothing else restricts the write to one tenant.\",\"evidence\":\"G1 says the worker's SELECT is scoped but its writes are not constrained by RLS. G2 says invoice_id has no global uniqueness. R1 and R8 forbid cross-tenant writes. The code comment 'load_invoice already used tenant' confuses the read scope with the write scope. T6 uses globally distinct fixture invoice IDs, so it cannot show the problem.\",\"failure_scenario\":\"Tenants A and B both have invoice 'INV-1' with migration_epoch NULL. Backfilling A/INV-1 writes A's balance, revision and epoch into B/INV-1 as well, corrupting B's data and marking it as migrated. Repairing it would need cross-tenant correction, which R8 limits.\",\"fix\":\"Add AND tenant_id = :tenant to the WHERE clause and bind the parameter. Assert that rowcount is at most 1. Add a test with the same invoice_id in two tenants.\"},{\"task\":\"B5 apply_backfill (concurrency guard)\",\"severity\":\"critical\",\"issue\":\"The guard migration_epoch IS NULL is not a staleness check. Live writers deliberately leave migration_epoch unchanged, so NULL does not mean the ledger has not advanced. The snapshot is read in a separate transaction before the write.\",\"evidence\":\"R4 says a backfill must not overwrite a newer live result and that a NULL marker is not evidence of no advancement. G5 says live commits may occur between the source read and the target write. T3 relies on 'atomic UPDATE + completion marker' as its concurrency argument. T6 runs with no concurrent live writer.\",\"failure_scenario\":\"The backfill reads revision 5 and computes balance X. A live transaction commits revision 6 and sets balance_v2=Y and source_revision_v2=6, leaving the marker NULL. The backfill UPDATE still matches and writes X with source revision 5. It also sets the marker, so the row is skipped on retry and the live revision-6 result is lost.\",\"fix\":\"Make the write a compare-and-set against the revision that was read, for example AND ledger_revision = :source_rev (or source_revision_v2 is NULL or below :rev, whichever matches the intended semantics). If rowcount is 0, do not set the marker; re-read and recompute. Add a test with a live commit between the read and the write.\"},{\"task\":\"B6 ready\",\"severity\":\"high\",\"issue\":\"The check compares the sum of applied offsets with the sum of required offsets instead of checking each partition. A lagging partition can be masked by another partition that is ahead.\",\"evidence\":\"R5 says a consumer is ready only if its applied position reaches every required partition, and that offsets have no meaning across partitions. G5 says only vectors from the same epoch reach B6, so the epoch is already handled. T6 barrier fixtures advance all partitions together, which hides the defect.\",\"failure_scenario\":\"required={p0:10,p1:10}. applied={p0:20,p1:0}. The sums are 20 and 20, so ready returns True while p1 is 10 behind. Readers cut over before the data is complete.\",\"fix\":\"Return all(p in applied_positions and applied_positions[p] >= required_positions[p] for p in required_positions). Add skewed-partition fixtures.\"},{\"task\":\"B7 resume_post / T5\",\"severity\":\"critical\",\"issue\":\"Resuming a job with no receipt calls the provider again with the same key regardless of how long ago the first attempt was. The provider forgets keys 7 days after first acceptance, and the DLQ keeps jobs for 30 days. The 'now' argument is unused.\",\"evidence\":\"R6 says there must be no duplicate even when a job resumes much later, and that a timeout is an unknown outcome. The provider has no lookup API and manual holds are allowed. B7's comment says first_attempt_at survives restart. T5 says a timed-out original may have completed, and T6 only tests retries within 60 seconds.\",\"failure_scenario\":\"Attempt 1 times out, but the provider accepted it at day 0. An operator resumes the job at day 10. The provider has forgotten the key and accepts it again, producing a duplicate posting.\",\"fix\":\"Before calling the provider, check that no receipt exists, that attempts > 0 and that now - first_attempt_at >= 7 days minus a safety margin. In that case return a held, manual-reconciliation state and make no provider call. Persist attempts and first_attempt_at before each send. Add resume tests at day 6 and day 8.\"}],\"uncertainties\":[\"If a live writer's incremental balance_v2 update uses a NULL or unbackfilled base, a row skipped because live advanced it needs a fresh re-backfill. The dossier does not say how live writers treat a NULL balance_v2. The compare-and-set fix in B5 retries until a snapshot matches the current revision.\",\"Decimal division by the rate is non-terminating and is limited by the context's 28-digit precision. The dossier does not specify the precision requirement for 'exact' contributions. Only a tie within that precision could be affected, so this is not asserted as a defect.\",\"B6 returns True for an empty required_positions. R5 says missing required partitions block cutover, but the dossier does not say whether an empty certificate can be issued. This is not asserted as a defect.\",\"B4 assumes e.usd_amount is a string or Decimal. G4 says payloads are runtime validated, but the dossier does not show that float values are excluded.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 5741,
+    "cache_read_input_tokens": 1662,
+    "output_tokens": 6171,
+    "output_tokens_details": {
+      "thinking_tokens": 2972
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5741,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 0,
+  "response_words": 1248,
+  "exit_code": 0,
+  "elapsed_seconds": 45.799,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792209319.2042246,
+    "windows": {
+      "five_hour": {
+        "used_percent": 7.0,
+        "resets_at": 1792213800.440393,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 87.0,
+        "resets_at": 1792278000.440412,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

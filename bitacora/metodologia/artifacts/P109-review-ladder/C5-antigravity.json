@@ -1,0 +1,132 @@
+{
+  "case": "C5",
+  "profile": "antigravity",
+  "provider": "antigravity",
+  "requested_model": "gemini-3.8-flash-high",
+  "requested_effort": "high",
+  "prompt_sha256": "5f5f4a347c4b41bc40e3fc40564023b518a938af2baa96e7deaaf83ed677323d",
+  "prompt_characters": 4990,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792206474.7909462,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792811269.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792224469.0,
+        "window_minutes": 300
+      }
+    }
+  },
+  "started_at": 1792206474.7912462,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "T2",
+        "severity": "critical",
+        "issue": "Capacity buckets are keyed by profile_id instead of effective account_ref, permitting concurrency violations across profile aliases.",
+        "evidence": "Contract requires 'Effective account, not profile alias, is the capacity unit' with pA and pB resolving to acct-X (concurrency limit 1), but T2 specifies 'construct capacity buckets keyed by profile_id, each with limit=1; M2 can recommend one READY task on pA and one on pB in same batch, and M1 reserves using identical profile-keyed buckets.'",
+        "failure_scenario": "M2 recommends and M1 reserves tasks for pA and pB simultaneously, causing two tasks to execute concurrently on acct-X and exceeding its concurrency limit of 1.",
+        "fix": "Key all capacity buckets and reservation accounting by resolved account_ref rather than profile_id."
+      },
+      {
+        "task": "T3",
+        "severity": "high",
+        "issue": "Stale or missing quota samples are defaulted to zero usage instead of being excluded as ineligible.",
+        "evidence": "Contract requires 'Unknown/stale readings are ineligible', but T3 specifies 'for each candidate, use sample if fresh; otherwise substitute {five_hour:0,seven_day:0} to avoid blocking progress.'",
+        "failure_scenario": "Stale or exhausted accounts appear to have 0% usage, erroneously prioritizing depleted accounts over valid accounts and leading to provider rate-limit rejections.",
+        "fix": "Exclude candidates with stale or missing quota readings from eligibility instead of substituting default zero usage."
+      },
+      {
+        "task": "T3",
+        "severity": "medium",
+        "issue": "Quota scoring sums percentages across windows instead of ranking by the maximum window bottleneck.",
+        "evidence": "Contract mandates 'choose lowest bottleneck=max(5h_used,7d_used); percentages from different windows must not be added', but T3 specifies 'Score=5h_used+7d_used ascending'.",
+        "failure_scenario": "acct-Y (5h0, 7d50; sum=50, bottleneck=50) is selected over acct-X (5h30, 7d30; sum=60, bottleneck=30), dispatching to an account with worse bottleneck headroom.",
+        "fix": "Calculate candidate score as max(five_hour_used, seven_day_used) ascending."
+      },
+      {
+        "task": "T4",
+        "severity": "high",
+        "issue": "Database write transaction encompasses bounded HTTP network I/O.",
+        "evidence": "Contract mandates 'No DB write transaction may span provider I/O', but T4 executes 'BEGIN IMMEDIATE; load reservation counts; fetch latest quota via bounded HTTP request (deadline 20s)... COMMIT. This path holds the write transaction during fetch.'",
+        "failure_scenario": "Network latency or HTTP timeouts block database write locks for up to 20 seconds, causing lock contention, connection starvation, and stalling concurrent transactions.",
+        "fix": "Perform the quota HTTP fetch before executing BEGIN IMMEDIATE, keeping only local reservation checks and writes inside the transaction."
+      },
+      {
+        "task": "T5",
+        "severity": "high",
+        "issue": "Revalidation overwrites existing startup map records and recalculates hashes rather than appending new decisions.",
+        "evidence": "Contract specifies 'A frozen map is append-only evidence with its original hash; revalidation must append a new decision, preserving prior bytes/hash', but T5 'replaces the recommendation inside the existing startup map row and recomputes its hash... No prior copy/history exists.'",
+        "failure_scenario": "Historical recommendation evidence and cryptographic audit trails are destroyed, making it impossible to verify original plan inputs or detect dispatch drift.",
+        "fix": "Retain the immutable startup map row and its original SHA-256 hash intact, recording dispatch revalidations as append-only child decisions."
+      },
+      {
+        "task": "T6",
+        "severity": "critical",
+        "issue": "Coordinator restart unconditionally deletes reservations and increments task generation without reconciling or canceling running executors.",
+        "evidence": "Contract states 'After coordinator restart, live executor jobs may still run; their reservations must be reconciled before replacement dispatch', while baseline notes 'each new generation is a distinct permitted external job. Executor does not dedup across generations.' Yet T6 'unconditionally deletes reservations... increments task generation, then dispatches tasks not marked completed... No executor cancel/query or reservation reconciliation occurs before replacement dispatch.'",
+        "failure_scenario": "Active executors from the pre-restart coordinator continue applying side effects while new generation tasks execute concurrently, causing duplicate executions and exceeding capacity limits.",
+        "fix": "Query or cancel running executor tasks and reconcile existing reservations before clearing reservations or issuing new task generations."
+      }
+    ],
+    "uncertainties": []
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"T2\",\"severity\":\"critical\",\"issue\":\"Capacity buckets are keyed by profile_id instead of effective account_ref, permitting concurrency violations across profile aliases.\",\"evidence\":\"Contract requires 'Effective account, not profile alias, is the capacity unit' with pA and pB resolving to acct-X (concurrency limit 1), but T2 specifies 'construct capacity buckets keyed by profile_id, each with limit=1; M2 can recommend one READY task on pA and one on pB in same batch, and M1 reserves using identical profile-keyed buckets.'\",\"failure_scenario\":\"M2 recommends and M1 reserves tasks for pA and pB simultaneously, causing two tasks to execute concurrently on acct-X and exceeding its concurrency limit of 1.\",\"fix\":\"Key all capacity buckets and reservation accounting by resolved account_ref rather than profile_id.\"},{\"task\":\"T3\",\"severity\":\"high\",\"issue\":\"Stale or missing quota samples are defaulted to zero usage instead of being excluded as ineligible.\",\"evidence\":\"Contract requires 'Unknown/stale readings are ineligible', but T3 specifies 'for each candidate, use sample if fresh; otherwise substitute {five_hour:0,seven_day:0} to avoid blocking progress.'\",\"failure_scenario\":\"Stale or exhausted accounts appear to have 0% usage, erroneously prioritizing depleted accounts over valid accounts and leading to provider rate-limit rejections.\",\"fix\":\"Exclude candidates with stale or missing quota readings from eligibility instead of substituting default zero usage.\"},{\"task\":\"T3\",\"severity\":\"medium\",\"issue\":\"Quota scoring sums percentages across windows instead of ranking by the maximum window bottleneck.\",\"evidence\":\"Contract mandates 'choose lowest bottleneck=max(5h_used,7d_used); percentages from different windows must not be added', but T3 specifies 'Score=5h_used+7d_used ascending'.\",\"failure_scenario\":\"acct-Y (5h0, 7d50; sum=50, bottleneck=50) is selected over acct-X (5h30, 7d30; sum=60, bottleneck=30), dispatching to an account with worse bottleneck headroom.\",\"fix\":\"Calculate candidate score as max(five_hour_used, seven_day_used) ascending.\"},{\"task\":\"T4\",\"severity\":\"high\",\"issue\":\"Database write transaction encompasses bounded HTTP network I/O.\",\"evidence\":\"Contract mandates 'No DB write transaction may span provider I/O', but T4 executes 'BEGIN IMMEDIATE; load reservation counts; fetch latest quota via bounded HTTP request (deadline 20s)... COMMIT. This path holds the write transaction during fetch.'\",\"failure_scenario\":\"Network latency or HTTP timeouts block database write locks for up to 20 seconds, causing lock contention, connection starvation, and stalling concurrent transactions.\",\"fix\":\"Perform the quota HTTP fetch before executing BEGIN IMMEDIATE, keeping only local reservation checks and writes inside the transaction.\"},{\"task\":\"T5\",\"severity\":\"high\",\"issue\":\"Revalidation overwrites existing startup map records and recalculates hashes rather than appending new decisions.\",\"evidence\":\"Contract specifies 'A frozen map is append-only evidence with its original hash; revalidation must append a new decision, preserving prior bytes/hash', but T5 'replaces the recommendation inside the existing startup map row and recomputes its hash... No prior copy/history exists.'\",\"failure_scenario\":\"Historical recommendation evidence and cryptographic audit trails are destroyed, making it impossible to verify original plan inputs or detect dispatch drift.\",\"fix\":\"Retain the immutable startup map row and its original SHA-256 hash intact, recording dispatch revalidations as append-only child decisions.\"},{\"task\":\"T6\",\"severity\":\"critical\",\"issue\":\"Coordinator restart unconditionally deletes reservations and increments task generation without reconciling or canceling running executors.\",\"evidence\":\"Contract states 'After coordinator restart, live executor jobs may still run; their reservations must be reconciled before replacement dispatch', while baseline notes 'each new generation is a distinct permitted external job. Executor does not dedup across generations.' Yet T6 'unconditionally deletes reservations... increments task generation, then dispatches tasks not marked completed... No executor cancel/query or reservation reconciliation occurs before replacement dispatch.'\",\"failure_scenario\":\"Active executors from the pre-restart coordinator continue applying side effects while new generation tasks execute concurrently, causing duplicate executions and exceeding capacity limits.\",\"fix\":\"Query or cancel running executor tasks and reconcile existing reservations before clearing reservations or issuing new task generations.\"}],\"uncertainties\":[]}\n",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 12945,
+    "output_tokens": 5294,
+    "thinking_tokens": 4343,
+    "cache_read_tokens": 0,
+    "total_tokens": 18239
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "exit_code": 0,
+  "status": "completed",
+  "elapsed_seconds": 39.416,
+  "quota_after": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792206522.6962528,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792811317.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792224517.0,
+        "window_minutes": 300
+      }
+    }
+  }
+}

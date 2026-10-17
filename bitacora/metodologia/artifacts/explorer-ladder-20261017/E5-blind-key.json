@@ -1,0 +1,22 @@
+[
+  {
+    "label": "E5-A",
+    "record": "E5-luna.json"
+  },
+  {
+    "label": "E5-B",
+    "record": "E5-sonnet.json"
+  },
+  {
+    "label": "E5-C",
+    "record": "E5-sol.json"
+  },
+  {
+    "label": "E5-D",
+    "record": "E5-haiku.json"
+  },
+  {
+    "label": "E5-E",
+    "record": "gemini-recovery/E5-gemini.json"
+  }
+]

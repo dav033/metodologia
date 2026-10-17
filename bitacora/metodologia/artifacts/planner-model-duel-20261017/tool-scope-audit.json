@@ -1,0 +1,146 @@
+[
+  {
+    "cell": "CP1-astra",
+    "tools": 13,
+    "read_paths_outside_cell": [],
+    "commands": [
+      "/usr/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g 'SPEC.md' -g '*schema*' -g '*example*' -g 'README*' -g 'package.json' -g 'pyproject.toml' -g 'Makefile' -g 'go.mod' -g 'Cargo.toml' -g 'SUMMARY.md' -g 'DECISIONS.md' -g 'PENDING.md' -g 'ARCHITECTURE.md'\"",
+      "/usr/bin/bash -lc 'cat request/SPEC.md'",
+      "/usr/bin/bash -lc 'rg --files repo planner-resources request'",
+      "/usr/bin/bash -lc 'cat repo/README.md repo/package.json repo/apps/api/package.json repo/apps/web/package.json repo/packages/contracts/package.json'",
+      "/usr/bin/bash -lc 'cat planner-resources/plan.schema.json planner-resources/plan.example.json'",
+      "/usr/bin/bash -lc \"rg -n 'ProjectListItem|nextCursor|/v1/projects|listProjects|data_json|cursor' repo\"",
+      "/usr/bin/bash -lc 'cat repo/docs/api-contract.md repo/docs/architecture.md repo/docs/deployment.md && cat repo/apps/api/test/repository.test.ts'",
+      "/usr/bin/bash -lc 'nl -ba repo/apps/web/lib/api/client.ts && nl -ba repo/apps/web/components/project-list.tsx && nl -ba repo/apps/web/components/project-tabs-bar.tsx'",
+      "/usr/bin/bash -lc 'nl -ba repo/apps/api/src/repositories/project-repository.ts && nl -ba repo/apps/api/src/app.ts && nl -ba repo/apps/api/src/db/database.ts'",
+      "/usr/bin/bash -lc \"cat repo/packages/contracts/src/index.ts repo/packages/contracts/src/project.ts repo/packages/contracts/test/project.test.ts repo/apps/api/src/errors.ts repo/apps/api/src/http/auth.ts repo/apps/api/src/config.ts repo/apps/api/tsconfig.json repo/apps/web/tsconfig.json repo/tsconfig.base.json repo/netlify.toml repo/ops/ec2/compose.yml && rg --files --hidden -g AGENTS.md -g '\"'!node_modules'\"' -g '\"'!.git'\"' repo request planner-resources\"",
+      "/usr/bin/bash -lc 'nl -ba repo/apps/web/components/project-tabs-bar.tsx && nl -ba repo/apps/web/components/project-list.tsx'",
+      "/usr/bin/bash -lc \"cat repo/apps/web/app/projects/page.tsx repo/apps/web/app/projects/layout.tsx 'repo/apps/web/app/projects/[projectId]/page.tsx' repo/apps/web/hooks/use-project-sync.ts repo/apps/web/lib/open-tabs.ts repo/apps/web/lib/types.ts\"",
+      "/usr/bin/bash -lc \"cat repo/scripts/check-contract-drift.mjs repo/packages/contracts/src/generate-schema.ts repo/packages/contracts/tsconfig.json repo/apps/api/Dockerfile repo/apps/web/next.config.ts repo/apps/web/eslint.config.mjs && rg -n 'repository\\\\.list|\\\\.list\\\\(|ProjectSnapshotSchema|listProjects|trainingApp-mcp' repo/apps repo/packages repo/docs && ls -a repo\""
+    ]
+  },
+  {
+    "cell": "CP1-opus",
+    "tools": 30,
+    "read_paths_outside_cell": [],
+    "commands": []
+  },
+  {
+    "cell": "CP1-sol",
+    "tools": 6,
+    "read_paths_outside_cell": [],
+    "commands": [
+      "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g 'SPEC.md' -g '*schema*' -g '*example*' -g 'README*' -g 'package.json' -g 'pyproject.toml' -g 'Makefile' -g '*lock*' .\"",
+      "/usr/bin/bash -lc 'cat request/SPEC.md planner-resources/plan.schema.json planner-resources/plan.example.json; rg --files repo; cat repo/README.md repo/package.json repo/apps/api/package.json repo/apps/web/package.json repo/packages/contracts/package.json'",
+      "/usr/bin/bash -lc 'cat repo/docs/api-contract.md repo/docs/architecture.md repo/docs/deployment.md; nl -ba repo/packages/contracts/src/project.ts; cat repo/packages/contracts/src/index.ts repo/packages/contracts/test/project.test.ts repo/apps/api/src/http/auth.ts repo/apps/api/src/errors.ts repo/apps/api/src/config.ts; cat repo/apps/api/tsconfig.json repo/apps/web/tsconfig.json repo/packages/contracts/tsconfig.json repo/tsconfig.base.json repo/scripts/check-contract-drift.mjs'",
+      "/usr/bin/bash -lc 'nl -ba repo/apps/api/src/app.ts; nl -ba repo/apps/api/src/repositories/project-repository.ts; nl -ba repo/apps/api/src/db/database.ts; nl -ba repo/apps/api/test/repository.test.ts'",
+      "/usr/bin/bash -lc \"nl -ba repo/apps/web/lib/api/client.ts; nl -ba repo/apps/web/components/project-list.tsx; nl -ba repo/apps/web/components/project-tabs-bar.tsx; nl -ba repo/apps/web/lib/open-tabs.ts; cat repo/apps/web/app/projects/page.tsx repo/apps/web/app/projects/layout.tsx; rg -n 'listProjects|ProjectListItem|/v1/projects|list\\\\(' repo/apps repo/packages repo/docs\"",
+      "/usr/bin/bash -lc \"nl -ba repo/apps/web/components/project-list.tsx; nl -ba repo/apps/web/components/project-tabs-bar.tsx; nl -ba repo/apps/web/lib/api/client.ts; nl -ba repo/apps/web/lib/open-tabs.ts; cat repo/apps/web/app/projects/page.tsx repo/apps/web/app/projects/layout.tsx repo/apps/web/app/projects/\\\\[projectId\\\\]/page.tsx repo/apps/web/app/page.tsx; nl -ba repo/apps/web/hooks/use-project-sync.ts; cat repo/apps/api/src/ws/hub.ts repo/apps/api/src/server.ts repo/packages/contracts/src/generate-schema.ts; rg --files --hidden -g 'AGENTS.md' -g '\"'!node_modules'\"' -g '\"'!.git'\"' .\""
+    ]
+  },
+  {
+    "cell": "CP2-astra",
+    "tools": 15,
+    "read_paths_outside_cell": [],
+    "commands": [
+      "/usr/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g 'SPEC.md' -g '*schema*' -g '*example*' -g 'README*' -g 'package.json' -g 'pyproject.toml' -g 'Makefile'\"",
+      "/usr/bin/bash -lc 'cat request/SPEC.md'",
+      "/usr/bin/bash -lc \"rg --files -g '\"'!pnpm-lock.yaml'\"' -g '\"'!package-lock.json'\"' -g '\"'!yarn.lock'\"' -g '\"'!node_modules/**'\"' -g '\"'!dist/**'\"' repo planner-resources request\"",
+      "/usr/bin/bash -lc 'cat repo/apps/api/src/db/database.ts repo/apps/api/src/repositories/project-repository.ts repo/apps/api/src/repositories/asset-repository.ts repo/apps/api/src/services/asset-service.ts'",
+      "/usr/bin/bash -lc 'cat repo/apps/api/src/app.ts repo/apps/api/test/repository.test.ts repo/apps/api/src/ws/server.ts repo/apps/api/src/ws/hub.ts repo/apps/api/src/errors.ts repo/apps/api/src/http/auth.ts'",
+      "/usr/bin/bash -lc 'cat repo/package.json repo/apps/api/package.json repo/apps/api/src/config.ts repo/apps/api/src/backup.ts repo/apps/api/src/server.ts repo/apps/api/Dockerfile repo/.env.example'",
+      "/usr/bin/bash -lc 'cat planner-resources/plan.example.json planner-resources/plan.schema.json'",
+      "/usr/bin/bash -lc 'cat repo/apps/api/src/app.ts repo/apps/api/test/repository.test.ts repo/apps/api/src/ws/server.ts repo/apps/api/src/ws/hub.ts repo/apps/api/src/errors.ts'",
+      "/usr/bin/bash -lc 'cat repo/README.md repo/docs/architecture.md repo/docs/api-contract.md repo/docs/deployment.md'",
+      "/usr/bin/bash -lc 'cat repo/ops/ec2/compose.yml repo/ops/ec2/deploy.ps1 repo/ops/ec2/preflight.ps1 repo/ops/ec2/rollback.ps1 repo/ops/ec2/Caddyfile.snippet'",
+      "/usr/bin/bash -lc 'cat repo/apps/web/lib/api/client.ts repo/apps/web/hooks/use-project-sync.ts repo/packages/contracts/src/project.ts repo/packages/contracts/test/project.test.ts repo/packages/contracts/package.json repo/apps/web/package.json repo/apps/api/tsconfig.json repo/tsconfig.base.json repo/scripts/check-contract-drift.mjs'",
+      "/usr/bin/bash -lc \"ls -la repo && rg -n 'repository\\\\.|assets\\\\.|openDatabase|assertDatabaseReady|TRAINING_DB|backup|rollback|api\\\\.|useProjectSync' repo/apps repo/ops repo/docs -g '\"'!*.pdf'\"' -g '\"'!*.png'\"'\"",
+      "/usr/bin/bash -lc \"cat repo/.dockerignore repo/.gitignore repo/tsconfig.json repo/apps/web/app/projects/page.tsx repo/apps/web/app/projects/'[projectId]'/page.tsx repo/apps/web/components/project-list.tsx && sed -n '1,85p' repo/package-lock.json\"",
+      "/usr/bin/bash -lc 'nl -ba repo/apps/api/src/repositories/project-repository.ts && nl -ba repo/apps/api/src/backup.ts && nl -ba repo/apps/api/src/db/database.ts && nl -ba repo/ops/ec2/deploy.ps1 && nl -ba repo/ops/ec2/rollback.ps1'",
+      "/usr/bin/bash -lc \"rg --files --hidden -g AGENTS.md -g '\"'!repo/.claude/**'\"' -g '\"'!repo/.git/**'\"' . && rg -n 'better-sqlite3|\\\"pg\\\"|\\\"node_modules/pg\\\"' repo/package-lock.json\""
+    ]
+  },
+  {
+    "cell": "CP2-opus",
+    "tools": 33,
+    "read_paths_outside_cell": [],
+    "commands": []
+  },
+  {
+    "cell": "CP2-sol",
+    "tools": 21,
+    "read_paths_outside_cell": [],
+    "commands": [
+      "/usr/bin/bash -lc pwd",
+      "/usr/bin/bash -lc \"rg --files -g 'AGENTS.md' -g 'SPEC.md' -g '*schema*' -g '*example*' -g 'README*' -g 'package.json' -g 'pyproject.toml' -g '*lock*' -g '*config*' .\"",
+      "/usr/bin/bash -lc 'cat repo/README.md repo/package.json repo/apps/api/package.json repo/apps/web/package.json repo/packages/contracts/package.json'",
+      "/usr/bin/bash -lc 'cat request/SPEC.md planner-resources/plan.schema.json planner-resources/plan.example.json'",
+      "/usr/bin/bash -lc \"rg --files repo -g '\"'!package-lock.json'\"'\"",
+      "/usr/bin/bash -lc 'cat -n repo/apps/api/src/repositories/project-repository.ts repo/apps/api/src/repositories/asset-repository.ts repo/apps/api/test/repository.test.ts'",
+      "/usr/bin/bash -lc 'nl -ba repo/apps/api/src/db/database.ts'",
+      "/usr/bin/bash -lc 'cat -n repo/docs/architecture.md repo/docs/api-contract.md repo/docs/deployment.md repo/ops/ec2/compose.yml repo/ops/ec2/deploy.ps1 repo/ops/ec2/rollback.ps1 repo/ops/ec2/preflight.ps1 repo/apps/api/Dockerfile repo/.env.example'",
+      "/usr/bin/bash -lc 'cat -n repo/apps/api/src/app.ts repo/apps/api/src/server.ts repo/apps/api/src/config.ts repo/apps/api/src/backup.ts'",
+      "/usr/bin/bash -lc 'nl -ba repo/apps/api/src/services/asset-service.ts'",
+      "/usr/bin/bash -lc 'cat -n repo/packages/contracts/src/project.ts repo/packages/contracts/test/project.test.ts repo/apps/api/src/http/auth.ts repo/apps/api/tsconfig.json repo/tsconfig.base.json repo/scripts/check-contract-drift.mjs'",
+      "/usr/bin/bash -lc 'cat -n repo/apps/api/src/ws/server.ts repo/apps/api/src/ws/hub.ts repo/apps/api/src/errors.ts repo/apps/web/lib/api/client.ts repo/apps/web/hooks/use-project-sync.ts'",
+      "/usr/bin/bash -lc \"rg --files --hidden -g '\"'!repo/.git/**'\"' -g '*AGENTS.md' -g '*SUMMARY.md' -g '*DECISIONS.md' -g '*PENDING.md' -g '*.yml' -g '*.yaml' -g '.gitignore' .\"",
+      "/usr/bin/bash -lc \"rg -n --hidden -g '\"'!.git/**'\"' 'better-sqlite3|openDatabase|assertDatabaseReady|ProjectRepository|AssetRepository|TRAINING_DB|backup|rollback|readyz|fetchProject|updateProject|useProjectSync|revision|sqlite|postgres' repo\"",
+      "/usr/bin/bash -lc 'nl -ba repo/docs/architecture.md'",
+      "/usr/bin/bash -lc 'cat repo/.gitignore repo/netlify.toml repo/apps/web/.env.example repo/tsconfig.json'",
+      "/usr/bin/bash -lc 'nl -ba repo/apps/api/src/http/auth.ts'",
+      "/usr/bin/bash -lc 'nl -ba repo/packages/contracts/test/project.test.ts'",
+      "/usr/bin/bash -lc \"sed -n '1,60p' repo/package-lock.json\"",
+      "/usr/bin/bash -lc 'nl -ba repo/ops/ec2/rollback.ps1'",
+      "/usr/bin/bash -lc 'nl -ba repo/ops/ec2/deploy.ps1'"
+    ]
+  },
+  {
+    "cell": "CP3-astra",
+    "tools": 12,
+    "read_paths_outside_cell": [],
+    "commands": [
+      "/usr/bin/bash -lc pwd",
+      "/usr/bin/bash -lc \"rg --files -g '\"'!node_modules'\"' -g '\"'!vendor'\"' -g '\"'!package-lock.json'\"' -g '\"'!pnpm-lock.yaml'\"' -g '\"'!yarn.lock'\"' .\"",
+      "/usr/bin/bash -lc \"rg --files --hidden -g AGENTS.md -g '\"'!'\"\\\\.git' repo .; sed -n '1,180p' repo/README.md\"",
+      "/usr/bin/bash -lc 'cat request/SPEC.md; cat repo/pyproject.toml; cat planner-resources/plan.example.json'",
+      "/usr/bin/bash -lc 'nl -ba repo/skill/scripts/bt_page_req.py; nl -ba repo/skill/scripts/bt_page_review.py'",
+      "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_plan_adapter.py; nl -ba repo/skill/scripts/bt_cli_plan.py; rg -n 'plan-json|cmd_plan_json|bt_cli_plan' repo/skill/scripts/bitacora.py\"",
+      "/usr/bin/bash -lc 'nl -ba repo/skill/scripts/bt_planner/quality.py; nl -ba repo/skill/scripts/bt_planner/cli.py; nl -ba repo/skill/scripts/tests/test_plan_integration.py; nl -ba repo/skill/scripts/tests/test_plan_boundary.py'",
+      "/usr/bin/bash -lc 'nl -ba repo/skill/scripts/bt_planner/quality.py; nl -ba repo/skill/scripts/bt_planner/cli.py'",
+      "/usr/bin/bash -lc \"sed -n '1,95p' repo/skill/scripts/tests/test_plan_integration.py; cat repo/skill/scripts/tests/test_00_isolation.py; sed -n '1,100p' repo/tests/test_legacy_collection.py; rg -n 'unittest|pytest|report' repo/skill/scripts/bt_planner/README.md; sed -n '1,100p' planner-resources/plan.schema.json\"",
+      "/usr/bin/bash -lc \"sed -n '90,190p' repo/skill/scripts/bt_page_req.py; cat repo/skill/scripts/bt_page_review.py; rg -n 'plan_panel|req_page|critical_path|widest_level|low_confidence|quality_report' repo/skill/scripts/tests repo/skill/scripts/bt_planner repo/skill/scripts/bt_pages.py repo/skill/scripts/bt_server.py\"",
+      "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_page_req.py | sed -n '75,160p'; cat repo/skill/scripts/bt_planner/__init__.py; rg -n -A 35 '\"'^def read_plan'\"' repo/skill/scripts/bt_planner/sync.py; sed -n '115,145p' repo/skill/scripts/bt_planner/cli.py; sed -n '465,520p' repo/skill/scripts/bt_planner/tests/test_evidence.py; sed -n '1,65p' repo/skill/scripts/bt_pages.py; sed -n '1,75p' repo/skill/scripts/tests/test_metrics_page.py; sed -n '1,70p' repo/skill/scripts/tests/test_plan_launch_paths.py; rg -n 'notice|kpis|\\\\.card|\\\\.panel' repo/skill/assets/style.css\"",
+      "/usr/bin/bash -lc \"rg -n -A 26 '\"'^def load'\"\\\\(' repo/skill/scripts/bt_planner/contract.py; sed -n '1,95p' repo/skill/scripts/bt_planner/tests/test_e2e_cli.py; sed -n '85,120p' repo/skill/scripts/tests/test_plan_integration.py; sed -n '90,115p' repo/skill/scripts/bt_server.py; sed -n '20,42p' repo/skill/assets/style.css; sed -n '1,85p' repo/skill/references/plan-contract.md\""
+    ]
+  },
+  {
+    "cell": "CP3-opus",
+    "tools": 28,
+    "read_paths_outside_cell": [],
+    "commands": []
+  },
+  {
+    "cell": "CP3-sol",
+    "tools": 17,
+    "read_paths_outside_cell": [],
+    "commands": [
+      "/usr/bin/bash -lc pwd",
+      "/usr/bin/bash -lc \"rg --files -g 'AGENTS.md' -g 'SPEC.md' -g '*schema*' -g '*example*' -g 'README*' -g 'package.json' -g '*lock*' -g 'pyproject.toml' -g 'Cargo.toml' -g 'go.mod' .\"",
+      "/usr/bin/bash -lc 'cat request/SPEC.md'",
+      "/usr/bin/bash -lc 'cat repo/README.md repo/pyproject.toml'",
+      "/usr/bin/bash -lc 'cat planner-resources/plan.schema.json planner-resources/plan.example.json'",
+      "/usr/bin/bash -lc \"rg --files -g AGENTS.md -g '*DECISIONS*' -g '*SUMMARY*' -g '*ARCHITECTURE*' -g '*PENDING*' -g '.github/workflows/*' repo; ls -a repo\"",
+      "/usr/bin/bash -lc 'cat repo/skill/scripts/bt_page_req.py'",
+      "/usr/bin/bash -lc 'cat repo/skill/scripts/bt_cli_plan.py repo/skill/scripts/bt_plan_adapter.py'",
+      "/usr/bin/bash -lc \"rg -n 'plan-json|plan_report|quality_report|critical_path|widest_level|low.confidence|bt_planner|render_req|plan review' repo/skill/scripts/bitacora.py repo/skill/scripts/bt_page* repo/skill/scripts/bt_views.py repo/skill/scripts/bt_server.py repo/skill/scripts/tests repo/skill/scripts/bt_planner/tests repo/tests repo/skill/scripts/bt_planner/quality.py\"",
+      "/usr/bin/bash -lc \"cat repo/skill/scripts/bt_cli_review.py; sed -n '1,270p' repo/skill/scripts/tests/test_plan_integration.py\"",
+      "/usr/bin/bash -lc \"cat repo/skill/scripts/bt_planner/cli.py repo/skill/scripts/bt_planner/__init__.py; sed -n '155,310p' repo/skill/scripts/bt_planner/quality.py; rg -n '\"'^def report|''^def check'\"' repo/skill/scripts/bt_planner/sync.py\"",
+      "/usr/bin/bash -lc \"rg -n 'plan_panel|req_page|bt_page_req|plan_decide|plan-json|unittest' repo/skill/scripts/tests/test*web* repo/skill/scripts/tests/test*round* repo/skill/scripts/tests/test*page* repo/skill/scripts/bitacora.py repo/skill/scripts/bt_views.py repo/skill/scripts/bt_server.py repo/skill/scripts/bt_planner/tests/test_sync.py; cat repo/skill/scripts/tests/test_plan_boundary.py; ls repo/skill/scripts/tests\"",
+      "/usr/bin/bash -lc \"sed -n '90,145p' repo/skill/scripts/bitacora.py; sed -n '365,415p' repo/skill/scripts/bitacora.py; cat repo/skill/scripts/bt_cli_flows.py; sed -n '1,120p' repo/skill/scripts/bt_planner/sync.py; sed -n '390,465p' repo/skill/scripts/bt_planner/tests/test_sync.py\"",
+      "/usr/bin/bash -lc \"cat repo/skill/scripts/tests/test_metrics_page.py; sed -n '1,140p' repo/skill/scripts/bt_page_metrics.py; sed -n '130,215p' repo/skill/scripts/bt_server.py; rg -n '\"'^def (main|plan_|read|md)|bt_cli_plan|bt_plan_adapter'\"' repo/skill/scripts/bitacora.py repo/skill/scripts/bt_rounds.py repo/skill/scripts/bt_pages.py repo/skill/scripts/bt_cli_flows.py; sed -n '440,510p' repo/skill/scripts/bt_planner/tests/test_evidence.py; sed -n '1,140p' repo/skill/scripts/tests/test_00_isolation.py\"",
+      "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_planner/sync.py | sed -n '252,292p'; nl -ba repo/skill/scripts/bt_planner/contract.py | sed -n '1,90p'; rg -n '\"'^def (load|loads)|SCHEMA_VERSION'\"' repo/skill/scripts/bt_planner/contract.py; sed -n '449,475p' repo/skill/scripts/bt_planner/tests/test_sync.py; sed -n '1,45p' repo/skill/scripts/bt_pages.py; sed -n '105,142p' repo/skill/scripts/bt_rounds.py\"",
+      "/usr/bin/bash -lc \"nl -ba repo/skill/scripts/bt_page_req.py | sed -n '95,135p'; nl -ba repo/skill/scripts/bt_cli_plan.py | sed -n '8,26p'; nl -ba repo/skill/scripts/bt_plan_adapter.py | sed -n '105,121p'; sed -n '1,35p' repo/skill/scripts/tests/test_metrics_page.py; rg -n 'plan-json|report|critical|confidence' repo/skill/references/plan-contract.md repo/skill/scripts/bt_planner/README.md repo/skill/scripts/bt_planner/tests/test_e2e_cli.py\"",
+      "/usr/bin/bash -lc \"sed -n '436,490p' repo/skill/scripts/bt_planner/contract.py; rg -n '\"'^def read_plan'\"' repo/skill/scripts/bt_planner/sync.py; sed -n '179,211p' repo/skill/scripts/bt_planner/sync.py; sed -n '1,85p' repo/skill/scripts/bt_planner/tests/support.py; sed -n '1,85p' repo/skill/scripts/bt_planner/tests/test_boundaries.py; sed -n '1,45p' repo/skill/scripts/bitacora.py; sed -n '1,55p' repo/skill/scripts/bt_core.py\""
+    ]
+  }
+]

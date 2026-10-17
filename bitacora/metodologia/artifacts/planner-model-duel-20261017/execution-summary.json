@@ -1,0 +1,10 @@
+[
+  {
+    "provider": "claude",
+    "status": "complete"
+  },
+  {
+    "provider": "codex",
+    "status": "complete"
+  }
+]

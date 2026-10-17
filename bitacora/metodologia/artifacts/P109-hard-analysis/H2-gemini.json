@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "case": "H2",
+  "route": {
+    "id": "gemini",
+    "profile": "antigravity",
+    "provider": "antigravity",
+    "model": "gemini-3.8-flash-high",
+    "effort": "high"
+  },
+  "status": "completed",
+  "prompt_sha256": "b860c77bcf845e195c065b4c6e80048d1a9cc507fb153bb03b260997f4d76ef4",
+  "prompt_characters": 12371,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792209476.9901373,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792814271.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792227471.0,
+        "window_minutes": 300
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209476.9901724,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "S2",
+        "severity": "high",
+        "issue": "Greedy route selection by task ID and local lowest cost fails to maximize batch assignment cardinality.",
+        "evidence": "R1 mandates maximizing assigned task cardinality before minimizing normalized cost, deferring tasks only if no feasible assignment exists. G2 provides accounts A and B with capacity=1 each, general task J1 (A cost 1, B cost 2), and specialized task J2 (A cost 1 only), with J1 sorting before J2. T2 proposes preserving S2 based on a superseded 2025 memo.",
+        "failure_scenario": "Under G2, S2 sorts tasks [J1, J2]. It assigns J1 to account A (cost 1 < 2), reducing A's capacity to 0. J2 can only use A, so with capacity[A]=0, J2 cannot be assigned. Total assigned tasks = 1. A maximum cardinality assignment assigns J1 to B (cost 2) and J2 to A (cost 1), achieving cardinality 2.",
+        "fix": "Replace greedy iteration with a maximum-cardinality bipartite matching or min-cost max-flow algorithm that maximizes total assigned tasks as the primary objective and minimizes total normalized cost secondarily."
+      },
+      {
+        "task": "S3",
+        "severity": "high",
+        "issue": "Eligibility check at reservation/dispatch verifies quota snapshot freshness against the stale request creation timestamp rather than current time.",
+        "evidence": "R2 requires quota freshness (observed_at <= current_time <= observed_at + 120) and future reset times to hold at reservation commit and dispatch, allowing queue stalls up to 300s. G3 specifies observed_at=900, request_now=1000, and reservation/dispatch at current_time=1100. S3 compares against frozen request.now. T3 keeps S3.",
+        "failure_scenario": "Under G3, request.now is 1000 and observed_at is 900. When reservation or dispatch executes at t=1100 after a 100s queue stall, S3 checks '900 <= request.now (1000) <= 1020', which evaluates to True. However, at execution time t=1100, the snapshot is 200s old, exceeding the 120s limit (1100 > 1020).",
+        "fix": "In at_reservation_or_dispatch, validate freshness against injected_clock() instead of request.now, checking 'quota.observed_at <= current_time <= quota.observed_at + 120' and ensuring quota reset times are strictly in the future relative to current_time."
+      },
+      {
+        "task": "S4",
+        "severity": "high",
+        "issue": "Token usage pricing double-bills cached tokens by charging input_rate on input_tokens (which already includes cached tokens) and adding cache_rate.",
+        "evidence": "R3 specifies provider schema v2 where input_tokens already includes cached_input_tokens and requires cost = noncached_input*input_rate + cached_input*cache_rate + output*output_rate. S4 charges input_tokens*rates.input + cached_input_tokens*rates.cache. T2 preserves S4 based on a superseded 2025 memo treating cached tokens as an additive bucket.",
+        "failure_scenario": "With rates input=20, cache=2, output=100 microcredits, a usage report with input_tokens=100, cached_input_tokens=100, and output_tokens=0 has 0 noncached tokens. R3 cost is (100-100)*20 + 100*2 = 200 microcredits. S4 calculates 100*20 + 100*2 = 2200 microcredits, overbilling by 2000 microcredits.",
+        "fix": "Calculate noncached input as (usage.input_tokens - usage.cached_input_tokens) and price as '(usage.input_tokens - usage.cached_input_tokens) * rates.input + usage.cached_input_tokens * rates.cache + usage.output_tokens * rates.output'."
+      },
+      {
+        "task": "S5",
+        "severity": "critical",
+        "issue": "Including mutable job generation in the external launch idempotency key bypasses remote deduplication across worker takeovers, causing multiple external executions.",
+        "evidence": "R4 mandates at most one external side effect per logical task across ownership changes or worker restarts, noting the external provider deduplicates per (effective_account, idempotency_key) and ignores local generations. G4 and G5 state workers share effective account, outbox generation intents differ, and remote.launch does not consult M1 CAS fences. Trace A demonstrates the failure.",
+        "failure_scenario": "In Trace A, worker W1 (generation 1) checks ownership at t10 and pauses at t11. Worker W2 acquires generation 2 at t71 and calls remote.launch with key '{run}:{task}:2'. W1 resumes at t80 and calls remote.launch with key '{run}:{task}:1'. Because the keys differ, the provider executes both launches, producing two remote side effects for one task.",
+        "fix": "Scope the external idempotency key strictly to the logical task and run without generation (e.g., f'{job.run}:{job.task}'), allowing the provider's deduplication mechanism to suppress duplicate launches across worker generations."
+      },
+      {
+        "task": "S6",
+        "severity": "critical",
+        "issue": "Cancel returns ACK immediately upon local DB commit without draining or synchronizing in-flight dispatch network requests, permitting external job starts post-ACK.",
+        "evidence": "R5 guarantees that after cancel ACK, no new external job for that run can start, noting that merely checking local state before HTTP dispatch does not prevent in-flight starts and no remote admission fence exists. Trace B shows a queued launch starting after cancel ACK. T5 acknowledges the conflict under a 50ms ACK budget.",
+        "failure_scenario": "In Trace B, a dispatcher passes 'if db.run_is_cancelled' at t20 and pauses in the network stack before transmission. cancel() commits to DB and returns ACK at t21. At t22, the delayed HTTP dispatch reaches the provider and starts remotely after cancel ACK.",
+        "fix": "Track all active dispatch attempts and do not return cancel ACK until in-flight HTTP requests for that run are either drained, aborted, or confirmed not to start; if a 50ms local ACK budget precludes this, relax the SLA or integrate a remote admission fence."
+      },
+      {
+        "task": "S7",
+        "severity": "medium",
+        "issue": "Decision map persistence stores only an unversioned, mutable file path rather than the quota observation, and omits injected time and policy version, breaking reproducibility.",
+        "evidence": "R6 requires frozen recommendations to retain reproducible decision input evidence, including the quota observation used, injected time, and policy version. G6 states /cache/quotas.json is overwritten in place by an external process without retaining older contents. S7 comments confirm injected time and policy version exist only in process memory. T3 preserves S7.",
+        "failure_scenario": "S7 writes quota_source: '/cache/quotas.json' to map_row. When /cache/quotas.json is subsequently updated by the separate process, the specific quota readings that generated computed_routes are overwritten and lost. Injected time and policy version are never stored, preventing historical verification.",
+        "fix": "Serialize allowlisted quota snapshot fields (or an immutable content hash), injected_clock(), and policy_version directly into map_row before computing map_hash and appending to the immutable map store."
+      },
+      {
+        "task": "S8",
+        "severity": "critical",
+        "issue": "Reservation expires_at is calculated statically from duration estimates and is not renewed by executor heartbeats, causing cleanup() to prematurely release capacity while jobs are running.",
+        "evidence": "R7 establishes that account concurrency limits are real constraints, task duration estimates do not guarantee termination, and freeing reservations while jobs remain live or uncertain is prohibited. S8 renews only job_lease on heartbeat and deletes reservations where expires_at < now. Trace C demonstrates the failure.",
+        "failure_scenario": "In Trace C, a task with estimated_seconds=60 reserves capacity on a limit=1 account at t0 (expires_at=65). The worker heartbeats and renews its job lease at t50 and t80, remaining active at t90. At t66, cleanup() deletes the reservation. At t67, a new READY task claims account capacity and executes concurrently with the first job, violating the account concurrency limit of 1.",
+        "fix": "Extend reservation.expires_at concurrently with job lease renewal during on_executor_heartbeat, and restrict cleanup() to delete reservations only after verifying that the corresponding job has reached a terminal state or its lease has fully expired."
+      },
+      {
+        "task": "S9",
+        "severity": "high",
+        "issue": "Usage processing appends cumulative spend snapshots to an additive charge ledger, causing final billing to sum cumulative totals instead of settling on the latest observation.",
+        "evidence": "R8 requires each usage stream to report cumulative spend per attempt, allows different event_ids to be cumulative observations of one attempt, and mandates final spend equal the latest total. Trace D shows cumulative events u1 and u2 for attempt X. S9 appends charges for each unique event_id and sums amount. T6 retains S9.",
+        "failure_scenario": "In Trace D, attempt X receives event u1 (sequence 1, cumulative 10) and u2 (sequence 2, cumulative 25). S9 inserts both distinct receipts and appends charges 10 and 25. The final bill is computed as SUM(append_charge.amount) = 35 microcredits, whereas the true cumulative spend is 25 microcredits.",
+        "fix": "Update the attempt charge record with the latest cumulative total (e.g., using UPSERT with MAX(cumulative_microcredits)), or compute incremental charge deltas (event.cumulative_microcredits - previous_cumulative_microcredits) before appending to the charge ledger."
+      }
+    ],
+    "uncertainties": [
+      "Whether the external launch provider offers an asynchronous cancellation or admission-fence endpoint to abort pending launches remotely, or if meeting R5 requires relaxing the 50ms local cancel ACK SLA to allow in-flight network dispatch drain.",
+      "Whether downstream audit tools require the complete allowlisted quota snapshot structure or only an immutable hash and summary fields within map_row to verify decision reproducibility."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"S2\",\"severity\":\"high\",\"issue\":\"Greedy route selection by task ID and local lowest cost fails to maximize batch assignment cardinality.\",\"evidence\":\"R1 mandates maximizing assigned task cardinality before minimizing normalized cost, deferring tasks only if no feasible assignment exists. G2 provides accounts A and B with capacity=1 each, general task J1 (A cost 1, B cost 2), and specialized task J2 (A cost 1 only), with J1 sorting before J2. T2 proposes preserving S2 based on a superseded 2025 memo.\",\"failure_scenario\":\"Under G2, S2 sorts tasks [J1, J2]. It assigns J1 to account A (cost 1 < 2), reducing A's capacity to 0. J2 can only use A, so with capacity[A]=0, J2 cannot be assigned. Total assigned tasks = 1. A maximum cardinality assignment assigns J1 to B (cost 2) and J2 to A (cost 1), achieving cardinality 2.\",\"fix\":\"Replace greedy iteration with a maximum-cardinality bipartite matching or min-cost max-flow algorithm that maximizes total assigned tasks as the primary objective and minimizes total normalized cost secondarily.\"},{\"task\":\"S3\",\"severity\":\"high\",\"issue\":\"Eligibility check at reservation/dispatch verifies quota snapshot freshness against the stale request creation timestamp rather than current time.\",\"evidence\":\"R2 requires quota freshness (observed_at <= current_time <= observed_at + 120) and future reset times to hold at reservation commit and dispatch, allowing queue stalls up to 300s. G3 specifies observed_at=900, request_now=1000, and reservation/dispatch at current_time=1100. S3 compares against frozen request.now. T3 keeps S3.\",\"failure_scenario\":\"Under G3, request.now is 1000 and observed_at is 900. When reservation or dispatch executes at t=1100 after a 100s queue stall, S3 checks '900 <= request.now (1000) <= 1020', which evaluates to True. However, at execution time t=1100, the snapshot is 200s old, exceeding the 120s limit (1100 > 1020).\",\"fix\":\"In at_reservation_or_dispatch, validate freshness against injected_clock() instead of request.now, checking 'quota.observed_at <= current_time <= quota.observed_at + 120' and ensuring quota reset times are strictly in the future relative to current_time.\"},{\"task\":\"S4\",\"severity\":\"high\",\"issue\":\"Token usage pricing double-bills cached tokens by charging input_rate on input_tokens (which already includes cached tokens) and adding cache_rate.\",\"evidence\":\"R3 specifies provider schema v2 where input_tokens already includes cached_input_tokens and requires cost = noncached_input*input_rate + cached_input*cache_rate + output*output_rate. S4 charges input_tokens*rates.input + cached_input_tokens*rates.cache. T2 preserves S4 based on a superseded 2025 memo treating cached tokens as an additive bucket.\",\"failure_scenario\":\"With rates input=20, cache=2, output=100 microcredits, a usage report with input_tokens=100, cached_input_tokens=100, and output_tokens=0 has 0 noncached tokens. R3 cost is (100-100)*20 + 100*2 = 200 microcredits. S4 calculates 100*20 + 100*2 = 2200 microcredits, overbilling by 2000 microcredits.\",\"fix\":\"Calculate noncached input as (usage.input_tokens - usage.cached_input_tokens) and price as '(usage.input_tokens - usage.cached_input_tokens) * rates.input + usage.cached_input_tokens * rates.cache + usage.output_tokens * rates.output'.\"},{\"task\":\"S5\",\"severity\":\"critical\",\"issue\":\"Including mutable job generation in the external launch idempotency key bypasses remote deduplication across worker takeovers, causing multiple external executions.\",\"evidence\":\"R4 mandates at most one external side effect per logical task across ownership changes or worker restarts, noting the external provider deduplicates per (effective_account, idempotency_key) and ignores local generations. G4 and G5 state workers share effective account, outbox generation intents differ, and remote.launch does not consult M1 CAS fences. Trace A demonstrates the failure.\",\"failure_scenario\":\"In Trace A, worker W1 (generation 1) checks ownership at t10 and pauses at t11. Worker W2 acquires generation 2 at t71 and calls remote.launch with key '{run}:{task}:2'. W1 resumes at t80 and calls remote.launch with key '{run}:{task}:1'. Because the keys differ, the provider executes both launches, producing two remote side effects for one task.\",\"fix\":\"Scope the external idempotency key strictly to the logical task and run without generation (e.g., f'{job.run}:{job.task}'), allowing the provider's deduplication mechanism to suppress duplicate launches across worker generations.\"},{\"task\":\"S6\",\"severity\":\"critical\",\"issue\":\"Cancel returns ACK immediately upon local DB commit without draining or synchronizing in-flight dispatch network requests, permitting external job starts post-ACK.\",\"evidence\":\"R5 guarantees that after cancel ACK, no new external job for that run can start, noting that merely checking local state before HTTP dispatch does not prevent in-flight starts and no remote admission fence exists. Trace B shows a queued launch starting after cancel ACK. T5 acknowledges the conflict under a 50ms ACK budget.\",\"failure_scenario\":\"In Trace B, a dispatcher passes 'if db.run_is_cancelled' at t20 and pauses in the network stack before transmission. cancel() commits to DB and returns ACK at t21. At t22, the delayed HTTP dispatch reaches the provider and starts remotely after cancel ACK.\",\"fix\":\"Track all active dispatch attempts and do not return cancel ACK until in-flight HTTP requests for that run are either drained, aborted, or confirmed not to start; if a 50ms local ACK budget precludes this, relax the SLA or integrate a remote admission fence.\"},{\"task\":\"S7\",\"severity\":\"medium\",\"issue\":\"Decision map persistence stores only an unversioned, mutable file path rather than the quota observation, and omits injected time and policy version, breaking reproducibility.\",\"evidence\":\"R6 requires frozen recommendations to retain reproducible decision input evidence, including the quota observation used, injected time, and policy version. G6 states /cache/quotas.json is overwritten in place by an external process without retaining older contents. S7 comments confirm injected time and policy version exist only in process memory. T3 preserves S7.\",\"failure_scenario\":\"S7 writes quota_source: '/cache/quotas.json' to map_row. When /cache/quotas.json is subsequently updated by the separate process, the specific quota readings that generated computed_routes are overwritten and lost. Injected time and policy version are never stored, preventing historical verification.\",\"fix\":\"Serialize allowlisted quota snapshot fields (or an immutable content hash), injected_clock(), and policy_version directly into map_row before computing map_hash and appending to the immutable map store.\"},{\"task\":\"S8\",\"severity\":\"critical\",\"issue\":\"Reservation expires_at is calculated statically from duration estimates and is not renewed by executor heartbeats, causing cleanup() to prematurely release capacity while jobs are running.\",\"evidence\":\"R7 establishes that account concurrency limits are real constraints, task duration estimates do not guarantee termination, and freeing reservations while jobs remain live or uncertain is prohibited. S8 renews only job_lease on heartbeat and deletes reservations where expires_at < now. Trace C demonstrates the failure.\",\"failure_scenario\":\"In Trace C, a task with estimated_seconds=60 reserves capacity on a limit=1 account at t0 (expires_at=65). The worker heartbeats and renews its job lease at t50 and t80, remaining active at t90. At t66, cleanup() deletes the reservation. At t67, a new READY task claims account capacity and executes concurrently with the first job, violating the account concurrency limit of 1.\",\"fix\":\"Extend reservation.expires_at concurrently with job lease renewal during on_executor_heartbeat, and restrict cleanup() to delete reservations only after verifying that the corresponding job has reached a terminal state or its lease has fully expired.\"},{\"task\":\"S9\",\"severity\":\"high\",\"issue\":\"Usage processing appends cumulative spend snapshots to an additive charge ledger, causing final billing to sum cumulative totals instead of settling on the latest observation.\",\"evidence\":\"R8 requires each usage stream to report cumulative spend per attempt, allows different event_ids to be cumulative observations of one attempt, and mandates final spend equal the latest total. Trace D shows cumulative events u1 and u2 for attempt X. S9 appends charges for each unique event_id and sums amount. T6 retains S9.\",\"failure_scenario\":\"In Trace D, attempt X receives event u1 (sequence 1, cumulative 10) and u2 (sequence 2, cumulative 25). S9 inserts both distinct receipts and appends charges 10 and 25. The final bill is computed as SUM(append_charge.amount) = 35 microcredits, whereas the true cumulative spend is 25 microcredits.\",\"fix\":\"Update the attempt charge record with the latest cumulative total (e.g., using UPSERT with MAX(cumulative_microcredits)), or compute incremental charge deltas (event.cumulative_microcredits - previous_cumulative_microcredits) before appending to the charge ledger.\"}],\"uncertainties\":[\"Whether the external launch provider offers an asynchronous cancellation or admission-fence endpoint to abort pending launches remotely, or if meeting R5 requires relaxing the 50ms local cancel ACK SLA to allow in-flight network dispatch drain.\",\"Whether downstream audit tools require the complete allowlisted quota snapshot structure or only an immutable hash and summary fields within map_row to verify decision reproducibility.\"]}\n",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 14702,
+    "output_tokens": 21358,
+    "thinking_tokens": 19128,
+    "cache_read_tokens": 0,
+    "total_tokens": 36060
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 1224,
+  "exit_code": 0,
+  "elapsed_seconds": 130.365,
+  "quota_after": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792209614.4647613,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 3.0,
+        "resets_at": 1792221676.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792814411.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792227611.0,
+        "window_minutes": 300
+      }
+    }
+  }
+}

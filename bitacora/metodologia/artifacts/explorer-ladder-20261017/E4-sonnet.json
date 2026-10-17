@@ -1,0 +1,817 @@
+{
+  "schema_version": 1,
+  "case": "E4",
+  "route": {
+    "id": "sonnet",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "0ac10fbb9cfc9957e86d70321328b53a9cc147a94fac9ea56073b3df7bf9d23c",
+  "prompt_characters": 2969,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248083.7246656,
+    "windows": {
+      "five_hour": {
+        "used_percent": 17.0,
+        "resets_at": 1792262399.949855,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792277999.949877,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248084.0557814,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-sonnet-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "plan",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "answer": {
+    "case": "E4",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "`SchedulerCore.start` binds or creates the run, then calls `_plan_all_routes()` before `reconcile`. For a new run it first calls `promote_ready`. The routing request is built from every `spec` in `self.plan.tasks`. It is not filtered by task state. Each `TaskView` carries `dependencies=spec.after`, so blocked tasks are included. The port README says the same: all approved-plan tasks, including dependency-blocked ones, with no reservation. The test asserts the request covers T1, T2 and T3. T2 is still `pending` with `route_status` `recommended`. By contrast, `_assign` builds its request only from tasks in `T.READY`.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.start",
+            "start_line": 107,
+            "end_line": 122
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._plan_all_routes",
+            "start_line": 124,
+            "end_line": 139
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._assign.eligible",
+            "start_line": 290,
+            "end_line": 307
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/README.md",
+            "symbol": "PlanRoutingPort row",
+            "start_line": 47,
+            "end_line": 47
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_routing.py",
+            "symbol": "FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor",
+            "start_line": 61,
+            "end_line": 69
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "The bridge is `DecisionAssignmentPort.plan`. It checks for `core.PlanRoutingRequest`, then calls `plan_full_dag(core, self, request, refresh_quota_preflight)`. `plan_full_dag` builds one `DecisionRequest` per task, but makes a single `port.ledger.batch_decisions.persist(tuple(decision_requests), ...)` call for the whole map. The task count is bounded by `MAX_BATCH_TASKS`; oversized plans return `m2_batch_task_limit_exceeded` for every task. `persist` calls `plan_ready_batch`, a deterministic, capacity-aware joint match (`_rank_batch_routes`, `_account_capacities`, `_match_batch_routes`). It stores the result as one `batch_decisions` row, so this is one batch operation for the map. It then returns one `PlannedRoute` per task, using either batch metadata or the unassigned reason.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.plan",
+            "start_line": 340,
+            "end_line": 345
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 136,
+            "end_line": 217
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "plan_ready_batch",
+            "start_line": 369,
+            "end_line": 392
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "BatchDecisionLedger.persist",
+            "start_line": 240,
+            "end_line": 295
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "M1 persists the routes in `persist`, inside a write transaction. For each task with no attempts it sets `rec.route_metadata`, `route_status` (`recommended`, or `unavailable` when metadata is empty) and `route_reason`. It also sets `ctx.state.routing_complete = True` and audits `plan_routes_received`. These fields are on `TaskRec` and `RunState` and are serialized with the state; `routing_complete` defaults to False and is validated as a boolean on load. The repository transaction writes `tx.state.to_dict()` as JSON. On a restart, `start` calls `_plan_all_routes`, which returns early if `routing_complete` is true. `persist` re-checks the flag and skips any task that already has attempts. M2 separately stores the batch in the `batch_decisions` table. An exact replay with the same `input_sha256` returns the stored first result. Because `requested_at` is part of the request, a fresh request normally yields a different input fingerprint. If M2 failed, `ROUTING_UNAVAILABLE` or `ROUTING_INVALID` is raised and the flag stays false, so the next start retries (test_routing.py:82-93).",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "_plan_all_routes.persist",
+            "start_line": 156,
+            "end_line": 173
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "_plan_all_routes",
+            "start_line": 127,
+            "end_line": 127
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/model.py",
+            "symbol": "TaskRec / RunState.routing_complete",
+            "start_line": 30,
+            "end_line": 31
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/model.py",
+            "symbol": "RunState.to_dict/from_dict",
+            "start_line": 97,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/repository.py",
+            "symbol": "transaction",
+            "start_line": 66,
+            "end_line": 74
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "persist replay branch",
+            "start_line": 273,
+            "end_line": 282
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_routing.py",
+            "symbol": "test_incomplete_full_plan_map_stops_before_any_task_reservation",
+            "start_line": 82,
+            "end_line": 93
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "No. The whole-plan mapping neither reserves nor launches. `plan_ready_batch` is documented as creating no durable reservations, and the contract is non-reserving. `persist` only inserts a decision row. The component that reserves is M1 `reservation.claim`. It checks that the task is READY, that the run is not paused or cancelled, that there are free slots, and that resources do not conflict. It then writes an ACTIVE task, a RESERVED attempt, `state.holds`, and a write-ahead `start` outbox intent. The module docstring says nothing external is called there. `SchedulerCore._assign` calls `claim`, capped by `free_slots`. The test asserts one outbox item and `ports.execution` is None after `step`. I did not trace the Dispatcher's actual executor delivery.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "plan_ready_batch",
+            "start_line": 375,
+            "end_line": 375
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "claim",
+            "start_line": 34,
+            "end_line": 71
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "free_slots",
+            "start_line": 26,
+            "end_line": 31
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore._assign",
+            "start_line": 321,
+            "end_line": 328
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_routing.py",
+            "symbol": "test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor",
+            "start_line": 71,
+            "end_line": 80
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "No. `step` runs `_assign` for READY tasks only. `_assign` calls `ports.assignment.propose`, which in `DecisionAssignmentPort.propose` runs a fresh `refresh_quota_preflight(self.project)`. It rebuilds candidates with `_candidate_rows(..., requested_at)` and demotes claude/codex/antigravity candidates to quota `unknown` unless the preflight is `available`. A new `DecisionRequest` and batch persist follow, then `engine.decide` for the selected candidate. The planned `rec.route_metadata` is never read as input. The `Assignment` is built from the new decision. `claim` overwrites `route_metadata` and sets `route_status` to `assigned`. The integration test plans with `claude-personal` fresh and `codex-luis` stale. It then flips the quota and calls `step`. It asserts `refresh_calls == [first_quota, changed_quota]`. It also asserts the initial plan did not pick `codex-luis` while the executor lookup resolves to `codex-luis`.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/scheduler.py",
+            "symbol": "SchedulerCore.step/_assign",
+            "start_line": 255,
+            "end_line": 328
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.propose",
+            "start_line": 347,
+            "end_line": 422
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_core/reservation.py",
+            "symbol": "claim",
+            "start_line": 53,
+            "end_line": 56
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_integration.py",
+            "symbol": "test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation",
+            "start_line": 401,
+            "end_line": 445
+          }
+        ]
+      },
+      {
+        "id": "Q6",
+        "answer": "There are three places. (a) In `bt_scheduler_quota_preflight.refresh`, a failed `bt_subscriptions.poll` sets `poll_failed`, so claude/codex rows become `refresh_failed` or `quota_refresh_failed` with status `unavailable`. Errors, stale data and malformed data are mapped to explicit states. The antigravity source has its own `except` that fails closed. An account count over the limit returns `{'*': {...preflight_account_limit_exceeded}}`. (b) In `plan_full_dag`, an exception from `refresh_quota(port.project)` becomes `{'*': {'status':'unavailable','reason':'quota_refresh_failed'}}`. `_apply_preflight` sets the candidate `quota_status` to `unknown` unless its profile entry is `available`. `_quota_evidence` turns the states and reasons into `BatchQuotaEvidence`, falling back to the `'*'` entry. (c) The same fallback exists in `propose`. The request timestamp comes from `quota_aware_requested_at`. It takes the maximum of the initial time, `time.time()` and every finite numeric `observed_at` in the refresh result. Both `plan_full_dag` and `propose` call it after the refresh and before `_candidate_rows`.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 28,
+            "end_line": 108
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "quota_aware_requested_at",
+            "start_line": 29,
+            "end_line": 38
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag refresh/requested_at",
+            "start_line": 147,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_apply_preflight",
+            "start_line": 63,
+            "end_line": 73
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_quota_evidence",
+            "start_line": 76,
+            "end_line": 109
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "DecisionAssignmentPort.propose",
+            "start_line": 356,
+            "end_line": 361
+          }
+        ]
+      },
+      {
+        "id": "Q7",
+        "answer": "There are two tests. `test_routing.py` uses a fake M2 port with the core only. `plan` returns sonnet/xhigh for T1 (READY), T2 (depends on T1, so blocked) and T3, with `max_parallel_tasks=1`. After `start()`, all three are `recommended`, T2 is still `pending`, and `routing_complete` is true. After `step()`, `propose` sees only `[T1, T3]` with one free slot, and returns haiku/low. T1 becomes `assigned` with model haiku. T2 keeps its sonnet recommendation. There is exactly one pending outbox item and `ports.execution` is None. The second, `test_scheduler_decision_integration.py:401-445`, uses the real `DecisionAssignmentPort` and a quota change between plan and step; see Q5.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_core/tests/test_routing.py",
+            "symbol": "FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor",
+            "start_line": 53,
+            "end_line": 80
+          }
+        ]
+      },
+      {
+        "path": "skill/scripts/tests/test_scheduler_decision_integration.py",
+        "symbol": "test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation",
+        "start_line": 401,
+        "end_line": 445
+      }
+    ],
+    "unknowns": [
+      "I did not trace Dispatcher.deliver_pending or the executor adapter, so what actually launches work after the outbox `start` intent is unverified.",
+      "I did not read the M2 internals (`_rank_batch_routes`, `_match_batch_routes`, `_account_capacities`), so I did not verify how capacity is accounted inside the joint match.",
+      "How `input_sha256` is computed was not read, so whether a restarted plan call replays or creates a new batch row is inferred; `routing_complete` is the only restart guard I verified.",
+      "I traced the SQLite and JSON repository only for `transaction`; the exact persistence backend used in production runs was not confirmed.",
+      "Tests were read, not run, so no pass or fail claim is made."
+    ]
+  },
+  "response_text": "{\"case\":\"E4\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"`SchedulerCore.start` binds or creates the run, then calls `_plan_all_routes()` before `reconcile`. For a new run it first calls `promote_ready`. The routing request is built from every `spec` in `self.plan.tasks`. It is not filtered by task state. Each `TaskView` carries `dependencies=spec.after`, so blocked tasks are included. The port README says the same: all approved-plan tasks, including dependency-blocked ones, with no reservation. The test asserts the request covers T1, T2 and T3. T2 is still `pending` with `route_status` `recommended`. By contrast, `_assign` builds its request only from tasks in `T.READY`.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.start\",\"start_line\":107,\"end_line\":122},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._plan_all_routes\",\"start_line\":124,\"end_line\":139},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._assign.eligible\",\"start_line\":290,\"end_line\":307},{\"path\":\"skill/scripts/bt_scheduler_core/README.md\",\"symbol\":\"PlanRoutingPort row\",\"start_line\":47,\"end_line\":47},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_routing.py\",\"symbol\":\"FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor\",\"start_line\":61,\"end_line\":69}]},{\"id\":\"Q2\",\"answer\":\"The bridge is `DecisionAssignmentPort.plan`. It checks for `core.PlanRoutingRequest`, then calls `plan_full_dag(core, self, request, refresh_quota_preflight)`. `plan_full_dag` builds one `DecisionRequest` per task, but makes a single `port.ledger.batch_decisions.persist(tuple(decision_requests), ...)` call for the whole map. The task count is bounded by `MAX_BATCH_TASKS`; oversized plans return `m2_batch_task_limit_exceeded` for every task. `persist` calls `plan_ready_batch`, a deterministic, capacity-aware joint match (`_rank_batch_routes`, `_account_capacities`, `_match_batch_routes`). It stores the result as one `batch_decisions` row, so this is one batch operation for the map. It then returns one `PlannedRoute` per task, using either batch metadata or the unassigned reason.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.plan\",\"start_line\":340,\"end_line\":345},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":136,\"end_line\":217},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"plan_ready_batch\",\"start_line\":369,\"end_line\":392},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"BatchDecisionLedger.persist\",\"start_line\":240,\"end_line\":295}]},{\"id\":\"Q3\",\"answer\":\"M1 persists the routes in `persist`, inside a write transaction. For each task with no attempts it sets `rec.route_metadata`, `route_status` (`recommended`, or `unavailable` when metadata is empty) and `route_reason`. It also sets `ctx.state.routing_complete = True` and audits `plan_routes_received`. These fields are on `TaskRec` and `RunState` and are serialized with the state; `routing_complete` defaults to False and is validated as a boolean on load. The repository transaction writes `tx.state.to_dict()` as JSON. On a restart, `start` calls `_plan_all_routes`, which returns early if `routing_complete` is true. `persist` re-checks the flag and skips any task that already has attempts. M2 separately stores the batch in the `batch_decisions` table. An exact replay with the same `input_sha256` returns the stored first result. Because `requested_at` is part of the request, a fresh request normally yields a different input fingerprint. If M2 failed, `ROUTING_UNAVAILABLE` or `ROUTING_INVALID` is raised and the flag stays false, so the next start retries (test_routing.py:82-93).\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"_plan_all_routes.persist\",\"start_line\":156,\"end_line\":173},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"_plan_all_routes\",\"start_line\":127,\"end_line\":127},{\"path\":\"skill/scripts/bt_scheduler_core/model.py\",\"symbol\":\"TaskRec / RunState.routing_complete\",\"start_line\":30,\"end_line\":31},{\"path\":\"skill/scripts/bt_scheduler_core/model.py\",\"symbol\":\"RunState.to_dict/from_dict\",\"start_line\":97,\"end_line\":116},{\"path\":\"skill/scripts/bt_scheduler_core/repository.py\",\"symbol\":\"transaction\",\"start_line\":66,\"end_line\":74},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"persist replay branch\",\"start_line\":273,\"end_line\":282},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_routing.py\",\"symbol\":\"test_incomplete_full_plan_map_stops_before_any_task_reservation\",\"start_line\":82,\"end_line\":93}]},{\"id\":\"Q4\",\"answer\":\"No. The whole-plan mapping neither reserves nor launches. `plan_ready_batch` is documented as creating no durable reservations, and the contract is non-reserving. `persist` only inserts a decision row. The component that reserves is M1 `reservation.claim`. It checks that the task is READY, that the run is not paused or cancelled, that there are free slots, and that resources do not conflict. It then writes an ACTIVE task, a RESERVED attempt, `state.holds`, and a write-ahead `start` outbox intent. The module docstring says nothing external is called there. `SchedulerCore._assign` calls `claim`, capped by `free_slots`. The test asserts one outbox item and `ports.execution` is None after `step`. I did not trace the Dispatcher's actual executor delivery.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"plan_ready_batch\",\"start_line\":375,\"end_line\":375},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"claim\",\"start_line\":34,\"end_line\":71},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"free_slots\",\"start_line\":26,\"end_line\":31},{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore._assign\",\"start_line\":321,\"end_line\":328},{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_routing.py\",\"symbol\":\"test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor\",\"start_line\":71,\"end_line\":80}]},{\"id\":\"Q5\",\"answer\":\"No. `step` runs `_assign` for READY tasks only. `_assign` calls `ports.assignment.propose`, which in `DecisionAssignmentPort.propose` runs a fresh `refresh_quota_preflight(self.project)`. It rebuilds candidates with `_candidate_rows(..., requested_at)` and demotes claude/codex/antigravity candidates to quota `unknown` unless the preflight is `available`. A new `DecisionRequest` and batch persist follow, then `engine.decide` for the selected candidate. The planned `rec.route_metadata` is never read as input. The `Assignment` is built from the new decision. `claim` overwrites `route_metadata` and sets `route_status` to `assigned`. The integration test plans with `claude-personal` fresh and `codex-luis` stale. It then flips the quota and calls `step`. It asserts `refresh_calls == [first_quota, changed_quota]`. It also asserts the initial plan did not pick `codex-luis` while the executor lookup resolves to `codex-luis`.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/scheduler.py\",\"symbol\":\"SchedulerCore.step/_assign\",\"start_line\":255,\"end_line\":328},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.propose\",\"start_line\":347,\"end_line\":422},{\"path\":\"skill/scripts/bt_scheduler_core/reservation.py\",\"symbol\":\"claim\",\"start_line\":53,\"end_line\":56},{\"path\":\"skill/scripts/tests/test_scheduler_decision_integration.py\",\"symbol\":\"test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation\",\"start_line\":401,\"end_line\":445}]},{\"id\":\"Q6\",\"answer\":\"There are three places. (a) In `bt_scheduler_quota_preflight.refresh`, a failed `bt_subscriptions.poll` sets `poll_failed`, so claude/codex rows become `refresh_failed` or `quota_refresh_failed` with status `unavailable`. Errors, stale data and malformed data are mapped to explicit states. The antigravity source has its own `except` that fails closed. An account count over the limit returns `{'*': {...preflight_account_limit_exceeded}}`. (b) In `plan_full_dag`, an exception from `refresh_quota(port.project)` becomes `{'*': {'status':'unavailable','reason':'quota_refresh_failed'}}`. `_apply_preflight` sets the candidate `quota_status` to `unknown` unless its profile entry is `available`. `_quota_evidence` turns the states and reasons into `BatchQuotaEvidence`, falling back to the `'*'` entry. (c) The same fallback exists in `propose`. The request timestamp comes from `quota_aware_requested_at`. It takes the maximum of the initial time, `time.time()` and every finite numeric `observed_at` in the refresh result. Both `plan_full_dag` and `propose` call it after the refresh and before `_candidate_rows`.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":28,\"end_line\":108},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"quota_aware_requested_at\",\"start_line\":29,\"end_line\":38},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag refresh/requested_at\",\"start_line\":147,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_apply_preflight\",\"start_line\":63,\"end_line\":73},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_quota_evidence\",\"start_line\":76,\"end_line\":109},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"DecisionAssignmentPort.propose\",\"start_line\":356,\"end_line\":361}]},{\"id\":\"Q7\",\"answer\":\"There are two tests. `test_routing.py` uses a fake M2 port with the core only. `plan` returns sonnet/xhigh for T1 (READY), T2 (depends on T1, so blocked) and T3, with `max_parallel_tasks=1`. After `start()`, all three are `recommended`, T2 is still `pending`, and `routing_complete` is true. After `step()`, `propose` sees only `[T1, T3]` with one free slot, and returns haiku/low. T1 becomes `assigned` with model haiku. T2 keeps its sonnet recommendation. There is exactly one pending outbox item and `ports.execution` is None. The second, `test_scheduler_decision_integration.py:401-445`, uses the real `DecisionAssignmentPort` and a quota change between plan and step; see Q5.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_core/tests/test_routing.py\",\"symbol\":\"FullPlanRouting.test_full_dag_is_recorded_then_ready_route_is_revalidated_without_executor\",\"start_line\":53,\"end_line\":80}]},{\"path\":\"skill/scripts/tests/test_scheduler_decision_integration.py\",\"symbol\":\"test_ready_revalidation_uses_changed_quota_and_m1_owns_the_only_reservation\",\"start_line\":401,\"end_line\":445}],\"unknowns\":[\"I did not trace Dispatcher.deliver_pending or the executor adapter, so what actually launches work after the outbox `start` intent is unverified.\",\"I did not read the M2 internals (`_rank_batch_routes`, `_match_batch_routes`, `_account_capacities`), so I did not verify how capacity is accounted inside the joint match.\",\"How `input_sha256` is computed was not read, so whether a restarted plan call replays or creates a new batch row is inferred; `routing_complete` is the only restart guard I verified.\",\"I traced the SQLite and JSON repository only for `transaction`; the exact persistence backend used in production runs was not confirmed.\",\"Tests were read, not run, so no pass or fail claim is made.\"]}",
+  "format_valid": false,
+  "usage_reported": {
+    "input_tokens": 20,
+    "cache_creation_input_tokens": 49478,
+    "cache_read_input_tokens": 225332,
+    "output_tokens": 7989,
+    "output_tokens_details": {
+      "thinking_tokens": 404
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 49478,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_tool_events": 19,
+  "response_words": 885,
+  "exit_code": 0,
+  "elapsed_seconds": 58.361,
+  "finished_at": 1792248142.417301,
+  "tool_audit": [
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "class Scheduler|def start\\b|plan_routes|planned_route|unavailable_reason|route_map|map_routes"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "**/*"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_core/scheduler.py",
+        "pattern": "route|plan_map|joint|m2|M2"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_core/scheduler.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "PlanRoutingRequest|PlannedRoute|def plan\\b|def propose|routing_complete|route_status|route_reason",
+        "glob": "!tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_plan_routing.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_core/reservation.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_core/tests/test_routing.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "def refresh_quota_preflight|quota_refresh_failed|def persist|reserv",
+        "glob": "{bt_scheduler_adapter.py,bt_quota_live.py,bt_scheduler_decision/batch*.py,bt_scheduler_decision_adapter.py}"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_decision/batch_ledger.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_decision/batch.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_decision/batch_ledger.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_quota_preflight.py",
+        "pattern": "refresh_failed|unavailable|observed_at|def refresh|except"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/tests",
+        "pattern": "routing_complete|route_status|plan_routes|nonreserv|non-reserv|revalidat"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/tests/test_scheduler_decision_integration.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E4/sonnet/repo/skill/scripts/bt_scheduler_quota_preflight.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_core/repository.py",
+        "pattern": "routing_complete|sqlite|def transaction|json_dumps|to_dict"
+      }
+    }
+  ],
+  "event_shapes": {
+    "system": [
+      "estimated_tokens",
+      "estimated_tokens_delta",
+      "session_id",
+      "subtype",
+      "type",
+      "uuid"
+    ],
+    "assistant": [
+      "message",
+      "parent_tool_use_id",
+      "request_id",
+      "session_id",
+      "timestamp",
+      "type",
+      "uuid"
+    ],
+    "rate_limit_event": [
+      "rate_limit_info",
+      "session_id",
+      "type",
+      "uuid"
+    ],
+    "user": [
+      "message",
+      "parent_tool_use_id",
+      "session_id",
+      "timestamp",
+      "tool_result_meta",
+      "tool_use_result",
+      "type",
+      "uuid"
+    ],
+    "result": [
+      "api_error_status",
+      "duration_api_ms",
+      "duration_ms",
+      "fast_mode_disabled_reason",
+      "fast_mode_state",
+      "first_content_frame_ms",
+      "is_error",
+      "modelUsage",
+      "num_turns",
+      "permission_denials",
+      "queued_turn_count",
+      "result",
+      "result_index",
+      "safety_stops",
+      "session_id",
+      "stop_reason",
+      "subagent_stats",
+      "subtype",
+      "terminal_reason",
+      "time_to_request_ms",
+      "total_cost_usd",
+      "ttft_ms",
+      "ttft_stream_ms",
+      "type",
+      "usage",
+      "uuid"
+    ]
+  },
+  "per_message_usage": [
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7642,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7642
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7642,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7642
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7642,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7642
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3053,
+      "cache_read_input_tokens": 7642,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3053
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 863,
+      "cache_read_input_tokens": 10695,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 863
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6393,
+      "cache_read_input_tokens": 11558,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6393
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6393,
+      "cache_read_input_tokens": 11558,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6393
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4287,
+      "cache_read_input_tokens": 17951,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4287
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4287,
+      "cache_read_input_tokens": 17951,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4287
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9445,
+      "cache_read_input_tokens": 22238,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9445
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9445,
+      "cache_read_input_tokens": 22238,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9445
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9445,
+      "cache_read_input_tokens": 22238,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9445
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9445,
+      "cache_read_input_tokens": 22238,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9445
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9445,
+      "cache_read_input_tokens": 22238,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9445
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5584,
+      "cache_read_input_tokens": 31683,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5584
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5584,
+      "cache_read_input_tokens": 31683,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5584
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5584,
+      "cache_read_input_tokens": 31683,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5584
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4015,
+      "cache_read_input_tokens": 37267,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4015
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4015,
+      "cache_read_input_tokens": 37267,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4015
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4015,
+      "cache_read_input_tokens": 37267,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4015
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4015,
+      "cache_read_input_tokens": 37267,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4015
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3734,
+      "cache_read_input_tokens": 41282,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3734
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3734,
+      "cache_read_input_tokens": 41282,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3734
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3734,
+      "cache_read_input_tokens": 41282,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3734
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4462,
+      "cache_read_input_tokens": 45016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4462
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4462,
+      "cache_read_input_tokens": 45016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4462
+      },
+      "output_tokens": 3
+    }
+  ],
+  "model_usage_reported": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 20,
+      "outputTokens": 7989,
+      "cacheReadInputTokens": 225332,
+      "cacheCreationInputTokens": 49478,
+      "webSearchRequests": 0,
+      "costUSD": 0.3003752,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 404
+    }
+  },
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248142.452046,
+    "windows": {
+      "five_hour": {
+        "used_percent": 19.0,
+        "resets_at": 1792262399.685122,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792277999.685143,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

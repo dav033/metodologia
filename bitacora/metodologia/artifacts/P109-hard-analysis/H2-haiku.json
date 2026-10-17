@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "case": "H2",
+  "route": {
+    "id": "haiku",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "effort": "max"
+  },
+  "status": "completed",
+  "prompt_sha256": "b860c77bcf845e195c065b4c6e80048d1a9cc507fb153bb03b260997f4d76ef4",
+  "prompt_characters": 12371,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792209853.3445842,
+    "windows": {
+      "five_hour": {
+        "used_percent": 9.0,
+        "resets_at": 1792213799.56847,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792277999.568491,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209853.6459458,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "S5 execute",
+        "severity": "critical",
+        "issue": "The idempotency key includes job.generation, so each ownership takeover creates a new provider key for one logical task. R4 allows at most one external side effect per logical task, and the provider deduplicates only on (effective_account, idempotency_key).",
+        "evidence": "S5 key=f'{job.run}:{job.task}:{job.generation}'. R4: the provider does not understand generations. G5: distinct keys execute separately. G4: the owner fence does not intercept HTTP; trace A uses one account across generations.",
+        "failure_scenario": "Trace A: W1 passes its owner check at t10 and pauses. W2 acquires generation2 at t71 and launches with run:task:2. W1 resumes at t80 and launches with run:task:1. The keys differ, so two jobs start. W1's rejected finalization discards its response, so nothing local records the second job.",
+        "fix": "Use key f'{job.run}:{job.task}' in S5 and in the outbox provider_key. Pin account_ref at the first launch intent. Keep the owner check and finalize CAS; the provider then deduplicates W1's late request against W2's launch. T6's ownership-loss-before-first-line case cannot reproduce this; use trace A with a pause after the check."
+      },
+      {
+        "task": "S2 assign",
+        "severity": "high",
+        "issue": "Greedy task-ID assignment spends capacity on a flexible task, then defers a specialized task that a feasible assignment could include. It optimizes neither cardinality nor cost.",
+        "evidence": "G2: A and B capacity=1; J1 can use A(1) or B(2); J2 only A(1). R1 requires max cardinality, then min cost. T2 keeps S2 on the basis of a 2025 memo that current requirements supersede.",
+        "failure_scenario": "S2 gives J1 A, so J2 is deferred: {J1:A}, size 1, cost 1. The feasible {J1:B,J2:A} has size 2, cost 3. Witness 2: J1 A(1)/B(2), J2 A(1)/B(10): S2 gives cost 11; the optimum is 3.",
+        "fix": "Replace the loop with min-cost maximum flow: source->task cap 1, task->account cost=normalized_cost, account->sink cap=capacity, integer costs. Break exact-cost ties by lexicographically smallest (task_id, account_ref). G2 must return {J1:B,J2:A}; T6's identical-capability case cannot reproduce the cardinality failure."
+      },
+      {
+        "task": "S3 at_reservation_or_dispatch",
+        "severity": "high",
+        "issue": "The freshness check uses request.now, captured at recommendation, instead of the current time at reservation commit or dispatch. The window primitive is correct; its caller passes a stale clock.",
+        "evidence": "S3 request={now: injected_clock(), ...} and the check uses request.now. R2 requires observed_at<=current_time<=observed_at+120 at every gate and allows queue stalls up to 300s. G3: observed_at=900, request_now=1000, reservation and dispatch at current_time=1100.",
+        "failure_scenario": "At 1000 the window is 900..1020, so S3 accepts. At current_time 1100 the window has closed, so the snapshot must be rejected, but S3 still accepts it. A 300s stall that dispatches at 1300 is wrongly accepted too.",
+        "fix": "Keep request.now only for recommendation. At reservation commit and at dispatch, re-run the S3 predicate with injected_clock() read at that gate, including the reset-time comparison. T6's 'no queue delay' case cannot detect this; use G3 at 1100."
+      },
+      {
+        "task": "S6 cancel",
+        "severity": "high",
+        "issue": "The only cancellation check is the pre-send read in S6 dispatch, and no remote admission fence is enabled. S5 launches with no cancellation check at all. R5 forbids new external job starts for the run after ACK.",
+        "evidence": "S6 dispatch checks run_is_cancelled, then calls remote.launch. S6 cancel commits the revision and returns ACK with no drain or fence. R5: a pre-send check does not cancel a request about to be sent. T5 claims the guarantee within a 50ms ACK.",
+        "failure_scenario": "Trace B: dispatch passes the check at t20, cancel ACKs at t21, and the queued launch starts at t22. Without any race: S5 passes its owner check at t6, cancel ACKs at t7, and remote.launch is sent at t8 and starts after ACK.",
+        "fix": "Local checks, and an ACK without provider confirmation, cannot meet R5 with these boundaries. Minimal sound option: a provider-side per-run admission tombstone, checked atomically at admission and confirmed before ACK; this needs provider capability and may exceed 50ms. Also gate S5 on cancellation and reconcile jobs that started before ACK. If the provider cannot provide the tombstone, report R5 as unachievable rather than claim it."
+      },
+      {
+        "task": "S8 cleanup",
+        "severity": "high",
+        "issue": "Reservation liveness comes from an estimate-based expires_at, not from the live job lease. Heartbeats renew the job lease but never the reservation, so cleanup frees capacity while the job is still live.",
+        "evidence": "S8: expires_at=now+estimated_seconds+5; on_executor_heartbeat calls only renew_job_lease_if_current; cleanup deletes expires_at<now without querying job state. R7: estimates are planning data, and freeing a reservation must not permit a second job while the first is live or uncertain.",
+        "failure_scenario": "Trace C: reserve at t0, expires_at=0+60+5=65. Lease renewed at t50 (to 110) and t80 (to 140); worker still working at t90. Cleanup at t66 deletes the reservation since 65<66. Another READY task takes the limit-1 slot, so two jobs are live on it.",
+        "fix": "Remove expires_at as a release trigger. Release a reservation only in the job's finalization transaction, with owner and generation checked, or after lease expiry together with a provider-confirmed terminal state. T6's 'executor finishing within estimate' case cannot reproduce this; use trace C."
+      },
+      {
+        "task": "S9 on_usage",
+        "severity": "high",
+        "issue": "Receipts dedupe by event_id, but each charge stores the cumulative snapshot and the bill sums all charge rows. Distinct event_ids for one attempt are summed as if they were deltas.",
+        "evidence": "R8: different event_ids can both be cumulative observations of one attempt, and final spend must equal the latest total. S9 appends event.cumulative_microcredits and settles SUM(append_charge.amount). Trace D: u1 attempt X cumulative 10, u2 attempt X cumulative 25, both new event_ids. Keep the receipt dedupe for redelivery.",
+        "failure_scenario": "Charges of 10 and 25 sum to 35, but the correct total is 25, an overbill of 10. The result is 35 in either arrival order.",
+        "fix": "In the same BEGIN IMMEDIATE transaction, store last_cumulative per attempt_id, append delta=max(0,cumulative-last_cumulative), then set last_cumulative=max(last,cumulative). Settlement SUM(deltas) then equals the latest total per attempt. Regression witness: trace D; T6's duplicate-same-event test passes and misses it."
+      },
+      {
+        "task": "S4 price",
+        "severity": "medium",
+        "issue": "Cached input is charged twice: inside input_tokens at the input rate, and again at the cache rate. R3 says input_tokens already includes cached_input_tokens.",
+        "evidence": "S4 = input_tokens*rates.input + cached_input_tokens*rates.cache + output_tokens*rates.output. R3 cost = noncached_input*input_rate + cached*cache_rate + output*output_rate; fixture 20/2/100. The output term is correct. T2 preserves S4 and cites the superseded memo.",
+        "failure_scenario": "usage input=1000, cached=600, output=0: S4 gives 21200; correct is 400*20+600*2=9200, an overcharge of 12000. Route flip: X rates 20/2/100 and Y rates 12/12/100 with this usage. S4 gives X=21200, Y=19200 and picks Y; correct X=9200, Y=12000 picks X.",
+        "fix": "Price noncached=input_tokens-cached_input_tokens: noncached*rates.input+cached*rates.cache+output*rates.output. Validate cached<=input first. T6's uncached-input case cannot detect this."
+      },
+      {
+        "task": "S7 map_row",
+        "severity": "medium",
+        "issue": "The frozen row hashes routes and a quota file path, but not the quota observation, injected time or policy version. The hash binds only the output, so the inputs cannot be reproduced.",
+        "evidence": "R6: output immutability is necessary but not sufficient; the row must keep the quota observation, injected time and policy version within the allowlist. S7 map_row={plan_hash, quota_source:'/cache/quotas.json', routes}; time and policy exist only in memory. G6: the file is refreshed in place and older contents are kept nowhere. Version1 bytes must stay unchanged.",
+        "failure_scenario": "Map M is computed at time 1000 from a snapshot observed at 900. At t1200 the separate process rewrites the file with observed_at=1200. Replaying M from its stored path reads the new snapshot; the 900 values, time 1000 and policy version are gone. The row's hash still verifies, so the mismatch is not detectable from the row.",
+        "fix": "Add a new map schema version. Before hashing, include the injected request time, policy_version, and only the allowlisted quota fields used (account_ref, status, windows, resets, observed_at). Do not store the raw file or provider payloads, and leave v1 rows unchanged."
+      }
+    ],
+    "uncertainties": [
+      "all_windows_and_status_ok is not shown. If its future-reset check uses request.now, the S3 defect applies there too.",
+      "remote.launch shows no deadline, although R4 requires external deadlines. If the client supplies none, an in-flight request can outlive its lease without bound.",
+      "Whether a generation can re-route to another account is unspecified. If it can, the provider's (account, key) dedupe fails even with a stable key, so account pinning is essential.",
+      "S6's intent.provider_key derivation is not shown. If it includes generation, the S5 key defect also affects outbox dispatch.",
+      "Usage schema v2 validation (nonnegative counters, cache<=input, reasoning<=output) is not shown before S4 and S9. A violation would make the noncached term negative.",
+      "The dossier says no remote admission fence is enabled, not whether one exists. If none is available, R5 cannot be met and the conflict needs an authority decision.",
+      "No provider status read is described. Without one, uncertain launches from lease-expired workers cannot be reconciled, so the S8 fix may hold capacity until an operator acts."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"S5 execute\",\"severity\":\"critical\",\"issue\":\"The idempotency key includes job.generation, so each ownership takeover creates a new provider key for one logical task. R4 allows at most one external side effect per logical task, and the provider deduplicates only on (effective_account, idempotency_key).\",\"evidence\":\"S5 key=f'{job.run}:{job.task}:{job.generation}'. R4: the provider does not understand generations. G5: distinct keys execute separately. G4: the owner fence does not intercept HTTP; trace A uses one account across generations.\",\"failure_scenario\":\"Trace A: W1 passes its owner check at t10 and pauses. W2 acquires generation2 at t71 and launches with run:task:2. W1 resumes at t80 and launches with run:task:1. The keys differ, so two jobs start. W1's rejected finalization discards its response, so nothing local records the second job.\",\"fix\":\"Use key f'{job.run}:{job.task}' in S5 and in the outbox provider_key. Pin account_ref at the first launch intent. Keep the owner check and finalize CAS; the provider then deduplicates W1's late request against W2's launch. T6's ownership-loss-before-first-line case cannot reproduce this; use trace A with a pause after the check.\"},{\"task\":\"S2 assign\",\"severity\":\"high\",\"issue\":\"Greedy task-ID assignment spends capacity on a flexible task, then defers a specialized task that a feasible assignment could include. It optimizes neither cardinality nor cost.\",\"evidence\":\"G2: A and B capacity=1; J1 can use A(1) or B(2); J2 only A(1). R1 requires max cardinality, then min cost. T2 keeps S2 on the basis of a 2025 memo that current requirements supersede.\",\"failure_scenario\":\"S2 gives J1 A, so J2 is deferred: {J1:A}, size 1, cost 1. The feasible {J1:B,J2:A} has size 2, cost 3. Witness 2: J1 A(1)/B(2), J2 A(1)/B(10): S2 gives cost 11; the optimum is 3.\",\"fix\":\"Replace the loop with min-cost maximum flow: source->task cap 1, task->account cost=normalized_cost, account->sink cap=capacity, integer costs. Break exact-cost ties by lexicographically smallest (task_id, account_ref). G2 must return {J1:B,J2:A}; T6's identical-capability case cannot reproduce the cardinality failure.\"},{\"task\":\"S3 at_reservation_or_dispatch\",\"severity\":\"high\",\"issue\":\"The freshness check uses request.now, captured at recommendation, instead of the current time at reservation commit or dispatch. The window primitive is correct; its caller passes a stale clock.\",\"evidence\":\"S3 request={now: injected_clock(), ...} and the check uses request.now. R2 requires observed_at<=current_time<=observed_at+120 at every gate and allows queue stalls up to 300s. G3: observed_at=900, request_now=1000, reservation and dispatch at current_time=1100.\",\"failure_scenario\":\"At 1000 the window is 900..1020, so S3 accepts. At current_time 1100 the window has closed, so the snapshot must be rejected, but S3 still accepts it. A 300s stall that dispatches at 1300 is wrongly accepted too.\",\"fix\":\"Keep request.now only for recommendation. At reservation commit and at dispatch, re-run the S3 predicate with injected_clock() read at that gate, including the reset-time comparison. T6's 'no queue delay' case cannot detect this; use G3 at 1100.\"},{\"task\":\"S6 cancel\",\"severity\":\"high\",\"issue\":\"The only cancellation check is the pre-send read in S6 dispatch, and no remote admission fence is enabled. S5 launches with no cancellation check at all. R5 forbids new external job starts for the run after ACK.\",\"evidence\":\"S6 dispatch checks run_is_cancelled, then calls remote.launch. S6 cancel commits the revision and returns ACK with no drain or fence. R5: a pre-send check does not cancel a request about to be sent. T5 claims the guarantee within a 50ms ACK.\",\"failure_scenario\":\"Trace B: dispatch passes the check at t20, cancel ACKs at t21, and the queued launch starts at t22. Without any race: S5 passes its owner check at t6, cancel ACKs at t7, and remote.launch is sent at t8 and starts after ACK.\",\"fix\":\"Local checks, and an ACK without provider confirmation, cannot meet R5 with these boundaries. Minimal sound option: a provider-side per-run admission tombstone, checked atomically at admission and confirmed before ACK; this needs provider capability and may exceed 50ms. Also gate S5 on cancellation and reconcile jobs that started before ACK. If the provider cannot provide the tombstone, report R5 as unachievable rather than claim it.\"},{\"task\":\"S8 cleanup\",\"severity\":\"high\",\"issue\":\"Reservation liveness comes from an estimate-based expires_at, not from the live job lease. Heartbeats renew the job lease but never the reservation, so cleanup frees capacity while the job is still live.\",\"evidence\":\"S8: expires_at=now+estimated_seconds+5; on_executor_heartbeat calls only renew_job_lease_if_current; cleanup deletes expires_at<now without querying job state. R7: estimates are planning data, and freeing a reservation must not permit a second job while the first is live or uncertain.\",\"failure_scenario\":\"Trace C: reserve at t0, expires_at=0+60+5=65. Lease renewed at t50 (to 110) and t80 (to 140); worker still working at t90. Cleanup at t66 deletes the reservation since 65<66. Another READY task takes the limit-1 slot, so two jobs are live on it.\",\"fix\":\"Remove expires_at as a release trigger. Release a reservation only in the job's finalization transaction, with owner and generation checked, or after lease expiry together with a provider-confirmed terminal state. T6's 'executor finishing within estimate' case cannot reproduce this; use trace C.\"},{\"task\":\"S9 on_usage\",\"severity\":\"high\",\"issue\":\"Receipts dedupe by event_id, but each charge stores the cumulative snapshot and the bill sums all charge rows. Distinct event_ids for one attempt are summed as if they were deltas.\",\"evidence\":\"R8: different event_ids can both be cumulative observations of one attempt, and final spend must equal the latest total. S9 appends event.cumulative_microcredits and settles SUM(append_charge.amount). Trace D: u1 attempt X cumulative 10, u2 attempt X cumulative 25, both new event_ids. Keep the receipt dedupe for redelivery.\",\"failure_scenario\":\"Charges of 10 and 25 sum to 35, but the correct total is 25, an overbill of 10. The result is 35 in either arrival order.\",\"fix\":\"In the same BEGIN IMMEDIATE transaction, store last_cumulative per attempt_id, append delta=max(0,cumulative-last_cumulative), then set last_cumulative=max(last,cumulative). Settlement SUM(deltas) then equals the latest total per attempt. Regression witness: trace D; T6's duplicate-same-event test passes and misses it.\"},{\"task\":\"S4 price\",\"severity\":\"medium\",\"issue\":\"Cached input is charged twice: inside input_tokens at the input rate, and again at the cache rate. R3 says input_tokens already includes cached_input_tokens.\",\"evidence\":\"S4 = input_tokens*rates.input + cached_input_tokens*rates.cache + output_tokens*rates.output. R3 cost = noncached_input*input_rate + cached*cache_rate + output*output_rate; fixture 20/2/100. The output term is correct. T2 preserves S4 and cites the superseded memo.\",\"failure_scenario\":\"usage input=1000, cached=600, output=0: S4 gives 21200; correct is 400*20+600*2=9200, an overcharge of 12000. Route flip: X rates 20/2/100 and Y rates 12/12/100 with this usage. S4 gives X=21200, Y=19200 and picks Y; correct X=9200, Y=12000 picks X.\",\"fix\":\"Price noncached=input_tokens-cached_input_tokens: noncached*rates.input+cached*rates.cache+output*rates.output. Validate cached<=input first. T6's uncached-input case cannot detect this.\"},{\"task\":\"S7 map_row\",\"severity\":\"medium\",\"issue\":\"The frozen row hashes routes and a quota file path, but not the quota observation, injected time or policy version. The hash binds only the output, so the inputs cannot be reproduced.\",\"evidence\":\"R6: output immutability is necessary but not sufficient; the row must keep the quota observation, injected time and policy version within the allowlist. S7 map_row={plan_hash, quota_source:'/cache/quotas.json', routes}; time and policy exist only in memory. G6: the file is refreshed in place and older contents are kept nowhere. Version1 bytes must stay unchanged.\",\"failure_scenario\":\"Map M is computed at time 1000 from a snapshot observed at 900. At t1200 the separate process rewrites the file with observed_at=1200. Replaying M from its stored path reads the new snapshot; the 900 values, time 1000 and policy version are gone. The row's hash still verifies, so the mismatch is not detectable from the row.\",\"fix\":\"Add a new map schema version. Before hashing, include the injected request time, policy_version, and only the allowlisted quota fields used (account_ref, status, windows, resets, observed_at). Do not store the raw file or provider payloads, and leave v1 rows unchanged.\"}],\"uncertainties\":[\"all_windows_and_status_ok is not shown. If its future-reset check uses request.now, the S3 defect applies there too.\",\"remote.launch shows no deadline, although R4 requires external deadlines. If the client supplies none, an in-flight request can outlive its lease without bound.\",\"Whether a generation can re-route to another account is unspecified. If it can, the provider's (account, key) dedupe fails even with a stable key, so account pinning is essential.\",\"S6's intent.provider_key derivation is not shown. If it includes generation, the S5 key defect also affects outbox dispatch.\",\"Usage schema v2 validation (nonnegative counters, cache<=input, reasoning<=output) is not shown before S4 and S9. A violation would make the noncached term negative.\",\"The dossier says no remote admission fence is enabled, not whether one exists. If none is available, R5 cannot be met and the conflict needs an authority decision.\",\"No provider status read is described. Without one, uncertain launches from lease-expired workers cannot be reconciled, so the S8 fix may hold capacity until an operator acts.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 6615,
+    "cache_read_input_tokens": 2442,
+    "output_tokens": 91932,
+    "output_tokens_details": {
+      "thinking_tokens": 88253
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6615,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 0,
+  "response_words": 1322,
+  "exit_code": 0,
+  "elapsed_seconds": 358.069,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792210211.715811,
+    "windows": {
+      "five_hour": {
+        "used_percent": 9.0,
+        "resets_at": 1792213799.974289,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792277999.974308,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

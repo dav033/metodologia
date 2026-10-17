@@ -1,0 +1,14 @@
+[
+  {
+    "label": "E2-A",
+    "record": "E2-haiku.json"
+  },
+  {
+    "label": "E2-B",
+    "record": "E2-gemini.json"
+  },
+  {
+    "label": "E2-C",
+    "record": "E2-luna.json"
+  }
+]

@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "case": "H1",
+  "route": {
+    "id": "luna",
+    "profile": "codex-2",
+    "provider": "codex",
+    "model": "gpt-6-luna",
+    "effort": "max"
+  },
+  "status": "completed",
+  "prompt_sha256": "08b234531046b26b06ebd5f1563c071c0405df8e29d9a04520d6141c37f91491",
+  "prompt_characters": 9983,
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209470.318322,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792209471.0837407,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "B2 (used by B7)",
+        "severity": "high",
+        "issue": "The colon-concatenated key encoding is ambiguous for IDs that may contain colons, so distinct logical invoices can share a provider idempotency key.",
+        "evidence": "R1 defines identity as the ordered tenant_id/invoice_id tuple; IDs may contain colons. G4 provides verified canonical_tuple_bytes, but B2 hashes tenant + ':' + invoice. T6 uses globally distinct fixture invoice IDs, which will not expose this collision.",
+        "failure_scenario": "(tenant='a:b', invoice='c') and (tenant='a', invoice='b:c') both encode as 'a:b:c'. B7 then sends the same key for two invoices, allowing provider deduplication to suppress one posting.",
+        "fix": "Hash canonical_tuple_bytes([tenant, invoice]) so the key preserves tuple boundaries."
+      },
+      {
+        "task": "B3",
+        "severity": "high",
+        "issue": "Replay includes an event at the snapshot boundary even though that event is already included in the snapshot balance.",
+        "evidence": "R2 says the snapshot contains all events with revision <= through_revision and replay applies later events once. B3 uses >=. T6 omits an event at the exact boundary.",
+        "failure_scenario": "For snapshot through_revision=5 with an event at revision 5, the snapshot already includes that event and B3 adds its contribution again.",
+        "fix": "Replay only events with revision > snapshot.through_revision."
+      },
+      {
+        "task": "B4 contribution",
+        "severity": "high",
+        "issue": "Each event is converted using the latest FX rate instead of the immutable rate revision carried by that event.",
+        "evidence": "R3 requires each event's fx_revision; G3 provides get_rate(r). B4 calls latest_rate_revision() for every contribution. T6's old/current rates happen to be equal, masking the defect.",
+        "failure_scenario": "An event records fx_revision 4 at USD_per_EUR=2; a later published revision has rate 4. For USD 8, B4 contributes EUR 2 instead of EUR 4.",
+        "fix": "Fetch get_rate(e.fx_revision) for each event."
+      },
+      {
+        "task": "B4 contribution",
+        "severity": "high",
+        "issue": "Decimal division can round a nonterminating quotient to the active context precision before aggregation, so the contributions are not exact as R3 requires.",
+        "evidence": "R3 requires exact signed contributions and one final rounding. B4 divides Decimal values using the ambient Decimal context; G3 specifies its rounding mode but no precision or input-scale limits.",
+        "failure_scenario": "At the usual 28-digit Decimal precision, USD 3 divided by rate 200 + 4×10^-27 rounds to 0.015. The exact quotient is slightly below 0.015, which should round to 0.01 cents, while the rounded intermediate can produce 0.02 under the current quantization.",
+        "fix": "Represent finite Decimal inputs as exact ratios, sum the EUR ratios exactly, and round the aggregate once to cents."
+      },
+      {
+        "task": "B4 cents",
+        "severity": "high",
+        "issue": "The final quantize uses ROUND_HALF_EVEN, but R3 requires half away from zero.",
+        "evidence": "G3 explicitly states the active Decimal context uses ROUND_HALF_EVEN. B4 does not override that mode. T6 excludes half-cent ties.",
+        "failure_scenario": "An exact aggregate of EUR 0.005 quantizes to EUR 0.00 under half-even; R3 requires EUR 0.01. For -0.005, the required result is -0.01.",
+        "fix": "Quantize with an explicit half-away-from-zero rule, such as Decimal ROUND_HALF_UP, then convert to integer cents."
+      },
+      {
+        "task": "B5 (T3)",
+        "severity": "high",
+        "issue": "The UPDATE is not tenant-scoped; the correctly scoped load does not constrain writes by the BYPASSRLS migration worker.",
+        "evidence": "G1 says RLS does not constrain migration writes. G2 says invoice_id is unique only within a tenant and the primary key is composite. B5 filters only on invoice_id. T6 uses globally distinct fixture IDs, so it misses this case.",
+        "failure_scenario": "Two tenants have invoice_id='42'. Backfilling tenant A updates both rows with tenant A's computed value and epoch.",
+        "fix": "Add tenant_id=:tenant to the UPDATE predicate alongside invoice_id=:invoice."
+      },
+      {
+        "task": "B5 (T3)",
+        "severity": "high",
+        "issue": "The NULL migration_epoch guard does not prevent a stale backfill from overwriting a newer live result because live writers leave that marker unchanged.",
+        "evidence": "R4 says live writers leave migration_epoch unchanged and NULL does not show that the ledger has not advanced. G5 permits live commits between the source read and target write. B5 checks only migration_epoch IS NULL; T6 excludes concurrent live writers.",
+        "failure_scenario": "Backfill reads revision r, then a live transaction commits r+1 and updates balance_v2/source_revision_v2. The backfill's UPDATE still matches NULL and replaces those newer values with revision r's result.",
+        "fix": "Condition the write on the target ledger_revision still equaling the source revision read for the snapshot; skip and retry if it changed."
+      },
+      {
+        "task": "B6 (T4)",
+        "severity": "high",
+        "issue": "Summing offsets can report readiness when one required partition is behind and another is ahead.",
+        "evidence": "R5 requires reaching every required partition independently and says offsets have no cross-partition numerical meaning. B6 checks required keys but compares only sums. T6 advances all partitions together.",
+        "failure_scenario": "Required positions are A=5, B=5; applied positions are A=10, B=0. B6 returns true although B has not reached its required position.",
+        "fix": "Return true only when every required partition p has applied_positions[p] >= required_positions[p], after checking that all required partitions are present."
+      },
+      {
+        "task": "B7 (T5)",
+        "severity": "critical",
+        "issue": "An unknown outcome can be retried after the provider's seven-day deduplication window, creating a duplicate posting.",
+        "evidence": "R6 says a timeout is unknown and the provider may forget keys after seven days, with no invoice lookup. B7 retries unless it has a receipt or has reached 100 attempts; it has no age guard. T5 retains jobs for 30 days and permits resumption after days offline; T6 tests only retries within 60 seconds.",
+        "failure_scenario": "The provider accepts the first post on day 0, but the response times out and no receipt persists. The job is resumed on day 8 with attempts below 100; the provider has forgotten the key and accepts a duplicate.",
+        "fix": "Stop automatic resubmission before seven days from the earliest possible acceptance, and keep unresolved outcomes on hold for manual reconciliation instead of retrying them later."
+      }
+    ],
+    "uncertainties": [
+      "G4 says source records are runtime validated but does not specify whether validation rejects binary-float usd_amount values. If floats can reach B4, Decimal(e.usd_amount) also imports a binary approximation and violates R3; if validation restricts values to exact Decimal or textual/integer inputs, that additional issue does not apply."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"B2 (used by B7)\",\"severity\":\"high\",\"issue\":\"The colon-concatenated key encoding is ambiguous for IDs that may contain colons, so distinct logical invoices can share a provider idempotency key.\",\"evidence\":\"R1 defines identity as the ordered tenant_id/invoice_id tuple; IDs may contain colons. G4 provides verified canonical_tuple_bytes, but B2 hashes tenant + ':' + invoice. T6 uses globally distinct fixture invoice IDs, which will not expose this collision.\",\"failure_scenario\":\"(tenant='a:b', invoice='c') and (tenant='a', invoice='b:c') both encode as 'a:b:c'. B7 then sends the same key for two invoices, allowing provider deduplication to suppress one posting.\",\"fix\":\"Hash canonical_tuple_bytes([tenant, invoice]) so the key preserves tuple boundaries.\"},{\"task\":\"B3\",\"severity\":\"high\",\"issue\":\"Replay includes an event at the snapshot boundary even though that event is already included in the snapshot balance.\",\"evidence\":\"R2 says the snapshot contains all events with revision <= through_revision and replay applies later events once. B3 uses >=. T6 omits an event at the exact boundary.\",\"failure_scenario\":\"For snapshot through_revision=5 with an event at revision 5, the snapshot already includes that event and B3 adds its contribution again.\",\"fix\":\"Replay only events with revision > snapshot.through_revision.\"},{\"task\":\"B4 contribution\",\"severity\":\"high\",\"issue\":\"Each event is converted using the latest FX rate instead of the immutable rate revision carried by that event.\",\"evidence\":\"R3 requires each event's fx_revision; G3 provides get_rate(r). B4 calls latest_rate_revision() for every contribution. T6's old/current rates happen to be equal, masking the defect.\",\"failure_scenario\":\"An event records fx_revision 4 at USD_per_EUR=2; a later published revision has rate 4. For USD 8, B4 contributes EUR 2 instead of EUR 4.\",\"fix\":\"Fetch get_rate(e.fx_revision) for each event.\"},{\"task\":\"B4 contribution\",\"severity\":\"high\",\"issue\":\"Decimal division can round a nonterminating quotient to the active context precision before aggregation, so the contributions are not exact as R3 requires.\",\"evidence\":\"R3 requires exact signed contributions and one final rounding. B4 divides Decimal values using the ambient Decimal context; G3 specifies its rounding mode but no precision or input-scale limits.\",\"failure_scenario\":\"At the usual 28-digit Decimal precision, USD 3 divided by rate 200 + 4×10^-27 rounds to 0.015. The exact quotient is slightly below 0.015, which should round to 0.01 cents, while the rounded intermediate can produce 0.02 under the current quantization.\",\"fix\":\"Represent finite Decimal inputs as exact ratios, sum the EUR ratios exactly, and round the aggregate once to cents.\"},{\"task\":\"B4 cents\",\"severity\":\"high\",\"issue\":\"The final quantize uses ROUND_HALF_EVEN, but R3 requires half away from zero.\",\"evidence\":\"G3 explicitly states the active Decimal context uses ROUND_HALF_EVEN. B4 does not override that mode. T6 excludes half-cent ties.\",\"failure_scenario\":\"An exact aggregate of EUR 0.005 quantizes to EUR 0.00 under half-even; R3 requires EUR 0.01. For -0.005, the required result is -0.01.\",\"fix\":\"Quantize with an explicit half-away-from-zero rule, such as Decimal ROUND_HALF_UP, then convert to integer cents.\"},{\"task\":\"B5 (T3)\",\"severity\":\"high\",\"issue\":\"The UPDATE is not tenant-scoped; the correctly scoped load does not constrain writes by the BYPASSRLS migration worker.\",\"evidence\":\"G1 says RLS does not constrain migration writes. G2 says invoice_id is unique only within a tenant and the primary key is composite. B5 filters only on invoice_id. T6 uses globally distinct fixture IDs, so it misses this case.\",\"failure_scenario\":\"Two tenants have invoice_id='42'. Backfilling tenant A updates both rows with tenant A's computed value and epoch.\",\"fix\":\"Add tenant_id=:tenant to the UPDATE predicate alongside invoice_id=:invoice.\"},{\"task\":\"B5 (T3)\",\"severity\":\"high\",\"issue\":\"The NULL migration_epoch guard does not prevent a stale backfill from overwriting a newer live result because live writers leave that marker unchanged.\",\"evidence\":\"R4 says live writers leave migration_epoch unchanged and NULL does not show that the ledger has not advanced. G5 permits live commits between the source read and target write. B5 checks only migration_epoch IS NULL; T6 excludes concurrent live writers.\",\"failure_scenario\":\"Backfill reads revision r, then a live transaction commits r+1 and updates balance_v2/source_revision_v2. The backfill's UPDATE still matches NULL and replaces those newer values with revision r's result.\",\"fix\":\"Condition the write on the target ledger_revision still equaling the source revision read for the snapshot; skip and retry if it changed.\"},{\"task\":\"B6 (T4)\",\"severity\":\"high\",\"issue\":\"Summing offsets can report readiness when one required partition is behind and another is ahead.\",\"evidence\":\"R5 requires reaching every required partition independently and says offsets have no cross-partition numerical meaning. B6 checks required keys but compares only sums. T6 advances all partitions together.\",\"failure_scenario\":\"Required positions are A=5, B=5; applied positions are A=10, B=0. B6 returns true although B has not reached its required position.\",\"fix\":\"Return true only when every required partition p has applied_positions[p] >= required_positions[p], after checking that all required partitions are present.\"},{\"task\":\"B7 (T5)\",\"severity\":\"critical\",\"issue\":\"An unknown outcome can be retried after the provider's seven-day deduplication window, creating a duplicate posting.\",\"evidence\":\"R6 says a timeout is unknown and the provider may forget keys after seven days, with no invoice lookup. B7 retries unless it has a receipt or has reached 100 attempts; it has no age guard. T5 retains jobs for 30 days and permits resumption after days offline; T6 tests only retries within 60 seconds.\",\"failure_scenario\":\"The provider accepts the first post on day 0, but the response times out and no receipt persists. The job is resumed on day 8 with attempts below 100; the provider has forgotten the key and accepts a duplicate.\",\"fix\":\"Stop automatic resubmission before seven days from the earliest possible acceptance, and keep unresolved outcomes on hold for manual reconciliation instead of retrying them later.\"}],\"uncertainties\":[\"G4 says source records are runtime validated but does not specify whether validation rejects binary-float usd_amount values. If floats can reach B4, Decimal(e.usd_amount) also imports a binary approximation and violates R3; if validation restricts values to exact Decimal or textual/integer inputs, that additional issue does not apply.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 15860,
+    "cached_input_tokens": 11648,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 10802,
+    "reasoning_output_tokens": 9322
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 857,
+  "exit_code": 0,
+  "elapsed_seconds": 85.647,
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792209556.73122,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792223259.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792810059.0,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

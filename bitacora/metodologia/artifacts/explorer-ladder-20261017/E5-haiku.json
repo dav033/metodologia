@@ -1,0 +1,1809 @@
+{
+  "schema_version": 1,
+  "case": "E5",
+  "route": {
+    "id": "haiku",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "prompt_sha256": "1ca2ecc212cdbfefa7df6fb34fa4560da6ceb895360043c7c8ddd2d4e21d2c36",
+  "prompt_characters": 3502,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248242.7074344,
+    "windows": {
+      "five_hour": {
+        "used_percent": 19.0,
+        "resets_at": 1792262399.966528,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792277999.966549,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248243.0555565,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-haiku-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "plan",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "answer": {
+    "case": "E5",
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "The floor is computed in `_tier_floor`, which starts from `bt_agents.start_tier`. Architecture (complexity extreme, or scope full_system) starts at TOP (2). Otherwise the start is max(KIND_TIER, 1 if complexity is high/extreme). Complexity high adds `complexity:high` and raises the floor to at least 1 through that router path. Extreme does not add that rule; it takes the architecture path to 2. Scope large_change/full_feature gives at least 1. Coupling medium/high gives at least 1. estimated_minutes >=240 gives 2 and >=120 gives at least 1. risk high gives 2. Medium risk has no branch, so it never raises the floor by itself. The test asserts a medium-risk low task has floor 0 for implement and 1 for audit, because audit starts at KIND_TIER 1.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_tier_floor",
+            "start_line": 80,
+            "end_line": 111
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "start_tier",
+            "start_line": 89,
+            "end_line": 94
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "KIND_TIER",
+            "start_line": 63,
+            "end_line": 63
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_sources.py",
+            "symbol": "test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion",
+            "start_line": 45,
+            "end_line": 64
+          }
+        ]
+      },
+      {
+        "id": "Q2",
+        "answer": "Route identity: `candidate_route_id` is SHA-256 of {provider, model, profile, effort}, so it includes the profile id. Account identity is `bt_agents.account_key`: the provider plus the sorted full env overlay, or 'default'. `account_reference` then hashes that key to `acct:<sha256>`. So account identity is not the provider name; it depends on env values such as CLAUDE_CONFIG_DIR or CODEX_HOME. `_candidate_rows` builds candidates from `pool_for` order, `_route_options` (model/effort per tier), and per-profile usage facts. A separate normalized identity, `_pool_account_identity`, is used only for pool dedupe and preflight grouping.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_candidate_rows",
+            "start_line": 220,
+            "end_line": 261
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/identity.py",
+            "symbol": "candidate_route_id",
+            "start_line": 61,
+            "end_line": 62
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/identity.py",
+            "symbol": "account_reference",
+            "start_line": 65,
+            "end_line": 69
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "account_key",
+            "start_line": 187,
+            "end_line": 196
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "_pool_account_identity",
+            "start_line": 199,
+            "end_line": 212
+          },
+          {
+            "path": "skill/scripts/bt_profiles.py",
+            "symbol": "ACCOUNT_VARS",
+            "start_line": 29,
+            "end_line": 29
+          }
+        ]
+      },
+      {
+        "id": "Q3",
+        "answer": "`refresh` groups pool profiles by `_pool_account_identity` and keeps the first profile in each group as the leader (lines 19-27). Only leaders are polled for claude/codex (lines 31-32), and the leader's result is copied to all aliases (lines 80, 107). Refresh is not forced. `subscription_usage._reserve` skips an account unless its hourly due time or retry_at has passed (MIN_POLL_SECONDS is 3480 s) and skips manual_challenge accounts. Antigravity `bt_agy.refresh` returns the cache unless it is older than 900 s. Work is bounded: more than 32 effective groups returns '*' unavailable with no poll; reads are sequential with 20 s timeouts for Claude/Codex and 60 s for agy. Stored rows are then read via `summary`, so a non-due account may report stale or missing data.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 11,
+            "end_line": 40
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_quota_preflight.py",
+            "symbol": "refresh",
+            "start_line": 82,
+            "end_line": 107
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "_reserve",
+            "start_line": 99,
+            "end_line": 116
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "poll",
+            "start_line": 119,
+            "end_line": 145
+          },
+          {
+            "path": "skill/scripts/bt_subscriptions.py",
+            "symbol": "MIN_POLL_SECONDS",
+            "start_line": 15,
+            "end_line": 17
+          },
+          {
+            "path": "skill/scripts/bt_agy.py",
+            "symbol": "refresh",
+            "start_line": 146,
+            "end_line": 153
+          },
+          {
+            "path": "skill/scripts/bt_agy.py",
+            "symbol": "read_usage",
+            "start_line": 80,
+            "end_line": 80
+          },
+          {
+            "path": "skill/scripts/bt_subscription_sources.py",
+            "symbol": "read_claude",
+            "start_line": 156,
+            "end_line": 156
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "refresh_quota_preflight",
+            "start_line": 60,
+            "end_line": 66
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_quota_preflight.py",
+            "symbol": "test_limit_counts_effective_accounts_after_alias_deduplication",
+            "start_line": 95,
+            "end_line": 106
+          }
+        ]
+      },
+      {
+        "id": "Q4",
+        "answer": "Hard filters are in `_candidate_reasons`, applied by `rank_candidates`. They cover profile_authorized false, source_status not available (including cooldown_active mapped to route_cooling_down), auth not valid, runtime not available, and quota not 'available' (stale, exhausted, or unknown). Wiring: cooldown comes from `cooling_until`; runtime from shutil.which; auth and quota from `_usage_facts` (exhausted when reset is future or pressure >=100; available only when status ok and fresh). `_apply_preflight` and the propose path set quota to unknown when the preflight is not available. The adapter hardcodes profile_authorized=True. A quality score cannot bypass these: `rank_with_route_policy` calls `rank_candidates` first and returns early when nothing is eligible, and the quality loop only iterates eligible routes. The default policy has no quality floor.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_candidate_reasons",
+            "start_line": 176,
+            "end_line": 194
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_candidates",
+            "start_line": 203,
+            "end_line": 229
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 245,
+            "end_line": 292
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_usage_facts",
+            "start_line": 47,
+            "end_line": 77
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_adapter.py",
+            "symbol": "_candidate_rows",
+            "start_line": 243,
+            "end_line": 260
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_apply_preflight",
+            "start_line": 63,
+            "end_line": 73
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_policy.py",
+            "symbol": "CandidatePolicyTests.test_hard_filters_exclude_unknown_quota_auth_and_unauthorized_profiles",
+            "start_line": 48,
+            "end_line": 60
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_policy.py",
+            "symbol": "CandidatePolicyTests.test_no_eligible_route_returns_no_assignment",
+            "start_line": 72,
+            "end_line": 77
+          }
+        ]
+      },
+      {
+        "id": "Q5",
+        "answer": "Quality ranks only when the policy has a quality_floor or when every eligible route has a valid interval. A route's interval is valid only if the assessment has schema API_VERSION, a selected level, and minimum_verified_samples >= the policy minimum. The selected measurement must be 'observed', verified_samples >= the minimum, successes+failures equal samples, and the interval is a finite [lower,upper] in [0,1]. The policy minimum is max(config, MIN_VERIFIED_SAMPLES=5). Intervals are Wilson 95% bounds. Cross-route comparison requires all eligible routes to have valid intervals and the same selected_level. Otherwise quality is ignored for ordering, and the floor (when configured) still applies per route. Tests assert that an unmeasured route is not penalized, and that different selected levels disable comparison.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_quality_interval",
+            "start_line": 311,
+            "end_line": 332
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_quality_objective_is_comparable",
+            "start_line": 335,
+            "end_line": 346
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "RoutePolicyConfig.__post_init__",
+            "start_line": 137,
+            "end_line": 151
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "MIN_VERIFIED_SAMPLES",
+            "start_line": 22,
+            "end_line": 22
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "_wilson_interval",
+            "start_line": 198,
+            "end_line": 206
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "_measurement",
+            "start_line": 209,
+            "end_line": 220
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_policy.py",
+            "symbol": "CandidatePolicyTests.test_incomplete_quality_evidence_does_not_penalize_unknown_route",
+            "start_line": 164,
+            "end_line": 178
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_policy.py",
+            "symbol": "CandidatePolicyTests.test_different_context_levels_disable_cross_route_quality_comparison",
+            "start_line": 180,
+            "end_line": 197
+          }
+        ]
+      },
+      {
+        "id": "Q6",
+        "answer": "After the hard filters and the quality floor, the key is: (quality lower bound, interval width) only if quality is comparable, else constant; then max window used_percent, else candidate.quota_used_percent, else inf; then duration (evidence, else measured median, else inf); then relative_cost (inf unless all eligible share one scale); then reserved_for_higher_risk; then not reset_soon; then baseline_rank (None last); then route_id. Missing duration becomes inf and sorts last. Duration is compared numerically with no cross-route comparability check, unlike cost, which requires a single scale. Missing or mixed cost scales make cost inf for all routes. A test asserts fresh quota sorts before baseline when quality is absent.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "OBJECTIVE_ORDER",
+            "start_line": 27,
+            "end_line": 39
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "_route_objective_key",
+            "start_line": 349,
+            "end_line": 381
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 294,
+            "end_line": 305
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_policy.py",
+            "symbol": "CandidatePolicyTests.test_missing_verified_quality_still_orders_fresh_quota_before_provider_baseline",
+            "start_line": 150,
+            "end_line": 162
+          }
+        ]
+      },
+      {
+        "id": "Q7",
+        "answer": "No, not in the wired paths. The policy supports `quality_assessment` (ContextualHistoryAssessment), `relative_cost` and `relative_cost_scale` (policy.py 102-125). Wired evidence in `plan_full_dag` is only `quota_windows` (one 'current_quota' window from the candidate's used_percent when quota is available and valid) and `duration_seconds` (median of RouteHistory). `propose` passes no route evidence. No non-test code sets `quality_assessment` or `relative_cost`. `aggregate_performance_history` is called only from learning_snapshots.py and temporal.py. The MODELS 'cost' values are local load-accounting weights in bt_agents, not API prices. The benchmark calls the policy with an empty evidence map.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/policy.py",
+            "symbol": "RoutePolicyEvidence",
+            "start_line": 101,
+            "end_line": 124
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "_route_evidence",
+            "start_line": 48,
+            "end_line": 60
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 182,
+            "end_line": 188
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_adapter.py",
+            "symbol": "propose",
+            "start_line": 396,
+            "end_line": 399
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/history.py",
+            "symbol": "aggregate_performance_history",
+            "start_line": 273,
+            "end_line": 279
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/learning_snapshots.py",
+            "symbol": "LearningSnapshotStore",
+            "start_line": 175,
+            "end_line": 175
+          },
+          {
+            "path": "skill/scripts/bt_agents.py",
+            "symbol": "MODELS",
+            "start_line": 34,
+            "end_line": 54
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision_benchmark.py",
+            "symbol": "rank_with_route_policy",
+            "start_line": 309,
+            "end_line": 309
+          }
+        ]
+      },
+      {
+        "id": "Q8",
+        "answer": "Batch options are keyed by `account_ref` (setdefault keeps only the first-ranked route per account per task). Capacity per account is min(free_slots, max_concurrent - active) only when AccountConcurrency is supplied, otherwise free_slots. Neither wired caller passes AccountConcurrency, so per-account capacity is bounded only by global free_slots. Two profiles alias only if they yield the same account_ref. In the wired path, `pool_for` already dedupes by effective identity, so aliases do not reach the batch. The batch layer trusts caller-supplied account_ref, so it cannot detect aliases itself. A persisted batch is an immutable, idempotent plan record (no capacity lock or reservation). M1 owns reservation per the engine docstring.",
+        "evidence": [
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_rank_batch_routes",
+            "start_line": 232,
+            "end_line": 234
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_account_capacities",
+            "start_line": 251,
+            "end_line": 264
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "_match_batch_routes",
+            "start_line": 267,
+            "end_line": 304
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch.py",
+            "symbol": "plan_ready_batch",
+            "start_line": 369,
+            "end_line": 385
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/batch_ledger.py",
+            "symbol": "BatchDecisionStore.persist",
+            "start_line": 240,
+            "end_line": 305
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/engine.py",
+            "symbol": "DecisionEngine",
+            "start_line": 151,
+            "end_line": 153
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_plan_routing.py",
+            "symbol": "plan_full_dag",
+            "start_line": 182,
+            "end_line": 188
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_batch.py",
+            "symbol": "BatchQuotaTests.test_shared_account_capacity_counts_active_work_and_profile_aliases_once",
+            "start_line": 149,
+            "end_line": 165
+          }
+        ]
+      },
+      {
+        "id": "Q9",
+        "answer": "Floor tests: test_scheduler_decision_sources.py 31-43 (ladder), 45-64 (floor rules, medium risk not promoted), 66-72 (rule explanation). Alias/pool tests: tests/test_agents.py 167-171 (named profile wins only by request order) and 173-190 (normalized paths dedupe, quota keys differ). Batch alias tests: test_batch.py 58-71 and 149-165 (account_ref supplied directly). Preflight tests: tests/test_scheduler_quota_preflight.py 19-43, 84-106. Quality/lexicographic tests: test_policy.py 129-148, 150-178, 180-197, 321-329. Not provable from this snapshot: real plan limits, actual provider quota windows and resets, whether two profiles really share one provider account, whether CLIs are installed and signed in at runtime, poll success/timing, and the actual contents of local quota state files. No tests were run.",
+        "evidence": [
+          {
+            "path": "skill/scripts/tests/test_scheduler_decision_sources.py",
+            "symbol": "test_route_options_follow_the_supported_provider_ladder_and_task_floor",
+            "start_line": 31,
+            "end_line": 43
+          },
+          {
+            "path": "skill/scripts/tests/test_agents.py",
+            "symbol": "test_pool_deduplicates_normalized_account_paths_without_changing_quota_keys",
+            "start_line": 173,
+            "end_line": 190
+          },
+          {
+            "path": "skill/scripts/tests/test_scheduler_quota_preflight.py",
+            "symbol": "test_refuses_an_oversized_account_pool_without_polling",
+            "start_line": 84,
+            "end_line": 93
+          },
+          {
+            "path": "skill/scripts/bt_scheduler_decision/tests/test_batch.py",
+            "symbol": "BatchQuotaTests.test_alias_routes_share_one_account_pressure_without_summing_profile_budgets",
+            "start_line": 58,
+            "end_line": 71
+          }
+        ]
+      }
+    ],
+    "unknowns": [
+      "Actual account quotas, plan limits, reset times and provider windows cannot be proven from this snapshot.",
+      "Whether distinct profiles with different env overlays are genuinely separate provider accounts is an assumption about local configuration; the code only encodes identity from env selectors and default home directories.",
+      "Whether AccountConcurrency is supplied by any runtime caller outside the traced paths; none was found in non-test code.",
+      "_tier_floor reads raw classifications before M2 validation; the enumerations are enforced in the M1 planner contract and M2 validation, which were not fully traced.",
+      "Whether CLI binaries, auth tokens, and quota state files exist at runtime was not checked; no test or code was executed."
+    ]
+  },
+  "response_text": "{\"case\":\"E5\",\"answers\":[{\"id\":\"Q1\",\"answer\":\"The floor is computed in `_tier_floor`, which starts from `bt_agents.start_tier`. Architecture (complexity extreme, or scope full_system) starts at TOP (2). Otherwise the start is max(KIND_TIER, 1 if complexity is high/extreme). Complexity high adds `complexity:high` and raises the floor to at least 1 through that router path. Extreme does not add that rule; it takes the architecture path to 2. Scope large_change/full_feature gives at least 1. Coupling medium/high gives at least 1. estimated_minutes >=240 gives 2 and >=120 gives at least 1. risk high gives 2. Medium risk has no branch, so it never raises the floor by itself. The test asserts a medium-risk low task has floor 0 for implement and 1 for audit, because audit starts at KIND_TIER 1.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_tier_floor\",\"start_line\":80,\"end_line\":111},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"start_tier\",\"start_line\":89,\"end_line\":94},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"KIND_TIER\",\"start_line\":63,\"end_line\":63},{\"path\":\"skill/scripts/tests/test_scheduler_decision_sources.py\",\"symbol\":\"test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion\",\"start_line\":45,\"end_line\":64}]},{\"id\":\"Q2\",\"answer\":\"Route identity: `candidate_route_id` is SHA-256 of {provider, model, profile, effort}, so it includes the profile id. Account identity is `bt_agents.account_key`: the provider plus the sorted full env overlay, or 'default'. `account_reference` then hashes that key to `acct:<sha256>`. So account identity is not the provider name; it depends on env values such as CLAUDE_CONFIG_DIR or CODEX_HOME. `_candidate_rows` builds candidates from `pool_for` order, `_route_options` (model/effort per tier), and per-profile usage facts. A separate normalized identity, `_pool_account_identity`, is used only for pool dedupe and preflight grouping.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_candidate_rows\",\"start_line\":220,\"end_line\":261},{\"path\":\"skill/scripts/bt_scheduler_decision/identity.py\",\"symbol\":\"candidate_route_id\",\"start_line\":61,\"end_line\":62},{\"path\":\"skill/scripts/bt_scheduler_decision/identity.py\",\"symbol\":\"account_reference\",\"start_line\":65,\"end_line\":69},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"account_key\",\"start_line\":187,\"end_line\":196},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"_pool_account_identity\",\"start_line\":199,\"end_line\":212},{\"path\":\"skill/scripts/bt_profiles.py\",\"symbol\":\"ACCOUNT_VARS\",\"start_line\":29,\"end_line\":29}]},{\"id\":\"Q3\",\"answer\":\"`refresh` groups pool profiles by `_pool_account_identity` and keeps the first profile in each group as the leader (lines 19-27). Only leaders are polled for claude/codex (lines 31-32), and the leader's result is copied to all aliases (lines 80, 107). Refresh is not forced. `subscription_usage._reserve` skips an account unless its hourly due time or retry_at has passed (MIN_POLL_SECONDS is 3480 s) and skips manual_challenge accounts. Antigravity `bt_agy.refresh` returns the cache unless it is older than 900 s. Work is bounded: more than 32 effective groups returns '*' unavailable with no poll; reads are sequential with 20 s timeouts for Claude/Codex and 60 s for agy. Stored rows are then read via `summary`, so a non-due account may report stale or missing data.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":11,\"end_line\":40},{\"path\":\"skill/scripts/bt_scheduler_quota_preflight.py\",\"symbol\":\"refresh\",\"start_line\":82,\"end_line\":107},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"_reserve\",\"start_line\":99,\"end_line\":116},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"poll\",\"start_line\":119,\"end_line\":145},{\"path\":\"skill/scripts/bt_subscriptions.py\",\"symbol\":\"MIN_POLL_SECONDS\",\"start_line\":15,\"end_line\":17},{\"path\":\"skill/scripts/bt_agy.py\",\"symbol\":\"refresh\",\"start_line\":146,\"end_line\":153},{\"path\":\"skill/scripts/bt_agy.py\",\"symbol\":\"read_usage\",\"start_line\":80,\"end_line\":80},{\"path\":\"skill/scripts/bt_subscription_sources.py\",\"symbol\":\"read_claude\",\"start_line\":156,\"end_line\":156},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"refresh_quota_preflight\",\"start_line\":60,\"end_line\":66},{\"path\":\"skill/scripts/tests/test_scheduler_quota_preflight.py\",\"symbol\":\"test_limit_counts_effective_accounts_after_alias_deduplication\",\"start_line\":95,\"end_line\":106}]},{\"id\":\"Q4\",\"answer\":\"Hard filters are in `_candidate_reasons`, applied by `rank_candidates`. They cover profile_authorized false, source_status not available (including cooldown_active mapped to route_cooling_down), auth not valid, runtime not available, and quota not 'available' (stale, exhausted, or unknown). Wiring: cooldown comes from `cooling_until`; runtime from shutil.which; auth and quota from `_usage_facts` (exhausted when reset is future or pressure >=100; available only when status ok and fresh). `_apply_preflight` and the propose path set quota to unknown when the preflight is not available. The adapter hardcodes profile_authorized=True. A quality score cannot bypass these: `rank_with_route_policy` calls `rank_candidates` first and returns early when nothing is eligible, and the quality loop only iterates eligible routes. The default policy has no quality floor.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_candidate_reasons\",\"start_line\":176,\"end_line\":194},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_candidates\",\"start_line\":203,\"end_line\":229},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":245,\"end_line\":292},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_usage_facts\",\"start_line\":47,\"end_line\":77},{\"path\":\"skill/scripts/bt_scheduler_decision_adapter.py\",\"symbol\":\"_candidate_rows\",\"start_line\":243,\"end_line\":260},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_apply_preflight\",\"start_line\":63,\"end_line\":73},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_policy.py\",\"symbol\":\"CandidatePolicyTests.test_hard_filters_exclude_unknown_quota_auth_and_unauthorized_profiles\",\"start_line\":48,\"end_line\":60},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_policy.py\",\"symbol\":\"CandidatePolicyTests.test_no_eligible_route_returns_no_assignment\",\"start_line\":72,\"end_line\":77}]},{\"id\":\"Q5\",\"answer\":\"Quality ranks only when the policy has a quality_floor or when every eligible route has a valid interval. A route's interval is valid only if the assessment has schema API_VERSION, a selected level, and minimum_verified_samples >= the policy minimum. The selected measurement must be 'observed', verified_samples >= the minimum, successes+failures equal samples, and the interval is a finite [lower,upper] in [0,1]. The policy minimum is max(config, MIN_VERIFIED_SAMPLES=5). Intervals are Wilson 95% bounds. Cross-route comparison requires all eligible routes to have valid intervals and the same selected_level. Otherwise quality is ignored for ordering, and the floor (when configured) still applies per route. Tests assert that an unmeasured route is not penalized, and that different selected levels disable comparison.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_quality_interval\",\"start_line\":311,\"end_line\":332},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_quality_objective_is_comparable\",\"start_line\":335,\"end_line\":346},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"RoutePolicyConfig.__post_init__\",\"start_line\":137,\"end_line\":151},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"MIN_VERIFIED_SAMPLES\",\"start_line\":22,\"end_line\":22},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"_wilson_interval\",\"start_line\":198,\"end_line\":206},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"_measurement\",\"start_line\":209,\"end_line\":220},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_policy.py\",\"symbol\":\"CandidatePolicyTests.test_incomplete_quality_evidence_does_not_penalize_unknown_route\",\"start_line\":164,\"end_line\":178},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_policy.py\",\"symbol\":\"CandidatePolicyTests.test_different_context_levels_disable_cross_route_quality_comparison\",\"start_line\":180,\"end_line\":197}]},{\"id\":\"Q6\",\"answer\":\"After the hard filters and the quality floor, the key is: (quality lower bound, interval width) only if quality is comparable, else constant; then max window used_percent, else candidate.quota_used_percent, else inf; then duration (evidence, else measured median, else inf); then relative_cost (inf unless all eligible share one scale); then reserved_for_higher_risk; then not reset_soon; then baseline_rank (None last); then route_id. Missing duration becomes inf and sorts last. Duration is compared numerically with no cross-route comparability check, unlike cost, which requires a single scale. Missing or mixed cost scales make cost inf for all routes. A test asserts fresh quota sorts before baseline when quality is absent.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"OBJECTIVE_ORDER\",\"start_line\":27,\"end_line\":39},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"_route_objective_key\",\"start_line\":349,\"end_line\":381},{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":294,\"end_line\":305},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_policy.py\",\"symbol\":\"CandidatePolicyTests.test_missing_verified_quality_still_orders_fresh_quota_before_provider_baseline\",\"start_line\":150,\"end_line\":162}]},{\"id\":\"Q7\",\"answer\":\"No, not in the wired paths. The policy supports `quality_assessment` (ContextualHistoryAssessment), `relative_cost` and `relative_cost_scale` (policy.py 102-125). Wired evidence in `plan_full_dag` is only `quota_windows` (one 'current_quota' window from the candidate's used_percent when quota is available and valid) and `duration_seconds` (median of RouteHistory). `propose` passes no route evidence. No non-test code sets `quality_assessment` or `relative_cost`. `aggregate_performance_history` is called only from learning_snapshots.py and temporal.py. The MODELS 'cost' values are local load-accounting weights in bt_agents, not API prices. The benchmark calls the policy with an empty evidence map.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/policy.py\",\"symbol\":\"RoutePolicyEvidence\",\"start_line\":101,\"end_line\":124},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"_route_evidence\",\"start_line\":48,\"end_line\":60},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":182,\"end_line\":188},{\"path\":\"skill/scripts/bt_scheduler_adapter.py\",\"symbol\":\"propose\",\"start_line\":396,\"end_line\":399},{\"path\":\"skill/scripts/bt_scheduler_decision/history.py\",\"symbol\":\"aggregate_performance_history\",\"start_line\":273,\"end_line\":279},{\"path\":\"skill/scripts/bt_scheduler_decision/learning_snapshots.py\",\"symbol\":\"LearningSnapshotStore\",\"start_line\":175,\"end_line\":175},{\"path\":\"skill/scripts/bt_agents.py\",\"symbol\":\"MODELS\",\"start_line\":34,\"end_line\":54},{\"path\":\"skill/scripts/bt_scheduler_decision_benchmark.py\",\"symbol\":\"rank_with_route_policy\",\"start_line\":309,\"end_line\":309}]},{\"id\":\"Q8\",\"answer\":\"Batch options are keyed by `account_ref` (setdefault keeps only the first-ranked route per account per task). Capacity per account is min(free_slots, max_concurrent - active) only when AccountConcurrency is supplied, otherwise free_slots. Neither wired caller passes AccountConcurrency, so per-account capacity is bounded only by global free_slots. Two profiles alias only if they yield the same account_ref. In the wired path, `pool_for` already dedupes by effective identity, so aliases do not reach the batch. The batch layer trusts caller-supplied account_ref, so it cannot detect aliases itself. A persisted batch is an immutable, idempotent plan record (no capacity lock or reservation). M1 owns reservation per the engine docstring.\",\"evidence\":[{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_rank_batch_routes\",\"start_line\":232,\"end_line\":234},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_account_capacities\",\"start_line\":251,\"end_line\":264},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"_match_batch_routes\",\"start_line\":267,\"end_line\":304},{\"path\":\"skill/scripts/bt_scheduler_decision/batch.py\",\"symbol\":\"plan_ready_batch\",\"start_line\":369,\"end_line\":385},{\"path\":\"skill/scripts/bt_scheduler_decision/batch_ledger.py\",\"symbol\":\"BatchDecisionStore.persist\",\"start_line\":240,\"end_line\":305},{\"path\":\"skill/scripts/bt_scheduler_decision/engine.py\",\"symbol\":\"DecisionEngine\",\"start_line\":151,\"end_line\":153},{\"path\":\"skill/scripts/bt_scheduler_plan_routing.py\",\"symbol\":\"plan_full_dag\",\"start_line\":182,\"end_line\":188},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_batch.py\",\"symbol\":\"BatchQuotaTests.test_shared_account_capacity_counts_active_work_and_profile_aliases_once\",\"start_line\":149,\"end_line\":165}]},{\"id\":\"Q9\",\"answer\":\"Floor tests: test_scheduler_decision_sources.py 31-43 (ladder), 45-64 (floor rules, medium risk not promoted), 66-72 (rule explanation). Alias/pool tests: tests/test_agents.py 167-171 (named profile wins only by request order) and 173-190 (normalized paths dedupe, quota keys differ). Batch alias tests: test_batch.py 58-71 and 149-165 (account_ref supplied directly). Preflight tests: tests/test_scheduler_quota_preflight.py 19-43, 84-106. Quality/lexicographic tests: test_policy.py 129-148, 150-178, 180-197, 321-329. Not provable from this snapshot: real plan limits, actual provider quota windows and resets, whether two profiles really share one provider account, whether CLIs are installed and signed in at runtime, poll success/timing, and the actual contents of local quota state files. No tests were run.\",\"evidence\":[{\"path\":\"skill/scripts/tests/test_scheduler_decision_sources.py\",\"symbol\":\"test_route_options_follow_the_supported_provider_ladder_and_task_floor\",\"start_line\":31,\"end_line\":43},{\"path\":\"skill/scripts/tests/test_agents.py\",\"symbol\":\"test_pool_deduplicates_normalized_account_paths_without_changing_quota_keys\",\"start_line\":173,\"end_line\":190},{\"path\":\"skill/scripts/tests/test_scheduler_quota_preflight.py\",\"symbol\":\"test_refuses_an_oversized_account_pool_without_polling\",\"start_line\":84,\"end_line\":93},{\"path\":\"skill/scripts/bt_scheduler_decision/tests/test_batch.py\",\"symbol\":\"BatchQuotaTests.test_alias_routes_share_one_account_pressure_without_summing_profile_budgets\",\"start_line\":58,\"end_line\":71}]}],\"unknowns\":[\"Actual account quotas, plan limits, reset times and provider windows cannot be proven from this snapshot.\",\"Whether distinct profiles with different env overlays are genuinely separate provider accounts is an assumption about local configuration; the code only encodes identity from env selectors and default home directories.\",\"Whether AccountConcurrency is supplied by any runtime caller outside the traced paths; none was found in non-test code.\",\"_tier_floor reads raw classifications before M2 validation; the enumerations are enforced in the M1 planner contract and M2 validation, which were not fully traced.\",\"Whether CLI binaries, auth tokens, and quota state files exist at runtime was not checked; no test or code was executed.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 64,
+    "cache_creation_input_tokens": 128701,
+    "cache_read_input_tokens": 2354967,
+    "output_tokens": 37141,
+    "output_tokens_details": {
+      "thinking_tokens": 21470
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 128701,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 56,
+  "response_words": 1046,
+  "exit_code": 0,
+  "elapsed_seconds": 183.127,
+  "finished_at": 1792248426.1836147,
+  "tool_audit": [
+    {
+      "tool": "Glob",
+      "input": {
+        "path": "./repo",
+        "pattern": "**/*.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo",
+        "pattern": "floor|complexity|coupling|scope|tier"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "floor"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/tests/test_scheduler_decision_sources.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_agents.py",
+        "pattern": "def (start_tier|pool_for|candidates|account_key|model_for|cooling_until|infer_kind)\\b|^TOP\\b|^PROVIDERS|^MODELS|^EFFORTS"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_agents.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_agents.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_agents.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_agents.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_decision",
+        "pattern": "def (candidate_route_id|account_reference|rank_candidates|comparable_metric_snapshots|_ranking_key|_lexicographic\\w*|_sort\\w*|_quality\\w*|_duration\\w*|_cost\\w*)|^class |def (route_id|account)"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/policy.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/identity.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/contracts.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "rank_with_route_policy|RoutePolicyEvidence\\(|quality_assessment=|relative_cost|duration_seconds=|quota_windows=|reserved_for_higher_risk=|RoutePolicyConfig\\(",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_plan_routing.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/batch.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_decision/batch_ledger.py",
+        "pattern": "reserv|def persist|def \\w+|CREATE TABLE|INSERT INTO"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "refresh_quota|plan_full_dag|bt_scheduler_decision_adapter|rank_with_route_policy|quality_assessment",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/batch_ledger.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_adapter.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_adapter.py"
+      }
+    },
+    {
+      "tool": "Glob",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "**/bt_scheduler_quota_preflight*.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_quota_preflight.py",
+        "pattern": "def (refresh|_\\w+)\\("
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_quota_preflight.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "^def (poll|capacity|load|refresh|load_cache)\\b|MAX_AGE|timeout|max_workers|ThreadPool|subprocess|_DUE|due",
+        "glob": "bt_{subscriptions,agy}.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_subscriptions.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_agy.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_subscriptions.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "MIN_POLL_SECONDS\\s*=|def read_claude|def read_codex",
+        "glob": "bt_*.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_subscriptions.py",
+        "pattern": "POLL_SECONDS\\s*=|^def summary|^def number"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "MIN_VERIFIED_SAMPLES\\s*=|HISTORY_LEVELS\\s*=|uncertainty_interval_95|def assess\\w*|ContextualHistoryAssessment\\(|selected_level\\s*=|price|pricing|relative_cost",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_adapter.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "account_concurrency=|AccountConcurrency\\(|reserv|def assess_contextual\\w*|def decide\\b|assess_contextual\\w*\\(|quality_evidence\\.|QualityEvidence\\(|price|prices",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/history.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_decision/history.py",
+        "pattern": "^def \\w+|^    def \\w+"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill",
+        "pattern": "contextual_history|assess_contextual|ContextualHistory|quality_assessment|rank_with_route_policy|RoutePolicyEvidence"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_decision/shadow.py",
+        "pattern": "aggregate_performance_history|contextual|RoutePolicyEvidence|rank_with_route_policy|quality_assessment|relative_cost|duration_seconds"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "aggregate_performance_history|assess_history|ContextualHistory|RoutePolicyEvidence|quality_assessment",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_scheduler_decision/engine.py",
+        "pattern": "rank_candidates|rank_with_route_policy|quality|assess_history|aggregate_performance|def decide|reserv|record"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "learning_snapshots|LearningSnapshotStore|LearningSnapshot\\b",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "def test_\\w*(alias|account|capacity|concurren|same_account|identity|dedup|pool)\\w*|def test_\\w*(floor|tier|risk|preflight|refresh|stale|exhaust|cooldown)\\w*",
+        "glob": "*test*.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/tests/test_batch.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/tests/test_batch.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/tests/test_policy.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/tests/test_policy.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "pool_for|_pool_account_identity|refresh_quota_preflight|bt_scheduler_quota_preflight|plan_full_dag",
+        "glob": "*test*.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/tests/test_scheduler_quota_preflight.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/tests/test_agents.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/tests/test_agents.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/tests/test_batch.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/tests/test_policy.py"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/tests/test_policy.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts",
+        "pattern": "estimated_minutes|\"extreme\"|full_system",
+        "glob": "!**/tests/**"
+      }
+    },
+    {
+      "tool": "Read",
+      "input": {
+        "file_path": "/tmp/metodologia-explorer-ladder-20261017-p5jrn9zd/cells/E5/haiku/repo/skill/scripts/bt_scheduler_decision/history.py"
+      }
+    },
+    {
+      "tool": "Grep",
+      "input": {
+        "path": "./repo/skill/scripts/bt_profiles.py",
+        "pattern": "^ACCOUNT_VARS|^DEFAULTS|def env_of|def is_work_project"
+      }
+    }
+  ],
+  "event_shapes": {
+    "system": [
+      "estimated_tokens",
+      "estimated_tokens_delta",
+      "session_id",
+      "subtype",
+      "type",
+      "uuid"
+    ],
+    "assistant": [
+      "message",
+      "parent_tool_use_id",
+      "request_id",
+      "session_id",
+      "timestamp",
+      "type",
+      "uuid"
+    ],
+    "user": [
+      "message",
+      "parent_tool_use_id",
+      "session_id",
+      "timestamp",
+      "tool_result_meta",
+      "tool_use_result",
+      "type",
+      "uuid"
+    ],
+    "rate_limit_event": [
+      "rate_limit_info",
+      "session_id",
+      "type",
+      "uuid"
+    ],
+    "result": [
+      "api_error_status",
+      "duration_api_ms",
+      "duration_ms",
+      "fast_mode_disabled_reason",
+      "fast_mode_state",
+      "first_content_frame_ms",
+      "is_error",
+      "modelUsage",
+      "num_turns",
+      "permission_denials",
+      "queued_turn_count",
+      "result",
+      "result_index",
+      "safety_stops",
+      "session_id",
+      "stop_reason",
+      "subagent_stats",
+      "subtype",
+      "terminal_reason",
+      "time_to_request_ms",
+      "total_cost_usd",
+      "ttft_ms",
+      "ttft_stream_ms",
+      "type",
+      "usage",
+      "uuid"
+    ]
+  },
+  "per_message_usage": [
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3575,
+      "cache_read_input_tokens": 5016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3575
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3575,
+      "cache_read_input_tokens": 5016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3575
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3575,
+      "cache_read_input_tokens": 5016,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3575
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7810,
+      "cache_read_input_tokens": 8591,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7810
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 7810,
+      "cache_read_input_tokens": 8591,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 7810
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3425,
+      "cache_read_input_tokens": 16401,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3425
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5622,
+      "cache_read_input_tokens": 19826,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5622
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5622,
+      "cache_read_input_tokens": 19826,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5622
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5622,
+      "cache_read_input_tokens": 19826,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5622
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3102,
+      "cache_read_input_tokens": 25448,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3102
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3102,
+      "cache_read_input_tokens": 25448,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3102
+      },
+      "output_tokens": 16
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5660,
+      "cache_read_input_tokens": 28550,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5660
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5660,
+      "cache_read_input_tokens": 28550,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5660
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5660,
+      "cache_read_input_tokens": 28550,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5660
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4221,
+      "cache_read_input_tokens": 34210,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4221
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4221,
+      "cache_read_input_tokens": 34210,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4221
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4832,
+      "cache_read_input_tokens": 38431,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4832
+      },
+      "output_tokens": 2
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4832,
+      "cache_read_input_tokens": 38431,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4832
+      },
+      "output_tokens": 2
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4832,
+      "cache_read_input_tokens": 38431,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4832
+      },
+      "output_tokens": 2
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4832,
+      "cache_read_input_tokens": 38431,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4832
+      },
+      "output_tokens": 2
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9248,
+      "cache_read_input_tokens": 43263,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9248
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 9248,
+      "cache_read_input_tokens": 43263,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 9248
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2923,
+      "cache_read_input_tokens": 52511,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2923
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4673,
+      "cache_read_input_tokens": 55434,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4673
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4673,
+      "cache_read_input_tokens": 55434,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4673
+      },
+      "output_tokens": 5
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8547,
+      "cache_read_input_tokens": 60107,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8547
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8547,
+      "cache_read_input_tokens": 60107,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8547
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8547,
+      "cache_read_input_tokens": 60107,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8547
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3224,
+      "cache_read_input_tokens": 68654,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3224
+      },
+      "output_tokens": 14
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3224,
+      "cache_read_input_tokens": 68654,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3224
+      },
+      "output_tokens": 14
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3224,
+      "cache_read_input_tokens": 68654,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3224
+      },
+      "output_tokens": 14
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5368,
+      "cache_read_input_tokens": 71878,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5368
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5368,
+      "cache_read_input_tokens": 71878,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5368
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5368,
+      "cache_read_input_tokens": 71878,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5368
+      },
+      "output_tokens": 4
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 503,
+      "cache_read_input_tokens": 77246,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 503
+      },
+      "output_tokens": 14
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2579,
+      "cache_read_input_tokens": 77749,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2579
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2579,
+      "cache_read_input_tokens": 77749,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2579
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1502,
+      "cache_read_input_tokens": 80328,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1502
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1502,
+      "cache_read_input_tokens": 80328,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1502
+      },
+      "output_tokens": 20
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2551,
+      "cache_read_input_tokens": 81830,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2551
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2551,
+      "cache_read_input_tokens": 81830,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2551
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2551,
+      "cache_read_input_tokens": 81830,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2551
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1356,
+      "cache_read_input_tokens": 84381,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1356
+      },
+      "output_tokens": 6
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1356,
+      "cache_read_input_tokens": 84381,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1356
+      },
+      "output_tokens": 6
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 870,
+      "cache_read_input_tokens": 85737,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 870
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 870,
+      "cache_read_input_tokens": 85737,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 870
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 870,
+      "cache_read_input_tokens": 85737,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 870
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6826,
+      "cache_read_input_tokens": 86607,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6826
+      },
+      "output_tokens": 6
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6826,
+      "cache_read_input_tokens": 86607,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6826
+      },
+      "output_tokens": 6
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6826,
+      "cache_read_input_tokens": 86607,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6826
+      },
+      "output_tokens": 6
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5877,
+      "cache_read_input_tokens": 93433,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5877
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5877,
+      "cache_read_input_tokens": 93433,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5877
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 5877,
+      "cache_read_input_tokens": 93433,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 5877
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1303,
+      "cache_read_input_tokens": 99310,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1303
+      },
+      "output_tokens": 9
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1303,
+      "cache_read_input_tokens": 99310,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1303
+      },
+      "output_tokens": 9
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1303,
+      "cache_read_input_tokens": 99310,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1303
+      },
+      "output_tokens": 9
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4297,
+      "cache_read_input_tokens": 100613,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4297
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4297,
+      "cache_read_input_tokens": 100613,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4297
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 4297,
+      "cache_read_input_tokens": 100613,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 4297
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1502,
+      "cache_read_input_tokens": 104910,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1502
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1502,
+      "cache_read_input_tokens": 104910,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1502
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8074,
+      "cache_read_input_tokens": 106412,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8074
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8074,
+      "cache_read_input_tokens": 106412,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8074
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8074,
+      "cache_read_input_tokens": 106412,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8074
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8074,
+      "cache_read_input_tokens": 106412,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8074
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8074,
+      "cache_read_input_tokens": 106412,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8074
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 8074,
+      "cache_read_input_tokens": 106412,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 8074
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6519,
+      "cache_read_input_tokens": 114486,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6519
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6519,
+      "cache_read_input_tokens": 114486,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6519
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 6519,
+      "cache_read_input_tokens": 114486,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 6519
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3274,
+      "cache_read_input_tokens": 121005,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3274
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3274,
+      "cache_read_input_tokens": 121005,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3274
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3274,
+      "cache_read_input_tokens": 121005,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3274
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3274,
+      "cache_read_input_tokens": 121005,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3274
+      },
+      "output_tokens": 8
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2907,
+      "cache_read_input_tokens": 124279,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2907
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 2907,
+      "cache_read_input_tokens": 124279,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 2907
+      },
+      "output_tokens": 3
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1430,
+      "cache_read_input_tokens": 127186,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1430
+      },
+      "output_tokens": 6
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1430,
+      "cache_read_input_tokens": 127186,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1430
+      },
+      "output_tokens": 6
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1430,
+      "cache_read_input_tokens": 127186,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1430
+      },
+      "output_tokens": 6
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3903,
+      "cache_read_input_tokens": 128616,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3903
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3903,
+      "cache_read_input_tokens": 128616,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 3903
+      },
+      "output_tokens": 7
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1198,
+      "cache_read_input_tokens": 132519,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1198
+      },
+      "output_tokens": 6
+    },
+    {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 1198,
+      "cache_read_input_tokens": 132519,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1198
+      },
+      "output_tokens": 6
+    }
+  ],
+  "model_usage_reported": {
+    "claude-haiku-5-5": {
+      "inputTokens": 64,
+      "outputTokens": 37141,
+      "cacheReadInputTokens": 2354967,
+      "cacheCreationInputTokens": 128701,
+      "webSearchRequests": 0,
+      "costUSD": 0.18772381000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 21470
+    }
+  },
+  "native_result_status": null,
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792248426.2227302,
+    "windows": {
+      "five_hour": {
+        "used_percent": 20.0,
+        "resets_at": 1792262400.48832,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 90.0,
+        "resets_at": 1792278000.488343,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

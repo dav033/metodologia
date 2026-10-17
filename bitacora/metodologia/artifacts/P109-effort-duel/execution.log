@@ -1,0 +1,25 @@
+START E1 sonnet-high high
+START E1 sol-medium medium
+DONE E1 sol-medium completed 42.072 s format=True usage={"input_tokens": 17394, "cached_input_tokens": 12288, "cache_write_input_tokens": 0, "output_tokens": 2463, "reasoning_output_tokens": 516}
+START E1 sol-high high
+DONE E1 sonnet-high completed 66.495 s format=True usage={"input_tokens": 2, "cache_creation_input_tokens": 6293, "cache_read_input_tokens": 1662, "output_tokens": 8459, "output_tokens_details": {"thinking_tokens": 4104}, "server_tool_use": {"web_search_requests": 0, "web_fetch_requests": 0}, "cache_creation": {"ephemeral_1h_input_tokens": 6293, "ephemeral_5m_input_tokens": 0}}
+START E1 sonnet-medium medium
+DONE E1 sonnet-medium completed 52.529 s format=True usage={"input_tokens": 2, "cache_creation_input_tokens": 2115, "cache_read_input_tokens": 5839, "output_tokens": 6862, "output_tokens_details": {"thinking_tokens": 2505}, "server_tool_use": {"web_search_requests": 0, "web_fetch_requests": 0}, "cache_creation": {"ephemeral_1h_input_tokens": 2115, "ephemeral_5m_input_tokens": 0}}
+START E2 sonnet-medium medium
+DONE E1 sol-high completed 78.386 s format=True usage={"input_tokens": 17398, "cached_input_tokens": 12288, "cache_write_input_tokens": 0, "output_tokens": 4211, "reasoning_output_tokens": 2265}
+START E2 sol-high high
+DONE E2 sonnet-medium completed 38.813 s format=True usage={"input_tokens": 2, "cache_creation_input_tokens": 6353, "cache_read_input_tokens": 1662, "output_tokens": 5085, "output_tokens_details": {"thinking_tokens": 1424}, "server_tool_use": {"web_search_requests": 0, "web_fetch_requests": 0}, "cache_creation": {"ephemeral_1h_input_tokens": 6353, "ephemeral_5m_input_tokens": 0}}
+START E2 sonnet-high high
+DONE E2 sol-high completed 49.221 s format=True usage={"input_tokens": 16933, "cached_input_tokens": 12288, "cache_write_input_tokens": 0, "output_tokens": 2585, "reasoning_output_tokens": 750}
+START E2 sol-medium medium
+DONE E2 sonnet-high completed 47.623 s format=True usage={"input_tokens": 2, "cache_creation_input_tokens": 2116, "cache_read_input_tokens": 5901, "output_tokens": 6186, "output_tokens_details": {"thinking_tokens": 2281}, "server_tool_use": {"web_search_requests": 0, "web_fetch_requests": 0}, "cache_creation": {"ephemeral_1h_input_tokens": 2116, "ephemeral_5m_input_tokens": 0}}
+START E3 sonnet-high high
+DONE E2 sol-medium completed 41.292 s format=True usage={"input_tokens": 17410, "cached_input_tokens": 12288, "cache_write_input_tokens": 0, "output_tokens": 2230, "reasoning_output_tokens": 322}
+START E3 sol-medium medium
+DONE E3 sonnet-high completed 51.903 s format=True usage={"input_tokens": 2, "cache_creation_input_tokens": 6495, "cache_read_input_tokens": 1662, "output_tokens": 6750, "output_tokens_details": {"thinking_tokens": 2412}, "server_tool_use": {"web_search_requests": 0, "web_fetch_requests": 0}, "cache_creation": {"ephemeral_1h_input_tokens": 6495, "ephemeral_5m_input_tokens": 0}}
+START E3 sonnet-medium medium
+DONE E3 sol-medium completed 41.563 s format=True usage={"input_tokens": 17036, "cached_input_tokens": 12288, "cache_write_input_tokens": 0, "output_tokens": 2307, "reasoning_output_tokens": 248}
+START E3 sol-high high
+DONE E3 sonnet-medium completed 37.204 s format=True usage={"input_tokens": 2, "cache_creation_input_tokens": 2116, "cache_read_input_tokens": 6043, "output_tokens": 4921, "output_tokens_details": {"thinking_tokens": 1226}, "server_tool_use": {"web_search_requests": 0, "web_fetch_requests": 0}, "cache_creation": {"ephemeral_1h_input_tokens": 2116, "ephemeral_5m_input_tokens": 0}}
+DONE E3 sol-high completed 66.106 s format=True usage={"input_tokens": 17038, "cached_input_tokens": 12288, "cache_write_input_tokens": 0, "output_tokens": 3326, "reasoning_output_tokens": 1295}
+EXECUTION SUMMARY [{"provider": "codex", "status": "complete"}, {"provider": "claude", "status": "complete"}]

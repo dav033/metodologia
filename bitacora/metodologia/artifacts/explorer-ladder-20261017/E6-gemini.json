@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "case": "E6",
+  "route": {
+    "id": "gemini",
+    "profile": "antigravity",
+    "provider": "antigravity",
+    "model": "gemini-3.8-flash-low",
+    "effort": "low"
+  },
+  "status": "completed",
+  "prompt_sha256": "909d6b76b183f20223377b3ca5950608e45e4a746be0a6edcc589861f6c0cdd2",
+  "prompt_characters": 4259,
+  "quota_before": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792248065.490926,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792265867.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792852860.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792266060.0,
+        "window_minutes": 300
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792248065.490959,
+  "argv": [
+    "agy",
+    "--model",
+    "gemini-3.8-flash-low",
+    "--effort",
+    "low",
+    "--mode",
+    "plan",
+    "--sandbox",
+    "--disable-slash-commands",
+    "--output-format",
+    "stream-json",
+    "--print-timeout",
+    "900s",
+    "--print=<shared hashed prompt>"
+  ],
+  "answer": null,
+  "response_text": "",
+  "format_valid": false,
+  "usage_reported": {
+    "input_tokens": 13626,
+    "output_tokens": 87,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 0,
+    "total_tokens": 13713
+  },
+  "observed_models": [],
+  "observed_tool_events": 0,
+  "response_words": 0,
+  "exit_code": 0,
+  "elapsed_seconds": 6.179,
+  "finished_at": 1792248071.6710854,
+  "tool_audit": [],
+  "event_shapes": {
+    "init": [
+      "conversation_id",
+      "event",
+      "init"
+    ],
+    "step_update": [
+      "event",
+      "step_update"
+    ],
+    "result": [
+      "event",
+      "result"
+    ]
+  },
+  "per_message_usage": [],
+  "model_usage_reported": {},
+  "native_result_status": "SUCCESS",
+  "workspace_changes": [],
+  "quota_after": {
+    "profile": "antigravity",
+    "status": "ok",
+    "observed_at": 1792248077.1961093,
+    "windows": {
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792808476.0,
+        "window_minutes": 10080
+      },
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792265867.0,
+        "window_minutes": 300
+      },
+      "seven_day_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792852876.0,
+        "window_minutes": 10080
+      },
+      "five_hour_claude_gpt": {
+        "used_percent": 0.0,
+        "resets_at": 1792266076.0,
+        "window_minutes": 300
+      }
+    }
+  },
+  "included_in_comparison": false,
+  "exclusion_reason": "AGY print mode soft-denied RunCommand; no final response, not a model-quality result"
+}

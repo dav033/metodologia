@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "case": "H3",
+  "route": {
+    "id": "haiku",
+    "profile": "claude-work",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "effort": "max"
+  },
+  "status": "completed",
+  "prompt_sha256": "1dc22f79a703521af19309e4e29224762a0428696279bcffed40988df573d7bb",
+  "prompt_characters": 13061,
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792210212.07455,
+    "windows": {
+      "five_hour": {
+        "used_percent": 9.0,
+        "resets_at": 1792213800.304299,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792278000.304318,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "deadline_seconds": 900,
+  "started_at": 1792210212.3803558,
+  "answer": {
+    "verdict": "needs_changes",
+    "findings": [
+      {
+        "task": "E4 keyset SQL (T3)",
+        "severity": "critical",
+        "issue": "Unparenthesized OR: AND binds tighter, so the second keyset branch has no tenant predicate. The outer wrapper filters only tenant-local project IDs, so it cannot exclude foreign rows.",
+        "evidence": "E4 'WHERE tenant_id=:tenant AND event_ts>:cursor_ts OR event_ts=:cursor_ts AND id>:cursor_id'; 'no outer tenant predicate exists'; R3 requires tenant scoping in both branches and says timestamps and project IDs collide across tenants; T3 uses one tenant.",
+        "failure_scenario": "Tenant A, project 7, boundary cursor (ts=100,id=50). Tenant B row id=51, ts=100, project_id=7 matches branch 2 (100=100, 51>50) and passes project=7, so it is emitted into A's page. Any foreign row with the boundary timestamp, a larger global id and the same project ID leaks.",
+        "fix": "WHERE tenant_id=:tenant AND (event_ts>:cursor_ts OR (event_ts=:cursor_ts AND id>:cursor_id)); add tenant_id=:tenant to the outer wrapper. Regression: two tenants, same project ID, interleaved global IDs, shared boundary timestamp; assert no foreign rows."
+      },
+      {
+        "task": "E5 encrypt_next and resume (T3, T6)",
+        "severity": "critical",
+        "issue": "The nonce namespace is export-wide, but resume restarts at the last persisted index, which can lag an upload. A changed snapshot then reuses (key, nonce) with different plaintext and AAD.",
+        "evidence": "E5 nonce = export.nonce_prefix + uint32_be(chunk_index), with upload before persist_next_index; 'a new attempt resumes at the last persisted next_index, but re-queries its approved current snapshot'; G4 crash window; R4 forbids this and says AAD changes do not help; T3 and T6 keep plaintext identical and inject no crash.",
+        "failure_scenario": "Attempt 1 (S1) uploads chunk 0 under p||0 with plaintext P1, then crashes before persist(1); checkpoint stays 0. A retraction yields S2 with P2; attempt 2 encrypts chunk 0 under the same key and p||0. Both versions are observable, so C1 xor C2 = P1 xor P2, and reuse also yields GHASH forgery material.",
+        "fix": "Give each attempt_snapshot a fresh random 8-byte nonce prefix persisted with that attempt (the key stays per export_id). Resume only within the same snapshot; a new snapshot starts at chunk 0 under its new prefix. Regression: crash after upload, then retry with changed rows."
+      },
+      {
+        "task": "E2 cache check before authorization (T2)",
+        "severity": "high",
+        "issue": "authorize_current runs only on a cache miss, and the cache key omits the policy revision, so a revoked grant is still honored on a hit.",
+        "evidence": "E2 returns cache[key] before authorize_current; G3: any authenticated request reaches E2 and the key has no policy revision; R1 requires current project authorization for every read, including cache hits.",
+        "failure_scenario": "U reads export E (version V) while authorized, so cache[(T,U,E,V)] is set. An admin commits revocation of U's project grant. U resends the same valid cursor: authentication and cursor checks pass, the cache hits, and authorize_current never runs. Exposure is limited to keys U already read, but R1 forbids it.",
+        "fix": "Call authorize_current(user,cursor.project) before the cache lookup on every read. T2 needs a revoke-then-hit case expecting Forbidden; its miss-then-hit test with no policy change cannot detect this."
+      },
+      {
+        "task": "E3 build_export validation (T2)",
+        "severity": "high",
+        "issue": "E3 compares the client's query_hash only with the cursor's hash, then executes client-supplied filters, columns and order. The effective query is never hashed and compared with the signed approval.",
+        "evidence": "E3 'if cursor.query_hash != req.query_hash: raise Forbidden', then validate_query(filters=req.filters, columns=req.columns, order=req.order); G2: req.query_hash is arbitrary input and request filters and columns are not equated to the cursor; R2 forbids widening.",
+        "failure_scenario": "A cursor approved for date window F0 and columns [id,event_ts] carries hash H0. The client sends query_hash=H0 (readable claim assumed, see uncertainties), an unbounded date filter and columns [id,event_ts,payload]. E3 passes because H0 equals H0, and worker.query returns out-of-window rows plus the extra column.",
+        "fix": "Ignore req.query_hash: compute sha256(canonical_query(validated effective query)) server-side and require equality with the signed cursor.query_hash, else Forbidden. Regression: a cursor for Q0 with a request for Q1 carrying H0 must be Forbidden; T2's honest-path test cannot catch it."
+      },
+      {
+        "task": "E2 cache key (T2)",
+        "severity": "high",
+        "issue": "The key (tenant,user,export_id,content_version) omits the cursor position and the query identity, though every continuation page depends on both.",
+        "evidence": "E2 key = (cursor.tenant,user.id,cursor.export_id,cursor.content_version); E4 binds :cursor_ts and :cursor_id on each later page; T2 reuses E2 for 'cursor continuation'; G3 lists no position or query hash.",
+        "failure_scenario": "Initial cursor C0 and continuation cursor C1 (after row id 5) share a key. Reading C0 caches rows 1-5; reading C1 hits the cache and returns rows 1-5 again, so rows 6 onward are never delivered. A request with a mismatched req.query_hash is also served from cache, skipping E3's check.",
+        "fix": "Add the continuation position and cursor.query_hash to the key and validate the request before any cache read, or do not cache continuation pages. Regression: a three-page export with cache enabled returns each row exactly once."
+      },
+      {
+        "task": "E6 finalize and verify (T4)",
+        "severity": "high",
+        "issue": "For an odd leaf count n, appending a copy of the last leaf yields the same root, because the odd level already duplicates it. The signature omits chunk_count, verify never compares the count, and duplicate chunk_index entries are accepted.",
+        "evidence": "G5: an odd level duplicates the final node and the signature binds tenant/export/snapshot/root only; chunk_count is unsigned; E6 verify checks the signature and root, then decrypts every entry; R5 forbids turning three chunks into four by repeating a chunk; T4 tests exactly four chunks (even count, no odd-level duplication).",
+        "failure_scenario": "Honest 3-chunk root R = H('node', H('node',l0,l1), H('node',l2,l2)). The attacker sends [c0,c1,c2,c2] with root R, the same signature and chunk_count=4. The signature verifies, the recomputed root is R, the count is unchecked, and the repeated chunk_index 2 decrypts, so four chunks are returned.",
+        "fix": "Put chunk_count into the signed canonical tuple; in verify, require len(chunks) to equal it and each chunk_index to equal its position (0..n-1). Tests: a 3-chunk export with its last chunk appended must fail; cover odd counts 3 and 5."
+      },
+      {
+        "task": "E8 cleanup_keys (T4)",
+        "severity": "high",
+        "issue": "Verification keys are deleted 24h after creation, but a key signs until created+8h, so tokens issued up to 8h after creation remain valid until created+32h.",
+        "evidence": "E8 deletes when key.created_at+24h <= now; G7: 8h signing window, token.exp=issue_time+24h, issuance can occur just before the key stops; R7 requires retention for the longest possible expiry under the key.",
+        "failure_scenario": "Key created 00:00 UTC day 0; a token issued 07:59 day 0 expires 07:59 day 1. The key is deleted at 00:00 day 1. At 01:00 day 1 the token is unexpired, but its kid is unknown and fails closed. T4's 'issue at key creation' case has exp equal to the deletion boundary and hides this.",
+        "fix": "Delete only when created_at+32h <= now (last issuance at created+8h plus 24h token life), or signing_end+24h. Test: a token issued at created+7h59m verifies at created+31h."
+      },
+      {
+        "task": "E7 restore (T5)",
+        "severity": "high",
+        "issue": "Containment is a lexical path check, but mkdir and write_bytes follow symlinks already present in the selected tree, and the check and the write are separate steps.",
+        "evidence": "E7 uses absolute() and is_relative_to (lexical, per G6), then mkdir(exist_ok=True) and write_bytes; R6 allows pre-existing symlinks and path-replacement races; T5 tests archive-entry symlinks and ordinary directories, never pre-existing symlinks.",
+        "failure_scenario": "Another local process makes root/out a symlink to /home/u/.config. Entry out/app.ini passes entry validation and the lexical check; mkdir sees a directory through the link; write_bytes creates /home/u/.config/app.ini. A pre-existing leaf symlink root/app.ini to /home/u/.bashrc is overwritten the same way.",
+        "fix": "Open root with O_DIRECTORY|O_NOFOLLOW and walk components with dir_fd (mkdir with dir_fd, tolerate EEXIST, reopen with O_DIRECTORY|O_NOFOLLOW, reject symlinks). Write a temporary file with O_CREAT|O_EXCL|O_NOFOLLOW in the final directory fd, then os.replace(tmp, name, src_dir_fd=fd, dst_dir_fd=fd), which replaces links rather than following them. Regression: pre-existing directory and leaf symlinks."
+      },
+      {
+        "task": "E9 csv_cell (T5)",
+        "severity": "high",
+        "issue": "Formula detection tests only value[0], but the consumer skips leading spaces, tabs and carriage returns before testing for formula characters.",
+        "evidence": "E9 'if value and value[0] in (=,+,-,@)'; R8: the consumer skips leading spaces, tabs and CR, and RFC quoting does not change this; T5 tests only a value beginning with '='.",
+        "failure_scenario": "value = one space followed by '=HYPERLINK(...)'. value[0] is a space, so E9 returns the value unchanged; quoting adds no prefix; the consumer skips the space, sees '=' and treats the cell as a formula.",
+        "fix": "Test the first character after removing leading spaces, tabs and CRs, but prefix the original value: return chr(39)+value when that character is '=', '+', '-' or '@'. Tests: space-, tab- and CR-led values, plus a direct '=' value."
+      }
+    ],
+    "uncertainties": [
+      "First-page (no-cursor) SQL and the outer wrapper's placement relative to LIMIT are not shown, so R3 tenant scoping there is unverified.",
+      "The E5 fix assumes a same-snapshot resume reproduces identical plaintext and AAD; how verify picks the AAD snapshot for mixed-attempt manifests is unspecified.",
+      "authorize_current takes no tenant although project IDs are tenant-local; whether grants are tenant-qualified is unstated, so a cross-tenant authorization gap is possible but unproven.",
+      "Whether the client can read the cursor's query_hash claim (affects E3 exploitability only, not the server-side defect) and whether continuation position comes from the cursor or the request.",
+      "Whether cached results under a superseded content_version must be purged on retraction is unspecified; no finding is made."
+    ]
+  },
+  "response_text": "{\"verdict\":\"needs_changes\",\"findings\":[{\"task\":\"E4 keyset SQL (T3)\",\"severity\":\"critical\",\"issue\":\"Unparenthesized OR: AND binds tighter, so the second keyset branch has no tenant predicate. The outer wrapper filters only tenant-local project IDs, so it cannot exclude foreign rows.\",\"evidence\":\"E4 'WHERE tenant_id=:tenant AND event_ts>:cursor_ts OR event_ts=:cursor_ts AND id>:cursor_id'; 'no outer tenant predicate exists'; R3 requires tenant scoping in both branches and says timestamps and project IDs collide across tenants; T3 uses one tenant.\",\"failure_scenario\":\"Tenant A, project 7, boundary cursor (ts=100,id=50). Tenant B row id=51, ts=100, project_id=7 matches branch 2 (100=100, 51>50) and passes project=7, so it is emitted into A's page. Any foreign row with the boundary timestamp, a larger global id and the same project ID leaks.\",\"fix\":\"WHERE tenant_id=:tenant AND (event_ts>:cursor_ts OR (event_ts=:cursor_ts AND id>:cursor_id)); add tenant_id=:tenant to the outer wrapper. Regression: two tenants, same project ID, interleaved global IDs, shared boundary timestamp; assert no foreign rows.\"},{\"task\":\"E5 encrypt_next and resume (T3, T6)\",\"severity\":\"critical\",\"issue\":\"The nonce namespace is export-wide, but resume restarts at the last persisted index, which can lag an upload. A changed snapshot then reuses (key, nonce) with different plaintext and AAD.\",\"evidence\":\"E5 nonce = export.nonce_prefix + uint32_be(chunk_index), with upload before persist_next_index; 'a new attempt resumes at the last persisted next_index, but re-queries its approved current snapshot'; G4 crash window; R4 forbids this and says AAD changes do not help; T3 and T6 keep plaintext identical and inject no crash.\",\"failure_scenario\":\"Attempt 1 (S1) uploads chunk 0 under p||0 with plaintext P1, then crashes before persist(1); checkpoint stays 0. A retraction yields S2 with P2; attempt 2 encrypts chunk 0 under the same key and p||0. Both versions are observable, so C1 xor C2 = P1 xor P2, and reuse also yields GHASH forgery material.\",\"fix\":\"Give each attempt_snapshot a fresh random 8-byte nonce prefix persisted with that attempt (the key stays per export_id). Resume only within the same snapshot; a new snapshot starts at chunk 0 under its new prefix. Regression: crash after upload, then retry with changed rows.\"},{\"task\":\"E2 cache check before authorization (T2)\",\"severity\":\"high\",\"issue\":\"authorize_current runs only on a cache miss, and the cache key omits the policy revision, so a revoked grant is still honored on a hit.\",\"evidence\":\"E2 returns cache[key] before authorize_current; G3: any authenticated request reaches E2 and the key has no policy revision; R1 requires current project authorization for every read, including cache hits.\",\"failure_scenario\":\"U reads export E (version V) while authorized, so cache[(T,U,E,V)] is set. An admin commits revocation of U's project grant. U resends the same valid cursor: authentication and cursor checks pass, the cache hits, and authorize_current never runs. Exposure is limited to keys U already read, but R1 forbids it.\",\"fix\":\"Call authorize_current(user,cursor.project) before the cache lookup on every read. T2 needs a revoke-then-hit case expecting Forbidden; its miss-then-hit test with no policy change cannot detect this.\"},{\"task\":\"E3 build_export validation (T2)\",\"severity\":\"high\",\"issue\":\"E3 compares the client's query_hash only with the cursor's hash, then executes client-supplied filters, columns and order. The effective query is never hashed and compared with the signed approval.\",\"evidence\":\"E3 'if cursor.query_hash != req.query_hash: raise Forbidden', then validate_query(filters=req.filters, columns=req.columns, order=req.order); G2: req.query_hash is arbitrary input and request filters and columns are not equated to the cursor; R2 forbids widening.\",\"failure_scenario\":\"A cursor approved for date window F0 and columns [id,event_ts] carries hash H0. The client sends query_hash=H0 (readable claim assumed, see uncertainties), an unbounded date filter and columns [id,event_ts,payload]. E3 passes because H0 equals H0, and worker.query returns out-of-window rows plus the extra column.\",\"fix\":\"Ignore req.query_hash: compute sha256(canonical_query(validated effective query)) server-side and require equality with the signed cursor.query_hash, else Forbidden. Regression: a cursor for Q0 with a request for Q1 carrying H0 must be Forbidden; T2's honest-path test cannot catch it.\"},{\"task\":\"E2 cache key (T2)\",\"severity\":\"high\",\"issue\":\"The key (tenant,user,export_id,content_version) omits the cursor position and the query identity, though every continuation page depends on both.\",\"evidence\":\"E2 key = (cursor.tenant,user.id,cursor.export_id,cursor.content_version); E4 binds :cursor_ts and :cursor_id on each later page; T2 reuses E2 for 'cursor continuation'; G3 lists no position or query hash.\",\"failure_scenario\":\"Initial cursor C0 and continuation cursor C1 (after row id 5) share a key. Reading C0 caches rows 1-5; reading C1 hits the cache and returns rows 1-5 again, so rows 6 onward are never delivered. A request with a mismatched req.query_hash is also served from cache, skipping E3's check.\",\"fix\":\"Add the continuation position and cursor.query_hash to the key and validate the request before any cache read, or do not cache continuation pages. Regression: a three-page export with cache enabled returns each row exactly once.\"},{\"task\":\"E6 finalize and verify (T4)\",\"severity\":\"high\",\"issue\":\"For an odd leaf count n, appending a copy of the last leaf yields the same root, because the odd level already duplicates it. The signature omits chunk_count, verify never compares the count, and duplicate chunk_index entries are accepted.\",\"evidence\":\"G5: an odd level duplicates the final node and the signature binds tenant/export/snapshot/root only; chunk_count is unsigned; E6 verify checks the signature and root, then decrypts every entry; R5 forbids turning three chunks into four by repeating a chunk; T4 tests exactly four chunks (even count, no odd-level duplication).\",\"failure_scenario\":\"Honest 3-chunk root R = H('node', H('node',l0,l1), H('node',l2,l2)). The attacker sends [c0,c1,c2,c2] with root R, the same signature and chunk_count=4. The signature verifies, the recomputed root is R, the count is unchecked, and the repeated chunk_index 2 decrypts, so four chunks are returned.\",\"fix\":\"Put chunk_count into the signed canonical tuple; in verify, require len(chunks) to equal it and each chunk_index to equal its position (0..n-1). Tests: a 3-chunk export with its last chunk appended must fail; cover odd counts 3 and 5.\"},{\"task\":\"E8 cleanup_keys (T4)\",\"severity\":\"high\",\"issue\":\"Verification keys are deleted 24h after creation, but a key signs until created+8h, so tokens issued up to 8h after creation remain valid until created+32h.\",\"evidence\":\"E8 deletes when key.created_at+24h <= now; G7: 8h signing window, token.exp=issue_time+24h, issuance can occur just before the key stops; R7 requires retention for the longest possible expiry under the key.\",\"failure_scenario\":\"Key created 00:00 UTC day 0; a token issued 07:59 day 0 expires 07:59 day 1. The key is deleted at 00:00 day 1. At 01:00 day 1 the token is unexpired, but its kid is unknown and fails closed. T4's 'issue at key creation' case has exp equal to the deletion boundary and hides this.\",\"fix\":\"Delete only when created_at+32h <= now (last issuance at created+8h plus 24h token life), or signing_end+24h. Test: a token issued at created+7h59m verifies at created+31h.\"},{\"task\":\"E7 restore (T5)\",\"severity\":\"high\",\"issue\":\"Containment is a lexical path check, but mkdir and write_bytes follow symlinks already present in the selected tree, and the check and the write are separate steps.\",\"evidence\":\"E7 uses absolute() and is_relative_to (lexical, per G6), then mkdir(exist_ok=True) and write_bytes; R6 allows pre-existing symlinks and path-replacement races; T5 tests archive-entry symlinks and ordinary directories, never pre-existing symlinks.\",\"failure_scenario\":\"Another local process makes root/out a symlink to /home/u/.config. Entry out/app.ini passes entry validation and the lexical check; mkdir sees a directory through the link; write_bytes creates /home/u/.config/app.ini. A pre-existing leaf symlink root/app.ini to /home/u/.bashrc is overwritten the same way.\",\"fix\":\"Open root with O_DIRECTORY|O_NOFOLLOW and walk components with dir_fd (mkdir with dir_fd, tolerate EEXIST, reopen with O_DIRECTORY|O_NOFOLLOW, reject symlinks). Write a temporary file with O_CREAT|O_EXCL|O_NOFOLLOW in the final directory fd, then os.replace(tmp, name, src_dir_fd=fd, dst_dir_fd=fd), which replaces links rather than following them. Regression: pre-existing directory and leaf symlinks.\"},{\"task\":\"E9 csv_cell (T5)\",\"severity\":\"high\",\"issue\":\"Formula detection tests only value[0], but the consumer skips leading spaces, tabs and carriage returns before testing for formula characters.\",\"evidence\":\"E9 'if value and value[0] in (=,+,-,@)'; R8: the consumer skips leading spaces, tabs and CR, and RFC quoting does not change this; T5 tests only a value beginning with '='.\",\"failure_scenario\":\"value = one space followed by '=HYPERLINK(...)'. value[0] is a space, so E9 returns the value unchanged; quoting adds no prefix; the consumer skips the space, sees '=' and treats the cell as a formula.\",\"fix\":\"Test the first character after removing leading spaces, tabs and CRs, but prefix the original value: return chr(39)+value when that character is '=', '+', '-' or '@'. Tests: space-, tab- and CR-led values, plus a direct '=' value.\"}],\"uncertainties\":[\"First-page (no-cursor) SQL and the outer wrapper's placement relative to LIMIT are not shown, so R3 tenant scoping there is unverified.\",\"The E5 fix assumes a same-snapshot resume reproduces identical plaintext and AAD; how verify picks the AAD snapshot for mixed-attempt manifests is unspecified.\",\"authorize_current takes no tenant although project IDs are tenant-local; whether grants are tenant-qualified is unstated, so a cross-tenant authorization gap is possible but unproven.\",\"Whether the client can read the cursor's query_hash claim (affects E3 exploitability only, not the server-side defect) and whether continuation position comes from the cursor or the request.\",\"Whether cached results under a superseded content_version must be purged on retraction is unspecified; no finding is made.\"]}",
+  "format_valid": true,
+  "usage_reported": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 6793,
+    "cache_read_input_tokens": 2442,
+    "output_tokens": 93592,
+    "output_tokens_details": {
+      "thinking_tokens": 89591
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6793,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_tool_events": 0,
+  "response_words": 1389,
+  "exit_code": 0,
+  "elapsed_seconds": 386.282,
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792210598.6631398,
+    "windows": {
+      "five_hour": {
+        "used_percent": 10.0,
+        "resets_at": 1792213799.918733,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 88.0,
+        "resets_at": 1792277999.918752,
+        "window_minutes": 10080.0
+      }
+    }
+  }
+}

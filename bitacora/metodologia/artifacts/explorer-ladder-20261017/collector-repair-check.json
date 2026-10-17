@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "native_calls": 0,
+  "simulated_provider_result_paths": 3,
+  "checks": [
+    "complete run_one persistence for all three provider formats",
+    "answer/usage preserved",
+    "JSON contract",
+    "source snapshot unchanged",
+    "runner/analyzer AST"
+  ]
+}
