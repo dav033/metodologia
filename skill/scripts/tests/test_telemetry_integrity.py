@@ -72,7 +72,8 @@ class TelemetryIntegrityTests(unittest.TestCase):
         import bt_quota_live
         today = dt.datetime.now().astimezone().date().isoformat()
         rows = [{"ts": today + "T12:00:00", "agent": "claude", "model": "haiku", "result": "done",
-                 "usage": {"input_tokens": 1000, "output_tokens": 1000, "cache_read_tokens": 8000}},
+                 "usage": {"input_tokens": 1000, "output_tokens": 1000, "cache_read_tokens": 8000,
+                           "cache_write_tokens": 0}},
                 {"ts": today + "T12:01:00", "agent": "claude", "model": "haiku", "result": "verified"},
                 {"ts": today + "T12:02:00", "agent": "codex", "model": "unknown", "result": "done"}]
         with tempfile.TemporaryDirectory() as directory, patch.object(bt_events, "STATE", Path(directory)), \

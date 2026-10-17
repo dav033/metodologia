@@ -55,7 +55,7 @@ def choose_successor(project: str | None, current: str | None, cwd: str, to: str
     pool = [p for p in bt_agents.pool_for(project or "")
             if bt_profiles.provider_of(p) in RELAY_PROVIDERS and bt_agents.account_key(p) != own
             and bt_profiles.gate_cwd(p, cwd)[0]]
-    routes, _ = bt_agents.candidates(project or "", pool, 1, "implement")
+    routes, _ = bt_agents.candidates(project or "", pool, 1, "implement", allow_explore=False)
     return routes[0] if routes else None
 
 

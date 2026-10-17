@@ -3,8 +3,10 @@
 Local and private (.state is not versioned). A measure the provider did not report is null, never 0. Token fields keep
 each provider's own convention: Claude's input_tokens excludes cached input; Codex JSON includes cached input.
 Each row says who ran (agent, profile, model, effort), what (kind, tier, tasks) and how it ended, so the router and
-the owner can compare agents and effort levels on measured results. Recording never raises: telemetry must not stop
-a marathon.
+the owner can compare agents and effort levels on measured results. A row is one SESSION attempt (it owns the cost);
+`task_outcomes` carries the verdict of each task that ran in it (bt_outcomes) and `decision` says why the route was
+chosen (exploit, explore, fallback, escalation, explicit: bt_explore). What a usage record means is decided in one
+place, bt_usage. Recording never raises: telemetry must not stop a marathon.
 """
 from __future__ import annotations
 
@@ -17,6 +19,7 @@ import sys
 from pathlib import Path
 
 import bt_profiles
+import bt_usage
 from bt_core import ROOT, STATE
 
 SCHEMA = 2
@@ -69,6 +72,11 @@ def detail_for(tasks: list[dict], result: str, results: dict | None = None) -> d
             "attempt": max((t.get("attempts") or 0) for t in tasks) + (0 if bad else 1) if tasks else 1,
             "milestone": tasks[0].get("milestone") if tasks else None,
             "task_results": {t["id"]: (results or {}).get(t["id"], result) for t in tasks},
+            "task_outcomes": [{"id": t["id"], "kind": t.get("kind") or "implement",
+                               "result": (results or {}).get(t["id"], result),
+                               "attempt": (t.get("attempts") or 0) + (0 if (results or {}).get(t["id"], result)
+                                                                      not in ("done", "verified") else 1)}
+                              for t in tasks],
             "titles": [str(t.get("title") or "")[:90] for t in tasks][:6],
             "outcome": outcome_of(result, why if bad else None), "why": why[:700]}
 
@@ -253,16 +261,24 @@ def record_attempt(project: str, state: dict, task_id: str, session: int, info: 
             "error_excerpt": None if result in ("done", "verified") else error_excerpt(info.get("text") or ""),
             "change_size": info.get("change_size") if isinstance(info.get("change_size"), dict) else None,
             "origin": origin_of(),
-            **{k: (detail or {}).get(k) for k in ("complexity", "complexity_source", "attempt", "milestone", "task_results", "titles",
-                                                   "outcome", "why")},
+            "decision": info.get("decision") if isinstance(info.get("decision"), dict) else None,
+            **{k: (detail or {}).get(k) for k in ("complexity", "complexity_source", "attempt", "milestone", "task_results",
+                                                   "task_outcomes", "titles", "outcome", "why")},
         }
         row["outcome"] = row["outcome"] or outcome_of(result, None)
+        if result == "stopped" and row.get("task_outcomes"):  # a stop is nobody's failure: unjudged for every task
+            row["task_outcomes"] = [{**o, "result": "stopped"} for o in row["task_outcomes"]]
         path = _path(now)
         if _seen(path, event_id):
             return None
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        decision = row.get("decision") or {}
+        if decision.get("decision_id"):  # close the exploration's ledger entry with what it produced
+            import bt_explore
+            bt_explore.settle(decision["decision_id"], result, True if result in ("done", "verified") else
+                              False if result in ("failed", "verify_failed", "timeout", "partial") else None)
         return path
     except Exception as exc:  # telemetry never stops a marathon
         print(f"[events] attempt not recorded: {type(exc).__name__}: {exc}", file=sys.stderr)
@@ -289,7 +305,10 @@ def _valid_row(row) -> bool:
     if cost is not None and (isinstance(cost, bool) or not isinstance(cost, (int, float)) or
                              not math.isfinite(cost) or cost < 0):
         return False
-    return all(row.get(k) is None or isinstance(row[k], dict) for k in ("task_results",)) and all(
+    outcomes = row.get("task_outcomes")
+    if outcomes is not None and not (isinstance(outcomes, list) and all(isinstance(o, dict) for o in outcomes)):
+        return False
+    return all(row.get(k) is None or isinstance(row[k], dict) for k in ("task_results", "decision")) and all(
         row.get(k) is None or isinstance(row[k], list) and all(isinstance(v, str) for v in row[k])
         for k in ("tasks", "titles"))
 
@@ -315,12 +334,9 @@ def read_all() -> list[dict]:
     return rows
 
 
-def _tokens(usage: dict) -> int | None:
-    total = usage.get("total_tokens")
-    if total is None and usage.get("input_tokens") is not None and usage.get("output_tokens") is not None:
-        total = usage["input_tokens"] + usage["output_tokens"] + (usage.get("cache_read_tokens") or 0) + \
-            (usage.get("cache_write_tokens") or 0)
-    return total
+def _tokens(usage: dict, agent: str | None = None) -> int | None:
+    """Final measured tokens of an attempt (bt_usage): None for a partial, contradictory or absent measurement."""
+    return bt_usage.measured_total(usage, agent)
 
 
 def summary(rows: list[dict], by: tuple | list | None = None, defects: list[dict] | None = None) -> list[dict]:
@@ -336,7 +352,7 @@ def summary(rows: list[dict], by: tuple | list | None = None, defects: list[dict
         key = tuple(r.get(k) if k != "kind" else (r.get(k) or "implement") for k in by)
         g = groups.setdefault(key, {**dict(zip(by, key)), "attempts": 0, "done": 0, "failed": 0, "other": 0,
                                     "seconds": 0, "seconds_measured": 0, "measured": 0,
-                                    "tokens_measured": 0, "cost_usd_reported": 0.0,
+                                    "tokens_measured": 0, "tokens_unreliable": 0, "cost_usd_reported": 0.0,
                                     "cost_measured": 0, "provider_loss": 0, "failed_by_loss": 0,
                                     "audits_done": 0, "audits_unreported": 0})
         g["attempts"] += 1
@@ -356,10 +372,12 @@ def summary(rows: list[dict], by: tuple | list | None = None, defects: list[dict
             g["seconds"] += r["seconds"]
             g["seconds_measured"] += 1
         u = r.get("usage") or {}
-        total = _tokens(u)
+        total = _tokens(u, r.get("agent"))
         if total is not None:
             g["measured"] += 1
             g["tokens_measured"] += total
+        elif bt_usage.normalize(u, r.get("agent"))["quality"] in (bt_usage.PARTIAL, bt_usage.CONTRADICTORY):
+            g["tokens_unreliable"] += 1  # reported but not final: never summed into the consumption totals
         if isinstance(u.get("cost_usd_reported"), (int, float)):
             g["cost_measured"] += 1
             g["cost_usd_reported"] += u["cost_usd_reported"]
@@ -367,11 +385,18 @@ def summary(rows: list[dict], by: tuple | list | None = None, defects: list[dict
     quality = bt_quality.group_quality(rows, defects or [], by)
     for key, g in groups.items():
         g.update(quality.get(key) or bt_quality.empty_quality())
-    for g in groups.values():
+    import bt_outcomes
+    task_counts = bt_outcomes.counts(rows, by)
+    for key, g in groups.items():
         judged = g["done"] + g["failed"]
+        # `success_rate` keeps its published session-level meaning (decisions and reports read this exact number); the
+        # task view the router learns from is `task_success_rate` (a partial session is 2 verified + 1 failed there).
         g["success_rate"] = round(g["done"] / judged, 2) if judged else None
         judged_model = judged - g["failed_by_loss"]  # same rate without the failures the provider caused
         g["success_rate_excl_loss"] = round(g["done"] / judged_model, 2) if judged_model > 0 else None
+        tc = task_counts.get(key) or {"verified": 0, "failed": 0, "judged": 0}
+        g.update(tasks_verified=tc["verified"], tasks_failed=tc["failed"],
+                 task_success_rate=round(tc["verified"] / tc["judged"], 2) if tc["judged"] else None)
         if defects is None:
             g["audits_unreported"] = None
         g["avg_seconds"] = round(g["seconds"] / g["seconds_measured"]) if g["seconds_measured"] else None
@@ -427,7 +452,7 @@ def read_defects() -> list[dict]:
 def key_values(row: dict) -> list[tuple[str, str]]:
     """One attempt as an ordered key/value table (CLI `metrics --attempts`, the /metrics page)."""
     u = row.get("usage") or {}
-    tokens = _tokens(u)
+    tokens = _tokens(u, row.get("agent"))
 
     def show(value) -> str:
         return "—" if value is None or value == "" or value == [] else str(value)

@@ -337,7 +337,9 @@ class ReviewPolicyTests(unittest.TestCase):
 class VerifiedEfficiency(unittest.TestCase):
     @staticmethod
     def row(result, model="sonnet", tokens=None, seconds=100, **extra):
-        usage = {"input_tokens": tokens, "output_tokens": 0} if tokens is not None else {}
+        # A Claude result event always carries both cache counters; without them the measurement is partial (bt_usage).
+        usage = {"input_tokens": tokens, "output_tokens": 0, "cache_read_tokens": 0, "cache_write_tokens": 0} \
+            if tokens is not None else {}
         return {"agent": "claude", "model": model, "effort": "medium", "kind": "implement", "tier": 1,
                 "result": result, "seconds": seconds, "usage": usage, "origin": "real", **extra}
 

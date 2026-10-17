@@ -265,7 +265,8 @@ class _Rates(dict):
 
     samples: dict = {}
     lower: dict = {}   # lower confidence bound of each rate: what the quality band ranks by
-    recent: dict = {}  # attempts in the last 7 days by (agent, model): the exploration budget's counter
+    recent: dict = {}  # admitted explorations in the last 7 days by (agent, model): the exploration budget's counter
+    recent_total: int = 0
 
 
 def _stats() -> tuple[dict, dict]:
@@ -288,57 +289,71 @@ def _stats() -> tuple[dict, dict]:
             acc = account_key(r.get("profile"), r.get("agent"))
             cost = MODELS.get(str(r.get("model")), {}).get("cost", 2) * bt_routing_policy.effort_weight(r.get("effort"))
             load[acc] = load.get(acc, 0) + (r.get("seconds") or 0) * cost
-    groups = bt_events.summary(rows, ("agent", "model", "kind"))
-    counts = {(g["agent"], g["model"], g["kind"]): (g["done"] + g["failed"], g["done"]) for g in groups}
+    # Quality learns from TASK outcomes (bt_outcomes), not from session aggregates: a session of three tasks with one
+    # failure is two verified tasks and one failed, not a failed session. Provider losses, skips and unjudged results
+    # never enter a rate. Consumption (`load`, above) stays per session: a session is paid once.
+    import bt_explore
+    import bt_outcomes
+    counts = {k: (g["judged"], g["verified"]) for k, g in bt_outcomes.counts(rows, ("agent", "model", "kind")).items()}
     min_samples = int(_config("routing.min_samples", MIN_SAMPLES))
     rates = _Rates({k: done / judged for k, (judged, done) in counts.items() if judged >= min_samples})
     rates.samples = {k: judged for k, (judged, _) in counts.items()}
     # The band uses the lower confidence bound: a short lucky streak must not read as a proven route.
     rates.lower = {k: bt_routing_policy.wilson_lower(done, judged) for k, (judged, done) in counts.items()
                    if judged >= min_samples}
-    rates.recent = {}
-    for r in rows:
-        try:
-            if 0 <= now - dt.datetime.fromisoformat(r["ts"]).timestamp() <= bt_routing_policy.EXPLORE_WINDOW_SEC:
-                key = (r.get("agent"), r.get("model"))
-                rates.recent[key] = rates.recent.get(key, 0) + 1
-        except (KeyError, ValueError, TypeError):
-            continue
+    # Only admitted explorations (the ledger) spend the exploration budget: ordinary attempts never do.
+    rates.recent, rates.recent_total = bt_explore.used(now)
     return rates, load
 
 
 def _quality_order(agent: str, kind: str, rate: float | None, pressure: float | None, samples: int = 0,
-                   explore: bool = False) -> tuple:
+                   explore: bool = False, critical: bool = False, best: float | None = None,
+                   point: float | None = None) -> tuple:
     """Sort-key part after the provider rules (busy, avoided builder provider, `_role_rank`, which already put the
-    preferred auditor first). Implementation: quota headroom in 10-point buckets (unknown pressure counts as
-    mid-range), then the verified success band (lower confidence bound, 20-point bands). Audits within one role rank:
-    measured quality first, then the audit budget order (Codex Sol is the last fallback after Claude Sonnet and Flash,
-    agents.md rule 4), and only then headroom.
+    preferred auditor first). `rate` is the lower confidence bound of the verified task success rate, so a small sample
+    never looks more precise than it is; quota headroom is in 10-point buckets (unknown pressure counts as mid-range).
 
-    Cold start: a route with fewer than `routing.min_samples` judged attempts of this kind takes the top measured band
-    only when `explore` is set (bt_routing_policy.may_explore: cheap model or weekly budget left, low-risk non-audit
-    work). Otherwise it ranks as an unproven route, below every route whose lower bound is at least 0.1."""
+    Routine work: quota balancing leads, but a route whose proven quality is clearly below the best admissible one
+    (more than `routing.quality_gap`, default 0.25, under it) goes behind, so spare quota is never spent on a route
+    that mostly fails. Critical work (risk high, complexity L, top tier; `routing.quality_protection` "critical" by
+    default, "always" or "off"): the verified quality band leads and quota only breaks ties. An unproven route has no
+    lower bound and is never "clearly inferior", so missing history blocks nothing.
+    Audits within one role rank: measured quality first, then the audit budget order (Codex Sol is the last fallback
+    after Claude Sonnet and Flash, agents.md rule 4), and only then headroom.
+
+    Cold start: a route with fewer than `routing.min_samples` judged outcomes of this kind takes the top measured band
+    only when `explore` is set (bt_routing_policy.may_explore: cheap model or weekly budget left, low-risk non-audit,
+    non-critical work). Otherwise it ranks as an unproven route, below every route whose lower bound is at least 0.1."""
     band = -(round(rate * 5) if rate is not None else 1)  # unproven ranks below any route with a positive bound
     if rate is None and explore:
         band = -6
     headroom = bt_routing_policy.pressure_bucket(pressure)
     if kind == "audit":
         return band, agent == "codex", headroom
-    return headroom, band
+    if bt_routing_policy.quality_leads(critical):
+        return band, headroom
+    # "Clearly inferior" compares this route's observed rate with the best route's PROVEN (lower-bound) rate, so a small
+    # sample is not punished twice and a route is relegated only by an evidence-backed gap.
+    inferior = (point is not None and best is not None and bt_routing_policy.quality_mode() != "off"
+                and best - point > bt_routing_policy.quality_gap())
+    return int(inferior), headroom, band
 
 
 def candidates(project: str, pool: list[str], tier: int, kind: str = "implement", configured: str | None = None,
-               avoid_providers: set | None = None, busy: set | None = None, risk: str | None = None
-               ) -> tuple[list[dict], float | None]:
+               avoid_providers: set | None = None, busy: set | None = None, risk: str | None = None,
+               complexity: str | None = None, allow_explore: bool = True) -> tuple[list[dict], float | None]:
     """(routes of `tier` ordered best first, earliest epoch a cooling account frees up when none is available).
-    `busy`: account keys already taken by sessions being started in the same batch (they go last). `risk` of the work
-    keeps cold-start exploration away from high-risk tasks."""
+    `busy`: account keys already taken by sessions being started in the same batch (they go last). `risk` and
+    `complexity` of the work make it critical (bt_routing_policy.is_critical): quality leads quota and cold-start
+    exploration stays away. Routes that would be explorations carry `exploring`; route() admits them against the
+    persistent budget (bt_explore) and asks again with `allow_explore=False` when the budget is spent."""
     from bt_subscriptions import capacity
     from bt_subscriptions import load as load_usage
     samples = load_usage(STATE)
     rates, load = _stats()
     profiles = bt_profiles.load()
-    routes, soonest = [], None
+    critical = bt_routing_policy.is_critical(tier, risk, complexity, kind)
+    routes, soonest, staged = [], None, []
     for index, pid in enumerate(pool):
         spec = profiles.get(pid)
         if not spec or spec["provider"] not in PROVIDERS:
@@ -360,18 +375,27 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
             continue
         rate = rates.get((agent, model, kind))
         seen = getattr(rates, "samples", {}).get((agent, model, kind), 0)
-        explore = rate is None and bt_routing_policy.may_explore(
-            MODELS.get(model, {}).get("cost", 2), kind, risk, seen, getattr(rates, "recent", {}).get((agent, model), 0))
+        explore = allow_explore and rate is None and bt_routing_policy.may_explore(
+            MODELS.get(model, {}).get("cost", 2), kind, risk, seen, getattr(rates, "recent", {}).get((agent, model), 0),
+            critical)
+        lower = getattr(rates, "lower", {}).get((agent, model, kind), rate)
+        staged.append((index, pid, agent, model, effort, pressure, ranked_pressure, rate, seen, explore, lower))
+    best = max((row[10] for row in staged if row[10] is not None), default=None)
+    for index, pid, agent, model, effort, pressure, ranked_pressure, rate, seen, explore, lower in staged:
+        acc = account_key(pid, agent)
+        cost = MODELS.get(model, {}).get("cost", 2) * bt_routing_policy.effort_weight(effort)
         routes.append({"profile": pid, "agent": agent, "model": model, "effort": effort, "tier": tier, "kind": kind,
-                       "_key": (account_key(pid, agent) in (busy or ()),
+                       "exploring": explore, "account": acc,
+                       "_key": (acc in (busy or ()),
                                 agent in (avoid_providers or ()),
                                 _role_rank(agent, kind, pressure),
-                                *_quality_order(agent, kind, getattr(rates, "lower", {}).get((agent, model, kind), rate),
-                                                ranked_pressure, seen, explore),
-                                int(load.get(account_key(pid, agent), 0) // (LOAD_BUCKET_SEC * 2)), index),
+                                *_quality_order(agent, kind, lower, ranked_pressure, seen, explore, critical, best, rate),
+                                int(cost / max(lower if lower is not None else 0.5, 0.1)),  # expected cost per verified task
+                                int(load.get(acc, 0) // (LOAD_BUCKET_SEC * 2)), index),
                        "why": (("audit budget: Sonnet medium / Opus high; " if agent == "claude" else
                                 "audit fallback: Sol medium / high; ") if kind == "audit" else "") +
-                              _why(agent, avoid_providers, rate, load.get(account_key(pid, agent), 0)) +
+                              ("critical work: verified quality before quota; " if critical and kind != "audit" else "") +
+                              _why(agent, avoid_providers, rate, load.get(acc, 0), lower, seen) +
                               (f"; subscription bottleneck {pressure:g}% used" if pressure is not None else
                                "; subscription usage unknown/stale")})
     # The rate is compared in 20-point bands on purpose: a few points of difference over a handful of attempts is
@@ -397,11 +421,12 @@ def _role_rank(agent: str, kind: str, pressure: float | None) -> int:
     return 1 if agent == "antigravity" else 0
 
 
-def _why(agent, avoid, rate, load) -> str:
+def _why(agent, avoid, rate, load, lower=None, seen: int = 0) -> str:
     bits = []
     if avoid:
         bits.append("other provider than " + "/".join(sorted(avoid)) if agent not in avoid else "same provider")
-    bits.append(f"success {rate:.0%}" if rate is not None else "no history yet")
+    bits.append(f"verified task success {rate:.0%} (lower bound {lower:.0%}, {seen} judged)" if rate is not None
+                else f"no proven history yet ({seen} judged)")
     bits.append(f"load {int(load // 60)} weighted-min in the last 5 h")
     return "; ".join(bits)
 
@@ -415,23 +440,54 @@ class NoRoute(Exception):
 
 
 def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_providers: set | None = None,
-          busy: set | None = None, risk: str | None = None) -> dict:
+          busy: set | None = None, risk: str | None = None, complexity: str | None = None,
+          allow_explore: bool = True) -> dict:
     """The route of one session. Fixed mode (no pool): the run's own agent/profile at the tier's model. Pool mode:
-    the best available candidate; raises NoRoute when all accounts are cooling down."""
+    the best available candidate; raises NoRoute when all accounts are cooling down. The route carries its `decision`
+    (bt_explore): exploit, explore (admitted against the persistent budget), fallback (an account was cooling),
+    escalation (a failure moved the work) or explicit (a pinned agent)."""
+    import bt_explore
     pool = state.get("pool") or []
     if not pool:
         agent = state.get("agent") or "claude"
         model, effort = model_for(agent, tier, kind=kind) if kind == "audit" else legacy_model_for(state, tier)
         return {"profile": state.get("profile"), "agent": agent, "model": model, "effort": effort, "tier": tier,
-                "kind": kind, "why": "fixed (no pool)"}
+                "kind": kind, "why": "fixed (no pool)",
+                "decision": bt_explore.decision_for("explicit", "the run is pinned to one agent (no pool)")}
     _refresh_google_quota(pool)
-    routes, soonest = candidates(project, pool, tier, kind, state.get("model"), avoid_providers, busy, risk)
+    args = (project, pool, tier, kind, state.get("model"), avoid_providers, busy, risk, complexity)
+    routes, soonest = candidates(*args, allow_explore=allow_explore)
     if not routes:
         if soonest is None:  # nothing is cooling: no account of the pool may run this project any more
             raise bt_profiles.ProfileError(f"No account of the pool ({', '.join(pool)}) may run '{project}'. "
                                            f"Check: bitacora.py --project {project} agents")
         raise NoRoute(soonest)
-    return routes[0]
+    chosen, record = routes[0], None
+    # An exploration is a real choice between routes: a lone candidate is forced, not explored.
+    if chosen.get("exploring") and len(routes) > 1:
+        cost = MODELS.get(chosen["model"], {}).get("cost", 2)
+        limit = int(_config("routing.explore_budget_week", 5)) if cost >= bt_routing_policy.EXPENSIVE_COST else -1
+        global_limit = _config("routing.explore_global_budget_week", None)
+        record = bt_explore.reserve(
+            chosen, project, state.get("req"),
+            f"cold start: {chosen['agent']}/{chosen['model']} has fewer than routing.min_samples judged {kind} outcomes "
+            f"and {len(routes) - 1} other admissible route(s) exist",
+            limit, int(global_limit or 0) or None)
+        if record is None:  # the weekly budget is spent (possibly by a concurrent supervisor): rank it as unproven
+            routes, soonest = candidates(*args, allow_explore=False)
+            chosen = routes[0]
+    if record:
+        decision = bt_explore.decision_for("explore", record["reason"], record)
+    elif avoid_providers and kind != "audit":
+        decision = bt_explore.decision_for("escalation", "a failed attempt moved the work to another provider: "
+                                           + "/".join(sorted(avoid_providers)) + " avoided")
+    elif soonest is not None:
+        decision = bt_explore.decision_for("fallback", "an account of the pool is cooling down or exhausted; best "
+                                           "admissible route chosen")
+    else:
+        decision = bt_explore.decision_for("exploit", chosen["why"])
+    chosen = {k: v for k, v in chosen.items() if k != "exploring"}
+    return {**chosen, "decision": decision}
 
 
 def _refresh_google_quota(pool: list[str]) -> None:

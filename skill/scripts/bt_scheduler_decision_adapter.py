@@ -11,8 +11,10 @@ from typing import TYPE_CHECKING, Any
 import bt_agents
 import bt_agy
 import bt_events
+import bt_outcomes
 import bt_profiles
 import bt_subscriptions
+import bt_usage
 from bt_scheduler_decision import (
     Candidate,
     RouteHistory,
@@ -117,19 +119,8 @@ def _tier_for(classifications: Mapping[str, object], kind: str) -> int:
 
 
 def _token_count(row: Mapping[str, Any]) -> int | None:
-    usage = row.get("usage")
-    if not isinstance(usage, Mapping):
-        return None
-    total = usage.get("total_tokens")
-    if isinstance(total, int) and not isinstance(total, bool) and total >= 0:
-        return total
-    input_tokens, output_tokens = usage.get("input_tokens"), usage.get("output_tokens")
-    if all(isinstance(value, int) and not isinstance(value, bool) and value >= 0
-           for value in (input_tokens, output_tokens)):
-        extras = sum(value for value in (usage.get("cache_read_tokens"), usage.get("cache_write_tokens"))
-                     if isinstance(value, int) and not isinstance(value, bool) and value >= 0)
-        return input_tokens + output_tokens + extras
-    return None
+    """Final measured tokens of a session, by the one canonical semantics (bt_usage); partial records answer None."""
+    return bt_usage.measured_total(row.get("usage"), row.get("agent"))
 
 
 def _route_options(provider: str, tier: int, task_kind: str) -> tuple[tuple[str, str | None], ...]:
@@ -152,6 +143,9 @@ def _route_options(provider: str, tier: int, task_kind: str) -> tuple[tuple[str,
 
 
 def _history_snapshot(rows: Sequence[Mapping[str, Any]]) -> dict[tuple[str, str, str, str, str], RouteHistory]:
+    """Route history per (provider, model, profile, effort, kind). Quality comes from TASK outcomes (bt_outcomes: the same
+    verdicts the router learns from), so a session with two verified tasks and one failure is 2 + 1, not one failure;
+    duration and tokens come from the session once. Provider losses (quota, credits, sign-in) are not a model failure."""
     grouped: dict[tuple[str, str, str, str, str], list[Mapping[str, Any]]] = defaultdict(list)
     for row in rows:
         if row.get("origin") == "synthetic":
@@ -160,14 +154,18 @@ def _history_snapshot(rows: Sequence[Mapping[str, Any]]) -> dict[tuple[str, str,
                str(row.get("effort") or ""), str(row.get("kind") or "implement"))
         grouped[key].append(row)
 
+    by_key: dict[tuple, list] = defaultdict(list)
+    for o in bt_outcomes.outcomes([r for rs_ in grouped.values() for r in rs_]):  # dedupe across ALL rows first
+        row = o["row"]
+        by_key[(str(row.get("agent") or ""), str(row.get("model") or ""), str(row.get("profile") or ""),
+                str(row.get("effort") or ""), str(row.get("kind") or "implement"))].append(o)
     result = {}
     for key, samples in grouped.items():
-        outcomes = [str(row.get("outcome") or bt_events.outcome_of(str(row.get("result") or ""), None))
-                    for row in samples]
-        successes = sum(outcome == "verified" for outcome in outcomes)
-        verified_failures = sum(outcome in _VERIFIED_FAILURES for outcome in outcomes)
-        claimed = sum(outcome in _CLAIMED for outcome in outcomes)
-        failures = sum(outcome in _FAILURES for outcome in outcomes)
+        found = by_key.get(key, [])
+        successes = sum(o["verdict"] == "verified" for o in found)
+        verified_failures = sum(o["verdict"] == "failed" for o in found)
+        claimed = sum(o["result"] in _CLAIMED for o in found)
+        failures = sum(o["verdict"] == "provider_loss" or o["result"] in _FAILURES - _VERIFIED_FAILURES for o in found)
         durations = [float(row["seconds"]) for row in samples
                      if isinstance(row.get("seconds"), (int, float)) and not isinstance(row.get("seconds"), bool)
                      and math.isfinite(row["seconds"]) and row["seconds"] >= 0]
@@ -225,7 +223,9 @@ def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, 
     profiles = bt_profiles.load()
     usage = bt_subscriptions.load()
     tier = _tier_for(classifications, task_kind)
-    routes, _ = bt_agents.candidates(project, pool, tier, task_kind, risk=str(classifications.get("risk") or "") or None)
+    routes, _ = bt_agents.candidates(project, pool, tier, task_kind, risk=str(classifications.get("risk") or "") or None,
+                                    complexity=str(classifications.get("complexity") or "") or None,
+                                    allow_explore=False)
     router_rank = {
         (route.get("profile"), route.get("agent"), route.get("model"), route.get("effort")): index
         for index, route in enumerate(routes)

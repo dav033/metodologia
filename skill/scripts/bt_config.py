@@ -16,7 +16,8 @@ DEFAULTS: dict = {
     "approval": {"auto": True, "max_milestones": 8, "max_tasks": 40},
     "learn": {"promote_after": 3, "inject_max": 12},
     "routing": {"mode": "auto", "pool": [], "min_samples": 5, "explore_budget_week": 5, "effort_weight": {},
-                "group_max": {}},
+                "group_max": {}, "quality_protection": "critical", "quality_gap": 0.25,
+                "explore_global_budget_week": 0},  # 0 = no global exploration cap
     "audit": {"mode": "milestone", "cross_provider": True, "provider": "antigravity"},
     "quota": {"default_cooldown_min": 30},
     "relay": {"enabled": False, "threshold_percent": 92, "exit_current": True, "max_chain": 3, "auto": True},
@@ -25,6 +26,7 @@ DEFAULTS: dict = {
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),
     "routing.mode": ("auto", "fixed"),
+    "routing.quality_protection": ("critical", "always", "off"),
     "audit.mode": ("milestone", "off"),
     "audit.provider": ("antigravity", "claude", "codex", "none"),
     "run.isolation": ("off", "worktree"),

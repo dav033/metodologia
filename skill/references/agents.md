@@ -110,27 +110,54 @@ completed audit. No xhigh/max by default; escalate for recorded risk or demonstr
 
 ## Router quota policy (D-066)
 
-Single engine: `bt_agents.candidates` ranks the routes and the scheduler's decision adapter reads the same ladder, so
-there is no second router. Order of the sort key: busy account, avoided provider, role, **quota headroom**, **verified
-quality**, recent load, pool order.
+Single engine: `bt_agents.candidates` ranks the routes (`bt_agents.route` admits the choice) and the scheduler's
+decision adapter reads the same ladder and the same verdicts, so there is no second router. Sort key: busy account,
+avoided provider, role, then the quota/quality part below, expected cost per verified task, recent load, pool order.
 
+- **Tokens have one meaning** (`bt_usage`, used by `bt_events`, `bt_efficiency`, the adapter and the reports). Claude:
+  `input` excludes cache, total = input + output + cache read + cache write. Codex: `input` includes cached input, total =
+  input + output (cache is a subset, never added again; cache > input is `contradictory`). Antigravity: only its own total.
+  A missing counter is null, never 0. A cut stream or a missing Claude cache counter is `partial` (a lower bound, never a
+  final consumption); a bare total is `total_only` (provider-specific, not comparable); inconsistent records are
+  `contradictory`. Only `complete` records are comparable across providers. Old rows are read through the same function,
+  never rewritten.
+- **Quality learns from task outcomes** (`bt_outcomes`), not from session aggregates. One session = one cost; each task in it
+  has its own verdict: verified, failed, provider loss (quota, credits, sign-in: not the model's quality), skipped or
+  unjudged (claimed, blocked, escalated, a legacy aggregate `partial`). A session with 2 verified tasks and 1 failure is
+  2 + 1, not a failed session. An outcome is (project, run, task, attempt): replays are dropped and a task is verified at
+  most once per run. Synthetic rows are excluded and audits keep their own `kind`.
 - Headroom is the bottleneck of the 5 h and 7 d windows in 10-point buckets; unknown or stale pressure counts as 50 %
   (never empty, never full). An account burning its week faster than evenly (15+ points ahead of the share of the
   window elapsed) is penalised by 20 points; accounts with slack are not pushed to spend it.
-- Quality is the lower 90 % confidence bound of the verified success rate (`done` only; claims the verify rejected and
-  `claimed` rows never count), with `routing.min_samples` (default 5) judged attempts of the same kind needed.
-- Cold start: an under-sampled route explores only for non-audit work that is not `risk: high`; cheap models freely
-  (bounded by min_samples), models of cost 6 or more (Opus, Sol) within `routing.explore_budget_week` attempts per
-  7 days (default 5; raise it with `bitacora.py config`).
+- **Quality vs quota** (`routing.quality_protection`: `critical` default, `always`, `off`). Quality is the lower 90 %
+  confidence bound of the verified task success rate (`routing.min_samples`, default 5, judged outcomes of the kind), so a
+  small lucky sample never looks proven. Critical work (`risk: high`, `complexity: L` or the top tier; never an audit):
+  quality band first, quota only breaks ties. Routine work: quota leads, but a route clearly below the best proven one
+  (`routing.quality_gap`, default 0.25 on lower bounds) goes behind it. An unproven route has no bound and is never "clearly
+  inferior": missing history blocks nothing, and every inferior route stays as an autonomous fallback. Tier floors,
+  provider/project/subscription restrictions are untouched. Each route's `why` states the criterion.
+- **Cold start and the exploration budget** (`bt_explore`, `<root>/.state/explore.jsonl`). Only a decision the router took
+  because a route was under-sampled, and that had a real alternative, is an exploration, never on audits, `risk: high` or
+  critical work. Cheap models explore freely; models of cost 6+ (Opus, Sol) spend `routing.explore_budget_week` (default 5
+  per agent+model per 7 days) of ADMITTED explorations, plus an optional `routing.explore_global_budget_week` (0 = none).
+  Reservation is atomic under a machine-wide lock, survives restarts, and records account, model, kind, tier, effort,
+  reason, the budget before the choice and, when the attempt ends, its result and verification. Ordinary attempts do not
+  spend it. Every route carries `decision.kind`: `exploit`, `explore`, `fallback` (an account was cooling),
+  `escalation` (a failure moved the work) or `explicit` (pinned agent); old attempts have none and count for nothing.
 - Load weights use `routing.effort_weight` (default low 1, medium 1, high 1.5, xhigh 2: a heuristic estimate, never an
-  observation). `bitacora.py`-independent report: `python bt_efficiency.py` prints verified success, claim precision,
-  attempts and seconds per verified task, and consumption as *measured* (provider tokens) or *estimated*, each with the
-  number of attempts behind it and a confidence label. The two are never added together.
+  observation). `python bt_efficiency.py` reports per account/provider/model/effort/kind/tier: sessions, task attempts,
+  verified tasks, retries, failure and rework rates, seconds, and consumption as *measured* (complete normalized tokens)
+  or *estimated* (relative units, not tokens), each with its coverage. A per-verified figure exists only when every session
+  of the group is covered; otherwise it is null with `insufficient_coverage` and the partial aggregates keep their label.
+  A multitask session is counted once (`shared_sessions`); its cost is never attributed to each task.
+- `evals/harness_replay.py` is a deterministic SIMULATION: same units and same fixture (with retried failures) for both
+  policies, `measured: null`, and no percentage of real quota saved. A real saving needs measured tokens from runs under
+  each policy.
 - After a usage limit the supervisor re-asks the router for the tier and kind of the session that was limited; a task
   at tier 2 is never served by a lighter model, and with no admissible route the run waits for the reset. Only an
   account that produced a provider limit message is put on cooldown.
-- Not implemented: reserving quota for priority work, and learning from reworked or regressed tasks (the telemetry
-  has no field for later rework yet).
+- Not implemented: reserving quota for priority work. Per-task cost is not measured: a session's cost stays at session
+  level (no estimated split is published).
 
 ## Scheduler M2 route recommendations (D-057)
 

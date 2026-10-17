@@ -25,7 +25,8 @@ def _route(order: dict, tier: int, avoid: set[str]) -> dict:
     if not pool:
         raise SystemExit(f"No account may run '{order['project']}'. Check: bitacora.py agents")
     try:
-        return bt_agents.route(order["project"], {"pool": pool}, tier, order.get("kind") or "implement", avoid)
+        return bt_agents.route(order["project"], {"pool": pool}, tier, order.get("kind") or "implement", avoid,
+                                allow_explore=False)
     except bt_agents.NoRoute as exc:
         raise SystemExit(f"Every account is waiting for a usage-limit reset (earliest {exc.until}).") from exc
 

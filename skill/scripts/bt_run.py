@@ -167,7 +167,8 @@ def _limited(project: str, rdir: Path, c: dict, state: dict, infos: list[dict]) 
     soonest = None
     for info in infos:
         tier, kind = int(info.get("tier") or 0), info.get("kind") or "implement"
-        routes, free_at = bt_agents.candidates(project, state["pool"], tier, kind, state.get("model"))
+        routes, free_at = bt_agents.candidates(project, state["pool"], tier, kind, state.get("model"),
+                                               allow_explore=False)  # a recovery re-route is not an exploration
         if routes:
             say(state, f"continuing on {routes[0]['profile']} ({routes[0]['agent']}) for tier {tier} {kind}")
             continue

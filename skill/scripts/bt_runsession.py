@@ -209,7 +209,8 @@ def session_route(project: str, state: dict, task: dict | None, unit: list[dict]
             if last.get("result") in ("failed", "verify_failed", "timeout", "escalated") and last.get("agent"):
                 avoid.add(last["agent"])
     risk = "high" if any(t.get("risk") == "high" for t in unit) else None
-    chosen = bt_agents.route(project, state, tier, kind, avoid, busy, risk)
+    complexity = "L" if any(t.get("complexity") == "L" for t in unit) else None
+    chosen = bt_agents.route(project, state, tier, kind, avoid, busy, risk, complexity)
     return _explicit_effort(chosen, unit)
 
 
@@ -327,7 +328,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
     return {"timeout_min": timeout / 60, "rc": proc.returncode, "timed_out": timed_out, "stopped": stopped, "early_exit": early, "text": text,
             "seconds": int(time.time() - start), "model": model, "effort": effort, "agent": state["agent"],
             "profile": state.get("profile"), "kind": route.get("kind"), "tier": route.get("tier"),
-            "tasks": [t["id"] for t in unit], "why": route.get("why"),
+            "tasks": [t["id"] for t in unit], "why": route.get("why"), "decision": route.get("decision"),
             "change_size": _change_size(workdir, head_before),
             "contract": _contract_shadow(state["agent"], text, proc.returncode, timed_out, stopped)}
 

@@ -68,7 +68,7 @@ def auto_route(project: str, kind: str, tier: int | None, avoid: set | None = No
         raise SystemExit(f"No account may run '{project}'. Check: bitacora.py agents")
     tier = bt_agents.start_tier(None, kind) if tier is None else tier
     try:
-        return bt_agents.route(project, {"pool": pool}, tier, kind, avoid)
+        return bt_agents.route(project, {"pool": pool}, tier, kind, avoid, allow_explore=False)
     except bt_agents.NoRoute as exc:
         raise SystemExit(f"Every account is waiting for a usage-limit reset (earliest "
                          f"{dt.datetime.fromtimestamp(exc.until):%Y-%m-%d %H:%M}). Nothing was sent.") from exc
@@ -247,7 +247,8 @@ def _next_route(order: dict) -> dict | None:
     while True:
         if order.get("auto"):
             pool = bt_agents.pool_for(order["project"], bt_agents._config("routing.pool", []) or None)
-            routes, soonest = bt_agents.candidates(order["project"], pool, tier, order.get("kind") or "implement")
+            routes, soonest = bt_agents.candidates(order["project"], pool, tier, order.get("kind") or "implement",
+                                                   allow_explore=False)
             if routes:
                 return routes[0]
         else:

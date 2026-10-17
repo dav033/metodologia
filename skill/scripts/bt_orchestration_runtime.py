@@ -28,7 +28,8 @@ def session_route(project: str, state: dict, task: dict | None, unit: list[dict]
     """Reasoning eligibility is independent from the native implementation pool."""
     pool = state.get('pool') or ([state['profile']] if state.get('profile') else ['claude'])
     eligible = [profile for profile in pool if bt_profiles.provider_of(profile) == 'claude']
-    candidates, soonest = bt_agents.candidates(project, eligible, 0, 'implement', 'haiku', busy=busy)
+    candidates, soonest = bt_agents.candidates(project, eligible, 0, 'implement', 'haiku', busy=busy,
+                                               allow_explore=False)
     if not candidates:
         raise bt_agents.NoRoute(soonest or time.time() + 1800)
     profile = candidates[0]['profile']

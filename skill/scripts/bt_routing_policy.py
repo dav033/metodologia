@@ -71,10 +71,40 @@ def pressure_bucket(pressure: float | None) -> int:
     return int(value // PRESSURE_BUCKET)
 
 
-def may_explore(cost: float, kind: str, risk: str | None, samples: int, recent_attempts: int) -> bool:
+def is_critical(tier: int | None, risk: str | None, complexity: str | None, kind: str | None = None) -> bool:
+    """Work whose failure is expensive: declared high risk, large complexity or the top tier (never an audit, whose
+    order has its own rules). Critical work is protected from being routed by quota alone (quality_leads)."""
+    if kind == "audit":
+        return False
+    return (risk or "").lower() == "high" or (complexity or "").upper() == "L" or int(tier or 0) >= TOP
+
+
+def quality_mode() -> str:
+    return str(config("routing.quality_protection", "critical")).lower()
+
+
+def quality_leads(critical: bool) -> bool:
+    """`routing.quality_protection`: "critical" (default) lets verified quality lead quota on critical work only,
+    "always" on every task, "off" restores quota-first ordering everywhere (no quality gap either)."""
+    mode = quality_mode()
+    return mode == "always" or (mode == "critical" and critical)
+
+
+def quality_gap() -> float:
+    """`routing.quality_gap` (default 0.25): how far below the best proven route a route is "clearly inferior" for
+    routine work; compared on lower confidence bounds, so only evidence-backed gaps count."""
+    try:
+        return float(config("routing.quality_gap", 0.25))
+    except (TypeError, ValueError):
+        return 0.25
+
+
+def may_explore(cost: float, kind: str, risk: str | None, samples: int, recent_attempts: int,
+                critical: bool = False) -> bool:
     """Cold start (under-sampled route): cheap routes explore on low-risk non-audit work; expensive ones only within
-    the weekly exploration budget (routing.explore_budget_week, default 5). Never on high-risk work."""
-    if kind == "audit" or (risk or "").lower() == "high":
+    the weekly exploration budget (routing.explore_budget_week, default 5) of ADMITTED explorations (bt_explore), not
+    of ordinary attempts. Never on high-risk or critical work."""
+    if kind == "audit" or critical or (risk or "").lower() == "high":
         return False
     if samples >= int(config("routing.min_samples", 5)):
         return False
