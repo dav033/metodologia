@@ -61,3 +61,9 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 
 ## Role policies activated — 2026-10-18
 - D-070 activates owner-selected models/efforts, quota-family priority, arbitrary eligible accounts and explicit-complexity alternatives; Researcher fallback Sonnet low. Installed editable runtime and35 native files across five account config directories.296 affected tests and independent spec/standards reviews pass; installed CLI live quota-only preview selects Runner Sonnet low on Claude. No model/pilot call, commit or push; frozen experiments unchanged.
+
+- 2026-10-18 D-071: owner cancelled remaining Explorer/Runner experiments (P-110/P-116). Evidence retained; installed model choices unchanged; no experimental pass claimed.
+
+- 2026-10-18 isolated real M1/M2 simulation completed all5 REQ-018 tasks; corrected invalid quota fixture reason, preserved production validation. Five adapter tests passed; external execution remains simulated.
+
+- 2026-10-18 completed10 varied isolated M1/M2 scenarios (20 reversed-order runs,80 tasks), all expectations and dependency checks passed; no production code change.

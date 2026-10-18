@@ -36,12 +36,8 @@ month summary._
   - ✓ P-029 · M2 exposes plan/revision/task and supersession in its public lookup · closed 2026-10-15 · `resolve_executor_binding`/`RouteBinding`; the adapter refuses a decision made for another plan/revision/task or already replaced by a later decision for the task (M2 65 + adapter 56 tests)
   - ✓ P-031 · M3 hand-over of accepted prerequisite work to dependent tasks · closed 2026-10-15 · `bt_scheduler_integrator` + `wire(integrate_predecessors=True)` (default on since 2026-10-15); conflict/missing snapshot rejects the order with its cause, transient git failures are retried; antagonist A1–A7 fixed
   - ✓ P-032 · M3 cwd sweep spares interactive processes · closed 2026-10-15 · a process with a controlling terminal that does not descend from the attempt's shim/agent is left alone; headless stragglers and the agent's own pty children are still swept; residual: a pty child orphaned to init
-- P-110 · Complete the authorized Explorer ladder after quota handoff · urgency: med · complexity: M · added 2026-10-17 · session 01a1457f
-  - Resume `relay/RELAY-20261017-095008.md` Next. Automatic relay was not scheduled (PID 2308 is not a terminal client); saved status now shows no active native calls: 23/24 measured cells returned, Gemini E6 unlaunched after E5 strict-contract failure. Finish semantic grading, closing quota and final report; any authorized continuation of Gemini E6 must preserve the declared stop and failure evidence, without repeating completed cells. Preserve nine excluded attempts and unknown repaired-Gemini per-cell quota; Explorer selection is now resolved by D-065; experimental closure remains open.
 - P-112 · Record later rework/regression and the verification mode (command / none / audit) in attempt telemetry so quality can penalise models that need follow-up repairs · urgency: med · complexity: M · added 2026-10-17 · session 2d72194c
 - P-113 · Measure on real marathon runs whether 3-task tier-0 groups beat single-task sessions (the replay does not model session start cost) · urgency: med · complexity: M · added 2026-10-17 · session 2d72194c
-- P-116 · Complete the nine never-invoked Runner pilot cells after resolving telemetry rate-limit handling · urgency: med · complexity: M · added 2026-10-17 · Runner pilot owner authorization
-  - Partial execution:15 native calls preserved, no retries; Codex12/12 complete, Claude3/12. Usage endpoint HTTP429 stopped Claude before N2 Haiku; this is not a native model limit or quality failure. See artifacts/runner-pilot-20261017/RESUME.md and pending-cells.json. A reviewed separate continuation must retain frozen inputs, all original evidence/preflight, and only admit never-invoked cells. No automatic waiting/rotation authorized in original protocol; do not infer four-model ranking from unequal coverage.
   _Sorted automatically by `bitacora.py pending` (urgency high → low, then complexity S → L: quick urgent wins first).
   One line per item: `P-NNN · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
   Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`.
@@ -77,6 +73,9 @@ month summary._
 _None_
 
 ## Recently closed
+
+- P-110 · CLOSED — Explorer experiment waived by owner · closed 2026-10-18 · D-071; remaining execution, grading and final report cancelled; existing evidence retained, not a successful experimental completion.
+- P-116 · CLOSED — Runner experiment waived by owner · closed 2026-10-18 · D-071; nine remaining cells and experimental closeout cancelled; partial evidence retained, not a successful experimental completion.
 - P-115 · DONE Complete and audit the Researcher pilot via owner-authorized codex-luis · urgency: med · complexity: M · added 2026-10-17 · artifacts/researcher-pilot-20261017/REPORT.md
   - Closed2026-10-17:18/18 unique calls complete and graded; original8+codex-luis10, original quota preflight preserved. No retries/repair. Published-source supplement applied uniformly and original grades retained; independent final audit APPROVE. Mixed profiles and missing Codex model/effective-effort attestation remain explicit. No permanent Researcher selection.
 - P-114 · CLOSED 2026-10-17 — Split bt_agents.py model selection/catalog and prompt rendering into bt_agent_models.py and bt_agent_views.py; public exports retained and router below 500 lines · urgency: low · complexity: M · added 2026-10-17 · session 411b81ed

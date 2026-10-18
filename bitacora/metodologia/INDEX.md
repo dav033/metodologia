@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-18 09:10 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-18 10:01 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -67,15 +67,15 @@ _Generated 2026-10-18 09:10 by `bitacora.py index`. Do not edit by hand._
 - P-003 · Visual review of the local web UI · med/S
 - P-109 · Pin exact accounts for the selected Sol/Sonnet REQ-024 reviewers · med/S
 - P-001 · Non-Scheduler follow-ups: Maros REQ-005 E2E and Relay F-23 helper success-path tests · med/M
-- P-110 · Complete the authorized Explorer ladder after quota handoff · med/M
+- P-112 · Record later rework/regression and the verification mode (command / none / audit) in attem · med/M
 
 ## Recent decisions
 
+- D-071 — Waive remaining Explorer and Runner experiments
 - D-070 — Activate role policies with provider-family quota priority
 - D-069 — Select Luna high and Sonnet low for Runner
 - D-068 — Select Luna high as the default Researcher
 - D-067 — Select Sonnet medium Implementer, with Luna high as fallback
-- D-066 — Harness quota optimisation: ladder without automatic xhigh, bounded exploration, tier-homogeneous sessions
 
 ## Artifacts
 

@@ -653,3 +653,10 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Researcher fallback:** Sonnet5.5 low is selected as the alternative to Luna high, matching Runner. High complexity prefers the designated alternative among healthy eligible routes; quota protection can still force another approved route.
 - **Scope:** Apply to automatic delegate, standard marathon, Scheduler route sources and Planner selection; install provider-native role defaults. Explicit provider/account/model calls remain pinned; native subagents cannot rotate provider families themselves and automatic cross-family routing uses the methodology router. Preserve the separate restricted orchestration reasoning boundary and documentation-only budget.
 - **Evidence/acceptance:** Verify reverse quota imbalance, account dedup/work gating/cooldowns, explicit-complexity transitions, unchanged models after failures, pin preservation, Scheduler baseline, native generated models/efforts and installed CLI/package imports. No new pilot call required; P-116 remains independent.
+
+
+## D-071 — Waive remaining Explorer and Runner experiments
+- **Date:** 2026-10-18 · **Status:** Accepted by explicit owner instruction.
+- **Decision:** Owner says “para explorer y runner ignoremos las pruebas”. Cancel remaining experimental execution and closeout for Explorer P-110 and Runner P-116, including grading and final reports. Do not resume without a new explicit request.
+- **Consequences:** Close backlog items as waived/cancelled, never as experimentally passed. Preserve all existing evidence and partial results; D-065/D-069 selections and D-070 runtime stay in force. No new model calls or runtime changes.
+- **Rollback:** A new owner instruction may authorize a separately scoped continuation that preserves prior evidence.
