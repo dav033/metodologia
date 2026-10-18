@@ -1,0 +1,116 @@
+{
+ "title": "Pictures REQ-018 — catálogo, categorías y experiencia",
+ "intro": "Primera ronda propuesta por Planner codex-luis / Sol high tras inspeccionar el código. Todas las recomendaciones son propuestas pendientes de respuesta.",
+ "coverage": "Goal partially confirmed; surface, catalogue, category, trigger and fallback remain open.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "¿Dónde deben aparecer primero las recomendaciones?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "En /asistente, reutilizando su galería"
+    },
+    {
+     "key": "b",
+     "label": "En el Taller /3d"
+    },
+    {
+     "key": "c",
+     "label": "En varias pantallas"
+    }
+   ],
+   "recommended": "a",
+   "why": "Reutiliza el flujo existente de descubrimiento de ideas y acota la primera entrega."
+  },
+  {
+   "id": "q2",
+   "text": "¿Qué catálogo cuenta como decoraciones ya armadas?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Las 31 ideas visibles completas, incluidas las de una estructura"
+    },
+    {
+     "key": "b",
+     "label": "Solo composiciones de varias piezas"
+    },
+    {
+     "key": "c",
+     "label": "Las escenas y conjuntos del Taller"
+    }
+   ],
+   "recommended": "a",
+   "why": "El asistente ya dispone de diseños identificables y seleccionables; el Taller usa otro catálogo."
+  },
+  {
+   "id": "q3",
+   "text": "¿Qué significa categoría en esta funcionalidad?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Celebración, con temática y colores opcionales"
+    },
+    {
+     "key": "b",
+     "label": "Temática como categoría principal"
+    },
+    {
+     "key": "c",
+     "label": "Tipo de estructura: arco, columna, etc."
+    }
+   ],
+   "recommended": "a",
+   "why": "Celebración y temática ya son conceptos distintos en el código; hace explícito el filtro principal."
+  },
+  {
+   "id": "q4",
+   "text": "¿Qué comportamiento nuevo buscamos frente al actual?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Mostrar diseños al conocer la categoría y refinarlos después"
+    },
+    {
+     "key": "b",
+     "label": "Mantener el momento actual y mejorar solo la relevancia"
+    },
+    {
+     "key": "c",
+     "label": "Definir un flujo de descubrimiento diferente"
+    }
+   ],
+   "recommended": "a",
+   "why": "La búsqueda actual exige evento y temática; esta opción habilita descubrimiento por categoría sola."
+  },
+  {
+   "id": "q5",
+   "text": "¿Qué hacemos cuando faltan coincidencias exactas?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Exactas primero y alternativas marcadas Parecida; pedir precisión si no hay diseños"
+    },
+    {
+     "key": "b",
+     "label": "Mostrar únicamente coincidencias exactas"
+    },
+    {
+     "key": "c",
+     "label": "Ofrecer alternativas solo cuando el usuario lo solicite"
+    }
+   ],
+   "recommended": "a",
+   "why": "Evita resultados vacíos en categorías escasas sin presentar una alternativa como coincidencia exacta."
+  }
+ ],
+ "round": 1,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-18T11:07:56"
+}
