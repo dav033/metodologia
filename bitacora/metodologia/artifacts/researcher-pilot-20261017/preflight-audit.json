@@ -1,0 +1,8 @@
+{
+  "spec": "APPROVE after source coverage corrections; R1 cancellation and R2 autocommit version/source signature included",
+  "standards": "APPROVE after process lock, malformed-ID validation and web query evidence corrections",
+  "model_calls_during_validation": 0,
+  "ruff_exit": 0,
+  "validation_exit": 0,
+  "review_limit": "one initial pass and one scoped correction pass per axis"
+}

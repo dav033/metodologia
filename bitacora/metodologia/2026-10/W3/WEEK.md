@@ -6,6 +6,11 @@ status: draft
 _Rewritten at the end of each session that week. Set `status: final` once the week is over and rolled up._
 
 ## Highlights
+- Researcher internet follow-up adds a primary search leaderboard and current official effort guidance: Sonnet medium / Sol medium broad-research candidates, Luna high for documentation, optional Haiku high challenger. External evidence only; Researcher remains unselected and no trial launched.
+- D-067 selects Sonnet medium Implementer with Luna high fallback after both pass6/6 pilot cases. Documented policy; coordinated runtime rollout remains pending. Researcher/Runner still need final choices; Antagonist already has D-066.
+- Implementer pilot closed:48/48 native cells, all eight configurations x6 cases audited without new calls. Original45/48 passes preserved; semantic/resource supplements yield Luna medium5/6, other seven6/6. I6 body-format ambiguity affects Luna medium and Haiku medium/xhigh; independent Luna medium leak remains (21 failed operation checks /23 connection observations). Full usage coverage; no invoice/quota equivalence, model/effort attestation limits retained. Final REPORT/comparison and integrity receipt in `artifacts/implementer-pilot-20261017/`; no permanent role selection.
+- Owner's D-066 amendment consolidates active quota refresh, hard kind/group budgets and bounded headless sessions; 301 targeted tests and replay guards pass, two independent audits approve, isolated wheel verified. Existing broad-suite fixture/isolation failures remain outside scope (session411b81ed).
+- D-066 replay/docs alignment and auth/challenge routing fix verified with 175 targeted tests; Antagonist costs are separate simulated units, installed agents regenerated (session 74ac99a7).
 - D-065 records owner-approved Explorer Luna high, Sol medium for complicated work and Sonnet medium as its alternative; runtime stays unchanged. Researcher proposal is sourced and pending selection; no further experiment launched.
 - Scheduler work advanced through M4 and now has one tested Planner→M1→M2→M3→M4 fixture flow; P-036 and P-038 closed under REQ-018.
 - REQ-020 M2 T13–T23 offline integration, adversarial validation and synthetic benchmark are complete with independent review; the live-provider gate remains open.

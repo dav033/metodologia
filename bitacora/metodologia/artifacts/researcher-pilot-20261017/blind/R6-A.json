@@ -1,0 +1,130 @@
+{
+  "blind_id": "R6-A",
+  "case": "R6",
+  "note": {
+    "case": "R6",
+    "claims": [
+      {
+        "id": "C1",
+        "text": "Official uv docs define lock freshness as the lockfile matching project metadata (pyproject.toml). Adding a dependency, or changing a constraint so the locked version is excluded, makes it outdated; a constraint that still includes the locked version does not. New upstream releases do NOT make a lockfile outdated. `uv lock --check` tests freshness and is documented as equivalent to --locked for other commands.",
+        "evidence": [
+          {
+            "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+            "locator": "'Checking the lockfile' and 'Automatic lock and sync (--locked, --frozen)' sections (fetched via WebFetch summary, not verbatim page text)"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "text": "--locked: if the lockfile is missing or out of date, uv exits with an error instead of updating it (it checks freshness, never rewrites the lock).",
+        "evidence": [
+          {
+            "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+            "locator": "Automatic lock and sync section"
+          },
+          {
+            "url": "https://docs.astral.sh/uv/reference/cli/",
+            "locator": "uv run --locked option description"
+          }
+        ]
+      },
+      {
+        "id": "C3",
+        "text": "--frozen: uses the lockfile as the source of truth without checking whether it is up to date against pyproject.toml; no re-lock. If pyproject.toml and uv.lock disagree, uv will install what the lock says without error. (Missing lockfile presumably errors; not verified in the fetched text.)",
+        "evidence": [
+          {
+            "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+            "locator": "Automatic lock and sync section"
+          },
+          {
+            "url": "https://docs.astral.sh/uv/reference/cli/",
+            "locator": "uv run --frozen option description"
+          }
+        ]
+      },
+      {
+        "id": "C4",
+        "text": "No, not per the retrieved docs. The sync concept page says nothing about network behavior for either flag. --locked still needs to resolve nothing but installation still fetches packages not in the cache; --frozen skips lock check/update but still downloads wheels/sdists if not cached. Network restriction is a separate control: --offline ('only use locally cached data and locally available files'). Inference: guaranteeing no network requires --offline plus a populated cache or local index; I did not test this.",
+        "evidence": [
+          {
+            "url": "https://docs.astral.sh/uv/reference/cli/",
+            "locator": "--offline option description (uv run section)"
+          },
+          {
+            "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+            "locator": "page has no network guidance"
+          }
+        ]
+      },
+      {
+        "id": "C5",
+        "text": "`uv sync` is exact by default: it removes packages in the environment that are not in the lockfile. Use `uv sync --inexact` to keep extraneous packages. `uv run` defaults the opposite (inexact); `uv run --exact` makes it exact.",
+        "evidence": [
+          {
+            "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+            "locator": "'Exact vs. inexact syncing' section"
+          }
+        ]
+      },
+      {
+        "id": "C6",
+        "text": "Recommendation (policy, not sourced fact): In CI, gate with `uv lock --check` or `uv sync --locked`, so a stale lock fails the build. In production deploy/image builds, run `uv sync --locked` (add `--no-dev` and other group flags as appropriate), keeping the default exact sync so the environment matches the lock. Use --frozen only where the lock was already validated in CI and the build context lacks metadata/needs speed (e.g. layered Docker builds), accepting that drift goes undetected. Add --offline with a pre-populated cache/internal index only if network isolation is required. Avoid --inexact in production unless extras are intentionally managed.",
+        "evidence": [
+          {
+            "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+            "locator": "Automatic lock and sync; Exact vs. inexact sections"
+          }
+        ]
+      }
+    ],
+    "recommendation": "Use `uv sync --locked` (exact, default) for production, validate the lock in CI with `uv lock --check`, reserve --frozen for pre-validated builds, and add --offline only with a prepared cache or mirror.",
+    "unknowns": [
+      "Retrieved docs only via WebFetch summarization; wording is not verbatim page text.",
+      "The `uv sync` section of the CLI reference was not read (page truncated at 100000 of ~727617 chars); option text came from `uv run`.",
+      "Behavior with --frozen and a missing uv.lock was not verified.",
+      "Network behavior of --locked/--frozen is inferred, not documented on the pages retrieved; no tests run.",
+      "uv version in the user's environment, Docker/cache setup, index configuration, and dev/group usage are unknown."
+    ]
+  },
+  "contract_valid": true,
+  "tool_calls": [
+    {
+      "type": "WebFetch",
+      "id": "toolu_01HbFNYjXhNAgcyhtsHxaB3m",
+      "input": {
+        "url": "https://docs.astral.sh/uv/concepts/projects/sync/"
+      }
+    },
+    {
+      "type": "WebFetch",
+      "id": "toolu_01TELe7ZpYTg5j627UHXymDd",
+      "input": {
+        "url": "https://docs.astral.sh/uv/reference/cli/"
+      }
+    },
+    {
+      "type": "Write",
+      "id": "toolu_012cXE6LSCdDV8dAHgA6Cpz8",
+      "input": {
+        "file_path": "/tmp/work/research.json"
+      }
+    }
+  ],
+  "tool_result_evidence": [
+    {
+      "tool_use_id": "toolu_01HbFNYjXhNAgcyhtsHxaB3m",
+      "is_error": false,
+      "text": "## Automatic lock and sync (`--locked`, `--frozen`)\n\n- **`--locked`:** \"If the lockfile is not up-to-date, uv will raise an error instead of updating the lockfile.\"\n- **`--frozen`:** The docs say to use it \"To use the lockfile without checking if it is up-to-date.\"\n\n## Checking the lockfile (freshness checks)\n\n- The docs say uv checks \"if it matches the project metadata\" when considering whether the lockfile is up-to-date.\n- Adding a dependency makes the lockfile outdated. Changing a constraint so the locked version is excluded also makes it outdated. If the locked version is still included, the lockfile remains up-to-date.\n- `uv lock --check` tests freshness, and the docs say it is \"equivalent to the `--locked` flag for other commands.\"\n- uv does not treat the lockfile as outdated when new package versions are released: \"uv will not consider lockfiles outdated when new versions of packages are released.\"\n\n## Exact vs. inexact syncing (`--inexact`)\n\n- `uv sync` defaults to exact syncing: \"exact\" syncing by default, which means it will remove any packages that are not present in the lockfile.\n- To keep extraneous packages, use the `--inexact` flag.\n- `uv run` defaults to inexact syncing, which installs required packages without removing extras.\n- To get exact syncing with `uv run`, use `--exact`.\n\n## Network and offline behavior\n\nThe page does not cover network or offline behavior. It has no guidance on running lock or sync without network access, and it does not describe how `--locked` or `--frozen` interact with network availability."
+    },
+    {
+      "tool_use_id": "toolu_01TELe7ZpYTg5j627UHXymDd",
+      "is_error": false,
+      "text": "The provided content includes `uv run` but cuts off before the `uv sync` section, so I can't quote its options. `--inexact` doesn't appear in the `uv run` section either.\n\n**uv run**\n\n- **`--locked`**: \"Requires that the lockfile is up-to-date. If the lockfile is missing or needs to be updated, uv will exit with an error.\"\n- **`--frozen`**: \"Instead of checking if the lockfile is up-to-date, uses the versions in the lockfile as the source of truth.\"\n- **`--offline`**: \"When disabled, uv will only use locally cached data and locally available files.\"\n- **`--no-sync`** (related): \"Implies `--frozen`, as the project dependencies will be ignored\"\n\n**uv run, `--no-install-project`:** Not listed. The closest option is `--no-project`, which avoids discovering the project or workspace.\n\n**uv add, `--no-install-project`** (the only match in the provided content): \"By default, the current project is installed into the environment with all of its dependencies.\"\n\n**uv sync:** Not available in the provided content. Check the `uv sync` section of the Commands reference for `--locked`, `--frozen`, `--offline`, `--inexact`, and `--no-install-project`.\n\n[WebFetch note: this page's text is 727617 characters long and the answer above covers only characters 0 to 100000; the final 627617 were not read \u2014 to read on, call WebFetch again with the same url and offset: 100000.]"
+    },
+    {
+      "tool_use_id": "toolu_012cXE6LSCdDV8dAHgA6Cpz8",
+      "is_error": false,
+      "text": "File created successfully at: /tmp/work/research.json (file state is current in your context \u2014 no need to Read it back)"
+    }
+  ]
+}

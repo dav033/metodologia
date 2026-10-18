@@ -1,0 +1,327 @@
+{
+  "schema_version": 1,
+  "case": "I3",
+  "route": {
+    "id": "sol-medium",
+    "provider": "codex",
+    "profile": "codex-2",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "prompt_sha256": "f24770c60ce45a9b02074e8bbc289159382a12a841496312d8fdfa8c6d83721b",
+  "prompt_characters": 3155,
+  "started_at": 1792287499.5043693,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792287499.504377,
+    "windows": {
+      "five_hour": {
+        "used_percent": 62.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 62.0,
+  "workspace_before": {
+    "TASK.md": "f24770c60ce45a9b02074e8bbc289159382a12a841496312d8fdfa8c6d83721b",
+    "app/__init__.py": "ec2935eff29687e2ae900e084b75b341c67a43947c692a52ecd5cc45b67f4018",
+    "app/graph.py": "a84988a842ff2f8aad752b8bc94ddb7f2f8bbf42542075f665215453b298782a",
+    "app/scheduler.py": "3a3b5c5c23a700ce36eac6e38b3d8142a9f50ba5e6533f254c7555179885adfa",
+    "test_public.py": "ffb14304729666dc46dc431c336a3d282787692d9e037c347f8b3c83134c08b5"
+  },
+  "response_text": "Implemented graph validation, input snapshots, capacity enforcement, sorted readiness, and immediate transitive failure blocking. Iterative traversal supports long chains.\n\nTests passed: 2 public tests and 11 added tests, including a 1,500-job chain. Source changes are confined to `app/`; `test_public.py` is unchanged.",
+  "usage_reported": {
+    "input_tokens": 60421,
+    "cached_input_tokens": 41728,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 3161,
+    "reasoning_output_tokens": 123
+  },
+  "usage": {
+    "input_tokens": 60421,
+    "output_tokens": 3161,
+    "cache_read_tokens": 41728,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 123,
+    "reported_total": null,
+    "total": 63582,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"pwd; rg --files -g '*.py' -g 'AGENTS.md' -g '*TASK*' -g '*README*' .\"",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat app/__init__.py app/graph.py app/scheduler.py test_public.py TASK.md'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "file_change",
+      "command": "",
+      "exit_code": null,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"python -m unittest discover -s . -p 'test_public.py' -v\"",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'python -m unittest app.test_scheduler -v'",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "elapsed_seconds": 48.063,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/implementer-cell-ahvmaybr",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-2",
+    "/home/david/.codex-2",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "limit_detected": false,
+  "changed_files": [
+    "app/graph.py",
+    "app/scheduler.py",
+    "app/test_scheduler.py"
+  ],
+  "grade": {
+    "command": [
+      "/usr/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      ".",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "exit_code": 0,
+    "tests": 25,
+    "failures": 0,
+    "errors": 0,
+    "methods": [
+      {
+        "method": "test_fresh_dependency_sets",
+        "class": "app.test_scheduler.GraphTests.test_fresh_dependency_sets",
+        "result": "ok"
+      },
+      {
+        "method": "test_long_chain_validation_and_blocking",
+        "class": "app.test_scheduler.GraphTests.test_long_chain_validation_and_blocking",
+        "result": "ok"
+      },
+      {
+        "method": "test_rejects_invalid_graphs",
+        "class": "app.test_scheduler.GraphTests.test_rejects_invalid_graphs",
+        "result": "ok"
+      },
+      {
+        "method": "test_capacity_validation",
+        "class": "app.test_scheduler.SchedulerTests.test_capacity_validation",
+        "result": "ok"
+      },
+      {
+        "method": "test_exports_and_empty",
+        "class": "app.test_scheduler.SchedulerTests.test_exports_and_empty",
+        "result": "ok"
+      },
+      {
+        "method": "test_failure_blocks_immediately_and_preserves_other_states",
+        "class": "app.test_scheduler.SchedulerTests.test_failure_blocks_immediately_and_preserves_other_states",
+        "result": "ok"
+      },
+      {
+        "method": "test_invalid_transitions_do_not_mutate",
+        "class": "app.test_scheduler.SchedulerTests.test_invalid_transitions_do_not_mutate",
+        "result": "ok"
+      },
+      {
+        "method": "test_ready_sorted_pure_and_independent_of_capacity",
+        "class": "app.test_scheduler.SchedulerTests.test_ready_sorted_pure_and_independent_of_capacity",
+        "result": "ok"
+      },
+      {
+        "method": "test_snapshot_generators_and_duplicates",
+        "class": "app.test_scheduler.SchedulerTests.test_snapshot_generators_and_duplicates",
+        "result": "ok"
+      },
+      {
+        "method": "test_snapshot_mutable_input",
+        "class": "app.test_scheduler.SchedulerTests.test_snapshot_mutable_input",
+        "result": "ok"
+      },
+      {
+        "method": "test_statuses_returns_fresh_dict",
+        "class": "app.test_scheduler.SchedulerTests.test_statuses_returns_fresh_dict",
+        "result": "ok"
+      },
+      {
+        "method": "test_capacity_and_reuse",
+        "class": "test_private.Private.test_capacity_and_reuse",
+        "result": "ok"
+      },
+      {
+        "method": "test_cycles_before_dispatch",
+        "class": "test_private.Private.test_cycles_before_dispatch",
+        "result": "ok"
+      },
+      {
+        "method": "test_deterministic_permutations",
+        "class": "test_private.Private.test_deterministic_permutations",
+        "result": "ok"
+      },
+      {
+        "method": "test_failure_transitive",
+        "class": "test_private.Private.test_failure_transitive",
+        "result": "ok"
+      },
+      {
+        "method": "test_failure_while_other_parent_running",
+        "class": "test_private.Private.test_failure_while_other_parent_running",
+        "result": "ok"
+      },
+      {
+        "method": "test_generators_and_exports",
+        "class": "test_private.Private.test_generators_and_exports",
+        "result": "ok"
+      },
+      {
+        "method": "test_invalid_transitions_atomic",
+        "class": "test_private.Private.test_invalid_transitions_atomic",
+        "result": "ok"
+      },
+      {
+        "method": "test_long_chain",
+        "class": "test_private.Private.test_long_chain",
+        "result": "ok"
+      },
+      {
+        "method": "test_parallel_diamond",
+        "class": "test_private.Private.test_parallel_diamond",
+        "result": "ok"
+      },
+      {
+        "method": "test_snapshot_and_duplicates",
+        "class": "test_private.Private.test_snapshot_and_duplicates",
+        "result": "ok"
+      },
+      {
+        "method": "test_unknown_dependency",
+        "class": "test_private.Private.test_unknown_dependency",
+        "result": "ok"
+      },
+      {
+        "method": "test_validate_capacity",
+        "class": "test_private.Private.test_validate_capacity",
+        "result": "ok"
+      },
+      {
+        "method": "test_chain",
+        "class": "test_public.Public.test_chain",
+        "result": "ok"
+      },
+      {
+        "method": "test_empty",
+        "class": "test_public.Public.test_empty",
+        "result": "ok"
+      }
+    ],
+    "output": "test_fresh_dependency_sets (app.test_scheduler.GraphTests.test_fresh_dependency_sets) ... ok\ntest_long_chain_validation_and_blocking (app.test_scheduler.GraphTests.test_long_chain_validation_and_blocking) ... ok\ntest_rejects_invalid_graphs (app.test_scheduler.GraphTests.test_rejects_invalid_graphs) ... ok\ntest_capacity_validation (app.test_scheduler.SchedulerTests.test_capacity_validation) ... ok\ntest_exports_and_empty (app.test_scheduler.SchedulerTests.test_exports_and_empty) ... ok\ntest_failure_blocks_immediately_and_preserves_other_states (app.test_scheduler.SchedulerTests.test_failure_blocks_immediately_and_preserves_other_states) ... ok\ntest_invalid_transitions_do_not_mutate (app.test_scheduler.SchedulerTests.test_invalid_transitions_do_not_mutate) ... ok\ntest_ready_sorted_pure_and_independent_of_capacity (app.test_scheduler.SchedulerTests.test_ready_sorted_pure_and_independent_of_capacity) ... ok\ntest_snapshot_generators_and_duplicates (app.test_scheduler.SchedulerTests.test_snapshot_generators_and_duplicates) ... ok\ntest_snapshot_mutable_input (app.test_scheduler.SchedulerTests.test_snapshot_mutable_input) ... ok\ntest_statuses_returns_fresh_dict (app.test_scheduler.SchedulerTests.test_statuses_returns_fresh_dict) ... ok\ntest_capacity_and_reuse (test_private.Private.test_capacity_and_reuse) ... ok\ntest_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) ... ok\ntest_deterministic_permutations (test_private.Private.test_deterministic_permutations) ... ok\ntest_failure_transitive (test_private.Private.test_failure_transitive) ... ok\ntest_failure_while_other_parent_running (test_private.Private.test_failure_while_other_parent_running) ... ok\ntest_generators_and_exports (test_private.Private.test_generators_and_exports) ... ok\ntest_invalid_transitions_atomic (test_private.Private.test_invalid_transitions_atomic) ... ok\ntest_long_chain (test_private.Private.test_long_chain) ... ok\ntest_parallel_diamond (test_private.Private.test_parallel_diamond) ... ok\ntest_snapshot_and_duplicates (test_private.Private.test_snapshot_and_duplicates) ... ok\ntest_unknown_dependency (test_private.Private.test_unknown_dependency) ... ok\ntest_validate_capacity (test_private.Private.test_validate_capacity) ... ok\ntest_chain (test_public.Public.test_chain) ... ok\ntest_empty (test_public.Public.test_empty) ... ok\n\n----------------------------------------------------------------------\nRan 25 tests in 0.011s\n\nOK\n",
+    "status": "passed",
+    "scope_violations": [],
+    "acceptance_passed": true
+  },
+  "workspace_after": {
+    "TASK.md": "f24770c60ce45a9b02074e8bbc289159382a12a841496312d8fdfa8c6d83721b",
+    "app/__init__.py": "ec2935eff29687e2ae900e084b75b341c67a43947c692a52ecd5cc45b67f4018",
+    "app/graph.py": "45e2c60ab65f5c48efe628f1910e3a46a4d794b79d75b58fae1e41ae88386d2f",
+    "app/scheduler.py": "71313e95e16149d115d98e8103ce2c20356b80fde54cd37de56a7b8de798a50e",
+    "app/test_scheduler.py": "9414f8fcb84835335bf956cd98da7d12460c03be6efe026deaf2b31bcbc0f4a2",
+    "test_public.py": "ffb14304729666dc46dc431c336a3d282787692d9e037c347f8b3c83134c08b5"
+  },
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792287548.370396,
+    "windows": {
+      "five_hour": {
+        "used_percent": 63.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 10.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792287549.1954792
+}

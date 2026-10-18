@@ -1,0 +1,97 @@
+START I1 haiku-medium
+START I1 luna-medium
+DONE I1 luna-medium completed 12.409 passed True tests 12 failures 0 errors 0
+START I1 luna-high
+DONE I1 haiku-medium completed 14.953 passed True tests 26 failures 0 errors 0
+START I1 haiku-high
+DONE I1 haiku-high completed 17.082 passed True tests 26 failures 0 errors 0
+START I1 haiku-xhigh
+DONE I1 luna-high completed 19.234 passed True tests 12 failures 0 errors 0
+START I1 luna-xhigh
+DONE I1 luna-xhigh completed 15.896 passed True tests 12 failures 0 errors 0
+START I1 sol-medium
+DONE I1 haiku-xhigh completed 29.111 passed True tests 36 failures 0 errors 0
+START I1 sonnet-medium
+DONE I1 sol-medium completed 22.393 passed True tests 18 failures 0 errors 0
+DONE I1 sonnet-medium completed 12.257 passed True tests 18 failures 0 errors 0
+START I2 haiku-high
+START I2 luna-high
+DONE I2 luna-high completed 44.357 passed True tests 14 failures 0 errors 0
+START I2 luna-xhigh
+DONE I2 haiku-high completed 76.349 passed True tests 35 failures 0 errors 0
+START I2 haiku-xhigh
+DONE I2 luna-xhigh completed 82.717 passed True tests 14 failures 0 errors 0
+START I2 sol-medium
+DONE I2 sol-medium completed 48.041 passed True tests 23 failures 0 errors 0
+START I2 luna-medium
+DONE I2 luna-medium completed 32.908 passed True tests 14 failures 0 errors 0
+START I3 luna-xhigh
+DONE I2 haiku-xhigh completed 143.277 passed True tests 53 failures 0 errors 0
+START I2 sonnet-medium
+DONE I2 sonnet-medium completed 25.087 passed True tests 17 failures 0 errors 0
+START I2 haiku-medium
+DONE I3 luna-xhigh completed 74.529 passed True tests 14 failures 0 errors 0
+START I3 sol-medium
+DONE I2 haiku-medium completed 62.086 passed True tests 34 failures 0 errors 0
+START I3 haiku-xhigh
+DONE I3 sol-medium completed 48.063 passed True tests 25 failures 0 errors 0
+START I3 luna-medium
+DONE I3 luna-medium completed 27.095 passed True tests 14 failures 0 errors 0
+START I3 luna-high
+DONE I3 haiku-xhigh completed 100.823 passed True tests 45 failures 0 errors 0
+START I3 sonnet-medium
+DONE I3 luna-high completed 44.952 passed True tests 14 failures 0 errors 0
+START I4 sol-medium
+DONE I3 sonnet-medium completed 20.563 passed True tests 18 failures 0 errors 0
+START I3 haiku-medium
+DONE I4 sol-medium completed 41.878 passed True tests 16 failures 0 errors 0
+START I4 luna-medium
+DONE I3 haiku-medium completed 43.135 passed True tests 37 failures 0 errors 0
+START I3 haiku-high
+DONE I4 luna-medium completed 20.483 passed True tests 11 failures 0 errors 0
+START I4 luna-high
+DONE I4 luna-high completed 28.91 passed True tests 11 failures 0 errors 0
+START I4 luna-xhigh
+DONE I3 haiku-high completed 71.876 passed True tests 46 failures 0 errors 0
+START I4 sonnet-medium
+DONE I4 sonnet-medium completed 21.82 passed True tests 14 failures 0 errors 0
+START I4 haiku-medium
+DONE I4 luna-xhigh completed 69.545 passed True tests 11 failures 0 errors 0
+START I5 luna-medium
+DONE I5 luna-medium completed 22.211 passed True tests 11 failures 0 errors 0
+START I5 luna-high
+DONE I4 haiku-medium completed 43.661 passed True tests 19 failures 0 errors 0
+START I4 haiku-high
+DONE I5 luna-high completed 27.305 passed True tests 11 failures 0 errors 0
+START I5 luna-xhigh
+DONE I4 haiku-high completed 62.017 passed True tests 23 failures 0 errors 0
+START I4 haiku-xhigh
+DONE I5 luna-xhigh completed 79.209 passed True tests 11 failures 0 errors 0
+START I5 sol-medium
+DONE I5 sol-medium completed 35.221 passed True tests 17 failures 0 errors 0
+START I6 luna-high
+DONE I4 haiku-xhigh completed 114.841 passed True tests 24 failures 0 errors 0
+START I5 haiku-medium
+DONE I6 luna-high completed 40.088 passed True tests 17 failures 0 errors 0
+START I6 luna-xhigh
+DONE I5 haiku-medium completed 48.342 passed True tests 26 failures 0 errors 0
+START I5 haiku-high
+DONE I6 luna-xhigh completed 71.011 passed True tests 24 failures 0 errors 0
+START I6 sol-medium
+DONE I5 haiku-high completed 76.913 passed True tests 29 failures 0 errors 0
+START I5 haiku-xhigh
+DONE I6 sol-medium completed 52.606 passed True tests 23 failures 0 errors 0
+START I6 luna-medium
+DONE I6 luna-medium completed 27.538 passed False tests 17 failures 5 errors 0
+DONE I5 haiku-xhigh completed 101.385 passed True tests 31 failures 0 errors 0
+START I5 sonnet-medium
+DONE I5 sonnet-medium completed 18.647 passed True tests 11 failures 0 errors 0
+START I6 haiku-high
+DONE I6 haiku-high completed 93.57 passed True tests 45 failures 0 errors 0
+START I6 haiku-xhigh
+DONE I6 haiku-xhigh completed 205.263 passed False tests 39 failures 5 errors 0
+START I6 sonnet-medium
+DONE I6 sonnet-medium completed 26.234 passed True tests 19 failures 0 errors 0
+START I6 haiku-medium
+DONE I6 haiku-medium completed 74.196 passed False tests 46 failures 5 errors 0
+LANES [{"provider": "codex", "status": "complete", "incidents": []}, {"provider": "claude", "status": "complete", "incidents": []}]

@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "case": "R1",
+  "mode": "frozen",
+  "route": {
+    "id": "sol-medium",
+    "provider": "codex",
+    "profile": "codex-2",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "prompt_sha256": "34ce2d33d681dcff5d554b1dc714b88bb5b95909f68a137ff5a5b07d3f92722d",
+  "started_at": 1792290414.8613613,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792290414.861367,
+    "windows": {
+      "five_hour": {
+        "used_percent": 99.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 15.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 99.0,
+  "workspace_before": {
+    "TASK.md": "34ce2d33d681dcff5d554b1dc714b88bb5b95909f68a137ff5a5b07d3f92722d",
+    "docs/asyncio313.txt": "bfd84aee01a06a9ca79406fbc5e47a16996d5f29131451de8a8ea433346305db"
+  },
+  "response_text": "Wrote all six claims to [research.json](/tmp/work/research.json), using only the supplied Python 3.13 extract with original line citations. Recommends TaskGroup for all-or-cancel sibling work and records version caveats and evidence limitations.",
+  "usage_reported": {
+    "input_tokens": 63035,
+    "cached_input_tokens": 45440,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1847,
+    "reasoning_output_tokens": 0
+  },
+  "usage": {
+    "input_tokens": 63035,
+    "output_tokens": 1847,
+    "cache_read_tokens": 45440,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 0,
+    "reported_total": null,
+    "total": 64882,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"rg --files -g '\"'!research.json'\"' -g '\"'!.*'\"'\"",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat TASK.md docs/asyncio313.txt'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"cat > research.json <<'EOF'\n{\n  \\\"case\\\": \\\"R1\\\",\n  \\\"claims\\\": [\n    {\n      \\\"id\\\": \\\"C1\\\",\n      \\\"text\\\": \\\"In Python 3.13, the first TaskGroup child failure other than CancelledError cancels the remaining group tasks and prevents further additions. If the context body is still active, its containing task is also cancelled to interrupt its await; that internal CancelledError does not escape the async-with statement. With gather's default return_exceptions=False, the first exception is propagated immediately to its awaiter, while other submitted awaitables keep running. With return_exceptions=True, exceptions become result-list entries instead. Cancelling gather after it has already been marked done by propagating an exception does not cancel its remaining awaitables.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"Original lines 360-375\\\"},\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"Original lines 523-529 and 587-593\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C2\\\",\n      \\\"text\\\": \\\"TaskGroup's async-with exit awaits every task in the group, including remaining tasks it has cancelled after failure, before raising the resulting failure. Tasks may be added while the group is waiting until the last task finishes and the block exits. On success, gather waits for all submitted awaitables and returns their values in input order. With return_exceptions=True it also waits for all submitted awaitables, collecting failures as results. With the default False it propagates the first exception immediately, so a failed await of gather is not a guarantee that the other awaitables have finished.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"Original lines 321-329, 353-375 and 377-388\\\"},\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"Original lines 511-529\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C3\\\",\n      \\\"text\\\": \\\"After all group tasks finish, TaskGroup combines their non-cancellation failures in an ExceptionGroup or BaseExceptionGroup, as appropriate, and raises it. An exception from the async-with body triggers cancellation and waiting too, and is included in the group unless it is CancelledError. CancelledError is excluded from these failure groups. KeyboardInterrupt and SystemExit are special: remaining tasks are still cancelled and awaited, but the initial KeyboardInterrupt or SystemExit is re-raised instead of an exception group; the same special handling applies to a body exception. By contrast, gather either propagates its first exception (default) or returns exceptions as list entries; the extract does not describe it grouping sibling failures. The supplied extract establishes grouping behavior but does not document handler syntax for exception groups.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"Original lines 370-393\\\"},\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"Original lines 523-529\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C4\\\",\n      \\\"text\\\": \\\"If an individual submitted Task or Future is cancelled, gather treats it as having raised CancelledError; gather itself is not cancelled and this does not cancel its siblings. Combining this rule with the documented return_exceptions behavior: by default that CancelledError is propagated to the awaiter, whereas return_exceptions=True collects it as a result entry while the other awaitables finish. This differs from cancelling gather itself, which cancels unfinished submitted awaitables regardless of return_exceptions (document",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 34.753,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/researcher-cell-x2i7xyep",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-2",
+    "/home/david/.codex-2",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "research_tool_calls": [],
+  "tool_result_evidence": [],
+  "limit_detected": false,
+  "contract": {
+    "valid": true,
+    "errors": []
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792290450.3455124,
+    "windows": {
+      "five_hour": {
+        "used_percent": 99.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 16.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792290451.1090584
+}

@@ -14,6 +14,14 @@ store, and M6 needs a private quality store path. M4 observes, M5 recommends rec
 captured M3 snapshots; M1 remains the sole owner of task state and verdict acceptance.
 
 ## Components / actors
+The legacy marathon router keeps `bt_agents` as its public facade. `bt_agent_models` owns the model catalog,
+kind ceilings and effort selection; `bt_agent_views` renders prompt-facing catalog text. Before pool decisions,
+`bt_subscriptions.ensure_fresh` reserves a bounded refresh per eligible account (900s), retaining the previous
+effective pressure/auth state during I/O. `bt_routing_policy` owns the >=85% fallback threshold and kind ceilings;
+`bt_runtier` bounds compatible task units to 3/1/1 and new sessions to 25 minutes without a task-count multiplier.
+`bt_review_policy` shares the milestone-review rule across both prompt builders; covered commits do not invoke
+Antagonist independently. Existing explicit timeout overrides remain part of the stored run contract.
+
 | Name | Responsibility | Where (path / owner) |
 |---|---|---|
 | Planner | Frozen plan contract and task order | `skill/scripts/bt_planner/` → `bt_plan_adapter.py` |

@@ -1,0 +1,118 @@
+--- before/app/graph.py
++++ after/app/graph.py
+@@ -1,2 +1,39 @@
++"""Dependency graph validation helpers."""
++
++
+ def validate_graph(jobs):
+-    return {job:set(deps) for job,deps in jobs.items()}
++    """Return a validated snapshot of ``jobs`` as dependency sets.
++
++    Graph traversal is iterative so long dependency chains do not depend on
++    Python's recursion limit.
++    """
++    graph = {job_id: set(dependencies) for job_id, dependencies in jobs.items()}
++
++    for job_id, dependencies in graph.items():
++        for dependency in dependencies:
++            if dependency not in graph:
++                raise ValueError("unknown dependency: {!r}".format(dependency))
++
++    # Iterative three-color depth-first search. A gray-to-gray edge is a cycle.
++    white, gray, black = 0, 1, 2
++    colors = {job_id: white for job_id in graph}
++    for root in graph:
++        if colors[root] != white:
++            continue
++        colors[root] = gray
++        stack = [(root, iter(graph[root]))]
++        while stack:
++            node, children = stack[-1]
++            try:
++                child = next(children)
++            except StopIteration:
++                colors[node] = black
++                stack.pop()
++                continue
++            if colors[child] == gray:
++                raise ValueError("dependency cycle detected")
++            if colors[child] == white:
++                colors[child] = gray
++                stack.append((child, iter(graph[child])))
++
++    return graph
+--- before/app/scheduler.py
++++ after/app/scheduler.py
+@@ -1,16 +1,59 @@
++"""Single-threaded dependency scheduler."""
++
+ from .graph import validate_graph
++
++
+ class Scheduler:
+-    def __init__(self,jobs,max_parallel=2):
+-        self.jobs=validate_graph(jobs)
+-        self.max_parallel=max_parallel
+-        self.state={job:'pending' for job in self.jobs}
++    def __init__(self, jobs, max_parallel=2):
++        if isinstance(max_parallel, bool) or not isinstance(max_parallel, int) or max_parallel < 1:
++            raise ValueError("max_parallel must be an integer of at least 1")
++
++        self.jobs = validate_graph(jobs)
++        self.max_parallel = max_parallel
++        self.state = {job_id: "pending" for job_id in self.jobs}
++        self._dependents = {job_id: set() for job_id in self.jobs}
++        for job_id, dependencies in self.jobs.items():
++            for dependency in dependencies:
++                self._dependents[dependency].add(job_id)
++
+     def ready(self):
+-        return [job for job,deps in self.jobs.items() if self.state[job]=='pending' and all(self.state.get(dep)=='succeeded' for dep in deps)]
+-    def start(self,job_id):
+-        if job_id not in self.ready(): raise ValueError('not ready')
+-        self.state[job_id]='running'
+-    def finish(self,job_id,success=True):
+-        if self.state.get(job_id)!='running': raise ValueError('not running')
+-        self.state[job_id]='succeeded' if success else 'failed'
+-    def statuses(self): return dict(self.state)
+-    def done(self): return all(v in ('succeeded','failed','blocked') for v in self.state.values())
++        """Return all pending jobs whose dependencies have succeeded."""
++        return sorted(
++            job_id
++            for job_id, dependencies in self.jobs.items()
++            if self.state[job_id] == "pending"
++            and all(self.state[dependency] == "succeeded" for dependency in dependencies)
++        )
++
++    def start(self, job_id):
++        if (
++            job_id not in self.state
++            or self.state[job_id] != "pending"
++            or any(self.state[dependency] != "succeeded" for dependency in self.jobs[job_id])
++            or sum(status == "running" for status in self.state.values()) >= self.max_parallel
++        ):
++            raise ValueError("job cannot be started")
++        self.state[job_id] = "running"
++
++    def finish(self, job_id, success=True):
++        if job_id not in self.state or self.state[job_id] != "running":
++            raise ValueError("job is not running")
++        if success:
++            self.state[job_id] = "succeeded"
++            return
++
++        self.state[job_id] = "failed"
++        # Mark pending descendants blocked as soon as this failure is known.
++        # Continue traversal through each newly blocked job to reach all descendants.
++        stack = list(self._dependents[job_id])
++        while stack:
++            descendant = stack.pop()
++            if self.state[descendant] == "pending":
++                self.state[descendant] = "blocked"
++            stack.extend(self._dependents[descendant])
++
++    def statuses(self):
++        return dict(self.state)
++
++    def done(self):
++        return all(status not in ("pending", "running") for status in self.state.values())

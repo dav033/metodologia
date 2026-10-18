@@ -1,0 +1,149 @@
+--- before/app/store.py
++++ after/app/store.py
+@@ -1,15 +1,134 @@
++"""SQLite-backed job storage."""
++
+ import sqlite3
++from contextlib import contextmanager
++
++
++_MAX_SQLITE_INTEGER = 2**63 - 1
++
++
++@contextmanager
++def _connection(path):
++    """Open a connection for one operation and always close it."""
++    connection = sqlite3.connect(path, timeout=30.0)
++    try:
++        yield connection
++    finally:
++        connection.close()
++
++
++@contextmanager
++def _transaction(connection, begin="BEGIN"):
++    """Run a transaction, rolling it back if its body or commit fails."""
++    connection.execute(begin)
++    try:
++        yield connection
++        connection.commit()
++    except BaseException:
++        try:
++            connection.rollback()
++        except sqlite3.Error:
++            pass
++        raise
++
+ 
+ def init(path):
+-    with sqlite3.connect(path) as c:
+-        c.execute("CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,payload TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'pending',token INTEGER NOT NULL DEFAULT 0,lease_until INTEGER,attempts INTEGER NOT NULL DEFAULT 0,depends_on TEXT,result TEXT)")
+-def enqueue(path,id,payload,depends_on=None):
+-    with sqlite3.connect(path) as c:c.execute('INSERT OR IGNORE INTO jobs(id,payload,depends_on) VALUES(?,?,?)',(id,payload,depends_on))
+-def claim(path,now,ttl):return None
+-def complete(path,id,token,result,now,fault=None):return False
+-def inspect(path,id):
+-    with sqlite3.connect(path) as c:
+-        c.row_factory=sqlite3.Row;r=c.execute('SELECT * FROM jobs WHERE id=?',(id,)).fetchone();return dict(r) if r else None
+-def retry(path,id,token,now):return False
+-def publish(path,deliver):return 0
+-def consume(path,id,body):return False
++    """Create the jobs table if it does not already exist."""
++    with _connection(path) as connection:
++        with _transaction(connection, "BEGIN IMMEDIATE"):
++            connection.execute(
++                """CREATE TABLE IF NOT EXISTS jobs(
++                    id TEXT PRIMARY KEY,
++                    payload TEXT NOT NULL,
++                    state TEXT NOT NULL DEFAULT 'pending',
++                    token INTEGER NOT NULL DEFAULT 0,
++                    lease_until INTEGER,
++                    attempts INTEGER NOT NULL DEFAULT 0,
++                    depends_on TEXT,
++                    result TEXT
++                )"""
++            )
++
++
++def enqueue(path, id, payload, depends_on=None):
++    """Insert a job once, retaining the first payload for duplicate ids."""
++    with _connection(path) as connection:
++        with _transaction(connection, "BEGIN IMMEDIATE"):
++            connection.execute(
++                "INSERT OR IGNORE INTO jobs(id, payload, depends_on) VALUES (?, ?, ?)",
++                (id, payload, depends_on),
++            )
++
++
++def claim(path, now, ttl):
++    """Claim the lexicographically first pending or expired job."""
++    if ttl <= 0:
++        raise ValueError("ttl must be positive")
++
++    with _connection(path) as connection:
++        with _transaction(connection, "BEGIN IMMEDIATE"):
++            row = connection.execute(
++                """SELECT id, payload, token, attempts
++                   FROM jobs
++                   WHERE state = 'pending'
++                      OR (state = 'running' AND lease_until <= ?)
++                   ORDER BY id ASC
++                   LIMIT 1""",
++                (now,),
++            ).fetchone()
++            if row is None:
++                return None
++
++            job_id, payload, token, attempts = row
++            if token >= _MAX_SQLITE_INTEGER or attempts >= _MAX_SQLITE_INTEGER:
++                raise OverflowError("job token or attempt count exceeds SQLite INTEGER range")
++
++            next_token = token + 1
++            next_attempts = attempts + 1
++            lease_until = now + ttl
++            changed = connection.execute(
++                """UPDATE jobs
++                   SET state = ?, token = ?, lease_until = ?, attempts = ?
++                   WHERE id = ?""",
++                ("running", next_token, lease_until, next_attempts, job_id),
++            ).rowcount
++            if changed != 1:
++                raise RuntimeError("claimed job changed during an immediate transaction")
++
++            return job_id, payload, next_token
++
++
++def complete(path, id, token, result, now, fault=None):
++    """Complete a live lease if its fencing token still matches."""
++    with _connection(path) as connection:
++        with _transaction(connection, "BEGIN IMMEDIATE"):
++            changed = connection.execute(
++                """UPDATE jobs
++                   SET state = ?, result = ?, lease_until = NULL
++                   WHERE id = ?
++                     AND state = 'running'
++                     AND token = ?
++                     AND lease_until > ?""",
++                ("done", result, id, token, now),
++            ).rowcount
++            return changed == 1
++
++
++def inspect(path, id):
++    """Return every stored column for a job, or None when it is absent."""
++    with _connection(path) as connection:
++        connection.row_factory = sqlite3.Row
++        row = connection.execute("SELECT * FROM jobs WHERE id = ?", (id,)).fetchone()
++        return dict(row) if row is not None else None
++
++
++def retry(path, id, token, now):
++    return False
++
++
++def publish(path, deliver):
++    return 0
++
++
++def consume(path, id, body):
++    return False

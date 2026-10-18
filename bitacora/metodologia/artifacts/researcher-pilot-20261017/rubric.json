@@ -1,0 +1,176 @@
+[
+  {
+    "case": "R1",
+    "criteria": [
+      {
+        "id": "C1",
+        "expected": "TaskGroup cancels other children on a non-CancelledError failure; gather default propagates first exception without cancelling other awaitables."
+      },
+      {
+        "id": "C2",
+        "expected": "TaskGroup waits for all children at exit, including cancellation cleanup; gather success aggregates in input order."
+      },
+      {
+        "id": "C3",
+        "expected": "TaskGroup groups failures in ExceptionGroup/BaseExceptionGroup; KeyboardInterrupt/SystemExit are reraised after cleanup."
+      },
+      {
+        "id": "C4",
+        "expected": "Treat as CancelledError; gather itself is not cancelled; other children are not cancelled."
+      },
+      {
+        "id": "C5",
+        "expected": "Structured concurrency uses cancellation internally and can misbehave if swallowed; propagate after cleanup, uncancel if truly suppressed."
+      },
+      {
+        "id": "C6",
+        "expected": "Use TaskGroup, added Python3.11, not gather as equivalent safety; bound to supplied3.13 docs."
+      }
+    ]
+  },
+  {
+    "case": "R2",
+    "criteria": [
+      {
+        "id": "C1",
+        "expected": "No. Connection context manager handles transactions, not closure, in both3.11 and3.13."
+      },
+      {
+        "id": "C2",
+        "expected": "Commit open transaction on success; rollback on exception or failed commit; does not itself open transactions."
+      },
+      {
+        "id": "C3",
+        "expected": "Explicit close in finally or contextlib.closing, combined with a transaction context if needed."
+      },
+      {
+        "id": "C4",
+        "expected": "Python3.13; separate warning from actual lifetime correctness."
+      },
+      {
+        "id": "C5",
+        "expected": "No, added3.12. Distinguish legacy isolation_level control and SQLite own autocommit state."
+      },
+      {
+        "id": "C6",
+        "expected": "Keep explicit closure and explicit transaction semantics; do not infer exact runtime SQLite version or claim warnings prove absence of leaks."
+      }
+    ]
+  },
+  {
+    "case": "R3",
+    "criteria": [
+      {
+        "id": "C1",
+        "expected": "Complete HTTP headers; min(requestTimeout,60000) milliseconds."
+      },
+      {
+        "id": "C2",
+        "expected": "Entire incoming request;300000 milliseconds; not a handler execution deadline."
+      },
+      {
+        "id": "C3",
+        "expected": "Respond408 without forwarding to request listener, then close connection."
+      },
+      {
+        "id": "C4",
+        "expected": "Socket inactivity;0 disables timeout; not total business-work duration."
+      },
+      {
+        "id": "C5",
+        "expected": "Handle timed-out sockets explicitly when a timeout callback/listener is assigned."
+      },
+      {
+        "id": "C6",
+        "expected": "No. Need a separate bounded application operation/cancellation strategy; cite scope, do not invent a built-in automatic handler cancellation guarantee."
+      }
+    ]
+  },
+  {
+    "case": "R4",
+    "criteria": [
+      {
+        "id": "C1",
+        "expected": "No; ordinary CREATE INDEX can."
+      },
+      {
+        "id": "C2",
+        "expected": "No; avoids blocking normal writes but waits for relevant transactions/snapshots and does extra scans/work."
+      },
+      {
+        "id": "C3",
+        "expected": "INVALID index, ignored for queries yet incurring update overhead."
+      },
+      {
+        "id": "C4",
+        "expected": "Yes, starts at second scan; invalid unique index may continue enforcement after failure."
+      },
+      {
+        "id": "C5",
+        "expected": "Inspect invalid index; documented drop/retry or REINDEX INDEX CONCURRENTLY; proposal only, no execution."
+      },
+      {
+        "id": "C6",
+        "expected": "Only one concurrent index build per table; bound answer to17, no guaranteed uninterrupted deployment."
+      }
+    ]
+  },
+  {
+    "case": "R5",
+    "criteria": [
+      {
+        "id": "C1",
+        "expected": "Use current official nodejs/Release schedule or official release page; do not claim retrieval from prior knowledge."
+      },
+      {
+        "id": "C2",
+        "expected": "Schedule snapshot: LTS2025-10-28, maintenance2026-10-20, end2028-04-30."
+      },
+      {
+        "id": "C3",
+        "expected": "LTS scheduled2026-10-28; not LTS yet on target date."
+      },
+      {
+        "id": "C4",
+        "expected": "Maintenance LTS; end2027-04-30, verify schedule."
+      },
+      {
+        "id": "C5",
+        "expected": "24 satisfies LTS on target date;26 does not yet. Explain upcoming24 maintenance and26 planned LTS."
+      },
+      {
+        "id": "C6",
+        "expected": "Do not invent latest installed version or guarantee future dates. Note schedule projections and inaccessible sources honestly."
+      }
+    ]
+  },
+  {
+    "case": "R6",
+    "criteria": [
+      {
+        "id": "C1",
+        "expected": "Cite official Astral sync/reference docs or upstream docs; disclose inability to retrieve."
+      },
+      {
+        "id": "C2",
+        "expected": "Require up-to-date lock; error rather than silently update."
+      },
+      {
+        "id": "C3",
+        "expected": "Use existing lockfile without checking freshness; not a freshness guarantee."
+      },
+      {
+        "id": "C4",
+        "expected": "No. Downloads may be needed; --offline is the separate network-disabling option and missing cache can fail."
+      },
+      {
+        "id": "C5",
+        "expected": "Exact sync removes extraneous packages; --inexact retains them. Distinguish these from lock freshness."
+      },
+      {
+        "id": "C6",
+        "expected": "For freshness choose uv sync --locked; add --offline only for deliberately populated cache. Do not promise uncached success, hidden credentials or exact current uv installation."
+      }
+    ]
+  }
+]

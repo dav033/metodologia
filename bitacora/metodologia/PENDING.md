@@ -40,6 +40,8 @@ month summary._
   - Resume `relay/RELAY-20261017-095008.md` Next. Automatic relay was not scheduled (PID 2308 is not a terminal client); saved status now shows no active native calls: 23/24 measured cells returned, Gemini E6 unlaunched after E5 strict-contract failure. Finish semantic grading, closing quota and final report; any authorized continuation of Gemini E6 must preserve the declared stop and failure evidence, without repeating completed cells. Preserve nine excluded attempts and unknown repaired-Gemini per-cell quota; Explorer selection is now resolved by D-065; experimental closure remains open.
 - P-112 · Record later rework/regression and the verification mode (command / none / audit) in attempt telemetry so quality can penalise models that need follow-up repairs · urgency: med · complexity: M · added 2026-10-17 · session 2d72194c
 - P-113 · Measure on real marathon runs whether 3-task tier-0 groups beat single-task sessions (the replay does not model session start cost) · urgency: med · complexity: M · added 2026-10-17 · session 2d72194c
+- P-115 · Complete unattempted Researcher pilot cells after codex-2 quota recovers · urgency: med · complexity: M · added 2026-10-17 · artifacts/researcher-pilot-20261017/PLAN.md
+  - Sonnet lane continues; Sol/Luna completed R1 only, then R2 Luna preflight observed100% five-hour usage. Stop retained, no retries/account rotation. Saved reset2026-10-17T23:12:26-05:00 is an estimate to revalidate. Resume requires checking frozen protocol and existing result files; never repeat started native calls. A quota_exhausted preflight record has no native attempt and must not count as a model/content failure.
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T5–T8 remain; resume only on explicit request · urgency: med · complexity: L · added 2026-10-14 · owner pause; requirements/REQ-008-fresh-milestone-orchestration-and-bounde/REPORT.md
 - P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · urgency: low · complexity: S · added 2026-10-08 · research
 - P-006 · Marathon: pass the claude prompt via stdin instead of argv (cmd-shim 8191-char / newline risk) · urgency: low · complexity: S · added 2026-10-09 · marathon review
@@ -70,6 +72,7 @@ month summary._
 _None_
 
 ## Recently closed
+- P-114 · CLOSED 2026-10-17 — Split bt_agents.py model selection/catalog and prompt rendering into bt_agent_models.py and bt_agent_views.py; public exports retained and router below 500 lines · urgency: low · complexity: M · added 2026-10-17 · session 411b81ed
 - P-108 · CLOSED 2026-10-16 — Revalidate the corrected Antigravity Planner launch · urgency: med · complexity: S · added 2026-10-16 · REQ-024 T15
   - After D-062 owner authorization, the fixed `antigravity` profile (`gemini-3.8-flash-low`) returned the exact launch-only sentinel with exit 0 in 21.418 seconds; runtime validated the CLI-reported model. No quota refresh, fallback, substitution or raw prompt/response storage. Redacted record: `artifacts/REQ-024-benchmark/antigravity-planner-t15-revalidation.redacted.json`. This closes the T15 launch/response criterion, not model-quality evaluation.
 - P-107 · CLOSED 2026-10-16 — Isolate M2 decision-source tests from live quota preflight · urgency: med · complexity: S · added 2026-10-16 · REQ-024 T11 verification

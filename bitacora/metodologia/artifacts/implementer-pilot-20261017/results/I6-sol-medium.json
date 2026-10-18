@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "case": "I6",
+  "route": {
+    "id": "sol-medium",
+    "provider": "codex",
+    "profile": "codex-2",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "prompt_sha256": "c05542a08753e228f0649f3f3c9df2b5e89197537fb97b72f99a979eed458f2b",
+  "prompt_characters": 4454,
+  "started_at": 1792288078.2033732,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792288078.2033992,
+    "windows": {
+      "five_hour": {
+        "used_percent": 75.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 12.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 75.0,
+  "workspace_before": {
+    "TASK.md": "c05542a08753e228f0649f3f3c9df2b5e89197537fb97b72f99a979eed458f2b",
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/store.py": "c0e0b84022be38e8a15b3fb47bcb29ec131139fb8d17d6e6ff40e650b04e46bc",
+    "test_public.py": "8da50d959512f825da3d8e3000e8a5f3469541014e99d85a2a6ce706d3e6bede"
+  },
+  "response_text": "Implemented `app/store.py` with durable leases, token fencing, dependencies, retries, atomic completion/outbox events, replayable publishing, and inbox deduplication.\n\nTests passed: 1 public test and 6 added tests covering concurrency, persistence, stale leases, callback replay, and process crashes at both fault hooks.",
+  "usage_reported": {
+    "input_tokens": 76321,
+    "cached_input_tokens": 57472,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 3567,
+    "reasoning_output_tokens": 159
+  },
+  "usage": {
+    "input_tokens": 76321,
+    "output_tokens": 3567,
+    "cache_read_tokens": 57472,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 159,
+    "reported_total": null,
+    "total": 79888,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"pwd; rg --files -g '*.py' -g 'AGENTS.md' -g '*task*' -g 'README*'\"",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat app/store.py test_public.py'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"cat > app/store.py <<'PY'\n\\\"\\\"\\\"A durable SQLite work queue with fenced leases and an outbox.\\\"\\\"\\\"\n\nfrom contextlib import contextmanager\nimport sqlite3\n\n\n@contextmanager\ndef _connection(path):\n    \\\"\\\"\\\"Commit successful operations, roll back failures, and always close.\\\"\\\"\\\"\n    connection = sqlite3.connect(path, timeout=30)\n    try:\n        with connection:\n            yield connection\n    finally:\n        connection.close()\n\n\ndef init(path):\n    with _connection(path) as connection:\n        connection.execute(\\\"BEGIN IMMEDIATE\\\")\n        connection.execute(\n            \\\"CREATE TABLE IF NOT EXISTS jobs(\\\"\n            \\\"id TEXT PRIMARY KEY,payload TEXT NOT NULL,\\\"\n            \\\"state TEXT NOT NULL DEFAULT 'pending',\\\"\n            \\\"token INTEGER NOT NULL DEFAULT 0,lease_until INTEGER,\\\"\n            \\\"attempts INTEGER NOT NULL DEFAULT 0,depends_on TEXT,result TEXT)\\\"\n        )\n        connection.execute(\n            \\\"CREATE TABLE IF NOT EXISTS outbox(\\\"\n            \\\"id TEXT PRIMARY KEY,body TEXT NOT NULL,\\\"\n            \\\"delivered INTEGER NOT NULL DEFAULT 0)\\\"\n        )\n        connection.execute(\n            \\\"CREATE TABLE IF NOT EXISTS inbox(\\\"\n            \\\"id TEXT PRIMARY KEY,body TEXT NOT NULL)\\\"\n        )\n\n\ndef enqueue(path, id, payload, depends_on=None):\n    with _connection(path) as connection:\n        connection.execute(\n            \\\"INSERT INTO jobs(id,payload,depends_on) VALUES(?,?,?) \\\"\n            \\\"ON CONFLICT(id) DO NOTHING\\\",\n            (id, payload, depends_on),\n        )\n\n\ndef claim(path, now, ttl):\n    if ttl <= 0:\n        raise ValueError(\\\"ttl must be positive\\\")\n    with _connection(path) as connection:\n        # Serialize selection and update across independent clients.\n        connection.execute(\\\"BEGIN IMMEDIATE\\\")\n        row = connection.execute(\n            \\\"SELECT id,payload,token FROM jobs AS job \\\"\n            \\\"WHERE (state='pending' OR (state='running' AND lease_until<=?)) \\\"\n            \\\"AND (depends_on IS NULL OR EXISTS (\\\"\n            \\\"SELECT 1 FROM jobs AS parent \\\"\n            \\\"WHERE parent.id=job.depends_on AND parent.state='done')) \\\"\n            \\\"ORDER BY id LIMIT 1\\\",\n            (now,),\n        ).fetchone()\n        if row is None:\n            return None\n        id, payload, token = row\n        token += 1\n        connection.execute(\n            \\\"UPDATE jobs SET state='running',token=[REDACTED_SECRET]\"\n            \\\"attempts=attempts+1 WHERE id=?\\\",\n            (token, now + ttl, id),\n        )\n        return id, payload, token\n\n\ndef complete(path, id, token, result, now, fault=None):\n    with _connection(path) as connection:\n        connection.execute(\\\"BEGIN IMMEDIATE\\\")\n        updated = connection.execute(\n            \\\"UPDATE jobs SET state='done',result=?,lease_until=NULL \\\"\n            \\\"WHERE id=? AND state='running' AND token=? AND lease_until>?\\\",\n            (result, id, token, now),\n        )\n        if updated.rowcount == 0:\n            return False\n        if fault is not None:\n            fault('after_result')\n        connection.execute(\n            \\\"INSERT INTO outbox(id,body) VALUES(?,?)\\\", (id, result)\n        )\n        if fault is not None:\n            fault('before_commit')\n        return True\n\n\ndef inspect(path, id):\n    with _connection(path) as connection:\n        connection.row_factory = sqlite3.Row\n        row = connection.execute(\n            \\\"SELECT * FROM jobs WHERE id=?\\\", (id,)\n        ).fetchone()\n        return dict(row) if row is not None else None\n\n\ndef retry(path, id, token, now):\n    with _connection(path) as connection:\n        updated = connection.execute(\n            \\\"UPDATE jobs SET state='pending',lease_until=NULL \\\"\n            \\\"WHERE id=? AND state='running' AND token=? AND lease_until>?\\\",\n            (id, token, now),\n        )\n        return updated.rowcount == 1\n\n\ndef publish(path, deliver):\n    # Materialize and close before callbacks: a callback can write to this DB.\n    with _connection(path) as conne",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"cat > app/test_store.py <<'PY'\n\\\"\\\"\\\"Behavioral and recovery checks for the queue.\\\"\\\"\\\"\n\nfrom concurrent.futures import ThreadPoolExecutor\nimport os\nimport sqlite3\nimport subprocess\nimport sys\nimport tempfile\nimport unittest\n\nfrom app import store\n\n\nclass StoreTests(unittest.TestCase):\n    def setUp(self):\n        self.directory = tempfile.TemporaryDirectory()\n        self.addCleanup(self.directory.cleanup)\n        self.path = os.path.join(self.directory.name, 'queue.db')\n        store.init(self.path)\n\n    def rows(self, table):\n        connection = sqlite3.connect(self.path)\n        try:\n            return connection.execute('SELECT * FROM ' + table).fetchall()\n        finally:\n            connection.close()\n\n    def test_leases_retry_and_fencing_persist(self):\n        store.enqueue(self.path, 'a', 'first')\n        store.enqueue(self.path, 'a', 'second')\n        for ttl in (0, -1):\n            with self.assertRaises(ValueError):\n                store.claim(self.path, 0, ttl)\n        self.assertEqual(store.inspect(self.path, 'a')['attempts'], 0)\n        self.assertEqual(store.claim(self.path, 0, 10), ('a', 'first', 1))\n        self.assertIsNone(store.claim(self.path, 9, 10))\n        original = store.inspect(self.path, 'a')\n        self.assertFalse(store.retry(self.path, 'a', 2, 9))\n        self.assertFalse(store.complete(self.path, 'a', 1, 'late', 10))\n        self.assertEqual(store.inspect(self.path, 'a'), original)\n        store.init(self.path)\n        self.assertEqual(store.claim(self.path, 10, 10), ('a', 'first', 2))\n        self.assertFalse(store.complete(self.path, 'a', 1, 'old', 11))\n        self.assertTrue(store.retry(self.path, 'a', 2, 11))\n        self.assertEqual(store.inspect(self.path, 'a')['attempts'], 2)\n        self.assertEqual(store.claim(self.path, 11, 10), ('a', 'first', 3))\n        self.assertTrue(store.complete(self.path, 'a', 3, 'result', 12))\n        store.init(self.path)\n        job = store.inspect(self.path, 'a')\n        self.assertEqual((job['state'], job['result'], job['lease_until']),\n                         ('done', 'result', None))\n        self.assertEqual(self.rows('outbox'), [('a', 'result', 0)])\n        self.assertIsNone(store.inspect(self.path, 'missing'))\n\n    def test_dependencies_and_order(self):\n        store.enqueue(self.path, 'a', 'child', 'z')\n        store.enqueue(self.path, 'b', 'missing', 'absent')\n        store.enqueue(self.path, 'c', 'cycle', 'd')\n        store.enqueue(self.path, 'd', 'cycle', 'c')\n        store.enqueue(self.path, 'z', 'parent')\n        self.assertEqual(store.claim(self.path, 0, 10)[0], 'z')\n        self.assertIsNone(store.claim(self.path, 0, 10))\n        self.assertTrue(store.complete(self.path, 'z', 1, 'done', 1))\n        self.assertEqual(store.claim(self.path, 1, 10)[0], 'a')\n        self.assertIsNone(store.claim(self.path, 1, 10))\n\n    def test_concurrent_claims_and_consumers(self):\n        for index in range(12):\n            store.enqueue(self.path, str(index), 'work')\n        with ThreadPoolExecutor(max_workers=8) as pool:\n            claims = list(pool.map(lambda _: store.claim(self.path, 0, 10),\n                                   range(24)))\n            consumed = list(pool.map(\n                lambda _: store.consume(self.path, 'event', 'body'), range(16)))\n        claimed = [row for row in claims if row is not None]\n        self.assertEqual(len(claimed), 12)\n        self.assertEqual(len({row[0] for row in claimed}), 12)\n        self.assertTrue(all(row[2] == 1 for row in claimed))\n        self.assertEqual(sum(consumed), 1)\n        self.assertFalse(store.consume(self.path, 'event', 'replacement'))\n        self.assertEqual(self.rows('inbox'), [('event', 'body')])\n\n    def test_hook_errors_roll_back_and_stale_calls_skip_hooks(self):\n        store.enqueue(self.path, 'a', 'work')\n        store.claim(self.path, 0, 10)\n        original = store.inspect(self.path, 'a')\n        for stage in ('after_result', 'before_commit'):\n            calls = ",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "elapsed_seconds": 52.606,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/implementer-cell-5llspin1",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-2",
+    "/home/david/.codex-2",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "limit_detected": false,
+  "changed_files": [
+    "app/store.py",
+    "app/test_store.py"
+  ],
+  "grade": {
+    "command": [
+      "/usr/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      ".",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "exit_code": 0,
+    "tests": 23,
+    "failures": 0,
+    "errors": 0,
+    "methods": [
+      {
+        "method": "test_concurrent_claims_and_consumers",
+        "class": "app.test_store.StoreTests.test_concurrent_claims_and_consumers",
+        "result": "ok"
+      },
+      {
+        "method": "test_dependencies_and_order",
+        "class": "app.test_store.StoreTests.test_dependencies_and_order",
+        "result": "ok"
+      },
+      {
+        "method": "test_hook_errors_roll_back_and_stale_calls_skip_hooks",
+        "class": "app.test_store.StoreTests.test_hook_errors_roll_back_and_stale_calls_skip_hooks",
+        "result": "ok"
+      },
+      {
+        "method": "test_leases_retry_and_fencing_persist",
+        "class": "app.test_store.StoreTests.test_leases_retry_and_fencing_persist",
+        "result": "ok"
+      },
+      {
+        "method": "test_process_crash_rolls_back_at_both_hooks",
+        "class": "app.test_store.StoreTests.test_process_crash_rolls_back_at_both_hooks",
+        "result": "ok"
+      },
+      {
+        "method": "test_publication_replays_failed_callback_with_inbox_deduplication",
+        "class": "app.test_store.StoreTests.test_publication_replays_failed_callback_with_inbox_deduplication",
+        "result": "ok"
+      },
+      {
+        "method": "test_claim_and_complete",
+        "class": "test_private.QueueTests.test_claim_and_complete",
+        "result": "ok"
+      },
+      {
+        "method": "test_concurrent_distinct_jobs",
+        "class": "test_private.QueueTests.test_concurrent_distinct_jobs",
+        "result": "ok"
+      },
+      {
+        "method": "test_concurrent_single_job",
+        "class": "test_private.QueueTests.test_concurrent_single_job",
+        "result": "ok"
+      },
+      {
+        "method": "test_delivery_crash_replay_and_dedupe",
+        "class": "test_private.QueueTests.test_delivery_crash_replay_and_dedupe",
+        "result": "ok"
+      },
+      {
+        "method": "test_dependencies_and_retry",
+        "class": "test_private.QueueTests.test_dependencies_and_retry",
+        "result": "ok"
+      },
+      {
+        "method": "test_duplicate_preserves_payload",
+        "class": "test_private.QueueTests.test_duplicate_preserves_payload",
+        "result": "ok"
+      },
+      {
+        "method": "test_expired_cannot_complete",
+        "class": "test_private.QueueTests.test_expired_cannot_complete",
+        "result": "ok"
+      },
+      {
+        "method": "test_expiry_boundary",
+        "class": "test_private.QueueTests.test_expiry_boundary",
+        "result": "ok"
+      },
+      {
+        "method": "test_hook_exception_atomic_and_expired_retry",
+        "class": "test_private.QueueTests.test_hook_exception_atomic_and_expired_retry",
+        "result": "ok"
+      },
+      {
+        "method": "test_invalid_ttl",
+        "class": "test_private.QueueTests.test_invalid_ttl",
+        "result": "ok"
+      },
+      {
+        "method": "test_order",
+        "class": "test_private.QueueTests.test_order",
+        "result": "ok"
+      },
+      {
+        "method": "test_ordered_delivery_failure_preserves_previous_ack",
+        "class": "test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack",
+        "result": "ok"
+      },
+      {
+        "method": "test_process_crash_after_result",
+        "class": "test_private.QueueTests.test_process_crash_after_result",
+        "result": "ok"
+      },
+      {
+        "method": "test_process_crash_before_commit",
+        "class": "test_private.QueueTests.test_process_crash_before_commit",
+        "result": "ok"
+      },
+      {
+        "method": "test_stale_fencing_after_reopen",
+        "class": "test_private.QueueTests.test_stale_fencing_after_reopen",
+        "result": "ok"
+      },
+      {
+        "method": "test_unknown_and_done",
+        "class": "test_private.QueueTests.test_unknown_and_done",
+        "result": "ok"
+      },
+      {
+        "method": "test_basic",
+        "class": "test_public.PublicTests.test_basic",
+        "result": "ok"
+      }
+    ],
+    "output": "test_concurrent_claims_and_consumers (app.test_store.StoreTests.test_concurrent_claims_and_consumers) ... ok\ntest_dependencies_and_order (app.test_store.StoreTests.test_dependencies_and_order) ... ok\ntest_hook_errors_roll_back_and_stale_calls_skip_hooks (app.test_store.StoreTests.test_hook_errors_roll_back_and_stale_calls_skip_hooks) ... ok\ntest_leases_retry_and_fencing_persist (app.test_store.StoreTests.test_leases_retry_and_fencing_persist) ... ok\ntest_process_crash_rolls_back_at_both_hooks (app.test_store.StoreTests.test_process_crash_rolls_back_at_both_hooks) ... ok\ntest_publication_replays_failed_callback_with_inbox_deduplication (app.test_store.StoreTests.test_publication_replays_failed_callback_with_inbox_deduplication) ... ok\ntest_claim_and_complete (test_private.QueueTests.test_claim_and_complete) ... ok\ntest_concurrent_distinct_jobs (test_private.QueueTests.test_concurrent_distinct_jobs) ... ok\ntest_concurrent_single_job (test_private.QueueTests.test_concurrent_single_job) ... ok\ntest_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe) ... ok\ntest_dependencies_and_retry (test_private.QueueTests.test_dependencies_and_retry) ... ok\ntest_duplicate_preserves_payload (test_private.QueueTests.test_duplicate_preserves_payload) ... ok\ntest_expired_cannot_complete (test_private.QueueTests.test_expired_cannot_complete) ... ok\ntest_expiry_boundary (test_private.QueueTests.test_expiry_boundary) ... ok\ntest_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry) ... ok\ntest_invalid_ttl (test_private.QueueTests.test_invalid_ttl) ... ok\ntest_order (test_private.QueueTests.test_order) ... ok\ntest_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack) ... ok\ntest_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result) ... ok\ntest_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit) ... ok\ntest_stale_fencing_after_reopen (test_private.QueueTests.test_stale_fencing_after_reopen) ... ok\ntest_unknown_and_done (test_private.QueueTests.test_unknown_and_done) ... ok\ntest_basic (test_public.PublicTests.test_basic) ... ok\n\n----------------------------------------------------------------------\nRan 23 tests in 0.154s\n\nOK\n",
+    "status": "passed",
+    "scope_violations": [],
+    "acceptance_passed": true
+  },
+  "workspace_after": {
+    "TASK.md": "c05542a08753e228f0649f3f3c9df2b5e89197537fb97b72f99a979eed458f2b",
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/store.py": "c5f2ce03de8d906fe8fcc16b8e45cebed94238d2209463f30d0c2892f486965a",
+    "app/test_store.py": "cc76cf35aca75d71f2b39dba2cb4a28f2561a71c234d916654e01233b456ff77",
+    "test_public.py": "8da50d959512f825da3d8e3000e8a5f3469541014e99d85a2a6ce706d3e6bede"
+  },
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792288132.0979066,
+    "windows": {
+      "five_hour": {
+        "used_percent": 77.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 12.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792288132.6922169
+}

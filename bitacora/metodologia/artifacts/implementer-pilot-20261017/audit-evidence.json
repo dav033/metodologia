@@ -1,0 +1,14 @@
+{
+  "spec_review": "APPROVE after ordered multi-event failure/replay witness added; I6 reference17/17, deferred-ack mutant rejected",
+  "standards_review": "APPROVE after minimal networkless grading sandbox/environment, per-cell error continuation, symlink rejection",
+  "reference_counts": [
+    12,
+    14,
+    14,
+    11,
+    11,
+    17
+  ],
+  "token_accounting_checks": "Claude cache counters included once; Codex cached input subset not added; partial lower bounds labeled",
+  "native_cli_isolation_smoke": "codex0.163.0/claude2.1.302 launch version in bwrap; oracle invisible, only own work in /tmp"
+}

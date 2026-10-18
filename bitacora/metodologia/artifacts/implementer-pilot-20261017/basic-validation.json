@@ -1,0 +1,97 @@
+{
+  "cases": [
+    {
+      "case": "I1",
+      "mode": "baseline",
+      "tests": 12,
+      "exit_code": 1,
+      "result": "failures=8",
+      "log": "/tmp/implementer-basic-I1-baseline.log"
+    },
+    {
+      "case": "I1",
+      "mode": "reference",
+      "tests": 12,
+      "exit_code": 0,
+      "result": "OK",
+      "log": "/tmp/implementer-basic-I1-reference.log"
+    },
+    {
+      "case": "I1",
+      "mode": "mutant",
+      "tests": 12,
+      "exit_code": 1,
+      "result": "failures=4",
+      "log": "/tmp/implementer-basic-I1-mutant.log"
+    },
+    {
+      "case": "I2",
+      "mode": "baseline",
+      "tests": 14,
+      "exit_code": 1,
+      "result": "failures=14, errors=4",
+      "log": "/tmp/implementer-basic-I2-baseline.log"
+    },
+    {
+      "case": "I2",
+      "mode": "reference",
+      "tests": 14,
+      "exit_code": 0,
+      "result": "OK",
+      "log": "/tmp/implementer-basic-I2-reference.log"
+    },
+    {
+      "case": "I2",
+      "mode": "mutant",
+      "tests": 14,
+      "exit_code": 1,
+      "result": "failures=3",
+      "log": "/tmp/implementer-basic-I2-mutant.log"
+    },
+    {
+      "case": "I3",
+      "mode": "baseline",
+      "tests": 14,
+      "exit_code": 1,
+      "result": "failures=10",
+      "log": "/tmp/implementer-basic-I3-baseline.log"
+    },
+    {
+      "case": "I3",
+      "mode": "reference",
+      "tests": 14,
+      "exit_code": 0,
+      "result": "OK",
+      "log": "/tmp/implementer-basic-I3-reference.log"
+    },
+    {
+      "case": "I3",
+      "mode": "mutant",
+      "tests": 14,
+      "exit_code": 1,
+      "result": "failures=1",
+      "log": "/tmp/implementer-basic-I3-mutant.log"
+    }
+  ],
+  "limitations": [
+    "Fixtures use synthetic Python stdlib tasks; difficulty ordering is designed, not empirically established.",
+    "Mutation checks cover one targeted wrong implementation per case, not exhaustive mutation analysis."
+  ],
+  "mutations": {
+    "I1": {
+      "file": "app/intervals.py",
+      "old": "start <= result[-1][1]",
+      "new": "start < result[-1][1]"
+    },
+    "I2": {
+      "file": "app/service.py",
+      "old": "repo.page(limit=limit, cursor=cursor)",
+      "new": "repo.page(limit=limit)"
+    },
+    "I3": {
+      "file": "app/scheduler.py",
+      "old": "job_id not in self.ready() or sum(v=='running' for v in self.state.values())>=self.max_parallel",
+      "new": "job_id not in self.ready()"
+    }
+  }
+}

@@ -1,0 +1,395 @@
+--- before/app/cli.py
++++ after/app/cli.py
+@@ -1,8 +1,60 @@
++"""Command-line entry point printing one JSON page of items."""
++import argparse
+ import json
+-from app.repository import Repository
++import sys
++
++from app.repository import DEFAULT_LIMIT, MAX_LIMIT, MIN_LIMIT, Repository
+ from app.service import list_items
++
++USAGE_ERROR = 2
++
++
++class _ArgumentError(Exception):
++    """Raised instead of argparse exiting, so main can return a status code."""
++
++    def __init__(self, status, text):
++        super().__init__(text)
++        self.status = status
++        self.text = text
++
++
++class _NonExitingParser(argparse.ArgumentParser):
++    def error(self, message):
++        raise _ArgumentError(USAGE_ERROR, f'{self.format_usage()}{self.prog}: error: {message}')
++
++    def exit(self, status=0, message=None):
++        raise _ArgumentError(status, message or '')
++
++
++def _build_parser():
++    parser = _NonExitingParser(prog='python -m app.cli')
++    parser.add_argument('--limit', type=int, default=DEFAULT_LIMIT,
++                        help=f'page size, {MIN_LIMIT}..{MAX_LIMIT} (default: {DEFAULT_LIMIT})')
++    parser.add_argument('--cursor', default=None,
++                        help='opaque cursor from a previous page')
++    return parser
++
++
++def _fail(status, text):
++    if text:
++        print(text.rstrip(), file=sys.stderr)
++    return status
++
++
+ def main(argv=None, *, repo=None):
+-    print(json.dumps(list_items(repo if repo is not None else Repository([]))))
++    try:
++        args = _build_parser().parse_args(argv)
++    except _ArgumentError as exc:
++        return _fail(exc.status, exc.text)
++    if repo is None:
++        repo = Repository([])
++    try:
++        page = list_items(repo, limit=args.limit, cursor=args.cursor)
++    except ValueError as exc:
++        return _fail(USAGE_ERROR, f'error: {exc}')
++    print(json.dumps(page))
+     return 0
++
++
+ if __name__ == '__main__':
+     raise SystemExit(main())
+--- before/app/cursor.py
++++ after/app/cursor.py
+@@ -0,0 +1,54 @@
++"""Opaque cursor codec for (timestamp, id) keyset pagination."""
++import base64
++import binascii
++import json
++
++_URL_SAFE_ALPHABET = frozenset(
++    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
++)
++
++
++def validate_key(timestamp, id):
++    """Raise ValueError unless (timestamp, id) is a valid pagination key."""
++    if not isinstance(timestamp, int) or isinstance(timestamp, bool):
++        raise ValueError('timestamp must be an integer')
++    if not isinstance(id, str) or not id:
++        raise ValueError('id must be a nonempty string')
++
++
++def encode_cursor(timestamp, id):
++    """Return an unpadded URL-safe base64 token for the pair (timestamp, id)."""
++    validate_key(timestamp, id)
++    payload = json.dumps([timestamp, id], separators=(',', ':'), ensure_ascii=False)
++    return base64.urlsafe_b64encode(payload.encode('utf-8')).decode('ascii').rstrip('=')
++
++
++def decode_cursor(cursor):
++    """Return the (timestamp, id) pair encoded in a cursor token."""
++    if not isinstance(cursor, str):
++        raise ValueError('cursor must be a string')
++    if not cursor:
++        raise ValueError('cursor must not be empty')
++    if not _URL_SAFE_ALPHABET.issuperset(cursor):
++        raise ValueError('cursor contains characters outside the URL-safe base64 alphabet')
++    if len(cursor) % 4 == 1:
++        raise ValueError('cursor has invalid base64 length')
++    try:
++        raw = base64.urlsafe_b64decode(cursor + '=' * (-len(cursor) % 4))
++    except binascii.Error as exc:
++        raise ValueError('cursor is not valid base64') from exc
++    if base64.urlsafe_b64encode(raw).decode('ascii').rstrip('=') != cursor:
++        raise ValueError('cursor is not canonical base64')
++    try:
++        text = raw.decode('utf-8')
++    except UnicodeDecodeError as exc:
++        raise ValueError('cursor is not valid UTF-8') from exc
++    try:
++        value = json.loads(text)
++    except (json.JSONDecodeError, RecursionError) as exc:
++        raise ValueError('cursor is not valid JSON') from exc
++    if not isinstance(value, list) or len(value) != 2:
++        raise ValueError('cursor must encode a [timestamp, id] pair')
++    timestamp, id = value
++    validate_key(timestamp, id)
++    return timestamp, id
+--- before/app/repository.py
++++ after/app/repository.py
+@@ -1,12 +1,53 @@
++"""In-memory repository with stable cursor pagination ordered by (timestamp, id)."""
++import bisect
++import copy
++
++from app.cursor import decode_cursor, encode_cursor
++
++DEFAULT_LIMIT = 20
++MIN_LIMIT = 1
++MAX_LIMIT = 100
++
++__all__ = [
++    'DEFAULT_LIMIT',
++    'MAX_LIMIT',
++    'MIN_LIMIT',
++    'Repository',
++    'decode_cursor',
++    'encode_cursor',
++]
++
++
++def _sort_key(row):
++    return (row['timestamp'], row['id'])
++
++
++def _validate_limit(limit):
++    if not isinstance(limit, int) or isinstance(limit, bool):
++        raise ValueError('limit must be an integer')
++    if not MIN_LIMIT <= limit <= MAX_LIMIT:
++        raise ValueError(f'limit must be between {MIN_LIMIT} and {MAX_LIMIT}')
++
++
+ class Repository:
+     def __init__(self, rows):
+-        self.rows = list(rows)
+-    def list_items(self, limit=20):
+-        return sorted(self.rows, key=lambda row: (row['timestamp'],row['id']))[:limit]
+-    def page(self, limit=20, cursor=None):
+-        return {'items': self.list_items(limit), 'next_cursor': None}
+-def encode_cursor(timestamp, id):
+-    return str(timestamp) + ':' + id
+-def decode_cursor(cursor):
+-    timestamp, id = cursor.split(':',1)
+-    return int(timestamp), id
++        # Deep copies keep caller-owned rows isolated from this repository.
++        snapshot = sorted((copy.deepcopy(row) for row in rows), key=_sort_key)
++        self._rows = snapshot
++        self._keys = [_sort_key(row) for row in snapshot]
++
++    def page(self, limit=DEFAULT_LIMIT, cursor=None):
++        _validate_limit(limit)
++        start = 0
++        if cursor is not None:
++            # Rows strictly after the cursor tuple; the cursor's row need not exist.
++            start = bisect.bisect_right(self._keys, decode_cursor(cursor))
++        end = start + limit
++        items = [copy.deepcopy(row) for row in self._rows[start:end]]
++        next_cursor = None
++        if end < len(self._rows):
++            next_cursor = encode_cursor(*self._keys[end - 1])
++        return {'items': items, 'next_cursor': next_cursor}
++
++    def list_items(self, limit=DEFAULT_LIMIT):
++        return self.page(limit=limit)['items']
+--- before/app/service.py
++++ after/app/service.py
+@@ -1,2 +1,6 @@
+-def list_items(repo, limit=20, cursor=None):
+-    return repo.page(limit=limit)
++"""Service layer for paginated item listing."""
++from app.repository import DEFAULT_LIMIT
++
++
++def list_items(repo, limit=DEFAULT_LIMIT, cursor=None):
++    return repo.page(limit=limit, cursor=cursor)
+--- before/app/test_pagination.py
++++ after/app/test_pagination.py
+@@ -0,0 +1,193 @@
++import contextlib
++import io
++import json
++import unittest
++
++from app.cli import main
++from app.cursor import decode_cursor, encode_cursor
++from app.repository import Repository
++from app.service import list_items
++
++
++def _rows(n):
++    return [{'timestamp': i // 2, 'id': f'id{i:03d}', 'payload': {'n': i}} for i in range(n)]
++
++
++def _run_cli(argv, repo=None):
++    out, err = io.StringIO(), io.StringIO()
++    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
++        status = main(argv, repo=repo)
++    return status, out.getvalue(), err.getvalue()
++
++
++class CursorCodecTests(unittest.TestCase):
++    def test_round_trip_unicode(self):
++        token = encode_cursor(5, 'ключ-🔑')
++        self.assertEqual(decode_cursor(token), (5, 'ключ-🔑'))
++        self.assertNotIn('=', token)
++
++    def test_encoding_is_compact_utf8_json(self):
++        import base64
++        token = encode_cursor(1, 'é')
++        padded = token + '=' * (-len(token) % 4)
++        self.assertEqual(base64.urlsafe_b64decode(padded), '[1,"é"]'.encode('utf-8'))
++
++    def test_rejects_invalid_cursors(self):
++        bad = [
++            '',
++            'a',                 # invalid base64 length
++            'W10=',              # padding not allowed
++            'W1 0',              # outside alphabet
++            'W10+',              # standard base64 char not allowed
++            'not base64!',
++        ]
++        for token in bad:
++            with self.subTest(token=token), self.assertRaises(ValueError):
++                decode_cursor(token)
++
++    def test_rejects_malformed_payloads(self):
++        import base64
++
++        def tok(text):
++            return base64.urlsafe_b64encode(text.encode('utf-8')).decode('ascii').rstrip('=')
++
++        for text in ['{', '[1]', '[1,"a",2]', '[true,"a"]', '[1.0,"a"]',
++                     '[1,""]', '[1,2]', '"x"', '[1,null]', '\xff']:
++            with self.subTest(text=text), self.assertRaises(ValueError):
++                decode_cursor(tok(text))
++
++    def test_rejects_non_string_cursor(self):
++        for value in [None, 1, b'W10', ['W10']]:
++            with self.subTest(value=value), self.assertRaises(ValueError):
++                decode_cursor(value)
++
++    def test_encode_rejects_invalid_keys(self):
++        with self.assertRaises(ValueError):
++            encode_cursor(True, 'a')
++        with self.assertRaises(ValueError):
++            encode_cursor(1, '')
++
++
++class RepositoryPageTests(unittest.TestCase):
++    def test_full_traversal_has_no_duplicates_or_gaps(self):
++        rows = _rows(25)
++        repo = Repository(rows)
++        seen, cursor, pages = [], None, 0
++        while True:
++            page = repo.page(limit=7, cursor=cursor)
++            pages += 1
++            seen.extend(row['id'] for row in page['items'])
++            cursor = page['next_cursor']
++            if cursor is None:
++                break
++        self.assertEqual(seen, [r['id'] for r in sorted(rows, key=lambda r: (r['timestamp'], r['id']))])
++        self.assertEqual(pages, 4)
++
++    def test_next_cursor_only_when_more_rows(self):
++        repo = Repository(_rows(3))
++        page = repo.page(limit=3)
++        self.assertEqual(len(page['items']), 3)
++        self.assertIsNone(page['next_cursor'])
++        page = repo.page(limit=2)
++        self.assertIsNotNone(page['next_cursor'])
++
++    def test_cursor_is_strictly_after_deleted_row(self):
++        repo = Repository([{'timestamp': 1, 'id': 'a'}, {'timestamp': 3, 'id': 'c'}])
++        token = encode_cursor(2, 'b')  # tuple not present in the repository
++        self.assertEqual([r['id'] for r in repo.page(cursor=token)['items']], ['c'])
++
++    def test_cursor_past_end_gives_empty_page(self):
++        repo = Repository(_rows(2))
++        page = repo.page(cursor=encode_cursor(10**9, 'z'))
++        self.assertEqual(page, {'items': [], 'next_cursor': None})
++
++    def test_ordering_is_by_timestamp_then_id(self):
++        repo = Repository([{'timestamp': 2, 'id': 'a'}, {'timestamp': 1, 'id': 'z'},
++                           {'timestamp': 1, 'id': 'b'}])
++        self.assertEqual([r['id'] for r in repo.page()['items']], ['b', 'z', 'a'])
++
++    def test_limit_validation(self):
++        repo = Repository(_rows(1))
++        for limit in [0, 101, -1, True, False, 1.0, '5', None]:
++            with self.subTest(limit=limit), self.assertRaises(ValueError):
++                repo.page(limit=limit)
++        self.assertEqual(len(repo.page(limit=1)['items']), 1)
++        self.assertEqual(len(repo.page(limit=100)['items']), 1)
++
++    def test_snapshot_isolated_from_input_and_outputs(self):
++        source = [{'timestamp': 1, 'id': 'a', 'payload': {'tags': ['x']}}]
++        repo = Repository(source)
++        source[0]['payload']['tags'].append('mutated')
++        source.append({'timestamp': 0, 'id': 'late'})
++        first = repo.page()
++        first['items'][0]['payload']['tags'].append('out')
++        first['items'][0]['id'] = 'changed'
++        self.assertEqual(repo.page()['items'], [{'timestamp': 1, 'id': 'a', 'payload': {'tags': ['x']}}])
++
++    def test_legacy_list_items(self):
++        rows = [{'timestamp': 2, 'id': 'b'}, {'timestamp': 1, 'id': 'a'}]
++        repo = Repository(rows)
++        self.assertEqual(repo.list_items(1), [rows[1]])
++        self.assertEqual(repo.list_items(), [rows[1], rows[0]])
++        with self.assertRaises(ValueError):
++            repo.list_items(0)
++
++
++class ServiceTests(unittest.TestCase):
++    def test_service_delegates_to_page(self):
++        repo = Repository(_rows(5))
++        page = list_items(repo, limit=2)
++        self.assertEqual(page, repo.page(limit=2))
++        self.assertEqual(list_items(repo, limit=2, cursor=page['next_cursor']),
++                         repo.page(limit=2, cursor=page['next_cursor']))
++
++
++class CliTests(unittest.TestCase):
++    def test_success_prints_one_json_page(self):
++        status, out, err = _run_cli(['--limit', '1'], repo=Repository(_rows(2)))
++        self.assertEqual(status, 0)
++        self.assertEqual(err, '')
++        page = json.loads(out)
++        self.assertEqual(len(page['items']), 1)
++        self.assertIsNotNone(page['next_cursor'])
++
++    def test_empty_default_repo(self):
++        status, out, _ = _run_cli([])
++        self.assertEqual(status, 0)
++        self.assertEqual(json.loads(out), {'items': [], 'next_cursor': None})
++
++    def test_cursor_round_trip_through_cli(self):
++        repo = Repository(_rows(3))
++        _, out, _ = _run_cli(['--limit=2'], repo=repo)
++        cursor = json.loads(out)['next_cursor']
++        status, out, _ = _run_cli(['--limit', '2', '--cursor', cursor], repo=repo)
++        self.assertEqual(status, 0)
++        self.assertEqual([r['id'] for r in json.loads(out)['items']], ['id002'])
++
++    def test_invalid_inputs_return_2_without_stdout(self):
++        cases = [
++            ['--limit', 'abc'],
++            ['--limit', '1.5'],
++            ['--limit', '0'],
++            ['--limit', '101'],
++            ['--limit', '-3'],
++            ['--cursor', 'not!valid'],
++            ['--cursor', ''],
++            ['--bogus'],
++            ['positional'],
++            ['--limit'],
++        ]
++        for argv in cases:
++            with self.subTest(argv=argv):
++                status, out, err = _run_cli(argv, repo=Repository(_rows(3)))
++                self.assertEqual(status, 2)
++                self.assertEqual(out, '')
++                self.assertTrue(err.strip())
++
++    def test_help_returns_zero_without_raising(self):
++        status, _, _ = _run_cli(['--help'])
++        self.assertEqual(status, 0)
++
++
++if __name__ == '__main__':
++    unittest.main()

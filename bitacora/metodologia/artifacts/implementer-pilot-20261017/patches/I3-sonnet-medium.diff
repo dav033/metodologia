@@ -1,0 +1,144 @@
+--- before/app/graph.py
++++ after/app/graph.py
+@@ -1,2 +1,34 @@
++from collections import deque
++
++
+ def validate_graph(jobs):
+-    return {job:set(deps) for job,deps in jobs.items()}
++    """Return a fresh dict job -> set(deps); raise ValueError on unknown deps or cycles."""
++    graph = {job: set(deps) for job, deps in jobs.items()}
++    for job, deps in graph.items():
++        for dep in deps:
++            if dep not in graph:
++                raise ValueError(f"unknown dependency {dep!r} for job {job!r}")
++    # Kahn's algorithm (iterative, so long chains are safe).
++    remaining = {job: len(deps) for job, deps in graph.items()}
++    dependents = build_dependents(graph)
++    queue = deque(job for job, n in remaining.items() if n == 0)
++    seen = 0
++    while queue:
++        job = queue.popleft()
++        seen += 1
++        for child in dependents[job]:
++            remaining[child] -= 1
++            if remaining[child] == 0:
++                queue.append(child)
++    if seen != len(graph):
++        raise ValueError("dependency cycle detected")
++    return graph
++
++
++def build_dependents(graph):
++    """Map each job to the set of jobs that depend on it."""
++    dependents = {job: set() for job in graph}
++    for job, deps in graph.items():
++        for dep in deps:
++            dependents[dep].add(job)
++    return dependents
+--- before/app/scheduler.py
++++ after/app/scheduler.py
+@@ -1,16 +1,51 @@
+-from .graph import validate_graph
++from .graph import build_dependents, validate_graph
++
++PENDING, RUNNING, SUCCEEDED, FAILED, BLOCKED = (
++    "pending", "running", "succeeded", "failed", "blocked")
++
++
+ class Scheduler:
+-    def __init__(self,jobs,max_parallel=2):
+-        self.jobs=validate_graph(jobs)
+-        self.max_parallel=max_parallel
+-        self.state={job:'pending' for job in self.jobs}
++    def __init__(self, jobs, max_parallel=2):
++        if isinstance(max_parallel, bool) or not isinstance(max_parallel, int) or max_parallel < 1:
++            raise ValueError("max_parallel must be an integer >= 1")
++        self.jobs = validate_graph(jobs)
++        self._dependents = build_dependents(self.jobs)
++        self.max_parallel = max_parallel
++        self.state = {job: PENDING for job in self.jobs}
++        self._running = 0
++
++    def _eligible(self, job):
++        return self.state[job] == PENDING and all(
++            self.state[d] == SUCCEEDED for d in self.jobs[job])
++
+     def ready(self):
+-        return [job for job,deps in self.jobs.items() if self.state[job]=='pending' and all(self.state.get(dep)=='succeeded' for dep in deps)]
+-    def start(self,job_id):
+-        if job_id not in self.ready(): raise ValueError('not ready')
+-        self.state[job_id]='running'
+-    def finish(self,job_id,success=True):
+-        if self.state.get(job_id)!='running': raise ValueError('not running')
+-        self.state[job_id]='succeeded' if success else 'failed'
+-    def statuses(self): return dict(self.state)
+-    def done(self): return all(v in ('succeeded','failed','blocked') for v in self.state.values())
++        return sorted(j for j in self.jobs if self._eligible(j))
++
++    def start(self, job_id):
++        if job_id not in self.state or not self._eligible(job_id):
++            raise ValueError(f"job {job_id!r} is not ready")
++        if self._running >= self.max_parallel:
++            raise ValueError("max_parallel limit reached")
++        self.state[job_id] = RUNNING
++        self._running += 1
++
++    def finish(self, job_id, success=True):
++        if self.state.get(job_id) != RUNNING:
++            raise ValueError(f"job {job_id!r} is not running")
++        self._running -= 1
++        if success:
++            self.state[job_id] = SUCCEEDED
++            return
++        self.state[job_id] = FAILED
++        stack = [job_id]
++        while stack:
++            for child in self._dependents[stack.pop()]:
++                if self.state[child] == PENDING:
++                    self.state[child] = BLOCKED
++                    stack.append(child)
++
++    def statuses(self):
++        return dict(self.state)
++
++    def done(self):
++        return not any(s in (PENDING, RUNNING) for s in self.state.values())
+--- before/app/test_scheduler.py
++++ after/app/test_scheduler.py
+@@ -0,0 +1,35 @@
++import unittest
++from app import Scheduler
++from app.scheduler import Scheduler as S2
++from app.graph import validate_graph
++
++
++class T(unittest.TestCase):
++    def test_invalid(self):
++        for g in ({'a': ['b']}, {'a': ['a']}, {'a': ['b'], 'b': ['a']},
++                  {'x': [], 'a': ['b'], 'b': ['c'], 'c': ['a']}):
++            with self.assertRaises(ValueError):
++                Scheduler(g)
++        for m in (0, True, 1.5, '2'):
++            with self.assertRaises(ValueError):
++                Scheduler({}, m)
++
++    def test_generators_and_block(self):
++        s = Scheduler({'a': iter([]), 'b': (d for d in []), 'c': (d for d in 'ab'), 'd': ['c']}, 3)
++        self.assertIs(S2, Scheduler)
++        s.start('a'); s.start('b'); s.finish('a', False)
++        self.assertEqual(s.statuses(), {'a': 'failed', 'b': 'running', 'c': 'blocked', 'd': 'blocked'})
++        s.finish('b'); self.assertTrue(s.done())
++
++    def test_capacity(self):
++        s = Scheduler({'a': [], 'b': [], 'c': []})
++        s.start('a'); s.start('b')
++        with self.assertRaises(ValueError): s.start('c')
++        with self.assertRaises(ValueError): s.start('zz')
++        self.assertEqual(s.ready(), ['c'])
++
++    def test_long_chain(self):
++        g = {str(i): [str(i - 1)] if i else [] for i in range(5000)}
++        s = Scheduler(g); s.start('0'); s.finish('0', False)
++        self.assertEqual(s.statuses()['4999'], 'blocked')
++        self.assertEqual(len(validate_graph(g)), 5000)

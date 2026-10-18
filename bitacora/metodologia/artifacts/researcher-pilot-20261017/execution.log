@@ -1,0 +1,17 @@
+START R1 sonnet-medium
+START R1 sol-medium
+DONE R1 sonnet-medium completed 30.086 {'valid': True, 'errors': []}
+START R2 sonnet-medium
+DONE R1 sol-medium completed 34.753 {'valid': True, 'errors': []}
+START R1 luna-high
+DONE R1 luna-high completed 16.224 {'valid': True, 'errors': []}
+DONE R2 sonnet-medium completed 26.771 {'valid': True, 'errors': []}
+START R3 sonnet-medium
+DONE R3 sonnet-medium completed 19.348 {'valid': True, 'errors': []}
+START R4 sonnet-medium
+DONE R4 sonnet-medium completed 28.958 {'valid': True, 'errors': []}
+START R5 sonnet-medium
+DONE R5 sonnet-medium completed 27.362 {'valid': True, 'errors': []}
+START R6 sonnet-medium
+DONE R6 sonnet-medium completed 29.855 {'valid': True, 'errors': []}
+LANES [{"provider": "claude", "status": "complete"}, {"provider": "codex", "status": "stopped", "cell": "R2-luna-high", "reason": "quota_exhausted"}]

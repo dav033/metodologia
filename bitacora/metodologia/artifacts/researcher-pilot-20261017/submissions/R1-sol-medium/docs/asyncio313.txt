@@ -1,0 +1,223 @@
+Source: https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst
+Original source line numbers follow.
+
+00290 |    .. versionchanged:: 3.11
+00291 |       Added the *context* parameter.
+00292 | 
+00293 | 
+00294 | Task Cancellation
+00295 | =================
+00296 | 
+00297 | Tasks can easily and safely be cancelled.
+00298 | When a task is cancelled, :exc:`asyncio.CancelledError` will be raised
+00299 | in the task at the next opportunity.
+00300 | 
+00301 | It is recommended that coroutines use ``try/finally`` blocks to robustly
+00302 | perform clean-up logic. In case :exc:`asyncio.CancelledError`
+00303 | is explicitly caught, it should generally be propagated when
+00304 | clean-up is complete. :exc:`asyncio.CancelledError` directly subclasses
+00305 | :exc:`BaseException` so most code will not need to be aware of it.
+00306 | 
+00307 | The asyncio components that enable structured concurrency, like
+00308 | :class:`asyncio.TaskGroup` and :func:`asyncio.timeout`,
+00309 | are implemented using cancellation internally and might misbehave if
+00310 | a coroutine swallows :exc:`asyncio.CancelledError`. Similarly, user code
+00311 | should not generally call :meth:`uncancel <asyncio.Task.uncancel>`.
+00312 | However, in cases when suppressing :exc:`asyncio.CancelledError` is
+00313 | truly desired, it is necessary to also call ``uncancel()`` to completely
+00314 | remove the cancellation state.
+00315 | 
+00316 | .. _taskgroups:
+00317 | 
+00318 | Task Groups
+00319 | ===========
+00320 | 
+00321 | Task groups combine a task creation API with a convenient
+00322 | and reliable way to wait for all tasks in the group to finish.
+00323 | 
+00324 | .. class:: TaskGroup()
+00325 | 
+00326 |    An :ref:`asynchronous context manager <async-context-managers>`
+00327 |    holding a group of tasks.
+00328 |    Tasks can be added to the group using :meth:`create_task`.
+00329 |    All tasks are awaited when the context manager exits.
+00330 | 
+00331 |    .. versionadded:: 3.11
+00332 | 
+00333 |    .. method:: create_task(coro, *, name=None, context=None)
+00334 | 
+00335 |       Create a task in this task group.
+00336 |       The signature matches that of :func:`asyncio.create_task`.
+00337 |       If the task group is inactive (e.g. not yet entered,
+00338 |       already finished, or in the process of shutting down),
+00339 |       we will close the given ``coro``.
+00340 | 
+00341 |       .. versionchanged:: 3.13
+00342 | 
+00343 |          Close the given coroutine if the task group is not active.
+00344 | 
+00345 | Example::
+00346 | 
+00347 |     async def main():
+00348 |         async with asyncio.TaskGroup() as tg:
+00349 |             task1 = tg.create_task(some_coro(...))
+00350 |             task2 = tg.create_task(another_coro(...))
+00351 |         print(f"Both tasks have completed now: {task1.result()}, {task2.result()}")
+00352 | 
+00353 | The ``async with`` statement will wait for all tasks in the group to finish.
+00354 | While waiting, new tasks may still be added to the group
+00355 | (for example, by passing ``tg`` into one of the coroutines
+00356 | and calling ``tg.create_task()`` in that coroutine).
+00357 | Once the last task has finished and the ``async with`` block is exited,
+00358 | no new tasks may be added to the group.
+00359 | 
+00360 | The first time any of the tasks belonging to the group fails
+00361 | with an exception other than :exc:`asyncio.CancelledError`,
+00362 | the remaining tasks in the group are cancelled.
+00363 | No further tasks can then be added to the group.
+00364 | At this point, if the body of the ``async with`` statement is still active
+00365 | (i.e., :meth:`~object.__aexit__` hasn't been called yet),
+00366 | the task directly containing the ``async with`` statement is also cancelled.
+00367 | The resulting :exc:`asyncio.CancelledError` will interrupt an ``await``,
+00368 | but it will not bubble out of the containing ``async with`` statement.
+00369 | 
+00370 | Once all tasks have finished, if any tasks have failed
+00371 | with an exception other than :exc:`asyncio.CancelledError`,
+00372 | those exceptions are combined in an
+00373 | :exc:`ExceptionGroup` or :exc:`BaseExceptionGroup`
+00374 | (as appropriate; see their documentation)
+00375 | which is then raised.
+00376 | 
+00377 | Two base exceptions are treated specially:
+00378 | If any task fails with :exc:`KeyboardInterrupt` or :exc:`SystemExit`,
+00379 | the task group still cancels the remaining tasks and waits for them,
+00380 | but then the initial :exc:`KeyboardInterrupt` or :exc:`SystemExit`
+00381 | is re-raised instead of :exc:`ExceptionGroup` or :exc:`BaseExceptionGroup`.
+00382 | 
+00383 | If the body of the ``async with`` statement exits with an exception
+00384 | (so :meth:`~object.__aexit__` is called with an exception set),
+00385 | this is treated the same as if one of the tasks failed:
+00386 | the remaining tasks are cancelled and then waited for,
+00387 | and non-cancellation exceptions are grouped into an
+00388 | exception group and raised.
+00389 | The exception passed into :meth:`~object.__aexit__`,
+00390 | unless it is :exc:`asyncio.CancelledError`,
+00391 | is also included in the exception group.
+00392 | The same special case is made for
+00393 | :exc:`KeyboardInterrupt` and :exc:`SystemExit` as in the previous paragraph.
+00394 | 
+00395 | Task groups are careful not to mix up the internal cancellation used to
+00396 | "wake up" their :meth:`~object.__aexit__` with cancellation requests
+00397 | for the task in which they are running made by other parties.
+00398 | In particular, when one task group is syntactically nested in another,
+00399 | and both experience an exception in one of their child tasks simultaneously,
+00400 | the inner task group will process its exceptions, and then the outer task group
+00401 | will receive another cancellation and process its own exceptions.
+00402 | 
+00403 | In the case where a task group is cancelled externally and also must
+00404 | raise an :exc:`ExceptionGroup`, it will call the parent task's
+00405 | :meth:`~asyncio.Task.cancel` method. This ensures that a
+00406 | :exc:`asyncio.CancelledError` will be raised at the next
+00407 | :keyword:`await`, so the cancellation is not lost.
+00408 | 
+00409 | Task groups preserve the cancellation count
+00410 | reported by :meth:`asyncio.Task.cancelling`.
+00411 | 
+00412 | .. versionchanged:: 3.13
+00413 | 
+00414 |    Improved handling of simultaneous internal and external cancellations
+00415 |    and correct preservation of cancellation counts.
+00416 | 
+
+00508 | Running Tasks Concurrently
+00509 | ==========================
+00510 | 
+00511 | .. awaitablefunction:: gather(*aws, return_exceptions=False)
+00512 | 
+00513 |    Run :ref:`awaitable objects <asyncio-awaitables>` in the *aws*
+00514 |    sequence *concurrently*.
+00515 | 
+00516 |    If any awaitable in *aws* is a coroutine, it is automatically
+00517 |    scheduled as a Task.
+00518 | 
+00519 |    If all awaitables are completed successfully, the result is an
+00520 |    aggregate list of returned values.  The order of result values
+00521 |    corresponds to the order of awaitables in *aws*.
+00522 | 
+00523 |    If *return_exceptions* is ``False`` (default), the first
+00524 |    raised exception is immediately propagated to the task that
+00525 |    awaits on ``gather()``.  Other awaitables in the *aws* sequence
+00526 |    **won't be cancelled** and will continue to run.
+00527 | 
+00528 |    If *return_exceptions* is ``True``, exceptions are treated the
+00529 |    same as successful results, and aggregated in the result list.
+00530 | 
+00531 |    If ``gather()`` is *cancelled*, all submitted awaitables
+00532 |    (that have not completed yet) are also *cancelled*.
+00533 | 
+00534 |    If any Task or Future from the *aws* sequence is *cancelled*, it is
+00535 |    treated as if it raised :exc:`CancelledError` -- the ``gather()``
+00536 |    call is **not** cancelled in this case.  This is to prevent the
+00537 |    cancellation of one submitted Task/Future to cause other
+00538 |    Tasks/Futures to be cancelled.
+00539 | 
+00540 |    .. note::
+00541 |       A new alternative to create and run tasks concurrently and
+00542 |       wait for their completion is :class:`asyncio.TaskGroup`. *TaskGroup*
+00543 |       provides stronger safety guarantees than *gather* for scheduling a nesting of subtasks:
+00544 |       if a task (or a subtask, a task scheduled by a task)
+00545 |       raises an exception, *TaskGroup* will, while *gather* will not,
+00546 |       cancel the remaining scheduled tasks).
+00547 | 
+00548 |    .. _asyncio_example_gather:
+00549 | 
+00550 |    Example::
+00551 | 
+00552 |       import asyncio
+00553 | 
+00554 |       async def factorial(name, number):
+00555 |           f = 1
+00556 |           for i in range(2, number + 1):
+00557 |               print(f"Task {name}: Compute factorial({number}), currently i={i}...")
+00558 |               await asyncio.sleep(1)
+00559 |               f *= i
+00560 |           print(f"Task {name}: factorial({number}) = {f}")
+00561 |           return f
+00562 | 
+00563 |       async def main():
+00564 |           # Schedule three calls *concurrently*:
+00565 |           L = await asyncio.gather(
+00566 |               factorial("A", 2),
+00567 |               factorial("B", 3),
+00568 |               factorial("C", 4),
+00569 |           )
+00570 |           print(L)
+00571 | 
+00572 |       asyncio.run(main())
+00573 | 
+00574 |       # Expected output:
+00575 |       #
+00576 |       #     Task A: Compute factorial(2), currently i=2...
+00577 |       #     Task B: Compute factorial(3), currently i=2...
+00578 |       #     Task C: Compute factorial(4), currently i=2...
+00579 |       #     Task A: factorial(2) = 2
+00580 |       #     Task B: Compute factorial(3), currently i=3...
+00581 |       #     Task C: Compute factorial(4), currently i=3...
+00582 |       #     Task B: factorial(3) = 6
+00583 |       #     Task C: Compute factorial(4), currently i=4...
+00584 |       #     Task C: factorial(4) = 24
+00585 |       #     [2, 6, 24]
+00586 | 
+00587 |    .. note::
+00588 |       If *return_exceptions* is false, cancelling gather() after it
+00589 |       has been marked done won't cancel any submitted awaitables.
+00590 |       For instance, gather can be marked done after propagating an
+00591 |       exception to the caller, therefore, calling ``gather.cancel()``
+00592 |       after catching an exception (raised by one of the awaitables) from
+00593 |       gather won't cancel any other awaitables.
+00594 | 
+00595 |    .. versionchanged:: 3.7
+00596 |       If the *gather* itself is cancelled, the cancellation is
+00597 |       propagated regardless of *return_exceptions*.
+00598 | 
+00599 |    .. versionchanged:: 3.10

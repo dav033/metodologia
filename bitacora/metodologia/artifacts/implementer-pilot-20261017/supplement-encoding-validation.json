@@ -1,0 +1,93 @@
+{
+  "source_sha256": "0fdef781bfc2eaab4006809b4b7a7d4f4263497610c7f7fe52b3e840d73d354a",
+  "changed_case_keys": [
+    "private_tests"
+  ],
+  "encoding_policy": "Exact raw expected result OR JSON dict with exact result and keyset {result}, {id,result}, or {job_id,result}. Supplied identity must equal expected event id; extra fields forbidden. Inbox preserves exact first callback body.",
+  "runs": {
+    "raw_reference": {
+      "tests": 17,
+      "exit_code": 0,
+      "outcome": "OK",
+      "failed_tests": []
+    },
+    "id_json_reference": {
+      "tests": 17,
+      "exit_code": 0,
+      "outcome": "OK",
+      "failed_tests": []
+    },
+    "job_id_json_reference": {
+      "tests": 17,
+      "exit_code": 0,
+      "outcome": "OK",
+      "failed_tests": []
+    },
+    "result_only_json_reference": {
+      "tests": 17,
+      "exit_code": 0,
+      "outcome": "OK",
+      "failed_tests": []
+    },
+    "wrong_result_json_mutant": {
+      "tests": 17,
+      "exit_code": 1,
+      "outcome": "failures=5",
+      "failed_tests": [
+        "test_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe)",
+        "test_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry)",
+        "test_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack)",
+        "test_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result)",
+        "test_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit)"
+      ]
+    },
+    "wrong_identity_id_mutant": {
+      "tests": 17,
+      "exit_code": 1,
+      "outcome": "failures=5",
+      "failed_tests": [
+        "test_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe)",
+        "test_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry)",
+        "test_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack)",
+        "test_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result)",
+        "test_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit)"
+      ]
+    },
+    "wrong_identity_job_id_mutant": {
+      "tests": 17,
+      "exit_code": 1,
+      "outcome": "failures=5",
+      "failed_tests": [
+        "test_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe)",
+        "test_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry)",
+        "test_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack)",
+        "test_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result)",
+        "test_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit)"
+      ]
+    },
+    "extra_fields_json_mutant": {
+      "tests": 17,
+      "exit_code": 1,
+      "outcome": "failures=5",
+      "failed_tests": [
+        "test_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe)",
+        "test_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry)",
+        "test_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack)",
+        "test_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result)",
+        "test_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit)"
+      ]
+    },
+    "both_identity_keys_mutant": {
+      "tests": 17,
+      "exit_code": 1,
+      "outcome": "failures=5",
+      "failed_tests": [
+        "test_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe)",
+        "test_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry)",
+        "test_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack)",
+        "test_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result)",
+        "test_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit)"
+      ]
+    }
+  }
+}

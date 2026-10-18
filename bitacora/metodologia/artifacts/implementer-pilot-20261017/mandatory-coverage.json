@@ -1,0 +1,413 @@
+{
+  "frozen_input_hashes_valid": true,
+  "same_prompt_per_case": true,
+  "mandatory_tests_per_route": 79,
+  "cells": [
+    {
+      "cell": "I1-haiku-high",
+      "mandatory_count": 12,
+      "mandatory_passed": 12,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I1-haiku-medium",
+      "mandatory_count": 12,
+      "mandatory_passed": 12,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I1-haiku-xhigh",
+      "mandatory_count": 12,
+      "mandatory_passed": 12,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I1-luna-high",
+      "mandatory_count": 12,
+      "mandatory_passed": 12,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I1-luna-medium",
+      "mandatory_count": 12,
+      "mandatory_passed": 12,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I1-luna-xhigh",
+      "mandatory_count": 12,
+      "mandatory_passed": 12,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I1-sol-medium",
+      "mandatory_count": 12,
+      "mandatory_passed": 12,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I1-sonnet-medium",
+      "mandatory_count": 12,
+      "mandatory_passed": 12,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I2-haiku-high",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I2-haiku-medium",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I2-haiku-xhigh",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I2-luna-high",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I2-luna-medium",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I2-luna-xhigh",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I2-sol-medium",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I2-sonnet-medium",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I3-haiku-high",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I3-haiku-medium",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I3-haiku-xhigh",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I3-luna-high",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I3-luna-medium",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I3-luna-xhigh",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I3-sol-medium",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I3-sonnet-medium",
+      "mandatory_count": 14,
+      "mandatory_passed": 14,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I4-haiku-high",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I4-haiku-medium",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I4-haiku-xhigh",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I4-luna-high",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I4-luna-medium",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I4-luna-xhigh",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I4-sol-medium",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I4-sonnet-medium",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I5-haiku-high",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I5-haiku-medium",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I5-haiku-xhigh",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I5-luna-high",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I5-luna-medium",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I5-luna-xhigh",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I5-sol-medium",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I5-sonnet-medium",
+      "mandatory_count": 11,
+      "mandatory_passed": 11,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I6-haiku-high",
+      "mandatory_count": 17,
+      "mandatory_passed": 17,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I6-haiku-medium",
+      "mandatory_count": 17,
+      "mandatory_passed": 12,
+      "not_proven_passing": [
+        "test_private.QueueTests.test_delivery_crash_replay_and_dedupe",
+        "test_private.QueueTests.test_hook_exception_atomic_and_expired_retry",
+        "test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack",
+        "test_private.QueueTests.test_process_crash_after_result",
+        "test_private.QueueTests.test_process_crash_before_commit"
+      ],
+      "noisy_line_recovered": [],
+      "full_pass": false
+    },
+    {
+      "cell": "I6-haiku-xhigh",
+      "mandatory_count": 17,
+      "mandatory_passed": 12,
+      "not_proven_passing": [
+        "test_private.QueueTests.test_delivery_crash_replay_and_dedupe",
+        "test_private.QueueTests.test_hook_exception_atomic_and_expired_retry",
+        "test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack",
+        "test_private.QueueTests.test_process_crash_after_result",
+        "test_private.QueueTests.test_process_crash_before_commit"
+      ],
+      "noisy_line_recovered": [],
+      "full_pass": false
+    },
+    {
+      "cell": "I6-luna-high",
+      "mandatory_count": 17,
+      "mandatory_passed": 17,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I6-luna-medium",
+      "mandatory_count": 17,
+      "mandatory_passed": 12,
+      "not_proven_passing": [
+        "test_private.QueueTests.test_delivery_crash_replay_and_dedupe",
+        "test_private.QueueTests.test_hook_exception_atomic_and_expired_retry",
+        "test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack",
+        "test_private.QueueTests.test_process_crash_after_result",
+        "test_private.QueueTests.test_process_crash_before_commit"
+      ],
+      "noisy_line_recovered": [
+        "test_private.QueueTests.test_expired_cannot_complete"
+      ],
+      "full_pass": false
+    },
+    {
+      "cell": "I6-luna-xhigh",
+      "mandatory_count": 17,
+      "mandatory_passed": 17,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [
+        "test_private.QueueTests.test_process_crash_before_commit"
+      ],
+      "full_pass": true
+    },
+    {
+      "cell": "I6-sol-medium",
+      "mandatory_count": 17,
+      "mandatory_passed": 17,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    },
+    {
+      "cell": "I6-sonnet-medium",
+      "mandatory_count": 17,
+      "mandatory_passed": 17,
+      "not_proven_passing": [],
+      "noisy_line_recovered": [],
+      "full_pass": true
+    }
+  ]
+}

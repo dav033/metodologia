@@ -1,0 +1,151 @@
+--- before/app/cli.py
++++ after/app/cli.py
+@@ -1,8 +1,53 @@
++import argparse
+ import json
++import sys
++
+ from app.repository import Repository
+ from app.service import list_items
++
++
++class _ArgumentError(Exception):
++    pass
++
++
++class _ArgumentExit(Exception):
++    def __init__(self, status):
++        self.status = status
++
++
++class _ArgumentParser(argparse.ArgumentParser):
++    def error(self, message):
++        raise _ArgumentError(message)
++
++    def exit(self, status=0, message=None):
++        if message:
++            self._print_message(message, sys.stdout if status == 0 else sys.stderr)
++        raise _ArgumentExit(status)
++
++
+ def main(argv=None, *, repo=None):
+-    print(json.dumps(list_items(repo if repo is not None else Repository([]))))
++    parser = _ArgumentParser(
++        description="List items with cursor pagination.", allow_abbrev=False
++    )
++    parser.add_argument("--limit", type=int, default=20)
++    parser.add_argument("--cursor")
++
++    try:
++        args = parser.parse_args(argv)
++        page = list_items(
++            repo if repo is not None else Repository([]),
++            limit=args.limit,
++            cursor=args.cursor,
++        )
++    except (_ArgumentError, ValueError) as exc:
++        print(f"error: {exc}", file=sys.stderr)
++        return 2
++    except _ArgumentExit as exc:
++        return exc.status
++
++    print(json.dumps(page))
+     return 0
+-if __name__ == '__main__':
++
++
++if __name__ == "__main__":
+     raise SystemExit(main())
+--- before/app/repository.py
++++ after/app/repository.py
+@@ -1,12 +1,75 @@
++import base64
++import copy
++import json
++import re
++
++
++_URLSAFE_BASE64 = re.compile(r"[A-Za-z0-9_-]+\Z")
++
++
++def _validate_limit(limit):
++    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 100:
++        raise ValueError("limit must be an integer between 1 and 100")
++
++
++def encode_cursor(timestamp, id):
++    """Encode a row's ordering tuple as an unpadded URL-safe cursor."""
++    payload = json.dumps(
++        [timestamp, id], separators=(",", ":"), ensure_ascii=False
++    ).encode("utf-8")
++    return base64.urlsafe_b64encode(payload).decode("ascii").rstrip("=")
++
++
++def decode_cursor(cursor):
++    """Decode and validate a cursor's ``(timestamp, id)`` ordering tuple."""
++    if not isinstance(cursor, str) or not cursor or not _URLSAFE_BASE64.fullmatch(cursor):
++        raise ValueError("cursor must be unpadded URL-safe base64")
++
++    try:
++        padded = cursor + "=" * (-len(cursor) % 4)
++        payload = base64.b64decode(padded, altchars=b"-_", validate=True)
++        # Reject non-canonical encodings, including encodings with non-zero pad bits.
++        if base64.urlsafe_b64encode(payload).decode("ascii").rstrip("=") != cursor:
++            raise ValueError("malformed base64 cursor")
++        decoded = json.loads(payload.decode("utf-8"))
++    except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++        raise ValueError("malformed cursor") from exc
++
++    if not isinstance(decoded, list) or len(decoded) != 2:
++        raise ValueError("cursor must contain a timestamp and id")
++    timestamp, id = decoded
++    if isinstance(timestamp, bool) or not isinstance(timestamp, int):
++        raise ValueError("cursor timestamp must be an integer")
++    if not isinstance(id, str) or not id:
++        raise ValueError("cursor id must be a nonempty string")
++    return timestamp, id
++
++
+ class Repository:
+     def __init__(self, rows):
+-        self.rows = list(rows)
++        # Keep an isolated snapshot so later caller changes cannot alter pagination.
++        self.rows = copy.deepcopy(list(rows))
++
++    def page(self, limit=20, cursor=None):
++        _validate_limit(limit)
++        after = None if cursor is None else decode_cursor(cursor)
++
++        ordered = sorted(self.rows, key=lambda row: (row["timestamp"], row["id"]))
++        if after is not None:
++            ordered = [
++                row
++                for row in ordered
++                if (row["timestamp"], row["id"]) > after
++            ]
++
++        has_more = len(ordered) > limit
++        selected = ordered[:limit]
++        items = copy.deepcopy(selected)
++        next_cursor = None
++        if has_more:
++            last = selected[-1]
++            next_cursor = encode_cursor(last["timestamp"], last["id"])
++        return {"items": items, "next_cursor": next_cursor}
++
+     def list_items(self, limit=20):
+-        return sorted(self.rows, key=lambda row: (row['timestamp'],row['id']))[:limit]
+-    def page(self, limit=20, cursor=None):
+-        return {'items': self.list_items(limit), 'next_cursor': None}
+-def encode_cursor(timestamp, id):
+-    return str(timestamp) + ':' + id
+-def decode_cursor(cursor):
+-    timestamp, id = cursor.split(':',1)
+-    return int(timestamp), id
++        return self.page(limit=limit)["items"]
+--- before/app/service.py
++++ after/app/service.py
+@@ -1,2 +1,2 @@
+ def list_items(repo, limit=20, cursor=None):
+-    return repo.page(limit=limit)
++    return repo.page(limit=limit, cursor=cursor)

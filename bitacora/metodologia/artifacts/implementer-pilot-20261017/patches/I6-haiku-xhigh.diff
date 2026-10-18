@@ -1,0 +1,510 @@
+--- before/app/checks.py
++++ after/app/checks.py
+@@ -0,0 +1,26 @@
++"""Argument validation for the store API. Runs before any database access."""
++
++INT64_MIN = -(2**63)
++INT64_MAX = 2**63 - 1
++
++
++def require_str(name, value):
++    if not isinstance(value, str):
++        raise TypeError(f'{name} must be str, not {type(value).__name__}')
++
++
++def require_optional_str(name, value):
++    if value is not None:
++        require_str(name, value)
++
++
++def require_int(name, value):
++    if isinstance(value, bool) or not isinstance(value, int):
++        raise TypeError(f'{name} must be int, not {type(value).__name__}')
++    if not INT64_MIN <= value <= INT64_MAX:
++        raise OverflowError(f'{name} is outside the SQLite INTEGER range')
++
++
++def require_callable(name, value):
++    if not callable(value):
++        raise TypeError(f'{name} must be callable, not {type(value).__name__}')
+--- before/app/db.py
++++ after/app/db.py
+@@ -0,0 +1,44 @@
++"""Connection, transaction, and schema helpers for the job store."""
++
++import sqlite3
++from contextlib import contextmanager
++
++BUSY_TIMEOUT_SECONDS = 30.0
++
++SCHEMA = (
++    "CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,payload TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'pending',token INTEGER NOT NULL DEFAULT 0,lease_until INTEGER,attempts INTEGER NOT NULL DEFAULT 0,depends_on TEXT,result TEXT)",
++    "CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY,body TEXT NOT NULL,delivered INTEGER NOT NULL DEFAULT 0)",
++    "CREATE TABLE IF NOT EXISTS inbox(id TEXT PRIMARY KEY,body TEXT NOT NULL)",
++)
++
++
++@contextmanager
++def connect(path):
++    """Yield an autocommit connection that fsyncs on commit and is always closed."""
++    conn = sqlite3.connect(path, timeout=BUSY_TIMEOUT_SECONDS, isolation_level=None)
++    try:
++        conn.execute('PRAGMA synchronous=FULL')
++        yield conn
++    finally:
++        conn.close()
++
++
++@contextmanager
++def write_transaction(conn):
++    """Run the block in BEGIN IMMEDIATE; commit on success, roll back on any error."""
++    conn.execute('BEGIN IMMEDIATE')
++    try:
++        yield conn
++        conn.execute('COMMIT')
++    except BaseException:
++        if conn.in_transaction:
++            conn.execute('ROLLBACK')
++        raise
++
++
++def initialize_schema(path):
++    with connect(path) as conn:
++        conn.execute('PRAGMA journal_mode=WAL').fetchall()
++        with write_transaction(conn):
++            for statement in SCHEMA:
++                conn.execute(statement)
+--- before/app/store.py
++++ after/app/store.py
+@@ -1,15 +1,139 @@
++"""SQLite-backed job queue with leases, dependencies, retries, and an outbox/inbox.
++
++Each call opens its own connection, performs its writes in a BEGIN IMMEDIATE
++transaction, and closes the connection before returning.
++"""
++
++import json
+ import sqlite3
+ 
++from .checks import require_callable, require_int, require_optional_str, require_str
++from .db import connect, initialize_schema, write_transaction
++
++CLAIM_CANDIDATE = """
++SELECT id, payload, token FROM jobs AS job
++WHERE (job.state = 'pending' OR (job.state = 'running' AND job.lease_until <= ?))
++  AND (job.depends_on IS NULL OR EXISTS (
++        SELECT 1 FROM jobs AS parent WHERE parent.id = job.depends_on AND parent.state = 'done'))
++ORDER BY job.id
++LIMIT 1
++"""
++CLAIM_JOB = "UPDATE jobs SET state='running', token=?, lease_until=?, attempts=attempts+1 WHERE id=?"
++COMPLETE_JOB = """
++UPDATE jobs SET state='done', result=?, lease_until=NULL
++WHERE id=? AND state='running' AND token=? AND lease_until>?
++"""
++RETRY_JOB = """
++UPDATE jobs SET state='pending', lease_until=NULL
++WHERE id=? AND state='running' AND token=? AND lease_until>?
++"""
++NEXT_UNDELIVERED = """
++SELECT id, body FROM outbox
++WHERE delivered=0 AND (? IS NULL OR id>?)
++ORDER BY id
++LIMIT 1
++"""
++
++
+ def init(path):
+-    with sqlite3.connect(path) as c:
+-        c.execute("CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,payload TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'pending',token INTEGER NOT NULL DEFAULT 0,lease_until INTEGER,attempts INTEGER NOT NULL DEFAULT 0,depends_on TEXT,result TEXT)")
+-def enqueue(path,id,payload,depends_on=None):
+-    with sqlite3.connect(path) as c:c.execute('INSERT OR IGNORE INTO jobs(id,payload,depends_on) VALUES(?,?,?)',(id,payload,depends_on))
+-def claim(path,now,ttl):return None
+-def complete(path,id,token,result,now,fault=None):return False
+-def inspect(path,id):
+-    with sqlite3.connect(path) as c:
+-        c.row_factory=sqlite3.Row;r=c.execute('SELECT * FROM jobs WHERE id=?',(id,)).fetchone();return dict(r) if r else None
+-def retry(path,id,token,now):return False
+-def publish(path,deliver):return 0
+-def consume(path,id,body):return False
++    initialize_schema(path)
++
++
++def enqueue(path, id, payload, depends_on=None):
++    require_str('id', id)
++    require_str('payload', payload)
++    require_optional_str('depends_on', depends_on)
++    with connect(path) as conn, write_transaction(conn):
++        conn.execute('INSERT OR IGNORE INTO jobs(id,payload,depends_on) VALUES(?,?,?)', (id, payload, depends_on))
++
++
++def claim(path, now, ttl):
++    require_int('now', now)
++    require_int('ttl', ttl)
++    if ttl <= 0:
++        raise ValueError('ttl must be greater than 0')
++    lease_until = now + ttl
++    require_int('now + ttl', lease_until)
++    with connect(path) as conn, write_transaction(conn):
++        candidates = conn.execute(CLAIM_CANDIDATE, (now,)).fetchall()
++        if not candidates:
++            return None
++        job_id, payload, token = candidates[0]
++        new_token = token + 1
++        conn.execute(CLAIM_JOB, (new_token, lease_until, job_id))
++        return job_id, payload, new_token
++
++
++def complete(path, id, token, result, now, fault=None):
++    require_str('id', id)
++    require_int('token', token)
++    require_str('result', result)
++    require_int('now', now)
++    if fault is not None:
++        require_callable('fault', fault)
++    with connect(path) as conn, write_transaction(conn):
++        if conn.execute(COMPLETE_JOB, (result, id, token, now)).rowcount != 1:
++            return False
++        _fire(fault, 'after_result')
++        conn.execute('INSERT INTO outbox(id,body) VALUES(?,?)', (id, _event_body(id, result)))
++        _fire(fault, 'before_commit')
++    return True
++
++
++def inspect(path, id):
++    require_str('id', id)
++    with connect(path) as conn:
++        conn.row_factory = sqlite3.Row
++        row = conn.execute('SELECT * FROM jobs WHERE id=?', (id,)).fetchone()
++    return dict(row) if row is not None else None
++
++
++def retry(path, id, token, now):
++    require_str('id', id)
++    require_int('token', token)
++    require_int('now', now)
++    with connect(path) as conn, write_transaction(conn):
++        return conn.execute(RETRY_JOB, (id, token, now)).rowcount == 1
++
++
++def publish(path, deliver):
++    require_callable('deliver', deliver)
++    delivered = 0
++    after = None
++    while True:
++        event = _next_undelivered(path, after)
++        if event is None:
++            return delivered
++        event_id, body = event
++        deliver(event_id, body)
++        _mark_delivered(path, event_id)
++        delivered += 1
++        after = event_id
++
++
++def consume(path, id, body):
++    require_str('id', id)
++    require_str('body', body)
++    with connect(path) as conn, write_transaction(conn):
++        return conn.execute('INSERT OR IGNORE INTO inbox(id,body) VALUES(?,?)', (id, body)).rowcount == 1
++
++
++def _fire(fault, point):
++    if fault is not None:
++        fault(point)
++
++
++def _event_body(job_id, result):
++    return json.dumps({'job_id': job_id, 'result': result}, sort_keys=True)
++
++
++def _next_undelivered(path, after):
++    # The connection is closed before the caller's callback runs, so no lock is held during delivery.
++    with connect(path) as conn:
++        rows = conn.execute(NEXT_UNDELIVERED, (after, after)).fetchall()
++    return rows[0] if rows else None
++
++
++def _mark_delivered(path, event_id):
++    with connect(path) as conn, write_transaction(conn):
++        conn.execute('UPDATE outbox SET delivered=1 WHERE id=?', (event_id,))
+--- before/app/test_store.py
++++ after/app/test_store.py
+@@ -0,0 +1,277 @@
++"""Behavioral tests for app.store. Run: python -m unittest app.test_store -v"""
++
++import json
++import os
++import sqlite3
++import subprocess
++import sys
++import tempfile
++import threading
++import unittest
++from contextlib import closing
++
++from app.store import claim, complete, consume, enqueue, init, inspect, publish, retry
++
++ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++JOB_COLUMNS = ['id', 'payload', 'state', 'token', 'lease_until', 'attempts', 'depends_on', 'result']
++CRASH_SCRIPT = (
++    'import os, sys\n'
++    'from app.store import complete\n'
++    'def crash_at(point):\n'
++    '    if point == sys.argv[3]:\n'
++    '        os._exit(1)\n'
++    'complete(sys.argv[1], sys.argv[2], 1, "R", 5, fault=crash_at)\n'
++)
++
++
++class StoreTestCase(unittest.TestCase):
++    def setUp(self):
++        tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(tmp.cleanup)
++        self.path = os.path.join(tmp.name, 'queue.db')
++        init(self.path)
++
++    def query(self, sql, params=()):
++        with closing(sqlite3.connect(self.path)) as conn:
++            return conn.execute(sql, params).fetchall()
++
++    def finish_jobs(self, job_ids):
++        for job_id in job_ids:
++            enqueue(self.path, job_id, 'P')
++        for _ in job_ids:
++            job_id, _, token = claim(self.path, 0, 100)
++            self.assertTrue(complete(self.path, job_id, token, 'result-' + job_id, 5))
++
++
++class SchemaTests(StoreTestCase):
++    def test_init_is_idempotent_and_keeps_data(self):
++        enqueue(self.path, 'a', 'work')
++        init(self.path)
++        init(self.path)
++        self.assertEqual(inspect(self.path, 'a')['payload'], 'work')
++
++    def test_tables_match_spec(self):
++        def columns(table):
++            return [row[1] for row in self.query(f'PRAGMA table_info({table})')]
++
++        self.assertEqual(columns('jobs'), JOB_COLUMNS)
++        self.assertEqual(columns('outbox'), ['id', 'body', 'delivered'])
++        self.assertEqual(columns('inbox'), ['id', 'body'])
++
++    def test_inspect_returns_all_columns_or_none(self):
++        self.assertIsNone(inspect(self.path, 'missing'))
++        enqueue(self.path, 'a', 'work', depends_on='p')
++        self.assertEqual(set(inspect(self.path, 'a')), set(JOB_COLUMNS))
++
++    def test_enqueue_duplicate_keeps_first_payload(self):
++        enqueue(self.path, 'a', 'first')
++        enqueue(self.path, 'a', 'second')
++        self.assertEqual(inspect(self.path, 'a')['payload'], 'first')
++
++    def test_invalid_argument_types_raise_type_error(self):
++        with self.assertRaises(TypeError):
++            enqueue(self.path, 1, 'A')
++        with self.assertRaises(TypeError):
++            claim(self.path, '0', 10)
++
++
++class ClaimTests(StoreTestCase):
++    def test_claim_picks_smallest_id_and_records_lease(self):
++        enqueue(self.path, 'b', 'B')
++        enqueue(self.path, 'a', 'A')
++        self.assertEqual(claim(self.path, 5, 10), ('a', 'A', 1))
++        job = inspect(self.path, 'a')
++        self.assertEqual((job['state'], job['token'], job['lease_until'], job['attempts']), ('running', 1, 15, 1))
++
++    def test_non_positive_ttl_is_rejected_without_mutation(self):
++        enqueue(self.path, 'a', 'A')
++        for ttl in (0, -1):
++            with self.subTest(ttl=ttl), self.assertRaises(ValueError):
++                claim(self.path, 0, ttl)
++        job = inspect(self.path, 'a')
++        self.assertEqual((job['state'], job['token'], job['attempts']), ('pending', 0, 0))
++
++    def test_live_lease_blocks_and_expired_lease_is_reclaimed(self):
++        enqueue(self.path, 'a', 'A')
++        self.assertEqual(claim(self.path, 0, 10), ('a', 'A', 1))
++        self.assertIsNone(claim(self.path, 9, 10))
++        self.assertEqual(claim(self.path, 10, 10), ('a', 'A', 2))
++        self.assertEqual(inspect(self.path, 'a')['attempts'], 2)
++
++
++class CompleteTests(StoreTestCase):
++    def test_valid_completion_stores_result_and_one_event(self):
++        enqueue(self.path, 'a', 'A')
++        token = claim(self.path, 0, 10)[2]
++        calls = []
++        self.assertTrue(complete(self.path, 'a', token, 'R', 5, fault=calls.append))
++        self.assertEqual(calls, ['after_result', 'before_commit'])
++        job = inspect(self.path, 'a')
++        self.assertEqual((job['state'], job['result'], job['lease_until']), ('done', 'R', None))
++        rows = self.query('SELECT id, body, delivered FROM outbox')
++        self.assertEqual([(row[0], row[2]) for row in rows], [('a', 0)])
++        self.assertEqual(json.loads(rows[0][1]), {'job_id': 'a', 'result': 'R'})
++
++    def test_stale_expired_and_missing_completions_do_nothing(self):
++        enqueue(self.path, 'a', 'A')
++        token = claim(self.path, 0, 10)[2]
++        calls = []
++        self.assertFalse(complete(self.path, 'a', token + 1, 'R', 5, fault=calls.append))
++        self.assertFalse(complete(self.path, 'a', token, 'R', 10, fault=calls.append))
++        self.assertFalse(complete(self.path, 'missing', token, 'R', 5, fault=calls.append))
++        self.assertEqual(calls, [])
++        self.assertEqual(self.query('SELECT COUNT(*) FROM outbox'), [(0,)])
++        job = inspect(self.path, 'a')
++        self.assertEqual((job['state'], job['result'], job['token']), ('running', None, 1))
++
++    def test_hook_exception_rolls_back_result_and_event(self):
++        for point in ('after_result', 'before_commit'):
++            job_id = 'hook-' + point
++            enqueue(self.path, job_id, 'A')
++            token = claim(self.path, 0, 100)[2]
++
++            def boom(name, point=point):
++                if name == point:
++                    raise RuntimeError(name)
++
++            with self.subTest(point=point):
++                with self.assertRaises(RuntimeError):
++                    complete(self.path, job_id, token, 'R', 5, fault=boom)
++                job = inspect(self.path, job_id)
++                self.assertEqual((job['state'], job['result']), ('running', None))
++                self.assertEqual(self.query('SELECT id FROM outbox WHERE id=?', (job_id,)), [])
++
++    def test_process_crash_at_either_hook_leaves_no_result_or_event(self):
++        for point in ('after_result', 'before_commit'):
++            job_id = 'crash-' + point
++            enqueue(self.path, job_id, 'A')
++            self.assertEqual(claim(self.path, 0, 100), (job_id, 'A', 1))
++            with self.subTest(point=point):
++                proc = subprocess.run(
++                    [sys.executable, '-c', CRASH_SCRIPT, self.path, job_id, point],
++                    cwd=ROOT, capture_output=True, text=True,
++                )
++                self.assertEqual(proc.returncode, 1, proc.stderr)
++                job = inspect(self.path, job_id)
++                self.assertEqual((job['state'], job['result']), ('running', None))
++                self.assertEqual(self.query('SELECT id FROM outbox WHERE id=?', (job_id,)), [])
++                self.assertTrue(complete(self.path, job_id, 1, 'R', 5))
++
++
++class DependencyTests(StoreTestCase):
++    def test_child_waits_for_done_parent(self):
++        enqueue(self.path, 'child', 'C', depends_on='parent')
++        enqueue(self.path, 'parent', 'P')
++        self.assertEqual(claim(self.path, 0, 10), ('parent', 'P', 1))
++        self.assertIsNone(claim(self.path, 0, 10))
++        self.assertTrue(complete(self.path, 'parent', 1, 'R', 5))
++        self.assertEqual(claim(self.path, 6, 10), ('child', 'C', 1))
++
++    def test_missing_parent_and_cycles_stay_blocked(self):
++        enqueue(self.path, 'orphan', 'O', depends_on='ghost')
++        enqueue(self.path, 'c1', 'X', depends_on='c2')
++        enqueue(self.path, 'c2', 'Y', depends_on='c1')
++        self.assertIsNone(claim(self.path, 0, 10))
++
++
++class RetryTests(StoreTestCase):
++    def test_retry_releases_lease_and_next_claim_advances_counters(self):
++        enqueue(self.path, 'a', 'A')
++        self.assertEqual(claim(self.path, 0, 10), ('a', 'A', 1))
++        self.assertTrue(retry(self.path, 'a', 1, 1))
++        job = inspect(self.path, 'a')
++        self.assertEqual((job['state'], job['token'], job['attempts'], job['lease_until']), ('pending', 1, 1, None))
++        self.assertFalse(retry(self.path, 'a', 1, 1))
++        self.assertEqual(claim(self.path, 2, 10), ('a', 'A', 2))
++        self.assertEqual(inspect(self.path, 'a')['attempts'], 2)
++
++    def test_retry_rejects_stale_token_or_expired_lease(self):
++        enqueue(self.path, 'a', 'A')
++        claim(self.path, 0, 10)
++        self.assertFalse(retry(self.path, 'a', 0, 1))
++        self.assertFalse(retry(self.path, 'a', 1, 10))
++        self.assertEqual(inspect(self.path, 'a')['state'], 'running')
++
++
++class FencingTests(StoreTestCase):
++    def test_old_token_is_fenced_after_reopen(self):
++        enqueue(self.path, 'a', 'A')
++        old = claim(self.path, 0, 10)[2]
++        init(self.path)
++        new = claim(self.path, 10, 10)[2]
++        self.assertEqual((old, new), (1, 2))
++        self.assertFalse(complete(self.path, 'a', old, 'stale', 11))
++        self.assertTrue(complete(self.path, 'a', new, 'fresh', 11))
++        self.assertEqual(inspect(self.path, 'a')['result'], 'fresh')
++
++
++class ConcurrencyTests(StoreTestCase):
++    def test_racing_claims_give_each_job_one_lease(self):
++        job_ids = [f'job-{i:03d}' for i in range(40)]
++        for job_id in job_ids:
++            enqueue(self.path, job_id, 'P')
++        claimed, errors = [], []
++        lock = threading.Lock()
++
++        def worker():
++            try:
++                while True:
++                    job = claim(self.path, 0, 1000)
++                    if job is None:
++                        return
++                    with lock:
++                        claimed.append(job[0])
++            except Exception as exc:
++                with lock:
++                    errors.append(exc)
++
++        threads = [threading.Thread(target=worker) for _ in range(8)]
++        for thread in threads:
++            thread.start()
++        for thread in threads:
++            thread.join()
++        self.assertEqual(errors, [])
++        self.assertEqual(sorted(claimed), job_ids)
++        self.assertEqual(self.query('SELECT COUNT(*) FROM jobs WHERE attempts=1'), [(40,)])
++
++
++class OutboxTests(StoreTestCase):
++    def test_publish_delivers_by_id_once(self):
++        self.finish_jobs(['c', 'a', 'b'])
++        delivered = []
++        self.assertEqual(publish(self.path, lambda event_id, body: delivered.append(event_id)), 3)
++        self.assertEqual(delivered, ['a', 'b', 'c'])
++        self.assertEqual(publish(self.path, lambda event_id, body: delivered.append(event_id)), 0)
++        self.assertEqual(delivered, ['a', 'b', 'c'])
++
++    def test_callback_error_stops_publish_and_replay_resumes(self):
++        self.finish_jobs(['a', 'b', 'c'])
++        state = {'failed': False}
++
++        def flaky(event_id, body):
++            if event_id == 'b' and not state['failed']:
++                state['failed'] = True
++                raise RuntimeError('boom')
++
++        with self.assertRaises(RuntimeError):
++            publish(self.path, flaky)
++        self.assertEqual(self.query('SELECT id, delivered FROM outbox ORDER BY id'), [('a', 1), ('b', 0), ('c', 0)])
++        replayed = []
++        self.assertEqual(publish(self.path, lambda event_id, body: replayed.append(event_id)), 2)
++        self.assertEqual(replayed, ['b', 'c'])
++
++    def test_callback_may_consume_on_same_database(self):
++        self.finish_jobs(['a'])
++        self.assertEqual(publish(self.path, lambda event_id, body: consume(self.path, event_id, body)), 1)
++        self.assertEqual([row[0] for row in self.query('SELECT id FROM inbox')], ['a'])
++
++
++class InboxTests(StoreTestCase):
++    def test_consume_is_first_wins(self):
++        self.assertTrue(consume(self.path, 'evt', 'first'))
++        self.assertFalse(consume(self.path, 'evt', 'second'))
++        self.assertEqual(self.query('SELECT body FROM inbox WHERE id=?', ('evt',)), [('first',)])
++
++
++if __name__ == '__main__':
++    unittest.main()

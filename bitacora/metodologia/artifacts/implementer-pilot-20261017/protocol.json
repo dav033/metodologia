@@ -1,0 +1,322 @@
+{
+  "schema_version": 1,
+  "status": "approved",
+  "authorization": "Owner: Luna and Haiku medium/high/xhigh; Sol and Sonnet medium; dale con las pruebas.",
+  "scope": "Six increasing-difficulty synthetic backend implementation tasks, outside formal REQ-024.",
+  "planned_calls": 48,
+  "repetitions": 1,
+  "routes": [
+    {
+      "id": "luna-medium",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6-luna",
+      "effort": "medium"
+    },
+    {
+      "id": "luna-high",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6-luna",
+      "effort": "high"
+    },
+    {
+      "id": "luna-xhigh",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6-luna",
+      "effort": "xhigh"
+    },
+    {
+      "id": "sol-medium",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    {
+      "id": "haiku-medium",
+      "provider": "claude",
+      "profile": "claude-work",
+      "model": "claude-haiku-5-5",
+      "effort": "medium"
+    },
+    {
+      "id": "haiku-high",
+      "provider": "claude",
+      "profile": "claude-work",
+      "model": "claude-haiku-5-5",
+      "effort": "high"
+    },
+    {
+      "id": "haiku-xhigh",
+      "provider": "claude",
+      "profile": "claude-work",
+      "model": "claude-haiku-5-5",
+      "effort": "xhigh"
+    },
+    {
+      "id": "sonnet-medium",
+      "provider": "claude",
+      "profile": "claude-work",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    }
+  ],
+  "instruction": "You are the Implementer in a controlled software engineering pilot.\nYou are not alone on this machine. Your entire editable repository is /tmp/work.\nImplement the task in app/ only, using the Python standard library. You may add\nyour own tests in app/. Do not change test_public.py or any file outside app/.\nYou may read local task files, edit code and run Python/unittest locally. Do not\nuse network, install packages, delegate, inspect accounts/configuration, access\nparent directories, other repositories, experiment artifacts or hidden tests.\nFollow the supplied public API and behavior exactly. Handle errors explicitly.\nKeep code modular and readable. Test your change and report actual results.\nThere is no human response during a cell: resolve ordinary implementation choices\nyourself within this contract. Do not ask for confirmation. Do not stop at a plan.\nPublic check: python -m unittest discover -s . -p 'test_public.py' -v\nReturn a short English summary of changes and tests; do not include private reasoning.\n\nTASK:\n",
+  "deadline_seconds": 1500,
+  "account_concurrency": 1,
+  "provider_lanes": 2,
+  "quota_before": {
+    "codex": {
+      "profile": "codex-2",
+      "provider": "codex",
+      "status": "ok",
+      "observed_at": 1792287116.8171208,
+      "windows": {
+        "five_hour": {
+          "used_percent": 52.0,
+          "resets_at": 1792296746.0,
+          "window_minutes": 300.0
+        },
+        "seven_day": {
+          "used_percent": 8.0,
+          "resets_at": 1792883546.0,
+          "window_minutes": 10080.0
+        }
+      }
+    },
+    "claude": {
+      "profile": "claude-work",
+      "provider": "claude",
+      "status": "ok",
+      "observed_at": 1792287117.5946696,
+      "windows": {
+        "five_hour": {
+          "used_percent": 0.0,
+          "resets_at": null,
+          "window_minutes": 300.0
+        },
+        "seven_day": {
+          "used_percent": 0.0,
+          "resets_at": 1792882800.0,
+          "window_minutes": 10080.0
+        }
+      }
+    }
+  },
+  "frozen_at": 1792287117.9906158,
+  "validation_counts": {
+    "I1": 12,
+    "I2": 14,
+    "I3": 14,
+    "I4": 11,
+    "I5": 11,
+    "I6": 17
+  },
+  "native_commands": {
+    "luna-medium": [
+      "codex",
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "workspace-write",
+      "--model",
+      "gpt-6-luna",
+      "-c",
+      "model_reasoning_effort=\"medium\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "-c",
+      "approval_policy=\"never\"",
+      "--json",
+      "-"
+    ],
+    "luna-high": [
+      "codex",
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "workspace-write",
+      "--model",
+      "gpt-6-luna",
+      "-c",
+      "model_reasoning_effort=\"high\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "-c",
+      "approval_policy=\"never\"",
+      "--json",
+      "-"
+    ],
+    "luna-xhigh": [
+      "codex",
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "workspace-write",
+      "--model",
+      "gpt-6-luna",
+      "-c",
+      "model_reasoning_effort=\"xhigh\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "-c",
+      "approval_policy=\"never\"",
+      "--json",
+      "-"
+    ],
+    "sol-medium": [
+      "codex",
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "workspace-write",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "model_reasoning_effort=\"medium\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "-c",
+      "approval_policy=\"never\"",
+      "--json",
+      "-"
+    ],
+    "haiku-medium": [
+      "claude",
+      "--print",
+      "--model",
+      "claude-haiku-5-5",
+      "--effort",
+      "medium",
+      "--safe-mode",
+      "--restricted",
+      "--strict-mcp-config",
+      "--tools",
+      "Read,Grep,Glob,Edit,Write,Bash",
+      "--allowedTools",
+      "Read,Grep,Glob,Edit,Write,Bash",
+      "--no-session-persistence",
+      "--permission-mode",
+      "acceptEdits",
+      "--permission-prompts",
+      "none",
+      "--max-turns",
+      "45",
+      "--output-format",
+      "stream-json",
+      "--verbose"
+    ],
+    "haiku-high": [
+      "claude",
+      "--print",
+      "--model",
+      "claude-haiku-5-5",
+      "--effort",
+      "high",
+      "--safe-mode",
+      "--restricted",
+      "--strict-mcp-config",
+      "--tools",
+      "Read,Grep,Glob,Edit,Write,Bash",
+      "--allowedTools",
+      "Read,Grep,Glob,Edit,Write,Bash",
+      "--no-session-persistence",
+      "--permission-mode",
+      "acceptEdits",
+      "--permission-prompts",
+      "none",
+      "--max-turns",
+      "45",
+      "--output-format",
+      "stream-json",
+      "--verbose"
+    ],
+    "haiku-xhigh": [
+      "claude",
+      "--print",
+      "--model",
+      "claude-haiku-5-5",
+      "--effort",
+      "xhigh",
+      "--safe-mode",
+      "--restricted",
+      "--strict-mcp-config",
+      "--tools",
+      "Read,Grep,Glob,Edit,Write,Bash",
+      "--allowedTools",
+      "Read,Grep,Glob,Edit,Write,Bash",
+      "--no-session-persistence",
+      "--permission-mode",
+      "acceptEdits",
+      "--permission-prompts",
+      "none",
+      "--max-turns",
+      "45",
+      "--output-format",
+      "stream-json",
+      "--verbose"
+    ],
+    "sonnet-medium": [
+      "claude",
+      "--print",
+      "--model",
+      "claude-sonnet-5-5",
+      "--effort",
+      "medium",
+      "--safe-mode",
+      "--restricted",
+      "--strict-mcp-config",
+      "--tools",
+      "Read,Grep,Glob,Edit,Write,Bash",
+      "--allowedTools",
+      "Read,Grep,Glob,Edit,Write,Bash",
+      "--no-session-persistence",
+      "--permission-mode",
+      "acceptEdits",
+      "--permission-prompts",
+      "none",
+      "--max-turns",
+      "45",
+      "--output-format",
+      "stream-json",
+      "--verbose"
+    ]
+  },
+  "frozen_hashes": {
+    "fixtures_basic.py": "d9fdeb696e184b8af24c8d3131f725297b34f04c609a12355f46e22c7af160ee",
+    "fixtures_basic_i1.py": "0d3fa65e3b4dd29218d2f23a1606037e0dcf59669a1660dbf0235d7570f9249f",
+    "fixtures_basic_i2.py": "1d28e30d4ba254a9bff5cb94376f437d22f08442049e760bd23318d300cf6c4e",
+    "fixtures_basic_i3.py": "4d8aa37b8412dc37c5fd2ca26a8dfd54693660263dcf29e5c4e1f359b6e2bd15",
+    "fixtures_durable.py": "0aadcb06b8e44146f867c25db199903d41bb4e4e5410565a02fe6c85690c5aae",
+    "fixtures_durable_i4.py": "e6d50fb3f52495b51eb0e076dc2fd0532160f074f4c7489f440248a99498df2b",
+    "fixtures_durable_i5.py": "88cef6f5d465d94af2a41a7c22649ad98fb31784571ac85b380a245c036586df",
+    "fixtures_durable_i6.py": "8fb9efafb14f910db1fe9536bf0ed334627c406fcfd857411fb4f6cfe94d8072",
+    "pilot_common.py": "57e204da59ac81db1cd31ac018b656671d42d18b35aa1e8229c075535241eead",
+    "pilot_grade.py": "29efe1bce62eed55fcf8a548b93562724067a9d20dcef76102b27f23b8c259dc",
+    "pilot_native.py": "821e8f561b046e0eb4dacbe51e80dfff51917abba328063c3cda9bfed582f876",
+    "pilot_run.py": "a00e062d78af3a7738852f622efd845cbd98c66ccb90f86b772f44b6bc0f4405"
+  },
+  "cases_sha256": "0fdef781bfc2eaab4006809b4b7a7d4f4263497610c7f7fe52b3e840d73d354a",
+  "isolation": "Bubblewrap read-only host, masked artifacts and /tmp, one writable cell at /tmp/work; CLI profile state writable; native sandbox/permissions retained. Grade code in separate networkless bubblewrap.",
+  "limitations": [
+    "Single sample/cell; no statistical superiority or frontend/language-wide conclusion.",
+    "Native harness and tokenizer differ; effort names are not equal compute budgets.",
+    "Requested effort pinned; reported effective identity retained where available.",
+    "Account quota can include other sessions and coarse/delayed updates.",
+    "No automatic repair, retry, account rotation or route substitution."
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "case": "R1",
+  "mode": "frozen",
+  "route": {
+    "id": "luna-high",
+    "provider": "codex",
+    "profile": "codex-2",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "prompt_sha256": "34ce2d33d681dcff5d554b1dc714b88bb5b95909f68a137ff5a5b07d3f92722d",
+  "started_at": 1792290451.1104357,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792290451.1104558,
+    "windows": {
+      "five_hour": {
+        "used_percent": 99.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 16.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 99.0,
+  "workspace_before": {
+    "TASK.md": "34ce2d33d681dcff5d554b1dc714b88bb5b95909f68a137ff5a5b07d3f92722d",
+    "docs/asyncio313.txt": "bfd84aee01a06a9ca79406fbc5e47a16996d5f29131451de8a8ea433346305db"
+  },
+  "response_text": "Completed the six claims using only the supplied Python 3.13.0 documentation extract. The research note is at [`research.json`](/tmp/work/research.json).",
+  "usage_reported": {
+    "input_tokens": 59319,
+    "cached_input_tokens": 45952,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1533,
+    "reasoning_output_tokens": 133
+  },
+  "usage": {
+    "input_tokens": 59319,
+    "output_tokens": 1533,
+    "cache_read_tokens": 45952,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 133,
+    "reported_total": null,
+    "total": 60852,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat TASK.md && cat docs/asyncio313.txt'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"cat > research.json <<'EOF'\n{\n  \\\"case\\\": \\\"R1\\\",\n  \\\"claims\\\": [\n    {\n      \\\"id\\\": \\\"C1\\\",\n      \\\"text\\\": \\\"In Python 3.13, when a TaskGroup child raises an exception other than CancelledError, the group cancels its remaining tasks and waits for them to finish before raising the resulting exception group. With gather(..., return_exceptions=False), the first raised exception is propagated immediately to the awaiting task; other awaitables are not cancelled and keep running. With return_exceptions=True, exceptions are returned as list entries instead.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"lines 360-375; 377-381\\\"},\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"lines 523-529; 540-546\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C2\\\",\n      \\\"text\\\": \\\"TaskGroup waits for all tasks in the group when its async context exits, including after failures while remaining tasks are cancelled. gather normally completes after its submitted awaitables complete and returns results in input order; however, on the default failure path it propagates the first exception immediately while the other awaitables continue in the background. Cancelling the gather call itself cancels submitted awaitables that have not completed yet.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"lines 321-329; 353-358; 370-375\\\"},\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"lines 519-526; 531-532\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C3\\\",\n      \\\"text\\\": \\\"After TaskGroup children finish, non-CancelledError failures are combined into an ExceptionGroup or BaseExceptionGroup as appropriate. If the async-with body exits with an exception, the group cancels and awaits remaining tasks; that body exception is included unless it is CancelledError. KeyboardInterrupt and SystemExit are special: the group still cancels and waits for the other tasks, then reraises the original base exception instead of an exception group. The body-exception case applies the same special handling.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"lines 370-393\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C4\\\",\n      \\\"text\\\": \\\"If an individual Task or Future submitted to gather is cancelled, gather treats it as though that item raised CancelledError. The gather call itself is not considered cancelled, so that one child's cancellation does not cause the other submitted tasks or futures to be cancelled.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"lines 534-538\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C5\\\",\n      \\\"text\\\": \\\"Swallowing CancelledError can break asyncio structured-concurrency components such as TaskGroup and timeout, because they use cancellation internally. The documented guidance is to perform cleanup, then generally propagate CancelledError; if suppressing it is truly intended, uncancel() is also needed to clear the cancellation state.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst\\\", \\\"locator\\\": \\\"lines 297-314\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C6\\\",\n      \\\"text\\\": \\\"For sibling work that should be all-or-cancel when a child fails, use asyncio.TaskGroup: it cancels the remaining group tasks on a non-CancelledError child failure and waits for them before reporting failures. Version caveat: TaskGroup was added in Python 3.11, so this recommendation requires Python 3.11 or later; this note is based on the Python 3.1",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 16.224,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/researcher-cell-ntq_egbz",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-2",
+    "/home/david/.codex-2",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "research_tool_calls": [],
+  "tool_result_evidence": [],
+  "limit_detected": false,
+  "contract": {
+    "valid": true,
+    "errors": []
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792290468.0867827,
+    "windows": {
+      "five_hour": {
+        "used_percent": 100.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 16.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792290468.7781234
+}

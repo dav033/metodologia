@@ -1,0 +1,14 @@
+{
+  "codex": {
+    "exit_code": 0,
+    "version": "codex-cli 0.163.0"
+  },
+  "claude": {
+    "exit_code": 0,
+    "version": "2.1.302 (Claude Code)"
+  },
+  "bwrap": {
+    "exit_code": 0,
+    "version": "bubblewrap 0.12.0"
+  }
+}

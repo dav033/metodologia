@@ -1,0 +1,56 @@
+[
+  {
+    "id": "asyncio313",
+    "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst",
+    "bytes": 48445,
+    "sha256": "f3cbb9d7f174f152127bb4eaea37784484f4a8c2db866d21aaf31edfce7ec7a1"
+  },
+  {
+    "id": "node2410http",
+    "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+    "bytes": 129726,
+    "sha256": "350fd0bca689a4676306b771466a6d076f0b7e600616ec6c02aef035fdb7d95b"
+  },
+  {
+    "id": "node_schedule",
+    "url": "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json",
+    "bytes": 3255,
+    "sha256": "1cf0432ceb9dfde7f1fd4cce43206519942cfdfad5a26039c2f4bb20fde8549c"
+  },
+  {
+    "id": "pg17index",
+    "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+    "bytes": 40012,
+    "sha256": "eb3d18a8b0b3cb9aba76a714e7262dea225092d0154ece3dc3c4d434d643592c"
+  },
+  {
+    "id": "sqlite311",
+    "url": "https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst",
+    "bytes": 77901,
+    "sha256": "605d10915043c992819ad1123f70ad23dede57b463cf14f8782ae22733be9527"
+  },
+  {
+    "id": "sqlite313",
+    "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst",
+    "bytes": 94027,
+    "sha256": "47ad881a6484d4eb0dd1cc8231f68675edbfe4d31c65596221113c3bc1060520"
+  },
+  {
+    "id": "uv_sync",
+    "url": "https://raw.githubusercontent.com/astral-sh/uv/main/docs/concepts/projects/sync.md",
+    "bytes": 8388,
+    "sha256": "b5cb70256ca739e0a7c17fd1d317d537c8e325dbd8f61e2c49102f305b70ea99"
+  },
+  {
+    "id": "uv_cache",
+    "url": "https://raw.githubusercontent.com/astral-sh/uv/main/docs/concepts/cache.md",
+    "bytes": 11562,
+    "sha256": "4048052dbf39b3208d757919a3c2a830268104fc99378e712659193609a2f35b"
+  },
+  {
+    "id": "uv_offline_source",
+    "url": "https://raw.githubusercontent.com/astral-sh/uv/main/crates/uv-cli/src/lib.rs",
+    "bytes": 3237,
+    "sha256": "8f90690d8322a5fc3a0b2936a606ba4d6a782203137ae7ff69b79cce0a18363d"
+  }
+]

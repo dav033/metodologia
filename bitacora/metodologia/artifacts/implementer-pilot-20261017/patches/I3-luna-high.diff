@@ -1,0 +1,156 @@
+--- before/app/graph.py
++++ after/app/graph.py
+@@ -1,2 +1,54 @@
++"""Dependency graph validation helpers."""
++
++from collections import deque
++from collections.abc import Mapping
++
++
+ def validate_graph(jobs):
+-    return {job:set(deps) for job,deps in jobs.items()}
++    """Return an independent dependency-set snapshot of a valid job graph.
++
++    Every dependency must name a job in ``jobs``. Cycles are detected with an
++    iterative topological traversal so validation also works for deep graphs.
++    """
++    if not isinstance(jobs, Mapping):
++        raise ValueError("jobs must be a mapping")
++
++    graph = {}
++    for job_id, dependencies in jobs.items():
++        if not isinstance(job_id, str) or not job_id:
++            raise ValueError("job IDs must be nonempty strings")
++        try:
++            graph[job_id] = set(dependencies)
++        except TypeError as exc:
++            raise ValueError("dependencies must be iterable") from exc
++
++    known_jobs = set(graph)
++    for job_id, dependencies in graph.items():
++        if any(not isinstance(dep, str) or not dep for dep in dependencies):
++            raise ValueError("dependency IDs must be nonempty strings")
++        unknown = dependencies - known_jobs
++        if unknown:
++            raise ValueError(
++                "unknown dependency for {!r}: {!r}".format(job_id, min(unknown))
++            )
++
++    dependents = {job_id: [] for job_id in graph}
++    remaining = {}
++    for job_id, dependencies in graph.items():
++        remaining[job_id] = len(dependencies)
++        for dependency in dependencies:
++            dependents[dependency].append(job_id)
++
++    ready = deque(job_id for job_id, count in remaining.items() if count == 0)
++    visited = 0
++    while ready:
++        job_id = ready.popleft()
++        visited += 1
++        for dependent in dependents[job_id]:
++            remaining[dependent] -= 1
++            if remaining[dependent] == 0:
++                ready.append(dependent)
++
++    if visited != len(graph):
++        raise ValueError("dependency graph contains a cycle")
++    return graph
+--- before/app/scheduler.py
++++ after/app/scheduler.py
+@@ -1,16 +1,82 @@
++"""Explicit, single-threaded dependency job scheduler."""
++
+ from .graph import validate_graph
++
++
+ class Scheduler:
+-    def __init__(self,jobs,max_parallel=2):
+-        self.jobs=validate_graph(jobs)
+-        self.max_parallel=max_parallel
+-        self.state={job:'pending' for job in self.jobs}
++    """Track job eligibility and completion without executing jobs itself."""
++
++    def __init__(self, jobs, max_parallel=2):
++        if isinstance(max_parallel, bool) or not isinstance(max_parallel, int):
++            raise ValueError("max_parallel must be an integer")
++        if max_parallel < 1:
++            raise ValueError("max_parallel must be at least 1")
++
++        self.jobs = validate_graph(jobs)
++        self.max_parallel = max_parallel
++        self.state = {job_id: "pending" for job_id in self.jobs}
++        self._dependents = {job_id: [] for job_id in self.jobs}
++        for job_id, dependencies in self.jobs.items():
++            for dependency in dependencies:
++                self._dependents[dependency].append(job_id)
++
+     def ready(self):
+-        return [job for job,deps in self.jobs.items() if self.state[job]=='pending' and all(self.state.get(dep)=='succeeded' for dep in deps)]
+-    def start(self,job_id):
+-        if job_id not in self.ready(): raise ValueError('not ready')
+-        self.state[job_id]='running'
+-    def finish(self,job_id,success=True):
+-        if self.state.get(job_id)!='running': raise ValueError('not running')
+-        self.state[job_id]='succeeded' if success else 'failed'
+-    def statuses(self): return dict(self.state)
+-    def done(self): return all(v in ('succeeded','failed','blocked') for v in self.state.values())
++        """Return all pending jobs whose dependencies have succeeded."""
++        return sorted(
++            job_id
++            for job_id, dependencies in self.jobs.items()
++            if self.state[job_id] == "pending"
++            and all(self.state[dependency] == "succeeded" for dependency in dependencies)
++        )
++
++    def start(self, job_id):
++        """Mark an eligible job running when capacity is available."""
++        if (
++            job_id not in self.state
++            or self.state[job_id] != "pending"
++            or self._running_count() >= self.max_parallel
++            or any(self.state[dependency] != "succeeded" for dependency in self.jobs[job_id])
++        ):
++            raise ValueError("job cannot be started")
++        self.state[job_id] = "running"
++
++    def finish(self, job_id, success=True):
++        """Finish a running job and propagate failure blocking if necessary."""
++        if job_id not in self.state or self.state[job_id] != "running":
++            raise ValueError("job is not running")
++
++        if success:
++            self.state[job_id] = "succeeded"
++            return
++
++        self.state[job_id] = "failed"
++        self._block_pending_descendants(job_id)
++
++    def statuses(self):
++        """Return a fresh mapping of job IDs to their current states."""
++        return dict(self.state)
++
++    def done(self):
++        """Return whether no jobs remain pending or running."""
++        return not any(state in ("pending", "running") for state in self.state.values())
++
++    def _running_count(self):
++        return sum(state == "running" for state in self.state.values())
++
++    def _block_pending_descendants(self, failed_job):
++        # Traverse the full descendant closure, but only change pending jobs.
++        # Traversal continues through every node so already-terminal or running
++        # nodes cannot hide pending descendants.
++        stack = list(self._dependents[failed_job])
++        visited = set()
++        while stack:
++            job_id = stack.pop()
++            if job_id in visited:
++                continue
++            visited.add(job_id)
++            if self.state[job_id] == "pending":
++                self.state[job_id] = "blocked"
++            stack.extend(self._dependents[job_id])
++
++
++__all__ = ["Scheduler"]

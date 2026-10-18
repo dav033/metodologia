@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-17 19:43 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-17 21:30 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -71,11 +71,11 @@ _Generated 2026-10-17 19:43 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-067 — Select Sonnet medium Implementer, with Luna high as fallback
 - D-066 — Harness quota optimisation: ladder without automatic xhigh, bounded exploration, tier-homogeneous sessions
 - D-065 — Select Luna high Explorer, with Sol/Sonnet medium for complicated exploration
 - D-064 — Planner default Astra high, fallback Opus xhigh (2026-10-17)
 - D-063 — Select Sol and Sonnet medium reviewers, with high for harder reviews
-- D-062 — Authorize necessary Antigravity T15 launch revalidation
 
 ## Artifacts
 

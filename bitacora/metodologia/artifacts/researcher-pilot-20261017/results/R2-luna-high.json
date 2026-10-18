@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "case": "R2",
+  "mode": "frozen",
+  "route": {
+    "id": "luna-high",
+    "provider": "codex",
+    "profile": "codex-2",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "prompt_sha256": "d6d685063320ab0d8b19219db116a8758e36cc49adf65a7ce67bf23875960635",
+  "started_at": 1792290468.779324,
+  "status": "quota_exhausted",
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792290468.779332,
+    "windows": {
+      "five_hour": {
+        "used_percent": 100.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 16.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 100.0
+}

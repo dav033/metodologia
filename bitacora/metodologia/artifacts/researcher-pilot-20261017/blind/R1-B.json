@@ -1,0 +1,82 @@
+{
+  "blind_id": "R1-B",
+  "case": "R1",
+  "note": {
+    "case": "R1",
+    "claims": [
+      {
+        "id": "C1",
+        "text": "In Python 3.13, when a TaskGroup child raises an exception other than CancelledError, the group cancels its remaining tasks and waits for them to finish before raising the resulting exception group. With gather(..., return_exceptions=False), the first raised exception is propagated immediately to the awaiting task; other awaitables are not cancelled and keep running. With return_exceptions=True, exceptions are returned as list entries instead.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst",
+            "locator": "lines 360-375; 377-381"
+          },
+          {
+            "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst",
+            "locator": "lines 523-529; 540-546"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "text": "TaskGroup waits for all tasks in the group when its async context exits, including after failures while remaining tasks are cancelled. gather normally completes after its submitted awaitables complete and returns results in input order; however, on the default failure path it propagates the first exception immediately while the other awaitables continue in the background. Cancelling the gather call itself cancels submitted awaitables that have not completed yet.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst",
+            "locator": "lines 321-329; 353-358; 370-375"
+          },
+          {
+            "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst",
+            "locator": "lines 519-526; 531-532"
+          }
+        ]
+      },
+      {
+        "id": "C3",
+        "text": "After TaskGroup children finish, non-CancelledError failures are combined into an ExceptionGroup or BaseExceptionGroup as appropriate. If the async-with body exits with an exception, the group cancels and awaits remaining tasks; that body exception is included unless it is CancelledError. KeyboardInterrupt and SystemExit are special: the group still cancels and waits for the other tasks, then reraises the original base exception instead of an exception group. The body-exception case applies the same special handling.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst",
+            "locator": "lines 370-393"
+          }
+        ]
+      },
+      {
+        "id": "C4",
+        "text": "If an individual Task or Future submitted to gather is cancelled, gather treats it as though that item raised CancelledError. The gather call itself is not considered cancelled, so that one child's cancellation does not cause the other submitted tasks or futures to be cancelled.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst",
+            "locator": "lines 534-538"
+          }
+        ]
+      },
+      {
+        "id": "C5",
+        "text": "Swallowing CancelledError can break asyncio structured-concurrency components such as TaskGroup and timeout, because they use cancellation internally. The documented guidance is to perform cleanup, then generally propagate CancelledError; if suppressing it is truly intended, uncancel() is also needed to clear the cancellation state.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst",
+            "locator": "lines 297-314"
+          }
+        ]
+      },
+      {
+        "id": "C6",
+        "text": "For sibling work that should be all-or-cancel when a child fails, use asyncio.TaskGroup: it cancels the remaining group tasks on a non-CancelledError child failure and waits for them before reporting failures. Version caveat: TaskGroup was added in Python 3.11, so this recommendation requires Python 3.11 or later; this note is based on the Python 3.13.0 documentation.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/asyncio-task.rst",
+            "locator": "lines 331; 360-375; 540-546"
+          }
+        ]
+      }
+    ],
+    "recommendation": "For sibling operations that form one unit and should stop together when one fails, use asyncio.TaskGroup (Python 3.11+). Its documented failure behavior cancels remaining tasks and waits for the group to finish, then reports failures together, which fits all-or-cancel sibling work better than gather's default behavior of propagating the first failure while leaving siblings running. This is a recommendation drawn from the cited Python 3.13 documentation.",
+    "unknowns": []
+  },
+  "contract_valid": true,
+  "tool_calls": [],
+  "tool_result_evidence": []
+}

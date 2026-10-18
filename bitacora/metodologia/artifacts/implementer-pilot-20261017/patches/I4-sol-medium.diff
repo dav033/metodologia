@@ -1,0 +1,186 @@
+--- before/app/store.py
++++ after/app/store.py
+@@ -1,5 +1,72 @@
+-def migrate(path, fault=None):
+-    pass
++"""Transactional migration and read access for the items database."""
+ 
+-def read_items(path):
+-    return []
++import sqlite3
++from pathlib import Path
++
++
++def _create_items(connection, table):
++    # Table names are internal constants, never supplied by callers.
++    connection.execute(
++        f"CREATE TABLE {table} ("
++        "id INTEGER PRIMARY KEY, value TEXT NOT NULL, normalized TEXT NOT NULL)"
++    )
++
++
++def migrate(path: str, fault=None) -> None:
++    """Create or upgrade the schema atomically, preserving legacy values."""
++    connection = sqlite3.connect(path, isolation_level=None)
++    try:
++        connection.execute("BEGIN IMMEDIATE")
++        version = connection.execute("PRAGMA user_version").fetchone()[0]
++        if version > 1:
++            raise ValueError(f"Unsupported database version: {version}")
++        if version == 1:
++            connection.commit()
++            return
++
++        has_items = connection.execute(
++            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'items'"
++        ).fetchone()
++        if has_items:
++            _create_items(connection, "items_migration_v1")
++            rows = connection.execute("SELECT id, value FROM items")
++            try:
++                connection.executemany(
++                    "INSERT INTO items_migration_v1 (id, value, normalized) "
++                    "VALUES (?, ?, ?)",
++                    ((item_id, value, value.strip().lower()) for item_id, value in rows),
++                )
++            finally:
++                rows.close()
++            if fault is not None:
++                fault("after_copy")
++            connection.execute("DROP TABLE items")
++            connection.execute("ALTER TABLE items_migration_v1 RENAME TO items")
++        else:
++            _create_items(connection, "items")
++
++        connection.execute("PRAGMA user_version = 1")
++        if fault is not None:
++            fault("before_commit")
++        connection.commit()
++    except BaseException:
++        connection.rollback()
++        raise
++    finally:
++        connection.close()
++
++
++def read_items(path: str) -> list[tuple[int, str]]:
++    """Read normalized items from a migrated database without creating a file."""
++    uri = Path(path).absolute().as_uri() + "?mode=ro"
++    connection = sqlite3.connect(uri, uri=True, isolation_level=None)
++    try:
++        connection.execute("BEGIN")
++        version = connection.execute("PRAGMA user_version").fetchone()[0]
++        if version != 1:
++            raise ValueError(f"Database must be migrated before reading (version {version})")
++        return connection.execute(
++            "SELECT id, normalized FROM items ORDER BY id"
++        ).fetchall()
++    finally:
++        connection.close()
+--- before/app/test_store.py
++++ after/app/test_store.py
+@@ -0,0 +1,104 @@
++import os
++import sqlite3
++import tempfile
++import unittest
++from contextlib import closing
++
++from app.store import migrate, read_items
++
++
++class StoreTests(unittest.TestCase):
++    def setUp(self):
++        self.directory = tempfile.TemporaryDirectory()
++        self.addCleanup(self.directory.cleanup)
++        self.path = os.path.join(self.directory.name, "items.db")
++        self.rows = [(-5, "  ÄBC\u2003"), (42, " İ "), (0, ""), (9, "MiXeD")]
++
++    def legacy(self):
++        with closing(sqlite3.connect(self.path)) as connection, connection:
++            connection.execute(
++                "CREATE TABLE items(id INTEGER PRIMARY KEY, value TEXT NOT NULL)"
++            )
++            connection.executemany("INSERT INTO items VALUES (?, ?)", self.rows)
++
++    def snapshot(self):
++        connection = sqlite3.connect(self.path)
++        try:
++            return (
++                connection.execute("PRAGMA user_version").fetchone()[0],
++                connection.execute("SELECT name, sql FROM sqlite_master ORDER BY name").fetchall(),
++                connection.execute("SELECT * FROM items ORDER BY id").fetchall(),
++            )
++        finally:
++            connection.close()
++
++    def test_conversion_and_reopening(self):
++        self.legacy()
++        events = []
++        migrate(self.path, events.append)
++        self.assertEqual(events, ["after_copy", "before_commit"])
++        self.assertEqual(
++            read_items(self.path),
++            sorted((key, value.strip().lower()) for key, value in self.rows),
++        )
++        before = self.snapshot()
++        self.assertEqual(before[0], 1)
++        self.assertEqual([row[:2] for row in before[2]], sorted(self.rows))
++        self.assertEqual([row[0] for row in before[1]], ["items"])
++        migrate(self.path, lambda stage: self.fail(stage))
++        self.assertEqual(self.snapshot(), before)
++
++    def test_rollback_and_retry_at_each_hook(self):
++        for stage in ("after_copy", "before_commit"):
++            with self.subTest(stage=stage):
++                if os.path.exists(self.path):
++                    os.unlink(self.path)
++                self.legacy()
++                before = self.snapshot()
++                error = RuntimeError(stage)
++
++                def fail(current):
++                    if current == stage:
++                        raise error
++
++                with self.assertRaises(RuntimeError) as caught:
++                    migrate(self.path, fail)
++                self.assertIs(caught.exception, error)
++                self.assertEqual(self.snapshot(), before)
++                migrate(self.path)
++                self.assertEqual([row[0] for row in self.snapshot()[1]], ["items"])
++
++    def test_future_version_unchanged(self):
++        self.legacy()
++        with closing(sqlite3.connect(self.path)) as connection, connection:
++            connection.execute("PRAGMA user_version = 2")
++        before = self.snapshot()
++        with self.assertRaises(ValueError):
++            migrate(self.path, lambda stage: self.fail(stage))
++        self.assertEqual(self.snapshot(), before)
++
++    def test_empty_database_rollback_and_retry(self):
++        events = []
++
++        def fail(stage):
++            events.append(stage)
++            raise RuntimeError(stage)
++
++        with self.assertRaises(RuntimeError):
++            migrate(self.path, fail)
++        self.assertEqual(events, ["before_commit"])
++        with closing(sqlite3.connect(self.path)) as connection, connection:
++            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 0)
++            self.assertEqual(connection.execute("SELECT name FROM sqlite_master").fetchall(), [])
++        migrate(self.path)
++        self.assertEqual(read_items(self.path), [])
++
++    def test_read_requires_migrated_database(self):
++        with self.assertRaises(sqlite3.OperationalError):
++            read_items(self.path)
++        self.assertFalse(os.path.exists(self.path))
++        self.legacy()
++        before = self.snapshot()
++        with self.assertRaises(ValueError):
++            read_items(self.path)
++        self.assertEqual(self.snapshot(), before)

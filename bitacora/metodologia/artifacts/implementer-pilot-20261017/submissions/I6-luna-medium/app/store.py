@@ -1,0 +1,135 @@
+"""A small durable SQLite-backed leased job queue."""
+
+import json
+import sqlite3
+
+
+_JOBS_SCHEMA = """CREATE TABLE IF NOT EXISTS jobs(
+    id TEXT PRIMARY KEY,
+    payload TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT 'pending',
+    token INTEGER NOT NULL DEFAULT 0,
+    lease_until INTEGER,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    depends_on TEXT,
+    result TEXT
+)"""
+
+
+def _connect(path):
+    # SQLite's context manager commits/rolls back but does not close the handle.
+    return sqlite3.connect(path, timeout=30)
+
+
+def init(path):
+    with _connect(path) as connection:
+        connection.execute(_JOBS_SCHEMA)
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS outbox("
+            "id TEXT PRIMARY KEY,body TEXT NOT NULL,"
+            "delivered INTEGER NOT NULL DEFAULT 0)"
+        )
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS inbox("
+            "id TEXT PRIMARY KEY,body TEXT NOT NULL)"
+        )
+
+
+def enqueue(path, id, payload, depends_on=None):
+    with _connect(path) as connection:
+        connection.execute(
+            "INSERT OR IGNORE INTO jobs(id,payload,depends_on) VALUES(?,?,?)",
+            (id, payload, depends_on),
+        )
+
+
+def claim(path, now, ttl):
+    if ttl <= 0:
+        raise ValueError("ttl must be positive")
+    with _connect(path) as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        row = connection.execute(
+            "SELECT j.id,j.payload,j.token FROM jobs AS j "
+            "WHERE (j.state='pending' OR "
+            "(j.state='running' AND j.lease_until<=?)) "
+            "AND (j.depends_on IS NULL OR EXISTS ("
+            "SELECT 1 FROM jobs AS parent WHERE parent.id=j.depends_on "
+            "AND parent.state='done')) "
+            "ORDER BY j.id LIMIT 1",
+            (now,),
+        ).fetchone()
+        if row is None:
+            return None
+        job_id, payload, old_token = row
+        token = old_token + 1
+        connection.execute(
+            "UPDATE jobs SET state='running',token=?,lease_until=?,"
+            "attempts=attempts+1 WHERE id=?",
+            (token, now + ttl, job_id),
+        )
+        return job_id, payload, token
+
+
+def complete(path, id, token, result, now, fault=None):
+    with _connect(path) as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        cursor = connection.execute(
+            "UPDATE jobs SET state='done',result=?,lease_until=NULL "
+            "WHERE id=? AND state='running' AND token=? AND lease_until>?",
+            (result, id, token, now),
+        )
+        if cursor.rowcount != 1:
+            return False
+        if fault is not None:
+            fault('after_result')
+        body = json.dumps({"id": id, "result": result}, separators=(",", ":"))
+        connection.execute(
+            "INSERT INTO outbox(id,body) VALUES(?,?)", (id, body)
+        )
+        if fault is not None:
+            fault('before_commit')
+        return True
+
+
+def inspect(path, id):
+    with _connect(path) as connection:
+        connection.row_factory = sqlite3.Row
+        row = connection.execute("SELECT * FROM jobs WHERE id=?", (id,)).fetchone()
+        return dict(row) if row is not None else None
+
+
+def retry(path, id, token, now):
+    with _connect(path) as connection:
+        cursor = connection.execute(
+            "UPDATE jobs SET state='pending',lease_until=NULL "
+            "WHERE id=? AND state='running' AND token=? AND lease_until>?",
+            (id, token, now),
+        )
+        return cursor.rowcount == 1
+
+
+def publish(path, deliver):
+    # Materialize and close the read connection before calling user code. A
+    # callback may call consume using this same database.
+    with _connect(path) as connection:
+        rows = connection.execute(
+            "SELECT id,body FROM outbox WHERE delivered=0 ORDER BY id"
+        ).fetchall()
+    delivered = 0
+    for event_id, body in rows:
+        deliver(event_id, body)
+        with _connect(path) as connection:
+            connection.execute(
+                "UPDATE outbox SET delivered=1 WHERE id=? AND delivered=0",
+                (event_id,),
+            )
+        delivered += 1
+    return delivered
+
+
+def consume(path, id, body):
+    with _connect(path) as connection:
+        cursor = connection.execute(
+            "INSERT OR IGNORE INTO inbox(id,body) VALUES(?,?)", (id, body)
+        )
+        return cursor.rowcount == 1

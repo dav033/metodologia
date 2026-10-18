@@ -1,0 +1,409 @@
+{
+  "schema_version": 1,
+  "case": "I3",
+  "route": {
+    "id": "haiku-medium",
+    "provider": "claude",
+    "profile": "claude-work",
+    "model": "claude-haiku-5-5",
+    "effort": "medium"
+  },
+  "prompt_sha256": "f24770c60ce45a9b02074e8bbc289159382a12a841496312d8fdfa8c6d83721b",
+  "prompt_characters": 3155,
+  "started_at": 1792287638.7550774,
+  "status": "completed",
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792287638.755084,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792304999.9531,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792882799.953162,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 2.0,
+  "workspace_before": {
+    "TASK.md": "f24770c60ce45a9b02074e8bbc289159382a12a841496312d8fdfa8c6d83721b",
+    "app/__init__.py": "ec2935eff29687e2ae900e084b75b341c67a43947c692a52ecd5cc45b67f4018",
+    "app/graph.py": "a84988a842ff2f8aad752b8bc94ddb7f2f8bbf42542075f665215453b298782a",
+    "app/scheduler.py": "3a3b5c5c23a700ce36eac6e38b3d8142a9f50ba5e6533f254c7555179885adfa",
+    "test_public.py": "ffb14304729666dc46dc431c336a3d282787692d9e037c347f8b3c83134c08b5"
+  },
+  "response_text": "The scheduler refactor is done, and both the public check and my added tests pass.\n\n**Changes (all in `app/`):**\n- **`app/graph.py`**: `validate_graph(jobs)` builds a fresh `{id: set(deps)}` snapshot, consuming generators once. It raises `ValueError` for unknown dependencies and for cycles, including self-loops and disconnected cycles. Cycle detection uses iterative Kahn's algorithm, so long chains don't hit the recursion limit. I also added a `dependents_of` helper.\n- **`app/scheduler.py`**: `Scheduler` now has the full contract:\n  - `max_parallel` is validated as a non-bool integer ≥ 1, otherwise `ValueError`.\n  - `ready()` returns all eligible pending IDs, sorted, and changes no state.\n  - `start()` and `finish()` raise `ValueError` without mutating state on invalid calls.\n  - A failure blocks every still-pending transitive dependent, iteratively, and leaves unrelated jobs alone.\n  - `statuses()` returns a copy, and `done()` treats blocked as terminal.\n- **`app/__init__.py`**: unchanged. It already exports `Scheduler`, which is the same class as `app.scheduler.Scheduler`.\n- **`app/test_scheduler.py`** (new): 23 tests covering validation, capacity, eligibility, blocking, snapshotting, generator dependencies, and 1200+ job chains.\n\n**Test results:**\n- `python -m unittest discover -s . -p 'test_public.py' -v`: 2 tests, OK.\n- `python -m unittest discover -s . -p 'test_*.py'`: 25 tests (the 2 public plus my 23), OK.\n\n**Implementation choices:**\n- I kept the `jobs` and `state` attribute names from the original class.\n- Non-integer `max_parallel` values raise `ValueError` rather than `TypeError`, to match the contract's \"otherwise ValueError\".\n- I did not add ID validation beyond what the contract guarantees.",
+  "usage_reported": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 12273,
+    "cache_read_input_tokens": 77158,
+    "output_tokens": 10178,
+    "output_tokens_details": {
+      "thinking_tokens": 4160
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12273,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 10178,
+    "cache_read_tokens": 77158,
+    "cache_write_tokens": 12273,
+    "reasoning_tokens": null,
+    "reported_total": null,
+    "total": 99621,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "claude-stream-json",
+    "provider": "claude"
+  },
+  "observed_models": [
+    "claude-haiku-5-5"
+  ],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "Bash",
+      "id": "toolu_01YTsFaGgbs4w54mcMXtWYAs",
+      "command": "ls -la && ls -la app && for f in app/*.py; do echo \"== $f\"; cat \"$f\"; done"
+    },
+    {
+      "type": "Bash",
+      "id": "toolu_01Rpq48dAvC7AgVx5RqpEENe",
+      "command": "cat TASK.md && echo ==== && cat test_public.py"
+    },
+    {
+      "type": "Write",
+      "id": "toolu_01NyHtAUYi5PjsW74Yp1Q2nF",
+      "file_path": "/tmp/work/app/graph.py"
+    },
+    {
+      "type": "Write",
+      "id": "toolu_01RMcXxEDjhEgbSybBzLsa4W",
+      "file_path": "/tmp/work/app/scheduler.py"
+    },
+    {
+      "type": "Write",
+      "id": "toolu_01B1hKRLQN5By3Nya5PvfNWr",
+      "file_path": "/tmp/work/app/test_scheduler.py"
+    },
+    {
+      "type": "Bash",
+      "id": "toolu_01UQ3eunLV8T56uYvwZDUAe3",
+      "command": "python -m unittest discover -s . -p 'test_public.py' -v 2>&1; echo \"-----\"; python -m unittest discover -s . -p 'test_*.py' 2>&1 | tail -n 30"
+    },
+    {
+      "type": "Bash",
+      "id": "toolu_01VsEgPKzdNLsjKcer8P2GV8",
+      "command": "rm -rf app/__pycache__ __pycache__ && ls -R"
+    }
+  ],
+  "native_result_status": "success",
+  "turns": 8,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "elapsed_seconds": 43.135,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/implementer-cell-fccnjg3w",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.claude-work",
+    "/home/david/.claude-work",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "claude",
+    "--print",
+    "--model",
+    "claude-haiku-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--strict-mcp-config",
+    "--tools",
+    "Read,Grep,Glob,Edit,Write,Bash",
+    "--allowedTools",
+    "Read,Grep,Glob,Edit,Write,Bash",
+    "--no-session-persistence",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none",
+    "--max-turns",
+    "45",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "stderr_excerpt": "",
+  "limit_detected": false,
+  "changed_files": [
+    "app/graph.py",
+    "app/scheduler.py",
+    "app/test_scheduler.py"
+  ],
+  "grade": {
+    "command": [
+      "/usr/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      ".",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "exit_code": 0,
+    "tests": 37,
+    "failures": 0,
+    "errors": 0,
+    "methods": [
+      {
+        "method": "test_blocked_immediately_even_with_running_sibling_dependency",
+        "class": "app.test_scheduler.LifecycleTests.test_blocked_immediately_even_with_running_sibling_dependency",
+        "result": "ok"
+      },
+      {
+        "method": "test_completed_states_preserved",
+        "class": "app.test_scheduler.LifecycleTests.test_completed_states_preserved",
+        "result": "ok"
+      },
+      {
+        "method": "test_failure_blocks_transitive_descendants_only",
+        "class": "app.test_scheduler.LifecycleTests.test_failure_blocks_transitive_descendants_only",
+        "result": "ok"
+      },
+      {
+        "method": "test_finish_accepts_only_running",
+        "class": "app.test_scheduler.LifecycleTests.test_finish_accepts_only_running",
+        "result": "ok"
+      },
+      {
+        "method": "test_finish_success_releases_dependents",
+        "class": "app.test_scheduler.LifecycleTests.test_finish_success_releases_dependents",
+        "result": "ok"
+      },
+      {
+        "method": "test_long_chain_failure_blocks_all",
+        "class": "app.test_scheduler.LifecycleTests.test_long_chain_failure_blocks_all",
+        "result": "ok"
+      },
+      {
+        "method": "test_long_chain_no_recursion_error",
+        "class": "app.test_scheduler.LifecycleTests.test_long_chain_no_recursion_error",
+        "result": "ok"
+      },
+      {
+        "method": "test_max_parallel_attribute_preserved",
+        "class": "app.test_scheduler.LifecycleTests.test_max_parallel_attribute_preserved",
+        "result": "ok"
+      },
+      {
+        "method": "test_ready_does_not_mutate",
+        "class": "app.test_scheduler.LifecycleTests.test_ready_does_not_mutate",
+        "result": "ok"
+      },
+      {
+        "method": "test_ready_is_sorted_and_capacity_independent",
+        "class": "app.test_scheduler.LifecycleTests.test_ready_is_sorted_and_capacity_independent",
+        "result": "ok"
+      },
+      {
+        "method": "test_start_requires_eligibility",
+        "class": "app.test_scheduler.LifecycleTests.test_start_requires_eligibility",
+        "result": "ok"
+      },
+      {
+        "method": "test_start_respects_capacity_without_state_change",
+        "class": "app.test_scheduler.LifecycleTests.test_start_respects_capacity_without_state_change",
+        "result": "ok"
+      },
+      {
+        "method": "test_statuses_returns_fresh_dict",
+        "class": "app.test_scheduler.LifecycleTests.test_statuses_returns_fresh_dict",
+        "result": "ok"
+      },
+      {
+        "method": "test_cycle_rejected",
+        "class": "app.test_scheduler.ValidationTests.test_cycle_rejected",
+        "result": "ok"
+      },
+      {
+        "method": "test_disconnected_cycle_rejected",
+        "class": "app.test_scheduler.ValidationTests.test_disconnected_cycle_rejected",
+        "result": "ok"
+      },
+      {
+        "method": "test_empty_graph_valid",
+        "class": "app.test_scheduler.ValidationTests.test_empty_graph_valid",
+        "result": "ok"
+      },
+      {
+        "method": "test_generator_dependencies_and_duplicates",
+        "class": "app.test_scheduler.ValidationTests.test_generator_dependencies_and_duplicates",
+        "result": "ok"
+      },
+      {
+        "method": "test_input_snapshot",
+        "class": "app.test_scheduler.ValidationTests.test_input_snapshot",
+        "result": "ok"
+      },
+      {
+        "method": "test_max_parallel_validation",
+        "class": "app.test_scheduler.ValidationTests.test_max_parallel_validation",
+        "result": "ok"
+      },
+      {
+        "method": "test_package_and_module_export_same_class",
+        "class": "app.test_scheduler.ValidationTests.test_package_and_module_export_same_class",
+        "result": "ok"
+      },
+      {
+        "method": "test_self_loop_rejected",
+        "class": "app.test_scheduler.ValidationTests.test_self_loop_rejected",
+        "result": "ok"
+      },
+      {
+        "method": "test_unknown_dependency_rejected",
+        "class": "app.test_scheduler.ValidationTests.test_unknown_dependency_rejected",
+        "result": "ok"
+      },
+      {
+        "method": "test_validate_graph_returns_fresh_dict",
+        "class": "app.test_scheduler.ValidationTests.test_validate_graph_returns_fresh_dict",
+        "result": "ok"
+      },
+      {
+        "method": "test_capacity_and_reuse",
+        "class": "test_private.Private.test_capacity_and_reuse",
+        "result": "ok"
+      },
+      {
+        "method": "test_cycles_before_dispatch",
+        "class": "test_private.Private.test_cycles_before_dispatch",
+        "result": "ok"
+      },
+      {
+        "method": "test_deterministic_permutations",
+        "class": "test_private.Private.test_deterministic_permutations",
+        "result": "ok"
+      },
+      {
+        "method": "test_failure_transitive",
+        "class": "test_private.Private.test_failure_transitive",
+        "result": "ok"
+      },
+      {
+        "method": "test_failure_while_other_parent_running",
+        "class": "test_private.Private.test_failure_while_other_parent_running",
+        "result": "ok"
+      },
+      {
+        "method": "test_generators_and_exports",
+        "class": "test_private.Private.test_generators_and_exports",
+        "result": "ok"
+      },
+      {
+        "method": "test_invalid_transitions_atomic",
+        "class": "test_private.Private.test_invalid_transitions_atomic",
+        "result": "ok"
+      },
+      {
+        "method": "test_long_chain",
+        "class": "test_private.Private.test_long_chain",
+        "result": "ok"
+      },
+      {
+        "method": "test_parallel_diamond",
+        "class": "test_private.Private.test_parallel_diamond",
+        "result": "ok"
+      },
+      {
+        "method": "test_snapshot_and_duplicates",
+        "class": "test_private.Private.test_snapshot_and_duplicates",
+        "result": "ok"
+      },
+      {
+        "method": "test_unknown_dependency",
+        "class": "test_private.Private.test_unknown_dependency",
+        "result": "ok"
+      },
+      {
+        "method": "test_validate_capacity",
+        "class": "test_private.Private.test_validate_capacity",
+        "result": "ok"
+      },
+      {
+        "method": "test_chain",
+        "class": "test_public.Public.test_chain",
+        "result": "ok"
+      },
+      {
+        "method": "test_empty",
+        "class": "test_public.Public.test_empty",
+        "result": "ok"
+      }
+    ],
+    "output": "test_blocked_immediately_even_with_running_sibling_dependency (app.test_scheduler.LifecycleTests.test_blocked_immediately_even_with_running_sibling_dependency) ... ok\ntest_completed_states_preserved (app.test_scheduler.LifecycleTests.test_completed_states_preserved) ... ok\ntest_failure_blocks_transitive_descendants_only (app.test_scheduler.LifecycleTests.test_failure_blocks_transitive_descendants_only) ... ok\ntest_finish_accepts_only_running (app.test_scheduler.LifecycleTests.test_finish_accepts_only_running) ... ok\ntest_finish_success_releases_dependents (app.test_scheduler.LifecycleTests.test_finish_success_releases_dependents) ... ok\ntest_long_chain_failure_blocks_all (app.test_scheduler.LifecycleTests.test_long_chain_failure_blocks_all) ... ok\ntest_long_chain_no_recursion_error (app.test_scheduler.LifecycleTests.test_long_chain_no_recursion_error) ... ok\ntest_max_parallel_attribute_preserved (app.test_scheduler.LifecycleTests.test_max_parallel_attribute_preserved) ... ok\ntest_ready_does_not_mutate (app.test_scheduler.LifecycleTests.test_ready_does_not_mutate) ... ok\ntest_ready_is_sorted_and_capacity_independent (app.test_scheduler.LifecycleTests.test_ready_is_sorted_and_capacity_independent) ... ok\ntest_start_requires_eligibility (app.test_scheduler.LifecycleTests.test_start_requires_eligibility) ... ok\ntest_start_respects_capacity_without_state_change (app.test_scheduler.LifecycleTests.test_start_respects_capacity_without_state_change) ... ok\ntest_statuses_returns_fresh_dict (app.test_scheduler.LifecycleTests.test_statuses_returns_fresh_dict) ... ok\ntest_cycle_rejected (app.test_scheduler.ValidationTests.test_cycle_rejected) ... ok\ntest_disconnected_cycle_rejected (app.test_scheduler.ValidationTests.test_disconnected_cycle_rejected) ... ok\ntest_empty_graph_valid (app.test_scheduler.ValidationTests.test_empty_graph_valid) ... ok\ntest_generator_dependencies_and_duplicates (app.test_scheduler.ValidationTests.test_generator_dependencies_and_duplicates) ... ok\ntest_input_snapshot (app.test_scheduler.ValidationTests.test_input_snapshot) ... ok\ntest_max_parallel_validation (app.test_scheduler.ValidationTests.test_max_parallel_validation) ... ok\ntest_package_and_module_export_same_class (app.test_scheduler.ValidationTests.test_package_and_module_export_same_class) ... ok\ntest_self_loop_rejected (app.test_scheduler.ValidationTests.test_self_loop_rejected) ... ok\ntest_unknown_dependency_rejected (app.test_scheduler.ValidationTests.test_unknown_dependency_rejected) ... ok\ntest_validate_graph_returns_fresh_dict (app.test_scheduler.ValidationTests.test_validate_graph_returns_fresh_dict) ... ok\ntest_capacity_and_reuse (test_private.Private.test_capacity_and_reuse) ... ok\ntest_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) ... ok\ntest_deterministic_permutations (test_private.Private.test_deterministic_permutations) ... ok\ntest_failure_transitive (test_private.Private.test_failure_transitive) ... ok\ntest_failure_while_other_parent_running (test_private.Private.test_failure_while_other_parent_running) ... ok\ntest_generators_and_exports (test_private.Private.test_generators_and_exports) ... ok\ntest_invalid_transitions_atomic (test_private.Private.test_invalid_transitions_atomic) ... ok\ntest_long_chain (test_private.Private.test_long_chain) ... ok\ntest_parallel_diamond (test_private.Private.test_parallel_diamond) ... ok\ntest_snapshot_and_duplicates (test_private.Private.test_snapshot_and_duplicates) ... ok\ntest_unknown_dependency (test_private.Private.test_unknown_dependency) ... ok\ntest_validate_capacity (test_private.Private.test_validate_capacity) ... ok\ntest_chain (test_public.Public.test_chain) ... ok\ntest_empty (test_public.Public.test_empty) ... ok\n\n----------------------------------------------------------------------\nRan 37 tests in 1.035s\n\nOK\n",
+    "status": "passed",
+    "scope_violations": [],
+    "acceptance_passed": true
+  },
+  "workspace_after": {
+    "TASK.md": "f24770c60ce45a9b02074e8bbc289159382a12a841496312d8fdfa8c6d83721b",
+    "app/__init__.py": "ec2935eff29687e2ae900e084b75b341c67a43947c692a52ecd5cc45b67f4018",
+    "app/graph.py": "b004dad4200cb73506f7a86c6f6c74d0d90d394466e5972db4ba49393e600b51",
+    "app/scheduler.py": "3cb7196812edeaa4fb87b66fb9f47db3513ef049b2c79f6c259b648ad7f87d4b",
+    "app/test_scheduler.py": "10ba25f31e4cf60514ebba8e78af1f1422b92d4535bbe26dd2ac1a2c11e154e6",
+    "test_public.py": "ffb14304729666dc46dc431c336a3d282787692d9e037c347f8b3c83134c08b5"
+  },
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792287683.3807342,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792304999.640736,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792882799.640755,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792287683.731738
+}

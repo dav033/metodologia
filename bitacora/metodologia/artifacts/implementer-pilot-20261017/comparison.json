@@ -1,0 +1,1079 @@
+{
+  "planned_calls": 48,
+  "started": 48,
+  "returned": 48,
+  "configurations": [
+    {
+      "route": {
+        "id": "luna-medium",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "medium"
+      },
+      "started": 6,
+      "returned": 6,
+      "fully_passed_cases": 5,
+      "adjudicated_passed_cases": 5,
+      "statuses": {
+        "completed": 6
+      },
+      "seconds": 142.644,
+      "token_coverage": "6/6",
+      "tokens": 696169,
+      "usage_parts": {
+        "input_tokens": 684762,
+        "output_tokens": 11407,
+        "cache_read_tokens": 570368,
+        "cache_write_tokens": null,
+        "reasoning_tokens": 1315
+      },
+      "complete_usage_subtotal": 696169,
+      "partial_usage_lower_bound": 0,
+      "tool_calls": 43,
+      "turns": 6,
+      "per_case": {
+        "I1": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 12,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 12.409,
+          "tokens": 67827,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I2": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 32.908,
+          "tokens": 193260,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I3": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 27.095,
+          "tokens": 113778,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I4": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 20.483,
+          "tokens": 99357,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I5": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 22.211,
+          "tokens": 100428,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I6": {
+          "status": "completed",
+          "passed": false,
+          "adjudicated_passed": false,
+          "resource_status": "failed",
+          "supplement_semantic_passed": true,
+          "tests": 17,
+          "failures": 5,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 27.538,
+          "tokens": 121519,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        }
+      }
+    },
+    {
+      "route": {
+        "id": "luna-high",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "high"
+      },
+      "started": 6,
+      "returned": 6,
+      "fully_passed_cases": 6,
+      "adjudicated_passed_cases": 6,
+      "statuses": {
+        "completed": 6
+      },
+      "seconds": 204.846,
+      "token_coverage": "6/6",
+      "tokens": 882938,
+      "usage_parts": {
+        "input_tokens": 863029,
+        "output_tokens": 19909,
+        "cache_read_tokens": 719488,
+        "cache_write_tokens": null,
+        "reasoning_tokens": 5495
+      },
+      "complete_usage_subtotal": 882938,
+      "partial_usage_lower_bound": 0,
+      "tool_calls": 52,
+      "turns": 6,
+      "per_case": {
+        "I1": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 12,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 19.234,
+          "tokens": 79878,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I2": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 44.357,
+          "tokens": 219037,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I3": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 44.952,
+          "tokens": 197278,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I4": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 28.91,
+          "tokens": 116394,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I5": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 27.305,
+          "tokens": 103850,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I6": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": true,
+          "tests": 17,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 40.088,
+          "tokens": 166501,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        }
+      }
+    },
+    {
+      "route": {
+        "id": "luna-xhigh",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "xhigh"
+      },
+      "started": 6,
+      "returned": 6,
+      "fully_passed_cases": 6,
+      "adjudicated_passed_cases": 6,
+      "statuses": {
+        "completed": 6
+      },
+      "seconds": 392.907,
+      "token_coverage": "6/6",
+      "tokens": 1058540,
+      "usage_parts": {
+        "input_tokens": 1013831,
+        "output_tokens": 44709,
+        "cache_read_tokens": 850816,
+        "cache_write_tokens": null,
+        "reasoning_tokens": 26734
+      },
+      "complete_usage_subtotal": 1058540,
+      "partial_usage_lower_bound": 0,
+      "tool_calls": 63,
+      "turns": 6,
+      "per_case": {
+        "I1": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 12,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 15.896,
+          "tokens": 84702,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I2": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 82.717,
+          "tokens": 258448,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I3": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 74.529,
+          "tokens": 262845,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I4": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 69.545,
+          "tokens": 141484,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I5": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 79.209,
+          "tokens": 167853,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I6": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": true,
+          "tests": 24,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 71.011,
+          "tokens": 143208,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        }
+      }
+    },
+    {
+      "route": {
+        "id": "sol-medium",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "started": 6,
+      "returned": 6,
+      "fully_passed_cases": 6,
+      "adjudicated_passed_cases": 6,
+      "statuses": {
+        "completed": 6
+      },
+      "seconds": 248.202,
+      "token_coverage": "6/6",
+      "tokens": 421245,
+      "usage_parts": {
+        "input_tokens": 405463,
+        "output_tokens": 15782,
+        "cache_read_tokens": 261248,
+        "cache_write_tokens": null,
+        "reasoning_tokens": 736
+      },
+      "complete_usage_subtotal": 421245,
+      "partial_usage_lower_bound": 0,
+      "tool_calls": 29,
+      "turns": 6,
+      "per_case": {
+        "I1": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 18,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 22.393,
+          "tokens": 59319,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I2": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 23,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 48.041,
+          "tokens": 79857,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I3": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 25,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 48.063,
+          "tokens": 63582,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I4": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 16,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 41.878,
+          "tokens": 77540,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I5": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 17,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 35.221,
+          "tokens": 61059,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        },
+        "I6": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": true,
+          "tests": 23,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 52.606,
+          "tokens": 79888,
+          "usage_quality": "complete",
+          "observed_models": [],
+          "observed_efforts": []
+        }
+      }
+    },
+    {
+      "route": {
+        "id": "haiku-medium",
+        "provider": "claude",
+        "profile": "claude-work",
+        "model": "claude-haiku-5-5",
+        "effort": "medium"
+      },
+      "started": 6,
+      "returned": 6,
+      "fully_passed_cases": 5,
+      "adjudicated_passed_cases": 6,
+      "statuses": {
+        "completed": 6
+      },
+      "seconds": 286.373,
+      "token_coverage": "6/6",
+      "tokens": 609338,
+      "usage_parts": {
+        "input_tokens": 70,
+        "output_tokens": 68830,
+        "cache_read_tokens": 446471,
+        "cache_write_tokens": 93967,
+        "reasoning_tokens": null
+      },
+      "complete_usage_subtotal": 609338,
+      "partial_usage_lower_bound": 0,
+      "tool_calls": 40,
+      "turns": 46,
+      "per_case": {
+        "I1": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 26,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 14.953,
+          "tokens": 40694,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I2": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 34,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 62.086,
+          "tokens": 117784,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I3": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 37,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 43.135,
+          "tokens": 99621,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I4": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 43.661,
+          "tokens": 92323,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I5": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 26,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 48.342,
+          "tokens": 123902,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I6": {
+          "status": "completed",
+          "passed": false,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": true,
+          "tests": 46,
+          "failures": 5,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 74.196,
+          "tokens": 135014,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        }
+      }
+    },
+    {
+      "route": {
+        "id": "haiku-high",
+        "provider": "claude",
+        "profile": "claude-work",
+        "model": "claude-haiku-5-5",
+        "effort": "high"
+      },
+      "started": 6,
+      "returned": 6,
+      "fully_passed_cases": 6,
+      "adjudicated_passed_cases": 6,
+      "statuses": {
+        "completed": 6
+      },
+      "seconds": 397.807,
+      "token_coverage": "6/6",
+      "tokens": 969297,
+      "usage_parts": {
+        "input_tokens": 94,
+        "output_tokens": 91942,
+        "cache_read_tokens": 761735,
+        "cache_write_tokens": 115526,
+        "reasoning_tokens": null
+      },
+      "complete_usage_subtotal": 969297,
+      "partial_usage_lower_bound": 0,
+      "tool_calls": 48,
+      "turns": 54,
+      "per_case": {
+        "I1": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 26,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 17.082,
+          "tokens": 64081,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I2": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 35,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 76.349,
+          "tokens": 177402,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I3": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 46,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 71.876,
+          "tokens": 183113,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I4": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 23,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 62.017,
+          "tokens": 167783,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I5": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 29,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 76.913,
+          "tokens": 172160,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I6": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": true,
+          "tests": 45,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 93.57,
+          "tokens": 204758,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        }
+      }
+    },
+    {
+      "route": {
+        "id": "haiku-xhigh",
+        "provider": "claude",
+        "profile": "claude-work",
+        "model": "claude-haiku-5-5",
+        "effort": "xhigh"
+      },
+      "started": 6,
+      "returned": 6,
+      "fully_passed_cases": 5,
+      "adjudicated_passed_cases": 6,
+      "statuses": {
+        "completed": 6
+      },
+      "seconds": 694.7,
+      "token_coverage": "6/6",
+      "tokens": 1740646,
+      "usage_parts": {
+        "input_tokens": 112,
+        "output_tokens": 168987,
+        "cache_read_tokens": 1378795,
+        "cache_write_tokens": 192752,
+        "reasoning_tokens": null
+      },
+      "complete_usage_subtotal": 1740646,
+      "partial_usage_lower_bound": 0,
+      "tool_calls": 74,
+      "turns": 80,
+      "per_case": {
+        "I1": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 36,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 29.111,
+          "tokens": 102973,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I2": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 53,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 143.277,
+          "tokens": 471422,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I3": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 45,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 100.823,
+          "tokens": 183081,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I4": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 24,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 114.841,
+          "tokens": 267896,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I5": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 31,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 101.385,
+          "tokens": 271207,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I6": {
+          "status": "completed",
+          "passed": false,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": true,
+          "tests": 39,
+          "failures": 5,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 205.263,
+          "tokens": 444067,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-haiku-5-5"
+          ],
+          "observed_efforts": []
+        }
+      }
+    },
+    {
+      "route": {
+        "id": "sonnet-medium",
+        "provider": "claude",
+        "profile": "claude-work",
+        "model": "claude-sonnet-5-5",
+        "effort": "medium"
+      },
+      "started": 6,
+      "returned": 6,
+      "fully_passed_cases": 6,
+      "adjudicated_passed_cases": 6,
+      "statuses": {
+        "completed": 6
+      },
+      "seconds": 124.608,
+      "token_coverage": "6/6",
+      "tokens": 175569,
+      "usage_parts": {
+        "input_tokens": 36,
+        "output_tokens": 15993,
+        "cache_read_tokens": 126724,
+        "cache_write_tokens": 32816,
+        "reasoning_tokens": null
+      },
+      "complete_usage_subtotal": 175569,
+      "partial_usage_lower_bound": 0,
+      "tool_calls": 12,
+      "turns": 18,
+      "per_case": {
+        "I1": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 18,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 12.257,
+          "tokens": 24806,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-sonnet-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I2": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 17,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 25.087,
+          "tokens": 31211,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-sonnet-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I3": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": null,
+          "supplement_semantic_passed": null,
+          "tests": 18,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 20.563,
+          "tokens": 29977,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-sonnet-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I4": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 21.82,
+          "tokens": 28494,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-sonnet-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I5": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": null,
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 18.647,
+          "tokens": 28222,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-sonnet-5-5"
+          ],
+          "observed_efforts": []
+        },
+        "I6": {
+          "status": "completed",
+          "passed": true,
+          "adjudicated_passed": true,
+          "resource_status": "passed",
+          "supplement_semantic_passed": true,
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "scope_violations": [],
+          "seconds": 26.234,
+          "tokens": 32859,
+          "usage_quality": "complete",
+          "observed_models": [
+            "claude-sonnet-5-5"
+          ],
+          "observed_efforts": []
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "provider": "claude",
+    "status": "complete"
+  },
+  {
+    "provider": "codex",
+    "status": "stopped",
+    "cell": "R2-luna-high",
+    "reason": "quota_exhausted"
+  }
+]

@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "case": "I6",
+  "route": {
+    "id": "luna-medium",
+    "provider": "codex",
+    "profile": "codex-2",
+    "model": "gpt-6-luna",
+    "effort": "medium"
+  },
+  "prompt_sha256": "c05542a08753e228f0649f3f3c9df2b5e89197537fb97b72f99a979eed458f2b",
+  "prompt_characters": 4454,
+  "started_at": 1792288132.6933668,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792288132.6933734,
+    "windows": {
+      "five_hour": {
+        "used_percent": 77.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 12.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 77.0,
+  "workspace_before": {
+    "TASK.md": "c05542a08753e228f0649f3f3c9df2b5e89197537fb97b72f99a979eed458f2b",
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/store.py": "c0e0b84022be38e8a15b3fb47bcb29ec131139fb8d17d6e6ff40e650b04e46bc",
+    "test_public.py": "8da50d959512f825da3d8e3000e8a5f3469541014e99d85a2a6ce706d3e6bede"
+  },
+  "response_text": "Implemented the SQLite queue in [app/store.py](/tmp/work/app/store.py), including durable claims, dependency checks, retries, atomic completion and outbox events, publishing, and inbox deduplication.\n\nThe public unittest passed (1 test). Additional smoke checks passed for dependencies, retry and token increments, fault rollback, publishing, and duplicate consumption.",
+  "usage_reported": {
+    "input_tokens": 119287,
+    "cached_input_tokens": 101504,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2232,
+    "reasoning_output_tokens": 147
+  },
+  "usage": {
+    "input_tokens": 119287,
+    "output_tokens": 2232,
+    "cache_read_tokens": 101504,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 147,
+    "reported_total": null,
+    "total": 121519,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'pwd && rg --files app . | sort | head -200'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat app/store.py && cat app/__init__.py && cat test_public.py'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat TASK.md'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "file_change",
+      "command": "",
+      "exit_code": null,
+      "status": "completed"
+    },
+    {
+      "type": "file_change",
+      "command": "",
+      "exit_code": null,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"python -m unittest discover -s . -p 'test_public.py' -v\"",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"python - <<'PY'\nimport os, tempfile\nfrom app.store import *\nwith tempfile.TemporaryDirectory() as d:\n p=os.path.join(d,'db'); init(p); init(p)\n enqueue(p,'b','B','a'); enqueue(p,'a','A')\n assert claim(p,0,5)==('a','A',1)\n assert claim(p,0,5) is None\n assert retry(p,'a',1,1)\n assert claim(p,2,5)==('a','A',2)\n assert complete(p,'a',2,'ok',3)\n assert claim(p,3,5)==('b','B',1)\n try:\n  complete(p,'b',1,'bad',4,lambda phase: (_ for _ in ()).throw(RuntimeError(phase)))\n except RuntimeError: pass\n else: raise AssertionError('fault did not propagate')\n assert inspect(p,'b')['state']=='running'\n assert publish(p,lambda i,b: consume(p,i,b))==1\n assert publish(p,lambda i,b: None)==0\n assert consume(p,'a','different') is False\n assert complete(p,'b',1,'done',4)\n assert publish(p,lambda i,b: consume(p,i,b))==1\n assert inspect(p,'b')['result']=='done'\nprint('smoke checks passed')\nPY\"",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "elapsed_seconds": 27.538,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/implementer-cell-9y4g1_b4",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-2",
+    "/home/david/.codex-2",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "limit_detected": false,
+  "changed_files": [
+    "app/store.py"
+  ],
+  "grade": {
+    "command": [
+      "/usr/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      ".",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "exit_code": 1,
+    "tests": 17,
+    "failures": 5,
+    "errors": 0,
+    "methods": [
+      {
+        "method": "test_claim_and_complete",
+        "class": "test_private.QueueTests.test_claim_and_complete",
+        "result": "ok"
+      },
+      {
+        "method": "test_concurrent_distinct_jobs",
+        "class": "test_private.QueueTests.test_concurrent_distinct_jobs",
+        "result": "ok"
+      },
+      {
+        "method": "test_concurrent_single_job",
+        "class": "test_private.QueueTests.test_concurrent_single_job",
+        "result": "ok"
+      },
+      {
+        "method": "test_delivery_crash_replay_and_dedupe",
+        "class": "test_private.QueueTests.test_delivery_crash_replay_and_dedupe",
+        "result": "FAIL"
+      },
+      {
+        "method": "test_dependencies_and_retry",
+        "class": "test_private.QueueTests.test_dependencies_and_retry",
+        "result": "ok"
+      },
+      {
+        "method": "test_duplicate_preserves_payload",
+        "class": "test_private.QueueTests.test_duplicate_preserves_payload",
+        "result": "ok"
+      },
+      {
+        "method": "test_expiry_boundary",
+        "class": "test_private.QueueTests.test_expiry_boundary",
+        "result": "ok"
+      },
+      {
+        "method": "test_hook_exception_atomic_and_expired_retry",
+        "class": "test_private.QueueTests.test_hook_exception_atomic_and_expired_retry",
+        "result": "FAIL"
+      },
+      {
+        "method": "test_invalid_ttl",
+        "class": "test_private.QueueTests.test_invalid_ttl",
+        "result": "ok"
+      },
+      {
+        "method": "test_order",
+        "class": "test_private.QueueTests.test_order",
+        "result": "ok"
+      },
+      {
+        "method": "test_ordered_delivery_failure_preserves_previous_ack",
+        "class": "test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack",
+        "result": "FAIL"
+      },
+      {
+        "method": "test_process_crash_after_result",
+        "class": "test_private.QueueTests.test_process_crash_after_result",
+        "result": "FAIL"
+      },
+      {
+        "method": "test_stale_fencing_after_reopen",
+        "class": "test_private.QueueTests.test_stale_fencing_after_reopen",
+        "result": "ok"
+      },
+      {
+        "method": "test_unknown_and_done",
+        "class": "test_private.QueueTests.test_unknown_and_done",
+        "result": "ok"
+      },
+      {
+        "method": "test_basic",
+        "class": "test_public.PublicTests.test_basic",
+        "result": "ok"
+      }
+    ],
+    "output": "test_claim_and_complete (test_private.QueueTests.test_claim_and_complete) ... ok\ntest_concurrent_distinct_jobs (test_private.QueueTests.test_concurrent_distinct_jobs) ... ok\ntest_concurrent_single_job (test_private.QueueTests.test_concurrent_single_job) ... ok\ntest_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe) ... FAIL\ntest_dependencies_and_retry (test_private.QueueTests.test_dependencies_and_retry) ... ok\ntest_duplicate_preserves_payload (test_private.QueueTests.test_duplicate_preserves_payload) ... ok\ntest_expired_cannot_complete (test_private.QueueTests.test_expired_cannot_complete) ... /tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1e980>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ea70>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1eb60>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ec50>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ed40>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ee30>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ef20>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f010>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f6a0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f790>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f100>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f5b0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fc40>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fd30>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f970>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f3d0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f2e0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f880>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fb50>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f1f0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fa60>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f4c0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fe20>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ff10>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec040>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec310>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec220>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec400>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec4f0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec5e0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec6d0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec7c0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec8b0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec9a0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afececa90>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afececb80>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afececc70>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afececd60>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecece50>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afececf40>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced030>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced120>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced210>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced300>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced3f0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced4e0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced5d0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/tmp/work/app/store.py:97: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced6c0>\n  row = connection.execute(\"SELECT * FROM jobs WHERE id=?\", (id,)).fetchone()\nResourceWarning: Enable tracemalloc to get the object allocation traceback\nok\ntest_expiry_boundary (test_private.QueueTests.test_expiry_boundary) ... ok\ntest_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry) ... FAIL\ntest_invalid_ttl (test_private.QueueTests.test_invalid_ttl) ... ok\ntest_order (test_private.QueueTests.test_order) ... ok\ntest_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack) ... FAIL\ntest_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result) ... FAIL\ntest_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit) ... /usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ff10>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fe20>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f4c0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fa60>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f1f0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fb50>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f880>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f2e0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f3d0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f970>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fd30>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1fc40>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f5b0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f100>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f790>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f6a0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ee30>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ed40>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ec50>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1eb60>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1f010>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1ea70>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afec1e980>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced6c0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced5d0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced4e0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced3f0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced300>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced210>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced120>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced030>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afececf40>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afee2df30>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecece50>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec7c0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec220>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec310>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecec040>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeced8a0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecedf30>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecee020>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecee110>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecee5c0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecee6b0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecee7a0>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecee890>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afecee980>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeceeb60>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeceec50>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeceed40>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/usr/lib/python3.14/traceback.py:889: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3afeceef20>\n  def setup_positions(expr, force_valid=True):\nResourceWarning: Enable tracemalloc to get the object allocation traceback\nFAIL\ntest_stale_fencing_after_reopen (test_private.QueueTests.test_stale_fencing_after_reopen) ... ok\ntest_unknown_and_done (test_private.QueueTests.test_unknown_and_done) ... ok\ntest_basic (test_public.PublicTests.test_basic) ... ok\n\n======================================================================\nFAIL: test_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 58, in test_delivery_crash_replay_and_dedupe\n    self.assertEqual(publish(self.p,again),1);self.assertEqual(seen,[('a','ok'),('a','ok')]);self.assertEqual(publish(self.p,again),0);self.assertFalse(consume(self.p,'a','changed'))\n                                              ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [('a', '{\"id\":\"a\",\"result\":\"ok\"}'), ('a', '{\"id\":\"a\",\"result\":\"ok\"}')] != [('a', 'ok'), ('a', 'ok')]\n\nFirst differing element 0:\n('a', '{\"id\":\"a\",\"result\":\"ok\"}')\n('a', 'ok')\n\n- [('a', '{\"id\":\"a\",\"result\":\"ok\"}'), ('a', '{\"id\":\"a\",\"result\":\"ok\"}')]\n+ [('a', 'ok'), ('a', 'ok')]\n\n======================================================================\nFAIL: test_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 67, in test_hook_exception_atomic_and_expired_retry\n    with sqlite3.connect(self.p) as c:self.assertEqual(c.execute('SELECT * FROM outbox').fetchall(),[('a','ok',0)])\n                                      ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [('a', '{\"id\":\"a\",\"result\":\"ok\"}', 0)] != [('a', 'ok', 0)]\n\nFirst differing element 0:\n('a', '{\"id\":\"a\",\"result\":\"ok\"}', 0)\n('a', 'ok', 0)\n\n- [('a', '{\"id\":\"a\",\"result\":\"ok\"}', 0)]\n+ [('a', 'ok', 0)]\n\n======================================================================\nFAIL: test_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 81, in test_ordered_delivery_failure_preserves_previous_ack\n    self.assertEqual(observed,[('a','a-result'),('b','b-result')])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [('a', '{\"id\":\"a\",\"result\":\"a-result\"}'), ('b', '[28 chars]\"}')] != [('a', 'a-result'), ('b', 'b-result')]\n\nFirst differing element 0:\n('a', '{\"id\":\"a\",\"result\":\"a-result\"}')\n('a', 'a-result')\n\n+ [('a', 'a-result'), ('b', 'b-result')]\n- [('a', '{\"id\":\"a\",\"result\":\"a-result\"}'),\n-  ('b', '{\"id\":\"b\",\"result\":\"b-result\"}')]\n\n======================================================================\nFAIL: test_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 49, in test_process_crash_after_result\n    def test_process_crash_after_result(self):self.crash_at('after_result')\n                                              ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^\n  File \"/tmp/work/test_private.py\", line 48, in crash_at\n    self.assertEqual(claim(self.p,5,5),('a','data',2));self.assertTrue(complete(self.p,'a',2,'recovered',6));seen=[];self.assertEqual(publish(self.p,lambda *x:seen.append(x)),1);self.assertEqual(seen,[('a','recovered')]);self.assertEqual(publish(self.p,lambda *x:seen.append(x)),0)\n                                                                                                                                                                                  ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [('a', '{\"id\":\"a\",\"result\":\"recovered\"}')] != [('a', 'recovered')]\n\nFirst differing element 0:\n('a', '{\"id\":\"a\",\"result\":\"recovered\"}')\n('a', 'recovered')\n\n- [('a', '{\"id\":\"a\",\"result\":\"recovered\"}')]\n+ [('a', 'recovered')]\n\n======================================================================\nFAIL: test_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 50, in test_process_crash_before_commit\n    def test_process_crash_before_commit(self):self.crash_at('before_commit')\n                                               ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"/tmp/work/test_private.py\", line 48, in crash_at\n    self.assertEqual(claim(self.p,5,5),('a','data',2));self.assertTrue(complete(self.p,'a',2,'recovered',6));seen=[];self.assertEqual(publish(self.p,lambda *x:seen.append(x)),1);self.assertEqual(seen,[('a','recovered')]);self.assertEqual(publish(self.p,lambda *x:seen.append(x)),0)\n                                                                                                                                                                                  ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [('a', '{\"id\":\"a\",\"result\":\"recovered\"}')] != [('a', 'recovered')]\n\nFirst differing element 0:\n('a', '{\"id\":\"a\",\"result\":\"recovered\"}')\n('a', 'recovered')\n\n- [('a', '{\"id\":\"a\",\"result\":\"recovered\"}')]\n+ [('a', 'recovered')]\n\n----------------------------------------------------------------------\nRan 17 tests in 0.160s\n\nFAILED (failures=5)\n",
+    "status": "failed",
+    "scope_violations": [],
+    "acceptance_passed": false
+  },
+  "workspace_after": {
+    "TASK.md": "c05542a08753e228f0649f3f3c9df2b5e89197537fb97b72f99a979eed458f2b",
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/store.py": "10bca8527b4ce4cbe95978be5309c97ab41873959435a7028281bacc58d58b13",
+    "test_public.py": "8da50d959512f825da3d8e3000e8a5f3469541014e99d85a2a6ce706d3e6bede"
+  },
+  "quota_after": {
+    "profile": "codex-2",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792288161.1476855,
+    "windows": {
+      "five_hour": {
+        "used_percent": 77.0,
+        "resets_at": 1792296746.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 12.0,
+        "resets_at": 1792883546.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792288161.9869316
+}

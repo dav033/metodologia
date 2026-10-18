@@ -1,0 +1,91 @@
+"""SQLite storage and schema migration helpers."""
+
+import sqlite3
+import uuid
+from pathlib import Path
+
+
+def migrate(path: str, fault=None) -> None:
+    """Migrate a legacy or empty database to schema version 1.
+
+    All schema changes, copied rows, and the version update are made in one
+    transaction so a failed migration can be retried safely.
+    """
+    connection = sqlite3.connect(path)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        version = connection.execute("PRAGMA user_version").fetchone()[0]
+
+        if version > 1:
+            raise ValueError(f"unsupported database version: {version}")
+        if version == 1:
+            # A migrated database is intentionally a no-op, including when a
+            # fault hook was supplied.
+            connection.rollback()
+            return
+        if version != 0:
+            raise ValueError(f"unsupported database version: {version}")
+
+        has_items = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'items'"
+        ).fetchone() is not None
+
+        if has_items:
+            replacement = f"items_migration_{uuid.uuid4().hex}"
+            connection.execute(
+                f"CREATE TABLE {replacement} ("
+                "id INTEGER PRIMARY KEY, "
+                "value TEXT NOT NULL, "
+                "normalized TEXT NOT NULL)"
+            )
+
+            rows = connection.execute("SELECT id, value FROM items").fetchall()
+            connection.executemany(
+                f"INSERT INTO {replacement} (id, value, normalized) "
+                "VALUES (?, ?, ?)",
+                ((item_id, value, value.strip().lower()) for item_id, value in rows),
+            )
+
+            if fault is not None:
+                fault("after_copy")
+
+            connection.execute("DROP TABLE items")
+            connection.execute(f"ALTER TABLE {replacement} RENAME TO items")
+        else:
+            connection.execute(
+                "CREATE TABLE items ("
+                "id INTEGER PRIMARY KEY, "
+                "value TEXT NOT NULL, "
+                "normalized TEXT NOT NULL)"
+            )
+
+        connection.execute("PRAGMA user_version = 1")
+        if fault is not None:
+            fault("before_commit")
+        connection.commit()
+    except BaseException:
+        # Preserve the original error (in particular exceptions raised by a
+        # fault hook). Closing the connection is a final rollback safeguard.
+        try:
+            if connection.in_transaction:
+                connection.rollback()
+        except sqlite3.Error:
+            pass
+        raise
+    finally:
+        connection.close()
+
+
+def read_items(path: str) -> list[tuple[int, str]]:
+    """Read normalized rows from a migrated database without changing it."""
+    database_uri = Path(path).resolve().as_uri() + "?mode=ro"
+    connection = sqlite3.connect(database_uri, uri=True)
+    try:
+        version = connection.execute("PRAGMA user_version").fetchone()[0]
+        if version != 1:
+            raise ValueError(f"database is not migrated (user_version={version})")
+        return connection.execute(
+            "SELECT id, normalized FROM items ORDER BY id"
+        ).fetchall()
+    finally:
+        connection.close()

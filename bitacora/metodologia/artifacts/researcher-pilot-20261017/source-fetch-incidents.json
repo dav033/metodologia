@@ -1,0 +1,7 @@
+[
+  {
+    "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+    "error": "HTTP403",
+    "action": "No retry; coordinator used upstream GitHub source for oracle. Live candidates may report inaccessible documentation explicitly."
+  }
+]

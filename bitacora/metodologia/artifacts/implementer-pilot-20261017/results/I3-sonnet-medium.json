@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "case": "I3",
+  "route": {
+    "id": "sonnet-medium",
+    "provider": "claude",
+    "profile": "claude-work",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium"
+  },
+  "prompt_sha256": "f24770c60ce45a9b02074e8bbc289159382a12a841496312d8fdfa8c6d83721b",
+  "prompt_characters": 3155,
+  "started_at": 1792287617.3827739,
+  "status": "completed",
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792287617.3827798,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792304999.627016,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792882799.627104,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 2.0,
+  "workspace_before": {
+    "TASK.md": "f24770c60ce45a9b02074e8bbc289159382a12a841496312d8fdfa8c6d83721b",
+    "app/__init__.py": "ec2935eff29687e2ae900e084b75b341c67a43947c692a52ecd5cc45b67f4018",
+    "app/graph.py": "a84988a842ff2f8aad752b8bc94ddb7f2f8bbf42542075f665215453b298782a",
+    "app/scheduler.py": "3a3b5c5c23a700ce36eac6e38b3d8142a9f50ba5e6533f254c7555179885adfa",
+    "test_public.py": "ffb14304729666dc46dc431c336a3d282787692d9e037c347f8b3c83134c08b5"
+  },
+  "response_text": "Refactoring is done: `Scheduler` is exported from both `app` and `app.scheduler`, and its public API is unchanged. The public check passes (2 tests), and so do my 4 new tests in `app/test_scheduler.py`.\n\n- **`app/graph.py`**:\n  - `validate_graph` returns a fresh dict of dependency sets.\n  - It raises `ValueError` for unknown dependencies, self-loops and cycles, including disconnected ones.\n  - Cycle detection is iterative, so long chains don't hit the recursion limit.\n  - I added a `build_dependents` helper that `Scheduler` also uses.\n- **`app/scheduler.py`**:\n  - `max_parallel` must be a non-bool integer of at least 1, otherwise `ValueError`.\n  - Construction snapshots the input, so generators work.\n  - `ready()` returns every eligible pending job in sorted order and never changes state.\n  - `start()` raises `ValueError`, without changing state, for unknown, ineligible or over-capacity jobs.\n  - `finish()` accepts only running jobs.\n  - A failure marks pending descendants as blocked iteratively, even if their other dependencies are still running.\n  - `statuses()` returns a fresh dict, and `done()` treats blocked as terminal.\n\nMy tests cover invalid graphs, invalid `max_parallel`, generator dependencies, blocking on failure, the capacity limit and a 5,000-job chain.",
+  "usage_reported": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4812,
+    "cache_read_input_tokens": 22395,
+    "output_tokens": 2764,
+    "output_tokens_details": {
+      "thinking_tokens": 227
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4812,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "usage": {
+    "input_tokens": 6,
+    "output_tokens": 2764,
+    "cache_read_tokens": 22395,
+    "cache_write_tokens": 4812,
+    "reasoning_tokens": null,
+    "reported_total": null,
+    "total": 29977,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "claude-stream-json",
+    "provider": "claude"
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "Bash",
+      "id": "toolu_01F54aH7CqWGCLebRTE9jYWe",
+      "command": "ls -R . | head -50 && cat app/*.py && head -50 test_public.py"
+    },
+    {
+      "type": "Bash",
+      "id": "toolu_018471CeDyBzDjsM34dLcUjM",
+      "command": "cd /tmp/work/app && cat > graph.py <<'E'\nfrom collections import deque\n\n\ndef validate_graph(jobs):\n    \"\"\"Return a fresh dict job -> set(deps); raise ValueError on unknown deps or cycles.\"\"\"\n    graph = {job: set(deps) for job, deps in jobs.items()}\n    for job, deps in graph.items():\n        for dep in deps:\n            if dep not in graph:\n                raise ValueError(f\"unknown dependency {dep!r} for job {job!r}\")\n    # Kahn's algorithm (iterative, so long chains are safe).\n    remaining = {job: len(deps) for job, deps in graph.items()}\n    dependents = build_dependents(graph)\n    queue = deque(job for job, n in remaining.items() if n == 0)\n    seen = 0\n    while queue:\n        job = queue.popleft()\n        seen += 1\n        for child in dependents[job]:\n            remaining[child] -= 1\n            if remaining[child] == 0:\n                queue.append(child)\n    if seen != len(graph):\n        raise ValueError(\"dependency cycle detected\")\n    return graph\n\n\ndef build_dependents(graph):\n    \"\"\"Map each job to the set of jobs that depend on it.\"\"\"\n    dependents = {job: set() for job in graph}\n    for job, deps in graph.items():\n        for dep in deps:\n            dependents[dep].add(job)\n    return dependents\nE\ncat > scheduler.py <<'E'\nfrom .graph import build_dependents, validate_graph\n\nPENDING, RUNNING, SUCCEEDED, FAILED, BLOCKED = (\n    \"pending\", \"running\", \"succeeded\", \"failed\", \"blocked\")\n\n\nclass Scheduler:\n    def __init__(self, jobs, max_parallel=2):\n        if isinstance(max_parallel, bool) or not isinstance(max_parallel, int) or max_parallel < 1:\n            raise ValueError(\"max_parallel must be an integer >= 1\")\n        self.jobs = validate_graph(jobs)\n        self._dependents = build_dependents(self.jobs)\n        self.max_parallel = max_parallel\n        self.state = {job: PENDING for job in self.jobs}\n        self._running = 0\n\n    def _eligible(self, job):\n        return self.state[job] == PENDING and all(\n            self.state[d] == SUCCEEDED for d in self.jobs[job])\n\n    def ready(self):\n        return sorted(j for j in self.jobs if self._eligible(j))\n\n    def start(self, job_id):\n        if job_id not in self.state or not self._eligible(job_id):\n            raise ValueError(f\"job {job_id!r} is not ready\")\n        if self._running >= self.max_parallel:\n            raise ValueError(\"max_parallel limit reached\")\n        self.state[job_id] = RUNNING\n        self._running += 1\n\n    def finish(self, job_id, success=True):\n        if self.state.get(job_id) != RUNNING:\n            raise ValueError(f\"job {job_id!r} is not running\")\n        self._running -= 1\n        if success:\n            self.state[job_id] = SUCCEEDED\n            return\n        self.state[job_id] = FAILED\n        stack = [job_id]\n        while stack:\n            for child in self._dependents[stack.pop()]:\n                if self.state[child] == PENDING:\n                    self.state[child] = BLOCKED\n                    stack.append(child)\n\n    def statuses(self):\n        return dict(self.state)\n\n    def done(self):\n        return not any(s in (PENDING, RUNNING) for s in self.state.values())\nE\ncat > test_scheduler.py <<'E'\nimport unittest\nfrom app import Scheduler\nfrom app.scheduler import Scheduler as S2\nfrom app.graph import validate_graph\n\n\nclass T(unittest.TestCase):\n    def test_invalid(self):\n        for g in ({'a': ['b']}, {'a': ['a']}, {'a': ['b'], 'b': ['a']},\n                  {'x': [], 'a': ['b'], 'b': ['c'], 'c': ['a']}):\n            with self.assertRaises(ValueError):\n                Scheduler(g)\n        for m in (0, True, 1.5, '2'):\n            with self.assertRaises(ValueError):\n                Scheduler({}, m)\n\n    def test_generators_and_block(self):\n        s = Scheduler({'a': iter([]), 'b': (d for d in []), 'c': (d for d in 'ab'), 'd': ['c']}, 3)\n        self.assertIs(S2, Scheduler)\n        s.start('a'); s.start('b'); s.finish('a', False)\n        self.assertEqual(s.statuses(), {'a': 'failed', 'b': 'running', 'c': 'blocked',"
+    }
+  ],
+  "native_result_status": "success",
+  "turns": 3,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "elapsed_seconds": 20.563,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/implementer-cell-5p29csgd",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.claude-work",
+    "/home/david/.claude-work",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "claude",
+    "--print",
+    "--model",
+    "claude-sonnet-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--strict-mcp-config",
+    "--tools",
+    "Read,Grep,Glob,Edit,Write,Bash",
+    "--allowedTools",
+    "Read,Grep,Glob,Edit,Write,Bash",
+    "--no-session-persistence",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none",
+    "--max-turns",
+    "45",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "stderr_excerpt": "",
+  "limit_detected": false,
+  "changed_files": [
+    "app/graph.py",
+    "app/scheduler.py",
+    "app/test_scheduler.py"
+  ],
+  "grade": {
+    "command": [
+      "/usr/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      ".",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "exit_code": 0,
+    "tests": 18,
+    "failures": 0,
+    "errors": 0,
+    "methods": [
+      {
+        "method": "test_capacity",
+        "class": "app.test_scheduler.T.test_capacity",
+        "result": "ok"
+      },
+      {
+        "method": "test_generators_and_block",
+        "class": "app.test_scheduler.T.test_generators_and_block",
+        "result": "ok"
+      },
+      {
+        "method": "test_invalid",
+        "class": "app.test_scheduler.T.test_invalid",
+        "result": "ok"
+      },
+      {
+        "method": "test_long_chain",
+        "class": "app.test_scheduler.T.test_long_chain",
+        "result": "ok"
+      },
+      {
+        "method": "test_capacity_and_reuse",
+        "class": "test_private.Private.test_capacity_and_reuse",
+        "result": "ok"
+      },
+      {
+        "method": "test_cycles_before_dispatch",
+        "class": "test_private.Private.test_cycles_before_dispatch",
+        "result": "ok"
+      },
+      {
+        "method": "test_deterministic_permutations",
+        "class": "test_private.Private.test_deterministic_permutations",
+        "result": "ok"
+      },
+      {
+        "method": "test_failure_transitive",
+        "class": "test_private.Private.test_failure_transitive",
+        "result": "ok"
+      },
+      {
+        "method": "test_failure_while_other_parent_running",
+        "class": "test_private.Private.test_failure_while_other_parent_running",
+        "result": "ok"
+      },
+      {
+        "method": "test_generators_and_exports",
+        "class": "test_private.Private.test_generators_and_exports",
+        "result": "ok"
+      },
+      {
+        "method": "test_invalid_transitions_atomic",
+        "class": "test_private.Private.test_invalid_transitions_atomic",
+        "result": "ok"
+      },
+      {
+        "method": "test_long_chain",
+        "class": "test_private.Private.test_long_chain",
+        "result": "ok"
+      },
+      {
+        "method": "test_parallel_diamond",
+        "class": "test_private.Private.test_parallel_diamond",
+        "result": "ok"
+      },
+      {
+        "method": "test_snapshot_and_duplicates",
+        "class": "test_private.Private.test_snapshot_and_duplicates",
+        "result": "ok"
+      },
+      {
+        "method": "test_unknown_dependency",
+        "class": "test_private.Private.test_unknown_dependency",
+        "result": "ok"
+      },
+      {
+        "method": "test_validate_capacity",
+        "class": "test_private.Private.test_validate_capacity",
+        "result": "ok"
+      },
+      {
+        "method": "test_chain",
+        "class": "test_public.Public.test_chain",
+        "result": "ok"
+      },
+      {
+        "method": "test_empty",
+        "class": "test_public.Public.test_empty",
+        "result": "ok"
+      }
+    ],
+    "output": "test_capacity (app.test_scheduler.T.test_capacity) ... ok\ntest_generators_and_block (app.test_scheduler.T.test_generators_and_block) ... ok\ntest_invalid (app.test_scheduler.T.test_invalid) ... ok\ntest_long_chain (app.test_scheduler.T.test_long_chain) ... ok\ntest_capacity_and_reuse (test_private.Private.test_capacity_and_reuse) ... ok\ntest_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) ... ok\ntest_deterministic_permutations (test_private.Private.test_deterministic_permutations) ... ok\ntest_failure_transitive (test_private.Private.test_failure_transitive) ... ok\ntest_failure_while_other_parent_running (test_private.Private.test_failure_while_other_parent_running) ... ok\ntest_generators_and_exports (test_private.Private.test_generators_and_exports) ... ok\ntest_invalid_transitions_atomic (test_private.Private.test_invalid_transitions_atomic) ... ok\ntest_long_chain (test_private.Private.test_long_chain) ... ok\ntest_parallel_diamond (test_private.Private.test_parallel_diamond) ... ok\ntest_snapshot_and_duplicates (test_private.Private.test_snapshot_and_duplicates) ... ok\ntest_unknown_dependency (test_private.Private.test_unknown_dependency) ... ok\ntest_validate_capacity (test_private.Private.test_validate_capacity) ... ok\ntest_chain (test_public.Public.test_chain) ... ok\ntest_empty (test_public.Public.test_empty) ... ok\n\n----------------------------------------------------------------------\nRan 18 tests in 0.023s\n\nOK\n",
+    "status": "passed",
+    "scope_violations": [],
+    "acceptance_passed": true
+  },
+  "workspace_after": {
+    "TASK.md": "f24770c60ce45a9b02074e8bbc289159382a12a841496312d8fdfa8c6d83721b",
+    "app/__init__.py": "ec2935eff29687e2ae900e084b75b341c67a43947c692a52ecd5cc45b67f4018",
+    "app/graph.py": "6008f87aae756feaf77678ad8188761687ea2939ecdc40ee31508be307f793be",
+    "app/scheduler.py": "3a0f6fc98a1bb532429b0a7ec6309ae00bdfd161d3ef636cb6cb36f19088f842",
+    "app/test_scheduler.py": "6a24bf46903efebaa921402f2ee93cc0c6d6544ec8d1509690885aa9227c7609",
+    "test_public.py": "ffb14304729666dc46dc431c336a3d282787692d9e037c347f8b3c83134c08b5"
+  },
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792287638.3603873,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792304999.64874,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792882799.648784,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792287638.7542658
+}

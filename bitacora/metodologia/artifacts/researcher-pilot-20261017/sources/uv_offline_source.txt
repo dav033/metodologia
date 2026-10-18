@@ -1,0 +1,67 @@
+Source: https://raw.githubusercontent.com/astral-sh/uv/main/crates/uv-cli/src/lib.rs
+00226 |     /// Whether to load TLS certificates from the platform's native certificate store [env: UV_SYSTEM_CERTS=]
+00227 |     ///
+00228 |     /// By default, uv uses bundled Mozilla root certificates, which improves portability and
+00229 |     /// performance (especially on macOS).
+00230 |     ///
+00231 |     /// However, in some cases, you may want to use the platform's native certificate store,
+00232 |     /// especially if you're relying on a corporate trust root (e.g., for a mandatory proxy) that's
+00233 |     /// included in your system's certificate store.
+00234 |     #[arg(global = true, long, value_parser = clap::builder::BoolishValueParser::new(), overrides_with_all = ["no_system_certs", "native_tls", "no_native_tls"])]
+00235 |     pub system_certs: bool,
+00236 | 
+00237 |     #[arg(global = true, long, overrides_with_all = ["system_certs", "native_tls", "no_native_tls"], hide = true)]
+00238 |     pub no_system_certs: bool,
+00239 | 
+00240 |     /// Disable network access [env: UV_OFFLINE=]
+00241 |     ///
+00242 |     /// When disabled, uv will only use locally cached data and locally available files.
+00243 |     #[arg(global = true, long, overrides_with("no_offline"))]
+00244 |     pub offline: bool,
+00245 | 
+00246 |     #[arg(global = true, long, overrides_with("offline"), hide = true)]
+00247 |     pub no_offline: bool,
+06483 |     pub no_cache: bool,
+06484 |     #[arg(long, hide = true)]
+06485 |     pub cache_dir: Option<PathBuf>,
+06486 | 
+06487 |     #[arg(long, hide = true)]
+06488 |     pub python_preference: Option<PythonPreference>,
+06489 |     #[arg(long, hide = true)]
+06490 |     pub no_python_downloads: bool,
+06491 | 
+06492 |     #[arg(long, short, action = clap::ArgAction::Count, conflicts_with = "verbose", hide = true)]
+06493 |     pub quiet: u8,
+06494 |     #[arg(long, short, action = clap::ArgAction::Count, conflicts_with = "quiet", hide = true)]
+06495 |     pub verbose: u8,
+06496 |     #[arg(long, conflicts_with = "no_color", hide = true)]
+06497 |     pub color: Option<ColorChoice>,
+06498 |     #[arg(long, hide = true)]
+06499 |     pub native_tls: bool,
+06500 |     #[arg(long, hide = true)]
+06501 |     pub offline: bool,
+06502 |     #[arg(long, hide = true)]
+06503 |     pub no_progress: bool,
+06504 |     #[arg(long, hide = true)]
+07413 |     /// Show the reverse dependencies for the given package. This flag will invert the tree and
+07414 |     /// display the packages that depend on the given package.
+07415 |     #[arg(long, alias = "reverse")]
+07416 |     invert: bool,
+07417 | 
+07418 |     /// Show the latest available version of each package in the tree.
+07419 |     #[arg(long)]
+07420 |     outdated: bool,
+07421 | 
+07422 |     /// Show compressed wheel sizes for packages in the tree.
+07423 |     #[arg(long)]
+07424 |     show_sizes: bool,
+07425 | }
+07426 | 
+07427 | #[derive(Args, Debug)]
+07428 | pub struct PublishArgs {
+07429 |     // Hide the unsupported global offline option.
+07430 |     #[arg(long, hide = true, overrides_with("no_offline"))]
+07431 |     pub offline: bool,
+07432 | 
+07433 |     /// Paths to the files to upload. Accepts glob expressions.
+07434 |     ///

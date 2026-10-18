@@ -1,0 +1,328 @@
+--- before/app/graph.py
++++ after/app/graph.py
+@@ -1,2 +1,53 @@
++"""Dependency graph snapshotting and validation.
++
++Graphs are plain dicts mapping each job ID to a set of dependency IDs. All
++traversals are iterative so long chains do not hit the recursion limit.
++"""
++from collections import deque
++
++
+ def validate_graph(jobs):
+-    return {job:set(deps) for job,deps in jobs.items()}
++    """Return a fresh ``{job_id: set(dep_ids)}`` snapshot of ``jobs``.
++
++    Dependencies may be any iterable (including generators); they are consumed
++    exactly once here. Raises ``ValueError`` for unknown dependencies and for
++    cycles, including self-loops and cycles disconnected from other jobs.
++    """
++    graph = {job_id: set(deps) for job_id, deps in jobs.items()}
++    for job_id, deps in graph.items():
++        unknown = deps.difference(graph)
++        if unknown:
++            raise ValueError(
++                f"job {job_id!r} depends on unknown job(s): {sorted(unknown)!r}"
++            )
++    if _has_cycle(graph):
++        raise ValueError("dependency graph contains a cycle")
++    return graph
++
++
++def dependents_of(graph):
++    """Return ``{job_id: set(ids of jobs that directly depend on job_id)}``.
++
++    ``graph`` must already be validated, so every dependency is a known key.
++    """
++    dependents = {job_id: set() for job_id in graph}
++    for job_id, deps in graph.items():
++        for dep in deps:
++            dependents[dep].add(job_id)
++    return dependents
++
++
++def _has_cycle(graph):
++    """Kahn's algorithm: a cycle exists iff some job is never dequeued."""
++    waiting_on = {job_id: len(deps) for job_id, deps in graph.items()}
++    dependents = dependents_of(graph)
++    queue = deque(job_id for job_id, count in waiting_on.items() if count == 0)
++    visited = 0
++    while queue:
++        job_id = queue.popleft()
++        visited += 1
++        for child in dependents[job_id]:
++            waiting_on[child] -= 1
++            if waiting_on[child] == 0:
++                queue.append(child)
++    return visited != len(graph)
+--- before/app/scheduler.py
++++ after/app/scheduler.py
+@@ -1,16 +1,84 @@
+-from .graph import validate_graph
++"""Explicit, single-threaded dependency scheduler.
++
++Callers drive the lifecycle: ``start`` a ready job, then ``finish`` it. The
++scheduler never executes jobs itself.
++"""
++from .graph import dependents_of, validate_graph
++
++PENDING = "pending"
++RUNNING = "running"
++SUCCEEDED = "succeeded"
++FAILED = "failed"
++BLOCKED = "blocked"
++
++_TERMINAL_STATES = frozenset((SUCCEEDED, FAILED, BLOCKED))
++
++
++def _validate_max_parallel(value):
++    """Require a true integer (not bool) that is at least 1."""
++    if isinstance(value, bool) or not isinstance(value, int):
++        raise ValueError(f"max_parallel must be an integer, got {value!r}")
++    if value < 1:
++        raise ValueError(f"max_parallel must be at least 1, got {value!r}")
++    return value
++
++
+ class Scheduler:
+-    def __init__(self,jobs,max_parallel=2):
+-        self.jobs=validate_graph(jobs)
+-        self.max_parallel=max_parallel
+-        self.state={job:'pending' for job in self.jobs}
++    """Tracks job states over a validated dependency graph."""
++
++    def __init__(self, jobs, max_parallel=2):
++        self.max_parallel = _validate_max_parallel(max_parallel)
++        self.jobs = validate_graph(jobs)
++        self.state = {job_id: PENDING for job_id in self.jobs}
++        self._dependents = dependents_of(self.jobs)
++        self._running_count = 0
++
+     def ready(self):
+-        return [job for job,deps in self.jobs.items() if self.state[job]=='pending' and all(self.state.get(dep)=='succeeded' for dep in deps)]
+-    def start(self,job_id):
+-        if job_id not in self.ready(): raise ValueError('not ready')
+-        self.state[job_id]='running'
+-    def finish(self,job_id,success=True):
+-        if self.state.get(job_id)!='running': raise ValueError('not running')
+-        self.state[job_id]='succeeded' if success else 'failed'
+-    def statuses(self): return dict(self.state)
+-    def done(self): return all(v in ('succeeded','failed','blocked') for v in self.state.values())
++        """Return all currently eligible pending job IDs, sorted. No state change."""
++        return [job_id for job_id in sorted(self.jobs) if self._is_eligible(job_id)]
++
++    def start(self, job_id):
++        """Move an eligible pending job to running if capacity allows."""
++        if not self._is_eligible(job_id):
++            raise ValueError(f"job {job_id!r} is not ready to start")
++        if self._running_count >= self.max_parallel:
++            raise ValueError(
++                f"cannot start job {job_id!r}: max_parallel={self.max_parallel} reached"
++            )
++        self.state[job_id] = RUNNING
++        self._running_count += 1
++
++    def finish(self, job_id, success=True):
++        """Record the outcome of a running job; failure blocks pending descendants."""
++        if self.state.get(job_id) != RUNNING:
++            raise ValueError(f"job {job_id!r} is not running")
++        self._running_count -= 1
++        if success:
++            self.state[job_id] = SUCCEEDED
++        else:
++            self.state[job_id] = FAILED
++            self._block_descendants(job_id)
++
++    def statuses(self):
++        """Return a fresh ``{job_id: state}`` dict."""
++        return dict(self.state)
++
++    def done(self):
++        """True when no job is pending or running; blocked jobs are terminal."""
++        return all(state in _TERMINAL_STATES for state in self.state.values())
++
++    def _is_eligible(self, job_id):
++        """A job is eligible when it is pending and every dependency succeeded."""
++        return self.state.get(job_id) == PENDING and all(
++            self.state[dep] == SUCCEEDED for dep in self.jobs[job_id]
++        )
++
++    def _block_descendants(self, failed_job_id):
++        """Iteratively mark every still-pending transitive dependent as blocked."""
++        stack = list(self._dependents[failed_job_id])
++        while stack:
++            child = stack.pop()
++            if self.state[child] != PENDING:
++                continue
++            self.state[child] = BLOCKED
++            stack.extend(self._dependents[child])
+--- before/app/test_scheduler.py
++++ after/app/test_scheduler.py
+@@ -0,0 +1,167 @@
++import unittest
++
++from app import Scheduler as PackageScheduler
++from app.graph import validate_graph
++from app.scheduler import Scheduler
++
++
++class ValidationTests(unittest.TestCase):
++    def test_package_and_module_export_same_class(self):
++        self.assertIs(PackageScheduler, Scheduler)
++
++    def test_unknown_dependency_rejected(self):
++        with self.assertRaises(ValueError):
++            Scheduler({'a': ['missing']})
++
++    def test_self_loop_rejected(self):
++        with self.assertRaises(ValueError):
++            Scheduler({'a': ['a']})
++
++    def test_cycle_rejected(self):
++        with self.assertRaises(ValueError):
++            Scheduler({'a': ['b'], 'b': ['a']})
++
++    def test_disconnected_cycle_rejected(self):
++        with self.assertRaises(ValueError):
++            Scheduler({'x': [], 'a': ['b'], 'b': ['a']})
++
++    def test_max_parallel_validation(self):
++        for bad in (0, -1, True, False, 1.0, '2', None):
++            with self.subTest(value=bad):
++                with self.assertRaises(ValueError):
++                    Scheduler({}, max_parallel=bad)
++        self.assertEqual(Scheduler({}, max_parallel=5).max_parallel, 5)
++
++    def test_empty_graph_valid(self):
++        s = Scheduler({})
++        self.assertEqual(s.ready(), [])
++        self.assertEqual(s.statuses(), {})
++        self.assertTrue(s.done())
++
++    def test_generator_dependencies_and_duplicates(self):
++        s = Scheduler({'a': [], 'b': (d for d in ['a', 'a'])})
++        self.assertEqual(s.ready(), ['a'])
++        self.assertEqual(validate_graph({'a': [], 'b': iter(['a', 'a'])}),
++                         {'a': set(), 'b': {'a'}})
++
++    def test_input_snapshot(self):
++        deps = {'a': [], 'b': ['a']}
++        s = Scheduler(deps)
++        deps['c'] = ['zzz']
++        deps['b'].append('q')
++        self.assertEqual(sorted(s.statuses()), ['a', 'b'])
++
++    def test_validate_graph_returns_fresh_dict(self):
++        jobs = {'a': []}
++        result = validate_graph(jobs)
++        result['a'].add('x')
++        self.assertEqual(validate_graph(jobs), {'a': set()})
++
++
++class LifecycleTests(unittest.TestCase):
++    def test_ready_is_sorted_and_capacity_independent(self):
++        s = Scheduler({'c': [], 'a': [], 'b': []}, max_parallel=1)
++        self.assertEqual(s.ready(), ['a', 'b', 'c'])
++        s.start('a')
++        self.assertEqual(s.ready(), ['b', 'c'])
++
++    def test_ready_does_not_mutate(self):
++        s = Scheduler({'a': []})
++        s.ready()
++        self.assertEqual(s.statuses(), {'a': 'pending'})
++
++    def test_start_requires_eligibility(self):
++        s = Scheduler({'a': [], 'b': ['a']})
++        with self.assertRaises(ValueError):
++            s.start('b')
++        with self.assertRaises(ValueError):
++            s.start('unknown')
++        self.assertEqual(s.statuses(), {'a': 'pending', 'b': 'pending'})
++
++    def test_start_respects_capacity_without_state_change(self):
++        s = Scheduler({'a': [], 'b': []}, max_parallel=1)
++        s.start('a')
++        with self.assertRaises(ValueError):
++            s.start('b')
++        self.assertEqual(s.statuses(), {'a': 'running', 'b': 'pending'})
++
++    def test_finish_accepts_only_running(self):
++        s = Scheduler({'a': []})
++        with self.assertRaises(ValueError):
++            s.finish('a')
++        with self.assertRaises(ValueError):
++            s.finish('nope')
++        self.assertEqual(s.statuses(), {'a': 'pending'})
++
++    def test_finish_success_releases_dependents(self):
++        s = Scheduler({'a': [], 'b': ['a']})
++        s.start('a')
++        self.assertIsNone(s.finish('a', True))
++        self.assertEqual(s.statuses(), {'a': 'succeeded', 'b': 'pending'})
++        self.assertEqual(s.ready(), ['b'])
++
++    def test_failure_blocks_transitive_descendants_only(self):
++        s = Scheduler({'a': [], 'b': ['a'], 'c': ['b'], 'd': [], 'e': ['d']},
++                      max_parallel=2)
++        s.start('a')
++        s.finish('a', success=False)
++        self.assertEqual(s.statuses(),
++                         {'a': 'failed', 'b': 'blocked', 'c': 'blocked',
++                          'd': 'pending', 'e': 'pending'})
++        self.assertFalse(s.done())
++        s.start('d')
++        s.finish('d')
++        s.start('e')
++        s.finish('e')
++        self.assertTrue(s.done())
++
++    def test_blocked_immediately_even_with_running_sibling_dependency(self):
++        s = Scheduler({'a': [], 'b': [], 'c': ['a', 'b']}, max_parallel=2)
++        s.start('a')
++        s.start('b')
++        s.finish('a', success=False)
++        self.assertEqual(s.statuses()['c'], 'blocked')
++        s.finish('b')
++        self.assertTrue(s.done())
++
++    def test_completed_states_preserved(self):
++        s = Scheduler({'a': [], 'b': [], 'c': ['b']}, max_parallel=2)
++        s.start('a')
++        s.finish('a')
++        s.start('b')
++        s.finish('b', success=False)
++        self.assertEqual(s.statuses(), {'a': 'succeeded', 'b': 'failed',
++                                        'c': 'blocked'})
++
++    def test_statuses_returns_fresh_dict(self):
++        s = Scheduler({'a': []})
++        snap = s.statuses()
++        snap['a'] = 'running'
++        self.assertEqual(s.statuses(), {'a': 'pending'})
++
++    def test_max_parallel_attribute_preserved(self):
++        self.assertEqual(Scheduler({}, max_parallel=3).max_parallel, 3)
++
++    def test_long_chain_no_recursion_error(self):
++        n = 1500
++        jobs = {f'j{i:05d}': ([f'j{i - 1:05d}'] if i else []) for i in range(n)}
++        s = Scheduler(jobs, max_parallel=1)
++        for i in range(n):
++            job = f'j{i:05d}'
++            self.assertEqual(s.ready(), [job])
++            s.start(job)
++            s.finish(job)
++        self.assertTrue(s.done())
++
++    def test_long_chain_failure_blocks_all(self):
++        n = 1200
++        jobs = {f'j{i:05d}': ([f'j{i - 1:05d}'] if i else []) for i in range(n)}
++        s = Scheduler(jobs, max_parallel=1)
++        s.start('j00000')
++        s.finish('j00000', success=False)
++        self.assertTrue(s.done())
++        self.assertEqual(set(s.statuses().values()), {'failed', 'blocked'})
++
++
++if __name__ == '__main__':
++    unittest.main()

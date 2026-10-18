@@ -1,0 +1,12 @@
+[
+  {
+    "provider": "codex",
+    "status": "complete",
+    "incidents": []
+  },
+  {
+    "provider": "claude",
+    "status": "complete",
+    "incidents": []
+  }
+]

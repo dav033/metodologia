@@ -1,0 +1,9 @@
+{
+  "cases": 6,
+  "criteria": 36,
+  "sandbox_smokes": 3,
+  "note_validator_positive_and_mutants": true,
+  "process_lock_conflict": true,
+  "codex_query_evidence": true,
+  "native_calls": 0
+}

@@ -1,0 +1,640 @@
+{
+  "excluded": true,
+  "reason": "Resource witness v1 selected outbox probes by hasattr, wrongly probing I5 optional APIs not required by its prompt; no candidate failure inferred. V2 gates strictly by case ID and accepts fault callback arity; no native calls repeated.",
+  "records": [
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.045s\n\nOK\n",
+      "status": "passed",
+      "case": "I4",
+      "posthoc": true,
+      "cell": "I4-haiku-high"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.036s\n\nOK\n",
+      "status": "passed",
+      "case": "I4",
+      "posthoc": true,
+      "cell": "I4-haiku-medium"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.040s\n\nOK\n",
+      "status": "passed",
+      "case": "I4",
+      "posthoc": true,
+      "cell": "I4-haiku-xhigh"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.005s\n\nOK\n",
+      "status": "passed",
+      "case": "I4",
+      "posthoc": true,
+      "cell": "I4-luna-high"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.008s\n\nOK\n",
+      "status": "passed",
+      "case": "I4",
+      "posthoc": true,
+      "cell": "I4-luna-medium"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.039s\n\nOK\n",
+      "status": "passed",
+      "case": "I4",
+      "posthoc": true,
+      "cell": "I4-luna-xhigh"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.034s\n\nOK\n",
+      "status": "passed",
+      "case": "I4",
+      "posthoc": true,
+      "cell": "I4-sol-medium"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.004s\n\nOK\n",
+      "status": "passed",
+      "case": "I4",
+      "posthoc": true,
+      "cell": "I4-sonnet-medium"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": 1,
+      "errors": 1,
+      "methods": [
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... \n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault') ... ERROR\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault') ... FAIL\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n======================================================================\nERROR: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 41, in check_operation\n    function()\n    ~~~~~~~~^^\n  File \"/tmp/work/test_resources.py\", line 102, in <lambda>\n    self.check_operation('complete_fault', lambda: s.complete(p, 'a', 1, 'ok', 1, fail), RuntimeError)\n                                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/work/app/store.py\", line 123, in complete\n    fault()\n    ~~~~~^^\nTypeError: ResourceTests.test_error_paths_close.<locals>.fail() missing 1 required positional argument: '_'\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n----------------------------------------------------------------------\nRan 2 tests in 0.043s\n\nFAILED (failures=1, errors=1)\n",
+      "status": "failed",
+      "case": "I5",
+      "posthoc": true,
+      "cell": "I5-haiku-high"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.012s\n\nOK\n",
+      "status": "passed",
+      "case": "I5",
+      "posthoc": true,
+      "cell": "I5-haiku-medium"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": 1,
+      "errors": 1,
+      "methods": [
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... \n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault') ... ERROR\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault') ... FAIL\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n======================================================================\nERROR: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 41, in check_operation\n    function()\n    ~~~~~~~~^^\n  File \"/tmp/work/test_resources.py\", line 102, in <lambda>\n    self.check_operation('complete_fault', lambda: s.complete(p, 'a', 1, 'ok', 1, fail), RuntimeError)\n                                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/work/app/store.py\", line 138, in complete\n    fault()\n    ~~~~~^^\nTypeError: ResourceTests.test_error_paths_close.<locals>.fail() missing 1 required positional argument: '_'\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n----------------------------------------------------------------------\nRan 2 tests in 0.011s\n\nFAILED (failures=1, errors=1)\n",
+      "status": "failed",
+      "case": "I5",
+      "posthoc": true,
+      "cell": "I5-haiku-xhigh"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": 2,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... \n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault') ... FAIL\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault') ... FAIL\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n----------------------------------------------------------------------\nRan 2 tests in 0.009s\n\nFAILED (failures=2)\n",
+      "status": "failed",
+      "case": "I5",
+      "posthoc": true,
+      "cell": "I5-luna-high"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": 1,
+      "errors": 1,
+      "methods": [
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... \n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault') ... ERROR\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault') ... FAIL\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n======================================================================\nERROR: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 41, in check_operation\n    function()\n    ~~~~~~~~^^\n  File \"/tmp/work/test_resources.py\", line 102, in <lambda>\n    self.check_operation('complete_fault', lambda: s.complete(p, 'a', 1, 'ok', 1, fail), RuntimeError)\n                                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/work/app/store.py\", line 83, in complete\n    fault() if callable(fault) else None\n    ~~~~~^^\nTypeError: ResourceTests.test_error_paths_close.<locals>.fail() missing 1 required positional argument: '_'\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n----------------------------------------------------------------------\nRan 2 tests in 0.010s\n\nFAILED (failures=1, errors=1)\n",
+      "status": "failed",
+      "case": "I5",
+      "posthoc": true,
+      "cell": "I5-luna-medium"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": 2,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... \n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault') ... FAIL\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault') ... FAIL\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n----------------------------------------------------------------------\nRan 2 tests in 0.007s\n\nFAILED (failures=2)\n",
+      "status": "failed",
+      "case": "I5",
+      "posthoc": true,
+      "cell": "I5-luna-xhigh"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": 2,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... \n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault') ... FAIL\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault') ... FAIL\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n----------------------------------------------------------------------\nRan 2 tests in 0.009s\n\nFAILED (failures=2)\n",
+      "status": "failed",
+      "case": "I5",
+      "posthoc": true,
+      "cell": "I5-sol-medium"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": 1,
+      "errors": 1,
+      "methods": [
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... \n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault') ... ERROR\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault') ... FAIL\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n======================================================================\nERROR: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 41, in check_operation\n    function()\n    ~~~~~~~~^^\n  File \"/tmp/work/test_resources.py\", line 102, in <lambda>\n    self.check_operation('complete_fault', lambda: s.complete(p, 'a', 1, 'ok', 1, fail), RuntimeError)\n                                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/work/app/store.py\", line 39, in complete\n    if callable(fault):fault()\n                       ~~~~~^^\nTypeError: ResourceTests.test_error_paths_close.<locals>.fail() missing 1 required positional argument: '_'\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 40, in check_operation\n    with self.assertRaises(error):\n         ~~~~~~~~~~~~~~~~~^^^^^^^\nAssertionError: RuntimeError not raised\n\n----------------------------------------------------------------------\nRan 2 tests in 0.010s\n\nFAILED (failures=1, errors=1)\n",
+      "status": "failed",
+      "case": "I5",
+      "posthoc": true,
+      "cell": "I5-sonnet-medium"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.012s\n\nOK\n",
+      "status": "passed",
+      "case": "I6",
+      "posthoc": true,
+      "cell": "I6-luna-high"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": 21,
+      "errors": 0,
+      "methods": [],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... \n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='init') ... FAIL\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='enqueue') ... FAIL\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='claim') ... FAIL\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault') ... FAIL\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_success') ... FAIL\n  test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault') ... FAIL\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... \n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='init') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='enqueue') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='duplicate_enqueue') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='claim') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='inspect') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='complete') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='empty_claim') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='stale_complete') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='missing_inspect') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='publish') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='consume_duplicate') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='enqueue_retry_job') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='claim_retry_job') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='retry') ... FAIL\n  test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='stale_retry') ... FAIL\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='init')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b2383c220>] is not false : init: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='enqueue')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c03d30>] is not false : enqueue: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='claim')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c885e0>] is not false : claim: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c88e50>] is not false : complete_fault: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='complete_success')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c88b80>] is not false : complete_success: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) (operation='publish_fault')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c88400>] is not false : publish_fault: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='init')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c88f40>] is not false : init: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='enqueue')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c89030>] is not false : enqueue: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='duplicate_enqueue')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c89120>] is not false : duplicate_enqueue: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='claim')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c893f0>] is not false : claim: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='inspect')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c896c0>] is not false : inspect: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='complete')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c897b0>] is not false : complete: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='empty_claim')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c898a0>] is not false : empty_claim: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='stale_complete')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c89990>] is not false : stale_complete: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='missing_inspect')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c89a80>] is not false : missing_inspect: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='publish')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c89b70>, <sqlite3.Connection object at 0x7f7b22c89c60>, <sqlite3.Connection object at 0x7f7b22c89d50>] is not false : publish: 3 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='consume_duplicate')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c89e40>] is not false : consume_duplicate: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='enqueue_retry_job')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c89f30>] is not false : enqueue_retry_job: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='claim_retry_job')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c8a020>] is not false : claim_retry_job: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='retry')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c8a110>] is not false : retry: 1 connection(s) usable after API return\n\n======================================================================\nFAIL: test_success_paths_close (test_resources.ResourceTests.test_success_paths_close) (operation='stale_retry')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_resources.py\", line 50, in check_operation\n    self.assertFalse(leaked, f'{label}: {len(leaked)} connection(s) usable after API return')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [<sqlite3.Connection object at 0x7f7b22c8a200>] is not false : stale_retry: 1 connection(s) usable after API return\n\n----------------------------------------------------------------------\nRan 2 tests in 0.026s\n\nFAILED (failures=21)\n",
+      "status": "failed",
+      "case": "I6",
+      "posthoc": true,
+      "cell": "I6-luna-medium"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.013s\n\nOK\n",
+      "status": "passed",
+      "case": "I6",
+      "posthoc": true,
+      "cell": "I6-luna-xhigh"
+    },
+    {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_resources.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_error_paths_close",
+          "class": "test_resources.ResourceTests.test_error_paths_close",
+          "result": "ok"
+        },
+        {
+          "method": "test_success_paths_close",
+          "class": "test_resources.ResourceTests.test_success_paths_close",
+          "result": "ok"
+        }
+      ],
+      "output": "test_error_paths_close (test_resources.ResourceTests.test_error_paths_close) ... ok\ntest_success_paths_close (test_resources.ResourceTests.test_success_paths_close) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.010s\n\nOK\n",
+      "status": "passed",
+      "case": "I6",
+      "posthoc": true,
+      "cell": "I6-sol-medium"
+    }
+  ]
+}

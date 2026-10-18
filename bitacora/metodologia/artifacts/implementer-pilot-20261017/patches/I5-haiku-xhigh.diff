@@ -1,0 +1,372 @@
+--- before/app/store.py
++++ after/app/store.py
+@@ -1,15 +1,152 @@
+ import sqlite3
++from contextlib import contextmanager
++
++SCHEMA = (
++    "CREATE TABLE IF NOT EXISTS jobs("
++    "id TEXT PRIMARY KEY,"
++    "payload TEXT NOT NULL,"
++    "state TEXT NOT NULL DEFAULT 'pending',"
++    "token INTEGER NOT NULL DEFAULT 0,"
++    "lease_until INTEGER,"
++    "attempts INTEGER NOT NULL DEFAULT 0,"
++    "depends_on TEXT,"
++    "result TEXT)"
++)
++BUSY_TIMEOUT_SECONDS = 30.0
++INT64_MIN = -(2**63)
++INT64_MAX = 2**63 - 1
++
++
++def _check_path(path):
++    if not isinstance(path, str):
++        raise TypeError('path must be str')
++
++
++def _check_str(name, value):
++    if not isinstance(value, str):
++        raise TypeError(f'{name} must be str')
++
++
++def _check_int(name, value):
++    if isinstance(value, bool) or not isinstance(value, int):
++        raise TypeError(f'{name} must be int')
++    if not INT64_MIN <= value <= INT64_MAX:
++        raise ValueError(f'{name} is outside the 64-bit integer range')
++
++
++@contextmanager
++def _connect(path):
++    """Open a private connection to path and always close it."""
++    _check_path(path)
++    conn = sqlite3.connect(path, timeout=BUSY_TIMEOUT_SECONDS, isolation_level=None)
++    try:
++        conn.execute('PRAGMA synchronous=FULL')
++        yield conn
++    finally:
++        conn.close()
++
++
++@contextmanager
++def _write_transaction(conn):
++    """Run a block as one write transaction, taking the write lock up front.
++
++    Commits on normal exit and rolls back on any exception, including a
++    failed COMMIT, so no partial mutation survives.
++    """
++    conn.execute('BEGIN IMMEDIATE')
++    try:
++        yield conn
++        conn.execute('COMMIT')
++    except BaseException:
++        if conn.in_transaction:
++            conn.execute('ROLLBACK')
++        raise
++
+ 
+ def init(path):
+-    with sqlite3.connect(path) as c:
+-        c.execute("CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,payload TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'pending',token INTEGER NOT NULL DEFAULT 0,lease_until INTEGER,attempts INTEGER NOT NULL DEFAULT 0,depends_on TEXT,result TEXT)")
+-def enqueue(path,id,payload,depends_on=None):
+-    with sqlite3.connect(path) as c:c.execute('INSERT OR IGNORE INTO jobs(id,payload,depends_on) VALUES(?,?,?)',(id,payload,depends_on))
+-def claim(path,now,ttl):return None
+-def complete(path,id,token,result,now,fault=None):return False
+-def inspect(path,id):
+-    with sqlite3.connect(path) as c:
+-        c.row_factory=sqlite3.Row;r=c.execute('SELECT * FROM jobs WHERE id=?',(id,)).fetchone();return dict(r) if r else None
+-def retry(path,id,token,now):return False
++    with _connect(path) as conn:
++        conn.execute('PRAGMA journal_mode=WAL').fetchone()
++        with _write_transaction(conn):
++            conn.execute(SCHEMA)
++
++
++def enqueue(path, id, payload, depends_on=None):
++    _check_str('id', id)
++    _check_str('payload', payload)
++    if depends_on is not None:
++        _check_str('depends_on', depends_on)
++    with _connect(path) as conn:
++        with _write_transaction(conn):
++            conn.execute(
++                'INSERT OR IGNORE INTO jobs(id,payload,depends_on) VALUES(?,?,?)',
++                (id, payload, depends_on),
++            )
++
++
++def claim(path, now, ttl):
++    _check_int('now', now)
++    _check_int('ttl', ttl)
++    if ttl <= 0:
++        raise ValueError('ttl must be positive')
++    lease_until = now + ttl
++    _check_int('lease_until', lease_until)
++    with _connect(path) as conn:
++        with _write_transaction(conn):
++            row = conn.execute(
++                "SELECT id, payload FROM jobs "
++                "WHERE state = 'pending' OR (state = 'running' AND lease_until <= ?) "
++                "ORDER BY id COLLATE BINARY LIMIT 1",
++                (now,),
++            ).fetchone()
++            if row is None:
++                return None
++            job_id, payload = row
++            conn.execute(
++                "UPDATE jobs SET state = 'running', token = token + 1, "
++                "lease_until = ?, attempts = attempts + 1 WHERE id = ?",
++                (lease_until, job_id),
++            )
++            token = conn.execute(
++                'SELECT token FROM jobs WHERE id = ?', (job_id,)
++            ).fetchone()[0]
++            return job_id, payload, token
++
++
++def complete(path, id, token, result, now, fault=None):
++    """Mark a job done if the caller still holds its current lease.
++
++    fault is None or a zero-argument callable run after the update and before
++    commit (fault injection). If it raises, the transaction is rolled back.
++    Returns False, with no mutation, for stale, expired, or missing jobs.
++    """
++    _check_str('id', id)
++    _check_int('token', token)
++    _check_str('result', result)
++    _check_int('now', now)
++    if fault is not None and not callable(fault):
++        raise TypeError('fault must be None or callable')
++    with _connect(path) as conn:
++        with _write_transaction(conn):
++            cursor = conn.execute(
++                "UPDATE jobs SET state = 'done', result = ?, lease_until = NULL "
++                "WHERE id = ? AND state = 'running' AND token = ? AND lease_until > ?",
++                (result, id, token, now),
++            )
++            if cursor.rowcount != 1:
++                return False
++            if fault is not None:
++                fault()
++            return True
++
++
++def inspect(path, id):
++    _check_str('id', id)
++    with _connect(path) as conn:
++        conn.row_factory = sqlite3.Row
++        row = conn.execute('SELECT * FROM jobs WHERE id = ?', (id,)).fetchone()
++    return dict(row) if row is not None else None
++
++
++def retry(path, id, token, now):return False
+ def publish(path,deliver):return 0
+ def consume(path,id,body):return False
+--- before/app/test_store.py
++++ after/app/test_store.py
+@@ -0,0 +1,204 @@
++import os
++import sqlite3
++import tempfile
++from contextlib import closing
++import threading
++import unittest
++
++from app.store import claim, complete, enqueue, init, inspect
++
++
++class StoreTestCase(unittest.TestCase):
++    def setUp(self):
++        tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(tmp.cleanup)
++        self.path = os.path.join(tmp.name, 'db')
++        init(self.path)
++
++
++class SchemaTests(StoreTestCase):
++    def test_init_is_idempotent_and_keeps_data(self):
++        enqueue(self.path, 'a', 'work')
++        init(self.path)
++        self.assertEqual(inspect(self.path, 'a')['payload'], 'work')
++
++    def test_schema_columns_match_contract(self):
++        with closing(sqlite3.connect(self.path)) as conn:
++            columns = [
++                (row[1], row[2], row[3], row[5])
++                for row in conn.execute('PRAGMA table_info(jobs)')
++            ]
++        self.assertEqual(columns, [
++            ('id', 'TEXT', 0, 1),
++            ('payload', 'TEXT', 1, 0),
++            ('state', 'TEXT', 1, 0),
++            ('token', 'INTEGER', 1, 0),
++            ('lease_until', 'INTEGER', 0, 0),
++            ('attempts', 'INTEGER', 1, 0),
++            ('depends_on', 'TEXT', 0, 0),
++            ('result', 'TEXT', 0, 0),
++        ])
++
++    def test_inspect_returns_all_columns_and_none_when_missing(self):
++        enqueue(self.path, 'a', 'work')
++        self.assertEqual(inspect(self.path, 'a'), {
++            'id': 'a', 'payload': 'work', 'state': 'pending', 'token': 0,
++            'lease_until': None, 'attempts': 0, 'depends_on': None, 'result': None,
++        })
++        self.assertIsNone(inspect(self.path, 'missing'))
++
++
++class EnqueueTests(StoreTestCase):
++    def test_duplicate_id_keeps_first_payload(self):
++        enqueue(self.path, 'a', 'first')
++        enqueue(self.path, 'a', 'second')
++        self.assertEqual(inspect(self.path, 'a')['payload'], 'first')
++
++
++class ClaimTests(StoreTestCase):
++    def test_claims_lexicographically_smallest_pending_job(self):
++        enqueue(self.path, 'b', 'pb')
++        enqueue(self.path, 'a', 'pa')
++        self.assertEqual(claim(self.path, 5, 10), ('a', 'pa', 1))
++        self.assertEqual(claim(self.path, 5, 10), ('b', 'pb', 1))
++        self.assertIsNone(claim(self.path, 5, 10))
++
++    def test_claim_sets_running_lease_and_attempts(self):
++        enqueue(self.path, 'a', 'work')
++        claim(self.path, 100, 30)
++        job = inspect(self.path, 'a')
++        self.assertEqual((job['state'], job['token'], job['lease_until'], job['attempts']),
++                         ('running', 1, 130, 1))
++
++    def test_active_lease_is_not_reclaimed(self):
++        enqueue(self.path, 'a', 'work')
++        claim(self.path, 0, 10)
++        self.assertIsNone(claim(self.path, 9, 10))
++
++    def test_expired_lease_is_reclaimed_with_new_token(self):
++        enqueue(self.path, 'a', 'work')
++        self.assertEqual(claim(self.path, 0, 10), ('a', 'work', 1))
++        self.assertEqual(claim(self.path, 10, 10), ('a', 'work', 2))
++        job = inspect(self.path, 'a')
++        self.assertEqual((job['token'], job['lease_until'], job['attempts']), (2, 20, 2))
++
++    def test_non_positive_ttl_raises_without_mutation(self):
++        enqueue(self.path, 'a', 'work')
++        for ttl in (0, -1):
++            with self.subTest(ttl=ttl):
++                with self.assertRaises(ValueError):
++                    claim(self.path, 0, ttl)
++        job = inspect(self.path, 'a')
++        self.assertEqual((job['state'], job['token'], job['attempts']), ('pending', 0, 0))
++
++    def test_rejects_wrong_types(self):
++        with self.assertRaises(TypeError):
++            claim(self.path, 1.5, 10)
++        with self.assertRaises(TypeError):
++            claim(self.path, 0, True)
++        with self.assertRaises(TypeError):
++            claim(123, 0, 10)
++
++
++class CompleteTests(StoreTestCase):
++    def setUp(self):
++        super().setUp()
++        enqueue(self.path, 'a', 'work')
++        self.assertEqual(claim(self.path, 0, 10), ('a', 'work', 1))
++
++    def test_completes_with_current_token_and_live_lease(self):
++        self.assertTrue(complete(self.path, 'a', 1, 'out', 5))
++        job = inspect(self.path, 'a')
++        self.assertEqual((job['state'], job['result'], job['lease_until']), ('done', 'out', None))
++        self.assertEqual(job['token'], 1)
++
++    def test_lease_expiring_exactly_now_is_rejected(self):
++        before = inspect(self.path, 'a')
++        self.assertFalse(complete(self.path, 'a', 1, 'out', 10))
++        self.assertEqual(inspect(self.path, 'a'), before)
++
++    def test_wrong_token_is_rejected_without_mutation(self):
++        before = inspect(self.path, 'a')
++        self.assertFalse(complete(self.path, 'a', 2, 'out', 5))
++        self.assertEqual(inspect(self.path, 'a'), before)
++
++    def test_missing_or_pending_job_is_rejected(self):
++        enqueue(self.path, 'b', 'pending-work')
++        self.assertFalse(complete(self.path, 'missing', 1, 'out', 5))
++        self.assertFalse(complete(self.path, 'b', 0, 'out', 5))
++        self.assertEqual(inspect(self.path, 'b')['state'], 'pending')
++
++    def test_done_job_cannot_be_completed_again(self):
++        self.assertTrue(complete(self.path, 'a', 1, 'first', 5))
++        self.assertFalse(complete(self.path, 'a', 1, 'second', 6))
++        self.assertEqual(inspect(self.path, 'a')['result'], 'first')
++
++    def test_fault_hook_failure_rolls_back_completion(self):
++        def crash():
++            raise RuntimeError('injected')
++
++        before = inspect(self.path, 'a')
++        with self.assertRaises(RuntimeError):
++            complete(self.path, 'a', 1, 'out', 5, fault=crash)
++        self.assertEqual(inspect(self.path, 'a'), before)
++
++    def test_fault_hook_that_returns_lets_completion_commit(self):
++        calls = []
++        self.assertTrue(complete(self.path, 'a', 1, 'out', 5, fault=lambda: calls.append(1)))
++        self.assertEqual(calls, [1])
++        self.assertEqual(inspect(self.path, 'a')['state'], 'done')
++
++    def test_non_callable_fault_is_rejected(self):
++        with self.assertRaises(TypeError):
++            complete(self.path, 'a', 1, 'out', 5, fault='crash')
++        self.assertEqual(inspect(self.path, 'a')['state'], 'running')
++
++
++class FencingTests(StoreTestCase):
++    def test_stale_claimant_is_fenced_after_reopen(self):
++        enqueue(self.path, 'a', 'work')
++        self.assertEqual(claim(self.path, 0, 10), ('a', 'work', 1))
++        self.assertEqual(claim(self.path, 10, 10), ('a', 'work', 2))
++
++        # Fresh connections (each call opens its own) see the persisted token.
++        self.assertFalse(complete(self.path, 'a', 1, 'stale', 11))
++        self.assertTrue(complete(self.path, 'a', 2, 'fresh', 11))
++        self.assertEqual(inspect(self.path, 'a')['result'], 'fresh')
++
++
++class ConcurrencyTests(StoreTestCase):
++    def test_racing_claimants_each_get_each_job_once(self):
++        job_count = 60
++        for i in range(job_count):
++            enqueue(self.path, f'job-{i:03d}', f'payload-{i}')
++
++        claimed = []
++        errors = []
++        lock = threading.Lock()
++
++        def worker():
++            try:
++                while True:
++                    result = claim(self.path, 0, 100)
++                    if result is None:
++                        return
++                    with lock:
++                        claimed.append(result)
++            except Exception as exc:  # surfaced by the assertion below
++                with lock:
++                    errors.append(exc)
++
++        threads = [threading.Thread(target=worker) for _ in range(8)]
++        for thread in threads:
++            thread.start()
++        for thread in threads:
++            thread.join()
++
++        self.assertEqual(errors, [])
++        self.assertEqual(len(claimed), job_count)
++        self.assertEqual(len({job_id for job_id, _, _ in claimed}), job_count)
++        self.assertTrue(all(token == 1 for _, _, token in claimed))
++
++
++if __name__ == '__main__':
++    unittest.main()

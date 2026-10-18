@@ -1,0 +1,71 @@
+{
+  "status": "passed",
+  "native_calls_added": 0,
+  "original_files_preserved": 354,
+  "original_hash_manifest": "closeout-original-hashes.json",
+  "cells": 48,
+  "configurations": 8,
+  "cases_per_configuration": 6,
+  "log_start_done_pairs": 48,
+  "lanes_complete": 2,
+  "frozen_hashes_valid": true,
+  "mandatory_tests_per_configuration": 79,
+  "mandatory_execution_coverage_complete": true,
+  "original_full_pass_cells": 45,
+  "original_failed_cells": [
+    "I6-haiku-medium",
+    "I6-haiku-xhigh",
+    "I6-luna-medium"
+  ],
+  "semantic_supplement_pass_cells": 8,
+  "resource_supplement_pass_cells": 23,
+  "resource_supplement_total_cells": 24,
+  "resource_failure_cell": "I6-luna-medium",
+  "resource_failed_subtests": 21,
+  "usable_connection_observations": 23,
+  "combined_supplement_full_pass_cells": 47,
+  "usage_coverage": "48/48 complete",
+  "model_unattested_routes": [
+    "luna-medium",
+    "luna-high",
+    "luna-xhigh",
+    "sol-medium"
+  ],
+  "effective_effort_unattested_routes": [
+    "luna-medium",
+    "luna-high",
+    "luna-xhigh",
+    "sol-medium",
+    "haiku-medium",
+    "haiku-high",
+    "haiku-xhigh",
+    "sonnet-medium"
+  ],
+  "regeneration_exit_codes": {
+    "supplement_resources.py": 0,
+    "pilot_supplement.py": 0,
+    "pilot_evidence.py": 0,
+    "pilot_report.py": 0
+  },
+  "parser_note": "Original I6 Luna medium test_expired_cannot_complete ends in explicit ok after ResourceWarnings; recovered in coverage only, native grade unchanged.",
+  "saved_encoding_validation_checked": true,
+  "all_json_parsed": true,
+  "all_top_level_python_ast_parsed": true,
+  "checks": [
+    "48 unique result/submission/patch sets",
+    "same prompt and frozen fixture hashes",
+    "saved submission hashes match native workspace_after",
+    "all mandatory methods emitted, none skipped",
+    "all complete token sums and route time sums recomputed",
+    "supplement provenance hashes match",
+    "original vs supplemental scores separated"
+  ],
+  "artifact_sha256": {
+    "REPORT.md": "87368ea7568a42fc479487f68a7d033e07afe9771ad2aa1afed7a549a4bd4adf",
+    "comparison.json": "a3a1e09fd79eac8ef932243eca0fe5644f52878882937a485785c78c6cd54e7a",
+    "mandatory-coverage.json": "b3fe4d334d103b16054beeeac6cc17b34bd78dd7d0065b250b72b9aa290eea99",
+    "supplement-resources.json": "856ca59c06546ed22c7877beb96c2a46db37a1a871222cbb370eb68ba70ea92a",
+    "supplement-semantics.json": "08706f79d52c2d5b3ce957c0112d0e6280d1684ac08ab6a7c8c6d43584b3c39d",
+    "supplement-provenance.json": "ad3be3c380f45f6d48e50ad66de3b6375716a55cf7e002eb28721f68d483547a"
+  }
+}

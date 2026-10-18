@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "case": "R5",
+  "mode": "live",
+  "route": {
+    "id": "sonnet-medium",
+    "provider": "claude",
+    "profile": "claude-work",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium"
+  },
+  "prompt_sha256": "be37da0947de73f1804f524cb7c7657f3535ec1a43175ffbc977aee78154e254",
+  "started_at": 1792290523.0134926,
+  "status": "completed",
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792290523.0134978,
+    "windows": {
+      "five_hour": {
+        "used_percent": 7.0,
+        "resets_at": 1792305000.22324,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792882800.223265,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 7.0,
+  "workspace_before": {
+    "TASK.md": "be37da0947de73f1804f524cb7c7657f3535ec1a43175ffbc977aee78154e254"
+  },
+  "response_text": "Escrib\u00ed la nota de investigaci\u00f3n en `/tmp/work/research.json`, con los seis claims C1\u2013C6. Us\u00e9 WebFetch sobre `schedule.json` de nodejs/Release y sobre la p\u00e1gina `previous-releases` de nodejs.org.\n\n- **Calendario oficial (C1):** el calendario lo mantiene el equipo de releases en `github.com/nodejs/Release` (`schedule.json`).\n- **Node 24 (C2):** LTS desde 2025-10-28, mantenimiento desde 2026-10-20 y fin de vida el 2028-04-30. Al 2026-10-17 sigue en Active LTS.\n- **Node 26 (C3):** su LTS est\u00e1 previsto para 2026-10-28, as\u00ed que al 2026-10-17 todav\u00eda no es LTS (sigue como Current).\n- **Node 22 (C4):** est\u00e1 en Maintenance LTS desde 2025-10-21 y llega a fin de vida el 2027-04-30.\n- **Recomendaci\u00f3n (C5):** usar Node 24 ahora y evaluar Node 26 despu\u00e9s del 2026-10-28.\n- **Calendario frente a garant\u00edas reales (C6):** el calendario solo da fechas planificadas. No garantiza qu\u00e9 parche est\u00e1 instalado ni que tenga los \u00faltimos arreglos de seguridad.\n\n**Qu\u00e9 queda sin verificar:**\n- WebFetch devolvi\u00f3 res\u00famenes de un modelo peque\u00f1o, no el contenido crudo.\n- No contrast\u00e9 las fechas con el README de GitHub ni con el blog de nodejs.org.\n- La tabla de `previous-releases` muestra fechas que parecen ser de \u00faltima actualizaci\u00f3n, no de fin de vida, y no coinciden con `schedule.json`. Di prioridad a `schedule.json`.\n- No verifiqu\u00e9 las versiones de parche m\u00e1s recientes ni el estado actual de los avisos de seguridad.",
+  "usage_reported": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 9665,
+    "cache_read_input_tokens": 14724,
+    "output_tokens": 2588,
+    "output_tokens_details": {
+      "thinking_tokens": 157
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 9665,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "usage": {
+    "input_tokens": 6,
+    "output_tokens": 2588,
+    "cache_read_tokens": 14724,
+    "cache_write_tokens": 9665,
+    "reasoning_tokens": null,
+    "reported_total": null,
+    "total": 26983,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "claude-stream-json",
+    "provider": "claude"
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "WebFetch",
+      "id": "toolu_01A4W7SphknnpyLr7reieqdu"
+    },
+    {
+      "type": "WebFetch",
+      "id": "toolu_017crWs3eKwnTzLJChro1S9Q"
+    },
+    {
+      "type": "Write",
+      "id": "toolu_01HGGTeZX9Hp8TniMaFgH99W",
+      "file_path": "/tmp/work/research.json"
+    }
+  ],
+  "native_result_status": "success",
+  "turns": 4,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 27.362,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/researcher-cell-_4ypcho5",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.claude-work",
+    "/home/david/.claude-work",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "claude",
+    "--print",
+    "--model",
+    "claude-sonnet-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--strict-mcp-config",
+    "--tools",
+    "Read,Grep,Glob,Write,WebSearch,WebFetch",
+    "--allowedTools",
+    "Read,Grep,Glob,Write,WebSearch,WebFetch",
+    "--no-session-persistence",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none",
+    "--max-turns",
+    "35",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "stderr_excerpt": "",
+  "research_tool_calls": [
+    {
+      "type": "WebFetch",
+      "id": "toolu_01A4W7SphknnpyLr7reieqdu",
+      "input": {
+        "url": "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json"
+      }
+    },
+    {
+      "type": "WebFetch",
+      "id": "toolu_017crWs3eKwnTzLJChro1S9Q",
+      "input": {
+        "url": "https://nodejs.org/en/about/previous-releases"
+      }
+    },
+    {
+      "type": "Write",
+      "id": "toolu_01HGGTeZX9Hp8TniMaFgH99W",
+      "input": {
+        "file_path": "/tmp/work/research.json"
+      }
+    }
+  ],
+  "tool_result_evidence": [
+    {
+      "tool_use_id": "toolu_01A4W7SphknnpyLr7reieqdu",
+      "is_error": false,
+      "text": "| Version | start | lts | maintenance | end |\n|---|---|---|---|---|\n| v22 | 2024-04-24 | 2024-10-29 | 2025-10-21 | 2027-04-30 |\n| v24 | 2025-05-06 | 2025-10-28 | 2026-10-20 | 2028-04-30 |\n| v25 | 2025-10-15 | *(not listed)* | 2026-04-01 | 2026-06-01 |\n| v26 | 2026-05-05 | 2026-10-28 | 2027-10-20 | 2029-04-30 |"
+    },
+    {
+      "tool_use_id": "toolu_017crWs3eKwnTzLJChro1S9Q",
+      "is_error": false,
+      "text": "| Version | Status | First released | Active LTS start | Maintenance LTS start | End-of-life |\n|---|---|---|---|---|---|\n| v26 | Current | May 05, 2026 | Not stated | Not stated | Not stated* (listed date: Oct 14, 2026) |\n| v25 | EOL | Oct 15, 2025 | Not stated | Not stated | Mar 31, 2026 (listed date) |\n| v24 (Krypton) | LTS | May 06, 2025 | Not stated | Not stated | Oct 14, 2026 (listed date) |\n| v22 (Jod) | LTS | Apr 24, 2024 | Not stated | Not stated | Sep 23, 2026 (listed date) |\n\n\\*The page's table column is labeled \"Last updated,\" not \"End-of-life,\" so its dates may not all be EOL dates. The page does not specify Active LTS or Maintenance LTS start dates, and it labels v24 and v22 only as \"LTS\" without distinguishing the phase.\n\n**Schedule text from the page:**\n- Major versions are in *Current* status for six months, giving library authors time to add support.\n- Historically (up to Node.js 26), odd-numbered releases become unsupported after six months, and even-numbered releases move to *Active LTS* and are ready for general use.\n- Starting with Node.js 27, the release cycle becomes annual. Each major version moves to *LTS* after its six-month *Current* phase, following six additional months of *Alpha* phase.\n- LTS typically guarantees critical bug fixes for a total of 30 months.\n- Production applications should only use *Active LTS* or *Maintenance LTS* releases.\n- Full schedule details are on GitHub: https://github.com/nodejs/release#release-schedule"
+    },
+    {
+      "tool_use_id": "toolu_01HGGTeZX9Hp8TniMaFgH99W",
+      "is_error": false,
+      "text": "File created successfully at: /tmp/work/research.json (file state is current in your context \u2014 no need to Read it back)"
+    }
+  ],
+  "limit_detected": false,
+  "contract": {
+    "valid": true,
+    "errors": []
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792290550.664919,
+    "windows": {
+      "five_hour": {
+        "used_percent": 7.0,
+        "resets_at": 1792304999.879422,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792882799.879447,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792290550.9574165
+}

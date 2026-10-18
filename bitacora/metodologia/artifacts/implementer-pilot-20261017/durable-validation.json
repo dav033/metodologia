@@ -1,0 +1,59 @@
+{
+  "I4": {
+    "starter": {
+      "tests": 11,
+      "exit_code": 1,
+      "outcome": "failures=8, errors=1"
+    },
+    "reference": {
+      "tests": 11,
+      "exit_code": 0,
+      "outcome": "OK"
+    },
+    "mutant": {
+      "tests": 11,
+      "exit_code": 1,
+      "outcome": "failures=3"
+    }
+  },
+  "I5": {
+    "starter": {
+      "tests": 11,
+      "exit_code": 1,
+      "outcome": "failures=8, errors=2"
+    },
+    "reference": {
+      "tests": 11,
+      "exit_code": 0,
+      "outcome": "OK"
+    },
+    "mutant": {
+      "tests": 11,
+      "exit_code": 1,
+      "outcome": "failures=1"
+    }
+  },
+  "I6": {
+    "starter": {
+      "tests": 17,
+      "exit_code": 1,
+      "outcome": "failures=12, errors=4"
+    },
+    "reference": {
+      "tests": 17,
+      "exit_code": 0,
+      "outcome": "OK"
+    },
+    "mutant": {
+      "tests": 17,
+      "exit_code": 1,
+      "outcome": "failures=1"
+    },
+    "deferred_ack_mutant": {
+      "tests": 17,
+      "exit_code": 1,
+      "outcome": "failures=1",
+      "detected_by": "test_ordered_delivery_failure_preserves_previous_ack"
+    }
+  }
+}

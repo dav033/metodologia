@@ -1,0 +1,17 @@
+[
+  {
+    "case": "I4",
+    "tests": 2,
+    "passed": true
+  },
+  {
+    "case": "I5",
+    "tests": 2,
+    "passed": true
+  },
+  {
+    "case": "I6",
+    "tests": 2,
+    "passed": true
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "posthoc": true,
+  "trigger": "I6 Luna medium and Haiku xhigh produced valid alternative JSON envelopes, revealing unspecified body encoding/key names; separate explicit connection-close requirement was untested.",
+  "rule": "Accept exact raw result or minimal JSON with correct result and optional matching id/job_id; preserve actual delivered body byte-for-byte in inbox; no other assertions relaxed.",
+  "scope": "Apply semantic adjustment to all eight I6 submissions; resource witness to all24 I4/I5/I6 submissions, gating required APIs by case ID.",
+  "original_scores_preserved": true,
+  "candidate_edits": false,
+  "additional_native_calls": 0,
+  "files": {
+    "supplement_encoding.py": "c32d762ddd571b410bd2a4b6dc1d4cca2349798fd7e111b2f6fc7b0dafd283f2",
+    "supplement_resources.py": "a3051e7c424456ec93c969b410dcd9f1dc75e1bfe1be41fa95e15affed9db823",
+    "pilot_supplement.py": "418311192b70352753832b1c02b4a4a7bff8e8e3cc81fc02ae916cc37ea63401"
+  },
+  "limitations": "Posthoc supplemental evidence is not the predeclared benchmark score. Extra resource checks do not certify every possible leak/error path."
+}

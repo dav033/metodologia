@@ -1,0 +1,1042 @@
+[
+  {
+    "case": "I1",
+    "starter": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 12,
+      "failures": 8,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_empty_intervals",
+          "class": "test_private.Private.test_empty_intervals",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_empty_outside",
+          "class": "test_private.Private.test_empty_outside",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_generator",
+          "class": "test_private.Private.test_generator",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_negative_and_disjoint",
+          "class": "test_private.Private.test_negative_and_disjoint",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_nested_duplicate",
+          "class": "test_private.Private.test_nested_duplicate",
+          "result": "ok"
+        },
+        {
+          "method": "test_preserves_input",
+          "class": "test_private.Private.test_preserves_input",
+          "result": "ok"
+        },
+        {
+          "method": "test_randomized_coverage_oracle",
+          "class": "test_private.Private.test_randomized_coverage_oracle",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_reverse",
+          "class": "test_private.Private.test_reverse",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_reverse_after_empty",
+          "class": "test_private.Private.test_reverse_after_empty",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_touching",
+          "class": "test_private.Private.test_touching",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_empty",
+          "class": "test_public.Public.test_empty",
+          "result": "ok"
+        },
+        {
+          "method": "test_smoke",
+          "class": "test_public.Public.test_smoke",
+          "result": "ok"
+        }
+      ],
+      "output": "test_empty_intervals (test_private.Private.test_empty_intervals) ... FAIL\ntest_empty_outside (test_private.Private.test_empty_outside) ... FAIL\ntest_generator (test_private.Private.test_generator) ... FAIL\ntest_negative_and_disjoint (test_private.Private.test_negative_and_disjoint) ... FAIL\ntest_nested_duplicate (test_private.Private.test_nested_duplicate) ... ok\ntest_preserves_input (test_private.Private.test_preserves_input) ... ok\ntest_randomized_coverage_oracle (test_private.Private.test_randomized_coverage_oracle) ... FAIL\ntest_reverse (test_private.Private.test_reverse) ... FAIL\ntest_reverse_after_empty (test_private.Private.test_reverse_after_empty) ... FAIL\ntest_touching (test_private.Private.test_touching) ... FAIL\ntest_empty (test_public.Public.test_empty) ... ok\ntest_smoke (test_public.Public.test_smoke) ... ok\n\n======================================================================\nFAIL: test_empty_intervals (test_private.Private.test_empty_intervals)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 8, in test_empty_intervals\n    self.assertEqual(merge([(0,0),(5,5)]), [])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [(0, 0), (5, 5)] != []\n\nFirst list contains 2 additional elements.\nFirst extra element 0:\n(0, 0)\n\n- [(0, 0), (5, 5)]\n+ []\n\n======================================================================\nFAIL: test_empty_outside (test_private.Private.test_empty_outside)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 10, in test_empty_outside\n    self.assertEqual(merge([(-10,-10),(1,2),(10,10)]), [(1,2)])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [(-10, -10), (1, 2), (10, 10)] != [(1, 2)]\n\nFirst differing element 0:\n(-10, -10)\n(1, 2)\n\nFirst list contains 2 additional elements.\nFirst extra element 1:\n(1, 2)\n\n- [(-10, -10), (1, 2), (10, 10)]\n+ [(1, 2)]\n\n======================================================================\nFAIL: test_generator (test_private.Private.test_generator)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 24, in test_generator\n    self.assertEqual(merge((p for p in [(2,3),(1,2)])), [(1,3)])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [(1, 2), (2, 3)] != [(1, 3)]\n\nFirst differing element 0:\n(1, 2)\n(1, 3)\n\nFirst list contains 1 additional elements.\nFirst extra element 1:\n(2, 3)\n\n- [(1, 2), (2, 3)]\n+ [(1, 3)]\n\n======================================================================\nFAIL: test_negative_and_disjoint (test_private.Private.test_negative_and_disjoint)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 18, in test_negative_and_disjoint\n    self.assertEqual(merge([(-2,0),(-5,-2),(3,4)]), [(-5,0),(3,4)])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [(-5, -2), (-2, 0), (3, 4)] != [(-5, 0), (3, 4)]\n\nFirst differing element 0:\n(-5, -2)\n(-5, 0)\n\nFirst list contains 1 additional elements.\nFirst extra element 2:\n(3, 4)\n\n- [(-5, -2), (-2, 0), (3, 4)]\n?       ----------\n\n+ [(-5, 0), (3, 4)]\n\n======================================================================\nFAIL: test_randomized_coverage_oracle (test_private.Private.test_randomized_coverage_oracle)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 35, in test_randomized_coverage_oracle\n    self.assertEqual(merge(pairs), expected)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [(-12, -10), (-10, 12)] != [(-12, 12)]\n\nFirst differing element 0:\n(-12, -10)\n(-12, 12)\n\nFirst list contains 1 additional elements.\nFirst extra element 1:\n(-10, 12)\n\n- [(-12, -10), (-10, 12)]\n+ [(-12, 12)]\n\n======================================================================\nFAIL: test_reverse (test_private.Private.test_reverse)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 12, in test_reverse\n    with self.assertRaises(ValueError): merge([(2,1)])\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_reverse_after_empty (test_private.Private.test_reverse_after_empty)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 14, in test_reverse_after_empty\n    with self.assertRaises(ValueError): merge([(0,0),(8,3)])\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_touching (test_private.Private.test_touching)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 6, in test_touching\n    self.assertEqual(merge([(4,8),(1,4),(8,9)]), [(1,9)])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [(1, 4), (4, 8), (8, 9)] != [(1, 9)]\n\nFirst differing element 0:\n(1, 4)\n(1, 9)\n\nFirst list contains 2 additional elements.\nFirst extra element 1:\n(4, 8)\n\n- [(1, 4), (4, 8), (8, 9)]\n+ [(1, 9)]\n\n----------------------------------------------------------------------\nRan 12 tests in 0.005s\n\nFAILED (failures=8)\n",
+      "status": "failed"
+    },
+    "reference": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_empty_intervals",
+          "class": "test_private.Private.test_empty_intervals",
+          "result": "ok"
+        },
+        {
+          "method": "test_empty_outside",
+          "class": "test_private.Private.test_empty_outside",
+          "result": "ok"
+        },
+        {
+          "method": "test_generator",
+          "class": "test_private.Private.test_generator",
+          "result": "ok"
+        },
+        {
+          "method": "test_negative_and_disjoint",
+          "class": "test_private.Private.test_negative_and_disjoint",
+          "result": "ok"
+        },
+        {
+          "method": "test_nested_duplicate",
+          "class": "test_private.Private.test_nested_duplicate",
+          "result": "ok"
+        },
+        {
+          "method": "test_preserves_input",
+          "class": "test_private.Private.test_preserves_input",
+          "result": "ok"
+        },
+        {
+          "method": "test_randomized_coverage_oracle",
+          "class": "test_private.Private.test_randomized_coverage_oracle",
+          "result": "ok"
+        },
+        {
+          "method": "test_reverse",
+          "class": "test_private.Private.test_reverse",
+          "result": "ok"
+        },
+        {
+          "method": "test_reverse_after_empty",
+          "class": "test_private.Private.test_reverse_after_empty",
+          "result": "ok"
+        },
+        {
+          "method": "test_touching",
+          "class": "test_private.Private.test_touching",
+          "result": "ok"
+        },
+        {
+          "method": "test_empty",
+          "class": "test_public.Public.test_empty",
+          "result": "ok"
+        },
+        {
+          "method": "test_smoke",
+          "class": "test_public.Public.test_smoke",
+          "result": "ok"
+        }
+      ],
+      "output": "test_empty_intervals (test_private.Private.test_empty_intervals) ... ok\ntest_empty_outside (test_private.Private.test_empty_outside) ... ok\ntest_generator (test_private.Private.test_generator) ... ok\ntest_negative_and_disjoint (test_private.Private.test_negative_and_disjoint) ... ok\ntest_nested_duplicate (test_private.Private.test_nested_duplicate) ... ok\ntest_preserves_input (test_private.Private.test_preserves_input) ... ok\ntest_randomized_coverage_oracle (test_private.Private.test_randomized_coverage_oracle) ... ok\ntest_reverse (test_private.Private.test_reverse) ... ok\ntest_reverse_after_empty (test_private.Private.test_reverse_after_empty) ... ok\ntest_touching (test_private.Private.test_touching) ... ok\ntest_empty (test_public.Public.test_empty) ... ok\ntest_smoke (test_public.Public.test_smoke) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 0.006s\n\nOK\n",
+      "status": "passed"
+    }
+  },
+  {
+    "case": "I2",
+    "starter": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 14,
+      "failures": 14,
+      "errors": 4,
+      "methods": [
+        {
+          "method": "test_cli_errors",
+          "class": "test_private.Private.test_cli_errors",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_cli_success",
+          "class": "test_private.Private.test_cli_success",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_cursor_encoding",
+          "class": "test_private.Private.test_cursor_encoding",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_deleted_cursor",
+          "class": "test_private.Private.test_deleted_cursor",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_legacy_default",
+          "class": "test_private.Private.test_legacy_default",
+          "result": "ok"
+        },
+        {
+          "method": "test_module_entrypoint",
+          "class": "test_private.Private.test_module_entrypoint",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_service_forwards_cursor",
+          "class": "test_private.Private.test_service_forwards_cursor",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_snapshot_and_return_isolation",
+          "class": "test_private.Private.test_snapshot_and_return_isolation",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_static_traversal",
+          "class": "test_private.Private.test_static_traversal",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_terminal",
+          "class": "test_private.Private.test_terminal",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_empty_page",
+          "class": "test_public.Public.test_empty_page",
+          "result": "ok"
+        },
+        {
+          "method": "test_legacy",
+          "class": "test_public.Public.test_legacy",
+          "result": "ok"
+        }
+      ],
+      "output": "test_cli_errors (test_private.Private.test_cli_errors) ... FAIL\ntest_cli_success (test_private.Private.test_cli_success) ... FAIL\ntest_cursor_encoding (test_private.Private.test_cursor_encoding) ... FAIL\ntest_deleted_cursor (test_private.Private.test_deleted_cursor) ... FAIL\ntest_legacy_default (test_private.Private.test_legacy_default) ... ok\ntest_limits (test_private.Private.test_limits) ... \n  test_limits (test_private.Private.test_limits) (bad=0) ... FAIL\n  test_limits (test_private.Private.test_limits) (bad=-1) ... FAIL\n  test_limits (test_private.Private.test_limits) (bad=101) ... FAIL\n  test_limits (test_private.Private.test_limits) (bad=True) ... FAIL\n  test_limits (test_private.Private.test_limits) (bad=1.5) ... ERROR\n  test_limits (test_private.Private.test_limits) (bad='2') ... ERROR\n  test_limits (test_private.Private.test_limits) (bad=None) ... FAIL\ntest_malformed_cursor (test_private.Private.test_malformed_cursor) ... \n  test_malformed_cursor (test_private.Private.test_malformed_cursor) (token=None) ... ERROR\n  test_malformed_cursor (test_private.Private.test_malformed_cursor) (token=12) ... ERROR\ntest_module_entrypoint (test_private.Private.test_module_entrypoint) ... FAIL\ntest_service_forwards_cursor (test_private.Private.test_service_forwards_cursor) ... FAIL\ntest_snapshot_and_return_isolation (test_private.Private.test_snapshot_and_return_isolation) ... FAIL\ntest_static_traversal (test_private.Private.test_static_traversal) ... FAIL\ntest_terminal (test_private.Private.test_terminal) ... FAIL\ntest_empty_page (test_public.Public.test_empty_page) ... ok\ntest_legacy (test_public.Public.test_legacy) ... ok\n\n======================================================================\nERROR: test_limits (test_private.Private.test_limits) (bad=1.5)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 37, in test_limits\n    with self.assertRaises(ValueError): self.repo.page(bad)\n                                        ~~~~~~~~~~~~~~^^^^^\n  File \"/tmp/work/app/repository.py\", line 7, in page\n    return {'items': self.list_items(limit), 'next_cursor': None}\n                     ~~~~~~~~~~~~~~~^^^^^^^\n  File \"/tmp/work/app/repository.py\", line 5, in list_items\n    return sorted(self.rows, key=lambda row: (row['timestamp'],row['id']))[:limit]\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^\nTypeError: slice indices must be integers or None or have an __index__ method\n\n======================================================================\nERROR: test_limits (test_private.Private.test_limits) (bad='2')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 37, in test_limits\n    with self.assertRaises(ValueError): self.repo.page(bad)\n                                        ~~~~~~~~~~~~~~^^^^^\n  File \"/tmp/work/app/repository.py\", line 7, in page\n    return {'items': self.list_items(limit), 'next_cursor': None}\n                     ~~~~~~~~~~~~~~~^^^^^^^\n  File \"/tmp/work/app/repository.py\", line 5, in list_items\n    return sorted(self.rows, key=lambda row: (row['timestamp'],row['id']))[:limit]\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^\nTypeError: slice indices must be integers or None or have an __index__ method\n\n======================================================================\nERROR: test_malformed_cursor (test_private.Private.test_malformed_cursor) (token=None)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 46, in test_malformed_cursor\n    with self.assertRaises(ValueError): decode_cursor(token)\n                                        ~~~~~~~~~~~~~^^^^^^^\n  File \"/tmp/work/app/repository.py\", line 11, in decode_cursor\n    timestamp, id = cursor.split(':',1)\n                    ^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'split'\n\n======================================================================\nERROR: test_malformed_cursor (test_private.Private.test_malformed_cursor) (token=12)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 46, in test_malformed_cursor\n    with self.assertRaises(ValueError): decode_cursor(token)\n                                        ~~~~~~~~~~~~~^^^^^^^\n  File \"/tmp/work/app/repository.py\", line 11, in decode_cursor\n    timestamp, id = cursor.split(':',1)\n                    ^^^^^^^^^^^^\nAttributeError: 'int' object has no attribute 'split'\n\n======================================================================\nFAIL: test_cli_errors (test_private.Private.test_cli_errors)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 66, in test_cli_errors\n    self.assertEqual(status,2); self.assertEqual(out.getvalue(),''); self.assertTrue(err.getvalue())\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^\nAssertionError: 0 != 2\n\n======================================================================\nFAIL: test_cli_success (test_private.Private.test_cli_success)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 60, in test_cli_success\n    self.assertEqual([r['id'] for r in json.loads(out.getvalue())['items']],['c'])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['a', 'b', 'c', 'z', 'x'] != ['c']\n\nFirst differing element 0:\n'a'\n'c'\n\nFirst list contains 4 additional elements.\nFirst extra element 1:\n'b'\n\n- ['a', 'b', 'c', 'z', 'x']\n+ ['c']\n\n======================================================================\nFAIL: test_cursor_encoding (test_private.Private.test_cursor_encoding)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 27, in test_cursor_encoding\n    self.assertEqual(token,expected)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^\nAssertionError: '-5:ñ' != 'Wy01LCLDsSJd'\n- -5:ñ\n+ Wy01LCLDsSJd\n\n\n======================================================================\nFAIL: test_deleted_cursor (test_private.Private.test_deleted_cursor)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 30, in test_deleted_cursor\n    self.assertEqual([r['id'] for r in self.repo.page(10,encode_cursor(1,'bb'))['items']],['c','z','x'])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['a', 'b', 'c', 'z', 'x'] != ['c', 'z', 'x']\n\nFirst differing element 0:\n'a'\n'c'\n\nFirst list contains 2 additional elements.\nFirst extra element 3:\n'z'\n\n- ['a', 'b', 'c', 'z', 'x']\n?  ----------\n\n+ ['c', 'z', 'x']\n\n======================================================================\nFAIL: test_limits (test_private.Private.test_limits) (bad=0)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 37, in test_limits\n    with self.assertRaises(ValueError): self.repo.page(bad)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_limits (test_private.Private.test_limits) (bad=-1)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 37, in test_limits\n    with self.assertRaises(ValueError): self.repo.page(bad)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_limits (test_private.Private.test_limits) (bad=101)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 37, in test_limits\n    with self.assertRaises(ValueError): self.repo.page(bad)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_limits (test_private.Private.test_limits) (bad=True)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 37, in test_limits\n    with self.assertRaises(ValueError): self.repo.page(bad)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_limits (test_private.Private.test_limits) (bad=None)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 37, in test_limits\n    with self.assertRaises(ValueError): self.repo.page(bad)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_module_entrypoint (test_private.Private.test_module_entrypoint)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 71, in test_module_entrypoint\n    self.assertEqual(bad.returncode,2); self.assertEqual(bad.stdout,''); self.assertTrue(bad.stderr)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\nAssertionError: 0 != 2\n\n======================================================================\nFAIL: test_service_forwards_cursor (test_private.Private.test_service_forwards_cursor)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 53, in test_service_forwards_cursor\n    self.assertEqual([r['id'] for r in page['items']],['b'])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['a'] != ['b']\n\nFirst differing element 0:\n'a'\n'b'\n\n- ['a']\n?   ^\n\n+ ['b']\n?   ^\n\n\n======================================================================\nFAIL: test_snapshot_and_return_isolation (test_private.Private.test_snapshot_and_return_isolation)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 50, in test_snapshot_and_return_isolation\n    self.assertTrue(all(r['payload']['v']==[1] for r in self.repo.page(5)['items']))\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: False is not true\n\n======================================================================\nFAIL: test_static_traversal (test_private.Private.test_static_traversal)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 22, in test_static_traversal\n    self.assertEqual(ids,['a','b','c','z','x'])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['a', 'b'] != ['a', 'b', 'c', 'z', 'x']\n\nSecond list contains 3 additional elements.\nFirst extra element 2:\n'c'\n\n- ['a', 'b']\n+ ['a', 'b', 'c', 'z', 'x']\n\n======================================================================\nFAIL: test_terminal (test_private.Private.test_terminal)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 33, in test_terminal\n    self.assertEqual(self.repo.page(2,encode_cursor(9,'z')),{'items':[],'next_cursor':None})\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'items': [{'timestamp': 1, 'id': 'a', 'payload': {'[79 chars]None} != {'items': [], 'next_cursor': None}\n- {'items': [{'id': 'a', 'payload': {'v': [1]}, 'timestamp': 1},\n-            {'id': 'b', 'payload': {'v': [1]}, 'timestamp': 1}],\n-  'next_cursor': None}\n+ {'items': [], 'next_cursor': None}\n? +++++++++++++\n\n\n----------------------------------------------------------------------\nRan 14 tests in 0.080s\n\nFAILED (failures=14, errors=4)\n",
+      "status": "failed"
+    },
+    "reference": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_cli_errors",
+          "class": "test_private.Private.test_cli_errors",
+          "result": "ok"
+        },
+        {
+          "method": "test_cli_success",
+          "class": "test_private.Private.test_cli_success",
+          "result": "ok"
+        },
+        {
+          "method": "test_cursor_encoding",
+          "class": "test_private.Private.test_cursor_encoding",
+          "result": "ok"
+        },
+        {
+          "method": "test_deleted_cursor",
+          "class": "test_private.Private.test_deleted_cursor",
+          "result": "ok"
+        },
+        {
+          "method": "test_legacy_default",
+          "class": "test_private.Private.test_legacy_default",
+          "result": "ok"
+        },
+        {
+          "method": "test_limits",
+          "class": "test_private.Private.test_limits",
+          "result": "ok"
+        },
+        {
+          "method": "test_malformed_cursor",
+          "class": "test_private.Private.test_malformed_cursor",
+          "result": "ok"
+        },
+        {
+          "method": "test_module_entrypoint",
+          "class": "test_private.Private.test_module_entrypoint",
+          "result": "ok"
+        },
+        {
+          "method": "test_service_forwards_cursor",
+          "class": "test_private.Private.test_service_forwards_cursor",
+          "result": "ok"
+        },
+        {
+          "method": "test_snapshot_and_return_isolation",
+          "class": "test_private.Private.test_snapshot_and_return_isolation",
+          "result": "ok"
+        },
+        {
+          "method": "test_static_traversal",
+          "class": "test_private.Private.test_static_traversal",
+          "result": "ok"
+        },
+        {
+          "method": "test_terminal",
+          "class": "test_private.Private.test_terminal",
+          "result": "ok"
+        },
+        {
+          "method": "test_empty_page",
+          "class": "test_public.Public.test_empty_page",
+          "result": "ok"
+        },
+        {
+          "method": "test_legacy",
+          "class": "test_public.Public.test_legacy",
+          "result": "ok"
+        }
+      ],
+      "output": "test_cli_errors (test_private.Private.test_cli_errors) ... ok\ntest_cli_success (test_private.Private.test_cli_success) ... ok\ntest_cursor_encoding (test_private.Private.test_cursor_encoding) ... ok\ntest_deleted_cursor (test_private.Private.test_deleted_cursor) ... ok\ntest_legacy_default (test_private.Private.test_legacy_default) ... ok\ntest_limits (test_private.Private.test_limits) ... ok\ntest_malformed_cursor (test_private.Private.test_malformed_cursor) ... ok\ntest_module_entrypoint (test_private.Private.test_module_entrypoint) ... ok\ntest_service_forwards_cursor (test_private.Private.test_service_forwards_cursor) ... ok\ntest_snapshot_and_return_isolation (test_private.Private.test_snapshot_and_return_isolation) ... ok\ntest_static_traversal (test_private.Private.test_static_traversal) ... ok\ntest_terminal (test_private.Private.test_terminal) ... ok\ntest_empty_page (test_public.Public.test_empty_page) ... ok\ntest_legacy (test_public.Public.test_legacy) ... ok\n\n----------------------------------------------------------------------\nRan 14 tests in 0.168s\n\nOK\n",
+      "status": "passed"
+    }
+  },
+  {
+    "case": "I3",
+    "starter": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 14,
+      "failures": 10,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_capacity_and_reuse",
+          "class": "test_private.Private.test_capacity_and_reuse",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_deterministic_permutations",
+          "class": "test_private.Private.test_deterministic_permutations",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_failure_transitive",
+          "class": "test_private.Private.test_failure_transitive",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_failure_while_other_parent_running",
+          "class": "test_private.Private.test_failure_while_other_parent_running",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_generators_and_exports",
+          "class": "test_private.Private.test_generators_and_exports",
+          "result": "ok"
+        },
+        {
+          "method": "test_invalid_transitions_atomic",
+          "class": "test_private.Private.test_invalid_transitions_atomic",
+          "result": "ok"
+        },
+        {
+          "method": "test_long_chain",
+          "class": "test_private.Private.test_long_chain",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_parallel_diamond",
+          "class": "test_private.Private.test_parallel_diamond",
+          "result": "ok"
+        },
+        {
+          "method": "test_snapshot_and_duplicates",
+          "class": "test_private.Private.test_snapshot_and_duplicates",
+          "result": "ok"
+        },
+        {
+          "method": "test_unknown_dependency",
+          "class": "test_private.Private.test_unknown_dependency",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_validate_capacity",
+          "class": "test_private.Private.test_validate_capacity",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_chain",
+          "class": "test_public.Public.test_chain",
+          "result": "ok"
+        },
+        {
+          "method": "test_empty",
+          "class": "test_public.Public.test_empty",
+          "result": "ok"
+        }
+      ],
+      "output": "test_capacity_and_reuse (test_private.Private.test_capacity_and_reuse) ... FAIL\ntest_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) ... \n  test_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) (graph={'a': ['a']}) ... FAIL\n  test_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) (graph={'a': ['b'], 'b': ['a']}) ... FAIL\n  test_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) (graph={'z': [], 'a': ['b'], 'b': ['c'], 'c': ['a']}) ... FAIL\ntest_deterministic_permutations (test_private.Private.test_deterministic_permutations) ... FAIL\ntest_failure_transitive (test_private.Private.test_failure_transitive) ... FAIL\ntest_failure_while_other_parent_running (test_private.Private.test_failure_while_other_parent_running) ... FAIL\ntest_generators_and_exports (test_private.Private.test_generators_and_exports) ... ok\ntest_invalid_transitions_atomic (test_private.Private.test_invalid_transitions_atomic) ... ok\ntest_long_chain (test_private.Private.test_long_chain) ... FAIL\ntest_parallel_diamond (test_private.Private.test_parallel_diamond) ... ok\ntest_snapshot_and_duplicates (test_private.Private.test_snapshot_and_duplicates) ... ok\ntest_unknown_dependency (test_private.Private.test_unknown_dependency) ... FAIL\ntest_validate_capacity (test_private.Private.test_validate_capacity) ... FAIL\ntest_chain (test_public.Public.test_chain) ... ok\ntest_empty (test_public.Public.test_empty) ... ok\n\n======================================================================\nFAIL: test_capacity_and_reuse (test_private.Private.test_capacity_and_reuse)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 25, in test_capacity_and_reuse\n    with self.assertRaises(ValueError): s.start('b')\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) (graph={'a': ['a']})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 13, in test_cycles_before_dispatch\n    with self.assertRaises(ValueError): Scheduler(graph)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) (graph={'a': ['b'], 'b': ['a']})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 13, in test_cycles_before_dispatch\n    with self.assertRaises(ValueError): Scheduler(graph)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) (graph={'z': [], 'a': ['b'], 'b': ['c'], 'c': ['a']})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 13, in test_cycles_before_dispatch\n    with self.assertRaises(ValueError): Scheduler(graph)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_deterministic_permutations (test_private.Private.test_deterministic_permutations)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 18, in test_deterministic_permutations\n    self.assertEqual(s.ready(),['a','b','c'])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['c', 'a', 'b'] != ['a', 'b', 'c']\n\nFirst differing element 0:\n'c'\n'a'\n\n- ['c', 'a', 'b']\n+ ['a', 'b', 'c']\n\n======================================================================\nFAIL: test_failure_transitive (test_private.Private.test_failure_transitive)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 36, in test_failure_transitive\n    self.assertEqual(s.statuses(),{'root':'failed','child':'blocked','leaf':'blocked','other':'pending'})\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'root': 'failed', 'child': 'pending', 'leaf': 'pending', 'other': 'pending'} != {'root': 'failed', 'child': 'blocked', 'leaf': 'blocked', 'other': 'pending'}\n- {'child': 'pending', 'leaf': 'pending', 'other': 'pending', 'root': 'failed'}\n+ {'child': 'blocked', 'leaf': 'blocked', 'other': 'pending', 'root': 'failed'}\n\n======================================================================\nFAIL: test_failure_while_other_parent_running (test_private.Private.test_failure_while_other_parent_running)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 41, in test_failure_while_other_parent_running\n    self.assertEqual(s.statuses()['c'],'blocked'); self.assertEqual(s.statuses()['d'],'blocked')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'pending' != 'blocked'\n- pending\n+ blocked\n\n\n======================================================================\nFAIL: test_long_chain (test_private.Private.test_long_chain)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 71, in test_long_chain\n    self.assertTrue(s.done()); self.assertEqual(sum(v=='blocked' for v in s.statuses().values()),1199)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^\nAssertionError: False is not true\n\n======================================================================\nFAIL: test_unknown_dependency (test_private.Private.test_unknown_dependency)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 8, in test_unknown_dependency\n    with self.assertRaises(ValueError): Scheduler({'a':['missing']})\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_validate_capacity (test_private.Private.test_validate_capacity)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 56, in test_validate_capacity\n    with self.assertRaises(ValueError): Scheduler({},bad)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n----------------------------------------------------------------------\nRan 14 tests in 0.010s\n\nFAILED (failures=10)\n",
+      "status": "failed"
+    },
+    "reference": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_capacity_and_reuse",
+          "class": "test_private.Private.test_capacity_and_reuse",
+          "result": "ok"
+        },
+        {
+          "method": "test_cycles_before_dispatch",
+          "class": "test_private.Private.test_cycles_before_dispatch",
+          "result": "ok"
+        },
+        {
+          "method": "test_deterministic_permutations",
+          "class": "test_private.Private.test_deterministic_permutations",
+          "result": "ok"
+        },
+        {
+          "method": "test_failure_transitive",
+          "class": "test_private.Private.test_failure_transitive",
+          "result": "ok"
+        },
+        {
+          "method": "test_failure_while_other_parent_running",
+          "class": "test_private.Private.test_failure_while_other_parent_running",
+          "result": "ok"
+        },
+        {
+          "method": "test_generators_and_exports",
+          "class": "test_private.Private.test_generators_and_exports",
+          "result": "ok"
+        },
+        {
+          "method": "test_invalid_transitions_atomic",
+          "class": "test_private.Private.test_invalid_transitions_atomic",
+          "result": "ok"
+        },
+        {
+          "method": "test_long_chain",
+          "class": "test_private.Private.test_long_chain",
+          "result": "ok"
+        },
+        {
+          "method": "test_parallel_diamond",
+          "class": "test_private.Private.test_parallel_diamond",
+          "result": "ok"
+        },
+        {
+          "method": "test_snapshot_and_duplicates",
+          "class": "test_private.Private.test_snapshot_and_duplicates",
+          "result": "ok"
+        },
+        {
+          "method": "test_unknown_dependency",
+          "class": "test_private.Private.test_unknown_dependency",
+          "result": "ok"
+        },
+        {
+          "method": "test_validate_capacity",
+          "class": "test_private.Private.test_validate_capacity",
+          "result": "ok"
+        },
+        {
+          "method": "test_chain",
+          "class": "test_public.Public.test_chain",
+          "result": "ok"
+        },
+        {
+          "method": "test_empty",
+          "class": "test_public.Public.test_empty",
+          "result": "ok"
+        }
+      ],
+      "output": "test_capacity_and_reuse (test_private.Private.test_capacity_and_reuse) ... ok\ntest_cycles_before_dispatch (test_private.Private.test_cycles_before_dispatch) ... ok\ntest_deterministic_permutations (test_private.Private.test_deterministic_permutations) ... ok\ntest_failure_transitive (test_private.Private.test_failure_transitive) ... ok\ntest_failure_while_other_parent_running (test_private.Private.test_failure_while_other_parent_running) ... ok\ntest_generators_and_exports (test_private.Private.test_generators_and_exports) ... ok\ntest_invalid_transitions_atomic (test_private.Private.test_invalid_transitions_atomic) ... ok\ntest_long_chain (test_private.Private.test_long_chain) ... ok\ntest_parallel_diamond (test_private.Private.test_parallel_diamond) ... ok\ntest_snapshot_and_duplicates (test_private.Private.test_snapshot_and_duplicates) ... ok\ntest_unknown_dependency (test_private.Private.test_unknown_dependency) ... ok\ntest_validate_capacity (test_private.Private.test_validate_capacity) ... ok\ntest_chain (test_public.Public.test_chain) ... ok\ntest_empty (test_public.Public.test_empty) ... ok\n\n----------------------------------------------------------------------\nRan 14 tests in 0.018s\n\nOK\n",
+      "status": "passed"
+    }
+  },
+  {
+    "case": "I4",
+    "starter": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 11,
+      "failures": 8,
+      "errors": 1,
+      "methods": [
+        {
+          "method": "test_empty_database",
+          "class": "test_private.MigrationTests.test_empty_database",
+          "result": "ERROR"
+        },
+        {
+          "method": "test_empty_legacy",
+          "class": "test_private.MigrationTests.test_empty_legacy",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_future_version_unchanged",
+          "class": "test_private.MigrationTests.test_future_version_unchanged",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_hooks_in_order",
+          "class": "test_private.MigrationTests.test_hooks_in_order",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_idempotent",
+          "class": "test_private.MigrationTests.test_idempotent",
+          "result": "ok"
+        },
+        {
+          "method": "test_order",
+          "class": "test_private.MigrationTests.test_order",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_preserves_values_and_ids",
+          "class": "test_private.MigrationTests.test_preserves_values_and_ids",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_rollback_after_copy",
+          "class": "test_private.MigrationTests.test_rollback_after_copy",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_rollback_before_commit",
+          "class": "test_private.MigrationTests.test_rollback_before_commit",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_unicode_normalization",
+          "class": "test_private.MigrationTests.test_unicode_normalization",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_new_db",
+          "class": "test_public.PublicTests.test_new_db",
+          "result": "ok"
+        }
+      ],
+      "output": "test_empty_database (test_private.MigrationTests.test_empty_database) ... ERROR\ntest_empty_legacy (test_private.MigrationTests.test_empty_legacy) ... FAIL\ntest_future_version_unchanged (test_private.MigrationTests.test_future_version_unchanged) ... FAIL\ntest_hooks_in_order (test_private.MigrationTests.test_hooks_in_order) ... FAIL\ntest_idempotent (test_private.MigrationTests.test_idempotent) ... ok\ntest_order (test_private.MigrationTests.test_order) ... FAIL\ntest_preserves_values_and_ids (test_private.MigrationTests.test_preserves_values_and_ids) ... FAIL\ntest_rollback_after_copy (test_private.MigrationTests.test_rollback_after_copy) ... FAIL\ntest_rollback_before_commit (test_private.MigrationTests.test_rollback_before_commit) ... FAIL\ntest_unicode_normalization (test_private.MigrationTests.test_unicode_normalization) ... FAIL\ntest_new_db (test_public.PublicTests.test_new_db) ... ok\n\n======================================================================\nERROR: test_empty_database (test_private.MigrationTests.test_empty_database)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 13, in test_empty_database\n    migrate(self.p);self.assertEqual(read_items(self.p),[]);self.assertEqual(self.state()[0],1)\n                                                                             ~~~~~~~~~~^^\n  File \"/tmp/work/test_private.py\", line 11, in state\n    return c.execute('PRAGMA user_version').fetchone()[0],c.execute('SELECT * FROM items ORDER BY id').fetchall(),c.execute(\"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name\").fetchall()\n                                                          ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsqlite3.OperationalError: no such table: items\n\n======================================================================\nFAIL: test_empty_legacy (test_private.MigrationTests.test_empty_legacy)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 39, in test_empty_legacy\n    self.legacy([]);migrate(self.p);self.assertEqual(self.state(),(1,[],[('items',)]))\n                                    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Tuples differ: (0, [], [('items',)]) != (1, [], [('items',)])\n\nFirst differing element 0:\n0\n1\n\n- (0, [], [('items',)])\n?  ^\n\n+ (1, [], [('items',)])\n?  ^\n\n\n======================================================================\nFAIL: test_future_version_unchanged (test_private.MigrationTests.test_future_version_unchanged)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 36, in test_future_version_unchanged\n    with self.assertRaises(ValueError):migrate(self.p)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_hooks_in_order (test_private.MigrationTests.test_hooks_in_order)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 31, in test_hooks_in_order\n    self.legacy();calls=[];migrate(self.p,calls.append);self.assertEqual(calls,['after_copy','before_commit'])\n                                                        ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [] != ['after_copy', 'before_commit']\n\nSecond list contains 2 additional elements.\nFirst extra element 0:\n'after_copy'\n\n- []\n+ ['after_copy', 'before_commit']\n\n======================================================================\nFAIL: test_order (test_private.MigrationTests.test_order)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 19, in test_order\n    self.legacy([(99,'Z'),(1,'A')]);migrate(self.p);self.assertEqual(read_items(self.p),[(1,'a'),(99,'z')])\n                                                    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [] != [(1, 'a'), (99, 'z')]\n\nSecond list contains 2 additional elements.\nFirst extra element 0:\n(1, 'a')\n\n- []\n+ [(1, 'a'), (99, 'z')]\n\n======================================================================\nFAIL: test_preserves_values_and_ids (test_private.MigrationTests.test_preserves_values_and_ids)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 15, in test_preserves_values_and_ids\n    self.legacy();migrate(self.p);self.assertEqual(self.state()[1],[(-2,'BÄR','bär'),(8,' Foo ','foo')])\n                                  ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [(-2, 'BÄR'), (8, ' Foo ')] != [(-2, 'BÄR', 'bär'), (8, ' Foo ', 'foo')]\n\nFirst differing element 0:\n(-2, 'BÄR')\n(-2, 'BÄR', 'bär')\n\n- [(-2, 'BÄR'), (8, ' Foo ')]\n+ [(-2, 'BÄR', 'bär'), (8, ' Foo ', 'foo')]\n?            +++++++             +++++++\n\n\n======================================================================\nFAIL: test_rollback_after_copy (test_private.MigrationTests.test_rollback_after_copy)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 28, in test_rollback_after_copy\n    def test_rollback_after_copy(self):self.rollback_at('after_copy')\n                                       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^\n  File \"/tmp/work/test_private.py\", line 26, in rollback_at\n    with self.assertRaisesRegex(RuntimeError,'injected'):migrate(self.p,fault)\n         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: RuntimeError not raised\n\n======================================================================\nFAIL: test_rollback_before_commit (test_private.MigrationTests.test_rollback_before_commit)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 29, in test_rollback_before_commit\n    def test_rollback_before_commit(self):self.rollback_at('before_commit')\n                                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"/tmp/work/test_private.py\", line 26, in rollback_at\n    with self.assertRaisesRegex(RuntimeError,'injected'):migrate(self.p,fault)\n         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: RuntimeError not raised\n\n======================================================================\nFAIL: test_unicode_normalization (test_private.MigrationTests.test_unicode_normalization)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 17, in test_unicode_normalization\n    self.legacy([(1,'  ÉCOLE  '),(2,'')]);migrate(self.p);self.assertEqual(read_items(self.p),[(1,'école'),(2,'')])\n                                                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: [] != [(1, 'école'), (2, '')]\n\nSecond list contains 2 additional elements.\nFirst extra element 0:\n(1, 'école')\n\n- []\n+ [(1, 'école'), (2, '')]\n\n----------------------------------------------------------------------\nRan 11 tests in 0.012s\n\nFAILED (failures=8, errors=1)\n",
+      "status": "failed"
+    },
+    "reference": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_empty_database",
+          "class": "test_private.MigrationTests.test_empty_database",
+          "result": "ok"
+        },
+        {
+          "method": "test_empty_legacy",
+          "class": "test_private.MigrationTests.test_empty_legacy",
+          "result": "ok"
+        },
+        {
+          "method": "test_future_version_unchanged",
+          "class": "test_private.MigrationTests.test_future_version_unchanged",
+          "result": "ok"
+        },
+        {
+          "method": "test_hooks_in_order",
+          "class": "test_private.MigrationTests.test_hooks_in_order",
+          "result": "ok"
+        },
+        {
+          "method": "test_idempotent",
+          "class": "test_private.MigrationTests.test_idempotent",
+          "result": "ok"
+        },
+        {
+          "method": "test_order",
+          "class": "test_private.MigrationTests.test_order",
+          "result": "ok"
+        },
+        {
+          "method": "test_preserves_values_and_ids",
+          "class": "test_private.MigrationTests.test_preserves_values_and_ids",
+          "result": "ok"
+        },
+        {
+          "method": "test_rollback_after_copy",
+          "class": "test_private.MigrationTests.test_rollback_after_copy",
+          "result": "ok"
+        },
+        {
+          "method": "test_rollback_before_commit",
+          "class": "test_private.MigrationTests.test_rollback_before_commit",
+          "result": "ok"
+        },
+        {
+          "method": "test_unicode_normalization",
+          "class": "test_private.MigrationTests.test_unicode_normalization",
+          "result": "ok"
+        },
+        {
+          "method": "test_new_db",
+          "class": "test_public.PublicTests.test_new_db",
+          "result": "ok"
+        }
+      ],
+      "output": "test_empty_database (test_private.MigrationTests.test_empty_database) ... ok\ntest_empty_legacy (test_private.MigrationTests.test_empty_legacy) ... ok\ntest_future_version_unchanged (test_private.MigrationTests.test_future_version_unchanged) ... ok\ntest_hooks_in_order (test_private.MigrationTests.test_hooks_in_order) ... ok\ntest_idempotent (test_private.MigrationTests.test_idempotent) ... ok\ntest_order (test_private.MigrationTests.test_order) ... ok\ntest_preserves_values_and_ids (test_private.MigrationTests.test_preserves_values_and_ids) ... ok\ntest_rollback_after_copy (test_private.MigrationTests.test_rollback_after_copy) ... ok\ntest_rollback_before_commit (test_private.MigrationTests.test_rollback_before_commit) ... ok\ntest_unicode_normalization (test_private.MigrationTests.test_unicode_normalization) ... ok\ntest_new_db (test_public.PublicTests.test_new_db) ... ok\n\n----------------------------------------------------------------------\nRan 11 tests in 0.018s\n\nOK\n",
+      "status": "passed"
+    }
+  },
+  {
+    "case": "I5",
+    "starter": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 11,
+      "failures": 8,
+      "errors": 2,
+      "methods": [
+        {
+          "method": "test_claim_and_complete",
+          "class": "test_private.QueueTests.test_claim_and_complete",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_concurrent_distinct_jobs",
+          "class": "test_private.QueueTests.test_concurrent_distinct_jobs",
+          "result": "ERROR"
+        },
+        {
+          "method": "test_concurrent_single_job",
+          "class": "test_private.QueueTests.test_concurrent_single_job",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_duplicate_preserves_payload",
+          "class": "test_private.QueueTests.test_duplicate_preserves_payload",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_expired_cannot_complete",
+          "class": "test_private.QueueTests.test_expired_cannot_complete",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_expiry_boundary",
+          "class": "test_private.QueueTests.test_expiry_boundary",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_invalid_ttl",
+          "class": "test_private.QueueTests.test_invalid_ttl",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_order",
+          "class": "test_private.QueueTests.test_order",
+          "result": "ERROR"
+        },
+        {
+          "method": "test_stale_fencing_after_reopen",
+          "class": "test_private.QueueTests.test_stale_fencing_after_reopen",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_unknown_and_done",
+          "class": "test_private.QueueTests.test_unknown_and_done",
+          "result": "ok"
+        },
+        {
+          "method": "test_basic",
+          "class": "test_public.PublicTests.test_basic",
+          "result": "FAIL"
+        }
+      ],
+      "output": "test_claim_and_complete (test_private.QueueTests.test_claim_and_complete) ... FAIL\ntest_concurrent_distinct_jobs (test_private.QueueTests.test_concurrent_distinct_jobs) ... ERROR\ntest_concurrent_single_job (test_private.QueueTests.test_concurrent_single_job) ... FAIL\ntest_duplicate_preserves_payload (test_private.QueueTests.test_duplicate_preserves_payload) ... FAIL\ntest_expired_cannot_complete (test_private.QueueTests.test_expired_cannot_complete) ... FAIL\ntest_expiry_boundary (test_private.QueueTests.test_expiry_boundary) ... FAIL\ntest_invalid_ttl (test_private.QueueTests.test_invalid_ttl) ... FAIL\ntest_order (test_private.QueueTests.test_order) ... ERROR\ntest_stale_fencing_after_reopen (test_private.QueueTests.test_stale_fencing_after_reopen) ... FAIL\ntest_unknown_and_done (test_private.QueueTests.test_unknown_and_done) ... ok\ntest_basic (test_public.PublicTests.test_basic) ... FAIL\n\n======================================================================\nERROR: test_concurrent_distinct_jobs (test_private.QueueTests.test_concurrent_distinct_jobs)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 30, in test_concurrent_distinct_jobs\n    self.assertEqual({r[0] for r in rs},{'a','b'})\n                      ~^^^\nTypeError: 'NoneType' object is not subscriptable\n\n======================================================================\nERROR: test_order (test_private.QueueTests.test_order)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 14, in test_order\n    self.add('z');self.add('b');self.assertEqual(claim(self.p,0,5)[0],'b')\n                                                 ~~~~~~~~~~~~~~~~~^^^\nTypeError: 'NoneType' object is not subscriptable\n\n======================================================================\nFAIL: test_claim_and_complete (test_private.QueueTests.test_claim_and_complete)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 10, in test_claim_and_complete\n    self.add();self.assertEqual(claim(self.p,10,5),('a','data',1));self.assertTrue(complete(self.p,'a',1,'ok',14));r=inspect(self.p,'a');self.assertEqual((r['state'],r['result'],r['lease_until']),('done','ok',None))\n               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: None != ('a', 'data', 1)\n\n======================================================================\nFAIL: test_concurrent_single_job (test_private.QueueTests.test_concurrent_single_job)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 25, in test_concurrent_single_job\n    self.assertEqual(sum(r is not None for r in rs),1);self.assertEqual(inspect(self.p,'a')['attempts'],1)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 0 != 1\n\n======================================================================\nFAIL: test_duplicate_preserves_payload (test_private.QueueTests.test_duplicate_preserves_payload)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 12, in test_duplicate_preserves_payload\n    self.add();self.add(payload='changed');self.assertEqual(claim(self.p,0,5),('a','data',1))\n                                           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: None != ('a', 'data', 1)\n\n======================================================================\nFAIL: test_expired_cannot_complete (test_private.QueueTests.test_expired_cannot_complete)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 18, in test_expired_cannot_complete\n    self.add();claim(self.p,0,5);self.assertFalse(complete(self.p,'a',1,'bad',5));self.assertEqual(inspect(self.p,'a')['state'],'running')\n                                                                                  ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'pending' != 'running'\n- pending\n+ running\n\n\n======================================================================\nFAIL: test_expiry_boundary (test_private.QueueTests.test_expiry_boundary)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 16, in test_expiry_boundary\n    self.add();claim(self.p,10,5);self.assertIsNone(claim(self.p,14,5));self.assertEqual(claim(self.p,15,5),('a','data',2))\n                                                                        ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: None != ('a', 'data', 2)\n\n======================================================================\nFAIL: test_invalid_ttl (test_private.QueueTests.test_invalid_ttl)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 34, in test_invalid_ttl\n    with self.assertRaises(ValueError):claim(self.p,0,ttl)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_stale_fencing_after_reopen (test_private.QueueTests.test_stale_fencing_after_reopen)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 20, in test_stale_fencing_after_reopen\n    self.add();claim(self.p,0,5);init(self.p);claim(self.p,5,5);self.assertFalse(complete(self.p,'a',1,'bad',6));self.assertTrue(complete(self.p,'a',2,'good',6));self.assertEqual(inspect(self.p,'a')['attempts'],2)\n                                                                                                                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: False is not true\n\n======================================================================\nFAIL: test_basic (test_public.PublicTests.test_basic)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_public.py\", line 6, in test_basic\n    p=os.path.join(d,'db');init(p);enqueue(p,'a','work');self.assertEqual(claim(p,0,10),('a','work',1))\n                                                         ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: None != ('a', 'work', 1)\n\n----------------------------------------------------------------------\nRan 11 tests in 0.020s\n\nFAILED (failures=8, errors=2)\n",
+      "status": "failed"
+    },
+    "reference": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_claim_and_complete",
+          "class": "test_private.QueueTests.test_claim_and_complete",
+          "result": "ok"
+        },
+        {
+          "method": "test_concurrent_distinct_jobs",
+          "class": "test_private.QueueTests.test_concurrent_distinct_jobs",
+          "result": "ok"
+        },
+        {
+          "method": "test_concurrent_single_job",
+          "class": "test_private.QueueTests.test_concurrent_single_job",
+          "result": "ok"
+        },
+        {
+          "method": "test_duplicate_preserves_payload",
+          "class": "test_private.QueueTests.test_duplicate_preserves_payload",
+          "result": "ok"
+        },
+        {
+          "method": "test_expired_cannot_complete",
+          "class": "test_private.QueueTests.test_expired_cannot_complete",
+          "result": "ok"
+        },
+        {
+          "method": "test_expiry_boundary",
+          "class": "test_private.QueueTests.test_expiry_boundary",
+          "result": "ok"
+        },
+        {
+          "method": "test_invalid_ttl",
+          "class": "test_private.QueueTests.test_invalid_ttl",
+          "result": "ok"
+        },
+        {
+          "method": "test_order",
+          "class": "test_private.QueueTests.test_order",
+          "result": "ok"
+        },
+        {
+          "method": "test_stale_fencing_after_reopen",
+          "class": "test_private.QueueTests.test_stale_fencing_after_reopen",
+          "result": "ok"
+        },
+        {
+          "method": "test_unknown_and_done",
+          "class": "test_private.QueueTests.test_unknown_and_done",
+          "result": "ok"
+        },
+        {
+          "method": "test_basic",
+          "class": "test_public.PublicTests.test_basic",
+          "result": "ok"
+        }
+      ],
+      "output": "test_claim_and_complete (test_private.QueueTests.test_claim_and_complete) ... ok\ntest_concurrent_distinct_jobs (test_private.QueueTests.test_concurrent_distinct_jobs) ... ok\ntest_concurrent_single_job (test_private.QueueTests.test_concurrent_single_job) ... ok\ntest_duplicate_preserves_payload (test_private.QueueTests.test_duplicate_preserves_payload) ... ok\ntest_expired_cannot_complete (test_private.QueueTests.test_expired_cannot_complete) ... ok\ntest_expiry_boundary (test_private.QueueTests.test_expiry_boundary) ... ok\ntest_invalid_ttl (test_private.QueueTests.test_invalid_ttl) ... ok\ntest_order (test_private.QueueTests.test_order) ... ok\ntest_stale_fencing_after_reopen (test_private.QueueTests.test_stale_fencing_after_reopen) ... ok\ntest_unknown_and_done (test_private.QueueTests.test_unknown_and_done) ... ok\ntest_basic (test_public.PublicTests.test_basic) ... ok\n\n----------------------------------------------------------------------\nRan 11 tests in 0.017s\n\nOK\n",
+      "status": "passed"
+    }
+  },
+  {
+    "case": "I6",
+    "starter": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 1,
+      "tests": 17,
+      "failures": 12,
+      "errors": 4,
+      "methods": [
+        {
+          "method": "test_claim_and_complete",
+          "class": "test_private.QueueTests.test_claim_and_complete",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_concurrent_distinct_jobs",
+          "class": "test_private.QueueTests.test_concurrent_distinct_jobs",
+          "result": "ERROR"
+        },
+        {
+          "method": "test_concurrent_single_job",
+          "class": "test_private.QueueTests.test_concurrent_single_job",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_delivery_crash_replay_and_dedupe",
+          "class": "test_private.QueueTests.test_delivery_crash_replay_and_dedupe",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_dependencies_and_retry",
+          "class": "test_private.QueueTests.test_dependencies_and_retry",
+          "result": "ERROR"
+        },
+        {
+          "method": "test_duplicate_preserves_payload",
+          "class": "test_private.QueueTests.test_duplicate_preserves_payload",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_expired_cannot_complete",
+          "class": "test_private.QueueTests.test_expired_cannot_complete",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_expiry_boundary",
+          "class": "test_private.QueueTests.test_expiry_boundary",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_hook_exception_atomic_and_expired_retry",
+          "class": "test_private.QueueTests.test_hook_exception_atomic_and_expired_retry",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_invalid_ttl",
+          "class": "test_private.QueueTests.test_invalid_ttl",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_order",
+          "class": "test_private.QueueTests.test_order",
+          "result": "ERROR"
+        },
+        {
+          "method": "test_ordered_delivery_failure_preserves_previous_ack",
+          "class": "test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack",
+          "result": "ERROR"
+        },
+        {
+          "method": "test_process_crash_before_commit",
+          "class": "test_private.QueueTests.test_process_crash_before_commit",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_stale_fencing_after_reopen",
+          "class": "test_private.QueueTests.test_stale_fencing_after_reopen",
+          "result": "FAIL"
+        },
+        {
+          "method": "test_unknown_and_done",
+          "class": "test_private.QueueTests.test_unknown_and_done",
+          "result": "ok"
+        },
+        {
+          "method": "test_basic",
+          "class": "test_public.PublicTests.test_basic",
+          "result": "FAIL"
+        }
+      ],
+      "output": "test_claim_and_complete (test_private.QueueTests.test_claim_and_complete) ... FAIL\ntest_concurrent_distinct_jobs (test_private.QueueTests.test_concurrent_distinct_jobs) ... ERROR\ntest_concurrent_single_job (test_private.QueueTests.test_concurrent_single_job) ... FAIL\ntest_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe) ... FAIL\ntest_dependencies_and_retry (test_private.QueueTests.test_dependencies_and_retry) ... ERROR\ntest_duplicate_preserves_payload (test_private.QueueTests.test_duplicate_preserves_payload) ... FAIL\ntest_expired_cannot_complete (test_private.QueueTests.test_expired_cannot_complete) ... FAIL\ntest_expiry_boundary (test_private.QueueTests.test_expiry_boundary) ... FAIL\ntest_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry) ... FAIL\ntest_invalid_ttl (test_private.QueueTests.test_invalid_ttl) ... FAIL\ntest_order (test_private.QueueTests.test_order) ... ERROR\ntest_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack) ... ERROR\ntest_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result) ... <frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bdf30>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452be2f0>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452be5c0>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452be890>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452be980>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bea70>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bef20>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bed40>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bec50>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf2e0>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf010>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452beb60>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf100>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf1f0>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bee30>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf3d0>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf4c0>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf5b0>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf6a0>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf790>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf880>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bf970>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bfa60>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bfb50>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bfe20>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bff10>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff245378040>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff245378220>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff245378310>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n<frozen abc>:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7ff2452bfc40>\nResourceWarning: Enable tracemalloc to get the object allocation traceback\nFAIL\ntest_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit) ... FAIL\ntest_stale_fencing_after_reopen (test_private.QueueTests.test_stale_fencing_after_reopen) ... FAIL\ntest_unknown_and_done (test_private.QueueTests.test_unknown_and_done) ... ok\ntest_basic (test_public.PublicTests.test_basic) ... FAIL\n\n======================================================================\nERROR: test_concurrent_distinct_jobs (test_private.QueueTests.test_concurrent_distinct_jobs)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 30, in test_concurrent_distinct_jobs\n    self.assertEqual({r[0] for r in rs},{'a','b'})\n                      ~^^^\nTypeError: 'NoneType' object is not subscriptable\n\n======================================================================\nERROR: test_dependencies_and_retry (test_private.QueueTests.test_dependencies_and_retry)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 40, in test_dependencies_and_retry\n    self.add('a-child','child','z-parent');self.assertIsNone(claim(self.p,0,5));self.add('z-parent','parent');self.assertEqual(claim(self.p,0,5)[0],'z-parent');self.assertFalse(retry(self.p,'z-parent',9,1));self.assertTrue(retry(self.p,'z-parent',1,1));self.assertFalse(retry(self.p,'z-parent',1,1));self.assertEqual(claim(self.p,1,5),('z-parent','parent',2));self.assertFalse(retry(self.p,'z-parent',1,2));self.assertTrue(complete(self.p,'z-parent',2,'ok',2));self.assertEqual(claim(self.p,2,5)[0],'a-child');self.add('cycle-x','x','cycle-y');self.add('cycle-y','y','cycle-x');self.assertIsNone(claim(self.p,2,5))\n                                                                                                                               ~~~~~~~~~~~~~~~~~^^^\nTypeError: 'NoneType' object is not subscriptable\n\n======================================================================\nERROR: test_order (test_private.QueueTests.test_order)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 14, in test_order\n    self.add('z');self.add('b');self.assertEqual(claim(self.p,0,5)[0],'b')\n                                                 ~~~~~~~~~~~~~~~~~^^^\nTypeError: 'NoneType' object is not subscriptable\n\n======================================================================\nERROR: test_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 73, in test_ordered_delivery_failure_preserves_previous_ack\n    self.assertEqual(leased[0],id)\n                     ~~~~~~^^^\nTypeError: 'NoneType' object is not subscriptable\n\n======================================================================\nFAIL: test_claim_and_complete (test_private.QueueTests.test_claim_and_complete)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 10, in test_claim_and_complete\n    self.add();self.assertEqual(claim(self.p,10,5),('a','data',1));self.assertTrue(complete(self.p,'a',1,'ok',14));r=inspect(self.p,'a');self.assertEqual((r['state'],r['result'],r['lease_until']),('done','ok',None))\n               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: None != ('a', 'data', 1)\n\n======================================================================\nFAIL: test_concurrent_single_job (test_private.QueueTests.test_concurrent_single_job)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 25, in test_concurrent_single_job\n    self.assertEqual(sum(r is not None for r in rs),1);self.assertEqual(inspect(self.p,'a')['attempts'],1)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 0 != 1\n\n======================================================================\nFAIL: test_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 55, in test_delivery_crash_replay_and_dedupe\n    with self.assertRaises(RuntimeError):publish(self.p,first)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^\nAssertionError: RuntimeError not raised\n\n======================================================================\nFAIL: test_duplicate_preserves_payload (test_private.QueueTests.test_duplicate_preserves_payload)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 12, in test_duplicate_preserves_payload\n    self.add();self.add(payload='changed');self.assertEqual(claim(self.p,0,5),('a','data',1))\n                                           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: None != ('a', 'data', 1)\n\n======================================================================\nFAIL: test_expired_cannot_complete (test_private.QueueTests.test_expired_cannot_complete)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 18, in test_expired_cannot_complete\n    self.add();claim(self.p,0,5);self.assertFalse(complete(self.p,'a',1,'bad',5));self.assertEqual(inspect(self.p,'a')['state'],'running')\n                                                                                  ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'pending' != 'running'\n- pending\n+ running\n\n\n======================================================================\nFAIL: test_expiry_boundary (test_private.QueueTests.test_expiry_boundary)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 16, in test_expiry_boundary\n    self.add();claim(self.p,10,5);self.assertIsNone(claim(self.p,14,5));self.assertEqual(claim(self.p,15,5),('a','data',2))\n                                                                        ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: None != ('a', 'data', 2)\n\n======================================================================\nFAIL: test_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 65, in test_hook_exception_atomic_and_expired_retry\n    with self.assertRaises(RuntimeError):complete(self.p,'a',1,'bad',1,fault)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^\nAssertionError: RuntimeError not raised\n\n======================================================================\nFAIL: test_invalid_ttl (test_private.QueueTests.test_invalid_ttl)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 34, in test_invalid_ttl\n    with self.assertRaises(ValueError):claim(self.p,0,ttl)\n         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n======================================================================\nFAIL: test_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 49, in test_process_crash_after_result\n    def test_process_crash_after_result(self):self.crash_at('after_result')\n                                              ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^\n  File \"/tmp/work/test_private.py\", line 46, in crash_at\n    self.assertEqual(r.returncode,73,r.stderr.decode());init(self.p);row=inspect(self.p,'a');self.assertEqual((row['state'],row['result']),('running',None))\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 0 != 73 : \n\n======================================================================\nFAIL: test_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 50, in test_process_crash_before_commit\n    def test_process_crash_before_commit(self):self.crash_at('before_commit')\n                                               ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"/tmp/work/test_private.py\", line 46, in crash_at\n    self.assertEqual(r.returncode,73,r.stderr.decode());init(self.p);row=inspect(self.p,'a');self.assertEqual((row['state'],row['result']),('running',None))\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 0 != 73 : \n\n======================================================================\nFAIL: test_stale_fencing_after_reopen (test_private.QueueTests.test_stale_fencing_after_reopen)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_private.py\", line 20, in test_stale_fencing_after_reopen\n    self.add();claim(self.p,0,5);init(self.p);claim(self.p,5,5);self.assertFalse(complete(self.p,'a',1,'bad',6));self.assertTrue(complete(self.p,'a',2,'good',6));self.assertEqual(inspect(self.p,'a')['attempts'],2)\n                                                                                                                 ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: False is not true\n\n======================================================================\nFAIL: test_basic (test_public.PublicTests.test_basic)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/work/test_public.py\", line 6, in test_basic\n    p=os.path.join(d,'db');init(p);enqueue(p,'a','work');self.assertEqual(claim(p,0,10),('a','work',1))\n                                                         ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: None != ('a', 'work', 1)\n\n----------------------------------------------------------------------\nRan 17 tests in 0.110s\n\nFAILED (failures=12, errors=4)\n",
+      "status": "failed"
+    },
+    "reference": {
+      "command": [
+        "/usr/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "methods": [
+        {
+          "method": "test_claim_and_complete",
+          "class": "test_private.QueueTests.test_claim_and_complete",
+          "result": "ok"
+        },
+        {
+          "method": "test_concurrent_distinct_jobs",
+          "class": "test_private.QueueTests.test_concurrent_distinct_jobs",
+          "result": "ok"
+        },
+        {
+          "method": "test_concurrent_single_job",
+          "class": "test_private.QueueTests.test_concurrent_single_job",
+          "result": "ok"
+        },
+        {
+          "method": "test_delivery_crash_replay_and_dedupe",
+          "class": "test_private.QueueTests.test_delivery_crash_replay_and_dedupe",
+          "result": "ok"
+        },
+        {
+          "method": "test_dependencies_and_retry",
+          "class": "test_private.QueueTests.test_dependencies_and_retry",
+          "result": "ok"
+        },
+        {
+          "method": "test_duplicate_preserves_payload",
+          "class": "test_private.QueueTests.test_duplicate_preserves_payload",
+          "result": "ok"
+        },
+        {
+          "method": "test_expired_cannot_complete",
+          "class": "test_private.QueueTests.test_expired_cannot_complete",
+          "result": "ok"
+        },
+        {
+          "method": "test_expiry_boundary",
+          "class": "test_private.QueueTests.test_expiry_boundary",
+          "result": "ok"
+        },
+        {
+          "method": "test_hook_exception_atomic_and_expired_retry",
+          "class": "test_private.QueueTests.test_hook_exception_atomic_and_expired_retry",
+          "result": "ok"
+        },
+        {
+          "method": "test_invalid_ttl",
+          "class": "test_private.QueueTests.test_invalid_ttl",
+          "result": "ok"
+        },
+        {
+          "method": "test_order",
+          "class": "test_private.QueueTests.test_order",
+          "result": "ok"
+        },
+        {
+          "method": "test_ordered_delivery_failure_preserves_previous_ack",
+          "class": "test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack",
+          "result": "ok"
+        },
+        {
+          "method": "test_process_crash_after_result",
+          "class": "test_private.QueueTests.test_process_crash_after_result",
+          "result": "ok"
+        },
+        {
+          "method": "test_process_crash_before_commit",
+          "class": "test_private.QueueTests.test_process_crash_before_commit",
+          "result": "ok"
+        },
+        {
+          "method": "test_stale_fencing_after_reopen",
+          "class": "test_private.QueueTests.test_stale_fencing_after_reopen",
+          "result": "ok"
+        },
+        {
+          "method": "test_unknown_and_done",
+          "class": "test_private.QueueTests.test_unknown_and_done",
+          "result": "ok"
+        },
+        {
+          "method": "test_basic",
+          "class": "test_public.PublicTests.test_basic",
+          "result": "ok"
+        }
+      ],
+      "output": "test_claim_and_complete (test_private.QueueTests.test_claim_and_complete) ... ok\ntest_concurrent_distinct_jobs (test_private.QueueTests.test_concurrent_distinct_jobs) ... ok\ntest_concurrent_single_job (test_private.QueueTests.test_concurrent_single_job) ... ok\ntest_delivery_crash_replay_and_dedupe (test_private.QueueTests.test_delivery_crash_replay_and_dedupe) ... ok\ntest_dependencies_and_retry (test_private.QueueTests.test_dependencies_and_retry) ... ok\ntest_duplicate_preserves_payload (test_private.QueueTests.test_duplicate_preserves_payload) ... ok\ntest_expired_cannot_complete (test_private.QueueTests.test_expired_cannot_complete) ... ok\ntest_expiry_boundary (test_private.QueueTests.test_expiry_boundary) ... ok\ntest_hook_exception_atomic_and_expired_retry (test_private.QueueTests.test_hook_exception_atomic_and_expired_retry) ... ok\ntest_invalid_ttl (test_private.QueueTests.test_invalid_ttl) ... ok\ntest_order (test_private.QueueTests.test_order) ... ok\ntest_ordered_delivery_failure_preserves_previous_ack (test_private.QueueTests.test_ordered_delivery_failure_preserves_previous_ack) ... ok\ntest_process_crash_after_result (test_private.QueueTests.test_process_crash_after_result) ... ok\ntest_process_crash_before_commit (test_private.QueueTests.test_process_crash_before_commit) ... ok\ntest_stale_fencing_after_reopen (test_private.QueueTests.test_stale_fencing_after_reopen) ... ok\ntest_unknown_and_done (test_private.QueueTests.test_unknown_and_done) ... ok\ntest_basic (test_public.PublicTests.test_basic) ... ok\n\n----------------------------------------------------------------------\nRan 17 tests in 0.101s\n\nOK\n",
+      "status": "passed"
+    }
+  }
+]
