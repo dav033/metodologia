@@ -22,7 +22,14 @@
   }
  ],
  "round": 2,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-18T11:34:06"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "Owner explicitly replied yes to reflecting library additions/modifications. No new admin requested; physical refresh/build semantics require code research."
+  }
+ },
+ "created_at": "2026-10-18T11:34:06",
+ "answered_at": "2026-10-18T11:34:07",
+ "answered_via": "terminal"
 }
