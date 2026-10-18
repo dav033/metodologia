@@ -31,3 +31,5 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 
 ## Carried over to next week
 - Keep the two local P-087 follow-up modifications separate from merged code; track the exact baseline E-03532 guirnalda failure independently and do not add an allowlist entry. P-077 calibrates the default quote cap, P-075 retains historical tests to reproduce separately. Current evidence: [REQ-015 report](../../requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/REPORT.md).
+
+- 2026-10-18 REQ-018 started via codex-luis / Sol high Planner; research-backed draft SPEC and five-question round01 ready, awaiting owner answers before task planning.

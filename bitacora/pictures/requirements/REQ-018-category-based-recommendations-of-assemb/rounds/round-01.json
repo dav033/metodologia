@@ -110,7 +110,30 @@
   }
  ],
  "round": 1,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-18T11:07:56"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "Owner confirms /asistente."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "Owner accepts existing complete visible designs, including single-structure designs, and adds that the catalogue must stay updated. Update mechanism is being clarified; no new admin scope approved."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Owner explicitly confirms celebration with optional theme/colours."
+  },
+  "q4": {
+   "choice": "a",
+   "note": "When a category is detected, offer existing assembled decorations; do not require theme/colours first."
+  },
+  "q5": {
+   "choice": "b",
+   "note": "Owner explicitly rejects nearby/general fallback: if matches are missing, offer nothing. Return only actual matches; never invent designs."
+  }
+ },
+ "created_at": "2026-10-18T11:07:56",
+ "answered_at": "2026-10-18T11:33:16",
+ "answered_via": "terminal"
 }

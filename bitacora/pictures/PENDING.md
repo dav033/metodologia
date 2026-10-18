@@ -63,12 +63,14 @@ month summary._
 - P-107 · Decide REQ-014 continuation: PM/critic chain (T26, T32, T40, T48, T56, T59) and growth tasks T71–T75 (one-touch rating, panel-edit feedback signal, client latency telemetry, «No pude» reason, action limits) · urgency: med · complexity: L · added 2026-10-18 · REQ-014 T18
 - P-109 · PLAN verifications are weak or Windows-only: T55 passes without shipping, T57 passes on 2026-10-11 rows (pre-T36), T44 passes on report keywords, T14/T31 use findstr, T18 and T71–T75 use C:/Users or only check file existence · urgency: low · complexity: S · added 2026-10-18 · REQ-014 audit
 
-- P-110 · `main` red after push 6649f75 (payload: shared Taller quotes, 3D sign compositing, Kontext colour pass): build error (`dynamic` route config vs cacheComponents) in 5 shared-quote files, stale fixtures/hash, mobiliario test «cuenta lo dibujado» (test-mobiliario-revision-hostil, changed by salon-nodos). Fix running (agent on worktree scratchpad/ship2). Also: shared-quote routes (`/api/cotizacion-compartida/*`, `/api/taller/cotizaciones-compartidas`) are classified as excluded without conRegistro; migration 020 is applied in Neon but no longer in the repo · urgency: high · complexity: M · added 2026-10-18 · REQ-014
+
+- P-111 · Shared-quote routes (`/api/cotizacion-compartida/*`, `/api/taller/cotizaciones-compartidas`) are excluded from the registry guard without `conRegistro`; migration 020 is applied in Neon but missing from the repo · urgency: med · complexity: M · added 2026-10-18 · REQ-014
 
 ## Blocked
 _None_
 
 ## Recently closed
+- P-110 · main red after 6649f75 · closed 2026-10-18: fixed in 2d924c10 (Quality success, Vercel production Ready). Still open: shared-quote routes without conRegistro and migration 020 drift (see P-111)
 - P-108 · guiada_motor cookie vs the P-045 cut · closed 2026-10-18: cookie ignored while the cut is on unless GUIADA_MOTOR_COOKIE_VALE_CON_CORTE=1 (D-058); shipped in main c8a8200e
 - P-105 · fal.ai account locked on the first T44 paid call (403 «Exhausted balance») although ~US$20 was expected: check billing, then re-run T44 under the US$0.60 cap · urgency: high · complexity: S · added 2026-10-18 · REQ-014 T44 · closed 2026-10-18: paid pass completed with the VPS key (4 calls, US$0.48 of 0.60); see research/kontext-color/EXPERIMENTO-2026-10-18.md
 - P-103 · CLOSED: Repaired the three mainline Quality failures in PR #13 (`859dd42d`), merged Happie PR #12 at `b591d015`, and passed exact-SHA Quality run `39002538708`. Production deploy `39003726308` succeeded; VPS `current` is `b591d015`, both containers are healthy, and `/` plus `/happie` return HTTP 200. No authenticated live Gemini conversation was replayed · urgency: high · complexity: M · added 2026-10-16 · closed 2026-10-16 · Happie production screenshot follow-up

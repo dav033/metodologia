@@ -359,3 +359,12 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Alternatives:** Keep the cookie beating the cut — rejected, it defeats the rollback; restore an admin identity now — not possible without REQ-004.
 - **Consequences:** + the cut is a real stop again. − the owner must set the variable to test a fix on 3D while the cut is on. Rollback: unset or restore the previous precedence in `bandera.ts`.
 - **Source:** Owner approval 2026-10-18 of the recommendation.
+
+## D-059 — Table-seat count test updated for parametric salon tables (REQ-014 T54)
+- **Date:** 2026-10-18 · **Status:** Accepted · **Scope:** `scripts/test/test-mobiliario-revision-hostil.ts`
+- **Context:** The payload turned salon tables from fixed furniture with `opciones.sillas` into parametric sets (table and seat group as two nodes). The old fixture expected a scene shape that no longer exists before the guard, so the test failed on `main`.
+- **Decision:** Update the fixture to build a fixed catalogue table with 8 seats plus a 6-seat group on top, still expecting 14 drawn seats; allow one group per table. No production code changed.
+- **Alternatives:** Revert the parametric tables — rejected, it is the approved T54 work; delete the test — rejected, it guards the seat count.
+- **Consequences:** + Quality green on `2d924c10`. − The expectation was changed by an agent; the owner should confirm the intent.
+- **Rollback:** restore the previous fixture from `3254ab1b`.
+- **Source:** Quality fix on 2026-10-18 (`2d924c10`).
