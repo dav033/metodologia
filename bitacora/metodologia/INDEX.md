@@ -1,10 +1,10 @@
 # Index — metodologia
 
-_Generated 2026-10-17 21:30 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-18 09:10 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
-**Last activity:** 2026-10-17
+**Last activity:** 2026-10-18
 
 ## Workspace
 
@@ -71,11 +71,11 @@ _Generated 2026-10-17 21:30 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-070 — Activate role policies with provider-family quota priority
+- D-069 — Select Luna high and Sonnet low for Runner
+- D-068 — Select Luna high as the default Researcher
 - D-067 — Select Sonnet medium Implementer, with Luna high as fallback
 - D-066 — Harness quota optimisation: ladder without automatic xhigh, bounded exploration, tier-homogeneous sessions
-- D-065 — Select Luna high Explorer, with Sol/Sonnet medium for complicated exploration
-- D-064 — Planner default Astra high, fallback Opus xhigh (2026-10-17)
-- D-063 — Select Sol and Sonnet medium reviewers, with high for harder reviews
 
 ## Artifacts
 
@@ -92,5 +92,5 @@ _Generated 2026-10-17 21:30 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W3](2026-10/W3/WEEK.md): [17](2026-10/W3/2026-10-17.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
+  - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [17](2026-10/W3/2026-10-17.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
   - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

@@ -1,0 +1,6 @@
+{"mode": "upstream", "event": "start", "at": 48445.473844586}
+{"mode": "upstream", "event": "end", "exit": 7, "seconds": 0.0002784280004561879}
+{"mode": "downstream", "event": "start", "at": 48445.585354986}
+{"mode": "downstream", "event": "end", "exit": 0, "seconds": 0.0003189609997207299}
+{"mode": "unavailable", "event": "start", "at": 48445.695993296}
+{"mode": "unavailable", "event": "end", "exit": 4, "seconds": 0.0002518719993531704}

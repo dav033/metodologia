@@ -1,0 +1,207 @@
+{
+  "R1-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  },
+  "R1-B": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  },
+  "R1-C": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": false,
+        "note": "Core answer correct. Extra historical ExceptionGroup availability and except* recommendation are not supported by this extract; note acknowledges the limitation."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  },
+  "R2-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "partial",
+        "supported": true,
+        "note": "Explicit compatibility/version question answered correctly. Reviewer partial only because hidden rubric also asks low-level SQLite autocommit distinction."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  },
+  "R3-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  }
+}

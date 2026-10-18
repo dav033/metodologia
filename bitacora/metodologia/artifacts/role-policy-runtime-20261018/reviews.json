@@ -1,0 +1,18 @@
+{
+  "spec": {
+    "initial": "changes_needed",
+    "fixed": [
+      "pinned retries",
+      "role defaults before tiers",
+      "complexity aliases persisted"
+    ],
+    "focused_rereview": "approve"
+  },
+  "standards": {
+    "initial": "changes_needed",
+    "fixed": [
+      "stable pinned model effort across failure tiers"
+    ],
+    "focused_rereview": "approve"
+  }
+}

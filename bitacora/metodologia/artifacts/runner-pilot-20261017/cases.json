@@ -1,0 +1,106 @@
+[
+  {
+    "id": "N1",
+    "title": "Success with warning",
+    "commands": [
+      "python check.py success"
+    ],
+    "modes": [
+      "success"
+    ],
+    "exits": [
+      0
+    ],
+    "status": "PASS",
+    "diagnostic": "12 tests passed; warning is not a failure",
+    "detail": "legacy_mode warning at config/options.py:18"
+  },
+  {
+    "id": "N2",
+    "title": "Misleading PASS on failed command",
+    "commands": [
+      "python check.py misleading"
+    ],
+    "modes": [
+      "misleading"
+    ],
+    "exits": [
+      3
+    ],
+    "status": "FAIL",
+    "diagnostic": "test_balance expected120 got90",
+    "detail": "tests/test_balance.py:42; preflight PASS does not mean command success"
+  },
+  {
+    "id": "N3",
+    "title": "Repeated and distinct failures",
+    "commands": [
+      "python check.py repeated"
+    ],
+    "modes": [
+      "repeated"
+    ],
+    "exits": [
+      1
+    ],
+    "status": "FAIL",
+    "diagnostic": "test_cache stale cache repeated14 times at tests/test_cache.py:27",
+    "detail": "test_auth forbidden at tests/test_auth.py:61"
+  },
+  {
+    "id": "N4",
+    "title": "Failure buried in noisy output",
+    "commands": [
+      "python check.py long"
+    ],
+    "modes": [
+      "long"
+    ],
+    "exits": [
+      1
+    ],
+    "status": "FAIL",
+    "diagnostic": "TS2322 string is not assignable to number",
+    "detail": "src/price.ts:87; logs/long.log is the full output"
+  },
+  {
+    "id": "N5",
+    "title": "Timeout and missing command entrypoint",
+    "commands": [
+      "timeout --signal=TERM --kill-after=1s 2s python check.py hang",
+      "python missing_runner_command.py"
+    ],
+    "modes": [
+      "hang"
+    ],
+    "exits": [
+      124,
+      2
+    ],
+    "status": "BLOCKED",
+    "diagnostic": "hang timed out after2 seconds; no tests completed",
+    "detail": "missing_runner_command.py cannot start; missing file"
+  },
+  {
+    "id": "N6",
+    "title": "Pipefail plus independent outcomes",
+    "commands": [
+      "bash -o pipefail -c 'python check.py upstream | cat'",
+      "python check.py downstream",
+      "python check.py unavailable"
+    ],
+    "modes": [
+      "upstream",
+      "downstream",
+      "unavailable"
+    ],
+    "exits": [
+      7,
+      0,
+      4
+    ],
+    "status": "FAIL",
+    "diagnostic": "corrupt archive at build/archive.py:19; downstream5 tests passed",
+    "detail": "runner_optional_sdk unavailable; report blocked check without installing"
+  }
+]

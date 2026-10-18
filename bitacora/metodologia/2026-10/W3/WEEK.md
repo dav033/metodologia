@@ -6,6 +6,9 @@ status: draft
 _Rewritten at the end of each session that week. Set `status: final` once the week is over and rolled up._
 
 ## Highlights
+- Runner internet research recorded in `artifacts/runner-model-research-20261017.md`: Luna high provisional candidate; Luna medium and Haiku5.5 medium comparators. Official sources do not establish a Runner winner. No pilot, selection or runtime change; proposed validation remains unapproved.
+- D-068 records owner-approved Luna high as default Researcher. Runner is the last role choice; Researcher fallback and coordinated runtime rollout remain separate. No installation/configuration changed.
+- Researcher pilot COMPLETE18/18 after owner-authorized codex-luis continuation, no repeats. Published-source supplement corrects R6 wording discounts uniformly; original scores preserved. Final content/source cases: Sonnet5/6, Sol6/6, Luna6/6; all36/36 requested criteria, source coverage35/36,36/36,36/36. Independent final audit approves; P-115 closed. Mixed accounts and telemetry/source limits retained; Researcher subsequently selected under D-068.
 - Researcher internet follow-up adds a primary search leaderboard and current official effort guidance: Sonnet medium / Sol medium broad-research candidates, Luna high for documentation, optional Haiku high challenger. External evidence only; Researcher remains unselected and no trial launched.
 - D-067 selects Sonnet medium Implementer with Luna high fallback after both pass6/6 pilot cases. Documented policy; coordinated runtime rollout remains pending. Researcher/Runner still need final choices; Antagonist already has D-066.
 - Implementer pilot closed:48/48 native cells, all eight configurations x6 cases audited without new calls. Original45/48 passes preserved; semantic/resource supplements yield Luna medium5/6, other seven6/6. I6 body-format ambiguity affects Luna medium and Haiku medium/xhigh; independent Luna medium leak remains (21 failed operation checks /23 connection observations). Full usage coverage; no invoice/quota equivalence, model/effort attestation limits retained. Final REPORT/comparison and integrity receipt in `artifacts/implementer-pilot-20261017/`; no permanent role selection.
@@ -52,3 +55,9 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 
 ## Migration planning — session 01a13754
 - REQ-007: code-grounded platform migration proposal in [[../../migracion/README|migracion]], 10 milestones and 22 tasks, with no-loss inventory and rollback gates. Legacy baseline: 578 tests, 2 routing failures. Implementation remains unapproved.
+
+## Runner selection — 2026-10-18
+- D-069 records Luna high as default Runner and Sonnet5.5 low as alternative. Sonnet low is unmeasured. All role choices are recorded; coordinated runtime rollout remains pending. P-116 retains the independent partial-pilot continuation.
+
+## Role policies activated — 2026-10-18
+- D-070 activates owner-selected models/efforts, quota-family priority, arbitrary eligible accounts and explicit-complexity alternatives; Researcher fallback Sonnet low. Installed editable runtime and35 native files across five account config directories.296 affected tests and independent spec/standards reviews pass; installed CLI live quota-only preview selects Runner Sonnet low on Claude. No model/pilot call, commit or push; frozen experiments unchanged.

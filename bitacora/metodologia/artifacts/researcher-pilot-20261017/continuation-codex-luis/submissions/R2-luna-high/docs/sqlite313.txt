@@ -1,0 +1,367 @@
+Source: https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst
+Original source line numbers follow.
+
+00250 | 
+00251 | Reference
+00252 | ---------
+00253 | 
+00254 | .. We keep the old sqlite3-module-contents ref to prevent breaking links.
+00255 | .. _sqlite3-module-contents:
+00256 | 
+00257 | .. _sqlite3-module-functions:
+00258 | 
+00259 | Module functions
+00260 | ^^^^^^^^^^^^^^^^
+00261 | 
+00262 | .. function:: connect(database, timeout=5.0, detect_types=0, \
+00263 |                       isolation_level="DEFERRED", check_same_thread=True, \
+00264 |                       factory=sqlite3.Connection, cached_statements=128, \
+00265 |                       uri=False, *, \
+00266 |                       autocommit=sqlite3.LEGACY_TRANSACTION_CONTROL)
+00267 | 
+00268 |    Open a connection to an SQLite database.
+00269 | 
+00270 |    :param database:
+00271 |        The path to the database file to be opened.
+00272 |        You can pass ``":memory:"`` to create an `SQLite database existing only
+00273 |        in memory <https://sqlite.org/inmemorydb.html>`_, and open a connection
+00274 |        to it.
+00275 |    :type database: :term:`path-like object`
+00276 | 
+00277 |    :param float timeout:
+00278 |        How many seconds the connection should wait before raising
+00279 |        an :exc:`OperationalError` when a table is locked.
+00280 |        If another connection opens a transaction to modify a table,
+00281 |        that table will be locked until the transaction is committed.
+00282 |        Default five seconds.
+00283 | 
+00284 |    :param int detect_types:
+00285 |        Control whether and how data types not
+00286 |        :ref:`natively supported by SQLite <sqlite3-types>`
+00287 |        are looked up to be converted to Python types,
+00288 |        using the converters registered with :func:`register_converter`.
+00289 |        Set it to any combination (using ``|``, bitwise or) of
+00290 |        :const:`PARSE_DECLTYPES` and :const:`PARSE_COLNAMES`
+00291 |        to enable this.
+00292 |        Column names takes precedence over declared types if both flags are set.
+00293 |        Types cannot be detected for generated fields (for example ``max(data)``),
+00294 |        even when the *detect_types* parameter is set; :class:`str` will be
+00295 |        returned instead.
+00296 |        By default (``0``), type detection is disabled.
+00297 | 
+00298 |    :param isolation_level:
+00299 |        Control legacy transaction handling behaviour.
+00300 |        See :attr:`Connection.isolation_level` and
+00301 |        :ref:`sqlite3-transaction-control-isolation-level` for more information.
+00302 |        Can be ``"DEFERRED"`` (default), ``"EXCLUSIVE"`` or ``"IMMEDIATE"``;
+00303 |        or ``None`` to disable opening transactions implicitly.
+00304 |        Has no effect unless :attr:`Connection.autocommit` is set to
+00305 |        :const:`~sqlite3.LEGACY_TRANSACTION_CONTROL` (the default).
+00306 |    :type isolation_level: str | None
+00307 | 
+00308 |    :param bool check_same_thread:
+00309 |        If ``True`` (default), :exc:`ProgrammingError` will be raised
+00310 |        if the database connection is used by a thread
+00311 |        other than the one that created it.
+00312 |        If ``False``, the connection may be accessed in multiple threads;
+00313 |        write operations may need to be serialized by the user
+00314 |        to avoid data corruption.
+00315 |        See :attr:`threadsafety` for more information.
+00316 | 
+00317 |    :param ~sqlite3.Connection factory:
+00318 |        A custom subclass of :class:`Connection` to create the connection with,
+00319 |        if not the default :class:`Connection` class.
+00320 | 
+00321 |    :param int cached_statements:
+00322 |        The number of statements that :mod:`!sqlite3`
+00323 |        should internally cache for this connection, to avoid parsing overhead.
+00324 |        By default, 128 statements.
+00325 | 
+00326 |    :param bool uri:
+00327 |        If set to ``True``, *database* is interpreted as a
+00328 |        :abbr:`URI (Uniform Resource Identifier)` with a file path
+00329 |        and an optional query string.
+00330 |        The scheme part *must* be ``"file:"``,
+00331 |        and the path can be relative or absolute.
+00332 |        The query string allows passing parameters to SQLite,
+00333 |        enabling various :ref:`sqlite3-uri-tricks`.
+00334 | 
+00335 |    :param autocommit:
+00336 |        Control :pep:`249` transaction handling behaviour.
+00337 |        See :attr:`Connection.autocommit` and
+00338 |        :ref:`sqlite3-transaction-control-autocommit` for more information.
+00339 |        *autocommit* currently defaults to
+00340 |        :const:`~sqlite3.LEGACY_TRANSACTION_CONTROL`.
+00341 |        The default will change to ``False`` in a future Python release.
+00342 |    :type autocommit: bool
+00343 | 
+00344 |    :rtype: ~sqlite3.Connection
+00345 | 
+00346 |    .. audit-event:: sqlite3.connect database sqlite3.connect
+00347 |    .. audit-event:: sqlite3.connect/handle connection_handle sqlite3.connect
+00348 | 
+00349 |    .. versionchanged:: 3.4
+00350 |       Added the *uri* parameter.
+00351 | 
+00352 |    .. versionchanged:: 3.7
+00353 |       *database* can now also be a :term:`path-like object`, not only a string.
+00354 | 
+00355 |    .. versionchanged:: 3.10
+00356 |       Added the ``sqlite3.connect/handle`` auditing event.
+00357 | 
+00358 |    .. versionchanged:: 3.12
+00359 |       Added the *autocommit* parameter.
+00360 | 
+00361 |    .. versionchanged:: 3.13
+00362 |       Positional use of the parameters *timeout*, *detect_types*,
+00363 |       *isolation_level*, *check_same_thread*, *factory*, *cached_statements*,
+00364 |       and *uri* is deprecated.
+00365 |       They will become keyword-only parameters in Python 3.15.
+00366 | 
+00367 | .. function:: complete_statement(statement)
+00368 | 
+00369 |    Return ``True`` if the string *statement* appears to contain
+00370 |    one or more complete SQL statements.
+
+00495 |    ``"qmark"``.
+00496 | 
+00497 |    .. note::
+00498 | 
+00499 |       The ``named`` DB-API parameter style is also supported.
+00500 | 
+00501 | .. data:: sqlite_version
+00502 | 
+00503 |    Version number of the runtime SQLite library as a :class:`string <str>`.
+00504 | 
+00505 | .. data:: sqlite_version_info
+00506 | 
+00507 |    Version number of the runtime SQLite library as a :class:`tuple` of
+00508 |    :class:`integers <int>`.
+00509 | 
+00510 | .. data:: threadsafety
+00511 | 
+00512 |    Integer constant required by the DB-API 2.0, stating the level of thread
+00513 |    safety the :mod:`!sqlite3` module supports. This attribute is set based on
+00514 |    the default `threading mode <https://sqlite.org/threadsafe.html>`_ the
+00515 |    underlying SQLite library is compiled with. The SQLite threading modes are:
+00516 | 
+00517 |    1. **Single-thread**: In this mode, all mutexes are disabled and SQLite is
+00518 |       unsafe to use in more than a single thread at once.
+00519 |    2. **Multi-thread**: In this mode, SQLite can be safely used by multiple
+00520 |       threads provided that no single database connection is used
+
+00560 |    This is not the version of the SQLite library.
+00561 | 
+00562 |    .. deprecated-removed:: 3.12 3.14
+00563 |       This constant used to reflect the version number of the ``pysqlite``
+00564 |       package, a third-party library which used to upstream changes to
+00565 |       :mod:`!sqlite3`. Today, it carries no meaning or practical value.
+00566 | 
+00567 | .. _sqlite3-dbconfig-constants:
+00568 | 
+00569 | .. data:: SQLITE_DBCONFIG_DEFENSIVE
+00570 |           SQLITE_DBCONFIG_DQS_DDL
+00571 |           SQLITE_DBCONFIG_DQS_DML
+00572 |           SQLITE_DBCONFIG_ENABLE_FKEY
+00573 |           SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER
+00574 |           SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION
+00575 |           SQLITE_DBCONFIG_ENABLE_QPSG
+00576 |           SQLITE_DBCONFIG_ENABLE_TRIGGER
+00577 |           SQLITE_DBCONFIG_ENABLE_VIEW
+00578 |           SQLITE_DBCONFIG_LEGACY_ALTER_TABLE
+00579 |           SQLITE_DBCONFIG_LEGACY_FILE_FORMAT
+00580 |           SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE
+00581 |           SQLITE_DBCONFIG_RESET_DATABASE
+00582 |           SQLITE_DBCONFIG_TRIGGER_EQP
+00583 |           SQLITE_DBCONFIG_TRUSTED_SCHEMA
+00584 |           SQLITE_DBCONFIG_WRITABLE_SCHEMA
+00585 | 
+00586 |    These constants are used for the :meth:`Connection.setconfig`
+00587 |    and :meth:`~Connection.getconfig` methods.
+00588 | 
+00589 |    The availability of these constants varies depending on the version of SQLite
+00590 |    Python was compiled with.
+00591 | 
+00592 |    .. versionadded:: 3.12
+00593 | 
+00594 |    .. seealso::
+00595 | 
+00596 |      https://www.sqlite.org/c3ref/c_dbconfig_defensive.html
+00597 |         SQLite docs: Database Connection Configuration Options
+00598 | 
+00599 | 
+00600 | .. _sqlite3-connection-objects:
+00601 | 
+00602 | Connection objects
+00603 | ^^^^^^^^^^^^^^^^^^
+00604 | 
+00605 | .. class:: Connection
+00606 | 
+00607 |    Each open SQLite database is represented by a ``Connection`` object,
+00608 |    which is created using :func:`sqlite3.connect`.
+00609 |    Their main purpose is creating :class:`Cursor` objects,
+00610 |    and :ref:`sqlite3-controlling-transactions`.
+00611 | 
+00612 |    .. seealso::
+00613 | 
+00614 |       * :ref:`sqlite3-connection-shortcuts`
+00615 |       * :ref:`sqlite3-connection-context-manager`
+00616 | 
+00617 | 
+00618 |    .. versionchanged:: 3.13
+00619 | 
+00620 |       A :exc:`ResourceWarning` is emitted if :meth:`close` is not called before
+00621 |       a :class:`!Connection` object is deleted.
+00622 | 
+00623 |    An SQLite database connection has the following attributes and methods:
+00624 | 
+00625 |    .. method:: cursor(factory=Cursor)
+00626 | 
+00627 |       Create and return a :class:`Cursor` object.
+00628 |       The cursor method accepts a single optional parameter *factory*. If
+00629 |       supplied, this must be a :term:`callable` returning
+00630 |       an instance of :class:`Cursor` or its subclasses.
+00631 | 
+00632 |    .. method:: blobopen(table, column, row, /, *, readonly=False, name="main")
+00633 | 
+00634 |       Open a :class:`Blob` handle to an existing
+00635 |       :abbr:`BLOB (Binary Large OBject)`.
+
+02375 |    ]
+02376 |    con.executemany("INSERT INTO lang(name, first_appeared) VALUES(?, ?)", data)
+02377 | 
+02378 |    # Print the table contents
+02379 |    for row in con.execute("SELECT name, first_appeared FROM lang"):
+02380 |        print(row)
+02381 | 
+02382 |    print("I just deleted", con.execute("DELETE FROM lang").rowcount, "rows")
+02383 | 
+02384 |    # close() is not a shortcut method and it's not called automatically;
+02385 |    # the connection object should be closed manually
+02386 |    con.close()
+02387 | 
+02388 | .. testoutput::
+02389 |    :hide:
+02390 | 
+02391 |    ('C++', 1985)
+02392 |    ('Objective-C', 1984)
+02393 |    I just deleted 2 rows
+02394 | 
+02395 | 
+02396 | .. _sqlite3-connection-context-manager:
+02397 | 
+02398 | How to use the connection context manager
+02399 | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+02400 | 
+02401 | A :class:`Connection` object can be used as a context manager that
+02402 | automatically commits or rolls back open transactions when leaving the body of
+02403 | the context manager.
+02404 | If the body of the :keyword:`with` statement finishes without exceptions,
+02405 | the transaction is committed.
+02406 | If this commit fails,
+02407 | or if the body of the ``with`` statement raises an uncaught exception,
+02408 | the transaction is rolled back.
+02409 | If :attr:`~Connection.autocommit` is ``False``,
+02410 | a new transaction is implicitly opened after committing or rolling back.
+02411 | 
+02412 | If there is no open transaction upon leaving the body of the ``with`` statement,
+02413 | or if :attr:`~Connection.autocommit` is ``True``,
+02414 | the context manager does nothing.
+02415 | 
+02416 | .. note::
+02417 |    The context manager neither implicitly opens a new transaction
+02418 |    nor closes the connection. If you need a closing context manager, consider
+02419 |    using :meth:`contextlib.closing`.
+02420 | 
+02421 | .. testcode::
+02422 | 
+02423 |    con = sqlite3.connect(":memory:")
+02424 |    con.execute("CREATE TABLE lang(id INTEGER PRIMARY KEY, name VARCHAR UNIQUE)")
+02425 | 
+02426 |    # Successful, con.commit() is called automatically afterwards
+02427 |    with con:
+02428 |        con.execute("INSERT INTO lang(name) VALUES(?)", ("Python",))
+02429 | 
+02430 |    # con.rollback() is called after the with block finishes with an exception,
+02431 |    # the exception is still raised and must be caught
+02432 |    try:
+02433 |        with con:
+02434 |            con.execute("INSERT INTO lang(name) VALUES(?)", ("Python",))
+02435 |    except sqlite3.IntegrityError:
+02436 |        print("couldn't add Python twice")
+02437 | 
+02438 |    # Connection object used as context manager only commits or rollbacks transactions,
+02439 |    # so the connection object should be closed manually
+02440 |    con.close()
+02441 | 
+02442 | .. testoutput::
+02443 |    :hide:
+02444 | 
+02445 |    couldn't add Python twice
+02446 | 
+02447 | 
+02448 | .. _sqlite3-uri-tricks:
+02449 | 
+02450 | How to work with SQLite URIs
+02451 | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+02452 | 
+02453 | Some useful URI tricks include:
+02454 | 
+02455 | * Open a database in read-only mode:
+
+02640 | -----------
+02641 | 
+02642 | .. _sqlite3-transaction-control:
+02643 | .. _sqlite3-controlling-transactions:
+02644 | 
+02645 | Transaction control
+02646 | ^^^^^^^^^^^^^^^^^^^
+02647 | 
+02648 | :mod:`!sqlite3` offers multiple methods of controlling whether,
+02649 | when and how database transactions are opened and closed.
+02650 | :ref:`sqlite3-transaction-control-autocommit` is recommended,
+02651 | while :ref:`sqlite3-transaction-control-isolation-level`
+02652 | retains the pre-Python 3.12 behaviour.
+02653 | 
+02654 | .. _sqlite3-transaction-control-autocommit:
+02655 | 
+02656 | Transaction control via the ``autocommit`` attribute
+02657 | """"""""""""""""""""""""""""""""""""""""""""""""""""
+02658 | 
+02659 | The recommended way of controlling transaction behaviour is through
+02660 | the :attr:`Connection.autocommit` attribute,
+02661 | which should preferably be set using the *autocommit* parameter
+02662 | of :func:`connect`.
+02663 | 
+02664 | It is suggested to set *autocommit* to ``False``,
+02665 | which implies :pep:`249`-compliant transaction control.
+02666 | This means:
+02667 | 
+02668 | * :mod:`!sqlite3` ensures that a transaction is always open,
+02669 |   so :func:`connect`, :meth:`Connection.commit`, and :meth:`Connection.rollback`
+02670 |   will implicitly open a new transaction
+02671 |   (immediately after closing the pending one, for the latter two).
+02672 |   :mod:`!sqlite3` uses ``BEGIN DEFERRED`` statements when opening transactions.
+02673 | * Transactions should be committed explicitly using :meth:`!commit`.
+02674 | * Transactions should be rolled back explicitly using :meth:`!rollback`.
+02675 | * An implicit rollback is performed if the database is
+02676 |   :meth:`~Connection.close`-ed with pending changes.
+02677 | 
+02678 | Set *autocommit* to ``True`` to enable SQLite's `autocommit mode`_.
+02679 | In this mode, :meth:`Connection.commit` and :meth:`Connection.rollback`
+02680 | have no effect.
+02681 | Note that SQLite's autocommit mode is distinct from
+02682 | the :pep:`249`-compliant :attr:`Connection.autocommit` attribute;
+02683 | use :attr:`Connection.in_transaction` to query
+02684 | the low-level SQLite autocommit mode.
+02685 | 
+02686 | Set *autocommit* to :data:`LEGACY_TRANSACTION_CONTROL`
+02687 | to leave transaction control behaviour to the
+02688 | :attr:`Connection.isolation_level` attribute.
+02689 | See :ref:`sqlite3-transaction-control-isolation-level` for more information.
+02690 | 
+02691 | 
+02692 | .. _sqlite3-transaction-control-isolation-level:
+02693 | 
+02694 | Transaction control via the ``isolation_level`` attribute
+02695 | """""""""""""""""""""""""""""""""""""""""""""""""""""""""

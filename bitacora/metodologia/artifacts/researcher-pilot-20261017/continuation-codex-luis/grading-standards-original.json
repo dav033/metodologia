@@ -1,0 +1,248 @@
+{
+  "R4-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "All6 full with relevant PostgreSQL17 source locators."
+  },
+  "R4-B": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "All6 full with relevant PostgreSQL17 source locators."
+  },
+  "R5-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+  },
+  "R5-B": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+  },
+  "R6-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+  },
+  "R6-B": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "partial",
+        "supported": false,
+        "note": "Initial reviewer: project-dependency wording differs from selected-installation wording in upstream snapshot. See later published-source adjudication."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+  }
+}

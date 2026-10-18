@@ -1,0 +1,19 @@
+{
+  "eligible_cells": 10,
+  "original_calls": 8,
+  "duplicate_attempt_mutant_rejected": true,
+  "codex_luis_sandbox_smoke": true,
+  "alternating_case_order": [
+    "R2-luna-high",
+    "R2-sol-medium",
+    "R3-sol-medium",
+    "R3-luna-high",
+    "R4-luna-high",
+    "R4-sol-medium",
+    "R5-sol-medium",
+    "R5-luna-high",
+    "R6-luna-high",
+    "R6-sol-medium"
+  ],
+  "native_calls": 0
+}

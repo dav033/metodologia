@@ -1,0 +1,41 @@
+{
+  "response_text": "STATUS: PASS\nCOMMANDS: `cd /tmp/work && python check.py success` -> exit 0 (duration unknown)\nFAILURES: none\nNOTES: Output reported \"12 tests passed\". Warning: deprecated option legacy_mode at config/options.py:18. Exit code is from the shell `echo` after the command, so it reflects the check.py process. Full log was not inspected; it is at logs/success.log.",
+  "case": "N1",
+  "fixture_events": [
+    {
+      "mode": "success",
+      "event": "start",
+      "at": 48337.504628575
+    },
+    {
+      "mode": "success",
+      "event": "end",
+      "exit": 0,
+      "seconds": 0.00027939199935644865
+    }
+  ],
+  "tool_evidence": [
+    {
+      "type": "tool_use",
+      "id": "toolu_01DJYbXZNBzSA71FCQX5rj5B",
+      "name": "Bash",
+      "input": {
+        "command": "python check.py success; echo \"exit=$?\"",
+        "description": "Run check.py success case and report exit code",
+        "timeout": 120000
+      },
+      "caller": {
+        "type": "direct"
+      }
+    },
+    {
+      "tool_use_id": "toolu_01DJYbXZNBzSA71FCQX5rj5B",
+      "type": "tool_result",
+      "content": "12 tests passed\nWARNING: deprecated option legacy_mode at config/options.py:18\nexit=0",
+      "is_error": false
+    }
+  ],
+  "scope_violations": [],
+  "unexpected_files": [],
+  "native_status": "completed"
+}

@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "case": "R5",
+  "mode": "live",
+  "route": {
+    "id": "luna-high",
+    "provider": "codex",
+    "profile": "codex-luis",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "prompt_sha256": "be37da0947de73f1804f524cb7c7657f3535ec1a43175ffbc977aee78154e254",
+  "started_at": 1792291230.9678848,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291230.9679003,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 4.0,
+  "workspace_before": {
+    "TASK.md": "be37da0947de73f1804f524cb7c7657f3535ec1a43175ffbc977aee78154e254"
+  },
+  "response_text": "Completed the LIVE research for case R5 and wrote the six requested claims to [`research.json`](/tmp/work/research.json). The official schedule supports choosing Node 24 for a deployment requiring LTS on 2026-10-17; Node 26 was still Current, with LTS scheduled for 2026-10-28. The note distinguishes upstream schedule and releases from any deployment\u2019s installed patch or security state.",
+  "usage_reported": {
+    "input_tokens": 123752,
+    "cached_input_tokens": 83840,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2005,
+    "reasoning_output_tokens": 188
+  },
+  "usage": {
+    "input_tokens": 123752,
+    "output_tokens": 2005,
+    "cache_read_tokens": 83840,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 188,
+    "reported_total": null,
+    "total": 125757,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "web_search",
+      "command": "",
+      "exit_code": null,
+      "status": null
+    },
+    {
+      "type": "web_search",
+      "command": "",
+      "exit_code": null,
+      "status": null
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"cat > /tmp/work/research.json <<'EOF'\n{\n  \\\"case\\\": \\\"R5\\\",\n  \\\"claims\\\": [\n    {\n      \\\"id\\\": \\\"C1\\\",\n      \\\"text\\\": \\\"The official Node.js Release Working Group schedule lists current release-line status and phase dates; its published dates are explicitly subject to change. As retrieved for the target date, it lists 22.x as Maintenance LTS, 24.x as Active LTS, and 26.x as Current.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://github.com/nodejs/Release/blob/main/README.md\\\",\n          \\\"locator\\\": \\\"Release schedule and dates-subject-to-change note, lines 191-204\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C2\\\",\n      \\\"text\\\": \\\"Node 24 (Krypton) entered Active LTS on 2025-10-28, is scheduled to enter Maintenance on 2026-10-20, and has scheduled end-of-life on 2028-04-30. These are schedule dates, not a guarantee against later schedule changes.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://github.com/nodejs/Release/blob/main/README.md\\\",\n          \\\"locator\\\": \\\"24.x row and date-subject-to-change note, lines 194-199\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C3\\\",\n      \\\"text\\\": \\\"Node 26 is scheduled to enter LTS on 2026-10-28. As of 2026-10-17 it is not LTS: the schedule calls it Current, and the official release page also labels v26 Current. The scheduled date is subject to change.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://github.com/nodejs/Release/blob/main/README.md\\\",\n          \\\"locator\\\": \\\"26.x row and date-subject-to-change note, lines 194-199\\\"\n        },\n        {\n          \\\"url\\\": \\\"https://nodejs.org/en/about/previous-releases\\\",\n          \\\"locator\\\": \\\"Release phases and v26 marked Current, lines 39-52\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C4\\\",\n      \\\"text\\\": \\\"Node 22 (Jod) is in Maintenance LTS, not Active LTS, as of 2026-10-17; its scheduled end-of-life is 2027-04-30. The official versions page independently identifies v22 as LTS and lists its latest update as 2026-09-23.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://github.com/nodejs/Release/blob/main/README.md\\\",\n          \\\"locator\\\": \\\"22.x schedule row, lines 194-199\\\"\n        },\n        {\n          \\\"url\\\": \\\"https://nodejs.org/en/about/previous-releases\\\",\n          \\\"locator\\\": \\\"v22 status and last-updated date, line 54\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C5\\\",\n      \\\"text\\\": \\\"For a deployment that requires LTS immediately on 2026-10-17, choose Node 24: it is already Active LTS, whereas Node 26 remains Current until its scheduled LTS transition on 2026-10-28. Node's official guidance says production applications should use Active LTS or Maintenance LTS releases.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://github.com/nodejs/Release/blob/main/README.md\\\",\n          \\\"locator\\\": \\\"24.x Active LTS and 26.x Current statuses, lines 194-199\\\"\n        },\n        {\n          \\\"url\\\": \\\"https://nodejs.org/en/about/previous-releases\\\",\n          \\\"locator\\\": \\\"Production guidance and v26/v24 statuses, lines 39-52\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C6\\\",\n      \\\"text\\\": \\\"The release schedule defines release-line phases and dates; it does not establish the exact Node patch installed in any particular deployment or prove that the deployment is receiving security fixes. As an as-of-date reference, the official release blog lists Node 24.22.0 (LTS) and Node 26.12.0 (Current), both posted 2026-10-14. Verify the deployed binary/package version and its source separately, and keep it updated; the schedule itself is not an installed-patch or security guarantee.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://nodejs.org/en/blog/release\\\",\n          \\\"locator\\\": \\\"Latest release entries and publication dates, lines 19-33\\\"\n        },\n        {\n          \\\"url\\\": \\\"https://github.com/nodejs/Release/blob/main/README.md\\\",\n          \\\"locator\\\": \\\"Release phases, supported release lines",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 23.974,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/researcher-cell-d8r6_enf",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-luis",
+    "/home/david/.codex-luis",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"live\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "research_tool_calls": [
+    {
+      "type": "web_search",
+      "action": {
+        "type": "search",
+        "queries": [
+          "site:nodejs.org/en/about/previous-releases Node.js release schedule 24 26",
+          "site:github.com/nodejs/Release Node.js release schedule 2026 24 26",
+          "site:nodejs.org Node.js 24 LTS October 2025 maintenance end 2028"
+        ]
+      },
+      "query": "site:nodejs.org/en/about/previous-releases Node.js release schedule 24 26 ..."
+    },
+    {
+      "type": "web_search",
+      "action": {
+        "type": "other"
+      },
+      "query": ""
+    }
+  ],
+  "tool_result_evidence": [],
+  "limit_detected": false,
+  "contract": {
+    "valid": true,
+    "errors": []
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "quota_after": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291255.770185,
+    "windows": {
+      "five_hour": {
+        "used_percent": 4.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792291256.5071197
+}

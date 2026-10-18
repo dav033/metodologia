@@ -1,0 +1,12 @@
+[
+  {
+    "provider": "claude",
+    "status": "stopped",
+    "cell": "N2-haiku-medium",
+    "reason": "quota_auth_blocked"
+  },
+  {
+    "provider": "codex",
+    "status": "complete"
+  }
+]

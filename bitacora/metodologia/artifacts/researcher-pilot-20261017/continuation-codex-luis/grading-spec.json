@@ -1,0 +1,166 @@
+{
+  "R2-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      }
+    ],
+    "overall_notes": "All6 full and source-supported. R2/C5 follows the standing explicit-question adjudication; no hidden-rubric-only demand applied."
+  },
+  "R2-B": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      }
+    ],
+    "overall_notes": "All6 full and source-supported. R2/C5 follows the standing explicit-question adjudication; no hidden-rubric-only demand applied."
+  },
+  "R3-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      }
+    ],
+    "overall_notes": "All6 full and source-supported; HTTP parser/socket limits correctly separated from application deadlines."
+  },
+  "R3-B": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      }
+    ],
+    "overall_notes": "All6 full and source-supported; HTTP parser/socket limits correctly separated from application deadlines."
+  }
+}

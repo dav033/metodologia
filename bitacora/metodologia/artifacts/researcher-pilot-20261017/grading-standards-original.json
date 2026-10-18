@@ -1,0 +1,125 @@
+{
+  "R4-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Transaction-block prohibition matches source690-692."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Waits, scans and resource impact match613-643."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "INVALID query exclusion/update overhead match645-661."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Unique enforcement starts at second scan and can persist after failure669-677."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Inspection and documented recovery only; no execution."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "One concurrent build per table685-689."
+      }
+    ],
+    "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+  },
+  "R5-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Official schedule successfully retrieved."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Dates match saved official schedule."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Node26 LTS2026-10-28; not LTS on target date."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Node22 maintenance LTS/EOL correct."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Node24 recommendation qualified with future Node26 LTS."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Schedule separated from installed patch/security verification."
+      }
+    ],
+    "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+  },
+  "R6-A": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Official freshness docs successfully retrieved."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Stale lock causes error instead of update."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Frozen bypasses freshness; missing-lock uncertainty disclosed."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Network guarantee denied; separate offline control identified."
+      },
+      {
+        "id": "C5",
+        "rating": "partial",
+        "supported": false,
+        "note": "Exact/inexact core correct, but removal incorrectly defined by absence from lockfile rather than installation selection."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Locked/exact recommendation and environment unknowns reasonable."
+      }
+    ],
+    "overall_notes": "Independent frozen-source/live-tool evidence review; route labels hidden. R6 CLI fetch truncated before sync options; candidate disclosed this."
+  }
+}

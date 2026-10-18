@@ -1,0 +1,655 @@
+{
+  "planned_calls": 18,
+  "saved_records": 9,
+  "started": 8,
+  "unattempted_native_cells": 10,
+  "graded": 8,
+  "matched_cases": [
+    "R1"
+  ],
+  "complete_comparison": false,
+  "configurations": [
+    {
+      "route": {
+        "id": "sonnet-medium",
+        "provider": "claude",
+        "profile": "claude-work",
+        "model": "claude-sonnet-5-5",
+        "effort": "medium"
+      },
+      "started": 6,
+      "saved_records": 6,
+      "native_statuses": {
+        "completed": 6
+      },
+      "content_and_evidence_cases": 4,
+      "graded_cases": 6,
+      "frozen_pass": 3,
+      "live_pass": 1,
+      "full_criteria": 35,
+      "partial_criteria": 1,
+      "supported_criteria": 34,
+      "contract_cases": 6,
+      "seconds": 162.38,
+      "token_coverage": "6/6",
+      "tokens": 218177,
+      "measured_token_subtotal": 218177,
+      "unattested_model_cells": [],
+      "unattested_effort_cells": [
+        "R1-sonnet-medium",
+        "R2-sonnet-medium",
+        "R3-sonnet-medium",
+        "R4-sonnet-medium",
+        "R5-sonnet-medium",
+        "R6-sonnet-medium"
+      ],
+      "per_case": [
+        {
+          "case": "R1",
+          "mode": "frozen",
+          "status": "completed",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": false,
+                "note": "Core answer correct. Extra historical ExceptionGroup availability and except* recommendation are not supported by this extract; note acknowledges the limitation."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": false,
+          "scope_valid": true,
+          "seconds": 30.086,
+          "tokens": 41814
+        },
+        {
+          "case": "R2",
+          "mode": "frozen",
+          "status": "completed",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Coordinator adjudication: asked compatibility with3.11 and introduction version are both correct and supported. Hidden rubric-only demand to distinguish low-level SQLite autocommit was not in the question; no source/candidate changed."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 26.771,
+          "tokens": 52743
+        },
+        {
+          "case": "R3",
+          "mode": "frozen",
+          "status": "completed",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 19.348,
+          "tokens": 34200
+        },
+        {
+          "case": "R4",
+          "mode": "frozen",
+          "status": "completed",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Transaction-block prohibition matches source690-692."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Waits, scans and resource impact match613-643."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "INVALID query exclusion/update overhead match645-661."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Unique enforcement starts at second scan and can persist after failure669-677."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Inspection and documented recovery only; no execution."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "One concurrent build per table685-689."
+              }
+            ],
+            "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 28.958,
+          "tokens": 35086
+        },
+        {
+          "case": "R5",
+          "mode": "live",
+          "status": "completed",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Official schedule successfully retrieved."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Dates match saved official schedule."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Node26 LTS2026-10-28; not LTS on target date."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Node22 maintenance LTS/EOL correct."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Node24 recommendation qualified with future Node26 LTS."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Schedule separated from installed patch/security verification."
+              }
+            ],
+            "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 27.362,
+          "tokens": 26983
+        },
+        {
+          "case": "R6",
+          "mode": "live",
+          "status": "completed",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Official freshness docs successfully retrieved."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Stale lock causes error instead of update."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Frozen bypasses freshness; missing-lock uncertainty disclosed."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Network guarantee denied; separate offline control identified."
+              },
+              {
+                "id": "C5",
+                "rating": "partial",
+                "supported": false,
+                "note": "Exact/inexact core correct, but removal incorrectly defined by absence from lockfile rather than installation selection."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Locked/exact recommendation and environment unknowns reasonable."
+              }
+            ],
+            "overall_notes": "Independent frozen-source/live-tool evidence review; route labels hidden. R6 CLI fetch truncated before sync options; candidate disclosed this."
+          },
+          "content_full": false,
+          "evidence_full": false,
+          "scope_valid": true,
+          "seconds": 29.855,
+          "tokens": 27351
+        }
+      ]
+    },
+    {
+      "route": {
+        "id": "sol-medium",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "started": 1,
+      "saved_records": 1,
+      "native_statuses": {
+        "completed": 1
+      },
+      "content_and_evidence_cases": 1,
+      "graded_cases": 1,
+      "frozen_pass": 1,
+      "live_pass": 0,
+      "full_criteria": 6,
+      "partial_criteria": 0,
+      "supported_criteria": 6,
+      "contract_cases": 1,
+      "seconds": 34.753,
+      "token_coverage": "1/1",
+      "tokens": 64882,
+      "measured_token_subtotal": 64882,
+      "unattested_model_cells": [
+        "R1-sol-medium"
+      ],
+      "unattested_effort_cells": [
+        "R1-sol-medium"
+      ],
+      "per_case": [
+        {
+          "case": "R1",
+          "mode": "frozen",
+          "status": "completed",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 34.753,
+          "tokens": 64882
+        },
+        {
+          "case": "R2",
+          "mode": "frozen",
+          "status": "unstarted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        },
+        {
+          "case": "R3",
+          "mode": "frozen",
+          "status": "unstarted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        },
+        {
+          "case": "R4",
+          "mode": "frozen",
+          "status": "unstarted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        },
+        {
+          "case": "R5",
+          "mode": "live",
+          "status": "unstarted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        },
+        {
+          "case": "R6",
+          "mode": "live",
+          "status": "unstarted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        }
+      ]
+    },
+    {
+      "route": {
+        "id": "luna-high",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "high"
+      },
+      "started": 1,
+      "saved_records": 2,
+      "native_statuses": {
+        "completed": 1,
+        "quota_exhausted": 1
+      },
+      "content_and_evidence_cases": 1,
+      "graded_cases": 1,
+      "frozen_pass": 1,
+      "live_pass": 0,
+      "full_criteria": 6,
+      "partial_criteria": 0,
+      "supported_criteria": 6,
+      "contract_cases": 1,
+      "seconds": 16.224,
+      "token_coverage": "1/1",
+      "tokens": 60852,
+      "measured_token_subtotal": 60852,
+      "unattested_model_cells": [
+        "R1-luna-high"
+      ],
+      "unattested_effort_cells": [
+        "R1-luna-high"
+      ],
+      "per_case": [
+        {
+          "case": "R1",
+          "mode": "frozen",
+          "status": "completed",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 16.224,
+          "tokens": 60852
+        },
+        {
+          "case": "R2",
+          "mode": "frozen",
+          "status": "quota_exhausted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        },
+        {
+          "case": "R3",
+          "mode": "frozen",
+          "status": "unstarted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        },
+        {
+          "case": "R4",
+          "mode": "frozen",
+          "status": "unstarted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        },
+        {
+          "case": "R5",
+          "mode": "live",
+          "status": "unstarted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        },
+        {
+          "case": "R6",
+          "mode": "live",
+          "status": "unstarted",
+          "contract_valid": null,
+          "grade": null,
+          "content_full": null,
+          "evidence_full": null,
+          "scope_valid": true,
+          "seconds": null,
+          "tokens": null
+        }
+      ]
+    }
+  ]
+}

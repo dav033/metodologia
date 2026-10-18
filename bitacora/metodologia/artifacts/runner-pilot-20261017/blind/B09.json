@@ -1,0 +1,29 @@
+{
+  "response_text": "STATUS: FAIL\nCOMMANDS: `python check.py repeated` -> exit 1 (duration 0.1s)\nFAILURES: `test_cache` — `AssertionError: stale cache`, `tests/test_cache.py:27` (14 occurrences); `test_auth` — `PermissionError: forbidden`, `tests/test_auth.py:61`.\nNOTES: None.",
+  "case": "N3",
+  "fixture_events": [
+    {
+      "mode": "repeated",
+      "event": "start",
+      "at": 48385.734887191
+    },
+    {
+      "mode": "repeated",
+      "event": "end",
+      "exit": 1,
+      "seconds": 0.0002801139999064617
+    }
+  ],
+  "tool_evidence": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'python check.py repeated'",
+      "exit_code": 1,
+      "status": "failed",
+      "aggregated_output": "FAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_auth — PermissionError: forbidden — tests/test_auth.py:61\n"
+    }
+  ],
+  "scope_violations": [],
+  "unexpected_files": [],
+  "native_status": "completed"
+}

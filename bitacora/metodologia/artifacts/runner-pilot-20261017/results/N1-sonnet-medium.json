@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "case": "N1",
+  "route": {
+    "id": "sonnet-medium",
+    "provider": "claude",
+    "profile": "claude-work",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium"
+  },
+  "status": "completed",
+  "started_at": 1792292206.3314977,
+  "prompt_sha256": "9b9524a3fda86c679c54056c5ba9a1c59f6214f09686bfc2fbe0e92e1f980f2b",
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792292206.3315272,
+    "windows": {
+      "five_hour": {
+        "used_percent": 8.0,
+        "resets_at": 1792304999.58252,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792882799.582548,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 8.0,
+  "workspace_before": {
+    "TASK.md": "9b9524a3fda86c679c54056c5ba9a1c59f6214f09686bfc2fbe0e92e1f980f2b",
+    "check.py": "8dcaee12505a8ed75192286f0b414c150282eff2ad0d68ecb02f92575a278a1f"
+  },
+  "response_text": "STATUS: PASS\nCOMMANDS: python check.py success -> exit unknown (my exit-code capture printed an empty value; duration about 0.04s)\nFAILURES: none\nNOTES: The output reported \"12 tests passed\". The command also printed \"WARNING: deprecated option legacy_mode at config/options.py:18\". I didn't run the command a second time, so the exit code is unconfirmed. PASS rests on the \"12 tests passed\" output and the absence of any error output. logs/success.log has the same two lines.",
+  "usage_reported": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 7221,
+    "cache_read_input_tokens": 13841,
+    "output_tokens": 411,
+    "output_tokens_details": {
+      "thinking_tokens": 72
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 7221,
+      "ephemeral_5m_input_tokens": 0
+    }
+  },
+  "usage": {
+    "input_tokens": 6,
+    "output_tokens": 411,
+    "cache_read_tokens": 13841,
+    "cache_write_tokens": 7221,
+    "reasoning_tokens": null,
+    "reported_total": null,
+    "total": 21479,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "claude-stream-json",
+    "provider": "claude"
+  },
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "Bash",
+      "id": "toolu_01B3KiPjYzR2gWzA4gFfxkrR",
+      "command": "time python check.py success; echo \"EXIT=$status\""
+    },
+    {
+      "type": "Bash",
+      "id": "toolu_01YUnPZCM3qxrYZDjp5T2CHe",
+      "command": "ls logs; cat logs/success.log"
+    }
+  ],
+  "native_result_status": "success",
+  "turns": 3,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 8.256,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/runner-cell-903c9skd",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.claude-work",
+    "/home/david/.claude-work",
+    "--ro-bind",
+    "/tmp/runner-cell-903c9skd/check.py",
+    "/tmp/work/check.py",
+    "--ro-bind",
+    "/tmp/runner-cell-903c9skd/TASK.md",
+    "/tmp/work/TASK.md",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "claude",
+    "--print",
+    "--model",
+    "claude-sonnet-5-5",
+    "--effort",
+    "medium",
+    "--safe-mode",
+    "--restricted",
+    "--strict-mcp-config",
+    "--tools",
+    "Bash,Read,Grep,Glob",
+    "--allowedTools",
+    "Bash,Read,Grep,Glob",
+    "--no-session-persistence",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none",
+    "--max-turns",
+    "25",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "tool_evidence": [
+    {
+      "type": "tool_use",
+      "id": "toolu_01B3KiPjYzR2gWzA4gFfxkrR",
+      "name": "Bash",
+      "input": {
+        "command": "time python check.py success; echo \"EXIT=$status\"",
+        "timeout": 60000
+      },
+      "caller": {
+        "type": "direct"
+      }
+    },
+    {
+      "tool_use_id": "toolu_01B3KiPjYzR2gWzA4gFfxkrR",
+      "type": "tool_result",
+      "content": "12 tests passed\nWARNING: deprecated option legacy_mode at config/options.py:18\n\nreal\t0m0.038s\nuser\t0m0.028s\nsys\t0m0.010s\nEXIT=",
+      "is_error": false
+    },
+    {
+      "type": "tool_use",
+      "id": "toolu_01YUnPZCM3qxrYZDjp5T2CHe",
+      "name": "Bash",
+      "input": {
+        "command": "ls logs; cat logs/success.log"
+      },
+      "caller": {
+        "type": "direct"
+      }
+    },
+    {
+      "tool_use_id": "toolu_01YUnPZCM3qxrYZDjp5T2CHe",
+      "type": "tool_result",
+      "content": "success.log\n12 tests passed\nWARNING: deprecated option legacy_mode at config/options.py:18",
+      "is_error": false
+    }
+  ],
+  "stderr_excerpt": "",
+  "limit_detected": false,
+  "workspace_after": {
+    ".runner-events.jsonl": "78935add53d018c14b39adb37fcc909aecfb5b113702c9739828c1ac58dd8f9c",
+    "TASK.md": "9b9524a3fda86c679c54056c5ba9a1c59f6214f09686bfc2fbe0e92e1f980f2b",
+    "check.py": "8dcaee12505a8ed75192286f0b414c150282eff2ad0d68ecb02f92575a278a1f",
+    "logs/success.log": "5a85765ab1fe8b2bee368a682a729af86e67aede740750f72901f61b95b80257"
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "fixture_events": [
+    {
+      "mode": "success",
+      "event": "start",
+      "at": 48343.59025805
+    },
+    {
+      "mode": "success",
+      "event": "end",
+      "exit": 0,
+      "seconds": 0.0003959660025429912
+    }
+  ],
+  "quota_after": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "ok",
+    "observed_at": 1792292214.9456267,
+    "windows": {
+      "five_hour": {
+        "used_percent": 8.0,
+        "resets_at": 1792305000.179012,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792882800.179031,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792292215.2613523
+}

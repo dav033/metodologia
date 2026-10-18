@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "case": "N2",
+  "route": {
+    "id": "haiku-medium",
+    "provider": "claude",
+    "profile": "claude-work",
+    "model": "claude-haiku-5-5",
+    "effort": "medium"
+  },
+  "status": "quota_auth_blocked",
+  "started_at": 1792292223.9202175,
+  "prompt_sha256": "7c12daec9e72670b701745651f12d90a1b50f7c768e6fa14f92c132cfa915c4c",
+  "quota_before": {
+    "profile": "claude-work",
+    "provider": "claude",
+    "status": "http_429",
+    "observed_at": null,
+    "windows": {}
+  },
+  "quota_pressure_before": null
+}

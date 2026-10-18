@@ -1,0 +1,78 @@
+{
+  "blind_id": "R4-B",
+  "case": "R4",
+  "note": {
+    "case": "R4",
+    "claims": [
+      {
+        "id": "C1",
+        "text": "In PostgreSQL 17, CREATE INDEX CONCURRENTLY cannot run inside a transaction block. A regular CREATE INDEX can.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "Original lines 00690\u201300692"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "text": "CONCURRENTLY does not mean no waiting or zero impact. It allows writes to continue, but performs two table scans and more total work, typically taking significantly longer. Extra CPU and I/O can slow other operations. Before each scan it waits for existing transactions that modified the table; after the second scan it waits for transactions with snapshots predating that scan, including certain concurrent builds on other tables. Schema modification of the target table is not allowed during the build.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "Original lines 00612\u201300624, 00627\u201300642, 00685\u201300689"
+          }
+        ]
+      },
+      {
+        "id": "C3",
+        "text": "A concurrent build that fails while scanning, for example because of a deadlock or uniqueness violation, can leave an INVALID index. It is ignored for queries because it may be incomplete, yet still imposes update overhead. The documented psql inspection command is \\d, whose output marks the index INVALID.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "Original lines 00645\u201300660"
+          }
+        ]
+      },
+      {
+        "id": "C4",
+        "text": "Yes. For a concurrent unique-index build, uniqueness is enforced against other transactions when the second table scan begins, before the index becomes available for use. Other queries can receive constraint violations even if the build eventually fails. Specifically, if failure occurs during the second scan, the remaining INVALID index continues enforcing uniqueness afterwards; this statement should not be generalized to every possible failure stage.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "Original lines 00670\u201300676"
+          }
+        ]
+      },
+      {
+        "id": "C5",
+        "text": "The documented recommended recovery for the leftover invalid index is to drop that index and retry CREATE INDEX CONCURRENTLY. The documentation also gives rebuilding it with REINDEX INDEX CONCURRENTLY as an alternative. These are descriptions only: no database inspection, drop, retry, or rebuild was executed. Any CREATE INDEX CONCURRENTLY retry must run outside a transaction block.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "Original lines 00663\u201300666, 00690\u201300692"
+          }
+        ]
+      },
+      {
+        "id": "C6",
+        "text": "No: PostgreSQL 17 permits only one concurrent index build on a given table at a time. The documentation contrasts this with regular index builds, which can run simultaneously on the same table.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "Original lines 00685\u201300688"
+          }
+        ]
+      }
+    ],
+    "recommendation": "For this incident, treat a failed concurrent unique-index build as potentially leaving an INVALID index with ongoing update overhead and, if the failure occurred in the second scan, ongoing uniqueness enforcement. Use the documented INVALID indicator to establish the index state before selecting recovery. Plan the documented drop-and-retry recovery, or the documented REINDEX INDEX CONCURRENTLY alternative, with CREATE INDEX CONCURRENTLY outside a transaction block and only one concurrent build per table. Allow for transaction waits and CPU/I/O impact. This is an evidence-based operational recommendation, not an executed recovery.",
+    "unknowns": [
+      "Research was restricted to the supplied docs/pg17index.txt extract from the PostgreSQL REL_17_0 source; no web retrieval or live database inspection was performed.",
+      "The actual incident's index state, failure stage, error cause, active transactions, and resource impact are unknown.",
+      "The extract names REINDEX INDEX CONCURRENTLY as an alternative but does not supply its full prerequisites, restrictions, or failure-handling procedure. It does not establish whether the incident's underlying cause has been resolved."
+    ]
+  },
+  "contract_valid": true,
+  "tool_calls": [],
+  "tool_result_evidence": []
+}

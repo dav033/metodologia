@@ -1,0 +1,39 @@
+{
+  "status": "passed_partial_pilot",
+  "native_calls": 8,
+  "planned_calls": 18,
+  "preflight_only_records": 1,
+  "unattempted_calls": 10,
+  "complete_comparison": false,
+  "matched_cases": [
+    "R1"
+  ],
+  "frozen_hashes_valid": true,
+  "original_evidence_hashes_valid": true,
+  "all_native_exits": 0,
+  "native_process_exit": 0,
+  "native_lane_statuses": [
+    {
+      "provider": "claude",
+      "status": "complete"
+    },
+    {
+      "provider": "codex",
+      "status": "stopped",
+      "cell": "R2-luna-high",
+      "reason": "quota_exhausted"
+    }
+  ],
+  "lint_exit": 0,
+  "json_ast_contract_checks": true,
+  "token_time_arithmetic": true,
+  "all8_usage_complete": true,
+  "preflight_quota_not_model_failure": true,
+  "no_native_retry_repair_or_substitution": true,
+  "artifact_hashes": {
+    "REPORT.md": "badf88006046bebf8d1937d82dd19670092a71c82d935f57270467eff3d6e62f",
+    "comparison.json": "67199b1a01e6ef0f6a61f9b74a2fe3cd4e293da136a88092b9d4d2a18506d8bc",
+    "grades.json": "e8f664e46a9bcfcdfc905314741c28a9dccc7bceb4d4a015ba650634ffcf0447",
+    "grading-adjudications.json": "b7f34e81e93d43fafc4d1b0b3520d346b0c28135f7b1d7ee24c777842a12706d"
+  }
+}

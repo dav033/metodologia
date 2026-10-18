@@ -1,0 +1,413 @@
+{
+  "decision": "D-070",
+  "status": "installed_and_verified",
+  "tests_passed": 296,
+  "test_suites": [
+    {
+      "log": "tests/d070-final-test_agents.py.log",
+      "tests": 36,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_handoff.py.log",
+      "tests": 14,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_harness_optimization.py.log",
+      "tests": 40,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_install.py.log",
+      "tests": 4,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_install_wiring.py.log",
+      "tests": 4,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_marathon_ladder.py.log",
+      "tests": 12,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_orchestration_rotation_recovery.py.log",
+      "tests": 11,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_package_install.py.log",
+      "tests": 20,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_plan_launch_paths.py.log",
+      "tests": 23,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_planner_runtime.py.log",
+      "tests": 14,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_relay_launch_argv.py.log",
+      "tests": 2,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_roleSTAR.py.log",
+      "tests": 23,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_scheduler_decision_sources.py.log",
+      "tests": 14,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_scheduler_executor_adapter.py.log",
+      "tests": 38,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_scheduler_launch.py.log",
+      "tests": 8,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_scheduler_route_resolution.py.log",
+      "tests": 24,
+      "status": "pass"
+    },
+    {
+      "log": "tests/d070-final-test_task_delegation.py.log",
+      "tests": 9,
+      "status": "pass"
+    }
+  ],
+  "installed_native_files": [
+    {
+      "provider": "claude",
+      "role": "planner",
+      "path": "/home/david/.claude/agents/planner.md",
+      "model": "opus",
+      "effort": "xhigh",
+      "sha256": "37cf403eb1a85195099216729bc79a8414952b3d21cd29ee5f3049e7c1c9e621"
+    },
+    {
+      "provider": "claude",
+      "role": "reviewer",
+      "path": "/home/david/.claude/agents/reviewer.md",
+      "model": "sonnet",
+      "effort": "medium",
+      "sha256": "f688e777e8b77cb93e962fc28ececd80699bdee798e4f17b0edb2b3b1dc1561c"
+    },
+    {
+      "provider": "claude",
+      "role": "explorer",
+      "path": "/home/david/.claude/agents/explorer.md",
+      "model": "sonnet",
+      "effort": "medium",
+      "sha256": "e84f584064864a1e1aad6126041d328cae0b77fb479a697cd2c796e097885840"
+    },
+    {
+      "provider": "claude",
+      "role": "implementer",
+      "path": "/home/david/.claude/agents/implementer.md",
+      "model": "sonnet",
+      "effort": "medium",
+      "sha256": "b7a98d9bada2572d3f0309bddc344ded34b6d156de88b743b3a783aed5e95481"
+    },
+    {
+      "provider": "claude",
+      "role": "researcher",
+      "path": "/home/david/.claude/agents/researcher.md",
+      "model": "sonnet",
+      "effort": "low",
+      "sha256": "9ed3bbc4d800cb1963862fec07ce87f5a6e34f6d4d6c991ce9044df6dc27c252"
+    },
+    {
+      "provider": "claude",
+      "role": "runner",
+      "path": "/home/david/.claude/agents/runner.md",
+      "model": "sonnet",
+      "effort": "low",
+      "sha256": "78ef68136c71e74de1ea76721c24c90af892c64f77054395000d70b77ff74575"
+    },
+    {
+      "provider": "claude",
+      "role": "antagonist",
+      "path": "/home/david/.claude/agents/antagonist.md",
+      "model": "sonnet",
+      "effort": "medium",
+      "sha256": "f615d340df18cb73b03c02b47e8e5b267f698f02f86d5d93b44ca79a73d27213"
+    },
+    {
+      "provider": "claude",
+      "role": "planner",
+      "path": "/home/david/.claude-work/agents/planner.md",
+      "model": "opus",
+      "effort": "xhigh",
+      "sha256": "37cf403eb1a85195099216729bc79a8414952b3d21cd29ee5f3049e7c1c9e621"
+    },
+    {
+      "provider": "claude",
+      "role": "reviewer",
+      "path": "/home/david/.claude-work/agents/reviewer.md",
+      "model": "sonnet",
+      "effort": "medium",
+      "sha256": "f688e777e8b77cb93e962fc28ececd80699bdee798e4f17b0edb2b3b1dc1561c"
+    },
+    {
+      "provider": "claude",
+      "role": "explorer",
+      "path": "/home/david/.claude-work/agents/explorer.md",
+      "model": "sonnet",
+      "effort": "medium",
+      "sha256": "e84f584064864a1e1aad6126041d328cae0b77fb479a697cd2c796e097885840"
+    },
+    {
+      "provider": "claude",
+      "role": "implementer",
+      "path": "/home/david/.claude-work/agents/implementer.md",
+      "model": "sonnet",
+      "effort": "medium",
+      "sha256": "b7a98d9bada2572d3f0309bddc344ded34b6d156de88b743b3a783aed5e95481"
+    },
+    {
+      "provider": "claude",
+      "role": "researcher",
+      "path": "/home/david/.claude-work/agents/researcher.md",
+      "model": "sonnet",
+      "effort": "low",
+      "sha256": "9ed3bbc4d800cb1963862fec07ce87f5a6e34f6d4d6c991ce9044df6dc27c252"
+    },
+    {
+      "provider": "claude",
+      "role": "runner",
+      "path": "/home/david/.claude-work/agents/runner.md",
+      "model": "sonnet",
+      "effort": "low",
+      "sha256": "78ef68136c71e74de1ea76721c24c90af892c64f77054395000d70b77ff74575"
+    },
+    {
+      "provider": "claude",
+      "role": "antagonist",
+      "path": "/home/david/.claude-work/agents/antagonist.md",
+      "model": "sonnet",
+      "effort": "medium",
+      "sha256": "f615d340df18cb73b03c02b47e8e5b267f698f02f86d5d93b44ca79a73d27213"
+    },
+    {
+      "provider": "codex",
+      "role": "planner",
+      "path": "/home/david/.codex/agents/planner.toml",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "sha256": "60354b66cfc3189aa7579267aef05a96cd6a3b751228c462f731618a7f329253"
+    },
+    {
+      "provider": "codex",
+      "role": "reviewer",
+      "path": "/home/david/.codex/agents/reviewer.toml",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "sha256": "fa3684bc367ec6063929fc7d01e3e44096f5906e3cc30cb369da389faead40cd"
+    },
+    {
+      "provider": "codex",
+      "role": "explorer",
+      "path": "/home/david/.codex/agents/explorer.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "b4a5897bbbd54369aeffdcb44eaa13ae3d7fb2c0fb86abb05bd8b27509ebbc68"
+    },
+    {
+      "provider": "codex",
+      "role": "implementer",
+      "path": "/home/david/.codex/agents/implementer.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "05b870c27e6dada1ec3020bb341deb5d01e1903683432ed2f8ff560925d8b70f"
+    },
+    {
+      "provider": "codex",
+      "role": "researcher",
+      "path": "/home/david/.codex/agents/researcher.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "6aa5b9f1ad721c49847c2d5e0a41797fd7cd943d3b62e6da92e2c857d95f04e8"
+    },
+    {
+      "provider": "codex",
+      "role": "runner",
+      "path": "/home/david/.codex/agents/runner.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "40146f75e7aa88771e2721b4b3ef3af989139c350092ebec8a4895da7c6fd578"
+    },
+    {
+      "provider": "codex",
+      "role": "antagonist",
+      "path": "/home/david/.codex/agents/antagonist.toml",
+      "model": null,
+      "effort": "medium",
+      "sha256": "9ccc87f88bdc457ed9d3fbea0e993f59d1778998c837ef0d847f2e20541538ab"
+    },
+    {
+      "provider": "codex",
+      "role": "planner",
+      "path": "/home/david/.codex-luis/agents/planner.toml",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "sha256": "60354b66cfc3189aa7579267aef05a96cd6a3b751228c462f731618a7f329253"
+    },
+    {
+      "provider": "codex",
+      "role": "reviewer",
+      "path": "/home/david/.codex-luis/agents/reviewer.toml",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "sha256": "fa3684bc367ec6063929fc7d01e3e44096f5906e3cc30cb369da389faead40cd"
+    },
+    {
+      "provider": "codex",
+      "role": "explorer",
+      "path": "/home/david/.codex-luis/agents/explorer.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "b4a5897bbbd54369aeffdcb44eaa13ae3d7fb2c0fb86abb05bd8b27509ebbc68"
+    },
+    {
+      "provider": "codex",
+      "role": "implementer",
+      "path": "/home/david/.codex-luis/agents/implementer.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "05b870c27e6dada1ec3020bb341deb5d01e1903683432ed2f8ff560925d8b70f"
+    },
+    {
+      "provider": "codex",
+      "role": "researcher",
+      "path": "/home/david/.codex-luis/agents/researcher.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "6aa5b9f1ad721c49847c2d5e0a41797fd7cd943d3b62e6da92e2c857d95f04e8"
+    },
+    {
+      "provider": "codex",
+      "role": "runner",
+      "path": "/home/david/.codex-luis/agents/runner.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "40146f75e7aa88771e2721b4b3ef3af989139c350092ebec8a4895da7c6fd578"
+    },
+    {
+      "provider": "codex",
+      "role": "antagonist",
+      "path": "/home/david/.codex-luis/agents/antagonist.toml",
+      "model": null,
+      "effort": "medium",
+      "sha256": "9ccc87f88bdc457ed9d3fbea0e993f59d1778998c837ef0d847f2e20541538ab"
+    },
+    {
+      "provider": "codex",
+      "role": "planner",
+      "path": "/home/david/.codex-2/agents/planner.toml",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "sha256": "60354b66cfc3189aa7579267aef05a96cd6a3b751228c462f731618a7f329253"
+    },
+    {
+      "provider": "codex",
+      "role": "reviewer",
+      "path": "/home/david/.codex-2/agents/reviewer.toml",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "sha256": "fa3684bc367ec6063929fc7d01e3e44096f5906e3cc30cb369da389faead40cd"
+    },
+    {
+      "provider": "codex",
+      "role": "explorer",
+      "path": "/home/david/.codex-2/agents/explorer.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "b4a5897bbbd54369aeffdcb44eaa13ae3d7fb2c0fb86abb05bd8b27509ebbc68"
+    },
+    {
+      "provider": "codex",
+      "role": "implementer",
+      "path": "/home/david/.codex-2/agents/implementer.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "05b870c27e6dada1ec3020bb341deb5d01e1903683432ed2f8ff560925d8b70f"
+    },
+    {
+      "provider": "codex",
+      "role": "researcher",
+      "path": "/home/david/.codex-2/agents/researcher.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "6aa5b9f1ad721c49847c2d5e0a41797fd7cd943d3b62e6da92e2c857d95f04e8"
+    },
+    {
+      "provider": "codex",
+      "role": "runner",
+      "path": "/home/david/.codex-2/agents/runner.toml",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "sha256": "40146f75e7aa88771e2721b4b3ef3af989139c350092ebec8a4895da7c6fd578"
+    },
+    {
+      "provider": "codex",
+      "role": "antagonist",
+      "path": "/home/david/.codex-2/agents/antagonist.toml",
+      "model": null,
+      "effort": "medium",
+      "sha256": "9ccc87f88bdc457ed9d3fbea0e993f59d1778998c837ef0d847f2e20541538ab"
+    }
+  ],
+  "module_paths": {
+    "bt_agents": "/home/david/dev/metodologia/skill/scripts/bt_agents.py",
+    "bt_role_policy": "/home/david/dev/metodologia/skill/scripts/bt_role_policy.py",
+    "bt_role_routing": "/home/david/dev/metodologia/skill/scripts/bt_role_routing.py",
+    "install_agents": "/home/david/dev/metodologia/skill/scripts/install_agents.py"
+  },
+  "installed_cli": "/home/david/.local/share/../bin/bt",
+  "quota_only_runner_preview": {
+    "profile": "claude-work",
+    "agent": "claude",
+    "model": "sonnet",
+    "effort": "low",
+    "tier": 0,
+    "kind": "implement",
+    "role": "runner",
+    "account": "claude:CLAUDE_CONFIG_DIR=/home/david/.claude-work",
+    "evidence": {
+      "kind": "none",
+      "samples": 0
+    },
+    "why": "owner role runner; subscription bottleneck 9% used",
+    "decision": {
+      "kind": "exploit",
+      "why": "owner role runner; subscription bottleneck 9% used",
+      "evidence": {
+        "kind": "none",
+        "samples": 0
+      }
+    }
+  },
+  "role_policy_source_sha256": "e0799a32e6085a12da1e9a2523a167a77c3dd3ae5ca34ef6820d659118cf9eae",
+  "native_model_calls": 0,
+  "pilot_cells_repeated": 0,
+  "commit_push_performed": false,
+  "limits": [
+    "Provider-native subagents are host-pinned; cross-family routing uses methodology commands.",
+    "Codex Antagonist has no selected model; automatic Antagonist routes use Claude.",
+    "Sonnet low Runner/Researcher selection is owner policy, not a completed pilot measurement."
+  ]
+}

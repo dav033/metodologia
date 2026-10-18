@@ -1,0 +1,32 @@
+{
+  "status": "passed_complete_pilot",
+  "native_calls": 18,
+  "original_native_calls": 8,
+  "continuation_native_calls": 10,
+  "preflight_only_records": 1,
+  "unattempted_calls": 0,
+  "frozen_hashes_valid": true,
+  "original_evidence_preserved": true,
+  "same_prompts_commands_models_efforts": true,
+  "profiles": {
+    "claude-work": 6,
+    "codex-2": 2,
+    "codex-luis": 10
+  },
+  "all_native_exits": 0,
+  "json_ast_contract_and_scope_checks": true,
+  "all18_usage_complete": true,
+  "time_token_criterion_arithmetic": true,
+  "original8_grades_preserved": true,
+  "uniform_r6_c5_source_supplement_separate": true,
+  "no_native_retry_repair_or_model_substitution": true,
+  "effective_codex_model_identity_and_all_efforts_unattested": true,
+  "artifact_hashes": {
+    "REPORT.md": "74710af1d13edcc773006e316e5c00687db7fd0d1b67c534b33c731a92f2790d",
+    "comparison.json": "53b1b742bb12638e24dcdb61807c6fb97dae59ca796afe5759d222c1e6328623",
+    "grades.json": "023eb07fa8b892f170b1bbc0a5c1eac1e8fd1fe56aed6085d8f53812e5ac1357",
+    "supplemental-grades.json": "de2b07cd255c494e57489139aac0dbd333b787a736c4f75361b426529932ea03",
+    "supplemental-source-adjudication.json": "60df530f69205c6cacbf5901bfa90e7285094a81712ccdd39575441a388561b0",
+    "all-native-evidence-hashes.json": "01814a4bda33f4f4356d52c3e918afac6a8a4544f1709ec60758dd8e514675c1"
+  }
+}

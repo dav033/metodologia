@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "authorization": "Owner: utiliza codex-luis after the partial8/18 Researcher pilot.",
+  "profile_override": {
+    "from": "codex-2",
+    "to": "codex-luis"
+  },
+  "total_native_cap": 18,
+  "original_native_calls": 8,
+  "additional_native_cap": 10,
+  "pending_cells": [
+    {
+      "cell": "R2-sol-medium",
+      "case": "R2",
+      "route": {
+        "id": "sol-medium",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": null
+    },
+    {
+      "cell": "R2-luna-high",
+      "case": "R2",
+      "route": {
+        "id": "luna-high",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "high"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": "results/R2-luna-high.json"
+    },
+    {
+      "cell": "R3-sol-medium",
+      "case": "R3",
+      "route": {
+        "id": "sol-medium",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": null
+    },
+    {
+      "cell": "R3-luna-high",
+      "case": "R3",
+      "route": {
+        "id": "luna-high",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "high"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": null
+    },
+    {
+      "cell": "R4-sol-medium",
+      "case": "R4",
+      "route": {
+        "id": "sol-medium",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": null
+    },
+    {
+      "cell": "R4-luna-high",
+      "case": "R4",
+      "route": {
+        "id": "luna-high",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "high"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": null
+    },
+    {
+      "cell": "R5-sol-medium",
+      "case": "R5",
+      "route": {
+        "id": "sol-medium",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": null
+    },
+    {
+      "cell": "R5-luna-high",
+      "case": "R5",
+      "route": {
+        "id": "luna-high",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "high"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": null
+    },
+    {
+      "cell": "R6-sol-medium",
+      "case": "R6",
+      "route": {
+        "id": "sol-medium",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": null
+    },
+    {
+      "cell": "R6-luna-high",
+      "case": "R6",
+      "route": {
+        "id": "luna-high",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "high"
+      },
+      "native_attempted": false,
+      "existing_preflight_record": null
+    }
+  ],
+  "frozen_hashes": {
+    "resume_luis.py": "4242dde970c74da02ccadb01aac777cb7f76d5ac6f4a9d39dedf613c124f2bc8",
+    "pending-cells.json": "de4fd88e057e0c993cd78d48efeee7f277ec5be5b20d6d677b7859866e8dc7fb",
+    "original-evidence-hashes.json": "4555c767d833916007b22dccd3c98e173cfa4bfaab867a3983619c4f0f7bf9aa",
+    "protocol.json": "35a36c9d67070e2cd5af7a109164eb5874932a412d7dce514756efd2506c6583"
+  },
+  "unchanged": [
+    "cases",
+    "rubric",
+    "source extracts",
+    "prompts",
+    "models",
+    "efforts",
+    "commands",
+    "deadlines"
+  ],
+  "output": "Separate continuation results/submissions; original preflight and native evidence preserved.",
+  "comparison_caveat": "Sol/Luna R1 on codex-2, R2-R6 on codex-luis; report effective profiles per cell, no quota equivalence."
+}

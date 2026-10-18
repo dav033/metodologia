@@ -1,0 +1,17 @@
+{
+  "axis": "spec",
+  "verdict": "APPROVE",
+  "native_calls": 18,
+  "operational_records": 19,
+  "independent_checks": [
+    "all18 unique calls complete;time/token arithmetic matches",
+    "frozen/original evidence and closure hashes valid",
+    "explicit mixed codex-2/codex-luis profiles disclosed",
+    "original versus supplemental source grades separated",
+    "published official uv concepts and CLI independently opened and support the respective wording",
+    "R6/C5 adjudication fair to LIVE question; no candidate repair or runtime proof",
+    "R1Sonnet source insufficiency retained"
+  ],
+  "native_calls_during_review": 0,
+  "quota_reads_during_review": 0
+}

@@ -1,0 +1,167 @@
+{
+  "B01": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "partial"
+    },
+    "evidence": "All three executions/exits corroborated. Reported 4\u20136\u00b5s durations contradict fixture runtimes exceeding 250\u00b5s."
+  },
+  "B02": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Single execution; captured exit 0, 12 passes, warning/path, duration unknown."
+  },
+  "B03": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Exit 1 corroborated; saved-log inspection preserves TS2322, source location and log path."
+  },
+  "B04": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "missing",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Withdrawal of1.89s penalty: native wall-time metadata and completed hang duration were not retained, and no tolerance was frozen. Incorrect FAIL versus BLOCKED remains a status defect."
+  },
+  "B05": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Single execution; exit 3, balance mismatch/path and preflight caveat retained."
+  },
+  "B06": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Single execution and exit 1 corroborated; log retrieval preserves complete diagnostic/location."
+  },
+  "B07": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "PASS, exit0 and warning preserve success semantics. Exact12-pass count was not required in the candidate prompt; hidden rubric-only precision must not be penalized."
+  },
+  "B08": {
+    "criteria": {
+      "execution": "full",
+      "exits": "missing",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Single execution corroborated; reports unknown exit instead of actual 0. Other findings correct."
+  },
+  "B09": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Exit 1; fourteen cache failures and distinct auth failure correctly condensed with locations."
+  },
+  "B10": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Exit 3, balance mismatch/location and misleading preflight correctly reported."
+  },
+  "B11": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Same timing-evidence limitation as B04; correct BLOCKED and exits retained."
+  },
+  "B12": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Same success-summary fairness correction as B07."
+  },
+  "B13": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "partial"
+    },
+    "evidence": "All executions/exits and findings correct; 3\u20136\u00b5s durations contradict fixture runtimes exceeding 230\u00b5s."
+  },
+  "B14": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "Correct exit, repetition count, both diagnostics and locations."
+  },
+  "B15": {
+    "criteria": {
+      "execution": "full",
+      "exits": "full",
+      "status": "full",
+      "diagnostic": "full",
+      "detail": "full",
+      "contract": "full"
+    },
+    "evidence": "First shell parse failed before execution; fixture confirms one actual invocation. Exit 3 captured; timing explicitly unknown."
+  }
+}

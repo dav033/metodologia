@@ -1,0 +1,149 @@
+[
+  {
+    "route": {
+      "id": "luna-high",
+      "provider": "codex",
+      "profile": "codex-luis",
+      "model": "gpt-6-luna",
+      "effort": "high"
+    },
+    "cases_recorded": 6,
+    "strict_cases": 5,
+    "content_cases": 6,
+    "original_strict_cases": 3,
+    "contract_cases": 5,
+    "full_criteria": 35,
+    "criteria_evaluated": 36,
+    "seconds": 58.113,
+    "complete_usage_cases": 6,
+    "tokens_available": 240248,
+    "completed_fixture_command_seconds": 0.003228,
+    "models_observed": [],
+    "efforts_observed": [],
+    "findings": [
+      {
+        "case": "N6",
+        "criteria": {
+          "execution": "full",
+          "exits": "full",
+          "status": "full",
+          "diagnostic": "full",
+          "detail": "full",
+          "contract": "partial"
+        },
+        "evidence": "All executions/exits and findings correct; 3–6µs durations contradict fixture runtimes exceeding 230µs."
+      }
+    ]
+  },
+  {
+    "route": {
+      "id": "luna-medium",
+      "provider": "codex",
+      "profile": "codex-luis",
+      "model": "gpt-6-luna",
+      "effort": "medium"
+    },
+    "cases_recorded": 6,
+    "strict_cases": 4,
+    "content_cases": 5,
+    "original_strict_cases": 3,
+    "contract_cases": 5,
+    "full_criteria": 34,
+    "criteria_evaluated": 36,
+    "seconds": 47.468,
+    "complete_usage_cases": 6,
+    "tokens_available": 227149,
+    "completed_fixture_command_seconds": 0.003603,
+    "models_observed": [],
+    "efforts_observed": [],
+    "findings": [
+      {
+        "case": "N5",
+        "criteria": {
+          "execution": "full",
+          "exits": "full",
+          "status": "missing",
+          "diagnostic": "full",
+          "detail": "full",
+          "contract": "full"
+        },
+        "evidence": "Withdrawal of1.89s penalty: native wall-time metadata and completed hang duration were not retained, and no tolerance was frozen. Incorrect FAIL versus BLOCKED remains a status defect."
+      },
+      {
+        "case": "N6",
+        "criteria": {
+          "execution": "full",
+          "exits": "full",
+          "status": "full",
+          "diagnostic": "full",
+          "detail": "full",
+          "contract": "partial"
+        },
+        "evidence": "All three executions/exits corroborated. Reported 4–6µs durations contradict fixture runtimes exceeding 250µs."
+      }
+    ]
+  },
+  {
+    "route": {
+      "id": "haiku-medium",
+      "provider": "claude",
+      "profile": "claude-work",
+      "model": "claude-haiku-5-5",
+      "effort": "medium"
+    },
+    "cases_recorded": 1,
+    "strict_cases": 1,
+    "content_cases": 1,
+    "original_strict_cases": 1,
+    "contract_cases": 1,
+    "full_criteria": 6,
+    "criteria_evaluated": 6,
+    "seconds": 4.83,
+    "complete_usage_cases": 1,
+    "tokens_available": 15745,
+    "completed_fixture_command_seconds": 0.000279,
+    "models_observed": [
+      "claude-haiku-5-5"
+    ],
+    "efforts_observed": [],
+    "findings": []
+  },
+  {
+    "route": {
+      "id": "sonnet-medium",
+      "provider": "claude",
+      "profile": "claude-work",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    "cases_recorded": 2,
+    "strict_cases": 1,
+    "content_cases": 1,
+    "original_strict_cases": 1,
+    "contract_cases": 2,
+    "full_criteria": 11,
+    "criteria_evaluated": 12,
+    "seconds": 16.326,
+    "complete_usage_cases": 2,
+    "tokens_available": 43369,
+    "completed_fixture_command_seconds": 0.0007,
+    "models_observed": [
+      "claude-sonnet-5-5"
+    ],
+    "efforts_observed": [],
+    "findings": [
+      {
+        "case": "N1",
+        "criteria": {
+          "execution": "full",
+          "exits": "missing",
+          "status": "full",
+          "diagnostic": "full",
+          "detail": "full",
+          "contract": "full"
+        },
+        "evidence": "Single execution corroborated; reports unknown exit instead of actual 0. Other findings correct."
+      }
+    ]
+  }
+]

@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "case": "N3",
+  "route": {
+    "id": "luna-high",
+    "provider": "codex",
+    "profile": "codex-luis",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "status": "completed",
+  "started_at": 1792292238.3417718,
+  "prompt_sha256": "11cee1318f7c2aeba28b47117bd89cea0d01dc23542fd5404ebb24ee62dc1654",
+  "quota_before": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792292238.3418117,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 6.0,
+  "workspace_before": {
+    "TASK.md": "11cee1318f7c2aeba28b47117bd89cea0d01dc23542fd5404ebb24ee62dc1654",
+    "check.py": "8dcaee12505a8ed75192286f0b414c150282eff2ad0d68ecb02f92575a278a1f"
+  },
+  "response_text": "STATUS: FAIL\nCOMMANDS: python check.py repeated -> exit 1 (0.1s)\nFAILURES: test_cache, AssertionError: stale cache, tests/test_cache.py:27 (14 occurrences); test_auth, PermissionError: forbidden, tests/test_auth.py:61\nNOTES: None.",
+  "usage_reported": {
+    "input_tokens": 33629,
+    "cached_input_tokens": 26368,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 196,
+    "reasoning_output_tokens": 52
+  },
+  "usage": {
+    "input_tokens": 33629,
+    "output_tokens": 196,
+    "cache_read_tokens": 26368,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 52,
+    "reported_total": null,
+    "total": 33825,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'python check.py repeated'",
+      "exit_code": 1,
+      "status": "failed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 6.433,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/runner-cell-kkse5h9w",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-luis",
+    "/home/david/.codex-luis",
+    "--ro-bind",
+    "/tmp/runner-cell-kkse5h9w/check.py",
+    "/tmp/work/check.py",
+    "--ro-bind",
+    "/tmp/runner-cell-kkse5h9w/TASK.md",
+    "/tmp/work/TASK.md",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "tool_evidence": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'python check.py repeated'",
+      "exit_code": 1,
+      "status": "failed",
+      "aggregated_output": "FAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_cache — AssertionError: stale cache — tests/test_cache.py:27\nFAILED test_auth — PermissionError: forbidden — tests/test_auth.py:61\n"
+    }
+  ],
+  "stderr_excerpt": "",
+  "limit_detected": false,
+  "workspace_after": {
+    ".runner-events.jsonl": "e882df54a20935131bd7e2105c2db04b91c9b25261a5d1f803b64ca94a331cf1",
+    "TASK.md": "11cee1318f7c2aeba28b47117bd89cea0d01dc23542fd5404ebb24ee62dc1654",
+    "check.py": "8dcaee12505a8ed75192286f0b414c150282eff2ad0d68ecb02f92575a278a1f",
+    "logs/repeated.log": "a0dd260602573832992826f0c969d6943a8808feffb6de80275e2fa667294d61"
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "fixture_events": [
+    {
+      "mode": "repeated",
+      "event": "start",
+      "at": 48377.2601426
+    },
+    {
+      "mode": "repeated",
+      "event": "end",
+      "exit": 1,
+      "seconds": 0.00024419000692432746
+    }
+  ],
+  "quota_after": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792292245.6608598,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792292246.357493
+}

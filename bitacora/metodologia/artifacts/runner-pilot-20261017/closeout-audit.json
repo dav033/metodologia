@@ -1,0 +1,45 @@
+{
+  "records": 16,
+  "attempted_native_calls": 15,
+  "expected": 24,
+  "missing": [
+    "N3-haiku-medium",
+    "N3-sonnet-medium",
+    "N4-haiku-medium",
+    "N4-sonnet-medium",
+    "N5-haiku-medium",
+    "N5-sonnet-medium",
+    "N6-haiku-medium",
+    "N6-sonnet-medium"
+  ],
+  "unique_start_done_pairs": true,
+  "never_invoked": [
+    "N2-haiku-medium",
+    "N3-haiku-medium",
+    "N3-sonnet-medium",
+    "N4-haiku-medium",
+    "N4-sonnet-medium",
+    "N5-haiku-medium",
+    "N5-sonnet-medium",
+    "N6-haiku-medium",
+    "N6-sonnet-medium"
+  ],
+  "frozen_and_original_hashes_valid": true,
+  "native_status_counts": {
+    "completed": 15,
+    "quota_auth_blocked": 1
+  },
+  "lanes": [
+    {
+      "provider": "claude",
+      "status": "stopped",
+      "cell": "N2-haiku-medium",
+      "reason": "quota_auth_blocked"
+    },
+    {
+      "provider": "codex",
+      "status": "complete"
+    }
+  ],
+  "grading_review": "pending"
+}

@@ -1,0 +1,70 @@
+{
+  "case": "R3",
+  "claims": [
+    {
+      "id": "C1",
+      "text": "In Node.js v24.10.0, server.headersTimeout limits how long the HTTP parser waits to receive the complete request headers. Its default is the minimum of server.requestTimeout and 60,000 ms (60 seconds).",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+          "locator": "lines 01828–01848"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "text": "In Node.js v24.10.0, server.requestTimeout is the millisecond limit for receiving the entire request from the client. Its default is 300,000 ms (300 seconds, five minutes).",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+          "locator": "lines 01877–01894"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "text": "If either headersTimeout or requestTimeout expires, the server responds with HTTP 408, does not forward the request to the request listener, and closes the connection.",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+          "locator": "lines 01844–01848 (headersTimeout); lines 01890–01894 (requestTimeout)"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "text": "In Node.js v24.10.0, server.timeout measures socket inactivity in milliseconds before the socket is presumed to have timed out. Its default is 0, which disables this timeout behavior on incoming connections. A value change affects new connections, not existing ones.",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+          "locator": "lines 01942–01960"
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "text": "When a Server 'timeout' listener is present, Node calls it with the timed-out socket; the server documentation says timeouts must then be handled explicitly. The listener is notified of the timeout, so application code is responsible for handling the socket timeout.",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+          "locator": "lines 01914–01923"
+        }
+      ]
+    },
+    {
+      "id": "C6",
+      "text": "No. A 300,000 ms requestTimeout is a deadline for receiving the entire client request, and headersTimeout concerns receiving headers; neither establishes a 300-second deadline for application work after the request reaches its listener. server.timeout is an inactivity timeout on a socket, not a total operation-duration limit. These settings alone therefore do not prove a 300-second application-operation deadline.",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+          "locator": "lines 01842–01848; 01888–01894; 01952–01960"
+        }
+      ]
+    }
+  ],
+  "recommendation": "Treat these as distinct transport-level controls: headersTimeout bounds header receipt, requestTimeout bounds complete request receipt, and server.timeout bounds socket inactivity. If an application operation itself needs a 300-second deadline, define and enforce that deadline around the operation separately; the supplied Node.js v24.10.0 documentation does not say these HTTP settings enforce it.",
+  "unknowns": [
+    "The supplied extract does not specify application-level timeout mechanisms or how a particular framework or handler controls work after request parsing.",
+    "The source extract is limited to Node.js v24.10.0 HTTP documentation; behavior of other Node.js versions and surrounding proxies or frameworks was not assessed."
+  ]
+}

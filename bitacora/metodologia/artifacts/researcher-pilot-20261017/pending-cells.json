@@ -1,0 +1,132 @@
+[
+  {
+    "cell": "R2-sol-medium",
+    "case": "R2",
+    "route": {
+      "id": "sol-medium",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": null
+  },
+  {
+    "cell": "R2-luna-high",
+    "case": "R2",
+    "route": {
+      "id": "luna-high",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6-luna",
+      "effort": "high"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": "results/R2-luna-high.json"
+  },
+  {
+    "cell": "R3-sol-medium",
+    "case": "R3",
+    "route": {
+      "id": "sol-medium",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": null
+  },
+  {
+    "cell": "R3-luna-high",
+    "case": "R3",
+    "route": {
+      "id": "luna-high",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6-luna",
+      "effort": "high"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": null
+  },
+  {
+    "cell": "R4-sol-medium",
+    "case": "R4",
+    "route": {
+      "id": "sol-medium",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": null
+  },
+  {
+    "cell": "R4-luna-high",
+    "case": "R4",
+    "route": {
+      "id": "luna-high",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6-luna",
+      "effort": "high"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": null
+  },
+  {
+    "cell": "R5-sol-medium",
+    "case": "R5",
+    "route": {
+      "id": "sol-medium",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": null
+  },
+  {
+    "cell": "R5-luna-high",
+    "case": "R5",
+    "route": {
+      "id": "luna-high",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6-luna",
+      "effort": "high"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": null
+  },
+  {
+    "cell": "R6-sol-medium",
+    "case": "R6",
+    "route": {
+      "id": "sol-medium",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": null
+  },
+  {
+    "cell": "R6-luna-high",
+    "case": "R6",
+    "route": {
+      "id": "luna-high",
+      "provider": "codex",
+      "profile": "codex-2",
+      "model": "gpt-6-luna",
+      "effort": "high"
+    },
+    "native_attempted": false,
+    "existing_preflight_record": null
+  }
+]

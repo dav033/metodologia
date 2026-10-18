@@ -1,0 +1,167 @@
+{
+  "base-s21.png": {
+    "pixeles": 23792,
+    "media": 12.9,
+    "porColor": [
+      {
+        "color": "matte light pink",
+        "hex": "#F2B6C8",
+        "dE": 17.3
+      },
+      {
+        "color": "pale lilac",
+        "hex": "#B6B8DC",
+        "dE": 10.9
+      },
+      {
+        "color": "chrome gold",
+        "hex": "#A08344",
+        "dE": 10.5
+      }
+    ],
+    "centros": [
+      {
+        "hex": "#9E8879",
+        "parte": 0.26
+      },
+      {
+        "hex": "#BEA6AD",
+        "parte": 0.2
+      },
+      {
+        "hex": "#846A59",
+        "parte": 0.14
+      },
+      {
+        "hex": "#D1C7DB",
+        "parte": 0.13
+      },
+      {
+        "hex": "#BA7B74",
+        "parte": 0.09
+      },
+      {
+        "hex": "#744C27",
+        "parte": 0.07
+      },
+      {
+        "hex": "#442716",
+        "parte": 0.06
+      },
+      {
+        "hex": "#A47D51",
+        "parte": 0.05
+      }
+    ]
+  },
+  "d-s21.png": {
+    "pixeles": 28955,
+    "media": 14.5,
+    "porColor": [
+      {
+        "color": "matte light pink",
+        "hex": "#F2B6C8",
+        "dE": 18.3
+      },
+      {
+        "color": "pale lilac",
+        "hex": "#B6B8DC",
+        "dE": 17.3
+      },
+      {
+        "color": "chrome gold",
+        "hex": "#A08344",
+        "dE": 7.8
+      }
+    ],
+    "centros": [
+      {
+        "hex": "#B2A198",
+        "parte": 0.3
+      },
+      {
+        "hex": "#DDCFD9",
+        "parte": 0.27
+      },
+      {
+        "hex": "#8E7971",
+        "parte": 0.15
+      },
+      {
+        "hex": "#CC8D8B",
+        "parte": 0.14
+      },
+      {
+        "hex": "#553A27",
+        "parte": 0.06
+      },
+      {
+        "hex": "#8D5D2F",
+        "parte": 0.04
+      },
+      {
+        "hex": "#B18C58",
+        "parte": 0.03
+      },
+      {
+        "hex": "#DAC49F",
+        "parte": 0.02
+      }
+    ]
+  },
+  "captura-referencia": {
+    "pixeles": 16844,
+    "media": 3.5,
+    "porColor": [
+      {
+        "color": "matte light pink",
+        "hex": "#F2B6C8",
+        "dE": 2.1
+      },
+      {
+        "color": "pale lilac",
+        "hex": "#B6B8DC",
+        "dE": 4.4
+      },
+      {
+        "color": "chrome gold",
+        "hex": "#A08344",
+        "dE": 3.9
+      }
+    ],
+    "centros": [
+      {
+        "hex": "#BFC1DF",
+        "parte": 0.3
+      },
+      {
+        "hex": "#F2BACB",
+        "parte": 0.29
+      },
+      {
+        "hex": "#A98F57",
+        "parte": 0.11
+      },
+      {
+        "hex": "#F0CBD6",
+        "parte": 0.08
+      },
+      {
+        "hex": "#967B41",
+        "parte": 0.07
+      },
+      {
+        "hex": "#CE9DAC",
+        "parte": 0.06
+      },
+      {
+        "hex": "#A1A1BE",
+        "parte": 0.05
+      },
+      {
+        "hex": "#B9A482",
+        "parte": 0.04
+      }
+    ]
+  }
+}

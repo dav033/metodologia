@@ -1,5 +1,5 @@
 {
-  "total": 0.08,
+  "total": 0.48,
   "llamadas": [
     {
       "variante": "base",
@@ -11,6 +11,61 @@
       "cuando": "2026-10-17T00:03:28.224Z",
       "motivo": "IMAGEN_PROVEEDOR_NO_DISPONIBLE: fal.ai rechazó la cuenta (403, saldo_agotado): User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing.",
       "ms": 897
+    },
+    {
+      "variante": "base",
+      "semilla": 21,
+      "archivo": "base-s21.png",
+      "escena": "07",
+      "costo": 0.08,
+      "resultado": "fallo",
+      "cuando": "2026-10-18T05:42:05.957Z",
+      "motivo": "IMAGEN_PROVEEDOR_NO_DISPONIBLE: fal.ai rechazó la cuenta (403, saldo_agotado): User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing.",
+      "ms": 1091
+    },
+    {
+      "variante": "base",
+      "semilla": 21,
+      "archivo": "base-s21.png",
+      "escena": "07",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-18T13:41:39.803Z",
+      "requestId": "01a14f3f-23dc-7c62-9c84-beb1396704a8",
+      "ms": 15295
+    },
+    {
+      "variante": "d",
+      "semilla": 21,
+      "archivo": "d-s21.png",
+      "escena": "07",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-18T13:42:07.216Z",
+      "requestId": "01a14f3f-8e97-79e1-bf17-c828f4d47303",
+      "ms": 19210
+    },
+    {
+      "variante": "base",
+      "semilla": 21,
+      "archivo": "e10-base-s21.png",
+      "escena": "10",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-18T13:42:33.568Z",
+      "requestId": "01a14f3f-f629-7d42-92ac-c9272d06d33f",
+      "ms": 17786
+    },
+    {
+      "variante": "d",
+      "semilla": 21,
+      "archivo": "e10-d-s21.png",
+      "escena": "10",
+      "costo": 0.08,
+      "resultado": "ok",
+      "cuando": "2026-10-18T13:42:59.009Z",
+      "requestId": "01a14f40-7acf-7651-99fa-97284db6d058",
+      "ms": 36837
     }
   ]
 }

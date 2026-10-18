@@ -1,0 +1,96 @@
+{
+  "case": "R6",
+  "claims": [
+    {
+      "id": "C1",
+      "text": "uv comprueba la actualidad de uv.lock frente a los metadatos del proyecto: cambios de dependencias o restricciones que excluyan la versión bloqueada marcan el lock como desactualizado; la aparición de nuevas versiones publicadas no lo desactualiza por sí sola. La documentación consultada es la documentación oficial vigente al momento de la consulta (17 de octubre de 2026); no se verificó una versión concreta instalada de uv.",
+      "evidence": [
+        {
+          "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+          "locator": "Locking and syncing, líneas 199–209; `--locked` y `--frozen`, líneas 183–205"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "text": "`uv sync --locked` exige que uv.lock ya esté actualizado. Si falta o necesita actualizarse, uv termina con error en vez de modificar el lockfile. La sincronización del entorno sigue ocurriendo si el lock está vigente.",
+      "evidence": [
+        {
+          "url": "https://docs.astral.sh/uv/reference/cli/",
+          "locator": "uv sync: líneas 3695–3707; definición de `--locked` en la referencia CLI"
+        },
+        {
+          "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+          "locator": "Locking and syncing: líneas 183–187"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "text": "`uv sync --frozen` usa las versiones del lockfile como fuente de verdad sin comprobar si está actualizado. Si falta uv.lock, uv falla. Cambios recientes en pyproject.toml que no estén en el lockfile no se reflejan en el entorno. Así que frozen evita la comprobación/re-resolución del lock, pero puede dejar el entorno desalineado con el manifiesto actual.",
+      "evidence": [
+        {
+          "url": "https://docs.astral.sh/uv/reference/cli/",
+          "locator": "uv sync, definición de `--frozen`"
+        },
+        {
+          "url": "https://docs.astral.sh/uv/guides/integration/docker/",
+          "locator": "Ejemplo de capas Docker: se usa `--frozen` en la sincronización inicial porque aún no se copiaron los pyproject.toml necesarios para verificar uv.lock"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "text": "No. `--locked` y `--frozen` expresan políticas sobre el lockfile; por sí solos no deshabilitan la red. La opción documentada para impedir acceso de red de uv es `--offline` (o UV_OFFLINE), que limita uv a datos en caché y archivos locales. Eso puede hacer fallar la sincronización si faltan artefactos locales.",
+      "evidence": [
+        {
+          "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+          "locator": "Locking and syncing, líneas 183–205: comportamiento de locked/frozen"
+        },
+        {
+          "url": "https://docs.astral.sh/uv/reference/cli/",
+          "locator": "Opción global `--offline`: líneas 711–716"
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "text": "`uv sync` hace una sincronización exacta por defecto: elimina paquetes que no figuran como dependencias del proyecto. Para conservar paquetes extra se usa `uv sync --inexact`; un paquete extra que entre en conflicto con una dependencia del proyecto todavía puede eliminarse. El caso especial documentado con `--no-build-isolation` no elimina paquetes extra para preservar posibles dependencias de compilación.",
+      "evidence": [
+        {
+          "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+          "locator": "Handling of extraneous packages, líneas 234–245"
+        },
+        {
+          "url": "https://docs.astral.sh/uv/reference/cli/",
+          "locator": "uv sync: descripción de sincronización exacta en línea 3700; opciones `--inexact` y `--no-build-isolation`"
+        }
+      ]
+    },
+    {
+      "id": "C6",
+      "text": "Recomendación: en una compilación/despliegue de producción, sincronizar con `uv sync --locked` y mantener juntos en el contexto de build uv.lock y los metadatos pyproject.toml pertinentes. Así, un lockfile faltante o desactualizado detiene el build y la sincronización instala desde el lock validado. Usar `--frozen` solo cuando el pipeline intencionalmente no presenta esos metadatos a uv (como en una capa inicial de Docker) o cuando se decide explícitamente aceptar que no se valide la actualidad; completar después la validación/sync en una fase con los manifiestos presentes. Si el requisito operativo es cero red, añadir `--offline` y proveer caché/archivos suficientes, o hacer cumplir el aislamiento de red fuera de uv; locked/frozen no cumplen ese requisito. Esto es una recomendación basada en los comportamientos documentados, no una afirmación sobre un entorno particular.",
+      "evidence": [
+        {
+          "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+          "locator": "Locking and syncing, líneas 183–205 y 217–224"
+        },
+        {
+          "url": "https://docs.astral.sh/uv/guides/integration/docker/",
+          "locator": "Ejemplo de sincronización inicial de dependencias en Docker con `--frozen` antes de copiar los manifiestos del proyecto"
+        },
+        {
+          "url": "https://docs.astral.sh/uv/reference/cli/",
+          "locator": "uv sync y `--offline`: líneas 3695–3707 y 711–716"
+        }
+      ]
+    }
+  ],
+  "recommendation": "Para producción, usar `uv sync --locked` en la fase donde están disponibles uv.lock y todos los pyproject.toml del proyecto/workspace, y considerar el fallo por lock desactualizado como error del build. Reservar `--frozen` para etapas donde esos manifiestos aún no están presentes, seguido por una sincronización validada. Ninguno de esos dos flags garantiza operación sin red: `--offline` es el control documentado de uv para eso, con la salvedad de que requiere caché o archivos locales suficientes.",
+  "unknowns": [
+    "No se verificó la versión de uv usada por el sistema de build o producción; la referencia oficial consultada puede evolucionar.",
+    "No se verificó si el proyecto tiene uv.lock comprometido y vigente, si es un workspace ni qué pyproject.toml se copian en cada etapa del build.",
+    "No se verificaron la forma de despliegue (incluidas etapas/capas Docker), los índices privados, la disponibilidad de caché, el acceso de red ni la política de egress del entorno.",
+    "No se verificó si producción necesita paquetes fuera del lockfile, grupos de dependencias concretos o dependencias que deban compilarse desde fuente."
+  ]
+}

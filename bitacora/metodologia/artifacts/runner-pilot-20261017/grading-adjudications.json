@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "original": "grades-original.json",
+  "reviewer": "/root/runner_blind_grading",
+  "blindness": "Reviewer read only cases/rubric/prepare and anonymous submissions; no route map or model identities.",
+  "changes": {
+    "B04": {"criterion": "contract", "final": "full", "reason": "Withdrawal of1.89s penalty: native wall-time metadata and completed hang duration were not retained, and no tolerance was frozen. Incorrect FAIL versus BLOCKED remains a status defect."},
+    "B07": {"criterion": "diagnostic", "final": "full", "reason": "PASS, exit0 and warning preserve success semantics. Exact12-pass count was not required in the candidate prompt; hidden rubric-only precision must not be penalized."},
+    "B11": {"criterion": "contract", "final": "full", "reason": "Same timing-evidence limitation as B04; correct BLOCKED and exits retained."},
+    "B12": {"criterion": "diagnostic", "final": "full", "reason": "Same success-summary fairness correction as B07."}
+  },
+  "remaining_timing_findings": {
+    "B01": "Reported complete-command durations6/5/4µs are below contained fixture durations278/319/252µs. Contract partial; native tool timing metadata was not retained, so measurement provenance/model versus CLI responsibility is unknown. No claim of fabrication.",
+    "B13": "Reported complete-command durations3/6/3µs are below contained fixture durations294/276/238µs. Same contract finding and provenance limitation as B01."
+  },
+  "limits": "No fixture, protocol, original answer, native evidence or original grade changed. Final grades are an explicit adjudicated assessment, not replacement native results."
+}

@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "case": "N1",
+  "route": {
+    "id": "luna-high",
+    "provider": "codex",
+    "profile": "codex-luis",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "status": "completed",
+  "started_at": 1792292200.7873094,
+  "prompt_sha256": "9b9524a3fda86c679c54056c5ba9a1c59f6214f09686bfc2fbe0e92e1f980f2b",
+  "quota_before": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792292200.7873373,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 6.0,
+  "workspace_before": {
+    "TASK.md": "9b9524a3fda86c679c54056c5ba9a1c59f6214f09686bfc2fbe0e92e1f980f2b",
+    "check.py": "8dcaee12505a8ed75192286f0b414c150282eff2ad0d68ecb02f92575a278a1f"
+  },
+  "response_text": "STATUS: PASS\nCOMMANDS: `python check.py success` -> exit 0 (0.1 s)\nFAILURES: none\nNOTES: Warning: deprecated option `legacy_mode` at `config/options.py:18`.",
+  "usage_reported": {
+    "input_tokens": 33431,
+    "cached_input_tokens": 16384,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 201,
+    "reasoning_output_tokens": 96
+  },
+  "usage": {
+    "input_tokens": 33431,
+    "output_tokens": 201,
+    "cache_read_tokens": 16384,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 96,
+    "reported_total": null,
+    "total": 33632,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'python check.py success'",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 6.7,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/runner-cell-glm7qiq5",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-luis",
+    "/home/david/.codex-luis",
+    "--ro-bind",
+    "/tmp/runner-cell-glm7qiq5/check.py",
+    "/tmp/work/check.py",
+    "--ro-bind",
+    "/tmp/runner-cell-glm7qiq5/TASK.md",
+    "/tmp/work/TASK.md",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "tool_evidence": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'python check.py success'",
+      "exit_code": 0,
+      "status": "completed",
+      "aggregated_output": "12 tests passed\nWARNING: deprecated option legacy_mode at config/options.py:18\n"
+    }
+  ],
+  "stderr_excerpt": "",
+  "limit_detected": false,
+  "workspace_after": {
+    ".runner-events.jsonl": "3b7e92f912529b0e7e63fce763df84856cd60e66c5ebc8792e8bf23da12f50f9",
+    "TASK.md": "9b9524a3fda86c679c54056c5ba9a1c59f6214f09686bfc2fbe0e92e1f980f2b",
+    "check.py": "8dcaee12505a8ed75192286f0b414c150282eff2ad0d68ecb02f92575a278a1f",
+    "logs/success.log": "5a85765ab1fe8b2bee368a682a729af86e67aede740750f72901f61b95b80257"
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "fixture_events": [
+    {
+      "mode": "success",
+      "event": "start",
+      "at": 48339.960695412
+    },
+    {
+      "mode": "success",
+      "event": "end",
+      "exit": 0,
+      "seconds": 0.000238540000282228
+    }
+  ],
+  "quota_after": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792292208.2653472,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792292209.1037328
+}

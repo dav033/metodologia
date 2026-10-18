@@ -333,3 +333,29 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Alternatives:** Leave the branch unsynchronized, which leaves T14 incomplete; include the full dirty worktree, which would mix unrelated tasks into the release.
 - **Consequences and rollback:** Only the approved shipping history can reach the deploy branch. Verify the deployed SHA and retain the pre-deploy main SHA for rollback evidence; no commit, merge, push, or deployment has occurred yet.
 - **Source:** Approved REQ-014 `PLAN.md` T14 and `SPEC.md` deploy policy; [2026-10-16 day log](2026-10/W3/2026-10-16.md).
+
+## D-056 — Remove the separate feedback administrator password; the app session is the admin gate
+- **Date:** 2026-10-18 · **Status:** Accepted · **Scope:** feedback-IA panel, guided motor flag cookie, render-cache writes, REQ-014 T18
+- **Context:** The owner asked to delete the separate administrator key (`ADMIN_PASSWORD`, cookie `feedback_admin`, `POST /api/feedback-ia/admin/sesion`). It was not configured in the production env file (`/etc/demo-decoracion/demo.env`), which kept the feedback panel closed and blocked REQ-014 T18's evidence gathering.
+- **Decision:** The feedback admin panel, exports, images and analysis now require only the app session (`isAuthenticatedRequest`, `401 SESION_REQUERIDA` without it). The admin login route, its UI screen, `ADMIN_PASSWORD` in `.env.example` and the related codes (`SOLO_ADMINISTRADOR`, `ADMIN_NO_CONFIGURADO`, `CLAVE_INCORRECTA`) are removed. The `guiada_motor` cookie override and the render-cache write gate follow the same session check.
+- **Alternatives:** Keep the separate key and set it in the VPS env — rejected by the owner; read Neon directly for T18 — bypasses the app and leaves no audit trail.
+- **Consequences:** + one credential, no dead admin code path. − `APP_PASSWORD` is the single shared password, so anyone who holds it can open the feedback panel (third-party data), can set the `guiada_motor` cookie to `3d` even while the 3D cut (P-045) is on, and can write render-cache entries (FLUX cost). REQ-004 (users admin|staff) must restore a distinct admin role. Rollback: restore `src/lib/feedback-ia/acceso.ts` and the removed route/screen from git history and set `ADMIN_PASSWORD`.
+- **Source:** Owner instruction in the 2026-10-18 session; [2026-10-18 day log](2026-10/W3/2026-10-18.md).
+- **Correction 2026-10-18:** the render-cache write gate did not move to the session. `puedeEscribirCacheModulos` no longer opens writes by session alone: in production only `MODULOS_ESCRITURA=abierta` allows them, so the owner's own session can no longer write the cache unless that variable is set. The first draft of this entry said the gate followed the session check. Owner choice pending: session-based writes (equivalent to `abierta`) or keep closed.
+- **Resolved 2026-10-18:** the owner chose session-based render-cache writes. `puedeEscribirCacheModulos` now opens writes to the app session (same as `abierta`). `MODULOS_ESCRITURA=cerrada` is a kill switch that wins over the session, so FLUX spend can be stopped without a deploy. The `guiada_motor=3d` cookie question (whether it may beat the P-045 cut for any session) is still open.
+
+## D-057 — Do not persist workshop stock yet; leftoverInventory stays quote output
+- **Date:** 2026-10-18 · **Status:** Accepted · **Scope:** REQ-014 T69 / PRO-07
+- **Context:** PRO-07 asks for stock add/remove, deduction on scene build and shortages. Persisting stock needs an owner-isolation scope (shared workshop vs per-account) and a REQ-004 identity mapping, neither defined; `APP_PASSWORD` identifies no person.
+- **Decision:** No inventory tables, migrations, stock store or build-deduction endpoint in this iteration. `leftoverInventory` remains quote output. The persistence design is kept as deferred in [PRO-07-INVENTORY-DECISION.md](research/pm/PRO-07-INVENTORY-DECISION.md).
+- **Alternatives:** Persist in `localStorage` — cannot be shared or isolated; persist now with a guessed owner scope — would authorize data without an identity model.
+- **Consequences:** + no unauthorized or unrecoverable stock data; − PRO-07 stays undelivered and the purchase list keeps quote output. Reopening requires answering the owner-isolation question and the REQ-004 mapping. Rollback: none needed (no data written).
+- **Source:** Owner instruction 2026-10-18; REQ-014 T69.
+
+## D-058 — The guiada_motor cookie does not beat the 3D cut unless explicitly allowed
+- **Date:** 2026-10-18 · **Status:** Accepted · **Scope:** guided engine flag (REQ-007 / P-045 cut)
+- **Context:** After D-056 any app session can set the `guiada_motor` cookie. With the cut on, that cookie would still force 3D for that browser, bypassing the emergency rollback.
+- **Decision:** With the cut on, the cookie is ignored unless `GUIADA_MOTOR_COOKIE_VALE_CON_CORTE=1`. Without the cut, the cookie of a session still wins, as before.
+- **Alternatives:** Keep the cookie beating the cut — rejected, it defeats the rollback; restore an admin identity now — not possible without REQ-004.
+- **Consequences:** + the cut is a real stop again. − the owner must set the variable to test a fix on 3D while the cut is on. Rollback: unset or restore the previous precedence in `bandera.ts`.
+- **Source:** Owner approval 2026-10-18 of the recommendation.

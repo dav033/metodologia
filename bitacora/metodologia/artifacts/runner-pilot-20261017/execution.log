@@ -1,0 +1,31 @@
+START N1-haiku-medium
+START N1-luna-high
+DONE N1-haiku-medium completed 4.83
+START N1-sonnet-medium
+DONE N1-luna-high completed 6.7
+START N1-luna-medium
+DONE N1-sonnet-medium completed 8.256
+START N2-sonnet-medium
+DONE N1-luna-medium completed 10.025
+START N2-luna-medium
+DONE N2-sonnet-medium completed 8.07
+DONE N2-luna-medium completed 5.833
+START N2-luna-high
+DONE N2-luna-high completed 8.764
+START N3-luna-high
+DONE N3-luna-high completed 6.433
+START N3-luna-medium
+DONE N3-luna-medium completed 6.807
+START N4-luna-medium
+DONE N4-luna-medium completed 7.036
+START N4-luna-high
+DONE N4-luna-high completed 13.489
+START N5-luna-high
+DONE N5-luna-high completed 13.765
+START N5-luna-medium
+DONE N5-luna-medium completed 9.794
+START N6-luna-medium
+DONE N6-luna-medium completed 7.973
+START N6-luna-high
+DONE N6-luna-high completed 8.962
+LANES [{"provider": "claude", "status": "stopped", "cell": "N2-haiku-medium", "reason": "quota_auth_blocked"}, {"provider": "codex", "status": "complete"}]

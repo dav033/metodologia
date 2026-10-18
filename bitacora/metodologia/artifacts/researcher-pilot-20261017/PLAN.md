@@ -34,3 +34,17 @@ counts are not invoices or equivalent quota. No prices will be inferred.
 Cases: R1 asyncio concurrency; R2 cross-version SQLite lifetime; R3 Node HTTP
 timeout scope; R4 PostgreSQL concurrent-index failure/recovery; R5 Node LTS dates
 as of2026-10-17; R6 uv lock freshness versus synchronization/network behavior.
+
+
+## Execution closeout
+
+All18 calls completed exactly once. Original8 remain immutable; original quota
+preflight remains separate. Owner explicitly authorized codex-luis for the ten
+pending cells, recorded in continuation-codex-luis/authorization.json. Cases,
+source corpora, prompts, model/effort and commands stayed frozen. One call/account.
+
+Original reviewer grades and posthoc published-source adjudication remain
+separate. All three models cover36/36 requested criteria; supported criteria are
+Sonnet35/36, Sol36/36, Luna36/36 after adjudication. Strict content+source cases:
+Sonnet5/6, Sol6/6, Luna6/6. No permanent Researcher assignment. P-115 closed.
+Validation, scoped lint, hash/usage audits and independent final audit approve.

@@ -1,0 +1,114 @@
+{
+  "blind_id": "R5-A",
+  "case": "R5",
+  "note": {
+    "case": "R5",
+    "claims": [
+      {
+        "id": "C1",
+        "text": "The official Node.js Release Working Group schedule lists current release-line status and phase dates; its published dates are explicitly subject to change. As retrieved for the target date, it lists 22.x as Maintenance LTS, 24.x as Active LTS, and 26.x as Current.",
+        "evidence": [
+          {
+            "url": "https://github.com/nodejs/Release/blob/main/README.md",
+            "locator": "Release schedule and dates-subject-to-change note, lines 191-204"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "text": "Node 24 (Krypton) entered Active LTS on 2025-10-28, is scheduled to enter Maintenance on 2026-10-20, and has scheduled end-of-life on 2028-04-30. These are schedule dates, not a guarantee against later schedule changes.",
+        "evidence": [
+          {
+            "url": "https://github.com/nodejs/Release/blob/main/README.md",
+            "locator": "24.x row and date-subject-to-change note, lines 194-199"
+          }
+        ]
+      },
+      {
+        "id": "C3",
+        "text": "Node 26 is scheduled to enter LTS on 2026-10-28. As of 2026-10-17 it is not LTS: the schedule calls it Current, and the official release page also labels v26 Current. The scheduled date is subject to change.",
+        "evidence": [
+          {
+            "url": "https://github.com/nodejs/Release/blob/main/README.md",
+            "locator": "26.x row and date-subject-to-change note, lines 194-199"
+          },
+          {
+            "url": "https://nodejs.org/en/about/previous-releases",
+            "locator": "Release phases and v26 marked Current, lines 39-52"
+          }
+        ]
+      },
+      {
+        "id": "C4",
+        "text": "Node 22 (Jod) is in Maintenance LTS, not Active LTS, as of 2026-10-17; its scheduled end-of-life is 2027-04-30. The official versions page independently identifies v22 as LTS and lists its latest update as 2026-09-23.",
+        "evidence": [
+          {
+            "url": "https://github.com/nodejs/Release/blob/main/README.md",
+            "locator": "22.x schedule row, lines 194-199"
+          },
+          {
+            "url": "https://nodejs.org/en/about/previous-releases",
+            "locator": "v22 status and last-updated date, line 54"
+          }
+        ]
+      },
+      {
+        "id": "C5",
+        "text": "For a deployment that requires LTS immediately on 2026-10-17, choose Node 24: it is already Active LTS, whereas Node 26 remains Current until its scheduled LTS transition on 2026-10-28. Node's official guidance says production applications should use Active LTS or Maintenance LTS releases.",
+        "evidence": [
+          {
+            "url": "https://github.com/nodejs/Release/blob/main/README.md",
+            "locator": "24.x Active LTS and 26.x Current statuses, lines 194-199"
+          },
+          {
+            "url": "https://nodejs.org/en/about/previous-releases",
+            "locator": "Production guidance and v26/v24 statuses, lines 39-52"
+          }
+        ]
+      },
+      {
+        "id": "C6",
+        "text": "The release schedule defines release-line phases and dates; it does not establish the exact Node patch installed in any particular deployment or prove that the deployment is receiving security fixes. As an as-of-date reference, the official release blog lists Node 24.22.0 (LTS) and Node 26.12.0 (Current), both posted 2026-10-14. Verify the deployed binary/package version and its source separately, and keep it updated; the schedule itself is not an installed-patch or security guarantee.",
+        "evidence": [
+          {
+            "url": "https://nodejs.org/en/blog/release",
+            "locator": "Latest release entries and publication dates, lines 19-33"
+          },
+          {
+            "url": "https://github.com/nodejs/Release/blob/main/README.md",
+            "locator": "Release phases, supported release lines, and schedule caveat, lines 199-210"
+          }
+        ]
+      }
+    ],
+    "recommendation": "For a deployment that needs LTS as of 2026-10-17, deploy the latest verified Node 24 LTS patch that is compatible with the application; the official release blog shows 24.22.0 (LTS) posted on 2026-10-14. Reassess Node 26 after its scheduled 2026-10-28 LTS transition, confirming its actual status and current patch then. Node 22 remains supported as Maintenance LTS through its scheduled 2027-04-30 EOL, but is in its maintenance phase.",
+    "unknowns": [
+      "Official schedules explicitly say dates can change; no independently archived schedule snapshot exactly at 2026-10-17 was retrieved, so the as-of status is cross-checked against the official versions page and release posts available for that date.",
+      "No target deployment, host package database, container image, or runtime was inspected. Its installed Node version, vendor patch/backport policy, and actual security state are therefore unknown.",
+      "LTS status indicates the upstream support phase, not that a particular downstream distribution or application image has installed the newest upstream patch."
+    ]
+  },
+  "contract_valid": true,
+  "tool_calls": [
+    {
+      "type": "web_search",
+      "action": {
+        "type": "search",
+        "queries": [
+          "site:nodejs.org/en/about/previous-releases Node.js release schedule 24 26",
+          "site:github.com/nodejs/Release Node.js release schedule 2026 24 26",
+          "site:nodejs.org Node.js 24 LTS October 2025 maintenance end 2028"
+        ]
+      },
+      "query": "site:nodejs.org/en/about/previous-releases Node.js release schedule 24 26 ..."
+    },
+    {
+      "type": "web_search",
+      "action": {
+        "type": "other"
+      },
+      "query": ""
+    }
+  ],
+  "tool_result_evidence": []
+}

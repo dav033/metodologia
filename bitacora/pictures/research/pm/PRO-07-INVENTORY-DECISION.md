@@ -1,64 +1,64 @@
 ---
-status: pending-owner-choice
-date: 2026-10-16
+status: accepted
+date: 2026-10-18
 requirement: REQ-014 T69 / PRO-07
 ---
 
 # PRO-07 inventory architecture decision
 
-This is a design draft. The owner-isolation choice remains unanswered, so this is not an accepted architecture decision and T69 remains open. No inventory migration or persisted stock data has been added.
+## Decision
+
+**Do not persist workshop stock in this iteration.** `leftoverInventory` stays quote output from `src/lib/plan/python-mapper.ts`; it is not a stock ledger. No inventory tables, migrations, browser stock store or build-deduction endpoint are added. Owner: David (instruction of 2026-10-18).
+
+Why: the owner-isolation scope (shared workshop stock versus per-account stock) and the REQ-004 identity mapping are not defined, and the current `APP_PASSWORD` cookie identifies no person. Persisting stock before those exist would create data that cannot be safely authorized, isolated or rolled back.
+
+Consequences:
+- PRO-07 (stock add/remove, build deduction, purchase list minus stock, shortage view) is not delivered. The purchase list keeps using quote output.
+- Nothing in the customer session or widget payload changes, so D-035 rollout does not apply to this decision.
+- Reopening persistence requires a new REQ or an amended PRO-07 that answers the open points below.
 
 ## Evidence
 
 - PRO-07 asks decorators to add and remove stock by product, colour and size; marking a scene as built deducts its required materials; the purchase list uses required quantity minus available stock; shortages must be visible.
-- `leftoverInventory` is quote output, mapped by `src/lib/plan/python-mapper.ts`; it is not a stock ledger.
-- `/3d` currently auto-saves one scene in this browser's `localStorage` (`taller3d:escena:v1`). The saved `clave` is generated locally and reused for that scene; there is no server-side build operation or stock store.
-- Current request authentication uses one shared `APP_PASSWORD` cookie. There is no authenticated user id or workshop id in the current runtime/schema.
-- REQ-004 scopes accounts to internal admins and Sempertex staff, excludes external decorators/customers, and plans `usuarios`/`sesiones`; those accounts and `usuarioDeRequest` are not implemented. Its plan does not define a workshop entity or membership.
+- `leftoverInventory` is quote output (`src/lib/cotizacion/motor.ts`, `src/lib/plan/python-mapper.ts`), not a stock ledger.
+- `/3d` auto-saves one scene in this browser's `localStorage` (`taller3d:escena:v1`). There is no server-side build operation or stock store.
+- Request authentication uses one shared `APP_PASSWORD` cookie; there is no authenticated user or workshop id in the runtime or schema. D-056 removed the separate admin key, so the app session is the only gate.
+- REQ-004 plans internal admin and staff accounts (`usuarios`, `sesiones`, `usuarioDeRequest`), none implemented. It defines no workshop entity or membership.
 
-## Owner isolation — decision pending
+## Open points before any persistence (deferred design, not implemented)
 
-Two viable scopes remain:
+### Owner isolation
+- **Shared workshop/company stock:** all authorized members share one pool. Fits the team model of REQ-004; needs a stable workshop owner and a membership rule.
+- **Per-account stock:** each user has an independent pool; needs a stable user id and an admin oversight rule.
+- Whichever is chosen, derive the owner from authenticated server-side membership; never accept an owner id from the request body.
 
-1. **Shared workshop/company stock:** every authorized member of the same workshop sees and changes one stock pool. This matches the internal admin/staff team model in REQ-004, but requires a stable workshop/company owner and a user-to-workshop membership rule.
-2. **Per-account stock:** every user has an independent pool. This needs only a stable user id, but staff do not share stock and the admin's access/oversight must be specified.
+### Persistence
+- Store inventory outside customer session/widget JSON and outside browser-only `localStorage`, in additive PostgreSQL tables with an explicit schema version.
+- One stock line per canonical product identity plus normalized colour and size; integer units; a database constraint forbids negative balances.
+- Current balance and append-only movement records written in the same transaction. Do not duplicate inventory into `leftoverInventory`.
+- Only resolved catalogue variants may change stock; free-text labels must not create catalogue items.
 
-**Recommendation for confirmation:** shared workshop/company stock. This fits a team that jointly quotes and builds Sempertex events. Do not enable it until the owner confirms the scope and REQ-004 identity mapping is specified. Derive the owner id from authenticated server-side membership; never accept a tenant/user owner id as authority from the request body.
+### Scene-build deduction and idempotency
+- Snapshot the material requirements and a hash of the scene/BOM when the decorator confirms a build; never re-read a mutable browser scene afterwards.
+- Each explicit confirmation carries a client-generated UUID operation id, reused on retries. Store it under the server-derived owner with a hash of the request and the result. Same id and payload returns the stored result without deducting again; same id with a different payload is a conflict.
+- A deliberate later build of the same scene is a new operation id; the server decides whether a request is a retry, not a scene name or client flag.
+- Deduction runs in one transaction: lock and update balances, deduct no more than available, record the movement, commit atomically. On shortage, deduct what is available, leave the balance at zero and return the missing quantity as a warning. Manual reductions follow the same rule.
+- The locally saved scene `clave` is not an authorization or tenant key.
 
-## Persistence — proposed, not accepted
+### REQ-004 identity and D-035 rollout
+- REQ-004 identity is a prerequisite for persistent stock. The owner mapping must be added to REQ-004 before any inventory read or write is authorized.
+- Keep stock and build records in their own tables. If a later change adds a field to the strict customer session/widget payload, it must be `.optional().catch(undefined)` and deployed as a reader before any writer (D-035).
+- Use additive migrations with inventory access off by default; enable the reader first and the writer only after the compatible reader is live.
 
-- Keep inventory outside customer session/widget JSON and outside browser-only `localStorage`; use additive PostgreSQL tables with an explicit schema version.
-- Represent each stock line by canonical product identity plus normalized colour and size codes, with integer units and a database constraint preventing negative balances. Accessories without a colour/size use explicit normalized empty values rather than ambiguous client labels.
-- Keep a current balance and an append-only movement/build record in the same transaction, so manual changes and scene deductions are auditable and can be reconciled. Do not duplicate inventory in `leftoverInventory`.
-- Require resolved product/variant identity before changing stock. User-entered labels alone must not create duplicate catalogue items.
+### Rollback
+- Disable inventory writes first, then reads. Keep the additive tables and movement history; never drop or reset stock data as a rollback shortcut.
 
-The owner key and foreign key cannot be finalized until the pending isolation choice is answered. If shared, REQ-004 must define workshop/company membership; if per-account, inventory must reference the authenticated `usuario_id`.
+### Acceptance gates for a future implementation
+- Test owner isolation, concurrent adjustments, non-negative balances, duplicate and retried build confirmations, deliberate rebuilds of the same scene, shortage warnings and rollback gates against a disposable database.
 
-## Scene-build deduction and idempotency — proposed
+## Alternatives rejected
 
-- Snapshot the canonical material requirements and hash the scene/BOM when the decorator confirms a build. Do not re-read a mutable browser scene later to determine what was deducted.
-- Each explicit build confirmation gets a stable UUID operation id that the client reuses for retries. Store it under the server-derived owner scope with a hash of the request and the exact result. Replaying the same id and payload returns the stored result without another deduction; reusing it with a different payload is a conflict.
-- A later deliberate build of the same scene is a new operation id. The server, not a scene name or client flag, decides whether a request is a retry.
-- In one database transaction, lock/update affected balance rows, subtract no more than the available quantity, record the movement and result, and commit atomically. On a shortage, deduct only available units, leave the balance at zero, and return a warning with the missing quantity. A failed transaction leaves both balance and movement unchanged.
-- Manual reductions use the same atomic non-negative rule and return an explicit shortage warning; no silent negative balance.
-
-The locally saved scene `clave` may help correlate a build to the current browser scene, but it is not an authorization or tenant key. The operation id and server-derived owner scope are the idempotency/security boundary.
-
-## REQ-004 identity and D-035 rollout
-
-- REQ-004 identity is a prerequisite to enabling persistent stock: current `APP_PASSWORD` does not identify a person. Add the chosen owner mapping to REQ-004 before implementation can safely authorize inventory reads/writes.
-- Keep stock and build records in their own tables; do not add inventory or build-state fields to strict customer session/widget payloads. Under that design, D-035's reader-first requirement for new session/widget fields does not apply. If implementation later adds such a field, it must be `.optional().catch(undefined)` and deployed read-only before any writer.
-- Use additive schema migration and default-off inventory access. If separate reader/writer rollout gates are needed, enable the reader first and the writer only after the compatible reader is deployed; do not apply a production migration as part of this architecture task.
-
-## Rollback and acceptance gates
-
-- Rollback disables inventory writes first and reads second; retain the additive tables and movement history. Do not drop or reset stock data as a rollback shortcut; export/retention review is separate.
-- Before T69 is accepted, confirm the owner scope and finalize its REQ-004 mapping, persistence keys, shortage behavior, idempotency boundary and D-035 applicability. Record the accepted ruling in an ADR and the project brain.
-- Before a later implementation is enabled, test owner isolation, concurrent adjustments, non-negative balances, duplicate/retried build confirmations, same-scene deliberate rebuilds, shortage warnings, and rollback gates with a disposable database.
-
-## Alternatives rejected for this design
-
-- Treating `leftoverInventory` as current stock: it is calculated quote output and loses stock movement history.
-- Persisting stock in only browser `localStorage`: it cannot be shared by a team or reliably isolated across users/devices.
-- Adding the stock quantity to the strict guided customer session/widget: it couples stock to conversation compatibility and invokes D-035 rollout risk without benefit.
-- Trusting a client-supplied owner/user id: the current identity boundary cannot authorize it.
+- Treating `leftoverInventory` as current stock: calculated quote output with no movement history.
+- Persisting stock only in browser `localStorage`: cannot be shared by a team or isolated per user.
+- Adding stock quantities to the strict guided session/widget: couples stock to conversation compatibility and adds D-035 rollout risk with no benefit yet.
+- Trusting a client-supplied owner or user id: the current identity boundary cannot authorize it.

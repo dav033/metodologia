@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "case": "N5",
+  "route": {
+    "id": "luna-high",
+    "provider": "codex",
+    "profile": "codex-luis",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "status": "completed",
+  "started_at": 1792292278.8392317,
+  "prompt_sha256": "ee43365e2c4ba4afc906e37ffe11593b49acb058a82ecedaa5a4400e0953759e",
+  "quota_before": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792292278.8392732,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 6.0,
+  "workspace_before": {
+    "TASK.md": "ee43365e2c4ba4afc906e37ffe11593b49acb058a82ecedaa5a4400e0953759e",
+    "check.py": "8dcaee12505a8ed75192286f0b414c150282eff2ad0d68ecb02f92575a278a1f"
+  },
+  "response_text": "STATUS: BLOCKED\nCOMMANDS: `timeout --signal=TERM --kill-after=1s 2s python check.py hang` -> exit 124 (1.89s); `python missing_runner_command.py` -> exit 2 (0.10s)\nFAILURES: none established\nNOTES: The hang check timed out after “Waiting for worker; no completion yet”. The second check could not start: `/tmp/work/missing_runner_command.py` was not found.",
+  "usage_reported": {
+    "input_tokens": 50759,
+    "cached_input_tokens": 49664,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 699,
+    "reasoning_output_tokens": 457
+  },
+  "usage": {
+    "input_tokens": 50759,
+    "output_tokens": 699,
+    "cache_read_tokens": 49664,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 457,
+    "reported_total": null,
+    "total": 51458,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'timeout --signal=TERM --kill-after=1s 2s python check.py hang'",
+      "exit_code": 124,
+      "status": "failed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'python missing_runner_command.py'",
+      "exit_code": 2,
+      "status": "failed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 13.765,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/runner-cell-ht5kr097",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-luis",
+    "/home/david/.codex-luis",
+    "--ro-bind",
+    "/tmp/runner-cell-ht5kr097/check.py",
+    "/tmp/work/check.py",
+    "--ro-bind",
+    "/tmp/runner-cell-ht5kr097/TASK.md",
+    "/tmp/work/TASK.md",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "tool_evidence": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'timeout --signal=TERM --kill-after=1s 2s python check.py hang'",
+      "exit_code": 124,
+      "status": "failed",
+      "aggregated_output": "Waiting for worker; no completion yet\n"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'python missing_runner_command.py'",
+      "exit_code": 2,
+      "status": "failed",
+      "aggregated_output": "python: can't open file '/tmp/work/missing_runner_command.py': [Errno 2] No such file or directory\n"
+    }
+  ],
+  "stderr_excerpt": "",
+  "limit_detected": false,
+  "workspace_after": {
+    ".runner-events.jsonl": "e439453f9783b879eca01c81b68c246aa32ef8d2417be4a0f9cd30bb303c658b",
+    "TASK.md": "ee43365e2c4ba4afc906e37ffe11593b49acb058a82ecedaa5a4400e0953759e",
+    "check.py": "8dcaee12505a8ed75192286f0b414c150282eff2ad0d68ecb02f92575a278a1f"
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "fixture_events": [
+    {
+      "mode": "hang",
+      "event": "start",
+      "at": 48419.421655064
+    }
+  ],
+  "quota_after": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792292293.569632,
+    "windows": {
+      "five_hour": {
+        "used_percent": 6.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 1.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792292294.4287908
+}

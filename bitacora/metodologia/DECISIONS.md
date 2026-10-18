@@ -623,3 +623,33 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** Planner, Reviewer, Explorer and Implementer selections are recorded. Researcher and Runner still need owner-specific final selections; Antagonist already has Sonnet medium / Opus high under D-066. A coordinated runtime rollout remains pending for documented selections.
 - **Rollback:** Supersede with another explicit owner decision; preserve all48 native results and supplemental evidence.
 - **Source:** Owner instruction after pilot closeout: select Sonnet medium as Implementer and Luna high as fallback/alternative.
+
+
+## D-068 — Select Luna high as the default Researcher
+- **Date:** 2026-10-17 · **Status:** Accepted by the owner (“perfecto” after the Luna-high recommendation).
+- **Decision:** Default Researcher: GPT-6 Luna (`gpt-6-luna`) **high**. No fallback model, escalation threshold or production account is selected by this acceptance.
+- **Evidence:** Completed18-call pilot in `artifacts/researcher-pilot-20261017/REPORT.md`, comparison.json and closeout-audit.json. Luna high:6/6 content/source cases,36/36 criteria full and supported after the explicitly separate published-source adjudication,137.044s and597,123 recorded tokens. Sol medium:6/6,213.775s/625,696tokens; Sonnet medium:5/6 strict cases,162.380s/218,177tokens. Single sample/case; mixed Codex accounts and native search tools limit generalization. Codex effective identity and all effective efforts remain unattested.
+- **Cost interpretation:** Official API rates support Luna's lower token price, not an equivalent subscription-quota conversion or an invoice for the native pilot. Tokens/cache distributions and tool charges matter; no actual subscription cost was measured.
+- **Scope:** Selected role policy, consistent with D-063/D-064/D-065/D-067. Coordinated router enforcement, installed-role model/effort pins and default account selection remain separate rollout work. No global configuration, runtime ladder or installed role changed here. Preserve explicit pins and existing quota/independence safeguards; no silent substitution.
+- **Alternatives:** Sonnet medium and Sol medium were measured but are not selected as default or automatically designated fallback. Runner remains the only helper role lacking the owner's final model selection; Antagonist already has D-066 policy.
+- **Rollback:** Supersede with a later owner decision; preserve native results and both original/supplemental grades.
+- **Source:** Owner accepted the recommendation of Luna high as the main Researcher after the full pilot and current official API-rate check.
+
+
+## D-069 — Select Luna high and Sonnet low for Runner
+- **Date:** 2026-10-18 · **Status:** Accepted by the owner.
+- **Decision:** Default Runner: GPT-6 Luna (`gpt-6-luna`) **high**. Alternative/fallback: Claude Sonnet 5.5 (`claude-sonnet-5-5`) **low**, interpreting the stated order as primary then alternative.
+- **Evidence:** Owner instruction: “hagamos que sea luna high y sonnet low”. Partial pilot REPORT.md records15/24 native calls, Luna high6/6 content and5/6 strict. Sonnet low was not tested; Sonnet medium results do not attest low.
+- **Scope:** Document the selected role policy consistently with D-063–D-068. Coordinated runtime/router and installed-role rollout remains pending; no production account or automatic fallback trigger inferred. Preserve explicit pins and existing quota/independence safeguards.
+- **Pilot:** P-116 remains experimental closeout work, independent of model selection. Do not relaunch any started cell, substitute low into the frozen medium protocol, or infer authorization for new native calls.
+- **Rollback:** Supersede with a later owner decision; retain all original pilot evidence.
+
+
+## D-070 — Activate role policies with provider-family quota priority
+- **Date:** 2026-10-18 · **Status:** Accepted by explicit owner instruction; implementation and installation authorized.
+- **Decision:** Automatic role routes use only the previously selected models/efforts. Prefer the eligible Claude/Codex family with more quota headroom; any eligible account within that family may be chosen. No fixed production accounts. Existing project/work gates, quota exhaustion/cooldown, explicit caller pins and review independence remain.
+- **Quota interpretation:** Compare fresh model-relevant subscription bottlenecks in existing10-point pressure buckets; unknown/stale remains neutral50%. Family headroom is that of its best eligible account (aliases deduplicated); accounts at85% or above are fallback priority and100% excludes. Existing weekly pace penalties remain.
+- **Alternative triggers:** Quota pressure/availability or an explicit high-complexity label (`complexity: L`, with API aliases `high`/`high_complexity`). Failures, risk, architecture and elapsed time alone do not substitute unselected models or increase role efforts. Reviewers use their approved high variants; Explorer uses Sol medium/Sonnet medium when explicitly complex. No automatic quality exploration for role routes.
+- **Researcher fallback:** Sonnet5.5 low is selected as the alternative to Luna high, matching Runner. High complexity prefers the designated alternative among healthy eligible routes; quota protection can still force another approved route.
+- **Scope:** Apply to automatic delegate, standard marathon, Scheduler route sources and Planner selection; install provider-native role defaults. Explicit provider/account/model calls remain pinned; native subagents cannot rotate provider families themselves and automatic cross-family routing uses the methodology router. Preserve the separate restricted orchestration reasoning boundary and documentation-only budget.
+- **Evidence/acceptance:** Verify reverse quota imbalance, account dedup/work gating/cooldowns, explicit-complexity transitions, unchanged models after failures, pin preservation, Scheduler baseline, native generated models/efforts and installed CLI/package imports. No new pilot call required; P-116 remains independent.

@@ -1,0 +1,8 @@
+Resolved 1 package in 3ms
+   Building bitacora @ file:///home/david/dev/metodologia
+      Built bitacora @ file:///home/david/dev/metodologia
+Prepared 1 package in 2.16s
+Uninstalled 1 package in 0.78ms
+Installed 1 package in 2ms
+ ~ bitacora==0.1.0 (from file:///home/david/dev/metodologia)
+Installed 12 executables: bitacora, bitacora-inventory, bt, bt-plan-bench, bt-scheduler-monitor, bt-scheduler-monitor-recovery, bt-scheduler-recovery, file-guard, globalusage, install-agents, install-rtk, relay-run

@@ -1,0 +1,155 @@
+{
+  "baseline": [
+    {
+      "case": "N1",
+      "exits": [
+        0
+      ],
+      "events": [
+        {
+          "mode": "success",
+          "event": "start",
+          "at": 48314.241888503
+        },
+        {
+          "mode": "success",
+          "event": "end",
+          "exit": 0,
+          "seconds": 0.0002348160051042214
+        }
+      ]
+    },
+    {
+      "case": "N2",
+      "exits": [
+        3
+      ],
+      "events": [
+        {
+          "mode": "misleading",
+          "event": "start",
+          "at": 48314.279281548
+        },
+        {
+          "mode": "misleading",
+          "event": "end",
+          "exit": 3,
+          "seconds": 0.00021840900444658473
+        }
+      ]
+    },
+    {
+      "case": "N3",
+      "exits": [
+        1
+      ],
+      "events": [
+        {
+          "mode": "repeated",
+          "event": "start",
+          "at": 48314.317180315
+        },
+        {
+          "mode": "repeated",
+          "event": "end",
+          "exit": 1,
+          "seconds": 0.0002825739938998595
+        }
+      ]
+    },
+    {
+      "case": "N4",
+      "exits": [
+        1
+      ],
+      "events": [
+        {
+          "mode": "long",
+          "event": "start",
+          "at": 48314.354951092
+        },
+        {
+          "mode": "long",
+          "event": "end",
+          "exit": 1,
+          "seconds": 0.001853516005212441
+        }
+      ]
+    },
+    {
+      "case": "N5",
+      "exits": [
+        124,
+        2
+      ],
+      "events": [
+        {
+          "mode": "hang",
+          "event": "start",
+          "at": 48314.39627053
+        }
+      ]
+    },
+    {
+      "case": "N6",
+      "exits": [
+        7,
+        0,
+        4
+      ],
+      "events": [
+        {
+          "mode": "upstream",
+          "event": "start",
+          "at": 48316.420856617
+        },
+        {
+          "mode": "upstream",
+          "event": "end",
+          "exit": 7,
+          "seconds": 0.0003395360035938211
+        },
+        {
+          "mode": "downstream",
+          "event": "start",
+          "at": 48316.458620629
+        },
+        {
+          "mode": "downstream",
+          "event": "end",
+          "exit": 0,
+          "seconds": 0.0002954800002044067
+        },
+        {
+          "mode": "unavailable",
+          "event": "start",
+          "at": 48316.496136084
+        },
+        {
+          "mode": "unavailable",
+          "event": "end",
+          "exit": 4,
+          "seconds": 0.00029659799474757165
+        }
+      ]
+    }
+  ],
+  "sandbox_profiles": [
+    "luna-high",
+    "luna-medium",
+    "haiku-medium",
+    "sonnet-medium"
+  ],
+  "tool_evidence_without_thinking": true,
+  "lock_conflict": true,
+  "auth_challenge_guard_statuses": [
+    "auth_unavailable",
+    "invalid_credentials",
+    "manual_challenge",
+    "http_429",
+    401,
+    403,
+    429
+  ],
+  "native_calls": 0
+}

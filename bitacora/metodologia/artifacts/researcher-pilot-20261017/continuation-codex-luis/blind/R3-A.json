@@ -1,0 +1,77 @@
+{
+  "blind_id": "R3-A",
+  "case": "R3",
+  "note": {
+    "case": "R3",
+    "claims": [
+      {
+        "id": "C1",
+        "text": "In Node.js v24.10.0, server.headersTimeout limits how long the parser waits to receive complete HTTP headers. Its default is min(server.requestTimeout, 60000 milliseconds); with the default requestTimeout of 300000 milliseconds, this is 60 seconds.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+            "locator": "server.headersTimeout, original lines 1842\u20131845; server.requestTimeout, line 1888"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "text": "In Node.js v24.10.0, server.requestTimeout limits the time for receiving the entire request from the client. Its default is 300000 milliseconds (300 seconds, five minutes), not a documented application-operation execution budget.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+            "locator": "server.requestTimeout, original lines 1882\u20131891"
+          }
+        ]
+      },
+      {
+        "id": "C3",
+        "text": "For both headersTimeout and requestTimeout expiry, the supplied v24.10.0 documentation states that the server responds with HTTP 408 without forwarding the request to the request listener, then closes the connection.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+            "locator": "server.headersTimeout, original lines 1847\u20131848; server.requestTimeout, lines 1893\u20131894"
+          }
+        ]
+      },
+      {
+        "id": "C4",
+        "text": "In Node.js v24.10.0, server.timeout measures milliseconds of socket inactivity before a socket is presumed timed out. The default is 0, disabling this timeout behavior on incoming connections. Its logic is installed on connection, so changing the value affects only new connections.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+            "locator": "server.timeout, original lines 1952\u20131960"
+          }
+        ]
+      },
+      {
+        "id": "C5",
+        "text": "For the socket timeout configured through server.setTimeout, a Server 'timeout' listener is called with the timed-out socket. When such a callback is assigned, timeouts must be handled explicitly. This listener behavior is distinct from the documented automatic 408-and-close behavior for headersTimeout and requestTimeout; the extract does not say that merely registering a listener enables a nonzero timeout.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+            "locator": "server.setTimeout, original lines 1910\u20131923; server.headersTimeout, lines 1847\u20131848; server.requestTimeout, lines 1893\u20131894"
+          }
+        ]
+      },
+      {
+        "id": "C6",
+        "text": "No. Setting these HTTP server timeouts does not establish a 300-second application-operation deadline: headersTimeout bounds header reception, requestTimeout bounds reception of the entire client request, and server.timeout bounds socket inactivity. None of these supplied descriptions establishes an elapsed-time deadline for application work or guarantees cancellation of that work.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md",
+            "locator": "Original lines 1842\u20131848, 1888\u20131894, 1914\u20131923, and 1952\u20131960"
+          }
+        ]
+      }
+    ],
+    "recommendation": "Treat request reception limits, socket inactivity limits, and application-operation deadlines as separate requirements. Configure the HTTP limits for their documented scopes, and explicitly handle socket timeouts when supplying a listener. If a 300-second application-operation deadline is required, specify and independently verify an application-level deadline and cancellation policy; the supplied HTTP settings alone are insufficient evidence that it exists.",
+    "unknowns": [
+      "FROZEN research used only docs/node2410http.txt, preserving its original source line numbers and source URL; no web retrieval or runtime verification was performed.",
+      "The supplied extract does not document how to implement or verify application-level cancellation, how already-running application work behaves after connection closure, or detailed timer enforcement precision. These remain unverified."
+    ]
+  },
+  "contract_valid": true,
+  "tool_calls": [],
+  "tool_result_evidence": []
+}

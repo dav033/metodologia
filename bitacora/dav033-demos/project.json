@@ -1,0 +1,12 @@
+{
+ "repos": {
+  "app": {
+   "remote": "https://github.com/dav033/dav033-demos.git",
+   "hint": "~/dev/dav033-demos"
+  },
+  "example-child": {
+   "remote": "https://github.com/dav033/oraldenti.git",
+   "hint": "~/dev/oraldenti"
+  }
+ }
+}

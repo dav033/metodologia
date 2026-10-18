@@ -1,0 +1,60 @@
+{
+  "posthoc": true,
+  "candidate_edits": false,
+  "native_calls_added": 0,
+  "trigger": "Published official uv pages differ from upstream GitHub source snapshot used by first reviewers.",
+  "scope": "Uniform R6/C5 adjudication for all3 routes; all other original criteria preserved.",
+  "changes": [
+    {
+      "cell": "R6-sonnet-medium",
+      "criterion": "C5",
+      "original_rating": "partial",
+      "original_supported": false,
+      "adjudicated_rating": "full",
+      "adjudicated_supported": true
+    },
+    {
+      "cell": "R6-sol-medium",
+      "criterion": "C5",
+      "original_rating": "full",
+      "original_supported": true,
+      "adjudicated_rating": "full",
+      "adjudicated_supported": true
+    },
+    {
+      "cell": "R6-luna-high",
+      "criterion": "C5",
+      "original_rating": "partial",
+      "original_supported": false,
+      "adjudicated_rating": "full",
+      "adjudicated_supported": true
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+      "locator": "Handling of extraneous packages, rendered line236",
+      "finding": "Published concepts text describes removal by lockfile membership, supporting Sonnet wording."
+    },
+    {
+      "url": "https://docs.astral.sh/uv/reference/cli/",
+      "locator": "uv sync description, rendered line3700",
+      "finding": "Published CLI describes project-dependency membership and documents inexact conflict/no-build-isolation qualifications, supporting the other candidate wording."
+    },
+    {
+      "url": "https://docs.astral.sh/uv/guides/integration/docker/",
+      "locator": "Intermediate layers/workspaces, rendered lines503-554",
+      "finding": "Confirms frozen dependency layer and later locked sync with metadata."
+    },
+    {
+      "url": "https://nodejs.org/en/blog/release",
+      "locator": "Release entries, rendered lines19-33",
+      "finding": "Confirms24.22.0 LTS and26.12.0 Current posted2026-10-14; extra patch claims not proven false."
+    }
+  ],
+  "limitations": [
+    "Coordinator verification is posthoc; no native tool bodies retroactively reconstructed.",
+    "Published/upstream wording difference is a source caveat, not a new runtime behavior test.",
+    "Original grades/partial report remain preserved."
+  ]
+}

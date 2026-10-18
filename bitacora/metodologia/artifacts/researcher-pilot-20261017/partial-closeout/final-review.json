@@ -1,0 +1,14 @@
+{
+  "axis": "spec",
+  "verdict": "APPROVE",
+  "checks": [
+    "8 native calls and1 quota preflight correctly distinguished",
+    "10 unattempted cells, onlyR1 matched",
+    "no full-ranking claim",
+    "R2 criterion adjudication disclosed with original preserved",
+    "time/token/criterion arithmetic matches",
+    "frozen hashes valid",
+    "missing identities/efforts remain unknown"
+  ],
+  "review_calls_did_not_invoke_native_models": true
+}

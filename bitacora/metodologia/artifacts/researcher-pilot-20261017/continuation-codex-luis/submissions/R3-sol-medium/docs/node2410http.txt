@@ -1,0 +1,142 @@
+Source: https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md
+Original source line numbers follow.
+
+01828 | ### `server.headersTimeout`
+01829 | 
+01830 | <!-- YAML
+01831 | added:
+01832 |  - v11.3.0
+01833 |  - v10.14.0
+01834 | changes:
+01835 |   - version:
+01836 |     - v19.4.0
+01837 |     - v18.14.0
+01838 |     pr-url: https://github.com/nodejs/node/pull/45778
+01839 |     description: The default is now set to the minimum between 60000 (60 seconds) or `requestTimeout`.
+01840 | -->
+01841 | 
+01842 | * Type: {number} **Default:** The minimum between [`server.requestTimeout`][] or `60000`.
+01843 | 
+01844 | Limit the amount of time the parser will wait to receive the complete HTTP
+01845 | headers.
+01846 | 
+01847 | If the timeout expires, the server responds with status 408 without
+01848 | forwarding the request to the request listener and then closes the connection.
+01849 | 
+01850 | It must be set to a non-zero value (e.g. 120 seconds) to protect against
+01851 | potential Denial-of-Service attacks in case the server is deployed without a
+01852 | reverse proxy in front.
+01853 | 
+01854 | ### `server.listen()`
+01855 | 
+01856 | Starts the HTTP server listening for connections.
+01857 | This method is identical to [`server.listen()`][] from [`net.Server`][].
+01858 | 
+01859 | ### `server.listening`
+01860 | 
+01861 | <!-- YAML
+01862 | added: v5.7.0
+01863 | -->
+01864 | 
+01865 | * Type: {boolean} Indicates whether or not the server is listening for connections.
+01866 | 
+01867 | ### `server.maxHeadersCount`
+01868 | 
+01869 | <!-- YAML
+01870 | added: v0.7.0
+01871 | -->
+01872 | 
+01873 | * Type: {number} **Default:** `2000`
+01874 | 
+01875 | Limits maximum incoming headers count. If set to 0, no limit will be applied.
+01876 | 
+01877 | ### `server.requestTimeout`
+01878 | 
+01879 | <!-- YAML
+01880 | added: v14.11.0
+01881 | changes:
+01882 |   - version: v18.0.0
+01883 |     pr-url: https://github.com/nodejs/node/pull/41263
+01884 |     description: The default request timeout changed
+01885 |                  from no timeout to 300s (5 minutes).
+01886 | -->
+01887 | 
+01888 | * Type: {number} **Default:** `300000`
+01889 | 
+01890 | Sets the timeout value in milliseconds for receiving the entire request from
+01891 | the client.
+01892 | 
+01893 | If the timeout expires, the server responds with status 408 without
+01894 | forwarding the request to the request listener and then closes the connection.
+01895 | 
+01896 | It must be set to a non-zero value (e.g. 120 seconds) to protect against
+01897 | potential Denial-of-Service attacks in case the server is deployed without a
+01898 | reverse proxy in front.
+01899 | 
+01900 | ### `server.setTimeout([msecs][, callback])`
+01901 | 
+01902 | <!-- YAML
+01903 | added: v0.9.12
+01904 | changes:
+01905 |   - version: v13.0.0
+01906 |     pr-url: https://github.com/nodejs/node/pull/27558
+01907 |     description: The default timeout changed from 120s to 0 (no timeout).
+01908 | -->
+01909 | 
+01910 | * `msecs` {number} **Default:** 0 (no timeout)
+01911 | * `callback` {Function}
+01912 | * Returns: {http.Server}
+01913 | 
+01914 | Sets the timeout value for sockets, and emits a `'timeout'` event on
+01915 | the Server object, passing the socket as an argument, if a timeout
+01916 | occurs.
+01917 | 
+01918 | If there is a `'timeout'` event listener on the Server object, then it
+01919 | will be called with the timed-out socket as an argument.
+01920 | 
+01921 | By default, the Server does not timeout sockets. However, if a callback
+01922 | is assigned to the Server's `'timeout'` event, timeouts must be handled
+01923 | explicitly.
+01924 | 
+01925 | ### `server.maxRequestsPerSocket`
+01926 | 
+01927 | <!-- YAML
+01928 | added: v16.10.0
+01929 | -->
+01930 | 
+01931 | * Type: {number} Requests per socket. **Default:** 0 (no limit)
+01932 | 
+01933 | The maximum number of requests socket can handle
+01934 | before closing keep alive connection.
+01935 | 
+01936 | A value of `0` will disable the limit.
+01937 | 
+01938 | When the limit is reached it will set the `Connection` header value to `close`,
+01939 | but will not actually close the connection, subsequent requests sent
+01940 | after the limit is reached will get `503 Service Unavailable` as a response.
+01941 | 
+01942 | ### `server.timeout`
+01943 | 
+01944 | <!-- YAML
+01945 | added: v0.9.12
+01946 | changes:
+01947 |   - version: v13.0.0
+01948 |     pr-url: https://github.com/nodejs/node/pull/27558
+01949 |     description: The default timeout changed from 120s to 0 (no timeout).
+01950 | -->
+01951 | 
+01952 | * Type: {number} Timeout in milliseconds. **Default:** 0 (no timeout)
+01953 | 
+01954 | The number of milliseconds of inactivity before a socket is presumed
+01955 | to have timed out.
+01956 | 
+01957 | A value of `0` will disable the timeout behavior on incoming connections.
+01958 | 
+01959 | The socket timeout logic is set up on connection, so changing this
+01960 | value only affects new connections to the server, not any existing connections.
+01961 | 
+01962 | ### `server.keepAliveTimeout`
+01963 | 
+01964 | <!-- YAML
+01965 | added: v8.0.0
+01966 | -->

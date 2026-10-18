@@ -1,0 +1,86 @@
+{
+ "repos": {
+  "repo-agentes-de-trabajo": {
+   "remote": "https://github.com/dav033/agentes-de-trabajo.git",
+   "hint": "~/dev/agentes-de-trabajo"
+  },
+  "repo-crunchyreroll": {
+   "remote": "https://github.com/dav033/CrunchyREroll.git",
+   "hint": "~/dev/crunchyreroll"
+  },
+  "repo-hints-custom": {
+   "remote": "https://github.com/AlfredoSequeida/hints",
+   "hint": "~/dev/hints-custom"
+  },
+  "repo-hints.wiki": {
+   "remote": "https://github.com/AlfredoSequeida/hints.wiki.git",
+   "hint": "~/dev/hints.wiki"
+  },
+  "repo-hyprland-wiki": {
+   "remote": "https://github.com/hyprwm/hyprland-wiki.git",
+   "hint": "~/dev/hyprland-wiki"
+  },
+  "repo-kodi": {
+   "remote": "https://github.com/dav033/xbmc.git",
+   "hint": "~/dev/kodi"
+  },
+  "repo-lotm": {
+   "remote": "https://github.com/dav033/lotm-workspace.git",
+   "hint": "~/dev/lotm"
+  },
+  "repo-lotm-backend": {
+   "remote": "https://github.com/dav033/lotm-backend.git",
+   "hint": "~/dev/lotm-backend"
+  },
+  "repo-lotm-frontend": {
+   "remote": "https://github.com/dav033/lotm-frontend.git",
+   "hint": "~/dev/lotm-frontend"
+  },
+  "repo-marketplace-control-backend": {
+   "remote": "https://github.com/dav033/marketplace-control-backend.git",
+   "hint": "~/dev/marketplace-control-backend"
+  },
+  "repo-marketplace-control-frontend": {
+   "remote": "https://github.com/dav033/marketplace-control-frontend.git",
+   "hint": "~/dev/marketplace-control-frontend"
+  },
+  "repo-maros-nest-ci": {
+   "remote": "",
+   "hint": "~/dev/maros-nest-ci"
+  },
+  "repo-metodologia": {
+   "remote": "https://github.com/dav033/metodologia.git",
+   "hint": "~/dev/metodologia"
+  },
+  "repo-metodologia-m2": {
+   "remote": "",
+   "hint": "~/dev/metodologia-m2"
+  },
+  "repo-metodologia-m5": {
+   "remote": "",
+   "hint": "~/dev/metodologia-m5"
+  },
+  "repo-metodologia-m6-quality": {
+   "remote": "",
+   "hint": "~/dev/metodologia-m6-quality"
+  },
+  "repo-oraldenti": {
+   "remote": "",
+   "hint": "~/dev/oraldenti"
+  },
+  "repo-pictures": {
+   "remote": "https://github.com/dav033/pictures.git",
+   "hint": "~/dev/pictures"
+  },
+  "repo-proposal-studio": {
+   "remote": "https://github.com/dav033/proposal-studio.git",
+   "hint": "~/dev/proposal-studio"
+  },
+  "repo-trainingapp": {
+   "remote": "https://github.com/dav033/trainingApp.git",
+   "hint": "~/dev/trainingapp"
+  }
+ },
+ "root": "~/dev",
+ "work": true
+}

@@ -1,0 +1,15 @@
+{
+  "axis": "standards",
+  "verdict": "APPROVE",
+  "correction": "Route order now alternates by case, exact ten-cell sequence validated.",
+  "checks": [
+    "shared exclusive lock",
+    "original8 calls excluded",
+    "quota preflight preserved",
+    "explicit codex-luis profile",
+    "frozen collector/commands retained",
+    "original hashes before and after",
+    "sandbox mask retained"
+  ],
+  "native_calls_before_run": 0
+}

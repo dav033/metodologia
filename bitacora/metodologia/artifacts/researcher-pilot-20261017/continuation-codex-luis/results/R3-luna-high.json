@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "case": "R3",
+  "mode": "frozen",
+  "route": {
+    "id": "luna-high",
+    "provider": "codex",
+    "profile": "codex-luis",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "prompt_sha256": "5419dba50efd6f7aafa81ee470e1a3569681d1a145f7e1cc214e01795acb172d",
+  "started_at": 1792291121.498612,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291121.4986227,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 2.0,
+  "workspace_before": {
+    "TASK.md": "5419dba50efd6f7aafa81ee470e1a3569681d1a145f7e1cc214e01795acb172d",
+    "docs/node2410http.txt": "b58bad20268025b5e844ec4a92d183eb74391d48e0fb39b47397da02f14f8afe"
+  },
+  "response_text": "Completed the six claims for Node.js v24.10.0 using only the supplied frozen extract. Saved the research note to `/tmp/work/research.json`.",
+  "usage_reported": {
+    "input_tokens": 72849,
+    "cached_input_tokens": 56832,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1615,
+    "reasoning_output_tokens": 404
+  },
+  "usage": {
+    "input_tokens": 72849,
+    "output_tokens": 1615,
+    "cache_read_tokens": 56832,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 404,
+    "reported_total": null,
+    "total": 74464,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat TASK.md && cat docs/node2410http.txt'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"cat > research.json <<'EOF'\n{\n  \\\"case\\\": \\\"R3\\\",\n  \\\"claims\\\": [\n    {\n      \\\"id\\\": \\\"C1\\\",\n      \\\"text\\\": \\\"In Node.js v24.10.0, server.headersTimeout limits how long the HTTP parser waits to receive the complete request headers. Its default is the minimum of server.requestTimeout and 60,000 ms (60 seconds).\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\",\n          \\\"locator\\\": \\\"lines 01828\u201301848\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C2\\\",\n      \\\"text\\\": \\\"In Node.js v24.10.0, server.requestTimeout is the millisecond limit for receiving the entire request from the client. Its default is 300,000 ms (300 seconds, five minutes).\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\",\n          \\\"locator\\\": \\\"lines 01877\u201301894\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C3\\\",\n      \\\"text\\\": \\\"If either headersTimeout or requestTimeout expires, the server responds with HTTP 408, does not forward the request to the request listener, and closes the connection.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\",\n          \\\"locator\\\": \\\"lines 01844\u201301848 (headersTimeout); lines 01890\u201301894 (requestTimeout)\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C4\\\",\n      \\\"text\\\": \\\"In Node.js v24.10.0, server.timeout measures socket inactivity in milliseconds before the socket is presumed to have timed out. Its default is 0, which disables this timeout behavior on incoming connections. A value change affects new connections, not existing ones.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\",\n          \\\"locator\\\": \\\"lines 01942\u201301960\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C5\\\",\n      \\\"text\\\": \\\"When a Server 'timeout' listener is present, Node calls it with the timed-out socket; the server documentation says timeouts must then be handled explicitly. The listener is notified of the timeout, so application code is responsible for handling the socket timeout.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\",\n          \\\"locator\\\": \\\"lines 01914\u201301923\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C6\\\",\n      \\\"text\\\": \\\"No. A 300,000 ms requestTimeout is a deadline for receiving the entire client request, and headersTimeout concerns receiving headers; neither establishes a 300-second deadline for application work after the request reaches its listener. server.timeout is an inactivity timeout on a socket, not a total operation-duration limit. These settings alone therefore do not prove a 300-second application-operation deadline.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\",\n          \\\"locator\\\": \\\"lines 01842\u201301848; 01888\u201301894; 01952\u201301960\\\"\n        }\n      ]\n    }\n  ],\n  \\\"recommendation\\\": \\\"Treat these as distinct transport-level controls: headersTimeout bounds header receipt, requestTimeout bounds complete request receipt, and server.timeout bounds socket inactivity. If an application operation itself needs a 300-second deadline, define and enforce that deadline around the operation separately; the supplied Node.js v24.10.0 documentation does not say these HTTP settings enforce it.\\\",\n  \\\"unknowns\\\": [\n    \\\"The supplied extract does not specify application-level timeout mechanisms or how a particular framework or handler controls work after request parsing.\\\",\n    \\\"The source extract is limited to Node.js v24.10.0 HTTP documentation; behavior of other Node.js versions and surrounding proxies or frameworks was not assessed.\\\"\n  ]\n}\nEOF\"",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 16.259,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/researcher-cell-m0cxkdfy",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-luis",
+    "/home/david/.codex-luis",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "research_tool_calls": [],
+  "tool_result_evidence": [],
+  "limit_detected": false,
+  "contract": {
+    "valid": true,
+    "errors": []
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "quota_after": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291138.584736,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792291139.2452319
+}

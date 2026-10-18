@@ -1,0 +1,148 @@
+Source: https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst
+Original source line numbers follow.
+
+00250 | .. We keep the old sqlite3-module-contents ref to prevent breaking links.
+00251 | .. _sqlite3-module-contents:
+00252 | 
+00253 | .. _sqlite3-module-functions:
+00254 | 
+00255 | Module functions
+00256 | ^^^^^^^^^^^^^^^^
+00257 | 
+00258 | .. function:: connect(database, timeout=5.0, detect_types=0, \
+00259 |                       isolation_level="DEFERRED", check_same_thread=True, \
+00260 |                       factory=sqlite3.Connection, cached_statements=128, \
+00261 |                       uri=False)
+00262 | 
+00263 |    Open a connection to an SQLite database.
+00264 | 
+00265 |    :param database:
+00266 |        The path to the database file to be opened.
+00267 |        Pass ``":memory:"`` to open a connection to a database that is
+00268 |        in RAM instead of on disk.
+00269 |    :type database: :term:`path-like object`
+00270 | 
+00271 |    :param float timeout:
+00272 |        How many seconds the connection should wait before raising
+00273 |        an exception, if the database is locked by another connection.
+00274 |        If another connection opens a transaction to modify the database,
+00275 |        it will be locked until that transaction is committed.
+00276 |        Default five seconds.
+00277 | 
+00278 |    :param int detect_types:
+00279 |        Control whether and how data types not
+00280 |        :ref:`natively supported by SQLite <sqlite3-types>`
+00281 |        are looked up to be converted to Python types,
+00282 |        using the converters registered with :func:`register_converter`.
+00283 |        Set it to any combination (using ``|``, bitwise or) of
+00284 |        :const:`PARSE_DECLTYPES` and :const:`PARSE_COLNAMES`
+00285 |        to enable this.
+00286 |        Column names takes precedence over declared types if both flags are set.
+00287 |        Types cannot be detected for generated fields (for example ``max(data)``),
+00288 |        even when the *detect_types* parameter is set; :class:`str` will be
+00289 |        returned instead.
+00290 |        By default (``0``), type detection is disabled.
+00291 | 
+00292 |    :param isolation_level:
+00293 |        The :attr:`~Connection.isolation_level` of the connection,
+00294 |        controlling whether and how transactions are implicitly opened.
+00295 |        Can be ``"DEFERRED"`` (default), ``"EXCLUSIVE"`` or ``"IMMEDIATE"``;
+00296 |        or ``None`` to disable opening transactions implicitly.
+00297 |        See :ref:`sqlite3-controlling-transactions` for more.
+00298 |    :type isolation_level: str | None
+00299 | 
+00300 |    :param bool check_same_thread:
+00301 |        If ``True`` (default), only the creating thread may use the connection.
+00302 |        If ``False``, the connection may be shared across multiple threads;
+00303 |        if so, write operations should be serialized by the user to avoid data
+00304 |        corruption.
+00305 | 
+00306 |    :param Connection factory:
+00307 |        A custom subclass of :class:`Connection` to create the connection with,
+00308 |        if not the default :class:`Connection` class.
+00309 | 
+00310 |    :param int cached_statements:
+
+00600 |       .. versionadded:: 3.11
+00601 | 
+00602 |    .. method:: commit()
+00603 | 
+00604 |       Commit any pending transaction to the database.
+00605 |       If there is no open transaction, this method is a no-op.
+00606 | 
+00607 |    .. method:: rollback()
+00608 | 
+00609 |       Roll back to the start of any pending transaction.
+00610 |       If there is no open transaction, this method is a no-op.
+00611 | 
+00612 |    .. method:: close()
+00613 | 
+00614 |       Close the database connection.
+00615 |       Any pending transaction is not committed implicitly;
+00616 |       make sure to :meth:`commit` before closing
+00617 |       to avoid losing pending changes.
+00618 | 
+00619 |    .. method:: execute(sql, parameters=(), /)
+00620 | 
+00621 |       Create a new :class:`Cursor` object and call
+00622 |       :meth:`~Cursor.execute` on it with the given *sql* and *parameters*.
+00623 |       Return the new cursor object.
+00624 | 
+00625 |    .. method:: executemany(sql, parameters, /)
+00626 | 
+00627 |       Create a new :class:`Cursor` object and call
+00628 |       :meth:`~Cursor.executemany` on it with the given *sql* and *parameters*.
+00629 |       Return the new cursor object.
+00630 | 
+
+02125 |    ('Objective-C', 1984)
+02126 |    I just deleted 2 rows
+02127 | 
+02128 | 
+02129 | .. _sqlite3-connection-context-manager:
+02130 | 
+02131 | How to use the connection context manager
+02132 | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+02133 | 
+02134 | A :class:`Connection` object can be used as a context manager that
+02135 | automatically commits or rolls back open transactions when leaving the body of
+02136 | the context manager.
+02137 | If the body of the :keyword:`with` statement finishes without exceptions,
+02138 | the transaction is committed.
+02139 | If this commit fails,
+02140 | or if the body of the ``with`` statement raises an uncaught exception,
+02141 | the transaction is rolled back.
+02142 | 
+02143 | If there is no open transaction upon leaving the body of the ``with`` statement,
+02144 | the context manager is a no-op.
+02145 | 
+02146 | .. note::
+02147 | 
+02148 |    The context manager neither implicitly opens a new transaction
+02149 |    nor closes the connection.
+02150 | 
+02151 | .. testcode::
+02152 | 
+02153 |    con = sqlite3.connect(":memory:")
+02154 |    con.execute("CREATE TABLE lang(id INTEGER PRIMARY KEY, name VARCHAR UNIQUE)")
+02155 | 
+02156 |    # Successful, con.commit() is called automatically afterwards
+02157 |    with con:
+02158 |        con.execute("INSERT INTO lang(name) VALUES(?)", ("Python",))
+02159 | 
+02160 |    # con.rollback() is called after the with block finishes with an exception,
+02161 |    # the exception is still raised and must be caught
+02162 |    try:
+02163 |        with con:
+02164 |            con.execute("INSERT INTO lang(name) VALUES(?)", ("Python",))
+02165 |    except sqlite3.IntegrityError:
+02166 |        print("couldn't add Python twice")
+02167 | 
+02168 |    # Connection object used as context manager only commits or rollbacks transactions,
+02169 |    # so the connection object should be closed manually
+02170 |    con.close()
+02171 | 
+02172 | .. testoutput::
+02173 |    :hide:
+02174 | 
+02175 |    couldn't add Python twice

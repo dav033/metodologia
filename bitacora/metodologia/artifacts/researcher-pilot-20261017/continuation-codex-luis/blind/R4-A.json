@@ -1,0 +1,77 @@
+{
+  "blind_id": "R4-A",
+  "case": "R4",
+  "note": {
+    "case": "R4",
+    "claims": [
+      {
+        "id": "C1",
+        "text": "No. In PostgreSQL 17, CREATE INDEX CONCURRENTLY cannot run within a transaction block; a regular CREATE INDEX can.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "lines 00685-00693"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "text": "No. CONCURRENTLY permits normal operations, including writes, to continue without being locked out for the whole build, but it still waits for relevant existing transactions at build phases. It performs two table scans, takes significantly longer and adds CPU and I/O load that can slow other operations.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "lines 00612-00625 and 00627-00643"
+          }
+        ]
+      },
+      {
+        "id": "C3",
+        "text": "If a problem such as a deadlock or uniqueness violation occurs during scanning, the failed command can leave an invalid index in the catalogs. It is ignored for queries because it may be incomplete, but it still incurs update overhead. For a unique index, if failure occurs in the second scan, the invalid index continues enforcing uniqueness.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "lines 00627-00630, 00645-00651, and 00669-00676"
+          }
+        ]
+      },
+      {
+        "id": "C4",
+        "text": "Yes, for a unique concurrent build, uniqueness enforcement against other transactions begins when the second table scan begins, before the index is available for use. Violations may therefore be reported before validity or even if the build later fails. After a failure in the second scan, the invalid index continues enforcing uniqueness; the documentation does not make that post-failure guarantee for every possible failure phase.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "lines 00669-00676"
+          }
+        ]
+      },
+      {
+        "id": "C5",
+        "text": "Documented recovery after a failed concurrent build is to drop the invalid index and retry CREATE INDEX CONCURRENTLY. The documentation also lists REINDEX INDEX CONCURRENTLY as another possibility. This is a description of the documented options, not an execution instruction.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "lines 00663-00667"
+          }
+        ]
+      },
+      {
+        "id": "C6",
+        "text": "No. PostgreSQL 17 allows only one concurrent index build on a given table at a time. Regular index builds have a different rule and may run simultaneously with other regular index builds on the same table.",
+        "evidence": [
+          {
+            "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml",
+            "locator": "lines 00685-00689"
+          }
+        ]
+      }
+    ],
+    "recommendation": "For PostgreSQL 17, treat CREATE INDEX CONCURRENTLY as a way to avoid locking out normal writes during index construction, not as a no-wait or no-impact operation. If a concurrent build fails, inspect for an invalid index and use one of the documented recovery paths: drop and retry the concurrent build, or rebuild with REINDEX INDEX CONCURRENTLY. Account for the fact that a unique build can begin rejecting conflicting writes before it becomes valid, and that an invalid index after a second-scan failure continues enforcing uniqueness.",
+    "unknowns": [
+      "The supplied PostgreSQL 17 extract describes transaction waits and impact generally; it does not quantify their duration or the CPU and I/O cost for a particular workload.",
+      "The extract does not specify how to determine the exact failed build phase in a particular incident or provide a full operational diagnostic procedure."
+    ]
+  },
+  "contract_valid": true,
+  "tool_calls": [],
+  "tool_result_evidence": []
+}

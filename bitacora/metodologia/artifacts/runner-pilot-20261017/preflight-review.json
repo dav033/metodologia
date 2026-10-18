@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "reviewer": "/root/runner_preflight_review",
+  "axes": ["spec", "standards"],
+  "findings": [
+    {"id": "auth-status-guard", "severity": "medium", "resolution": "quota_blocked includes auth_unavailable, invalid_credentials, manual_challenge and numeric HTTP statuses; mocked run_one rejects before invoke"},
+    {"id": "http-429-guard", "severity": "medium", "resolution": "quota_blocked and mocked guards also include the actual string http_429"}
+  ],
+  "validation": "run.py validate exit0; six subprocess cases, four sandbox profiles, seven auth/rate/challenge mutants, process-lock conflict and evidence parser",
+  "ruff": "exit0",
+  "native_calls_so_far": 0,
+  "final_verdict": "APPROVE; independent correction-only confirmation received"
+}

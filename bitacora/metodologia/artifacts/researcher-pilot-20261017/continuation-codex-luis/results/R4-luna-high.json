@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "case": "R4",
+  "mode": "frozen",
+  "route": {
+    "id": "luna-high",
+    "provider": "codex",
+    "profile": "codex-luis",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "prompt_sha256": "b63d81ea9e329140bb4824fb56045bd039602c83f6741d87b8e84776e94b2365",
+  "started_at": 1792291139.2459352,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291139.2459445,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 2.0,
+  "workspace_before": {
+    "TASK.md": "b63d81ea9e329140bb4824fb56045bd039602c83f6741d87b8e84776e94b2365",
+    "docs/pg17index.txt": "28393bcdbc0a714476f03eead5172ef34d1ed2e0e5fb6f50c75cbbb5aa3c9b0b"
+  },
+  "response_text": "Completed the PostgreSQL 17 concurrent-index research for all six claims using only the supplied extract. The note is at `/tmp/work/research.json`.",
+  "usage_reported": {
+    "input_tokens": 73187,
+    "cached_input_tokens": 52224,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1697,
+    "reasoning_output_tokens": 394
+  },
+  "usage": {
+    "input_tokens": 73187,
+    "output_tokens": 1697,
+    "cache_read_tokens": 52224,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 394,
+    "reported_total": null,
+    "total": 74884,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat TASK.md && cat docs/pg17index.txt'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"cat > research.json <<'EOF'\n{\n  \\\"case\\\": \\\"R4\\\",\n  \\\"claims\\\": [\n    {\n      \\\"id\\\": \\\"C1\\\",\n      \\\"text\\\": \\\"No. In PostgreSQL 17, CREATE INDEX CONCURRENTLY cannot run within a transaction block; a regular CREATE INDEX can.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml\\\",\n          \\\"locator\\\": \\\"lines 00685-00693\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C2\\\",\n      \\\"text\\\": \\\"No. CONCURRENTLY permits normal operations, including writes, to continue without being locked out for the whole build, but it still waits for relevant existing transactions at build phases. It performs two table scans, takes significantly longer and adds CPU and I/O load that can slow other operations.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml\\\",\n          \\\"locator\\\": \\\"lines 00612-00625 and 00627-00643\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C3\\\",\n      \\\"text\\\": \\\"If a problem such as a deadlock or uniqueness violation occurs during scanning, the failed command can leave an invalid index in the catalogs. It is ignored for queries because it may be incomplete, but it still incurs update overhead. For a unique index, if failure occurs in the second scan, the invalid index continues enforcing uniqueness.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml\\\",\n          \\\"locator\\\": \\\"lines 00627-00630, 00645-00651, and 00669-00676\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C4\\\",\n      \\\"text\\\": \\\"Yes, for a unique concurrent build, uniqueness enforcement against other transactions begins when the second table scan begins, before the index is available for use. Violations may therefore be reported before validity or even if the build later fails. After a failure in the second scan, the invalid index continues enforcing uniqueness; the documentation does not make that post-failure guarantee for every possible failure phase.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml\\\",\n          \\\"locator\\\": \\\"lines 00669-00676\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C5\\\",\n      \\\"text\\\": \\\"Documented recovery after a failed concurrent build is to drop the invalid index and retry CREATE INDEX CONCURRENTLY. The documentation also lists REINDEX INDEX CONCURRENTLY as another possibility. This is a description of the documented options, not an execution instruction.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml\\\",\n          \\\"locator\\\": \\\"lines 00663-00667\\\"\n        }\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C6\\\",\n      \\\"text\\\": \\\"No. PostgreSQL 17 allows only one concurrent index build on a given table at a time. Regular index builds have a different rule and may run simultaneously with other regular index builds on the same table.\\\",\n      \\\"evidence\\\": [\n        {\n          \\\"url\\\": \\\"https://raw.githubusercontent.com/postgres/postgres/REL_17_0/doc/src/sgml/ref/create_index.sgml\\\",\n          \\\"locator\\\": \\\"lines 00685-00689\\\"\n        }\n      ]\n    }\n  ],\n  \\\"recommendation\\\": \\\"For PostgreSQL 17, treat CREATE INDEX CONCURRENTLY as a way to avoid locking out normal writes during index construction, not as a no-wait or no-impact operation. If a concurrent build fails, inspect for an invalid index and use one of the documented recovery paths: drop and retry the concurrent build, or rebuild with REINDEX INDEX CONCURRENTLY. Account for the fact that a unique build can begin rejecting conflicting writes before it becomes valid, and that an invalid index after a second-scan failure continues enforcing uniquen",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 22.516,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/researcher-cell-g6p3f5cn",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-luis",
+    "/home/david/.codex-luis",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "research_tool_calls": [],
+  "tool_result_evidence": [],
+  "limit_detected": false,
+  "contract": {
+    "valid": true,
+    "errors": []
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "quota_after": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291162.5023973,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792291163.29731
+}

@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "case": "R3",
+  "mode": "frozen",
+  "route": {
+    "id": "sol-medium",
+    "provider": "codex",
+    "profile": "codex-luis",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "prompt_sha256": "5419dba50efd6f7aafa81ee470e1a3569681d1a145f7e1cc214e01795acb172d",
+  "started_at": 1792291088.752848,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291088.7528558,
+    "windows": {
+      "five_hour": {
+        "used_percent": 1.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 1.0,
+  "workspace_before": {
+    "TASK.md": "5419dba50efd6f7aafa81ee470e1a3569681d1a145f7e1cc214e01795acb172d",
+    "docs/node2410http.txt": "b58bad20268025b5e844ec4a92d183eb74391d48e0fb39b47397da02f14f8afe"
+  },
+  "response_text": "Created `/tmp/work/research.json` with all six R3 claims, citing only the supplied Node.js v24.10.0 extract and original line numbers. These HTTP timeouts do not establish a 300-second application-operation deadline. No web retrieval or runtime verification was performed.",
+  "usage_reported": {
+    "input_tokens": 75384,
+    "cached_input_tokens": 54016,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1264,
+    "reasoning_output_tokens": 0
+  },
+  "usage": {
+    "input_tokens": 75384,
+    "output_tokens": 1264,
+    "cache_read_tokens": 54016,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 0,
+    "reported_total": null,
+    "total": 76648,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files .'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat TASK.md docs/node2410http.txt'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"cat > research.json <<'EOF'\n{\n  \\\"case\\\": \\\"R3\\\",\n  \\\"claims\\\": [\n    {\n      \\\"id\\\": \\\"C1\\\",\n      \\\"text\\\": \\\"In Node.js v24.10.0, server.headersTimeout limits how long the parser waits to receive complete HTTP headers. Its default is min(server.requestTimeout, 60000 milliseconds); with the default requestTimeout of 300000 milliseconds, this is 60 seconds.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\", \\\"locator\\\": \\\"server.headersTimeout, original lines 1842\u20131845; server.requestTimeout, line 1888\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C2\\\",\n      \\\"text\\\": \\\"In Node.js v24.10.0, server.requestTimeout limits the time for receiving the entire request from the client. Its default is 300000 milliseconds (300 seconds, five minutes), not a documented application-operation execution budget.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\", \\\"locator\\\": \\\"server.requestTimeout, original lines 1882\u20131891\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C3\\\",\n      \\\"text\\\": \\\"For both headersTimeout and requestTimeout expiry, the supplied v24.10.0 documentation states that the server responds with HTTP 408 without forwarding the request to the request listener, then closes the connection.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\", \\\"locator\\\": \\\"server.headersTimeout, original lines 1847\u20131848; server.requestTimeout, lines 1893\u20131894\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C4\\\",\n      \\\"text\\\": \\\"In Node.js v24.10.0, server.timeout measures milliseconds of socket inactivity before a socket is presumed timed out. The default is 0, disabling this timeout behavior on incoming connections. Its logic is installed on connection, so changing the value affects only new connections.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\", \\\"locator\\\": \\\"server.timeout, original lines 1952\u20131960\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C5\\\",\n      \\\"text\\\": \\\"For the socket timeout configured through server.setTimeout, a Server 'timeout' listener is called with the timed-out socket. When such a callback is assigned, timeouts must be handled explicitly. This listener behavior is distinct from the documented automatic 408-and-close behavior for headersTimeout and requestTimeout; the extract does not say that merely registering a listener enables a nonzero timeout.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\", \\\"locator\\\": \\\"server.setTimeout, original lines 1910\u20131923; server.headersTimeout, lines 1847\u20131848; server.requestTimeout, lines 1893\u20131894\\\"}\n      ]\n    },\n    {\n      \\\"id\\\": \\\"C6\\\",\n      \\\"text\\\": \\\"No. Setting these HTTP server timeouts does not establish a 300-second application-operation deadline: headersTimeout bounds header reception, requestTimeout bounds reception of the entire client request, and server.timeout bounds socket inactivity. None of these supplied descriptions establishes an elapsed-time deadline for application work or guarantees cancellation of that work.\\\",\n      \\\"evidence\\\": [\n        {\\\"url\\\": \\\"https://raw.githubusercontent.com/nodejs/node/v24.10.0/doc/api/http.md\\\", \\\"locator\\\": \\\"Original lines 1842\u20131848, 1888\u20131894, 1914\u20131923, and 1952\u20131960\\\"}\n      ]\n    }\n  ],\n  \\\"recommendation\\\": \\\"Treat request reception limits, socket inactivity limits, and application-operation deadlines as separate requirements. Configure the HTTP limits for their documented scopes, and explicitly handle socket timeouts when supplying a listener. If a 300-second application-operation deadline is required, specify and independently verify an application-level deadline and cancellation policy; the supplied HTTP settings alone are insufficient evidence that it exists.\\\",\n  \\\"unknowns\\",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 30.928,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/researcher-cell-d3d8p_hv",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-luis",
+    "/home/david/.codex-luis",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "research_tool_calls": [],
+  "tool_result_evidence": [],
+  "limit_detected": false,
+  "contract": {
+    "valid": true,
+    "errors": []
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "quota_after": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291120.695033,
+    "windows": {
+      "five_hour": {
+        "used_percent": 2.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792291121.4971328
+}

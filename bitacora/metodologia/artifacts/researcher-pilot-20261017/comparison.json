@@ -1,0 +1,1851 @@
+{
+  "planned_calls": 18,
+  "saved_records": 19,
+  "effective_cell_records": 18,
+  "started": 18,
+  "unattempted_native_cells": 0,
+  "graded": 18,
+  "matched_cases": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6"
+  ],
+  "complete_comparison": true,
+  "posthoc_source_adjudication": true,
+  "configurations": [
+    {
+      "route": {
+        "id": "sonnet-medium",
+        "provider": "claude",
+        "profile": "claude-work",
+        "model": "claude-sonnet-5-5",
+        "effort": "medium"
+      },
+      "effective_profiles": {
+        "claude-work": 6
+      },
+      "started": 6,
+      "saved_records": 6,
+      "native_statuses": {
+        "completed": 6
+      },
+      "original_content_and_evidence_cases": 4,
+      "content_and_evidence_cases": 5,
+      "graded_cases": 6,
+      "frozen_pass": 3,
+      "live_pass": 2,
+      "full_criteria": 36,
+      "partial_criteria": 0,
+      "supported_criteria": 35,
+      "contract_cases": 6,
+      "seconds": 162.38,
+      "token_coverage": "6/6",
+      "tokens": 218177,
+      "measured_token_subtotal": 218177,
+      "unattested_model_cells": [],
+      "unattested_effort_cells": [
+        "R1-sonnet-medium",
+        "R2-sonnet-medium",
+        "R3-sonnet-medium",
+        "R4-sonnet-medium",
+        "R5-sonnet-medium",
+        "R6-sonnet-medium"
+      ],
+      "per_case": [
+        {
+          "case": "R1",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "claude-work",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": false,
+                "note": "Core answer correct. Extra historical ExceptionGroup availability and except* recommendation are not supported by this extract; note acknowledges the limitation."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": false,
+                "note": "Core answer correct. Extra historical ExceptionGroup availability and except* recommendation are not supported by this extract; note acknowledges the limitation."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": false,
+          "scope_valid": true,
+          "seconds": 30.086,
+          "tokens": 41814
+        },
+        {
+          "case": "R2",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "claude-work",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Coordinator adjudication: asked compatibility with3.11 and introduction version are both correct and supported. Hidden rubric-only demand to distinguish low-level SQLite autocommit was not in the question; no source/candidate changed."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Coordinator adjudication: asked compatibility with3.11 and introduction version are both correct and supported. Hidden rubric-only demand to distinguish low-level SQLite autocommit was not in the question; no source/candidate changed."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 26.771,
+          "tokens": 52743
+        },
+        {
+          "case": "R3",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "claude-work",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 19.348,
+          "tokens": 34200
+        },
+        {
+          "case": "R4",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "claude-work",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Transaction-block prohibition matches source690-692."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Waits, scans and resource impact match613-643."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "INVALID query exclusion/update overhead match645-661."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Unique enforcement starts at second scan and can persist after failure669-677."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Inspection and documented recovery only; no execution."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "One concurrent build per table685-689."
+              }
+            ],
+            "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Transaction-block prohibition matches source690-692."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Waits, scans and resource impact match613-643."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "INVALID query exclusion/update overhead match645-661."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Unique enforcement starts at second scan and can persist after failure669-677."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Inspection and documented recovery only; no execution."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "One concurrent build per table685-689."
+              }
+            ],
+            "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 28.958,
+          "tokens": 35086
+        },
+        {
+          "case": "R5",
+          "mode": "live",
+          "status": "completed",
+          "profile": "claude-work",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Official schedule successfully retrieved."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Dates match saved official schedule."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Node26 LTS2026-10-28; not LTS on target date."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Node22 maintenance LTS/EOL correct."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Node24 recommendation qualified with future Node26 LTS."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Schedule separated from installed patch/security verification."
+              }
+            ],
+            "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Official schedule successfully retrieved."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Dates match saved official schedule."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Node26 LTS2026-10-28; not LTS on target date."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Node22 maintenance LTS/EOL correct."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Node24 recommendation qualified with future Node26 LTS."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Schedule separated from installed patch/security verification."
+              }
+            ],
+            "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 27.362,
+          "tokens": 26983
+        },
+        {
+          "case": "R6",
+          "mode": "live",
+          "status": "completed",
+          "profile": "claude-work",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Official freshness docs successfully retrieved."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Stale lock causes error instead of update."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Frozen bypasses freshness; missing-lock uncertainty disclosed."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Network guarantee denied; separate offline control identified."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Posthoc source adjudication: published official concepts/CLI pages support the candidate wording. Upstream snapshot wording differs; do not penalize a LIVE answer for quoting the published official docs. All3 routes adjudicated uniformly."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Locked/exact recommendation and environment unknowns reasonable."
+              }
+            ],
+            "overall_notes": "Independent frozen-source/live-tool evidence review; route labels hidden. R6 CLI fetch truncated before sync options; candidate disclosed this."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Official freshness docs successfully retrieved."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Stale lock causes error instead of update."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Frozen bypasses freshness; missing-lock uncertainty disclosed."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Network guarantee denied; separate offline control identified."
+              },
+              {
+                "id": "C5",
+                "rating": "partial",
+                "supported": false,
+                "note": "Exact/inexact core correct, but removal incorrectly defined by absence from lockfile rather than installation selection."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Locked/exact recommendation and environment unknowns reasonable."
+              }
+            ],
+            "overall_notes": "Independent frozen-source/live-tool evidence review; route labels hidden. R6 CLI fetch truncated before sync options; candidate disclosed this."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 29.855,
+          "tokens": 27351
+        }
+      ]
+    },
+    {
+      "route": {
+        "id": "sol-medium",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "effective_profiles": {
+        "codex-2": 1,
+        "codex-luis": 5
+      },
+      "started": 6,
+      "saved_records": 6,
+      "native_statuses": {
+        "completed": 6
+      },
+      "original_content_and_evidence_cases": 6,
+      "content_and_evidence_cases": 6,
+      "graded_cases": 6,
+      "frozen_pass": 4,
+      "live_pass": 2,
+      "full_criteria": 36,
+      "partial_criteria": 0,
+      "supported_criteria": 36,
+      "contract_cases": 6,
+      "seconds": 213.775,
+      "token_coverage": "6/6",
+      "tokens": 625696,
+      "measured_token_subtotal": 625696,
+      "unattested_model_cells": [
+        "R1-sol-medium",
+        "R2-sol-medium",
+        "R3-sol-medium",
+        "R4-sol-medium",
+        "R5-sol-medium",
+        "R6-sol-medium"
+      ],
+      "unattested_effort_cells": [
+        "R1-sol-medium",
+        "R2-sol-medium",
+        "R3-sol-medium",
+        "R4-sol-medium",
+        "R5-sol-medium",
+        "R6-sol-medium"
+      ],
+      "per_case": [
+        {
+          "case": "R1",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "codex-2",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 34.753,
+          "tokens": 64882
+        },
+        {
+          "case": "R2",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              }
+            ],
+            "overall_notes": "All6 full and source-supported. R2/C5 follows the standing explicit-question adjudication; no hidden-rubric-only demand applied."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              }
+            ],
+            "overall_notes": "All6 full and source-supported. R2/C5 follows the standing explicit-question adjudication; no hidden-rubric-only demand applied."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 40.769,
+          "tokens": 87961
+        },
+        {
+          "case": "R3",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              }
+            ],
+            "overall_notes": "All6 full and source-supported; HTTP parser/socket limits correctly separated from application deadlines."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              }
+            ],
+            "overall_notes": "All6 full and source-supported; HTTP parser/socket limits correctly separated from application deadlines."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 30.928,
+          "tokens": 76648
+        },
+        {
+          "case": "R4",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "All6 full with relevant PostgreSQL17 source locators."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "All6 full with relevant PostgreSQL17 source locators."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 26.1,
+          "tokens": 77019
+        },
+        {
+          "case": "R5",
+          "mode": "live",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 38.279,
+          "tokens": 109033
+        },
+        {
+          "case": "R6",
+          "mode": "live",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Posthoc source adjudication: published official concepts/CLI pages support the candidate wording. Upstream snapshot wording differs; do not penalize a LIVE answer for quoting the published official docs. All3 routes adjudicated uniformly."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 42.946,
+          "tokens": 210153
+        }
+      ]
+    },
+    {
+      "route": {
+        "id": "luna-high",
+        "provider": "codex",
+        "profile": "codex-2",
+        "model": "gpt-6-luna",
+        "effort": "high"
+      },
+      "effective_profiles": {
+        "codex-2": 1,
+        "codex-luis": 5
+      },
+      "started": 6,
+      "saved_records": 6,
+      "native_statuses": {
+        "completed": 6
+      },
+      "original_content_and_evidence_cases": 5,
+      "content_and_evidence_cases": 6,
+      "graded_cases": 6,
+      "frozen_pass": 4,
+      "live_pass": 2,
+      "full_criteria": 36,
+      "partial_criteria": 0,
+      "supported_criteria": 36,
+      "contract_cases": 6,
+      "seconds": 137.044,
+      "token_coverage": "6/6",
+      "tokens": 597123,
+      "measured_token_subtotal": 597123,
+      "unattested_model_cells": [
+        "R1-luna-high",
+        "R2-luna-high",
+        "R3-luna-high",
+        "R4-luna-high",
+        "R5-luna-high",
+        "R6-luna-high"
+      ],
+      "unattested_effort_cells": [
+        "R1-luna-high",
+        "R2-luna-high",
+        "R3-luna-high",
+        "R4-luna-high",
+        "R5-luna-high",
+        "R6-luna-high"
+      ],
+      "per_case": [
+        {
+          "case": "R1",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "codex-2",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Reviewer verified answer and cited frozen source."
+              }
+            ],
+            "overall_notes": "Independent source-backed content review with route labels hidden."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 16.224,
+          "tokens": 60852
+        },
+        {
+          "case": "R2",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              }
+            ],
+            "overall_notes": "All6 full and source-supported. R2/C5 follows the standing explicit-question adjudication; no hidden-rubric-only demand applied."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              }
+            ],
+            "overall_notes": "All6 full and source-supported. R2/C5 follows the standing explicit-question adjudication; no hidden-rubric-only demand applied."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 23.933,
+          "tokens": 84199
+        },
+        {
+          "case": "R3",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              }
+            ],
+            "overall_notes": "All6 full and source-supported; HTTP parser/socket limits correctly separated from application deadlines."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+              }
+            ],
+            "overall_notes": "All6 full and source-supported; HTTP parser/socket limits correctly separated from application deadlines."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 16.259,
+          "tokens": 74464
+        },
+        {
+          "case": "R4",
+          "mode": "frozen",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "All6 full with relevant PostgreSQL17 source locators."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "All6 full with relevant PostgreSQL17 source locators."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 22.516,
+          "tokens": 74884
+        },
+        {
+          "case": "R5",
+          "mode": "live",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 23.974,
+          "tokens": 125757
+        },
+        {
+          "case": "R6",
+          "mode": "live",
+          "status": "completed",
+          "profile": "codex-luis",
+          "contract_valid": true,
+          "grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "full",
+                "supported": true,
+                "note": "Posthoc source adjudication: published official concepts/CLI pages support the candidate wording. Upstream snapshot wording differs; do not penalize a LIVE answer for quoting the published official docs. All3 routes adjudicated uniformly."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+          },
+          "original_grade": {
+            "criteria": [
+              {
+                "id": "C1",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C2",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C3",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C4",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              },
+              {
+                "id": "C5",
+                "rating": "partial",
+                "supported": false,
+                "note": "Initial reviewer: project-dependency wording differs from selected-installation wording in upstream snapshot. See later published-source adjudication."
+              },
+              {
+                "id": "C6",
+                "rating": "full",
+                "supported": true,
+                "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+              }
+            ],
+            "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+          },
+          "content_full": true,
+          "evidence_full": true,
+          "scope_valid": true,
+          "seconds": 34.138,
+          "tokens": 176967
+        }
+      ]
+    }
+  ]
+}

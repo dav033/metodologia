@@ -1,0 +1,59 @@
+{
+  "case": "R2",
+  "claims": [
+    {
+      "id": "C1",
+      "text": "No. In both Python 3.11 and 3.13, with sqlite3.connect(...) as con uses the Connection transaction context manager; exiting it does not close the connection. Transaction completion and connection closure are separate responsibilities.",
+      "evidence": [
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst", "locator": "Original lines 2134-2149, 2168-2170"},
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst", "locator": "Original lines 2401-2419, 2438-2440"}
+      ]
+    },
+    {
+      "id": "C2",
+      "text": "In both versions, normal exit commits an open transaction; a failing commit or an uncaught exception in the body causes rollback. The body exception remains raised, as the examples explicitly state. With no open transaction, exit does nothing. In 3.13, autocommit=True also makes the context manager do nothing; with autocommit=False, committing or rolling back implicitly opens a new transaction afterward. Merely entering the context manager does not implicitly open a transaction; the autocommit=False transaction policy is responsible for keeping a transaction open.",
+      "evidence": [
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst", "locator": "Original lines 2134-2149, 2160-2165"},
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst", "locator": "Original lines 2401-2419, 2430-2435, 2664-2676"}
+      ]
+    },
+    {
+      "id": "C3",
+      "text": "Call close() explicitly on every exit path. A compatible recommended pattern is con = sqlite3.connect(...), followed by try: with con: ... and finally: con.close(). The inner context handles transaction success/failure before the finally block closes the connection. The 3.13 documentation also explicitly recommends considering contextlib.closing for a closing context manager; nest with con inside that closing scope if transaction handling is needed. Closing alone must not replace committing: 3.11 says close does not implicitly commit pending changes, and 3.13 documents rollback on close with pending changes under autocommit=False.",
+      "evidence": [
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst", "locator": "Original lines 612-617, 2134-2149, 2168-2170"},
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst", "locator": "Original lines 2401-2419, 2438-2440, 2673-2676"}
+      ]
+    },
+    {
+      "id": "C4",
+      "text": "Python 3.13 introduces ResourceWarning when a Connection object is deleted without close() having been called. This is documented as a 3.13 change; the trigger is object deletion, not simply leaving a with block. The extracts do not establish warning visibility under any particular warning-filter configuration.",
+      "evidence": [
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst", "locator": "Original lines 618-621"}
+      ]
+    },
+    {
+      "id": "C5",
+      "text": "No. The autocommit connect parameter was added in Python 3.12 and is absent from the supplied 3.11 signature, so a call using autocommit= cannot be used unchanged on 3.11. Python 3.11 instead documents isolation_level for implicit transaction opening. In 3.13, isolation_level only has effect under LEGACY_TRANSACTION_CONTROL, the documented current default; the docs say the default will change to False in a future release. Do not equate isolation_level='DEFERRED' in legacy mode with autocommit=False: the latter ensures a transaction is always open.",
+      "evidence": [
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst", "locator": "Original lines 258-261, 292-298"},
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst", "locator": "Original lines 262-266, 298-306, 335-341, 358-359, 2664-2672, 2686-2689"}
+      ]
+    },
+    {
+      "id": "C6",
+      "text": "Recommendation: first fix connection ownership on both 3.11 and 3.13 using try/finally closure around the existing transaction context. For a migration that preserves pre-3.12 transaction behavior, retain the application's existing isolation_level and omit autocommit on 3.11; on 3.12+ explicitly select sqlite3.LEGACY_TRANSACTION_CONTROL rather than relying on a default documented to change. The extracts identify isolation_level-based control as retaining pre-3.12 behavior. Treat adoption of autocommit=False as a separate transaction-policy migration: it is the 3.13 documentation's preferred policy, but keeps a transaction open and is not directly available on 3.11. Review and test application transaction boundaries before adopting it. Uncertainty: no application code or runtime tests were supplied, so preservation of application-specific behavior and a 3.11 equivalent of the newer policy have not been verified.",
+      "evidence": [
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst", "locator": "Original lines 292-298, 612-617, 2134-2149, 2168-2170"},
+        {"url": "https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst", "locator": "Original lines 298-305, 335-341, 358-359, 2416-2419, 2648-2652, 2659-2676, 2686-2689"}
+      ]
+    }
+  ],
+  "recommendation": "Separate the closure fix from a transaction-policy change. Use explicit finally-based closure with the existing Connection context manager on both supported versions. Preserve existing isolation_level settings, omit the unsupported autocommit argument on 3.11, and explicitly choose LEGACY_TRANSACTION_CONTROL on 3.12+ when preserving legacy semantics. Evaluate autocommit=False separately with application transaction tests; do not assume it is behaviorally interchangeable with legacy DEFERRED handling. This is a recommendation derived from the cited documentation, not a runtime-tested migration.",
+  "unknowns": [
+    "FROZEN research used only docs/sqlite311.txt and docs/sqlite313.txt, representing CPython v3.11.0 and v3.13.0 documentation with original source line numbers. No web retrieval or runtime execution was performed.",
+    "No application code, connection factory customization, transaction workload, or test results were supplied. Application-specific compatibility remains unverified.",
+    "The extracts do not specify the future release that will change the autocommit default, warning-filter visibility, or the exact exception text for an unsupported autocommit keyword on 3.11.",
+    "The 3.12 introduction of autocommit is supported by the 3.13 version-change annotation; no separate 3.12 extract was supplied. No claim is made about later releases beyond the supplied documentation."
+  ]
+}

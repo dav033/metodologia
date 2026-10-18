@@ -1,0 +1,57 @@
+{
+  "case": "R6",
+  "claims": [
+    {
+      "id": "C1",
+      "text": "The retrieved official uv documentation defines freshness against project metadata: adding a dependency or excluding its locked version makes the lock stale; a constraint change that still admits the locked version need not. New upstream releases alone do not make a lock stale. `uv lock --check` checks freshness and is equivalent to --locked on other commands. These are current online documentation semantics, not verification of an installed uv version.",
+      "evidence": [
+        {"url": "https://docs.astral.sh/uv/concepts/projects/sync/#checking-the-lockfile", "locator": "Checking the lockfile"}
+      ]
+    },
+    {
+      "id": "C2",
+      "text": "`uv sync --locked` requires an up-to-date lockfile and leaves it unchanged. If missing or needing an update, uv exits with an error rather than updating it.",
+      "evidence": [
+        {"url": "https://docs.astral.sh/uv/reference/cli/#uv-sync--locked", "locator": "uv sync > --locked; retrieved lines 3988-3992"}
+      ]
+    },
+    {
+      "id": "C3",
+      "text": "`uv sync --frozen` skips freshness checking and uses locked versions without updating the lockfile. A missing lockfile is an error. Dependency additions in pyproject.toml that were never locked will be absent from the environment.",
+      "evidence": [
+        {"url": "https://docs.astral.sh/uv/reference/cli/#uv-sync--frozen", "locator": "uv sync > --frozen; retrieved lines 3901-3905"}
+      ]
+    },
+    {
+      "id": "C4",
+      "text": "Neither flag alone guarantees no network: their documented scope is lockfile handling. The separate --offline option disables uv network access and restricts it to cached data and local files; it does not promise successful installation when required inputs are unavailable locally.",
+      "evidence": [
+        {"url": "https://docs.astral.sh/uv/reference/cli/#uv-sync--offline", "locator": "uv sync > --offline; retrieved lines 4165-4170"},
+        {"url": "https://docs.astral.sh/uv/reference/cli/#uv-sync--locked", "locator": "uv sync > --locked"},
+        {"url": "https://docs.astral.sh/uv/reference/cli/#uv-sync--frozen", "locator": "uv sync > --frozen"}
+      ]
+    },
+    {
+      "id": "C5",
+      "text": "`uv sync` defaults to exact synchronization, removing extraneous packages. Use --inexact to retain extras already installed. This choice is independent of freshness checking. Dependency groups and optional extras still determine what is selected for installation; the dev group is included by default, and --no-dev excludes it.",
+      "evidence": [
+        {"url": "https://docs.astral.sh/uv/concepts/projects/sync/#handling-of-extraneous-packages", "locator": "Handling of extraneous packages"},
+        {"url": "https://docs.astral.sh/uv/concepts/projects/sync/#syncing-development-dependencies", "locator": "Syncing development dependencies"},
+        {"url": "https://docs.astral.sh/uv/concepts/projects/sync/#syncing-optional-dependencies", "locator": "Syncing optional dependencies"}
+      ]
+    },
+    {
+      "id": "C6",
+      "text": "The official Docker guide demonstrates --frozen for an intermediate workspace dependency layer lacking project metadata, followed by --locked after all workspace members are copied. This supports the recommendation below; no actual production environment was inspected or tested.",
+      "evidence": [
+        {"url": "https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers-in-workspaces", "locator": "Intermediate layers in workspaces; explanation at retrieved line 554"}
+      ]
+    }
+  ],
+  "recommendation": "Recommendation: commit and review uv.lock; make the final production sync use --locked with complete project/workspace metadata, keeping default exact synchronization in a dedicated environment. Select runtime groups/extras explicitly; --no-dev excludes dev but does not necessarily exclude other configured default groups. Reserve --frozen for deliberately incomplete intermediate layers, then validate with a final --locked sync. Add --offline when uv must avoid network, after provisioning required local inputs; do not treat locked/frozen as offline switches. Pin and validate the deployment's uv version. This is policy advice inferred from the cited semantics, not a tested deployment recipe.",
+  "unknowns": [
+    "Installed uv version, lockfile schema and freshness, pyproject/workspace contents, Python version/platform, configured default groups/extras, package sources, cache completeness and available build inputs were not inspected.",
+    "No commands installing dependencies or validating production synchronization were executed. Offline success is unverified; arbitrary build-backend subprocess network behavior was not established by the retrieved documentation.",
+    "Native web retrieval was available; the official concepts, CLI reference and Docker guide were retrieved successfully. No HTTP failure or browser challenge was encountered. The online pages are mutable and were not tied to a release tag."
+  ]
+}

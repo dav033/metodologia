@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "case": "R2",
+  "mode": "frozen",
+  "route": {
+    "id": "luna-high",
+    "provider": "codex",
+    "profile": "codex-luis",
+    "model": "gpt-6-luna",
+    "effort": "high"
+  },
+  "prompt_sha256": "d6d685063320ab0d8b19219db116a8758e36cc49adf65a7ce67bf23875960635",
+  "started_at": 1792291020.1710382,
+  "status": "completed",
+  "quota_before": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291020.1710536,
+    "windows": {
+      "five_hour": {
+        "used_percent": 0.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "quota_pressure_before": 0.0,
+  "workspace_before": {
+    "TASK.md": "d6d685063320ab0d8b19219db116a8758e36cc49adf65a7ce67bf23875960635",
+    "docs/sqlite313.txt": "16e53699083cf167b81f2aef6b1858c73f87f891dbd8e9421687e0d66642eca4",
+    "docs/sqlite311.txt": "35ab56ad25d6bf8276c633c06999f7fd43c74f6d66c3069bb9a9c1417ce03889"
+  },
+  "response_text": "Research completed from the supplied Python 3.11 and 3.13 documentation extracts. The note answers C1\u2013C6 and records the evidence and limitations in [`research.json`](/tmp/work/research.json).",
+  "usage_reported": {
+    "input_tokens": 82017,
+    "cached_input_tokens": 56448,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2182,
+    "reasoning_output_tokens": 470
+  },
+  "usage": {
+    "input_tokens": 82017,
+    "output_tokens": 2182,
+    "cache_read_tokens": 56448,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 470,
+    "reported_total": null,
+    "total": 84199,
+    "quality": "complete",
+    "coverage": 1.0,
+    "comparable": true,
+    "source": "codex-stream-json",
+    "provider": "codex"
+  },
+  "observed_models": [],
+  "observed_efforts": [],
+  "tool_calls": [
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'rg --files'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc 'cat TASK.md && cat docs/sqlite311.txt && cat docs/sqlite313.txt'",
+      "exit_code": 0,
+      "status": "completed"
+    },
+    {
+      "type": "command_execution",
+      "command": "/usr/bin/bash -lc \"cat > research.json <<'EOF'\n{\n  \\\"case\\\": \\\"R2\\\",\n  \\\"claims\\\": [\n    {\n      \\\"id\\\": \\\"C1\\\",\n      \\\"text\\\": \\\"No. In both Python 3.11 and 3.13, \"'`with sqlite3.connect(...) as con` uses the connection context manager for transaction handling; it does not close the connection. The connection must be closed separately.\",\n      \"evidence\": [\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 2134-2149\"},\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 2401-2419\"}\n      ]\n    },\n    {\n      \"id\": \"C2\",\n      \"text\": \"In both versions, leaving the connection context with no uncaught exception commits the open transaction; an uncaught exception rolls it back and is still raised. If commit fails, rollback is performed. With no open transaction, the manager is a no-op. In 3.13, with `autocommit=False`, a new transaction is implicitly opened after commit or rollback; with `autocommit=True`, the manager does nothing. The 3.13 connect default remains legacy transaction control in this version of the docs.\",\n      \"evidence\": [\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 2134-2144, 2160-2165\"},\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 2401-2414\"},\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 335-342\"}\n      ]\n    },\n    {\n      \"id\": \"C3\",\n      \"text\": \"Close deterministically by explicitly calling `con.close()` after transaction handling, for example in a `finally` block. The 3.13 docs also suggest `contextlib.closing` when a closing context manager is desired. Nest transaction handling inside the closing scope if both behaviors are needed; the connection context manager alone does not close it.\",\n      \"evidence\": [\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 612-617, 2168-2170\"},\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 2384-2386, 2416-2419\"}\n      ]\n    },\n    {\n      \"id\": \"C4\",\n      \"text\": \"Python 3.13 introduces a documented `ResourceWarning` when a connection is deleted without `close()` having been called. The supplied 3.11 extract does not document that warning.\",\n      \"evidence\": [\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 618-622\"}\n      ]\n    },\n    {\n      \"id\": \"C5\",\n      \"text\": \"No. The `autocommit` argument was added in Python 3.12, so code passing it to `sqlite3.connect` cannot be used unchanged on Python 3.11. The 3.13 docs show it as a keyword-only parameter and document the current default as `LEGACY_TRANSACTION_CONTROL`.\",\n      \"evidence\": [\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.13.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 262-266, 335-342, 358-359\"},\n        {\"url\": \"https://raw.githubusercontent.com/python/cpython/v3.11.0/Doc/library/sqlite3.rst\", \"locator\": \"lines 258-261\"}\n      ]\n    },\n    {\n      \"id\": \"C6\",\n      \"text\": \"For code supporting 3.11 and 3.13, first make closure explicit using `try/finally: con.close()` (or use `contextlib.closing` where available), while retaining a separate `with con:` only for commit/rollback behavior. Avoid passing `autocommit` on the shared path; retain the legacy default unless the application deliberately adopts and tests a new transaction policy on supported versions. The supplied extracts establish the API addition in 3.12 and describe 3.13 semantics, but do not fully specify all legacy/default transaction details or prove runtime behavior for every patch release.\",\n      \"evidence\": [\n        {\"url\": \"https://raw.githubusercontent.",
+      "exit_code": 0,
+      "status": "completed"
+    }
+  ],
+  "native_result_status": null,
+  "turns": 1,
+  "provider_errors": [],
+  "has_final_usage_event": true,
+  "exit_code": 0,
+  "seconds": 23.933,
+  "argv": [
+    "bwrap",
+    "--ro-bind",
+    "/",
+    "/",
+    "--tmpfs",
+    "/home/david/dev/metodologia/bitacora/metodologia/artifacts",
+    "--tmpfs",
+    "/tmp",
+    "--bind",
+    "/tmp/researcher-cell-wx7tg2vv",
+    "/tmp/work",
+    "--bind",
+    "/home/david/.codex-luis",
+    "/home/david/.codex-luis",
+    "--chdir",
+    "/tmp/work",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--unshare-pid",
+    "--die-with-parent",
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6-luna",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-c",
+    "web_search=\"disabled\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "--json",
+    "-"
+  ],
+  "stderr_excerpt": "",
+  "research_tool_calls": [],
+  "tool_result_evidence": [],
+  "limit_detected": false,
+  "contract": {
+    "valid": true,
+    "errors": []
+  },
+  "scope_violations": [],
+  "unexpected_files": [],
+  "quota_after": {
+    "profile": "codex-luis",
+    "provider": "codex",
+    "status": "ok",
+    "observed_at": 1792291045.1180086,
+    "windows": {
+      "five_hour": {
+        "used_percent": 0.0,
+        "resets_at": 1792306657.0,
+        "window_minutes": 300.0
+      },
+      "seven_day": {
+        "used_percent": 0.0,
+        "resets_at": 1792893457.0,
+        "window_minutes": 10080.0
+      }
+    }
+  },
+  "finished_at": 1792291046.1220489
+}

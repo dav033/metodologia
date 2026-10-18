@@ -1,0 +1,9 @@
+[
+  {
+    "blind_id": "R2-A",
+    "criterion": "C5",
+    "reviewer_rating": "partial",
+    "final_rating": "full",
+    "reason": "Answer meets the explicit external task question; additional hidden rubric detail cannot create an unstated requirement. Frozen rubric and reviewer score preserved."
+  }
+]

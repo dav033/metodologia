@@ -1,0 +1,740 @@
+{
+  "R1-sol-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  },
+  "R1-luna-high": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  },
+  "R1-sonnet-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": false,
+        "note": "Core answer correct. Extra historical ExceptionGroup availability and except* recommendation are not supported by this extract; note acknowledges the limitation."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  },
+  "R2-sonnet-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Coordinator adjudication: asked compatibility with3.11 and introduction version are both correct and supported. Hidden rubric-only demand to distinguish low-level SQLite autocommit was not in the question; no source/candidate changed."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  },
+  "R3-sonnet-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Reviewer verified answer and cited frozen source."
+      }
+    ],
+    "overall_notes": "Independent source-backed content review with route labels hidden."
+  },
+  "R4-sonnet-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Transaction-block prohibition matches source690-692."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Waits, scans and resource impact match613-643."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "INVALID query exclusion/update overhead match645-661."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Unique enforcement starts at second scan and can persist after failure669-677."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Inspection and documented recovery only; no execution."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "One concurrent build per table685-689."
+      }
+    ],
+    "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+  },
+  "R5-sonnet-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Official schedule successfully retrieved."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Dates match saved official schedule."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Node26 LTS2026-10-28; not LTS on target date."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Node22 maintenance LTS/EOL correct."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Node24 recommendation qualified with future Node26 LTS."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Schedule separated from installed patch/security verification."
+      }
+    ],
+    "overall_notes": "Independent reviewer verified all6 against source/tool evidence."
+  },
+  "R6-sonnet-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Official freshness docs successfully retrieved."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Stale lock causes error instead of update."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Frozen bypasses freshness; missing-lock uncertainty disclosed."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Network guarantee denied; separate offline control identified."
+      },
+      {
+        "id": "C5",
+        "rating": "partial",
+        "supported": false,
+        "note": "Exact/inexact core correct, but removal incorrectly defined by absence from lockfile rather than installation selection."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Locked/exact recommendation and environment unknowns reasonable."
+      }
+    ],
+    "overall_notes": "Independent frozen-source/live-tool evidence review; route labels hidden. R6 CLI fetch truncated before sync options; candidate disclosed this."
+  },
+  "R2-sol-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      }
+    ],
+    "overall_notes": "All6 full and source-supported. R2/C5 follows the standing explicit-question adjudication; no hidden-rubric-only demand applied."
+  },
+  "R2-luna-high": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      }
+    ],
+    "overall_notes": "All6 full and source-supported. R2/C5 follows the standing explicit-question adjudication; no hidden-rubric-only demand applied."
+  },
+  "R3-sol-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      }
+    ],
+    "overall_notes": "All6 full and source-supported; HTTP parser/socket limits correctly separated from application deadlines."
+  },
+  "R3-luna-high": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the explicit question against supplied primary-source URL and locator."
+      }
+    ],
+    "overall_notes": "All6 full and source-supported; HTTP parser/socket limits correctly separated from application deadlines."
+  },
+  "R4-luna-high": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "All6 full with relevant PostgreSQL17 source locators."
+  },
+  "R4-sol-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "All6 full with relevant PostgreSQL17 source locators."
+  },
+  "R5-luna-high": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+  },
+  "R5-sol-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+  },
+  "R6-sol-medium": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+  },
+  "R6-luna-high": {
+    "criteria": [
+      {
+        "id": "C1",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C2",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C3",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C4",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      },
+      {
+        "id": "C5",
+        "rating": "partial",
+        "supported": false,
+        "note": "Initial reviewer: project-dependency wording differs from selected-installation wording in upstream snapshot. See later published-source adjudication."
+      },
+      {
+        "id": "C6",
+        "rating": "full",
+        "supported": true,
+        "note": "Independent route-hidden reviewer verified the requested answer and cited primary source against saved evidence."
+      }
+    ],
+    "overall_notes": "Independent route-hidden source review. Live Codex events retain searches/opens/finds but not full rendered bodies; exact body retrieval/line rendering cannot be independently attested."
+  }
+}
