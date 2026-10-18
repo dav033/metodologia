@@ -33,3 +33,7 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 - Keep the two local P-087 follow-up modifications separate from merged code; track the exact baseline E-03532 guirnalda failure independently and do not add an allowlist entry. P-077 calibrates the default quote cap, P-075 retains historical tests to reproduce separately. Current evidence: [REQ-015 report](../../requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/REPORT.md).
 
 - 2026-10-18 REQ-018 started via codex-luis / Sol high Planner; research-backed draft SPEC and five-question round01 ready, awaiting owner answers before task planning.
+
+- REQ-018 owner choices recorded; Sol high/codex-luis produced3-milestone/6-task schema1.2 draft. Canonical check/report pass with9 explicit warnings; awaiting plan review for isolated Scheduler simulation, no implementation.
+
+- Owner-scoped REQ-018 real-plan simulation complete: two isolated M1/M2 runs,6 tasks each; all route/dependency assertions passed. Canonical plan remains draft, no implementation authorization. Evidence persisted in artifacts/REQ-018-m1m2-simulation/.

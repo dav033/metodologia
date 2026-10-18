@@ -4,6 +4,7 @@
 The user's working method for Claude Code and Codex, with the provider-neutral Planner also available in Antigravity: prioritized requirements → approved plan → autonomous execution; engineering standards, agent roles, per-project bitácora, local web UI, tools and infrastructure registry. The private `github.com/dav033/metodologia` repo holds the skill, evals, installer and bitácora copies (D-008, D-009, D-011), including Pictures since D-012; the remaining live bitácora is `~/bitacora`.
 
 ## Current state
+- 2026-10-18 D-072 fixes Implementer assignments: complexity no longer reverses Sonnet medium/Luna high or outranks quota; alternative remains availability-based. Other roles unchanged.115 targeted tests, Ruff, offline wheel and installed source checks pass;10-case matrix and real Pictures REQ-018 pass with T1–T5 Sonnet medium/T6 Sonnet low at20%/60% used. No commit/push; P-117/P-118 separate.
 - 2026-10-18 M1/M2 quota/difficulty matrix:10 scenarios,5 unique DAGs,3 complexities,4 task kinds;20 order-invariant runs/80 simulated tasks passed with real candidate/router code and synthetic external facts/execution. Evidence: /home/david/.local/tmp/m1-m2-matrix-20261018-v2/REPORT.md. No runtime policy change or live-model validation.
 - 2026-10-18 isolated M1/M2 simulation verified on approved REQ-018: real full-DAG routing and READY assignment, all5 tasks completed with synthetic quota/accounts and fake executor/verifier. Five adapter contract tests pass. Prior m2_batch_invalid was a harness quota-reason error, corrected without production edits; evidence in /home/david/.local/tmp/m1-m2-isolated-n1d_ectu/. No live-provider verification claimed.
 - 2026-10-18 D-071: owner waives further Explorer and Runner experiments. P-110/P-116 closed as cancelled, not passed/completed experiments. No remaining cells, grading or reports required; preserve existing evidence and D-065/D-069/D-070 role selections/runtime. Resume only on explicit owner request. This supersedes historical pending experimental-closeout statements below.
@@ -96,6 +97,7 @@ The user's working method for Claude Code and Codex, with the provider-neutral P
   D-022 M1 Scheduler Core is an isolated module · D-021 Planner phase 1 closes with schema 1.1.0 · D-020 methodology modules
 
 ## Known issues
+- P-118 confirmed: round CLI and native session hooks auto-commit/push despite owner restrictions; actual pushes recorded in origin/main reflog through5bc98f3. User informed; no rollback or fix. Avoid wrappers unless VCS is effectively disabled.
 - P-039: broad Ruff 0.16.7 audit reports 83 style findings in the pre-existing M4 monitor package; focused REQ-018 integration files lint clean.
 - Codex hooks need one-time approval with `/hooks` on each machine.
 - Push failures stay silent in `bt_vcs.push_async`. Nothing pushes the live bitácora (P-013).

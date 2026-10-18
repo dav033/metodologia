@@ -1,12 +1,13 @@
+> **CANCELLED 2026-10-18 by the owner (all open requirements).** Nothing deleted: code, branches and reports are kept.
 ---
 id: REQ-018
-status: clarifying
+status: cancelled (2026-10-18, owner)
 created: 2026-10-18
 track: standard
 ---
 # REQ-018 — Category-based recommendations of assembled decorations
 
-**Planning draft; product choices confirmed, plan approval pending.** The original metadata is retained without changing workflow/approval state. The owner has answered Q1–Q5 and the update follow-up. `rounds/round-01.json` is historical answered evidence; its stale update-mechanism note is superseded by the owner's “si, reflejar” in the current instruction. Round files and bitácora remain coordinator-owned.
+**Planning draft v2; product choices confirmed, plan approval pending.** The original metadata is retained without changing workflow/approval state. The owner has answered Q1–Q5 and the update follow-up. `rounds/round-01.json` is historical answered evidence; its stale update-mechanism note is superseded by the owner's “si, reflejar” in the current instruction. Round files and bitácora remain coordinator-owned.
 
 ## Problem & goal
 
@@ -106,7 +107,7 @@ These planning rules resolve implementation choices that can affect acceptance; 
 
 1. Inputs are validated visible library records, a customer-confirmed category, optional age/preferences and existing turn-intent facts. A pure matcher receives records explicitly; an application adapter obtains `bibliotecaVisible()` for each search. No singleton derived candidate cache or independently authored IDs/categories.
 2. Match category against each record's `eventos` using normalized full labels or genuine same-celebration aliases (for example boda/matrimonio/casamiento). Existing broad affinity groups are not strict equivalence: bautizo must not become primera comunión, nor an unsupported event a generic fiesta. Preserve unrelated legacy helper behavior through an explicit strict query boundary rather than changing every consumer. Use phrase/token boundaries, case/accent normalization and prefer the longest matching label. Discover additional event labels from current visible records. Do not substitute a generic party, infer a category from colour or treat a title-only event mention as its category. Example: wedding plus white/black does not admit a birthday-only design of those colours.
-3. Explicit refinements are conjunctive: requested theme/style must be evidenced in title/theme (literal normalized words/phrases or equivalent existing lexical aliases), every explicit colour must be present according to existing literal colour/tone classifiers, and stated gender/positive age restrictions must hold. Keep existing baby-shower gender interpretation only within eligible event candidates. Do not turn an absent character/theme into typical colours, use partial colour overlap or add model-selected preferences. Extra colours are allowed unless explicitly excluded/limited by the customer; a stated tone such as celeste cannot be satisfied merely by broad azul. Unknown theme/style remains unsatisfied rather than disappearing from the request. Age 0/absent means unknown, never a mandatory question. An absent optional refinement imposes no filter.
+3. Explicit refinements are conjunctive: requested theme/style must be evidenced in title/theme (literal normalized words/phrases or equivalent existing lexical aliases), every explicit colour must be present according to existing literal colour/tone classifiers, and stated gender/positive age restrictions must hold. Keep existing baby-shower gender interpretation only within eligible event candidates. Do not turn an absent character/theme into typical colours, use partial colour overlap or add model-selected preferences. Explicit negative preferences exclude matching literal evidence and are never counted as positive requests; explicit colour-only restrictions reject extra colours. Extra colours are allowed unless explicitly excluded/limited by the customer; a stated tone such as celeste cannot be satisfied merely by broad azul. Unknown theme/style remains unsatisfied rather than disappearing from the request. Age 0/absent means unknown, never a mandatory question. An absent optional refinement imposes no filter.
 4. Keep the existing foreign-motif exclusion: a Halloween/football/seasonal motif requires that motif in the customer's category/theme. Do not hide ordinary single-structure ideas, infer decoration completion from structure count or rewrite identities/titles to make another event appear eligible.
 5. Filter before deduplication/limit. Preserve source order for eligible results, deduplicate repeated IDs and normalized equivalent titles within that set, cap at the existing upper display limit six. There is no minimum. Every emitted result is an actual match; `coincidencia: exacta` is valid only after these predicates, never by relabeling legacy search output. Validation failures remain real errors, not successful empty searches.
 6. Turn precedence: retain explicit cost/learn/plan queries and edits, explicit design choice, deliberate bespoke proposal/direct complete-piece requests and actual photo-analysis intent before automatic discovery. Explicit browsing with a current plan is read-only. An ordinary new/refined category discovery turn may show matching designs even with a plan visible, but never changes that plan or selected design. A mere incidental category mention during another action does not interrupt it.
@@ -140,10 +141,10 @@ These planning rules resolve implementation choices that can affect acceptance; 
 
 ## Verification performed
 
-Re-run in this planning pass from `/home/david/dev/pictures`:
+Historical v1 baseline evidence is retained below. During v2 planning both commands were executed again using `--import=tsx`, each exit 0; these passing legacy assertions do not demonstrate the new strict behavior:
 
-- `node --import tsx scripts/test/test-busqueda-biblioteca-sempertex.ts`: exit 0; legacy exact/nearby behavior passes. This does not prove REQ-018 acceptance.
-- `node --import tsx scripts/test/test-ideas-boda-guiada.ts`: exit 0; legacy padding/photo alternatives and customer-theme fidelity pass. New strict cases remain planned.
+- `node --import=tsx scripts/test/test-busqueda-biblioteca-sempertex.ts`: exit 0; legacy exact/nearby behavior passes. This does not prove REQ-018 acceptance.
+- `node --import=tsx scripts/test/test-ideas-boda-guiada.ts`: exit 0; legacy padding/photo alternatives and customer-theme fidelity pass. New strict cases remain planned.
 - Local JSON inspection: 46 total / 31 visible / 23 single-piece-quantity ideas; HEAD and 197 status entries reconfirmed. Current wedding labels: four; Navidad and Bautizo: one each.
 - Prior evidence-path/whitespace checks and previous test results are retained as historical research, not current product validation. Current draft contract check and semantic self-review are recorded in PLAN.md after execution.
 - No application lint/build/full suite or live providers run for this documentation-only planning change. No product completion, production state or approval inferred.
@@ -164,4 +165,13 @@ Original owner answer: “1) asistente 2) si, ademas que se actualize 3)si exact
 
 ## Coverage and readiness
 
-Goal, audience, scope, exclusions, flows, edge cases, acceptance and constraints are clear for this draft. Timeline is deferred (none supplied). PLAN.md/PLAN.json decompose R1–R6; execution and the later isolated M1/M2 experiment are outside this session. No workflow status, round, approval, revision or run artifact is changed.
+Goal, audience, scope, exclusions, flows, edge cases, acceptance and constraints are clear for this draft. Timeline is deferred (none supplied). PLAN.md/PLAN.json decompose R1–R6; execution and any further M1/M2 experiment are outside this session. Existing frozen external simulation evidence is preserved and supplies no difficulty or acceptance proof. Workflow metadata, rounds, approval, frozen revision and run artifacts remain unchanged. Narrative v2 retains unfrozen contract revision 1; no canonical frozen revision exists.
+
+## V2 planning delta and current evidence
+
+- The six requirements and C1-C5/C2a remain unchanged. Negative-preference wording above makes the existing exclusion rule explicit; it adds no broader semantic matching capability. Full partial-brief snapshots, unsupported/stale category changes, unknown positive themes, honest empty responses and restored selection remain normative.
+- Corrected canonical Planner/WBS responsibility rules were applied after inspecting methodology `skill/scripts/bt_role_policy.py:11,36-39` and `skill/agents/runner.md:21-27`: test means execute/report; test authoring, fixtures and package registration mean implement; evidence interpretation means audit. This invocation edits no Planner source or installed role.
+- V2 reinspection: canonical Pictures HEAD `5f9104980d31e0074c6bbb5ed16cae1e8c92a723`, 197 dirty entries; catalogue 46 total, 31 visible, 23 single-quantity ideas. Paths E2-E7 and publication/loading were revisited; broader E8-E14 remain retained historical evidence. No product or REQ-017 worktree was written.
+- An esbuild `build` of the real `src/components/guiado/VistaGuiada.tsx` with `bundle:true,write:false,platform:browser,format:iife,jsx:automatic`, the existing `@` alias and development define succeeded in memory (6,299,698 bytes). This checks import/bundle feasibility only. Playwright's default executable path was absent; `/usr/bin/chromium` exists and the existing test precedent accepts `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. No browser was launched and no new harness is credited as existing proof.
+- No bounded research prerequisite is needed: concrete bundling and the existing browser precedent bound harness construction. Browser launch, network stubbing, session fixtures and behavioral assertions are implementation/verification work in T5, with medium estimate confidence and explicit blocker reporting.
+- A distinct T8 audit owns cross-contract/product interpretation. This Planner's semantic self-review is neither that future independent review nor owner approval. Real deterministic/publication check outcomes are in PLAN.md.

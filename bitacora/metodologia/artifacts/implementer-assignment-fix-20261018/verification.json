@@ -1,0 +1,34 @@
+{
+  "decision": "D-072",
+  "scope": "Implementer only; quota/availability fallback retained; no difficulty promotion",
+  "tests_passed": 115,
+  "matrix_scenarios": 10,
+  "matrix_runs": 20,
+  "matrix_simulated_tasks": 80,
+  "real_plan_runs": 2,
+  "real_plan_simulated_tasks": 12,
+  "source_hashes": {
+    "skill/scripts/bt_role_policy.py": "0feb8f6f6c1b807b4b32cde9a2cfc055cc051ed7cfff39bb3ad033b7bdfc5c38",
+    "skill/scripts/bt_role_routing.py": "9f766c0167307467ec26ece4a73861204edf8ede59af7790da21f46f14293c97",
+    "skill/scripts/tests/test_role_policy.py": "9578a07798921b560ae1363e4b8a5b370805b9c00083b9884238e6f105b9d299",
+    "skill/scripts/tests/test_role_routing.py": "455e897294498b529778221ceca35ce07b46dc3ce219557b6e22e3300769d033"
+  },
+  "wheel": "/home/david/.local/tmp/implementer-policy-dist/bitacora-0.1.0-py3-none-any.whl",
+  "checks": [
+    "Ruff",
+    "scoped whitespace",
+    "offline wheel build",
+    "wheel content equality",
+    "installed editable module assertion"
+  ],
+  "not_run": [
+    "full repository suite",
+    "static type checker",
+    "real providers/task execution"
+  ],
+  "initial_failures": [
+    "TDD reproduction:2 tests/10 subcase failures before correction",
+    "combined consumer test invocation refused unsafe root due pre-existing import-order coupling; all four suites subsequently passed in fresh processes"
+  ],
+  "no_vcs_mutations": true
+}

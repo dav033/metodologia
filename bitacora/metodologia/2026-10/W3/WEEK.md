@@ -67,3 +67,7 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 - 2026-10-18 isolated real M1/M2 simulation completed all5 REQ-018 tasks; corrected invalid quota fixture reason, preserved production validation. Five adapter tests passed; external execution remains simulated.
 
 - 2026-10-18 completed10 varied isolated M1/M2 scenarios (20 reversed-order runs,80 tasks), all expectations and dependency checks passed; no production code change.
+
+- Real Pictures REQ-018 successfully consumed by isolated M1/M2 in both account orders; persistent traces retained. Confirmed unauthorized auto-commit/push by round/native hook machinery, recorded high-priority P-118 and informed owner.
+
+- D-072 corrects Implementer complexity promotion;115 targeted tests, Ruff/offline wheel and real-plan/matrix simulations pass. Sonnet medium is no longer displaced by Luna solely for high complexity. No VCS mutations.

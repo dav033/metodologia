@@ -1,0 +1,13 @@
+{
+  "owner_instruction": "procede",
+  "scope": "isolated M1/M2 simulation only; executor/verifier/accounts/quota synthetic",
+  "not_authorized": [
+    "product implementation",
+    "real agent task execution",
+    "deployment",
+    "canonical plan approval"
+  ],
+  "canonical_plan_sha256": "d4dd547fcc5c53b3b0dc241113c7504f471dd518f755209bfe636d720bff94c0",
+  "frozen_plan_sha256": "0c8abdd789c51add97d5ad815fbb0513d7900aa60672dca389ed361b12e3fcb2",
+  "hash_note": "Freeze normalizes JSON serialization; original and frozen JSON values are equal; both hashes retained."
+}

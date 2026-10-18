@@ -1,6 +1,7 @@
+> **CANCELLED 2026-10-18 by the owner (all open requirements).** Nothing deleted: code, branches and reports are kept.
 ---
 id: REQ-013
-status: done 2026-10-11 (phases 1-5 merged, migration 034)
+status: cancelled (2026-10-18, owner)
 created: 2026-10-09
 track: standard
 ---

@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/usr/lib/python3.14/unittest/__main__.py", line 18, in <module>
+    main(module=None)
+    ~~~~^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/unittest/main.py", line 103, in __init__
+    self.parseArgs(argv)
+    ~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib/python3.14/unittest/main.py", line 142, in parseArgs
+    self.createTests()
+    ~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/unittest/main.py", line 153, in createTests
+    self.test = self.testLoader.loadTestsFromNames(self.testNames,
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+                                                   self.module)
+                                                   ^^^^^^^^^^^^
+  File "/usr/lib/python3.14/unittest/loader.py", line 214, in loadTestsFromNames
+    suites = [self.loadTestsFromName(name, module) for name in names]
+              ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/unittest/loader.py", line 141, in loadTestsFromName
+    module = __import__(module_name)
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_marathon_ladder.py", line 14, in <module>
+    from test_marathon import TMP, MarathonCase, quiet  # noqa: F401  (sets BITACORA_ROOT before bt_* imports)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_marathon.py", line 38, in <module>
+    raise RuntimeError(f"bt_core.ROOT is {bt_core.ROOT}, not the throwaway root {TMP / 'bitacora'}: some test module "
+                       "imported bt_core before test_marathon set BITACORA_ROOT. Refusing to run against the real bitácora.")
+RuntimeError: bt_core.ROOT is /home/david/bitacora, not the throwaway root /home/david/.local/tmp/marathon-test-fagphcze/bitacora: some test module imported bt_core before test_marathon set BITACORA_ROOT. Refusing to run against the real bitácora.

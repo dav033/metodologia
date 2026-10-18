@@ -58,10 +58,6 @@ month summary._
 - P-098 · Webhook recommendations return only {url, razon}: decide with the owner whether to add an optional `paquete` (name, total, items; never provider price) to recommend-package(s) and chat, and then update ~/guia-webhook-happie.txt and docs/happie-external-integration.md · urgency: low · complexity: M · added 2026-10-15
 - P-032 · Laya fine-tune for routing / customer pro-guardrail — researched (laya.train, head-only CPU or RLCD Kaggle; ~3–5k Gemini-labelled Spanish rows, US$1–3); not worth it vs Gemini today; revisit when the customer chat has volume · urgency: low · complexity: L · added 2026-10-09
 
-- P-104 · Ship #3 payload (admin key removal D-056, render cache session, cookie cut D-058) is on main as c8a8200e (Quality success, Vercel production Ready). Open: the VPS deploy is manual (D-031, Actions → Deploy, not triggered); the rest of the T55 payload (other working-tree changes) and T70 need an owner decision · urgency: med · complexity: M · added 2026-10-18 · REQ-014
-- P-106 · T57 blocked: owner photo path for `--fotos` (images (25..54) are not on this machine) and whether the harness must write triptychs (correr-foto.ts is dry-run only); CLI transport must be passed through the environment · urgency: med · complexity: M · added 2026-10-18 · REQ-014 T57
-- P-107 · Decide REQ-014 continuation: PM/critic chain (T26, T32, T40, T48, T56, T59) and growth tasks T71–T75 (one-touch rating, panel-edit feedback signal, client latency telemetry, «No pude» reason, action limits) · urgency: med · complexity: L · added 2026-10-18 · REQ-014 T18
-- P-109 · PLAN verifications are weak or Windows-only: T55 passes without shipping, T57 passes on 2026-10-11 rows (pre-T36), T44 passes on report keywords, T14/T31 use findstr, T18 and T71–T75 use C:/Users or only check file existence · urgency: low · complexity: S · added 2026-10-18 · REQ-014 audit
 
 
 - P-111 · Shared-quote routes (`/api/cotizacion-compartida/*`, `/api/taller/cotizaciones-compartidas`) are excluded from the registry guard without `conRegistro`; migration 020 is applied in Neon but missing from the repo · urgency: med · complexity: M · added 2026-10-18 · REQ-014
@@ -70,6 +66,10 @@ month summary._
 _None_
 
 ## Recently closed
+- P-109 · PLAN verifications are weak or Windows-only: T55 passes without shipping, T57 passes on 2026-10-11 rows (pre-T36), T44 passes on report keywords, T14/T31 use findstr, T18 and T71–T75 use C:/Users or only check file existence · urgency: low · complexity: S · added 2026-10-18 · REQ-014 audit · closed 2026-10-18: REQ-014 plan cancelled by the owner
+- P-107 · Decide REQ-014 continuation: PM/critic chain (T26, T32, T40, T48, T56, T59) and growth tasks T71–T75 (one-touch rating, panel-edit feedback signal, client latency telemetry, «No pude» reason, action limits) · urgency: med · complexity: L · added 2026-10-18 · REQ-014 T18 · closed 2026-10-18: REQ-014 plan cancelled by the owner
+- P-106 · T57 blocked: owner photo path for `--fotos` (images (25..54) are not on this machine) and whether the harness must write triptychs (correr-foto.ts is dry-run only); CLI transport must be passed through the environment · urgency: med · complexity: M · added 2026-10-18 · REQ-014 T57 · closed 2026-10-18: REQ-014 plan cancelled by the owner
+- P-104 · Ship and VPS deploy · closed 2026-10-18: main 2d924c10 deployed to VPS (run 39148146600, success) and Vercel Ready. The rest of the working tree is not shipped (only the payload committed on main)
 - P-110 · main red after 6649f75 · closed 2026-10-18: fixed in 2d924c10 (Quality success, Vercel production Ready). Still open: shared-quote routes without conRegistro and migration 020 drift (see P-111)
 - P-108 · guiada_motor cookie vs the P-045 cut · closed 2026-10-18: cookie ignored while the cut is on unless GUIADA_MOTOR_COOKIE_VALE_CON_CORTE=1 (D-058); shipped in main c8a8200e
 - P-105 · fal.ai account locked on the first T44 paid call (403 «Exhausted balance») although ~US$20 was expected: check billing, then re-run T44 under the US$0.60 cap · urgency: high · complexity: S · added 2026-10-18 · REQ-014 T44 · closed 2026-10-18: paid pass completed with the VPS key (4 calls, US$0.48 of 0.60); see research/kontext-color/EXPERIMENTO-2026-10-18.md

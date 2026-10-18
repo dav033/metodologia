@@ -660,3 +660,13 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Decision:** Owner says “para explorer y runner ignoremos las pruebas”. Cancel remaining experimental execution and closeout for Explorer P-110 and Runner P-116, including grading and final reports. Do not resume without a new explicit request.
 - **Consequences:** Close backlog items as waived/cancelled, never as experimentally passed. Preserve all existing evidence and partial results; D-065/D-069 selections and D-070 runtime stay in force. No new model calls or runtime changes.
 - **Rollback:** A new owner instruction may authorize a separately scoped continuation that preserves prior evidence.
+
+
+## D-072 — Separate Implementer availability fallback from complexity
+- **Date:** 2026-10-18 · **Status:** Accepted by explicit owner instruction to fix assignments.
+- **Supersedes:** Only D-070’s explicit-complexity preference inversion for Implementer; all other role choices, pins, work gates and quota rules remain.
+- **Context:** Real-plan simulation put medium implementation on Sonnet medium and high implementation on Luna high solely because the fallback list was reversed. No evidence established the alternative as a capability upgrade.
+- **Decision:** Implementer options stay Sonnet medium then Luna high for every complexity label. Select the eligible provider family through the existing quota/headroom rules; tied pressure uses the normal preference. Complexity must neither reverse the list nor override quota with an Implementer option-priority key. No new stronger model/effort is inferred.
+- **Alternatives:** Retaining the inversion would preserve unsupported capability assumptions; inventing a new high-complexity model/effort would exceed the owner’s selected policy. Both rejected.
+- **Consequences/verification:** Two pre-fix regression tests fail10 subcases;115 targeted tests, Ruff, offline wheel build and installed-module checks pass after the bounded policy/router correction. Ten-scenario matrix (20 runs/80 simulated tasks) and real REQ-018 (2 runs/12 tasks) pass. At Claude20%/Codex60% used, T1–T5 Sonnet medium; T6 Sonnet low. Reverse quota/exhaustion still permits Luna.
+- **Rollback:** Supersede with another explicit owner decision and restore the two policy/ranking clauses plus corresponding behavioral expectations; preserve existing simulation evidence. No schema or data migration.

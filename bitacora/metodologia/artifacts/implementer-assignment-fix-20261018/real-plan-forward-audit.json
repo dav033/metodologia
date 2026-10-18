@@ -1,0 +1,1052 @@
+[
+  {
+    "seq": 1,
+    "at": 1000000.0,
+    "kind": "run_created",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "sha256": "0c8abdd789c51add97d5ad815fbb0513d7900aa60672dca389ed361b12e3fcb2",
+      "tasks": 6
+    }
+  },
+  {
+    "seq": 2,
+    "at": 1000000.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 3,
+    "at": 1000000.0,
+    "kind": "plan_routes_received",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "contract_version": "1.0.0",
+      "recommended": 6,
+      "tasks": 6,
+      "unavailable": 0
+    }
+  },
+  {
+    "seq": 4,
+    "at": 1000000.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0001",
+      "from": "ready",
+      "to": "active"
+    }
+  },
+  {
+    "seq": 5,
+    "at": 1000000.0,
+    "kind": "reserved",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "executor": "route:m2:v1:6878bf2104c8b391cddf2ad11422c2692d721afaf7d4759a5a98749b440ce40c:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+      "resources": [
+        "path:pictures:scripts/test/test-ideas-boda-guiada.ts",
+        "path:pictures:scripts/test/test-recomendaciones-categoria.ts",
+        "path:pictures:src/lib/biblioteca-sempertex/biblioteca.ts",
+        "path:pictures:src/lib/biblioteca-sempertex/categorias.ts",
+        "path:pictures:src/lib/biblioteca-sempertex/recomendaciones-categoria.ts",
+        "path:pictures:src/lib/ia/guiado/ideas-guiadas.ts",
+        "repo:pictures",
+        "res:strict-category-matching"
+      ],
+      "token": 1
+    }
+  },
+  {
+    "seq": 6,
+    "at": 1000000.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "kind": "start",
+      "outbox": "out-00001"
+    }
+  },
+  {
+    "seq": 7,
+    "at": 1000000.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "ack": "accepted",
+      "kind": "start"
+    }
+  },
+  {
+    "seq": 8,
+    "at": 1000000.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "ack": "accepted",
+      "from": "reserved",
+      "to": "dispatched"
+    }
+  },
+  {
+    "seq": 9,
+    "at": 1000000.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "from": "dispatched",
+      "source": "simulated-executor",
+      "to": "running"
+    }
+  },
+  {
+    "seq": 10,
+    "at": 1000000.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "from": "running",
+      "source": "simulated-executor",
+      "to": "verifying"
+    }
+  },
+  {
+    "seq": 11,
+    "at": 1000000.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "kind": "verify",
+      "outbox": "out-00002"
+    }
+  },
+  {
+    "seq": 12,
+    "at": 1000001.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "ack": "accepted",
+      "kind": "verify"
+    }
+  },
+  {
+    "seq": 13,
+    "at": 1000001.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "from": "verifying",
+      "to": "accepted",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 14,
+    "at": 1000001.0,
+    "kind": "reservation_released",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {}
+  },
+  {
+    "seq": 15,
+    "at": 1000001.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0001",
+      "from": "active",
+      "to": "completed",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 16,
+    "at": 1000001.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 17,
+    "at": 1000002.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0002",
+      "from": "ready",
+      "to": "active"
+    }
+  },
+  {
+    "seq": 18,
+    "at": 1000002.0,
+    "kind": "reserved",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {
+      "executor": "route:m2:v1:acb74053c3a1b0efce9004bfb4a94b697422c2ca1052303a5492069103a5a127:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+      "resources": [
+        "path:pictures:scripts/test/test-turno-recomendaciones.ts",
+        "path:pictures:src/lib/ia/guiado/turno-recomendaciones.ts",
+        "repo:pictures",
+        "res:discovery-turn-outcome"
+      ],
+      "token": 2
+    }
+  },
+  {
+    "seq": 19,
+    "at": 1000002.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {
+      "kind": "start",
+      "outbox": "out-00003"
+    }
+  },
+  {
+    "seq": 20,
+    "at": 1000002.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {
+      "ack": "accepted",
+      "kind": "start"
+    }
+  },
+  {
+    "seq": 21,
+    "at": 1000002.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {
+      "ack": "accepted",
+      "from": "reserved",
+      "to": "dispatched"
+    }
+  },
+  {
+    "seq": 22,
+    "at": 1000002.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {
+      "from": "dispatched",
+      "source": "simulated-executor",
+      "to": "running"
+    }
+  },
+  {
+    "seq": 23,
+    "at": 1000002.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {
+      "from": "running",
+      "source": "simulated-executor",
+      "to": "verifying"
+    }
+  },
+  {
+    "seq": 24,
+    "at": 1000002.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {
+      "kind": "verify",
+      "outbox": "out-00004"
+    }
+  },
+  {
+    "seq": 25,
+    "at": 1000003.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {
+      "ack": "accepted",
+      "kind": "verify"
+    }
+  },
+  {
+    "seq": 26,
+    "at": 1000003.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {
+      "from": "verifying",
+      "to": "accepted",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 27,
+    "at": 1000003.0,
+    "kind": "reservation_released",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "att-0002",
+    "detail": {}
+  },
+  {
+    "seq": 28,
+    "at": 1000003.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0002",
+      "from": "active",
+      "to": "completed",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 29,
+    "at": 1000003.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 30,
+    "at": 1000004.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0003",
+      "from": "ready",
+      "to": "active"
+    }
+  },
+  {
+    "seq": 31,
+    "at": 1000004.0,
+    "kind": "reserved",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {
+      "executor": "route:m2:v1:2d983fad89e8dd35d9abbadc5750a8961c48a1b714cb3a6c8762c495c47c7e95:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+      "resources": [
+        "path:pictures:scripts/test/test-cambio-tematica-guiada.ts",
+        "path:pictures:scripts/test/test-opciones-catalogo-guiado.ts",
+        "path:pictures:scripts/test/test-respuesta-guiada-sin-fracaso.ts",
+        "path:pictures:scripts/test/test-respuesta-recomendaciones.ts",
+        "path:pictures:src/lib/ia/guiado/opciones-catalogo.ts",
+        "path:pictures:src/lib/ia/guiado/prompt-guiado.ts",
+        "path:pictures:src/lib/ia/guiado/respuesta-guiada.ts",
+        "path:pictures:src/lib/ia/guiado/respuesta-recomendaciones.ts",
+        "repo:pictures",
+        "res:discovery-response-policy"
+      ],
+      "token": 3
+    }
+  },
+  {
+    "seq": 32,
+    "at": 1000004.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {
+      "kind": "start",
+      "outbox": "out-00005"
+    }
+  },
+  {
+    "seq": 33,
+    "at": 1000004.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {
+      "ack": "accepted",
+      "kind": "start"
+    }
+  },
+  {
+    "seq": 34,
+    "at": 1000004.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {
+      "ack": "accepted",
+      "from": "reserved",
+      "to": "dispatched"
+    }
+  },
+  {
+    "seq": 35,
+    "at": 1000004.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {
+      "from": "dispatched",
+      "source": "simulated-executor",
+      "to": "running"
+    }
+  },
+  {
+    "seq": 36,
+    "at": 1000004.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {
+      "from": "running",
+      "source": "simulated-executor",
+      "to": "verifying"
+    }
+  },
+  {
+    "seq": 37,
+    "at": 1000004.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {
+      "kind": "verify",
+      "outbox": "out-00006"
+    }
+  },
+  {
+    "seq": 38,
+    "at": 1000005.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {
+      "ack": "accepted",
+      "kind": "verify"
+    }
+  },
+  {
+    "seq": 39,
+    "at": 1000005.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {
+      "from": "verifying",
+      "to": "accepted",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 40,
+    "at": 1000005.0,
+    "kind": "reservation_released",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "att-0003",
+    "detail": {}
+  },
+  {
+    "seq": 41,
+    "at": 1000005.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T3",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0003",
+      "from": "active",
+      "to": "completed",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 42,
+    "at": 1000005.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 43,
+    "at": 1000006.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0004",
+      "from": "ready",
+      "to": "active"
+    }
+  },
+  {
+    "seq": 44,
+    "at": 1000006.0,
+    "kind": "reserved",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {
+      "executor": "route:m2:v1:c00faf0bb9e893d6bcca7c24e59511928f62451b6035f29381203e23721d1936:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+      "resources": [
+        "path:pictures:scripts/test/test-ruta-recomendaciones-categoria.ts",
+        "path:pictures:src/app/api/asistente-guiado/route.ts",
+        "path:pictures:src/lib/ia/guiado/pedido-ideas.ts",
+        "repo:pictures",
+        "res:guided-recommendation-sse-v1"
+      ],
+      "token": 4
+    }
+  },
+  {
+    "seq": 45,
+    "at": 1000006.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {
+      "kind": "start",
+      "outbox": "out-00007"
+    }
+  },
+  {
+    "seq": 46,
+    "at": 1000006.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {
+      "ack": "accepted",
+      "kind": "start"
+    }
+  },
+  {
+    "seq": 47,
+    "at": 1000006.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {
+      "ack": "accepted",
+      "from": "reserved",
+      "to": "dispatched"
+    }
+  },
+  {
+    "seq": 48,
+    "at": 1000006.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {
+      "from": "dispatched",
+      "source": "simulated-executor",
+      "to": "running"
+    }
+  },
+  {
+    "seq": 49,
+    "at": 1000006.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {
+      "from": "running",
+      "source": "simulated-executor",
+      "to": "verifying"
+    }
+  },
+  {
+    "seq": 50,
+    "at": 1000006.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {
+      "kind": "verify",
+      "outbox": "out-00008"
+    }
+  },
+  {
+    "seq": 51,
+    "at": 1000007.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {
+      "ack": "accepted",
+      "kind": "verify"
+    }
+  },
+  {
+    "seq": 52,
+    "at": 1000007.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {
+      "from": "verifying",
+      "to": "accepted",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 53,
+    "at": 1000007.0,
+    "kind": "reservation_released",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "att-0004",
+    "detail": {}
+  },
+  {
+    "seq": 54,
+    "at": 1000007.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T4",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0004",
+      "from": "active",
+      "to": "completed",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 55,
+    "at": 1000007.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 56,
+    "at": 1000008.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0005",
+      "from": "ready",
+      "to": "active"
+    }
+  },
+  {
+    "seq": 57,
+    "at": 1000008.0,
+    "kind": "reserved",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {
+      "executor": "route:m2:v1:7e499c515c2656acdcee0cd4c45f7506de9b7f45e04c516d1df46dddec05787a:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+      "resources": [
+        "path:pictures:scripts/test/fixtures/recomendaciones-categoria-ui/arnes.tsx",
+        "path:pictures:scripts/test/test-ui-recomendaciones-categoria.ts",
+        "path:pictures:src/components/guiado/CarruselDecoraciones.tsx",
+        "path:pictures:src/components/guiado/VistaGuiada.tsx",
+        "repo:pictures",
+        "res:guided-recommendation-sse-v1",
+        "res:guided-session-widgets"
+      ],
+      "token": 5
+    }
+  },
+  {
+    "seq": 58,
+    "at": 1000008.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {
+      "kind": "start",
+      "outbox": "out-00009"
+    }
+  },
+  {
+    "seq": 59,
+    "at": 1000008.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {
+      "ack": "accepted",
+      "kind": "start"
+    }
+  },
+  {
+    "seq": 60,
+    "at": 1000008.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {
+      "ack": "accepted",
+      "from": "reserved",
+      "to": "dispatched"
+    }
+  },
+  {
+    "seq": 61,
+    "at": 1000008.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {
+      "from": "dispatched",
+      "source": "simulated-executor",
+      "to": "running"
+    }
+  },
+  {
+    "seq": 62,
+    "at": 1000008.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {
+      "from": "running",
+      "source": "simulated-executor",
+      "to": "verifying"
+    }
+  },
+  {
+    "seq": 63,
+    "at": 1000008.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {
+      "kind": "verify",
+      "outbox": "out-00010"
+    }
+  },
+  {
+    "seq": 64,
+    "at": 1000009.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {
+      "ack": "accepted",
+      "kind": "verify"
+    }
+  },
+  {
+    "seq": 65,
+    "at": 1000009.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {
+      "from": "verifying",
+      "to": "accepted",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 66,
+    "at": 1000009.0,
+    "kind": "reservation_released",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "att-0005",
+    "detail": {}
+  },
+  {
+    "seq": 67,
+    "at": 1000009.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T5",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0005",
+      "from": "active",
+      "to": "completed",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 68,
+    "at": 1000009.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 69,
+    "at": 1000010.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0006",
+      "from": "ready",
+      "to": "active"
+    }
+  },
+  {
+    "seq": 70,
+    "at": 1000010.0,
+    "kind": "reserved",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {
+      "executor": "route:m2:v1:1d29c845fd5a0f0d7ba082473d011065aca2e9d18c1291cebf5135a48ee536a8:6a2329d96dd810934a554973214dd8a943c4357d1c0a5895994310669fc64558",
+      "resources": [
+        "path:pictures:package.json",
+        "path:pictures:scripts/test/test-recomendaciones-categoria.ts",
+        "path:pictures:scripts/test/test-respuesta-recomendaciones.ts",
+        "path:pictures:scripts/test/test-ruta-recomendaciones-categoria.ts",
+        "path:pictures:scripts/test/test-turno-recomendaciones.ts",
+        "path:pictures:scripts/test/test-ui-recomendaciones-categoria.ts",
+        "repo:pictures",
+        "res:discovery-response-policy",
+        "res:discovery-turn-outcome",
+        "res:guided-recommendation-sse-v1",
+        "res:guided-session-widgets",
+        "res:strict-category-matching"
+      ],
+      "token": 6
+    }
+  },
+  {
+    "seq": 71,
+    "at": 1000010.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {
+      "kind": "start",
+      "outbox": "out-00011"
+    }
+  },
+  {
+    "seq": 72,
+    "at": 1000010.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {
+      "ack": "accepted",
+      "kind": "start"
+    }
+  },
+  {
+    "seq": 73,
+    "at": 1000010.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {
+      "ack": "accepted",
+      "from": "reserved",
+      "to": "dispatched"
+    }
+  },
+  {
+    "seq": 74,
+    "at": 1000010.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {
+      "from": "dispatched",
+      "source": "simulated-executor",
+      "to": "running"
+    }
+  },
+  {
+    "seq": 75,
+    "at": 1000010.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {
+      "from": "running",
+      "source": "simulated-executor",
+      "to": "verifying"
+    }
+  },
+  {
+    "seq": 76,
+    "at": 1000010.0,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {
+      "kind": "verify",
+      "outbox": "out-00012"
+    }
+  },
+  {
+    "seq": 77,
+    "at": 1000011.0,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {
+      "ack": "accepted",
+      "kind": "verify"
+    }
+  },
+  {
+    "seq": 78,
+    "at": 1000011.0,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {
+      "from": "verifying",
+      "to": "accepted",
+      "verifier": "simulated-validator"
+    }
+  },
+  {
+    "seq": 79,
+    "at": 1000011.0,
+    "kind": "reservation_released",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "att-0006",
+    "detail": {}
+  },
+  {
+    "seq": 80,
+    "at": 1000011.0,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T6",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0006",
+      "from": "active",
+      "to": "completed",
+      "verifier": "simulated-validator"
+    }
+  }
+]

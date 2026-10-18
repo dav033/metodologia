@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-18 11:08 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-18 12:22 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -20,7 +20,6 @@ _Generated 2026-10-18 11:08 by `bitacora.py index`. Do not edit by hand._
 - REQ-016: executor finished — review & merge
 - REQ-017: question round waiting for answers
 - REQ-017: executor finished — review & merge
-- REQ-018: question round waiting for answers
 
 ## Requirements
 
@@ -39,29 +38,29 @@ _Generated 2026-10-18 11:08 by `bitacora.py index`. Do not edit by hand._
 | [REQ-011](requirements/REQ-011-module-studio-with-cached-ai-renders/SPEC.md) | Module studio with cached AI renders | `done 2026-10-11 (merged 03049ca7)` | — |  |
 | [REQ-012](requirements/REQ-012-furniture-freedom-tables-and-chairs-deco/SPEC.md) | Furniture freedom: tables and chairs decoupled | `merged to main 2026-10-10 (78638080, 386b0cdc)` | — |  |
 | [REQ-013](requirements/REQ-013-catalogue-repositories/SPEC.md) | Catalogue repositories (ADR) | `done 2026-10-11 (phases 1-5 merged, migration 034)` | [in-progress (phases 1-5 built, 6-7 pending)](requirements/REQ-013-catalogue-repositories/PLAN.md) |  |
-| [REQ-014](requirements/REQ-014-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `in-progress` | [in-progress](requirements/REQ-014-72h-marathon-autonomous-product-developm/PLAN.md) |  |
+| [REQ-014](requirements/REQ-014-72h-marathon-autonomous-product-developm/SPEC.md) | 72h marathon — autonomous product development | `in-progress` | [cancelled](requirements/REQ-014-72h-marathon-autonomous-product-developm/PLAN.md) |  |
 | [REQ-015](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/SPEC.md) | judge-fix: guided chat honesty and count/price parity (D1-D5, D8) | `done (local branch awaiting owner review)` | [done](requirements/REQ-015-judge-fix-guided-chat-honesty-and-count/PLAN.md) | report ✓ |
 | [REQ-016](requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/SPEC.md) | Guided 3D edit leftovers: exact undo and colour resolver (P-042, P-058) | `ready` | [done](requirements/REQ-016-guided-3d-edit-leftovers-exact-undo-and/PLAN.md) | report ✓ |
 | [REQ-017](requirements/REQ-017-activity-aware-guided-chat-decoration-re/SPEC.md) | Activity-aware guided-chat decoration recommendations | `in-progress` | [done](requirements/REQ-017-activity-aware-guided-chat-decoration-re/PLAN.md) | report ✓ · round open |
-| [REQ-018](requirements/REQ-018-category-based-recommendations-of-assemb/SPEC.md) | Category-based recommendations of assembled decorations | `clarifying` | — | round open |
+| [REQ-018](requirements/REQ-018-category-based-recommendations-of-assemb/SPEC.md) | Category-based recommendations of assembled decorations | `clarifying` | [draft](requirements/REQ-018-category-based-recommendations-of-assemb/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
 - P-015 · REQ-002 remaining rollout verification: current read-only Neon audit proves 028 tables and · high/M
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
-- P-110 · `main` red after push 6649f75 (payload: shared Taller quotes, 3D sign compositing, Kontext · high/M
 - P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
 - P-086 · `tamano_pieza` shrink (-1) enlarges a piece whose start size is below the constructor mini · med/S
 - P-002 · FLUX photo color fidelity: residual ΔE ~15 after hex prompt (c25490f1); next: photoreal ca · med/M
+- P-007 · Split Taller3D.tsx (1022 lines) by responsibility: top bar, rail panels, viewer overlay, i · med/M
 
 ## Recent decisions
 
+- D-059 — Table-seat count test updated for parametric salon tables (REQ-014 T54)
 - D-058 — The guiada_motor cookie does not beat the 3D cut unless explicitly allowed
 - D-057 — Do not persist workshop stock yet; leftoverInventory stays quote output
 - D-056 — Remove the separate feedback administrator password; the app session is the admin gate
 - D-055 — Limit REQ-014 synchronization to the approved Ship #1 payload
-- D-054 — Preserve the existing Happie v1 contract while adding opt-in services
 
 ## Timeline
 

@@ -1,6 +1,7 @@
+> **CANCELLED 2026-10-18 by the owner (all open requirements).** Nothing deleted: code, branches and reports are kept.
 ---
 id: REQ-005
-status: clarifying
+status: cancelled (2026-10-18, owner)
 created: 2026-10-08
 track: standard
 ---

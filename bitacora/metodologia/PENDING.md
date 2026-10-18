@@ -7,6 +7,10 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
+- P-118 · Enforce owner no-commit/no-push policy in bitacora CLI and native session hooks · urgency: high · complexity: M · added 2026-10-18 · confirmed Pictures REQ-018 incident
+  - bt_cli_flows round new/answer and native Planner Stop hooks call bt_vcs.commit with default push=True; commit then pushes asynchronously. Local origin/main reflog confirms automatic pushes through5bc98f3, including round commits0312304/5eeee36/298da62 and sessionfed1200. This violates explicit owner restrictions. Do not use these wrappers without an effective no-VCS guard. No history rollback or config/source fix performed; preserve evidence and add permission regressions before repair.
+- P-117 · Fix command-evidence validation for Node --import operands · urgency: med · complexity: S · added 2026-10-18 · Pictures REQ-018 planning
+  - bt_plan_adapter_evidence.py treats tsx in node --import tsx scripts/test/test-ideas-boda-guiada.ts as the target file and falsely rejects valid evidence. The real script exists and exits0; --import=tsx also exits0 and is accepted. Preserve the strict existence gate; add regression coverage before fixing option parsing. No validator source changed in this session.
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin = GitHub, 778 bitácora files already on `origin/main`), so a push is the backup; BUT the repo is PUBLIC (checked 2026-10-14 with `gh`) while these notes called it private: owner decision 2026-10-14: no push for now, work locally; revisit before any push (make the repo private first) · urgency: high · complexity: M · added 2026-10-13 · user: "tenemos un problema" (GitHub review)
   - Context: since remote commit `4cfd74f` the bitácora lives outside the repo (D-007). Its legacy history reached GitHub with `a67371f`. The silent push failure no longer applies, because nothing pushes the live copy.
   - Options: (1) a private remote for `~/bitacora` with `push_async` plus a push-failure log (`.state/push.log`, warning at SessionStart), the approved fix; (2) local git plus a scheduled backup; (3) no sync, single machine. The session-end commit creates a local git repo in `~/bitacora` (`ensure_repo`).
@@ -118,6 +122,7 @@ _None_
   - ✓ P-030 · M3 antagonist leftovers (A3 forged exit.json while agent alive, A5 repeated cwd sweep) · closed 2026-10-15 · always stop the live agent before settling, sweep on first pass only
 
 ## Notes
+- Resolved under D-072: owner requested fixing Implementer assignments; removed complexity preference inversion and priority override. Quota/availability fallback and other roles retained;115 tests and both simulation sets pass. No model-quality superiority claim.
 - ✓ P-027 · M3 route lookup for M2 `route:<id>` references · closed 2026-10-14 · adapter resolves only M2's persisted selected route; Plan→M1→M2 reference test passes
 - ✓ P-028 · Package all M2 runtime modules and `bt_scheduler_decision` data in the installed wheel · closed 2026-10-14 · package migration suite 13/13, including isolated M2 import
 - ✓ P-025 · Plans approved by hand had no approval record · closed 2026-10-14 · a launch never freezes anymore: `PLAN_NOT_FROZEN` until `plan approve` / `plan-json freeze` (explicit `--force` is recorded `launch-forced`); REQ-012, D-021.

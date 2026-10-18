@@ -1,0 +1,164 @@
+======================================================================
+FAIL: test_implementer_complexity_does_not_promote_the_availability_alternative (test_role_policy.RolePolicyTests.test_implementer_complexity_does_not_promote_the_availability_alternative) (label='L')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_policy.py", line 41, in test_implementer_complexity_does_not_promote_the_availability_alternative
+    self.assertEqual(policy.options("implementer", label), policy.options("implementer"))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('codex', 'gpt-6-luna', 'high'), ('claude', 'sonnet', 'medium')] != [('claude', 'sonnet', 'medium'), ('codex', 'gpt-6-luna', 'high')]
+
+First differing element 0:
+('codex', 'gpt-6-luna', 'high')
+('claude', 'sonnet', 'medium')
+
+- [('codex', 'gpt-6-luna', 'high'), ('claude', 'sonnet', 'medium')]
++ [('claude', 'sonnet', 'medium'), ('codex', 'gpt-6-luna', 'high')]
+
+======================================================================
+FAIL: test_implementer_complexity_does_not_promote_the_availability_alternative (test_role_policy.RolePolicyTests.test_implementer_complexity_does_not_promote_the_availability_alternative) (label='high')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_policy.py", line 41, in test_implementer_complexity_does_not_promote_the_availability_alternative
+    self.assertEqual(policy.options("implementer", label), policy.options("implementer"))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('codex', 'gpt-6-luna', 'high'), ('claude', 'sonnet', 'medium')] != [('claude', 'sonnet', 'medium'), ('codex', 'gpt-6-luna', 'high')]
+
+First differing element 0:
+('codex', 'gpt-6-luna', 'high')
+('claude', 'sonnet', 'medium')
+
+- [('codex', 'gpt-6-luna', 'high'), ('claude', 'sonnet', 'medium')]
++ [('claude', 'sonnet', 'medium'), ('codex', 'gpt-6-luna', 'high')]
+
+======================================================================
+FAIL: test_implementer_complexity_does_not_promote_the_availability_alternative (test_role_policy.RolePolicyTests.test_implementer_complexity_does_not_promote_the_availability_alternative) (label='high_complexity')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_policy.py", line 41, in test_implementer_complexity_does_not_promote_the_availability_alternative
+    self.assertEqual(policy.options("implementer", label), policy.options("implementer"))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('codex', 'gpt-6-luna', 'high'), ('claude', 'sonnet', 'medium')] != [('claude', 'sonnet', 'medium'), ('codex', 'gpt-6-luna', 'high')]
+
+First differing element 0:
+('codex', 'gpt-6-luna', 'high')
+('claude', 'sonnet', 'medium')
+
+- [('codex', 'gpt-6-luna', 'high'), ('claude', 'sonnet', 'medium')]
++ [('claude', 'sonnet', 'medium'), ('codex', 'gpt-6-luna', 'high')]
+
+======================================================================
+FAIL: test_implementer_complexity_does_not_promote_the_availability_alternative (test_role_policy.RolePolicyTests.test_implementer_complexity_does_not_promote_the_availability_alternative) (label=' HIGH ')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_policy.py", line 41, in test_implementer_complexity_does_not_promote_the_availability_alternative
+    self.assertEqual(policy.options("implementer", label), policy.options("implementer"))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('codex', 'gpt-6-luna', 'high'), ('claude', 'sonnet', 'medium')] != [('claude', 'sonnet', 'medium'), ('codex', 'gpt-6-luna', 'high')]
+
+First differing element 0:
+('codex', 'gpt-6-luna', 'high')
+('claude', 'sonnet', 'medium')
+
+- [('codex', 'gpt-6-luna', 'high'), ('claude', 'sonnet', 'medium')]
++ [('claude', 'sonnet', 'medium'), ('codex', 'gpt-6-luna', 'high')]
+
+======================================================================
+FAIL: test_implementer_complexity_preserves_quota_selection_and_default_on_ties (test_role_routing.RoleRoutingTests.test_implementer_complexity_preserves_quota_selection_and_default_on_ties) (complexity='L', claude=20, codex=60)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_routing.py", line 88, in test_implementer_complexity_preserves_quota_selection_and_default_on_ties
+    self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('codex', 'gpt-6-luna', 'high') != ('claude', 'sonnet', 'medium')
+
+First differing element 0:
+'codex'
+'claude'
+
+- ('codex', 'gpt-6-luna', 'high')
++ ('claude', 'sonnet', 'medium')
+
+======================================================================
+FAIL: test_implementer_complexity_preserves_quota_selection_and_default_on_ties (test_role_routing.RoleRoutingTests.test_implementer_complexity_preserves_quota_selection_and_default_on_ties) (complexity='L', claude=20, codex=20)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_routing.py", line 88, in test_implementer_complexity_preserves_quota_selection_and_default_on_ties
+    self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('codex', 'gpt-6-luna', 'high') != ('claude', 'sonnet', 'medium')
+
+First differing element 0:
+'codex'
+'claude'
+
+- ('codex', 'gpt-6-luna', 'high')
++ ('claude', 'sonnet', 'medium')
+
+======================================================================
+FAIL: test_implementer_complexity_preserves_quota_selection_and_default_on_ties (test_role_routing.RoleRoutingTests.test_implementer_complexity_preserves_quota_selection_and_default_on_ties) (complexity='high', claude=20, codex=60)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_routing.py", line 88, in test_implementer_complexity_preserves_quota_selection_and_default_on_ties
+    self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('codex', 'gpt-6-luna', 'high') != ('claude', 'sonnet', 'medium')
+
+First differing element 0:
+'codex'
+'claude'
+
+- ('codex', 'gpt-6-luna', 'high')
++ ('claude', 'sonnet', 'medium')
+
+======================================================================
+FAIL: test_implementer_complexity_preserves_quota_selection_and_default_on_ties (test_role_routing.RoleRoutingTests.test_implementer_complexity_preserves_quota_selection_and_default_on_ties) (complexity='high', claude=20, codex=20)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_routing.py", line 88, in test_implementer_complexity_preserves_quota_selection_and_default_on_ties
+    self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('codex', 'gpt-6-luna', 'high') != ('claude', 'sonnet', 'medium')
+
+First differing element 0:
+'codex'
+'claude'
+
+- ('codex', 'gpt-6-luna', 'high')
++ ('claude', 'sonnet', 'medium')
+
+======================================================================
+FAIL: test_implementer_complexity_preserves_quota_selection_and_default_on_ties (test_role_routing.RoleRoutingTests.test_implementer_complexity_preserves_quota_selection_and_default_on_ties) (complexity='high_complexity', claude=20, codex=60)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_routing.py", line 88, in test_implementer_complexity_preserves_quota_selection_and_default_on_ties
+    self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('codex', 'gpt-6-luna', 'high') != ('claude', 'sonnet', 'medium')
+
+First differing element 0:
+'codex'
+'claude'
+
+- ('codex', 'gpt-6-luna', 'high')
++ ('claude', 'sonnet', 'medium')
+
+======================================================================
+FAIL: test_implementer_complexity_preserves_quota_selection_and_default_on_ties (test_role_routing.RoleRoutingTests.test_implementer_complexity_preserves_quota_selection_and_default_on_ties) (complexity='high_complexity', claude=20, codex=20)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_role_routing.py", line 88, in test_implementer_complexity_preserves_quota_selection_and_default_on_ties
+    self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('codex', 'gpt-6-luna', 'high') != ('claude', 'sonnet', 'medium')
+
+First differing element 0:
+'codex'
+'claude'
+
+- ('codex', 'gpt-6-luna', 'high')
++ ('claude', 'sonnet', 'medium')
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.016s
+
+FAILED (failures=10)

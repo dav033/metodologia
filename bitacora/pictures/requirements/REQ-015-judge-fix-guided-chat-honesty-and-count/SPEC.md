@@ -1,6 +1,7 @@
+> **CANCELLED 2026-10-18 by the owner (all open requirements).** Nothing deleted: code, branches and reports are kept.
 ---
 id: REQ-015
-status: done (local branch awaiting owner review)
+status: cancelled (2026-10-18, owner)
 created: 2026-10-13
 track: standard
 ---
