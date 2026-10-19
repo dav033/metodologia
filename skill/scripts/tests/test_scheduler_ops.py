@@ -70,6 +70,14 @@ class OpsTests(unittest.TestCase):
         self.assertTrue(any("r6 → r7" in line for line in lines))
         self.assertFalse(ops.on_hold(self.rdir))
 
+    def test_a_move_rewrites_the_read_model_even_while_the_run_is_held(self):
+        report = SimpleNamespace(from_revision=2, to_revision=3, kept=[], reset=["T3"], added=[], removed=[])
+        with patch.object(adapter, "rebase_to_latest", return_value=report), patch("bt_scheduler_run.rebind_runtime"), \
+                patch.object(adapter, "write_projection") as write:
+            ops.apply("p", "REQ-001", self.rdir, "revise", keep_held=True)
+        write.assert_called_once_with(self.rdir, self.sch)
+        self.assertTrue(ops.on_hold(self.rdir))
+
     def test_a_refused_move_still_releases_the_hold(self):
         self.sch.reopen.side_effect = adapter.core.SchedulerError("NOT_ALLOWED", "no")
         with self.assertRaises(adapter.core.SchedulerError):

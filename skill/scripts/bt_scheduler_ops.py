@@ -230,7 +230,19 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
             bt_scheduler_run.rebind_runtime(rdir)
             lines.append(f"rebase r{report.from_revision} → r{report.to_revision}: kept {len(report.kept)}, "
                          f"redo {len(report.reset)}, new {len(report.added)}, removed {len(report.removed)}")
+        _refresh_projection(rdir)
     return lines
+
+
+def _refresh_projection(rdir: Path) -> bool:
+    """Rewrite the read model after a move: a held run has no owner to do it, and the plan page would keep showing the
+    old routes and states (after a rebase, routes chosen for a previous revision). Best effort."""
+    try:
+        with _opened(rdir) as sch:
+            adapter.write_projection(rdir, sch)
+    except Exception:  # noqa: BLE001 - the move itself already succeeded; the owner rewrites it when it runs
+        return False
+    return True
 
 
 def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wait: float = 180.0) -> list[str]:
