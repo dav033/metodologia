@@ -1,6 +1,6 @@
 # Bitácora — index
 
-_Generated 2026-10-19 15:24. Do not edit by hand. Web: http://127.0.0.1:8765_
+_Generated 2026-10-19 16:24. Do not edit by hand. Web: http://127.0.0.1:8765_
 
 | Project | Repos | Open REQs | Open pending | Last activity | Links |
 |---|---|---|---|---|---|
@@ -28,7 +28,6 @@ _Generated 2026-10-19 15:24. Do not edit by hand. Web: http://127.0.0.1:8765_
 - **escritorio** — REQ-004: executor finished — review & merge
 - **maros** — REQ-005: executor finished — review & merge
 - **maros-lab** — REQ-001: executor finished — review & merge
-- **metodologia** — REQ-027: question round waiting for answers
 - **pictures** — REQ-015: executor finished — review & merge
 - **pictures** — REQ-016: executor finished — review & merge
 - **pictures** — REQ-017: question round waiting for answers

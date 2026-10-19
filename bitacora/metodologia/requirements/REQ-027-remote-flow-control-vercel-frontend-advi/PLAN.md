@@ -6,138 +6,177 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/5 · tareas 0/23 · generado: 2026-10-19T14:46:28-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/5 · tareas 0/31 · generado: 2026-10-19T16:22:41-05:00
 
-**M1 — Spikes and contracts** · dificultad alta · 0/3
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T1 | Spike: Vercel external rewrite forwards cookies and streams SSE from AdvIn | media | en curso | gpt-6-luna | codex-luis | 1 |
-| T2 | Research the scheduler injection points for a per-task route pin and operator notes | media | en curso | gpt-6-luna | codex-luis | 1 |
-| T3 | Write the remote API contract (endpoints, command schema, errors, event kinds) and the architecture decision | alta | pendiente | — | — | 0 |
-
-**M2 — Laptop: remote API, ledger and feed** · dificultad alta · 0/6
+**M1 — Contracts** · dificultad extrema · 0/2
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T4 | Remote API skeleton in `bt_server` behind the gateway key, with health and snapshot endpoints | media | pendiente | — | — | 0 |
-| T5 | Command ledger: idempotency, preconditions, dispatch to scheduler/plan/round operations, audit | alta | pendiente | — | — | 0 |
-| T6 | Event feed: the six notification kinds as deterministic events with stable ids and a cursor | alta | pendiente | — | — | 0 |
-| T7 | Failure review read model: cause, verification output, diff stat, log tail per attempt | media | pendiente | — | — | 0 |
-| T8 | Extended recovery: retry pinned to a route, brief edit as a plan revision, note in the next prompt | alta | pendiente | — | — | 0 |
-| T9 | Stop the panel from flapping: one owner of port 8765 and restarts that do not drop clients | media | pendiente | — | — | 0 |
+| T2 | Research where a per-task route pin enters M2 routing and the executor | media | lista | gpt-6-luna | codex-luis | 1 |
+| T3 | Remote API contract, command and event schemas, and the architecture note | extrema | pendiente | — | — | 0 |
 
-**M3 — Gateway on AdvIn** · dificultad alta · 0/5
+**M2 — Laptop: remote API, ledger and feed** · dificultad alta · 0/10
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T10 | Gateway skeleton: config, upstream client, liveness probe and offline state | media | pendiente | — | — | 0 |
-| T11 | GitHub OAuth for dav033, sessions, CSRF header and Origin checks, rate limits | media | pendiente | — | — | 0 |
-| T12 | Read proxy with snapshot cache and SSE fan-out with Last-Event-ID | alta | pendiente | — | — | 0 |
-| T13 | Command relay with confirmation challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME | media | pendiente | — | — | 0 |
-| T14 | Notification rules and Telegram bot: dedupe, retries, safe buttons, /estado, chat allowlist | alta | pendiente | — | — | 0 |
+| T4 | Remote API skeleton behind the gateway key, with health | media | pendiente | — | — | 0 |
+| T4a | Snapshot endpoint over the shared live caches | media | pendiente | — | — | 0 |
+| T5 | Command ledger store: idempotency keys, preconditions and audit rows | alta | pendiente | — | — | 0 |
+| T5a | Ledger dispatch for run moves and decision answers | media | pendiente | — | — | 0 |
+| T5b | Ledger dispatch for plans and rounds with the confirmation challenge | media | pendiente | — | — | 0 |
+| T6 | Event feed with stable ids and a cursor, including decision requests | alta | pendiente | — | — | 0 |
+| T7 | Failure review read model per attempt | media | pendiente | — | — | 0 |
+| T8 | Retry pinned to a route, model or account | alta | pendiente | — | — | 0 |
+| T8a | Brief or criteria edit as an owner-approved plan revision | alta | pendiente | — | — | 0 |
+| T9 | One owner of port 8765 and reloads that keep the listening socket | media | pendiente | — | — | 0 |
 
-**M4 — Mobile web on Vercel** · dificultad media · 0/3
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T15 | Web foundation: Next.js app, theme tokens, PWA manifest, rewrites, login, runs list and run view | media | pendiente | — | — | 0 |
-| T15a | Web failure review, control sheet with confirmations and command history | media | pendiente | — | — | 0 |
-| T15b | Web plans, question rounds, extended recovery forms and live quotas | media | pendiente | — | — | 0 |
-
-**M5 — Deploy, verify, close** · dificultad alta · 0/6
+**M3 — Gateway (tested against a fake laptop)** · dificultad alta · 0/8
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T16 | Owner prerequisites and secrets: Telegram bot + chat id, GitHub OAuth App, generated keys in env files | baja | pendiente | — | — | 0 |
-| T17 | Deploy the gateway on AdvIn: systemd unit, Caddy site block with backup and rollback | media | pendiente | — | — | 0 |
-| T18 | Deploy the web to Vercel production with its env vars | baja | pendiente | — | — | 0 |
-| T19 | End-to-end check on a phone viewport against production with a sandbox plan | alta | pendiente | — | — | 0 |
-| T20 | Independent security and spec audit by another provider | alta | pendiente | — | — | 0 |
-| T21 | Documentation: TOOLS.md entries, runbook, rollback, references | baja | pendiente | — | — | 0 |
+| T10 | Gateway skeleton: config, upstream client and liveness state | media | pendiente | — | — | 0 |
+| T11 | GitHub OAuth for dav033 and server-side sessions | media | pendiente | — | — | 0 |
+| T11a | CSRF header, Origin check, rate limits and request log | baja | pendiente | — | — | 0 |
+| T12 | Snapshot cache and SSE fan-out with Last-Event-ID | alta | pendiente | — | — | 0 |
+| T13 | Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME | media | pendiente | — | — | 0 |
+| T14 | Deterministic notification rules with dedupe keys | alta | pendiente | — | — | 0 |
+| T14a | Telegram delivery with retries, backoff and history | media | pendiente | — | — | 0 |
+| T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | pendiente | — | — | 0 |
+
+**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 0/7
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T15 | Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway | media | pendiente | — | — | 0 |
+| T15a | Login screen and runs list | baja | pendiente | — | — | 0 |
+| T15b | Run view: activity strip, tasks and feed on flow-core.js | media | pendiente | — | — | 0 |
+| T15c | Failure review screen | baja | pendiente | — | — | 0 |
+| T15d | Control sheet with typed confirmations and command history | media | pendiente | — | — | 0 |
+| T15e | Plans, question rounds and decision requests screens | media | pendiente | — | — | 0 |
+| T15f | Recovery forms and live quotas | media | pendiente | — | — | 0 |
+
+**M5 — Go-live kit and audit** · dificultad alta · 0/4
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | pendiente | — | — | 0 |
+| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | pendiente | — | — | 0 |
+| T18 | Independent security and spec audit by another provider | alta | pendiente | — | — | 0 |
+| T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | — | — | 0 |
 <!-- bitacora:status:end -->
 
 ## Approach
-Three pieces, one direction of trust. **Laptop** (unchanged executor): `bt_server` gains a remote API
-`/api/remote/v1/` guarded by a gateway key, a command ledger (idempotency + preconditions) and an append-only event
-feed; it stays bound to `127.0.0.1` and is reached from AdvIn only through the existing reverse SSH tunnel
-(`advin-bitacora-tunnel.service`, AdvIn `127.0.0.1:8765` → laptop `127.0.0.1:8765`). **Gateway** on AdvIn
-(`remote/gateway`, Python 3.12 + Starlette/uvicorn/httpx, systemd on the host, bound to `172.20.0.1:8790`, published by
-the existing Caddy container as `flow-api.185-147-157-25.sslip.io`): GitHub OAuth for `dav033`, session cookies,
-liveness probe, snapshot cache, SSE fan-out, command relay, deterministic notification rules and a Telegram bot by long
-polling. **Web** on Vercel (`remote/web`, Next.js 15 + React 19 + Tailwind 4, project `flow-remote`): mobile-first PWA
-that reaches the gateway through same-origin rewrites (`/api/*` → gateway), as `lotm-frontend` already does, so cookies
-stay first-party and there is no CORS. Pure flow logic is reused from `skill/assets/flow-core.js`.
-Alternatives weighed (→ DECISIONS.md at T3): exposing the laptop or a new outbound WebSocket agent (rejected: the
-tunnel already exists, is SSH-authenticated and exposes nothing); auth on Vercel with Auth.js (rejected: the gateway
-would still need its own trust of the caller); queuing commands while offline (rejected by the owner).
+Three pieces, one direction of trust. **Laptop** (the only executor): `bt_server` gains a remote API
+`/api/remote/v1/` guarded by a gateway key, a command ledger (idempotency + preconditions, dispatching to the existing
+operator moves and to D-020's decision answers) and an append-only event feed; it stays bound to `127.0.0.1` and is
+reached from AdvIn only through the existing reverse SSH tunnel (`advin-bitacora-tunnel.service`). **Gateway** on AdvIn
+(`remote/gateway`, Python 3.12 **standard library only**, like `bt_server`: a threading HTTP server, `urllib` for
+GitHub and Telegram, SQLite; systemd on the host, bound to `172.20.0.1:8790`, published by the existing Caddy container
+as `flow-api.185-147-157-25.sslip.io`): GitHub OAuth for `dav033`, sessions, liveness, snapshot cache, SSE fan-out,
+command relay, deterministic notification rules and a Telegram bot by long polling. **Web** on Vercel (`remote/web`,
+Next.js 15 + React 19 + Tailwind 4, project `flow-remote`, local fonts): mobile-first PWA that reaches the gateway
+through same-origin rewrites (`/api/*` → gateway), as `lotm-frontend` does. Pure flow logic is reused from
+`skill/assets/flow-core.js`.
+**How it runs (r3):** the scheduler builds and tests everything against fakes (a fake laptop for the gateway, a mock
+gateway for the web); no task touches `main`, the live panel, AdvIn, Vercel or the bitácora. Then the run ends and the
+**go-live** happens once, with the owner (section below). Every task is ≤90 min (owner: always split) and every
+`verify` runs offline in the verifier sandbox (no network, no home, no `$|;<>`, no `PYTHONPATH=`).
+Alternatives weighed (recorded in `remote/docs/architecture.md` by T3, copied to DECISIONS.md at go-live): exposing
+the laptop or an outbound WebSocket agent (rejected: the tunnel exists and exposes nothing); Auth.js on Vercel
+(rejected: the gateway would still need its own trust of the caller); Starlette/uvicorn for the gateway (rejected:
+`uv` and third-party packages cannot run in the offline verifier, and one user needs no async stack); queuing commands
+while offline (rejected by the owner).
 
 ## Global constraints
 - Execution never leaves the laptop; AdvIn holds no Claude/Codex credentials (SPEC §Out of scope).
 - The local panel keeps its behavior and tests (R18); the laptop never listens beyond `127.0.0.1`.
+- Tasks never edit `bitacora/`, never merge to `main`, never deploy, never ssh to AdvIn: notes go to `remote/docs/`.
 - Secrets only in mode-600 env files and Vercel env vars, never in git or the bitácora (R16). Gitleaks stays on.
 - Every command: idempotency key + precondition; no queue while offline (R6, R7).
-- UI: Spanish copy, Catppuccin Mocha + mauve `#cba6f7`, JetBrainsMono, 360 px without horizontal scroll, ≥44 px
-  targets (R14).
-- Deploy with CLIs (`vercel deploy --prod`, `ssh advin`); no `git push`, no merge to `main`.
-- Back up any AdvIn file before editing it (Caddyfile, units) and keep a rollback command next to each change.
+- UI: Spanish copy, Catppuccin Mocha + mauve `#cba6f7`, JetBrainsMono (local font files), 360 px without horizontal
+  scroll, ≥44 px targets (R14).
+- Verify commands: `cd <dir> && <argv>` only; laptop tests as `cd skill/scripts && python -m unittest discover -s tests -p <file>`.
 
 ## Keys and access (references only, never values)
 | What | Where / how | Status |
 |---|---|---|
 | AdvIn shell | `ssh advin` → `root@185.147.157.25`, key `~/.ssh/id_ed25519_advin` (`~/.ssh/config`) | works |
 | Laptop → AdvIn tunnel | `advin-bitacora-tunnel.service` (user unit, `-R 127.0.0.1:8765:127.0.0.1:8765`) | active |
-| Caddy on AdvIn | Docker container `caddy`; config `/etc/caddy/Caddyfile` inside it (host path found in T17) | running |
+| Caddy on AdvIn | Docker container `caddy`; config `/etc/caddy/Caddyfile` inside it (host path found at go-live 3) | running |
 | Vercel | `vercel` CLI logged in as `dav033`, scope `dav033s-projects`; new project `flow-remote` | works |
-| GitHub | `gh` logged in as `dav033`; OAuth App `flow-remote` → `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | **to create** (T16) |
-| Telegram | bot from @BotFather → `TELEGRAM_BOT_TOKEN`; owner sends `/start` → `TELEGRAM_CHAT_ID` | **owner creates** (T16) |
-| Gateway ↔ laptop | `FLOW_GATEWAY_KEY` (generated, 48 bytes): laptop `~/.config/bitacora/remote.env`, AdvIn `/etc/flow-gateway/env` | generated in T16 |
-| Sessions | `SESSION_SECRET` (generated) in `/etc/flow-gateway/env` | generated in T16 |
-| Frontend config | Vercel env `GATEWAY_ORIGIN=https://flow-api.185-147-157-25.sslip.io` (not secret) | set in T18 |
+| GitHub | `gh` logged in as `dav033`; OAuth App `flow-remote` → `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | **to create** (go-live 2) |
+| Telegram | bot from @BotFather → `TELEGRAM_BOT_TOKEN`; owner sends `/start` → `TELEGRAM_CHAT_ID` | **owner creates** (go-live 2) |
+| Gateway ↔ laptop | `FLOW_GATEWAY_KEY` (generated, 48 bytes): laptop `~/.config/bitacora/remote.env`, AdvIn `/etc/flow-gateway/env` | generated at go-live 2 |
+| Sessions | `SESSION_SECRET` (generated) in `/etc/flow-gateway/env` | generated at go-live 2 |
+| Frontend config | Vercel env `GATEWAY_ORIGIN=https://flow-api.185-147-157-25.sslip.io` (not secret) | set at go-live 4 |
 | DNS (later) | NS1 `my.nsone.net`, needs the owner's login; only for a custom domain | deferred |
 
 ## Tasks
 
-### M1 — Spikes and contracts
-- [ ] T1 — Spike: Vercel external rewrite forwards cookies and streams SSE from AdvIn · repo: skill · files: remote/spikes/rewrite-sse/** · verify: `python remote/spikes/rewrite-sse/check.py` · covers: R2, R4
-- [ ] T2 — Research the scheduler injection points for a per-task route pin and operator notes · repo: skill · files: skill/scripts/bt_scheduler_plan_routing.py, skill/scripts/bt_runprompt.py · verify: `test -s remote/docs/injection-points.md` · covers: R13
-- [ ] T3 — Write the remote API contract (endpoints, command schema, errors, event kinds) and the architecture decision · repo: skill · files: remote/docs/contract.md, remote/contract/** · after: T1, T2 · verify: `python -m json.tool remote/contract/command.schema.json` · covers: R3, R5, R6, R10 · kind: implement
+### M1 — Contracts
+- [ ] T2 — Research where a per-task route pin enters M2 routing and the executor · repo: skill · files: remote/docs/route-pin.md · verify: `test -s remote/docs/route-pin.md` · covers: R13 · kind: research
+- [ ] T3 — Remote API contract, command and event schemas, and the architecture note · repo: skill · files: remote/docs/contract.md, remote/docs/architecture.md, remote/contract/** · after: T2 · verify: `python -m json.tool remote/contract/command.schema.json` · covers: R3, R5, R6, R10 · kind: implement
 
 ### M2 — Laptop: remote API, ledger and feed
-- [ ] T4 — Remote API skeleton in `bt_server` behind the gateway key, with health and snapshot endpoints · repo: skill · files: skill/scripts/bt_remote_api.py, skill/scripts/bt_server.py · after: T3 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_remote_api` · covers: R3, R4, R18
-- [ ] T5 — Command ledger: idempotency, preconditions, dispatch to scheduler/plan/round operations, audit · repo: skill · files: skill/scripts/bt_remote_commands.py · after: T4 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_remote_commands` · covers: R5, R6, R8, R15
-- [ ] T6 — Event feed: the six notification kinds as deterministic events with stable ids and a cursor · repo: skill · files: skill/scripts/bt_remote_events.py · after: T4 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_remote_events` · covers: R10, R11
-- [ ] T7 — Failure review read model: cause, verification output, diff stat, log tail per attempt · repo: skill · files: skill/scripts/bt_remote_api.py · after: T4 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_remote_api` · covers: R9
-- [ ] T8 — Extended recovery: retry pinned to a route, brief edit as a plan revision, note in the next prompt · repo: skill · files: skill/scripts/bt_remote_commands.py · after: T5 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_remote_recovery` · covers: R13
-- [ ] T9 — Stop the panel from flapping: one owner of port 8765 and restarts that do not drop clients · repo: skill · files: skill/scripts/bt_server.py · after: T4 · verify: `PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_platform` · covers: R7, R18
+- [ ] T4 — Remote API skeleton behind the gateway key, with health · repo: skill · files: skill/scripts/bt_remote_api.py, skill/scripts/bt_server.py, skill/scripts/tests/test_remote_api.py · after: T3 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py` · covers: R3, R18 · kind: implement
+- [ ] T4a — Snapshot endpoint over the shared live caches · repo: skill · files: skill/scripts/bt_remote_api.py, skill/scripts/tests/test_remote_api.py · after: T4 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py` · covers: R4 · kind: implement
+- [ ] T5 — Command ledger store: idempotency keys, preconditions and audit rows · repo: skill · files: skill/scripts/bt_remote_commands.py, skill/scripts/tests/test_remote_commands.py · after: T4a · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py` · covers: R6, R15 · kind: implement
+- [ ] T5a — Ledger dispatch for run moves and decision answers · repo: skill · files: skill/scripts/bt_remote_commands.py, skill/scripts/tests/test_remote_commands.py · after: T5 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py` · covers: R5, R6 · kind: implement
+- [ ] T5b — Ledger dispatch for plans and rounds with the confirmation challenge · repo: skill · files: skill/scripts/bt_remote_commands.py, skill/scripts/tests/test_remote_commands.py · after: T5a · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py` · covers: R5, R8 · kind: implement
+- [ ] T6 — Event feed with stable ids and a cursor, including decision requests · repo: skill · files: skill/scripts/bt_remote_events.py, skill/scripts/tests/test_remote_events.py · after: T5b · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py` · covers: R10, R11 · kind: implement
+- [ ] T7 — Failure review read model per attempt · repo: skill · files: skill/scripts/bt_remote_api.py, skill/scripts/tests/test_remote_review.py · after: T6 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py` · covers: R9 · kind: implement
+- [ ] T8 — Retry pinned to a route, model or account · repo: skill · files: skill/scripts/bt_remote_commands.py, skill/scripts/tests/test_remote_recovery.py · after: T7 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py` · covers: R13 · kind: implement
+- [ ] T8a — Brief or criteria edit as an owner-approved plan revision · repo: skill · files: skill/scripts/bt_remote_commands.py, skill/scripts/tests/test_remote_recovery.py · after: T8 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py` · covers: R13 · kind: implement
+- [ ] T9 — One owner of port 8765 and reloads that keep the listening socket · repo: skill · files: skill/scripts/bt_server.py, skill/scripts/bt_platform.py, skill/scripts/tests/test_platform.py · after: T8a · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py` · covers: R7, R18 · kind: implement
 
-### M3 — Gateway on AdvIn
-- [ ] T10 — Gateway skeleton: config, upstream client, liveness probe and offline state · repo: skill · files: remote/gateway/** · after: T3 · verify: `cd remote/gateway && uv run pytest -q tests/test_liveness.py` · covers: R7, R17
-- [ ] T11 — GitHub OAuth for dav033, sessions, CSRF header and Origin checks, rate limits · repo: skill · files: remote/gateway/** · after: T10 · verify: `cd remote/gateway && uv run pytest -q tests/test_auth.py` · covers: R1, R2, R17
-- [ ] T12 — Read proxy with snapshot cache and SSE fan-out with Last-Event-ID · repo: skill · files: remote/gateway/** · after: T4, T11 · verify: `cd remote/gateway && uv run pytest -q tests/test_stream.py` · covers: R4, R7
-- [ ] T13 — Command relay with confirmation challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME · repo: skill · files: remote/gateway/** · after: T5, T12 · verify: `cd remote/gateway && uv run pytest -q tests/test_commands.py` · covers: R5, R6, R7, R8
-- [ ] T14 — Notification rules and Telegram bot: dedupe, retries, safe buttons, /estado, chat allowlist · repo: skill · files: remote/gateway/** · after: T6, T13 · verify: `cd remote/gateway && uv run pytest -q tests/test_notify.py tests/test_telegram.py` · covers: R10, R11, R12
+### M3 — Gateway (tested against a fake laptop)
+- [ ] T10 — Gateway skeleton: config, upstream client and liveness state · repo: skill · files: remote/gateway/** · after: T3 · verify: `cd remote/gateway && python -m unittest discover -s tests -p test_liveness.py` · covers: R7, R17 · kind: implement
+- [ ] T11 — GitHub OAuth for dav033 and server-side sessions · repo: skill · files: remote/gateway/** · after: T10 · verify: `cd remote/gateway && python -m unittest discover -s tests -p test_auth.py` · covers: R1, R2 · kind: implement
+- [ ] T11a — CSRF header, Origin check, rate limits and request log · repo: skill · files: remote/gateway/** · after: T11 · verify: `cd remote/gateway && python -m unittest discover -s tests -p test_guard.py` · covers: R2, R17 · kind: implement
+- [ ] T12 — Snapshot cache and SSE fan-out with Last-Event-ID · repo: skill · files: remote/gateway/** · after: T11a, T4a · verify: `cd remote/gateway && python -m unittest discover -s tests -p test_stream.py` · covers: R4, R7 · kind: implement
+- [ ] T13 — Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME · repo: skill · files: remote/gateway/** · after: T12, T5b · verify: `cd remote/gateway && python -m unittest discover -s tests -p test_commands.py` · covers: R5, R6, R7, R8 · kind: implement
+- [ ] T14 — Deterministic notification rules with dedupe keys · repo: skill · files: remote/gateway/** · after: T13, T6 · verify: `cd remote/gateway && python -m unittest discover -s tests -p test_notify.py` · covers: R10, R11 · kind: implement
+- [ ] T14a — Telegram delivery with retries, backoff and history · repo: skill · files: remote/gateway/** · after: T14 · verify: `cd remote/gateway && python -m unittest discover -s tests -p test_telegram_send.py` · covers: R10, R15 · kind: implement
+- [ ] T14b — Telegram bot: long polling, chat allowlist, safe buttons and /estado · repo: skill · files: remote/gateway/** · after: T14a · verify: `cd remote/gateway && python -m unittest discover -s tests -p test_telegram_bot.py` · covers: R12 · kind: implement
 
-### M4 — Mobile web on Vercel
-- [ ] T15 — Web foundation: Next.js app, theme tokens, PWA manifest, rewrites, login, runs list and run view · repo: skill · files: remote/web/** · after: T12 · verify: `cd remote/web && npm run verify` · covers: R1, R4, R14
-- [ ] T15a — Web failure review, control sheet with confirmations and command history · repo: skill · files: remote/web/** · after: T15, T7, T13 · verify: `cd remote/web && npm run verify` · covers: R5, R8, R9, R15
-- [ ] T15b — Web plans, question rounds, extended recovery forms and live quotas · repo: skill · files: remote/web/** · after: T15a, T8 · verify: `cd remote/web && npm run verify` · covers: R13, R15
+### M4 — Mobile web (tested against a mock gateway)
+- [ ] T15 — Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway · repo: skill · files: remote/web/** · after: T3 · verify: `cd remote/web && npm run verify` · covers: R14 · kind: implement
+- [ ] T15a — Login screen and runs list · repo: skill · files: remote/web/** · after: T15 · verify: `cd remote/web && npm run verify` · covers: R1, R4 · kind: implement
+- [ ] T15b — Run view: activity strip, tasks and feed on flow-core.js · repo: skill · files: remote/web/** · after: T15a · verify: `cd remote/web && npm run verify` · covers: R4, R14 · kind: implement
+- [ ] T15c — Failure review screen · repo: skill · files: remote/web/** · after: T15b, T7 · verify: `cd remote/web && npm run verify` · covers: R9 · kind: implement
+- [ ] T15d — Control sheet with typed confirmations and command history · repo: skill · files: remote/web/** · after: T15c, T13 · verify: `cd remote/web && npm run verify` · covers: R5, R8, R15 · kind: implement
+- [ ] T15e — Plans, question rounds and decision requests screens · repo: skill · files: remote/web/** · after: T15d · verify: `cd remote/web && npm run verify` · covers: R5, R8 · kind: implement
+- [ ] T15f — Recovery forms and live quotas · repo: skill · files: remote/web/** · after: T15e, T8a · verify: `cd remote/web && npm run verify` · covers: R13, R15 · kind: implement
 
-### M5 — Deploy, verify, close
-- [ ] T16 — Owner prerequisites and secrets: Telegram bot + chat id, GitHub OAuth App, generated keys in env files · repo: skill · files: remote/deploy/env.example · after: T14, T15b · verify: `ssh advin 'test "$(stat -c %a /etc/flow-gateway/env)" = 600'` · covers: R16
-- [ ] T17 — Deploy the gateway on AdvIn: systemd unit, Caddy site block with backup and rollback · repo: skill · files: remote/deploy/** · after: T16 · verify: `curl -fsS https://flow-api.185-147-157-25.sslip.io/healthz` · covers: R3, R7, R16
-- [ ] T18 — Deploy the web to Vercel production with its env vars · repo: skill · files: remote/web/** · after: T17 · verify: `curl -fsS -o /dev/null https://flow-remote.vercel.app/login` · covers: R1, R14
-- [ ] T19 — End-to-end check on a phone viewport against production with a sandbox plan · repo: skill · files: remote/e2e/** · after: T18, T9 · verify: `cd remote/e2e && npm test` · covers: R1, R2, R3, R4, R5, R6, R7, R9, R10, R11, R12, R14, R17, R18
-- [ ] T20 — Independent security and spec audit by another provider · repo: skill · after: T19 · verify: `test -s remote/docs/audit.md` · covers: R1, R2, R3, R16, R17
-- [ ] T21 — Documentation: TOOLS.md entries, runbook, rollback, references · repo: skill · files: remote/README.md · after: T20 · verify: `grep -q flow-gateway bitacora/dev/TOOLS.md` · covers: R16, R18
+### M5 — Go-live kit and audit
+- [ ] T16 — Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook · repo: skill · files: remote/deploy/**, remote/docs/runbook.md · after: T14b, T15f, T9 · verify: `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` · covers: R16, R3 · kind: implement
+- [ ] T17 — Offline end-to-end: real laptop API, gateway and built web wired locally on loopback · repo: skill · files: remote/e2e/** · after: T16 · verify: `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` · covers: R1, R4, R5, R6, R7, R10, R11, R12, R18 · kind: test
+- [ ] T18 — Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit.md · after: T17 · verify: `test -s remote/docs/audit.md` · covers: R1, R2, R3, R16, R17 · kind: audit
+- [ ] T19 — Documentation: remote README, references and TOOLS entries to copy at go-live · repo: skill · files: remote/README.md, remote/docs/tools-entries.md · after: T18 · verify: `test -s remote/docs/tools-entries.md` · covers: R16, R18 · kind: docs
+
+## Go-live with the owner (after the run; not scheduler tasks)
+One stop, together, in this order; each step has its rollback in `remote/docs/runbook.md`:
+1. Review the diff of the run and merge it to `main` (owner's OK), restart `bitacora-web`, check `/flow` and `/plans`.
+2. Owner creates the Telegram bot (@BotFather) and sends `/start`; the GitHub OAuth App is created (agents' Firefox
+   if a GitHub session is there, otherwise the owner); keys generated into the env files (Keys table).
+3. Gateway on AdvIn: back up the Caddyfile, install the unit, add the site block, reload Caddy, check `healthz` and the
+   other sites.
+4. Vercel production deploy with `GATEWAY_ORIGIN`.
+5. Real end-to-end at 360 px: sign-in as dav033 (a foreign account refused), live view, a command, offline banner
+   after stopping the tunnel, one Telegram alert from a forced failure on a sandbox plan.
+6. Copy `remote/docs/architecture.md` into DECISIONS.md and `remote/docs/tools-entries.md` into TOOLS.md.
+
+## Spike (coordinator, before resuming)
+The old T1: check that Vercel external rewrites forward `Set-Cookie` and keep an SSE stream open, and how long; result
+in `remote/docs/spike-rewrite-sse.md`, committed before the run resumes so T3 can read it.
 
 ## Verification
-- Unit/integration: `PYTHONPATH=skill/scripts:skill/scripts/tests python -m unittest test_remote_api test_remote_commands test_remote_events test_remote_recovery test_platform`, the existing panel suites (`test_live_api`, `test_scheduler_ops`, page tests), `cd remote/gateway && uv run pytest -q`, `cd remote/web && npm run verify` (typecheck, lint, unit, build).
-- End to end (T19, Playwright at 360×800 against production, sandbox plan with `echo`-style tasks): sign-in as dav033;
-  a foreign GitHub user is refused; runs list and run view update within 5 s; cancel an attempt and see it in the
-  ledger; a stale precondition is refused; stop the tunnel → "sin conexión" within 20 s and commands rejected;
-  restart it → online again; a forced failure produces exactly one Telegram message whose button opens the review.
-- Local panel unchanged: `http://127.0.0.1:8765/flow` and `/plans` still serve, full suite has no new failures.
+- Per task: the offline `verify` above (unit tests of laptop modules, gateway `unittest`, `npm run verify` =
+  typecheck + lint + unit + build without network).
+- T17: everything wired on loopback with a fixture bitácora: sign-in through a fake GitHub, runs list within 5 s,
+  cancel an attempt through the ledger, stale precondition refused, gateway marks the laptop offline when the fake
+  tunnel stops, exactly one notification per forced failure through a fake Telegram.
+- Go-live step 5 is the real end-to-end; the local panel keeps passing its suites.
 
 ## Proposals — deterministic systems for execution
 Built into this plan: the command ledger with preconditions (T5), the event feed with stable ids (T6), the liveness
@@ -160,10 +199,16 @@ state machine (T10) and the notification rules (T14). Proposed next, each as its
    never drop the page (T9 starts this; the proposal makes it the only way the panel runs).
 
 ## Rulings
-- T3 (planned): new code lives in the methodology repo under `remote/` (`gateway/`, `web/`, `deploy/`, `e2e/`,
-  `docs/`), because it is a feature of the skill and the plan contract only knows the `skill` repository.
+- New code lives in the methodology repo under `remote/` (`gateway/`, `web/`, `deploy/`, `e2e/`, `docs/`, `contract/`),
+  because it is a feature of the skill and the plan contract only knows the `skill` repository.
+- r3: the gateway uses only the Python standard library (the verifier sandbox has no network or home, so `uv run` and
+  third-party packages cannot be checked there); the old T1 spike moves to the coordinator; external steps become the
+  go-live section; T5/T8/T14/T15 are split (owner: always split); laptop tasks run in sequence because they share
+  `bt_remote_api.py`/`bt_remote_commands.py`; operator notes already exist (D-020, `RUN.notes`), so recovery keeps only
+  the route pin and the brief edit.
 
 ## Progress log
+- 2026-10-19: r3 — round 3 (execution risks): offline verifies, stdlib gateway, all tasks ≤90 min, go-live with the owner after the run, spike by the coordinator, D-020 decision requests reused.
 - 2026-10-19: r2 — T3 reclassified kind docs → implement, complexity high → extreme (owner approved): as docs, the D-066 tier-0 ceiling routed the architecture contract to Gemini Flash.
 - 2026-10-19: spec and plan written after two interview rounds.
 - 2026-10-19 14:45 plan APPROVED (terminal)
