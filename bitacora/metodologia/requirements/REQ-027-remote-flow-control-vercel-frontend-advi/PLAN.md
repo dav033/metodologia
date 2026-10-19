@@ -6,13 +6,13 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/5 · tareas 0/31 · generado: 2026-10-19T16:22:41-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/5 · tareas 0/31 · generado: 2026-10-19T16:26:18-05:00
 
 **M1 — Contracts** · dificultad extrema · 0/2
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T2 | Research where a per-task route pin enters M2 routing and the executor | media | lista | gpt-6-luna | codex-luis | 1 |
+| T2 | Research where a per-task route pin enters M2 routing and the executor | media | en curso | sonnet | claude-work | 2 |
 | T3 | Remote API contract, command and event schemas, and the architecture note | extrema | pendiente | — | — | 0 |
 
 **M2 — Laptop: remote API, ledger and feed** · dificultad alta · 0/10
