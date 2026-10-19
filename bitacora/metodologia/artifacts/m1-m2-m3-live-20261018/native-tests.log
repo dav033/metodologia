@@ -1,0 +1,18 @@
+✔ trims and lowercases tags (1.995305ms)
+✔ normalizes Unicode to NFC (0.283007ms)
+✔ deduplicates canonically equivalent tags (0.272891ms)
+✔ discards empty and whitespace-only tags (0.201726ms)
+✔ deduplicates preserving first-seen order (0.204851ms)
+✔ returns an empty array for an empty input (0.185391ms)
+✔ does not mutate the input and returns a new array (0.244707ms)
+✔ throws TypeError when input is not an array (0.624772ms)
+✔ throws TypeError when any element is not a string (3.718059ms)
+✔ throws TypeError for sparse arrays (0.417687ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 99.440648

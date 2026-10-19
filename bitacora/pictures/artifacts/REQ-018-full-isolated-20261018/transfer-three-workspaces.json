@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "base": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723",
+  "tasks": [
+    "one",
+    "two",
+    "three"
+  ],
+  "last_tree": "c6686f7333caf84dd8d8db55bcb7d56df02c57b4",
+  "mechanism": "cached cumulative binary patches; isolated index; checkout-index into empty no-checkout worktrees",
+  "note": "synthetic transfer proof only; no product acceptance or live agent claims"
+}

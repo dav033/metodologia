@@ -1,0 +1,518 @@
+--- a/src/lib/biblioteca-sempertex/biblioteca.ts
++++ b/src/lib/biblioteca-sempertex/biblioteca.ts
+@@ -304,11 +304,22 @@
+   return Object.values(PERSONAJES_COLOR).some((lista) => lista.some((personaje) => normalizarBusqueda(personaje) === consulta));
+ }
+ 
++/**
++ * Formas léxicas equivalentes de un término temático según los grupos existentes («dino» → dinosaurio, dinosaurios, dinos…):
++ * el término es una forma completa del grupo, o una palabra de una de sus formas. Vacío si ningún grupo lo nombra.
++ */
++export function formasTematicasEquivalentes(termino: string): string[] {
++  const consulta = normalizarBusqueda(termino);
++  if (!consulta) return [];
++  const formas = sinonimosTematicos.filter((grupo) => grupo.some((forma) => ` ${normalizarBusqueda(forma)} `.includes(` ${consulta} `))).flat().map(normalizarBusqueda);
++  return [...new Set(formas)];
++}
++
+ /** Mínimo de ideas que se intenta mostrar en el carrusel (exactas primero, luego cercanas). */
+ const IDEAS_MINIMAS = 4;
+ 
+ /** «Arco de entrada en blanco y negro» y «Arco de entrada blanco y negro» son la misma idea para el cliente. */
+-function tituloComparable(titulo: string): string {
++export function tituloComparable(titulo: string): string {
+   return normalizarBusqueda(titulo).split(" ").filter((palabra) => palabra !== "en" && palabra !== "de").join(" ");
+ }
+ 
+--- /dev/null
++++ b/src/lib/biblioteca-sempertex/categorias.ts
+@@ -0,0 +1,74 @@
++import { normalizarBusqueda } from "./biblioteca";
++import type { DecoracionSempertex } from "./esquemas";
++
++/**
++ * Categoría = celebración o evento de una decoración (`eventos`). Equivalencia ESTRICTA: solo nombres de una misma
++ * celebración. No son los grupos de afinidad de la búsqueda legacy (`sinonimosEvento`), que acercan bautizo con primera
++ * comunión o cualquier evento con «fiesta infantil». Las etiquetas que no están aquí se descubren de los registros
++ * visibles y valen por sí mismas: una celebración nueva en la biblioteca no necesita editar esta tabla.
++ */
++const CELEBRACIONES: ReadonlyArray<readonly [string, readonly string[]]> = [
++  ["boda", ["boda", "bodas", "matrimonio", "casamiento"]],
++  ["cumpleanos", ["cumpleanos", "cumple"]],
++  ["baby shower", ["baby shower", "babyshower", "bienvenida de bebe"]],
++  ["xv", ["xv", "xv anos", "quince", "quince anos", "quinceanos", "quinceanera", "15 anos"]],
++  ["bautizo", ["bautizo", "bautismo"]],
++  ["comunion", ["comunion", "primera comunion"]],
++  ["san valentin", ["san valentin", "dia de los enamorados", "enamorados"]],
++  ["navidad", ["navidad", "navideno", "navidena", "novena", "novena navidena", "nochebuena"]],
++  ["dia de la madre", ["dia de la madre", "dia de las madres", "dia de la mama", "dia de mama"]],
++  ["halloween", ["halloween", "noche de brujas"]],
++  ["graduacion", ["graduacion", "grado"]],
++];
++
++export type VocabularioCategorias = ReadonlyArray<{ forma: string; clave: string }>;
++export type ClaveCategoria = string;
++
++/** Formas (normalizadas) y su clave: la tabla de alias más las etiquetas de evento de los registros dados. */
++export function vocabularioDeCategorias(catalogo: readonly DecoracionSempertex[]): VocabularioCategorias {
++  const formas = new Map<string, string>();
++  for (const [clave, alias] of CELEBRACIONES) for (const forma of alias) formas.set(forma, clave);
++  for (const decoracion of catalogo) {
++    for (const evento of decoracion.eventos) {
++      const forma = normalizarBusqueda(evento);
++      if (forma && !formas.has(forma)) formas.set(forma, forma);
++    }
++  }
++  return [...formas].map(([forma, clave]) => ({ forma, clave })).sort((a, b) => b.forma.length - a.forma.length);
++}
++
++function contiene(texto: string, forma: string): number {
++  return ` ${texto} `.indexOf(` ${forma} `);
++}
++
++/**
++ * Clave de la categoría que nombra el texto: la etiqueta más larga manda y los tramos ya usados no se reutilizan.
++ * `null` si no nombra ninguna celebración conocida; `"ambigua"` si nombra varias distintas (no se adivina una).
++ */
++export function claveDeCategoria(texto: string, vocabulario: VocabularioCategorias): ClaveCategoria | "ambigua" | null {
++  let resto = ` ${normalizarBusqueda(texto)} `;
++  const claves = new Set<string>();
++  for (const { forma, clave } of vocabulario) {
++    const posicion = resto.indexOf(` ${forma} `);
++    if (posicion < 0) continue;
++    claves.add(clave);
++    resto = resto.slice(0, posicion + 1) + " ".repeat(forma.length) + resto.slice(posicion + 1 + forma.length);
++  }
++  if (claves.size === 0) return null;
++  return claves.size === 1 ? [...claves][0]! : "ambigua";
++}
++
++/** Todas las claves que una etiqueta de evento de un registro nombra («Primer cumpleaños» → él mismo y «cumpleanos»). */
++export function clavesDeEtiqueta(etiqueta: string, vocabulario: VocabularioCategorias): Set<ClaveCategoria> {
++  const texto = normalizarBusqueda(etiqueta);
++  return new Set(vocabulario.filter(({ forma }) => contiene(texto, forma) >= 0).map(({ clave }) => clave));
++}
++
++/** Formas con las que se nombra una categoría: sirven para no tratar «boda» como un estilo pedido. */
++export function formasDeCategoria(clave: ClaveCategoria, vocabulario: VocabularioCategorias): string[] {
++  return vocabulario.filter((entrada) => entrada.clave === clave).map((entrada) => entrada.forma);
++}
++
++export function decoracionEsDeCategoria(decoracion: DecoracionSempertex, clave: ClaveCategoria, vocabulario: VocabularioCategorias): boolean {
++  return decoracion.eventos.some((evento) => clavesDeEtiqueta(evento, vocabulario).has(clave));
++}
+--- /dev/null
++++ b/src/lib/biblioteca-sempertex/recomendaciones-categoria.ts
+@@ -0,0 +1,167 @@
++import { ALIAS_COLORES_V2, clasificarColores, clasificarTonos, TONOS_V2, type TonoClaroV2 } from "@/lib/rag/taxonomy/v2";
++import { formasTematicasEquivalentes, motivosNombrados, normalizarBusqueda, sinMotivosAjenos, tituloComparable, type CoincidenciaDecoracion } from "./biblioteca";
++import { claveDeCategoria, decoracionEsDeCategoria, formasDeCategoria, vocabularioDeCategorias } from "./categorias";
++import type { DecoracionSempertex } from "./esquemas";
++
++/**
++ * Recomendación ESTRICTA por categoría (REQ-018, SPEC «Matching and decision contract» 1-5). Función pura: recibe los
++ * registros visibles y devuelve solo coincidencias reales, en el orden de la fuente, sin mínimo ni relleno. No usa la
++ * búsqueda legacy (`buscarDecoracionesSempertex`), que completa con ideas cercanas.
++ */
++
++export const TOPE_RECOMENDACIONES = 6;
++
++export type PreferenciasCategoria = {
++  /** Estilo o temática pedidos: cada uno debe estar evidenciado en el título o la temática de la idea. */
++  estilos: string[];
++  /** Colores de la paleta pedidos (cada uno debe estar presente). */
++  colores: string[];
++  /** Tonos claros pedidos («celeste»): el tono debe estar presente, no basta su familia. */
++  tonos: TonoClaroV2[];
++  /** Términos excluidos de forma literal (colores, tonos o palabras). Nunca cuentan como petición positiva. */
++  excluir: string[];
++  /** El cliente limitó los colores («solo blanco y dorado»): la idea no puede traer otros. */
++  soloColores: boolean;
++};
++
++export type ConsultaCategoria = {
++  categoria: string;
++  /** 0 o ausente = edad desconocida: nunca filtra. */
++  edad?: number;
++  /** Temática guardada: sus palabras que no son color ni categoría son estilos pedidos. */
++  tematica?: string;
++  /** Último mensaje del cliente: aporta colores, tonos, motivos reconocidos y negativas, no palabras sueltas. */
++  mensaje?: string;
++  /** Filtro adicional entre los candidatos de la categoría (p. ej. el género del baby shower). */
++  admite?: (decoracion: DecoracionSempertex) => boolean;
++};
++
++export type EstadoRecomendacion = "coincidencias" | "vacio" | "categoria_desconocida" | "categoria_ambigua";
++export type ResultadoCategoria = { estado: EstadoRecomendacion; ideas: CoincidenciaDecoracion[] };
++
++const PALABRAS_GENERO = new Set(["nino", "ninos", "nina", "ninas", "boy", "girl", "varon", "varoncito", "nena", "neutro", "neutra", "neutros", "neutral", "unisex"]);
++const PALABRAS_RELLENO = new Set([
++  "y", "e", "o", "u", "de", "del", "la", "las", "el", "los", "en", "con", "para", "por", "un", "una", "unos", "unas", "mi", "mis", "su", "tu",
++  "que", "a", "al", "se", "lo", "me", "es", "quiero", "quisiera", "gustaria", "algo", "tipo", "estilo", "tono", "tonos", "color", "colores",
++  "fiesta", "decoracion", "decoraciones", "globos", "idea", "ideas", "ano", "anos", "lleve", "lleven", "usar", "uses", "tenga", "tengan",
++]);
++
++const normalizados = (formas: Iterable<string>): string[] => [...new Set([...formas].map(normalizarBusqueda).filter(Boolean))].sort((a, b) => b.length - a.length);
++const ALIAS_TONOS = normalizados(Object.values(TONOS_V2).flatMap((tono) => tono.aliases));
++const ALIAS_COLORES = normalizados(ALIAS_COLORES_V2.flatMap((color) => color.aliases));
++const escapar = (texto: string): string => texto.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
++const CUE_NEGATIVO = new RegExp(`(?:^| )(?:sin|nada de|evita|evitar|excepto|menos|ni|no (?:quiero|quieres|me gusta|me gustan|lleve|uses|usar|con)|no(?= (?:${[...ALIAS_TONOS, ...ALIAS_COLORES].map(escapar).join("|")})(?: |$)))(?= |$)`);
++const CUE_SOLO = /(?:^| )(?:solo|solamente|unicamente|exclusivamente)(?= |$)/;
++
++function quitarFormas(texto: string, formas: readonly string[]): string {
++  return formas.reduce((resto, forma) => resto.replace(new RegExp(`(?<=^| )${escapar(forma)}(?= |$)`, "g"), " "), ` ${texto} `).replace(/\s+/g, " ").trim();
++}
++
++function coloresDeTexto(texto: string): { colores: string[]; tonos: TonoClaroV2[] } {
++  return { tonos: clasificarTonos(texto).values, colores: clasificarColores(quitarFormas(normalizarBusqueda(texto), ALIAS_TONOS)).values };
++}
++
++type TextoAnalizado = { positivo: string; negativos: string[] };
++
++/** Separa lo que el cliente pide de lo que descarta («sin negro», «no quiero rosa», «nada de elegante»), cláusula a cláusula. */
++function separarNegativas(texto: string | undefined): TextoAnalizado {
++  const positivos: string[] = [];
++  const negativos: string[] = [];
++  for (const clausula of (texto ?? "").split(/[.;,!?¿¡\n]|\b(?:pero|aunque)\b/i)) {
++    const normal = normalizarBusqueda(clausula);
++    const corte = CUE_NEGATIVO.exec(normal);
++    if (!corte) { positivos.push(normal); continue; }
++    positivos.push(normal.slice(0, corte.index));
++    const terminos = normal.slice(corte.index + corte[0].length).trim().split(/ (?:y|ni|o|e) /).map((termino) => termino.split(" ").filter((palabra) => !PALABRAS_RELLENO.has(palabra)).join(" ")).filter(Boolean);
++    negativos.push(...terminos);
++  }
++  return { positivo: positivos.join(" ").replace(/\s+/g, " ").trim(), negativos };
++}
++
++function analizarTexto(entrada: { tematica?: string; mensaje?: string; ignorar?: readonly string[] }): { preferencias: PreferenciasCategoria; positivo: string } {
++  const delTema = separarNegativas(entrada.tematica);
++  const delMensaje = separarNegativas(entrada.mensaje);
++  const positivo = `${delTema.positivo} ${delMensaje.positivo}`.trim();
++  const { colores, tonos } = coloresDeTexto(positivo);
++  const antesDeSolo = CUE_SOLO.exec(positivo);
++  const tras = antesDeSolo ? positivo.slice(antesDeSolo.index + antesDeSolo[0].length) : "";
++  const soloColores = Boolean(antesDeSolo) && (clasificarColores(tras).values.length > 0 || clasificarTonos(tras).values.length > 0);
++  const sinColores = quitarFormas(delTema.positivo, [...(entrada.ignorar ?? []), ...ALIAS_TONOS, ...ALIAS_COLORES]);
++  const delTemaEstilos = sinColores.split(" ").filter((palabra) => palabra && !PALABRAS_RELLENO.has(palabra) && !PALABRAS_GENERO.has(palabra) && !/^\d+$/.test(palabra));
++  // Los motivos o personajes que el cliente nombra en su último mensaje también son petición («quiere dinosaurios»).
++  const delMensajeMotivos = motivosNombrados(quitarFormas(delMensaje.positivo, entrada.ignorar ?? [])).map((motivo) => motivo.palabra);
++  return {
++    positivo,
++    preferencias: { estilos: [...new Set([...delTemaEstilos, ...delMensajeMotivos])], colores, tonos, excluir: [...delTema.negativos, ...delMensaje.negativos], soloColores },
++  };
++}
++
++/**
++ * Preferencias explícitas de un texto. Conservador (SPEC A2): solo colores y tonos de los clasificadores existentes, el
++ * estilo de la temática guardada y las negativas literales; no se infiere ningún color típico ni ninguna preferencia.
++ */
++export function preferenciasDeTexto(entrada: { tematica?: string; mensaje?: string; ignorar?: readonly string[] }): PreferenciasCategoria {
++  return analizarTexto(entrada).preferencias;
++}
++
++function textoDe(decoracion: DecoracionSempertex): string {
++  return normalizarBusqueda(`${decoracion.titulo} ${decoracion.tematica}`);
++}
++
++function contiene(texto: string, forma: string): boolean {
++  return ` ${texto} `.includes(` ${forma} `);
++}
++
++function tieneEvidenciaDeEstilo(texto: string, estilo: string): boolean {
++  const formas = [estilo, `${estilo}s`, `${estilo}es`, estilo.replace(/(?:es|s)$/, ""), ...formasTematicasEquivalentes(estilo)];
++  return formas.some((forma) => forma.length > 0 && contiene(texto, forma));
++}
++
++function cumpleEdad(decoracion: DecoracionSempertex, edad: number | undefined): boolean {
++  if (!edad || edad <= 0 || decoracion.edad === null) return true;
++  return edad >= decoracion.edad.min && edad <= decoracion.edad.max;
++}
++
++function cumplePreferencias(decoracion: DecoracionSempertex, preferencias: PreferenciasCategoria): boolean {
++  const texto = textoDe(decoracion);
++  // Lo que la idea dice: su «celeste» cuenta como azul para quien pide azul (la taxonomía lo agrupa), pero no al revés.
++  const suyos = { colores: new Set<string>(clasificarColores(texto).values), tonos: new Set<string>(clasificarTonos(texto).values) };
++  if (!preferencias.colores.every((color) => suyos.colores.has(color))) return false;
++  if (!preferencias.tonos.every((tono) => suyos.tonos.has(tono))) return false;
++  if (preferencias.soloColores) {
++    const permitidos = new Set([...preferencias.colores, ...preferencias.tonos.map((tono) => TONOS_V2[tono].familia as string)]);
++    if (![...suyos.colores].every((color) => permitidos.has(color))) return false;
++  }
++  if (preferencias.excluir.some((termino) => {
++    const pedido = coloresDeTexto(termino);
++    return contiene(texto, termino) || pedido.colores.some((color) => suyos.colores.has(color)) || pedido.tonos.some((tono) => suyos.tonos.has(tono));
++  })) return false;
++  return preferencias.estilos.every((estilo) => tieneEvidenciaDeEstilo(texto, estilo));
++}
++
++/** Antes de deduplicar y topar: ID repetido y título equivalente salen una vez, en el orden de la fuente. */
++function sinRepetidas(ideas: readonly DecoracionSempertex[]): DecoracionSempertex[] {
++  const ids = new Set<string>();
++  const titulos = new Set<string>();
++  return ideas.filter((idea) => {
++    const titulo = tituloComparable(idea.titulo);
++    if (ids.has(idea.id) || titulos.has(titulo)) return false;
++    ids.add(idea.id);
++    titulos.add(titulo);
++    return true;
++  });
++}
++
++export function recomendarPorCategoria(catalogo: readonly DecoracionSempertex[], consulta: ConsultaCategoria): ResultadoCategoria {
++  const vocabulario = vocabularioDeCategorias(catalogo);
++  const clave = claveDeCategoria(consulta.categoria, vocabulario);
++  if (clave === null) return { estado: "categoria_desconocida", ideas: [] };
++  if (clave === "ambigua") return { estado: "categoria_ambigua", ideas: [] };
++  const { preferencias, positivo } = analizarTexto({ tematica: consulta.tematica, mensaje: consulta.mensaje, ignorar: formasDeCategoria(clave, vocabulario) });
++  const delEvento = catalogo.filter((decoracion) => decoracionEsDeCategoria(decoracion, clave, vocabulario));
++  // Un motivo (Halloween, fútbol, una temporada) solo se ofrece si el cliente lo nombra en la categoría o lo pide (positivo).
++  const sinAjenos = sinMotivosAjenos([...delEvento], { evento: consulta.categoria, tematica: positivo });
++  const elegibles = sinAjenos.filter((decoracion) => cumpleEdad(decoracion, consulta.edad) && (consulta.admite?.(decoracion) ?? true) && cumplePreferencias(decoracion, preferencias));
++  const ideas = sinRepetidas(elegibles).slice(0, TOPE_RECOMENDACIONES).map((decoracion): CoincidenciaDecoracion => ({ ...decoracion, coincidencia: "exacta" }));
++  return { estado: ideas.length ? "coincidencias" : "vacio", ideas };
++}
+--- a/src/lib/ia/guiado/ideas-guiadas.ts
++++ b/src/lib/ia/guiado/ideas-guiadas.ts
+@@ -1,5 +1,6 @@
+ import { bibliotecaVisible, buscarDecoracionesSempertex, normalizarBusqueda, type CoincidenciaDecoracion } from "@/lib/biblioteca-sempertex/biblioteca";
+ import type { DecoracionSempertex } from "@/lib/biblioteca-sempertex/esquemas";
++import { recomendarPorCategoria, type ResultadoCategoria } from "@/lib/biblioteca-sempertex/recomendaciones-categoria";
+ import { ALIAS_COLORES_V2, clasificarColores, clasificarTonos, plegarTexto, TONOS_V2 } from "@/lib/rag/taxonomy/v2";
+ 
+ /**
+@@ -206,6 +207,25 @@
+   return { ideas: delEvento, genero, via: delEvento.length ? "evento" : "vacio", consulta };
+ }
+ 
++export type ResultadoCategoriaGuiada = ResultadoCategoria & { genero: GeneroBebe | null };
++
++/**
++ * Recomendación estricta de la categoría activa (REQ-018): solo diseños visibles del evento que cumplen lo que el cliente
++ * pidió, sin relleno ni «parecidas». Es aparte de `ideasGuiadas` (que sigue para las opciones y la foto) y nunca cae a ella.
++ * Sin categoría no hay recomendaciones; la biblioteca visible se lee en cada búsqueda.
++ */
++export function ideasEstrictasDeCategoria(entrada: EntradaIdeas, catalogo: DecoracionSempertex[] = bibliotecaVisible()): ResultadoCategoriaGuiada {
++  const genero = esBabyShower(entrada.evento) ? generoBebeDe(entrada.ultimoUsuario ?? "") ?? generoBebeDe(entrada.tematica ?? "") : null;
++  const resultado = recomendarPorCategoria(catalogo, {
++    categoria: entrada.evento ?? "",
++    edad: entrada.edad,
++    tematica: entrada.tematica,
++    mensaje: entrada.ultimoUsuario,
++    admite: genero ? (decoracion) => generoDeDecoracion(decoracion) === genero : undefined,
++  });
++  return { ...resultado, genero };
++}
++
+ /**
+  * Cuántas decoraciones REALES de ese estilo ve el cliente si toca la opción (0 = la opción desemboca en sugerencias de
+  * otro estilo o en nada, y no se ofrece). Solo cuentan las exactas: las «cercanas» son de otro estilo.
+--- /dev/null
++++ b/scripts/test/test-recomendaciones-categoria.ts
+@@ -0,0 +1,157 @@
++import { strict as assert } from "node:assert";
++import { bibliotecaVisible } from "@/lib/biblioteca-sempertex/biblioteca";
++import { claveDeCategoria, vocabularioDeCategorias } from "@/lib/biblioteca-sempertex/categorias";
++import type { DecoracionSempertex } from "@/lib/biblioteca-sempertex/esquemas";
++import { preferenciasDeTexto, recomendarPorCategoria, TOPE_RECOMENDACIONES, type ConsultaCategoria } from "@/lib/biblioteca-sempertex/recomendaciones-categoria";
++import { ideasEstrictasDeCategoria } from "@/lib/ia/guiado/ideas-guiadas";
++
++/**
++ * REQ-018 T1: recomendación estricta por categoría (evento). Sin red ni modelo: catálogos controlados que se construyen
++ * a partir de un registro real (solo para tener una forma válida) y la biblioteca visible real para los anclajes.
++ *
++ *   node --import=tsx scripts/test/test-recomendaciones-categoria.ts
++ */
++
++const base = bibliotecaVisible()[0]!;
++let contador = 0;
++function idea(titulo: string, tematica: string, eventos: string[], extra: Partial<Pick<DecoracionSempertex, "edad">> & { id?: string } = {}): DecoracionSempertex {
++  contador += 1;
++  return { ...base, id: extra.id ?? `deco-real-fx${contador}`, titulo, tematica, eventos, edad: extra.edad === undefined ? null : extra.edad };
++}
++const ids = (catalogo: DecoracionSempertex[], consulta: ConsultaCategoria): string[] => recomendarPorCategoria(catalogo, consulta).ideas.map((item) => item.id);
++const titulos = (catalogo: DecoracionSempertex[], consulta: ConsultaCategoria): string[] => recomendarPorCategoria(catalogo, consulta).ideas.map((item) => item.titulo);
++
++const bodaBlancoDorado = idea("Arco blanco y dorado", "Blanco y dorado", ["Boda"]);
++const bodaNegroDorado = idea("Arco negro y dorado", "Elegante negro y dorado", ["Boda"]);
++const bodaBlancoDoradoNude = idea("Aro blanco, dorado y nude", "Blanco, dorado y nude", ["Boda", "Bautizo"]);
++const bodaOroRosa = idea("Semiarco blanco y oro rosa", "Romántico oro rosa", ["Matrimonio"]);
++const cumpleBlancoDorado = idea("Arco blanco y dorado de cumpleaños", "Blanco y dorado", ["Cumpleaños"]);
++const comunion = idea("Arco celeste y blanco", "Celeste y blanco", ["Primera comunión"]);
++const bautizoAzul = idea("Semiarco azul y blanco", "Azul y blanco", ["Bautizo"]);
++const babyNina = idea("Guirnalda rosa", "Baby shower niña", ["Baby shower"]);
++const babyNino = idea("Guirnalda azul", "Azul y plateado", ["Baby shower"]);
++const dinos = idea("Semiarco de dinosaurios", "Infantil de dinosaurios", ["Cumpleaños"], { edad: { min: 2, max: 12 } });
++const cumpleAdulto = idea("Columnas negras y doradas", "Elegante negro y dorado", ["Cumpleaños", "Graduación"], { edad: { min: 18, max: 70 } });
++const halloween = idea("Sombrero de bruja", "Halloween negro, plata y naranja", ["Halloween", "Cumpleaños"]);
++const futbol = idea("Columna de fútbol", "Fútbol verde lima, negro y blanco", ["Cumpleaños", "Fiesta de fútbol"]);
++const navidad = idea("Aro navideño", "Navidad verde salvia", ["Navidad", "Novena navideña", "Fiesta de fin de año"]);
++const primerCumple = idea("Guirnalda pastel", "Pastel rosa", ["Primer cumpleaños"]);
++const catalogo = [bodaBlancoDorado, bodaNegroDorado, bodaBlancoDoradoNude, bodaOroRosa, cumpleBlancoDorado, comunion, bautizoAzul, babyNina, babyNino, dinos, cumpleAdulto, halloween, futbol, navidad, primerCumple];
++
++// ── 1. Solo categoría: eventos completos y alias genuinos, en orden de la fuente, sin relleno ──────────────────────────
++assert.deepEqual(ids(catalogo, { categoria: "Boda" }), [bodaBlancoDorado.id, bodaNegroDorado.id, bodaBlancoDoradoNude.id, bodaOroRosa.id], "boda + matrimonio (alias), nada de otro evento");
++assert.deepEqual(ids(catalogo, { categoria: "casamiento" }), ids(catalogo, { categoria: "boda" }), "alias de la misma celebración");
++assert.deepEqual(ids(catalogo, { categoria: "es para una BODA!" }), ids(catalogo, { categoria: "boda" }), "mayúsculas, signos y frase");
++assert.deepEqual(ids(catalogo, { categoria: "Bautizo" }), [bodaBlancoDoradoNude.id, bautizoAzul.id], "bautizo no es primera comunión");
++assert.deepEqual(ids(catalogo, { categoria: "primera comunión" }), [comunion.id], "comunión no es bautizo");
++assert.deepEqual(ids(catalogo, { categoria: "Navidad" }), [navidad.id], "un solo resultado: sin relleno hasta cuatro o seis");
++assert.deepEqual(ids(catalogo, { categoria: "novena" }), [navidad.id], "novena es Navidad");
++assert.deepEqual(ids(catalogo, { categoria: "Fiesta de fin de año" }), [navidad.id], "etiqueta completa descubierta en la fuente");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños" }), [cumpleBlancoDorado.id, dinos.id, cumpleAdulto.id, primerCumple.id], "motivos ajenos (Halloween, fútbol) fuera; primer cumpleaños es cumpleaños");
++assert.deepEqual(ids(catalogo, { categoria: "primer cumpleaños" }), [primerCumple.id], "la etiqueta más larga manda");
++assert.ok(recomendarPorCategoria(catalogo, { categoria: "Boda" }).ideas.every((item) => item.coincidencia === "exacta"), "todo lo emitido es exacta");
++assert.equal(recomendarPorCategoria(catalogo, { categoria: "Boda" }).estado, "coincidencias");
++
++// ── 2. Categoría desconocida, ambigua, genérica o sin registros: vacío honesto (nunca fiesta general) ─────────────────────
++for (const categoria of ["jubilación", "fiesta", "fiesta de empresa", "celebración", ""]) {
++  const resultado = recomendarPorCategoria(catalogo, { categoria });
++  assert.deepEqual(resultado.ideas, [], `«${categoria}»: sin diseños`);
++  assert.equal(resultado.estado, "categoria_desconocida", `«${categoria}»: categoría desconocida`);
++}
++assert.equal(recomendarPorCategoria(catalogo, { categoria: "boda o cumpleaños" }).estado, "categoria_ambigua");
++assert.deepEqual(ids(catalogo, { categoria: "boda o cumpleaños" }), [], "dos categorías competidoras no se adivinan");
++assert.equal(recomendarPorCategoria([bodaBlancoDorado], { categoria: "graduación" }).estado, "vacio", "alias conocido pero sin registros: vacío, no desconocida");
++assert.deepEqual(recomendarPorCategoria([], { categoria: "boda" }), { estado: "vacio", ideas: [] }, "catálogo vacío");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", tematica: "spiderman" }), [], "personaje ausente: vacío, sin colores típicos");
++
++// ── 3. Mismo color, otro evento: el evento manda ─────────────────────────────────────────────────────────────────────
++assert.deepEqual(ids(catalogo, { categoria: "boda", tematica: "blanco y dorado" }), [bodaBlancoDorado.id, bodaBlancoDoradoNude.id], "blanco Y dorado en boda: ni negro/dorado ni cumpleaños blanco/dorado; oro rosa no es dorado");
++assert.ok(!ids(catalogo, { categoria: "boda", tematica: "blanco y dorado" }).includes(cumpleBlancoDorado.id));
++assert.deepEqual(ids(catalogo, { categoria: "boda", tematica: "Blanco, dorado y nude" }), [bodaBlancoDoradoNude.id], "nude pedido: solo quien lo lleva");
++assert.deepEqual(ids(catalogo, { categoria: "boda", tematica: "blanco y dorado" }).length, 2, "nude no se infiere ni se exige si no se pidió; es un color extra permitido");
++
++// ── 4. Preferencias: temática, colores, tonos, negativas, solo-colores ──────────────────────────────────────────────────
++assert.deepEqual(ids(catalogo, { categoria: "boda", tematica: "romántico" }), [bodaOroRosa.id], "estilo evidenciado en título/temática");
++assert.deepEqual(ids(catalogo, { categoria: "boda", tematica: "romántico rosa y dorado" }), [], "oro rosa no satisface dorado literal; rosa suelto tampoco");
++assert.deepEqual(ids(catalogo, { categoria: "boda", tematica: "elegante" }), [bodaNegroDorado.id], "elegante literal");
++assert.deepEqual(ids(catalogo, { categoria: "boda", tematica: "gótico" }), [], "estilo desconocido sigue sin satisfacerse");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", tematica: "dinosaurios" }), [dinos.id], "motivo con evidencia");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", tematica: "dino" }), [dinos.id], "alias léxico existente");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", mensaje: "mi hijo quiere dinosaurios" }), [dinos.id], "motivo nombrado en el último mensaje");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", tematica: "negro y dorado" }), [cumpleAdulto.id], "colores del cumpleaños; Halloween (negro) fuera por motivo ajeno");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", tematica: "Halloween" }), [halloween.id], "el motivo nombrado lo admite");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", tematica: "fútbol" }), [futbol.id]);
++assert.deepEqual(ids(catalogo, { categoria: "baby shower", tematica: "celeste" }), [], "celeste no se cumple con azul a secas");
++const celeste = idea("Semiarco celeste", "Celeste y blanco", ["Baby shower"]);
++assert.deepEqual(ids([...catalogo, celeste], { categoria: "baby shower", tematica: "celeste" }), [celeste.id], "el tono literal sí");
++assert.deepEqual(ids([...catalogo, celeste], { categoria: "baby shower", tematica: "azul" }), [babyNino.id, celeste.id], "azul admite azul y celeste (su familia)");
++assert.deepEqual(ids(catalogo, { categoria: "boda", tematica: "blanco y dorado", mensaje: "sin nude" }), [bodaBlancoDorado.id], "negativa literal excluye");
++assert.deepEqual(ids(catalogo, { categoria: "boda", mensaje: "no quiero negro" }), [bodaBlancoDorado.id, bodaBlancoDoradoNude.id, bodaOroRosa.id], "la negativa no cuenta como petición positiva");
++assert.deepEqual(ids(catalogo, { categoria: "boda", mensaje: "nada de elegante" }), [bodaBlancoDorado.id, bodaBlancoDoradoNude.id, bodaOroRosa.id], "negativa de estilo literal");
++assert.deepEqual(ids(catalogo, { categoria: "boda", tematica: "blanco y dorado", mensaje: "solo blanco y dorado" }), [bodaBlancoDorado.id], "solo-colores rechaza colores extra");
++
++// ── 5. Edad ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", edad: 6 }), [cumpleBlancoDorado.id, dinos.id, primerCumple.id], "edad dentro de rango; sin restricción de edad también vale");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", edad: 40 }), [cumpleBlancoDorado.id, cumpleAdulto.id, primerCumple.id]);
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños", edad: 0 }), ids(catalogo, { categoria: "cumpleaños" }), "edad 0 = desconocida, sin filtro");
++assert.deepEqual(ids(catalogo, { categoria: "cumpleaños" }), ids(catalogo, { categoria: "cumpleaños", edad: undefined }));
++
++// ── 6. Identidad: se filtra antes de deduplicar y de topar a seis ──────────────────────────────────────────────────────
++const muchos = Array.from({ length: 9 }, (_, indice) => idea(`Semiarco boda ${indice}`, "Boda clásica", ["Boda"]));
++assert.equal(ids(muchos, { categoria: "boda" }).length, TOPE_RECOMENDACIONES, "tope de seis");
++assert.deepEqual(ids(muchos, { categoria: "boda" }), muchos.slice(0, 6).map((item) => item.id), "orden de la fuente");
++const gemelo = idea("Arco de entrada blanco y negro", "Elegante blanco y negro", ["Boda"], { id: "deco-real-gemelo-a" });
++const gemeloOtro = idea("Arco de entrada en blanco y negro", "Elegante blanco y negro", ["Boda"], { id: "deco-real-gemelo-b" });
++const repetido = { ...gemelo };
++assert.deepEqual(ids([gemelo, repetido, gemeloOtro], { categoria: "boda" }), ["deco-real-gemelo-a"], "ID repetido y título equivalente salen una vez");
++const duplicadosAjenos = Array.from({ length: 8 }, (_, indice) => idea("Arco repetido", "Boda clásica", [indice < 7 ? "Cumpleaños" : "Boda"]));
++assert.deepEqual(ids(duplicadosAjenos, { categoria: "boda" }), [duplicadosAjenos[7]!.id], "los de otro evento no consumen el tope ni la deduplicación");
++assert.ok(titulos([idea("Cumpleaños especial", "Boda clásica", ["Boda"])], { categoria: "boda" })[0] === "Cumpleaños especial", "el título no se reescribe");
++
++// ── 7. Fuentes sucesivas: altas, cambios y bajas se reflejan sin tocar código ni listas ─────────────────────────────────
++const inicial = [idea("Arco jubilación", "Elegante azul", ["Jubilación"])];
++const nuevo = idea("Aro de jubilación dorado", "Dorado", ["Jubilación"], { id: "deco-real-nueva-jubilacion" });
++assert.equal(recomendarPorCategoria(catalogo, { categoria: "jubilación" }).estado, "categoria_desconocida", "antes de la alta no existe");
++assert.deepEqual(ids(inicial, { categoria: "jubilación" }), [inicial[0]!.id], "una etiqueta nueva se descubre sin tabla de alias");
++assert.deepEqual(ids([...inicial, nuevo], { categoria: "jubilación" }), [inicial[0]!.id, nuevo.id], "alta");
++assert.deepEqual(ids([...inicial, nuevo], { categoria: "jubilación", tematica: "dorado" }), [nuevo.id]);
++const modificado = { ...nuevo, eventos: ["Boda"] };
++assert.deepEqual(ids([...inicial, modificado], { categoria: "jubilación" }), [inicial[0]!.id], "cambio de evento");
++assert.deepEqual(ids([...inicial, modificado], { categoria: "boda" }), [modificado.id], "cambio de evento: aparece en la nueva categoría");
++assert.deepEqual(ids([...inicial, { ...nuevo, tematica: "Plateado", titulo: "Aro plateado" }], { categoria: "jubilación", tematica: "dorado" }), [], "cambio de título/temática");
++assert.deepEqual(ids(inicial, { categoria: "jubilación" }), [inicial[0]!.id], "baja (oculta como ejemplo): deja de salir");
++assert.deepEqual(ids([], { categoria: "jubilación" }), []);
++assert.equal(claveDeCategoria("jubilacion", vocabularioDeCategorias([inicial[0]!])), "jubilacion", "la etiqueta nueva es su propia clave");
++
++// ── 8. Preferencias leídas del texto ───────────────────────────────────────────────────────────────────────────────────
++assert.deepEqual(preferenciasDeTexto({ tematica: "rosa, lila, celeste y dorado" }), { estilos: [], colores: ["rosado", "lila", "dorado"], tonos: ["celeste"], excluir: [], soloColores: false });
++assert.deepEqual(preferenciasDeTexto({ mensaje: "quiero blanco pero sin negro ni rosa" }).excluir, ["negro", "rosa"], "la cláusula negativa se guarda literal, término a término");
++assert.deepEqual(preferenciasDeTexto({ mensaje: "quiero blanco pero sin negro ni rosa" }).colores, ["blanco"], "lo negado no es positivo");
++assert.equal(preferenciasDeTexto({ mensaje: "solo dorado" }).soloColores, true);
++assert.equal(preferenciasDeTexto({ mensaje: "solo quiero ver bodas" }).soloColores, false);
++assert.deepEqual(preferenciasDeTexto({ tematica: "Niña romántico", ignorar: [] }).estilos, ["romantico"], "las palabras de género no son estilo");
++
++// ── 9. Biblioteca real: anclajes del SPEC (no son listas de elegibilidad) ──────────────────────────────────────────────
++const real = bibliotecaVisible();
++const deBoda = ideasEstrictasDeCategoria({ evento: "Boda" }, real).ideas.map((item) => item.id);
++assert.ok(deBoda.includes("deco-real-28-aro-blanco-dorado-y-nude"), "AC1: boda sin preferencias incluye el aro de una sola estructura");
++assert.deepEqual(deBoda, real.filter((item) => item.eventos.some((evento) => /boda/i.test(evento))).map((item) => item.id), "boda = los registros con evento Boda, en orden");
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Navidad" }, real).ideas.map((item) => item.id), ["deco-real-27-aro-navideno-verde-salvia"], "AC2 Navidad");
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Bautizo" }, real).ideas.map((item) => item.id), ["deco-real-28-aro-blanco-dorado-y-nude"], "AC2 Bautizo (no comunión)");
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Boda", tematica: "blanco y dorado" }, real).ideas.map((item) => item.id), ["deco-real-13-images-28", "deco-real-28-aro-blanco-dorado-y-nude"], "AC3 con la biblioteca real: blanco (título) y dorado (temática) literales; sin negro/dorado ni cumpleaños");
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Cumpleaños", tematica: "Spiderman" }, real).ideas, [], "AC4 Spiderman");
++assert.equal(ideasEstrictasDeCategoria({ evento: "jubilación" }, real).estado, "categoria_desconocida", "AC4 jubilación");
++assert.equal(ideasEstrictasDeCategoria({}, real).estado, "categoria_desconocida", "sin categoría no hay recomendaciones");
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Boda" }).ideas.map((item) => item.id), deBoda, "el adaptador usa la biblioteca visible por defecto");
++
++// Género de baby shower: solo dentro de los candidatos del evento.
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "es una niña" }, catalogo).ideas.map((item) => item.id), [babyNina.id]);
++assert.equal(ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "es una niña" }, catalogo).genero, "nina");
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower", tematica: "Niño" }, catalogo).ideas.map((item) => item.id), [babyNino.id], "azul sin palabra de género es de niño");
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower" }, catalogo).ideas.map((item) => item.id), [babyNina.id, babyNino.id], "sin género no se filtra");
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Cumpleaños", ultimoUsuario: "es para mi niña" }, catalogo).genero, null, "el género de bebé solo aplica a baby shower");
++
++// El buscador legacy conserva su relleno: no se vuelve la ruta de la categoría activa.
++assert.equal(ideasEstrictasDeCategoria({ evento: "jubilación" }, real).ideas.length, 0, "la categoría activa nunca cae al buscador legacy con relleno");
++
++console.log("test-recomendaciones-categoria: categoría estricta, alias genuinos, preferencias positivas/negativas, sin relleno, fuentes sucesivas.");
+--- a/scripts/test/test-ideas-boda-guiada.ts
++++ b/scripts/test/test-ideas-boda-guiada.ts
+@@ -1,5 +1,5 @@
+ import assert from "node:assert/strict";
+-import { ideasGuiadas, ideasRealesDeOpcion, ideasYaVistas, tematicaFielAlCliente } from "../../src/lib/ia/guiado/ideas-guiadas";
++import { ideasEstrictasDeCategoria, ideasGuiadas, ideasRealesDeOpcion, ideasYaVistas, tematicaFielAlCliente } from "../../src/lib/ia/guiado/ideas-guiadas";
+ import { esPedidoParecidasAFoto, ideasParecidasAFoto, pedidoDeIdeas } from "../../src/lib/ia/guiado/pedido-ideas";
+ 
+ /**
+@@ -22,21 +22,23 @@
+ assert.equal(tematicaFielAlCliente("Rosa y azul", ["unicornio en rosa, lila, celeste y dorado"]).tematica, "Rosado, lila, celeste y dorado", "con el tono que dijo («celeste», no «azul»)");
+ assert.equal(tematicaFielAlCliente("Blanco, dorado y nude", ["Blanco, dorado y nude"]).tematica, "Blanco, dorado y nude", "si eligió esa temática en las opciones, es suya");
+ 
+-// ── 2. Menos de 3 exactas: se completa con parecidas reales del mismo evento y colores ───────────────────────────────
+-for (const tematica of ["Blanco y dorado", "Blanco, dorado y nude"]) {
+-  const resultado = ideasGuiadas({ evento: "Boda", edad: 0, tematica, ultimoUsuario: BODA });
++// ── 2. Categoría estricta: solo diseños de boda que cumplen lo pedido, sin relleno con parecidas ─────────────────────
++// (REQ-018: antes se completaba hasta tres con «parecidas»; ahora cada resultado es una coincidencia real.)
++const IDEA_ARO = "deco-real-28-aro-blanco-dorado-y-nude";
++const IDEA_SEMIARCO = "deco-real-13-images-28"; // título «blanco y oro rosa», temática «Romántico rosa y dorado»: ambos colores literales
++for (const [tematica, esperadas] of [["Blanco y dorado", [IDEA_SEMIARCO, IDEA_ARO]], ["Blanco, dorado y nude", [IDEA_ARO]]] as const) {
++  const resultado = ideasEstrictasDeCategoria({ evento: "Boda", edad: 0, tematica, ultimoUsuario: BODA });
+   const titulos = resultado.ideas.map((idea) => idea.titulo);
+-  assert.ok(resultado.ideas.length >= 3, `${tematica}: al menos 3 ideas (${titulos.join(" | ")})`);
+-  assert.ok(titulos.includes("Semiarco blanco y oro rosa") && titulos.includes("Semiarco oro rosa, dorado y amarillo pastel"), `${tematica}: las parecidas de boda (${titulos.join(" | ")})`);
+-  for (const idea of resultado.ideas.slice(1)) assert.equal(idea.coincidencia, "cercana", `${idea.titulo}: marcada «Parecida»`);
+-  assert.equal(resultado.ideas[0]?.coincidencia, "exacta", "la exacta primero");
++  assert.deepEqual(resultado.ideas.map((idea) => idea.id), esperadas, `${tematica}: solo diseños de boda con esos colores, sin parecidas (${titulos.join(" | ")})`);
++  assert.ok(resultado.ideas.every((idea) => idea.coincidencia === "exacta" && idea.eventos.some((evento) => /boda/i.test(evento))), `${tematica}: exacta y de boda`);
+ }
++const bodaSinPreferencias = ideasEstrictasDeCategoria({ evento: "Boda" }).ideas;
++assert.ok(bodaSinPreferencias.length >= 3 && bodaSinPreferencias.every((idea) => idea.eventos.some((evento) => /boda/i.test(evento))), "boda sola: todos los diseños de boda, ninguno de otro evento");
++assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Boda", edad: 0, tematica: "Elegante blanco y negro" }).ideas, [], "ningún diseño de boda blanco y negro: vacío, no parecidas de graduación");
++// La búsqueda legacy y sus «parecidas» siguen para los demás consumidores (opciones, foto), pero no son la ruta de la categoría activa.
++assert.ok(ideasGuiadas({ evento: "Boda", edad: 0, tematica: "Blanco y dorado", ultimoUsuario: BODA }).ideas.length >= 3, "legacy intacto");
+ // Las opciones siguen contando solo exactas (las parecidas no hacen que una opción «exista»).
+ assert.equal(ideasRealesDeOpcion("Blanco, dorado y nude", { evento: "Boda" }), 1);
+-// Nunca de otros colores: «Elegante blanco y negro» en una boda solo suma ideas con blanco o negro.
+-for (const idea of ideasGuiadas({ evento: "Boda", edad: 0, tematica: "Elegante blanco y negro" }).ideas.filter((item) => item.coincidencia === "cercana")) {
+-  assert.match(`${idea.titulo} ${idea.tematica}`.toLowerCase(), /blanc|negr/, `${idea.titulo}: una parecida comparte colores`);
+-}
+ 
+ // ── 3. «Prefiero ver ideas parecidas» a la foto de una columna ───────────────────────────────────────────────────────
+ const FOTO = "Muéstrame ideas parecidas a mi foto: Veo una columna en blanco mate y dorado cromado. ¿Te armo el plan con estas piezas?";
+@@ -60,4 +62,4 @@
+   assert.ok(parecidas.ideas.every((idea) => idea.coincidencia === "cercana"), "todas «Parecida»");
+ }
+ 
+-console.log("test-ideas-boda-guiada: temática fiel al cliente (sin «nude»), ≥3 ideas de boda con parecidas marcadas, parecidas a la foto sin repetir y con su estructura primero.");
++console.log("test-ideas-boda-guiada: temática fiel al cliente (sin «nude»), categoría de boda estricta sin relleno, parecidas a la foto sin repetir y con su estructura primero.");

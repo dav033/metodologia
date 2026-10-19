@@ -1,0 +1,1658 @@
+{
+  "schema_version": "1.2.0",
+  "plan_id": "REQ-019",
+  "revision": 6,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Stuck viewer",
+      "acceptance_criteria": [
+        "Returning to /3d after leaving it frames the scene and orbit/zoom respond on desktop and phone",
+        "A lost WebGL context shows a recoverable state instead of a frozen canvas"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Mobile usability",
+      "acceptance_criteria": [
+        "The Taller at 390x844 has no touch target under 44 px and no hover-only control",
+        "The bottom sheet follows the finger and the scene stays visible at the medium height",
+        "The assistant and shared quote pass the touch audit or list each remaining issue as pending"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "React Bits",
+      "acceptance_criteria": [
+        "Only shortlisted React Bits components are added, typed, tokenised and reduced-motion aware",
+        "AI chat surfaces show React Bits waiting, step and generation states without changing send logic",
+        "Bundle and phone interaction cost are measured before and after"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Close",
+      "acceptance_criteria": [
+        "The full repository gate passes except recorded baseline failures",
+        "The branch is on origin/main and the bitácora records the outcome"
+      ]
+    }
+  ],
+  "requirements": [
+    "R1",
+    "R10",
+    "R11",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9"
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Regression harness for viewer re-entry under Activity",
+      "objective": "A browser harness mounts the real Taller3D inside React Activity at a desktop viewport and at 390x844 with touch, hides and shows it, and measures the camera; the --base mode proves the harness reproduces the bug on unfixed code, the default mode asserts the fixed behaviour",
+      "repository": "pictures",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Harness pattern exists for another panel; unknown is which Next imports Taller3D needs stubbed and headless WebGL behaviour.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:scripts/test/fixtures/anadir-repositorios-ui/navegador.ts",
+            "file:scripts/test/test-carga-3d.ts"
+          ],
+          "justification": "Bundling the whole Taller3D with esbuild needs stubs for Next modules and headless WebGL"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/tres-d/medicion-visor.ts"
+          ],
+          "justification": "Adds one fixture folder, one test script and a dev-only camera read on the measurement hook"
+        },
+        "duration": {
+          "evidence": [
+            "file:scripts/test/fixtures/anadir-repositorios-ui/navegador.ts"
+          ],
+          "justification": "Two and a half hours covers harness stubbing plus desktop and phone cases"
+        },
+        "risk": {
+          "evidence": [
+            "file:src/components/tres-d/medicion-visor.ts"
+          ],
+          "justification": "Test-only code plus a development hook that production never registers"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4"
+          ],
+          "justification": "Touches package.json scripts, which T4 also edits later in order"
+        },
+        "confidence": {
+          "evidence": [
+            "file:scripts/test/test-carga-3d.ts",
+            "assumption:SwiftShader WebGL works in headless Chromium here"
+          ],
+          "justification": "Esbuild bundling of Taller3D is proven by the load-time test; Activity toggling is untested"
+        }
+      },
+      "expected_paths": [
+        "scripts/test/test-ui-taller-reentrada.ts",
+        "scripts/test/fixtures/taller-reentrada/arnes.tsx",
+        "src/components/tres-d/medicion-visor.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "First mount reports a framed camera with distance above 0.05",
+        "The harness mounts the real Taller3D inside React Activity, hides and shows it, and measures the camera after re-entry",
+        "On the current main the re-entry case reproduces the near-zero camera radius on desktop and on a 390x844 touch viewport",
+        "The default run asserts framing after re-entry and that a drag moves the camera, and lists those assertions"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run taller:test-reentrada-ui -- --base",
+          "purpose": "First mount reports a framed camera with distance above 0.05",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-reentrada-ui -- --base",
+          "purpose": "The harness mounts the real Taller3D inside React Activity, hides and shows it, and measures the camera after re-entry",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-reentrada-ui -- --base",
+          "purpose": "On the current main the re-entry case reproduces the near-zero camera radius on desktop and on a 390x844 touch viewport",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-reentrada-ui -- --listar-aserciones",
+          "purpose": "The default run asserts framing after re-entry and that a drag moves the camera, and lists those assertions",
+          "created_by": "T1",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Reset viewer state on cleanup and give the camera a valid start",
+      "objective": "Leaving and returning to /3d recreates a viewer that frames the scene on its first draw",
+      "repository": "pictures",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "isolated_fix",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Root cause read in code: cleanup keeps visor state and encuadradoRef, so the new viewer is never framed.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/tres-d/Taller3D.tsx",
+            "file:next.config.ts"
+          ],
+          "justification": "Effect ordering under React Activity decides whether framing runs; solitary view restore must keep working"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/tres-d/escena-globos.ts"
+          ],
+          "justification": "A few lines in the mount effect cleanup and the camera start in crearEscena"
+        },
+        "duration": {
+          "evidence": [
+            "file:src/components/tres-d/Taller3D.tsx"
+          ],
+          "justification": "One hour for the change, the pure framing helper and its unit check"
+        },
+        "risk": {
+          "evidence": [
+            "file:src/components/tres-d/Taller3D.tsx",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Every Taller session draws through this effect; a mistake breaks framing or view restore"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3",
+            "task:T5"
+          ],
+          "justification": "Taller3D.tsx is edited again by T3, T5 and T6 in sequence"
+        },
+        "confidence": {
+          "evidence": [
+            "file:next.config.ts",
+            "file:node_modules/next/dist/client/components/layout-router.js"
+          ],
+          "justification": "Cause traced to cacheComponents Activity wrapping and the stale encuadradoRef comparison"
+        }
+      },
+      "expected_paths": [
+        "src/components/tres-d/Taller3D.tsx",
+        "src/components/tres-d/escena-globos.ts"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Effect cleanup sets the viewer state to null and clears the framing ref and pending views",
+        "crearEscena places the camera at a non-zero distance from its target before any framing",
+        "The re-entry regression test passes on desktop and on 390x844 touch emulation, including a one-finger drag after returning"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx --test src/components/tres-d/encuadre-visor.test.ts",
+          "purpose": "Effect cleanup sets the viewer state to null and clears the framing ref and pending views",
+          "created_by": "T2",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --test src/components/tres-d/encuadre-visor.test.ts",
+          "purpose": "crearEscena places the camera at a non-zero distance from its target before any framing",
+          "created_by": "T2",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-reentrada-ui",
+          "purpose": "The re-entry regression test passes on desktop and on 390x844 touch emulation, including a one-finger drag after returning",
+          "created_by": "T1",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Handle WebGL context loss and free contexts on destroy",
+      "objective": "A lost WebGL context is reported to the user and the viewer is rebuilt when the context returns",
+      "repository": "pictures",
+      "after": [
+        "T2"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "No context-loss handling exists today; WEBGL_lose_context lets the test force it, timing of restore is uncertain.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/tres-d/escena-globos.ts"
+          ],
+          "justification": "Context loss interacts with renderer disposal, shadow maps and the measurement registry"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/tres-d/Taller3D.tsx"
+          ],
+          "justification": "Listeners on the canvas, a message state and forceContextLoss in destroy"
+        },
+        "duration": {
+          "evidence": [
+            "task:T1"
+          ],
+          "justification": "Ninety minutes including a forced-loss case in the re-entry suite"
+        },
+        "risk": {
+          "evidence": [
+            "file:src/components/tres-d/escena-globos.ts"
+          ],
+          "justification": "A wrong rebuild could leak GPU memory or double-mount the viewer on phones"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2"
+          ],
+          "justification": "Edits the same viewer lifecycle as T2 right after it"
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/tres-d/Biblioteca.tsx",
+            "assumption:mobile browsers drop contexts under memory pressure"
+          ],
+          "justification": "Library and captures create extra contexts, but loss frequency in the field is unmeasured"
+        }
+      },
+      "expected_paths": [
+        "src/components/tres-d/Taller3D.tsx",
+        "src/components/tres-d/escena-globos.ts"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "webglcontextlost shows a recoverable message instead of a frozen canvas",
+        "webglcontextrestored or a retry rebuilds the viewer and frames the scene",
+        "destruir releases the context so repeated visits do not pile up contexts",
+        "After forcing context loss with the WEBGL_lose_context extension the Taller shows a retry message and rebuilds the scene"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run taller:test-reentrada-ui",
+          "purpose": "webglcontextlost shows a recoverable message instead of a frozen canvas",
+          "created_by": "T3",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-reentrada-ui",
+          "purpose": "webglcontextrestored or a retry rebuilds the viewer and frames the scene",
+          "created_by": "T3",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-reentrada-ui",
+          "purpose": "destruir releases the context so repeated visits do not pile up contexts",
+          "created_by": "T3",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-reentrada-ui",
+          "purpose": "After forcing context loss with the WEBGL_lose_context extension the Taller shows a retry message and rebuilds the scene",
+          "created_by": "T3",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R3"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Touch audit script for the Taller at 390x844",
+      "objective": "A self-contained phone audit of the Taller reports small targets, hover-only controls, overflow and canvas share with screenshots: it bundles the real components with esbuild like the re-entry harness (no dev server, no network, no database), its checks can run alone with --solo and its strict evaluator proves itself on a built-in fixture",
+      "repository": "pictures",
+      "after": [
+        "T1"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Reuses the T1 harness and the existing 390x844 context; detecting hover-only controls needs a heuristic.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/tres-d/PanelPiezas.tsx"
+          ],
+          "justification": "Hover-only detection needs computed styles before and after hover on touch contexts"
+        },
+        "scope": {
+          "evidence": [
+            "task:T1"
+          ],
+          "justification": "One new test script on top of the re-entry harness from T1"
+        },
+        "duration": {
+          "evidence": [
+            "file:scripts/test/fixtures/anadir-repositorios-ui/navegador.ts"
+          ],
+          "justification": "Two and a half hours for measurements, thresholds and screenshot output"
+        },
+        "risk": {
+          "evidence": [
+            "file:scripts/test/fixtures/anadir-repositorios-ui/navegador.ts"
+          ],
+          "justification": "Only test code; a wrong heuristic gives noisy reports, not user impact"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T8",
+            "task:T1"
+          ],
+          "justification": "Shares package.json scripts with T1 and the audit file with T8"
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/tres-d/HojaMovil.tsx",
+            "file:src/components/tres-d/MenuMas.tsx"
+          ],
+          "justification": "Mobile pain points already located by reading the components"
+        }
+      },
+      "expected_paths": [
+        "scripts/test/test-ui-taller-movil.ts",
+        "package.json"
+      ],
+      "shared_resources": [
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "The audit bundles the real Taller3D with esbuild and runs it at 390x844 with touch enabled without any server, network, database or env file, and saves one screenshot per sheet height",
+        "Report mode lists every violation with selector and size and exits 0 whenever the audit itself ran, and non-zero when it could not run",
+        "The strict evaluator flags a 30 px target and a hover-only control in a built-in fixture and accepts a compliant one",
+        "Each check named primer-render, hoja, objetivos, hover, desborde, lienzo and texto can run alone with --solo and is listed by --listar-checks"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --informe",
+          "purpose": "The audit bundles the real Taller3D with esbuild and runs it at 390x844 with touch enabled without any server, network, database or env file, and saves one screenshot per sheet height",
+          "created_by": "T4",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --informe",
+          "purpose": "Report mode lists every violation with selector and size and exits 0 whenever the audit itself ran, and non-zero when it could not run",
+          "created_by": "T4",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --autoprueba",
+          "purpose": "The strict evaluator flags a 30 px target and a hover-only control in a built-in fixture and accepts a compliant one",
+          "created_by": "T4",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --listar-checks",
+          "purpose": "Each check named primer-render, hoja, objetivos, hover, desborde, lienzo and texto can run alone with --solo and is listed by --listar-checks",
+          "created_by": "T4",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R5"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "First paint without the desktop flash on phones",
+      "objective": "Phones render the mobile layout on first paint without flashing the desktop tree",
+      "repository": "pictures",
+      "after": [
+        "T3",
+        "T4"
+      ],
+      "complexity": "medium",
+      "scope": "isolated_fix",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "useSyncExternalStore server snapshot returns true today; a neutral shell avoids the wrong tree but must not delay the canvas.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/tres-d/Taller3D.tsx"
+          ],
+          "justification": "Hydration with useSyncExternalStore and a canvas that mounts once needs care"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/tres-d/Taller3D.tsx",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Changes the width hook and the branch that chooses the layout tree"
+        },
+        "duration": {
+          "evidence": [
+            "task:T4"
+          ],
+          "justification": "One hour including desktop and phone checks of the first frame"
+        },
+        "risk": {
+          "evidence": [
+            "file:src/app/globals.css"
+          ],
+          "justification": "Every visitor of /3d passes through this layout decision on load"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6"
+          ],
+          "justification": "Taller3D.tsx is then reshaped by T6 for the sheet layout"
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/tres-d/Taller3D.tsx"
+          ],
+          "justification": "Current server default seen in the width hook comment and code"
+        }
+      },
+      "expected_paths": [
+        "src/components/tres-d/Taller3D.tsx"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The server snapshot renders a neutral shell until the width query is known",
+        "No hydration warning appears in the console on desktop or phone",
+        "Under 390x844 touch emulation no frame from navigation start contains the desktop side rail and the first-frame screenshot shows it absent"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo primer-render",
+          "purpose": "The server snapshot renders a neutral shell until the width query is known",
+          "created_by": "T4",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo primer-render",
+          "purpose": "No hydration warning appears in the console on desktop or phone",
+          "created_by": "T4",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo primer-render",
+          "purpose": "Under 390x844 touch emulation no frame from navigation start contains the desktop side rail and the first-frame screenshot shows it absent",
+          "created_by": "T4",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R4"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M2",
+      "title": "Draggable bottom sheet over a full-height canvas",
+      "objective": "On phones the canvas fills the screen and a draggable sheet with peek, medium and tall snaps sits over it",
+      "repository": "pictures",
+      "after": [
+        "T5"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 240,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Gesture, snapping, keyboard inset and camera offset interact; motion drag exists in the repo but not for sheets.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/tres-d/HojaMovil.tsx",
+            "file:src/components/tres-d/escena-globos.ts"
+          ],
+          "justification": "Drag physics, the iOS keyboard inset and the camera view offset must agree"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/tres-d/Taller3D.tsx"
+          ],
+          "justification": "Rewrites the sheet and the phone layout of the editor tree"
+        },
+        "duration": {
+          "evidence": [
+            "file:src/components/tres-d/HojaMovil.tsx"
+          ],
+          "justification": "Four hours for gesture work, camera offset and audit screenshots"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "The sheet holds every editing panel on phones; a bug blocks editing there"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "task:T7"
+          ],
+          "justification": "Shares Taller3D.tsx with T5 and the phone tree that T7 and T10 edit"
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/tres-d/HojaMovil.tsx",
+            "assumption:camera setViewOffset is enough to recentre"
+          ],
+          "justification": "Current sheet steps one height per gesture with no follow, read in code"
+        }
+      },
+      "expected_paths": [
+        "src/components/tres-d/HojaMovil.tsx",
+        "src/components/tres-d/Taller3D.tsx",
+        "src/components/tres-d/escena-globos.ts"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Dragging the 44 px handle moves the sheet with the finger and snaps by velocity to 15, 45 or 85 percent",
+        "The camera view offset keeps the scene centred in the visible area above the sheet",
+        "The canvas stays at least 40 percent of the viewport at the medium sheet height",
+        "Keyboard arrows and the handle button change height and reduced motion removes the spring"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo hoja",
+          "purpose": "Dragging the 44 px handle moves the sheet with the finger and snaps by velocity to 15, 45 or 85 percent",
+          "created_by": "T4",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo lienzo",
+          "purpose": "The camera view offset keeps the scene centred in the visible area above the sheet",
+          "created_by": "T4",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo lienzo",
+          "purpose": "The canvas stays at least 40 percent of the viewport at the medium sheet height",
+          "created_by": "T4",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo hoja",
+          "purpose": "Keyboard arrows and the handle button change height and reduced motion removes the spring",
+          "created_by": "T4",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R6",
+        "R7"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M2",
+      "title": "Touch targets, hover-only actions and direct touch controls",
+      "objective": "Every Taller control on phones is at least 44 px, visible without hover, and touch controls call the viewer directly",
+      "repository": "pictures",
+      "after": [
+        "T6"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Each offending class and line is already located; changes are class tweaks plus one small API call path.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/tres-d/ControlesTactiles.tsx"
+          ],
+          "justification": "The task now ends on the full strict phone audit, so it must clear every remaining target, text size and overflow violation"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/tres-d/Inspector.tsx",
+            "file:src/components/tres-d/MenuMas.tsx"
+          ],
+          "justification": "Touches four components with targeted class and handler edits"
+        },
+        "duration": {
+          "evidence": [
+            "file:src/components/tres-d/PanelPiezas.tsx"
+          ],
+          "justification": "Two hours including text size review of the phone tree"
+        },
+        "risk": {
+          "evidence": [
+            "task:T4"
+          ],
+          "justification": "Visual and touch changes only, caught by the strict audit"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T10"
+          ],
+          "justification": "PanelPiezas.tsx is edited again by T10 for animated lists"
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/tres-d/PanelPiezas.tsx",
+            "file:src/components/tres-d/MenuMas.tsx"
+          ],
+          "justification": "Exact offending lines found: size-7 opacity-0 group-hover eye, min-h-9 menu, min-h-7 inspector"
+        }
+      },
+      "expected_paths": [
+        "src/components/tres-d/PanelPiezas.tsx",
+        "src/components/tres-d/MenuMas.tsx",
+        "src/components/tres-d/Inspector.tsx",
+        "src/components/tres-d/ControlesTactiles.tsx"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The eye button, menu items and inspector controls measure at least 44 px on touch",
+        "No control depends on group-hover to become visible on a coarse pointer",
+        "Touch camera buttons no longer dispatch synthetic KeyboardEvents",
+        "The full strict phone audit passes: no target under 44 px, no hover-only control, no horizontal overflow, canvas at least 40 percent at the medium sheet and text at least 12 px"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo objetivos",
+          "purpose": "The eye button, menu items and inspector controls measure at least 44 px on touch",
+          "created_by": "T4",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo hover",
+          "purpose": "No control depends on group-hover to become visible on a coarse pointer",
+          "created_by": "T4",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --test src/components/tres-d/ControlesTactiles.test.ts",
+          "purpose": "Touch camera buttons no longer dispatch synthetic KeyboardEvents",
+          "created_by": "T7",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui",
+          "purpose": "The full strict phone audit passes: no target under 44 px, no hover-only control, no horizontal overflow, canvas at least 40 percent at the medium sheet and text at least 12 px",
+          "created_by": "T4",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R5"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T16",
+      "milestone_id": "M2",
+      "title": "Phone audit proves the sheet drag, reduced motion and camera offset",
+      "objective": "The phone audit gains three checks that exercise what the sheet promises and the --solo hoja check does not: touch drag with finger follow and velocity snapping, live reduced motion, and the camera view offset at each height; any defect they expose in the sheet or the camera offset is fixed in the same task",
+      "repository": "pictures",
+      "after": [
+        "T8"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Playwright touch events and CDP sampling are new to the audit; the sheet code is small and already has snap heights.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/tres-d/HojaMovil.tsx"
+          ],
+          "justification": "Touch drag with velocity needs synthesized touch events and timing against the real sheet"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/tres-d/HojaMovil.tsx",
+            "file:src/components/tres-d/Taller3D.tsx"
+          ],
+          "justification": "Adds three audit checks and may adjust the sheet or the camera offset it exposes"
+        },
+        "duration": {
+          "evidence": [
+            "file:src/components/tres-d/HojaMovil.tsx"
+          ],
+          "justification": "Two and a half hours covers three checks and the fixes they expose"
+        },
+        "risk": {
+          "evidence": [
+            "file:src/components/tres-d/HojaMovil.tsx"
+          ],
+          "justification": "Test code plus small sheet fixes behind existing behaviour on phones only"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7",
+            "task:T8"
+          ],
+          "justification": "Shares the audit script with the other phone tasks which edit it in order"
+        },
+        "confidence": {
+          "evidence": [
+            "assumption:snap thresholds can be asserted from sampled sheet positions"
+          ],
+          "justification": "Touch emulation in Playwright is proven by the audit already; velocity thresholds are unmeasured"
+        }
+      },
+      "expected_paths": [
+        "scripts/test/test-ui-taller-movil.ts",
+        "src/components/tres-d/HojaMovil.tsx",
+        "src/components/tres-d/Taller3D.tsx"
+      ],
+      "shared_resources": [
+        "scripts/test/test-ui-taller-movil.ts"
+      ],
+      "acceptance_criteria": [
+        "Dragging the sheet handle with touch events moves the sheet with the finger, a fast flick snaps to the next height and a slow release snaps to the nearest one",
+        "With prefers-reduced-motion the sheet changes height without a spring animation and the audit proves it by sampling the sheet while it moves",
+        "The camera view offset keeps the scene centred in the area above the sheet at the closed, medium and tall heights"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo arrastre",
+          "purpose": "Dragging the sheet handle with touch events moves the sheet with the finger, a fast flick snaps to the next height and a slow release snaps to the nearest one",
+          "created_by": "T16",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo movimiento-reducido",
+          "purpose": "With prefers-reduced-motion the sheet changes height without a spring animation and the audit proves it by sampling the sheet while it moves",
+          "created_by": "T16",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --solo desplazamiento-camara",
+          "purpose": "The camera view offset keeps the scene centred in the area above the sheet at the closed, medium and tall heights",
+          "created_by": "T16",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R6",
+        "R7"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M2",
+      "title": "Touch audit and cheap fixes on the assistant and shared quote",
+      "objective": "The assistant and shared quote pages pass the phone audit; any remaining issue is recorded with route, selector, size, cause, urgency and complexity in a checked accepted-pending list",
+      "repository": "pictures",
+      "after": [
+        "T4",
+        "T7"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "Issues on these pages are not yet measured; the shared quote needs a token fixture without a database.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ],
+          "justification": "Two customer pages need fixtures and their own components reviewed"
+        },
+        "scope": {
+          "evidence": [
+            "task:T4"
+          ],
+          "justification": "Extends the audit script and applies small fixes on two pages"
+        },
+        "duration": {
+          "evidence": [
+            "file:src/app/cotizacion-compartida"
+          ],
+          "justification": "Two and a half hours with fixture setup for the public quote"
+        },
+        "risk": {
+          "evidence": [
+            "file:src/app/cotizacion-compartida"
+          ],
+          "justification": "Customer-facing pages; a layout slip shows to clients and prices"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4",
+            "task:T11"
+          ],
+          "justification": "Extends the audit file from T4 and touches assistant files that T11 changes"
+        },
+        "confidence": {
+          "evidence": [
+            "assumption:issues are similar in size to the Taller ones"
+          ],
+          "justification": "No audit has run on these pages, so the fix list is unknown"
+        }
+      },
+      "expected_paths": [
+        "scripts/test/test-ui-taller-movil.ts",
+        "src/components/guiado/VistaGuiada.tsx",
+        "src/app/cotizacion-compartida",
+        "scripts/test/fixtures/movil-pendientes.json"
+      ],
+      "shared_resources": [
+        "scripts/test/test-ui-taller-movil.ts"
+      ],
+      "acceptance_criteria": [
+        "The audit accepts a route list and runs on /asistente and /cotizacion-compartida/[token] fixtures",
+        "The strict audit of both routes reports no violation outside the accepted list scripts/test/fixtures/movil-pendientes.json",
+        "Every entry of the accepted list states route, selector, size, cause, urgency and complexity"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --rutas asistente,cotizacion --informe",
+          "purpose": "The audit accepts a route list and runs on /asistente and /cotizacion-compartida/[token] fixtures",
+          "created_by": "T8",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --rutas asistente,cotizacion",
+          "purpose": "The strict audit of both routes reports no violation outside the accepted list scripts/test/fixtures/movil-pendientes.json",
+          "created_by": "T8",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui -- --rutas asistente,cotizacion --validar-pendientes",
+          "purpose": "Every entry of the accepted list states route, selector, size, cause, urgency and complexity",
+          "created_by": "T8",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M3",
+      "title": "React Bits registry setup and shortlist install",
+      "objective": "React Bits is installable from its registry and the shortlist lives typed in the repo with one motion version; the project-wide type check must end clean, so any type error that earlier tasks left in the audit scripts, fixtures or tests is fixed here",
+      "repository": "pictures",
+      "after": [
+        "T16"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Registry manifests pin motion 12 and hugeicons; each component needs import edits and token mapping.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:package.json",
+            "command:curl -s https://reactbits.dev/r/PromptBar-TS-TW.json -> deps motion 12 and hugeicons"
+          ],
+          "justification": "Adapting vendored components to motion 13, lucide icons and repo tokens"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/app/globals.css"
+          ],
+          "justification": "Around fourteen vendored components plus config and a test"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-019"
+          ],
+          "justification": "Three hours for install, adaptation and the invariant test"
+        },
+        "risk": {
+          "evidence": [
+            "file:package.json"
+          ],
+          "justification": "Dependency and lockfile changes can duplicate motion or grow every bundle"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T10",
+            "task:T11"
+          ],
+          "justification": "Owns package.json dependencies that later tasks import from"
+        },
+        "confidence": {
+          "evidence": [
+            "command:curl -s https://reactbits.dev/r/StatusMark-TS-TW.json -> motion only",
+            "assumption:shadcn CLI works without a full shadcn setup"
+          ],
+          "justification": "Registry URLs and dependency lists were fetched for the AI components"
+        }
+      },
+      "expected_paths": [
+        "components.json",
+        "src/components/ui/reactbits",
+        "package.json",
+        "package-lock.json"
+      ],
+      "shared_resources": [
+        "package.json dependencies"
+      ],
+      "acceptance_criteria": [
+        "components.json declares the @react-bits registry and the ui/reactbits alias",
+        "The whole project type-checks under TS strict, including the shortlisted components with lucide icons and motion/react 13, and any type error left by earlier tasks is fixed",
+        "A registry test checks single motion version, no hugeicons or gsap, license notice and live reduced-motion hook"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-reactbits-registro.ts",
+          "purpose": "components.json declares the @react-bits registry and the ui/reactbits alias",
+          "created_by": "T9",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "The whole project type-checks under TS strict, including the shortlisted components with lucide icons and motion/react 13, and any type error left by earlier tasks is fixed",
+          "created_by": "T9",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-reactbits-registro.ts",
+          "purpose": "A registry test checks single motion version, no hugeicons or gsap, license notice and live reduced-motion hook",
+          "created_by": "T9",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R7",
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M3",
+      "title": "Apply React Bits in the Taller",
+      "objective": "The Taller shows animated totals, list entrances and card highlights from React Bits without hurting phone use",
+      "repository": "pictures",
+      "after": [
+        "T9"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Placement is decided; long lists in the library may need virtual-list care with animated entrances.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/tres-d/Biblioteca.tsx"
+          ],
+          "justification": "Animated lists over hundreds of library cards must not re-render on selection"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/tres-d/DialogoCompra.tsx"
+          ],
+          "justification": "Three Taller components gain wrappers from the vendored set"
+        },
+        "duration": {
+          "evidence": [
+            "task:T9"
+          ],
+          "justification": "Two and a half hours including reduced-motion checks"
+        },
+        "risk": {
+          "evidence": [
+            "file:src/components/tres-d/DialogoCompra.tsx"
+          ],
+          "justification": "Totals must never display an intermediate number as final price"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7"
+          ],
+          "justification": "PanelPiezas.tsx was edited by T7 just before"
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/tres-d/Biblioteca.tsx",
+            "file:src/components/tres-d/PanelPiezas.tsx"
+          ],
+          "justification": "Target components read; library card memoisation exists"
+        }
+      },
+      "expected_paths": [
+        "src/components/tres-d/PanelPiezas.tsx",
+        "src/components/tres-d/Biblioteca.tsx",
+        "src/components/tres-d/DialogoCompra.tsx"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Shopping list and quote totals use CountUp ending on the exact value",
+        "Pieces panel and library results use AnimatedList; library cards use SpotlightCard",
+        "The strict phone audit still passes and reduced motion shows static content",
+        "The whole project still type-checks under TS strict"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-ui-reactbits-taller.ts",
+          "purpose": "Shopping list and quote totals use CountUp ending on the exact value",
+          "created_by": "T10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-ui-reactbits-taller.ts",
+          "purpose": "Pieces panel and library results use AnimatedList; library cards use SpotlightCard",
+          "created_by": "T10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-movil-ui",
+          "purpose": "The strict phone audit still passes and reduced motion shows static content",
+          "created_by": "T4",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "The whole project still type-checks under TS strict",
+          "created_by": "T9",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T11",
+      "milestone_id": "M3",
+      "title": "Apply React Bits in the assistant and shared quote",
+      "objective": "The guided assistant and shared quote use React Bits for steps, prices and result cards",
+      "repository": "pictures",
+      "after": [
+        "T10"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Guided view structure known; Stepper must map to the existing step model without changing logic.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ],
+          "justification": "Mapping the guided step model onto Stepper without changing navigation"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/app/cotizacion-compartida"
+          ],
+          "justification": "Two customer surfaces get presentational wrappers only"
+        },
+        "duration": {
+          "evidence": [
+            "task:T9"
+          ],
+          "justification": "Two hours with both themes checked"
+        },
+        "risk": {
+          "evidence": [
+            "file:src/app/cotizacion-compartida"
+          ],
+          "justification": "Public quote shows prices to clients; display must stay exact"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T12"
+          ],
+          "justification": "VistaGuiada and the composer are touched again by T12"
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ],
+          "justification": "Guided view read; shared quote page is small"
+        }
+      },
+      "expected_paths": [
+        "src/components/guiado/VistaGuiada.tsx",
+        "src/app/cotizacion-compartida"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Guided steps show a Stepper consistent with the existing flow",
+        "Shared quote price ends exactly on the stored total with CountUp",
+        "Reduced motion renders static steps and prices",
+        "React Bits invariants still hold after use: single motion version, no hugeicons or gsap, license notice",
+        "The whole project still type-checks under TS strict"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-ui-reactbits-cliente.ts",
+          "purpose": "Guided steps show a Stepper consistent with the existing flow",
+          "created_by": "T11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-ui-reactbits-cliente.ts",
+          "purpose": "Shared quote price ends exactly on the stored total with CountUp",
+          "created_by": "T11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-ui-reactbits-cliente.ts",
+          "purpose": "Reduced motion renders static steps and prices",
+          "created_by": "T11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-reactbits-registro.ts",
+          "purpose": "React Bits invariants still hold after use: single motion version, no hugeicons or gsap, license notice",
+          "created_by": "T9",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "The whole project still type-checks under TS strict",
+          "created_by": "T9",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T12",
+      "milestone_id": "M3",
+      "title": "React Bits AI-chat components on the AI surfaces",
+      "objective": "AI chat surfaces show React Bits waiting, step, generation and composer states while keeping their logic",
+      "repository": "pictures",
+      "after": [
+        "T10",
+        "T11"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 240,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Four surfaces with streaming and cancel states; PromptBar is 861 lines and must be trimmed to our features.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/tres-d/ia/TarjetaEnCurso.tsx",
+            "file:src/components/ui/shell/EsperaAsistente.tsx"
+          ],
+          "justification": "Streaming, cancellation and step events must drive the new visuals truthfully"
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/ui/shell/Compositor.tsx",
+            "file:src/components/tres-d/GeneradorIA.tsx"
+          ],
+          "justification": "Composer, waiting state, scene-AI card and image generator change presentation"
+        },
+        "duration": {
+          "evidence": [
+            "command:curl -s https://reactbits.dev/r/PromptBar-TS-TW.json -> 861 lines"
+          ],
+          "justification": "Four hours plus a rendering test for each state"
+        },
+        "risk": {
+          "evidence": [
+            "file:src/components/ui/shell/Compositor.tsx"
+          ],
+          "justification": "The composer is the main input of the chat; breaking send blocks quoting"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T11"
+          ],
+          "justification": "Shares composer and assistant files with T11 and the guided view"
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/tres-d/ia/TarjetaEnCurso.tsx",
+            "assumption:existing step events carry names and timestamps"
+          ],
+          "justification": "Surfaces located; event shapes for steps not yet mapped to ThoughtLine"
+        }
+      },
+      "expected_paths": [
+        "src/components/ui/shell/EsperaAsistente.tsx",
+        "src/components/ui/shell/Compositor.tsx",
+        "src/components/tres-d/ia/TarjetaEnCurso.tsx",
+        "src/components/tres-d/GeneradorIA.tsx"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Assistant waiting uses StatusMark and LatticeLoader; scene-AI steps fold with ThoughtLine",
+        "Foto realista shows RefineFrame stages tied to real progress events",
+        "The composer adopts PromptBar styling and keeps send, attach and cancel behaviour",
+        "A scripted assistant turn and a scene-AI turn with mocked stream events render the new waiting and step visuals and still send and cancel",
+        "The whole project still type-checks under TS strict"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-ui-chat-ia-estados.ts",
+          "purpose": "Assistant waiting uses StatusMark and LatticeLoader; scene-AI steps fold with ThoughtLine",
+          "created_by": "T12",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-ui-chat-ia-estados.ts",
+          "purpose": "Foto realista shows RefineFrame stages tied to real progress events",
+          "created_by": "T12",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-ui-chat-ia-estados.ts",
+          "purpose": "The composer adopts PromptBar styling and keeps send, attach and cancel behaviour",
+          "created_by": "T12",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-ui-chat-ia-estados.ts",
+          "purpose": "A scripted assistant turn and a scene-AI turn with mocked stream events render the new waiting and step visuals and still send and cancel",
+          "created_by": "T12",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "The whole project still type-checks under TS strict",
+          "created_by": "T9",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T13",
+      "milestone_id": "M3",
+      "title": "Measure bundle and phone interaction cost before and after",
+      "objective": "Route bundle sizes and phone interaction cost are measured in the task worktree with the real build and trace, recorded before and after in a checked fixture, and costly components are reverted with a written ruling",
+      "repository": "pictures",
+      "after": [
+        "T12"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Build output gives sizes; the throttled trace reuses the T4 harness.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:package.json"
+          ],
+          "justification": "Reading build tables and one throttled trace comparison"
+        },
+        "scope": {
+          "evidence": [
+            "task:T12"
+          ],
+          "justification": "Measurement and a report; code changes only when reverting a component"
+        },
+        "duration": {
+          "evidence": [
+            "file:package.json"
+          ],
+          "justification": "Ninety minutes with two production builds"
+        },
+        "risk": {
+          "evidence": [
+            "task:T12"
+          ],
+          "justification": "Measurement does not change behaviour unless a revert is made"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T12"
+          ],
+          "justification": "Runs alone at the end of M3 with nothing in parallel"
+        },
+        "confidence": {
+          "evidence": [
+            "file:package.json",
+            "assumption:Playwright CPU throttling is available via CDP"
+          ],
+          "justification": "Build script exists; phone trace setup still to write"
+        }
+      },
+      "expected_paths": [
+        "scripts/test/test-medicion-reactbits.ts",
+        "scripts/test/fixtures/medicion-reactbits.json",
+        "package.json"
+      ],
+      "shared_resources": [
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "First Load JS for /3d, /asistente and the shared quote is recorded for main and the branch in scripts/test/fixtures/medicion-reactbits.json",
+        "A 4x CPU throttled phone trace of sheet drag and panel open is recorded for main and the branch in the same file",
+        "Every component whose recorded cost outweighs its benefit has a written ruling in that file and no remaining import"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-medicion-reactbits.ts",
+          "purpose": "First Load JS for /3d, /asistente and the shared quote is recorded for main and the branch in scripts/test/fixtures/medicion-reactbits.json",
+          "created_by": "T13",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-medicion-reactbits.ts",
+          "purpose": "A 4x CPU throttled phone trace of sheet drag and panel open is recorded for main and the branch in the same file",
+          "created_by": "T13",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-medicion-reactbits.ts",
+          "purpose": "Every component whose recorded cost outweighs its benefit has a written ruling in that file and no remaining import",
+          "created_by": "T13",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R8"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T14",
+      "milestone_id": "M4",
+      "title": "Full gate and new UI suites on the final branch",
+      "objective": "The final branch passes the repository gate, the static checks and the new UI suites, each run from a clean snapshot whose workspace packages the verifier builds first",
+      "repository": "pictures",
+      "after": [
+        "T13",
+        "T16"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Two package scripts compose existing commands; the gate and the static checks run from a clean snapshot whose workspace packages the verifier builds first.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:scripts/test/gate.mjs"
+          ],
+          "justification": "Running scripted checks and comparing with the main baseline"
+        },
+        "scope": {
+          "evidence": [
+            "task:T13"
+          ],
+          "justification": "Fixes only what the gate finds in this branch"
+        },
+        "duration": {
+          "evidence": [
+            "file:scripts/test/gate.mjs"
+          ],
+          "justification": "Ninety minutes for the gate plus the UI suites"
+        },
+        "risk": {
+          "evidence": [
+            "file:.github/workflows/checks.yml"
+          ],
+          "justification": "A late failure can force rework across milestones"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T13"
+          ],
+          "justification": "Runs alone after every implementation task"
+        },
+        "confidence": {
+          "evidence": [
+            "file:scripts/test/gate.mjs",
+            "precedent:2d924c10"
+          ],
+          "justification": "Gate script exists and ran green on recent ships"
+        }
+      },
+      "expected_paths": [
+        "package.json"
+      ],
+      "shared_resources": [
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "npm run gate passes from a clean snapshot with the workspace packages built",
+        "Lint and TypeScript pass on the branch",
+        "The re-entry, phone audit, registry and AI state suites pass together"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run gate",
+          "purpose": "npm run gate passes from a clean snapshot with the workspace packages built",
+          "created_by": "T14",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-estatico",
+          "purpose": "Lint and TypeScript pass on the branch",
+          "created_by": "T14",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-ui-final",
+          "purpose": "The re-entry, phone audit, registry and AI state suites pass together",
+          "created_by": "T14",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R11"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T15",
+      "milestone_id": "M4",
+      "title": "Rebase, push to main and update the bitácora",
+      "objective": "The verified branch is rebased on origin/main and pushed to main, then the executor watches checks.yml and records the outcome, rulings and pending items in the bitácora (those follow-ups are done, not machine-verified)",
+      "repository": "pictures",
+      "after": [
+        "T14"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "high",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Same push path used for the backup merge earlier today; time is the CI watch.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "precedent:ae78a79d"
+          ],
+          "justification": "Rebase, push and record; no new logic is written"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#clarifications"
+          ],
+          "justification": "One push plus bitácora files"
+        },
+        "duration": {
+          "evidence": [
+            "file:.github/workflows/checks.yml"
+          ],
+          "justification": "Forty-five minutes including the Quality workflow watch"
+        },
+        "risk": {
+          "evidence": [
+            "file:.github/workflows/checks.yml",
+            "spec:SPEC.md#clarifications"
+          ],
+          "justification": "Pushing main likely triggers a Vercel production build that customers see"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T14"
+          ],
+          "justification": "Last task; nothing else runs after or beside it"
+        },
+        "confidence": {
+          "evidence": [
+            "precedent:ae78a79d"
+          ],
+          "justification": "Direct push to main was done for the backup merge today"
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The branch is rebased on origin/main and pushed directly to main after T14",
+        "HEAD and origin/main have identical trees after the push"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "git merge-base --is-ancestor HEAD origin/main",
+          "purpose": "The branch is rebased on origin/main and pushed directly to main after T14",
+          "created_by": "T15",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "git diff --quiet HEAD origin/main",
+          "purpose": "HEAD and origin/main have identical trees after the push",
+          "created_by": "T15",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R11"
+      ],
+      "kind": "implement"
+    }
+  ]
+}

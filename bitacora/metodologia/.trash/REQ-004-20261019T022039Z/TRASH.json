@@ -1,0 +1,18 @@
+{
+  "req_id": "REQ-004",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-004-measured-context-efficiency",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-004-measured-context-efficiency/PLAN.md",
+      "sha256": "1f0b150aadad0a527cd688a81071e8ddae079ceff6896357585bcda5adbd129c"
+    }
+  ]
+}

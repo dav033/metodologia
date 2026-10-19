@@ -1,0 +1,8 @@
+{
+  "owner_request": "probemos el flujo con m3",
+  "scope": "isolated technical smoke, T1 only; no Pictures feature advancement",
+  "base_sha": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723",
+  "source_repository": "/home/david/dev/pictures",
+  "no_new_commits_or_push": true,
+  "runtime_root": "/home/david/bitacora/pictures/.state/m3-flow-xm9hnyg1"
+}

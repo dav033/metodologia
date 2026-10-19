@@ -1,0 +1,46 @@
+{
+  "task": "T1",
+  "accepted": true,
+  "tree": "63c6bf26559840627d032cecc0bab65ad6b05932",
+  "source_hashes": {
+    "src/lib/biblioteca-sempertex/biblioteca.ts": "a14fea9c097f23aa598015298174aa29785c52406b1095cfac3ba9d0b84e9691",
+    "src/lib/biblioteca-sempertex/categorias.ts": "030c9874627ac1aeaf07718b46c8e11c3b923f35a0a6be89a3d5decbe48de1da",
+    "src/lib/biblioteca-sempertex/recomendaciones-categoria.ts": "1efbdd786e23b62c89f131fe4c0d4395a5fbe1efb85cabae2b246db03db34e5d",
+    "src/lib/biblioteca-sempertex/preferencias-texto.ts": "6db629229c36006c2c016ffc05fffbef09002bff4f3afb73ec00dad4320ed6ed",
+    "src/lib/ia/guiado/ideas-guiadas.ts": "33657698b857df510dd4a7ab6f61d7c51f086b882d91427561b1221b46e4a7fc",
+    "scripts/test/test-recomendaciones-categoria.ts": "eeb4fc48881f75d8cde183a80e107280c70cffedf6d33b68e33e9e19835d2a15",
+    "scripts/test/test-ideas-boda-guiada.ts": "a23bc93d912374a4add048a9362be97324a2499c41139417ac55ad50b8a557ab"
+  },
+  "independent_reviews": [
+    {
+      "axis": "spec",
+      "verdict": "APPROVE",
+      "binding": "all seven exact hashes verified; actual public adapter probes correct for all reproduced blockers"
+    },
+    {
+      "axis": "standards",
+      "verdict": "APPROVE",
+      "scope": "shared positive/negative vocabulary, phrase atomization, independent conjunctive constraints, preserved regression assertions"
+    }
+  ],
+  "checks": [
+    "six independent scripts exit0",
+    "four adapted previous red reproductions exit0",
+    "comprehensive actual prefs/matcher/adapter: ten grammatical heads positive/negative, five lexical phrase aliases and independent conjunction exit0",
+    "independent workspace build0, next typegen0, tsc0",
+    "independent post-terminal lint0; earlier -9 retained and overlapping successful rerun0; exact cause of -9 unproven, consistent with terminal sweep",
+    "source hashes unchanged throughout; scoped whitespace check0; no new deletion relative input; accepted artifact replay required by verdict.py"
+  ],
+  "operational_incidents": [
+    {
+      "event": "native rm of three generated diagnostic copies against explicit restriction",
+      "recovery": "original evidence/source intact; copies reconstructed from recorded transformation; previous copy hashes unrecorded; command guards durably added and probed",
+      "compliance": "No claim of exception-free no-deletion compliance"
+    },
+    {
+      "event": "native monitor waited indefinitely for nonempty successful tsc log and self-matching pgrep",
+      "recovery": "verified own Bash monitor SIGTERM; native actual exit0 preserved; future brief requires bounded command results"
+    }
+  ],
+  "provenance": "Historical isolated T1 acceptance not transferred. Rejected att0003/att0004 partial code retained as candidates only, repaired by native att0005; fresh reviews/checks govern this verdict."
+}

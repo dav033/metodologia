@@ -25,9 +25,11 @@ month summary._
 - P-051 · TS motor builds 0 balloons for pared_organica, figura, pared_no_densa, centro_mesa (fall back to Python / curated price) · urgency: med · complexity: M · added 2026-10-10 · property tests
 - P-068 · Owner quince photo, left after 9f86d67b (P-067): the reader gives 1 door piece where the photo has 3 arched panels (needs a fondos-detector fixture that finds the doors); pink fabric roses missing from the catalogue (only white/ivory); low/seated camera breaks the refine capture (unreproduced, needs a headless capture check); a failed colour tweak (ajustarColoresSiPuede) also adds a misleading «no se armó» entry · urgency: med · complexity: M · added 2026-10-11
 - P-101 · Review or revise REQ-017's provisional event→structure mapping and behavior assumptions after the implementation pass; work resumed using Opus's defaults at owner request, with no item-by-item approval recorded · urgency: med · complexity: M · added 2026-10-16 · REQ-017 / Opus 5.5 high
+- P-111 · Shared-quote routes (`/api/cotizacion-compartida/*`, `/api/taller/cotizaciones-compartidas`) are excluded from the registry guard without `conRegistro`; migration 020 is applied in Neon but missing from the repo · urgency: med · complexity: M · added 2026-10-18 · REQ-014
 - P-003 · Resume idea digitization: 110 covered ideas left after lot 26, then new generators · urgency: med · complexity: L · added 2026-10-08 · D-005
 - P-008 · Split organico.ts (1529 lines) and escena.ts (740) by responsibility · urgency: med · complexity: L · added 2026-10-08
 - P-034 · BalloonBuilder ideas (artifact SH28k1k2DhKHHDA2JMhApt): owner to pick; quick-win batch (S) pump seconds/dimensions/helium/recipe cards/size profiles/light presets, then build sheet, palette→Sempertex ΔE, 3-tier quote · urgency: med · complexity: L · medium/M
+- P-121 · Decide whether to rerun the M1-M3 flow test from a new run as pure supervisor (T2 failure list in `.state/req018-full-mwvocojr/reviews/T2/` is the corpus); pending owner choice. Related: T1 matcher does not exclude qualifier+colour phrases ("sin fondo rosa"); P-118 still open. · urgency: med · complexity: ?
 - P-027 · Burgundy chrome: no wine Reflex in the Sempertex table (915 used) and 915 renders too bright/red in the viewer — check swatch fidelity · urgency: low · complexity: S · added 2026-10-09
 - P-030 · RAG: `taller_taxonomia` (migration 028) has no writer and the search reads the taxonomy from code — orphan table: drop it or load it from src/lib/taller/taxonomia (decide with the reader) · urgency: low · complexity: S · added 2026-10-09
 - P-046 · Shopping list «Por pieza» lists identical decorations one per row («Ojo con venas 1…14 · urgency: low · complexity: S · 1 globo»): group identical pieces (× 14) · added 2026-10-09 · judge
@@ -58,14 +60,12 @@ month summary._
 - P-098 · Webhook recommendations return only {url, razon}: decide with the owner whether to add an optional `paquete` (name, total, items; never provider price) to recommend-package(s) and chat, and then update ~/guia-webhook-happie.txt and docs/happie-external-integration.md · urgency: low · complexity: M · added 2026-10-15
 - P-032 · Laya fine-tune for routing / customer pro-guardrail — researched (laya.train, head-only CPU or RLCD Kaggle; ~3–5k Gemini-labelled Spanish rows, US$1–3); not worth it vs Gemini today; revisit when the customer chat has volume · urgency: low · complexity: L · added 2026-10-09
 
-
-
-- P-111 · Shared-quote routes (`/api/cotizacion-compartida/*`, `/api/taller/cotizaciones-compartidas`) are excluded from the registry guard without `conRegistro`; migration 020 is applied in Neon but missing from the repo · urgency: med · complexity: M · added 2026-10-18 · REQ-014
-
 ## Blocked
 _None_
 
 ## Recently closed
+- P-120 · CLOSED 2026-10-18 — Repair isolated REQ-018 T1 after actual rejection
+  - Root causes and follow-up semantic boundaries repaired with red/green regressions. Both independent reviews APPROVE; actual M1 T1 completed/accepted and T2 ready with0 attempts. Isolated scope only; canonical source unchanged. Evidence: artifacts/REQ-018-T1-retry-20261018/REPORT.md.
 - P-109 · PLAN verifications are weak or Windows-only: T55 passes without shipping, T57 passes on 2026-10-11 rows (pre-T36), T44 passes on report keywords, T14/T31 use findstr, T18 and T71–T75 use C:/Users or only check file existence · urgency: low · complexity: S · added 2026-10-18 · REQ-014 audit · closed 2026-10-18: REQ-014 plan cancelled by the owner
 - P-107 · Decide REQ-014 continuation: PM/critic chain (T26, T32, T40, T48, T56, T59) and growth tasks T71–T75 (one-touch rating, panel-edit feedback signal, client latency telemetry, «No pude» reason, action limits) · urgency: med · complexity: L · added 2026-10-18 · REQ-014 T18 · closed 2026-10-18: REQ-014 plan cancelled by the owner
 - P-106 · T57 blocked: owner photo path for `--fotos` (images (25..54) are not on this machine) and whether the harness must write triptychs (correr-foto.ts is dry-run only); CLI transport must be passed through the environment · urgency: med · complexity: M · added 2026-10-18 · REQ-014 T57 · closed 2026-10-18: REQ-014 plan cancelled by the owner

@@ -1,0 +1,20 @@
+{
+  "verdict": {
+    "verdict_id": "real-independent-review-T1-reject",
+    "plan_id": "REQ-018",
+    "revision": 1,
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "accepted": false,
+    "verifier": "independent-spec-and-standards-review",
+    "evidence": "Independent spec and standards reviews: CHANGES_NEEDED. Parent independently reproduced F1 style from colour affinity, F2 incorrect clause polarity, F3 dropped explicit unknown style, F4 negated baby gender as positive. reviews/reproductions.json; planned checks pass but do not establish acceptance.",
+    "token": 1,
+    "occurred_at": ""
+  },
+  "ingest_result": {
+    "status": "applied",
+    "reason": "",
+    "event_id": "real-independent-review-T1-reject"
+  },
+  "remaining_execution_scope": "none; rejected T1, no T2 launch"
+}

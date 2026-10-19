@@ -1,0 +1,41 @@
+{
+  "status": "completed",
+  "reset_epoch": null,
+  "terminal_event": true,
+  "text": "Aye.\n\n```\nSTATUS: DONE_WITH_CONCERNS\nSUMMARY: T1 implementado: matcher estricto puro + adaptador sobre la biblioteca visible, sin relleno ni \"parecidas\". La b\u00fasqueda legacy (`buscarDecoracionesSempertex`, `ideasGuiadas`) queda intacta para los dem\u00e1s consumidores. Las tres verificaciones T1 pasan; `tsc` falla solo por un error que no es de T1.\nCHANGES:\n- src/lib/biblioteca-sempertex/categorias.ts (nuevo) \u2014 alias estrictos de una misma celebraci\u00f3n (boda/matrimonio/casamiento; bautizo \u2260 comuni\u00f3n). Descubre etiquetas nuevas desde `eventos` y usa la etiqueta m\u00e1s larga. Devuelve \"ambigua\" si hay varias categor\u00edas competidoras.\n- src/lib/biblioteca-sempertex/recomendaciones-categoria.ts (nuevo) \u2014 `recomendarPorCategoria` y `preferenciasDeTexto`. Aplica categor\u00eda, motivos ajenos, edad, colores, tonos, estilo, negativas y solo-colores, y luego deduplica por ID/t\u00edtulo y topa a 6. Todo lo emitido es `exacta`.\n- src/lib/biblioteca-sempertex/biblioteca.ts \u2014 exporta `tituloComparable` y a\u00f1ade `formasTematicasEquivalentes`.\n- src/lib/ia/guiado/ideas-guiadas.ts \u2014 a\u00f1ade `ideasEstrictasDeCategoria` (lee `bibliotecaVisible()` en cada llamada; el g\u00e9nero de baby shower solo filtra dentro de los candidatos del evento).\n- scripts/test/test-recomendaciones-categoria.ts (nuevo) \u2014 fixtures controlados y anclajes AC1-AC4 sobre la biblioteca real.\n- scripts/test/test-ideas-boda-guiada.ts \u2014 reemplazada solo la secci\u00f3n 2 (relleno \"\u22653 + parecidas\") por aserciones estrictas. Fidelidad de tem\u00e1tica y foto/no-repetici\u00f3n intactas.\nVERIFICATION:\n- L\u00ednea base: el test nuevo fall\u00f3 (\"Cannot find module \u2026/categorias\") y el de boda modificado fall\u00f3 (\"ideasEstrictasDeCategoria is not a function\") \u2192 checks/t1-baseline-*.txt.\n- `node --import=tsx scripts/test/test-recomendaciones-categoria.ts` \u2192 exit 0.\n- `node --import=tsx scripts/test/test-ideas-boda-guiada.ts` \u2192 exit 0.\n- `node --import=tsx scripts/test/test-busqueda-biblioteca-sempertex.ts` \u2192 exit 0.\n- Extra: test-cambio-tematica-guiada, test-respuesta-guiada-sin-fracaso y test-pedido-ideas \u2192 exit 0.\n- `npm run lint` \u2192 exit 0, 50 warnings, ninguno en archivos T1 (checks/t1-lint-final.txt).\n- `npm run build --workspaces --if-present` \u2192 exit 0.\n- `npx tsc --noEmit` \u2192 exit 2, un solo error: `src/app/layout.tsx(26,50) TS2304 LayoutProps` (tipo generado por Next, archivo no tocado; pre-existente/del entorno aislado). Mis dos errores de tipos iniciales los correg\u00ed.\n- Salidas completas en /home/david/.local/tmp/req018-t1-live-6ml2566g/checks/.\nCOMMITS: none\nRULINGS:\n- No toqu\u00e9 `ideasGuiadas`: la ruta estricta es una funci\u00f3n aparte. Cambiarla romper\u00eda opciones y foto, que son otros consumidores.\n- \"oro rosa\" \u2260 \"dorado\" por s\u00ed solo, pero el registro real 13 (\"blanco y oro rosa\", tem\u00e1tica \"Rom\u00e1ntico rosa y dorado\") s\u00ed cumple blanco+dorado de forma literal. Con la biblioteca real, boda + blanco y dorado devuelve [13, 28]; lo dej\u00e9 as\u00ed en el test.\n- Los colores del mensaje y de la tem\u00e1tica guardada se suman (conjuntivo, regla 3). Del mensaje solo se leen colores, tonos, motivos reconocidos y negativas, no palabras sueltas como estilo.\n- No reescribo t\u00edtulos \"Cumplea\u00f1os\u2026\" a \"Fiesta\u2026\" (regla 4).\n- \"Amor y Amistad\" no es alias de San Valent\u00edn; coincide solo por su etiqueta literal.\nCONCERNS:\n- El g\u00e9nero solo se aplica en baby shower. En otros eventos las palabras de g\u00e9nero se ignoran porque los registros no tienen metadato de g\u00e9nero.\n- La precedencia del \u00faltimo mensaje sobre una tem\u00e1tica vieja (regla 7) y la detecci\u00f3n de negaci\u00f3n/ambig\u00fcedad en la frase de categor\u00eda son de T2. Aqu\u00ed solo hay una guarda: varias categor\u00edas en el texto devuelven vac\u00edo.\n- Las negativas se detectan por se\u00f1ales conservadoras (\"sin\", \"nada de\", \"no quiero\", \"no <color>\", \"evita\"), no por an\u00e1lisis de lenguaje natural.\n- El error de `LayoutProps` en `tsc` impide declarar el typecheck limpio hasta regenerar los tipos de Next (`next dev` o `next typegen`); no lo ejecut\u00e9 por estar fuera de alcance.\n- `package.json` sin tocar (T6). Los scripts T1 no est\u00e1n en `guiada:test`.\n```",
+  "usage": {
+    "input_tokens": 58,
+    "cache_creation_input_tokens": 147191,
+    "cache_read_input_tokens": 2866185,
+    "output_tokens": 53616,
+    "output_tokens_details": {
+      "thinking_tokens": 25782
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 147191,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1865,
+        "cache_read_input_tokens": 146739,
+        "cache_creation_input_tokens": 452,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 452
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "cost_usd": 1.4116584999999997
+}

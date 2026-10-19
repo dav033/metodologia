@@ -1,0 +1,37 @@
+[
+  {
+    "attempt": "att-0001",
+    "m3_state": "finished",
+    "native_launched": true,
+    "reported_model": "claude-sonnet-5-5",
+    "subtype": "success",
+    "is_error": false,
+    "num_turns": 8,
+    "duration_ms": 290376
+  },
+  {
+    "attempt": "att-0002",
+    "m3_state": "rejected",
+    "native_launched": false
+  },
+  {
+    "attempt": "att-0003",
+    "m3_state": "finished",
+    "native_launched": true,
+    "reported_model": "claude-sonnet-5-5",
+    "subtype": "success",
+    "is_error": false,
+    "num_turns": 20,
+    "duration_ms": 231790
+  },
+  {
+    "attempt": "att-0004",
+    "m3_state": "finished",
+    "native_launched": true,
+    "reported_model": "claude-sonnet-5-5",
+    "subtype": "success",
+    "is_error": false,
+    "num_turns": 15,
+    "duration_ms": 250672
+  }
+]

@@ -1,0 +1,91 @@
+diff --git a/m3-smoke/normalize-tags.mjs b/m3-smoke/normalize-tags.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..41b6f8f066a487fe9ad3e2b84180c34d027dcf0d
+--- /dev/null
++++ b/m3-smoke/normalize-tags.mjs
+@@ -0,0 +1,23 @@
++/**
++ * Normalizes a list of tags: trim, Unicode NFC, lowercase, drop empties,
++ * deduplicate preserving first-seen order. Never mutates the input.
++ *
++ * @param {string[]} values
++ * @returns {string[]}
++ * @throws {TypeError} when `values` is not an array of strings (sparse arrays included).
++ */
++export function normalizeTags(values) {
++  if (!Array.isArray(values)) {
++    throw new TypeError("normalizeTags expects an array of strings");
++  }
++
++  const seen = new Set();
++  for (let i = 0; i < values.length; i += 1) {
++    if (!(i in values) || typeof values[i] !== "string") {
++      throw new TypeError(`normalizeTags: element at index ${i} is not a string`);
++    }
++    const tag = values[i].trim().normalize("NFC").toLowerCase().normalize("NFC");
++    if (tag !== "") seen.add(tag);
++  }
++  return [...seen];
++}
+diff --git a/m3-smoke/normalize-tags.test.mjs b/m3-smoke/normalize-tags.test.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..7a44b5e4f5061f7a3b3f72df3596daa4c9b5ed19
+--- /dev/null
++++ b/m3-smoke/normalize-tags.test.mjs
+@@ -0,0 +1,56 @@
++import assert from "node:assert/strict";
++import { test } from "node:test";
++
++import { normalizeTags } from "./normalize-tags.mjs";
++
++test("trims and lowercases tags", () => {
++  assert.deepEqual(normalizeTags(["  Foo ", "BAR"]), ["foo", "bar"]);
++});
++
++test("normalizes Unicode to NFC", () => {
++  const decomposed = "Café";
++  const [tag] = normalizeTags([decomposed]);
++  assert.equal(tag, "café");
++  assert.equal(tag, tag.normalize("NFC"));
++});
++
++test("deduplicates canonically equivalent tags", () => {
++  assert.deepEqual(normalizeTags(["café", "CAFÉ"]), ["café"]);
++});
++
++test("discards empty and whitespace-only tags", () => {
++  assert.deepEqual(normalizeTags(["", "   ", "\t\n", "a"]), ["a"]);
++});
++
++test("deduplicates preserving first-seen order", () => {
++  assert.deepEqual(normalizeTags(["b", "A", "B", "a", "c"]), ["b", "a", "c"]);
++});
++
++test("returns an empty array for an empty input", () => {
++  assert.deepEqual(normalizeTags([]), []);
++});
++
++test("does not mutate the input and returns a new array", () => {
++  const input = [" A ", "a", ""];
++  const snapshot = [...input];
++  const result = normalizeTags(input);
++  assert.deepEqual(input, snapshot);
++  assert.notEqual(result, input);
++});
++
++test("throws TypeError when input is not an array", () => {
++  for (const bad of [undefined, null, "a", 1, {}, new Set(["a"]), { length: 0 }]) {
++    assert.throws(() => normalizeTags(bad), TypeError);
++  }
++});
++
++test("throws TypeError when any element is not a string", () => {
++  for (const bad of [1, null, undefined, {}, ["a"], Symbol("x"), new String("a")]) {
++    assert.throws(() => normalizeTags(["ok", bad]), TypeError);
++  }
++});
++
++test("throws TypeError for sparse arrays", () => {
++  // eslint-disable-next-line no-sparse-arrays
++  assert.throws(() => normalizeTags(["a", , "b"]), TypeError);
++});

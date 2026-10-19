@@ -1,0 +1,18 @@
+{
+  "plan_sha256": "70873adb64235c629a41b676dd8dfb066286e219bd0c505b7c33728f3832e54c",
+  "receipt": {
+    "base_sha": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723",
+    "target_tree": "63c6bf26559840627d032cecc0bab65ad6b05932",
+    "lineage": [
+      "candidate-t1",
+      "att-0003",
+      "att-0004",
+      "att-0005"
+    ],
+    "manifest_path": "/home/david/dev/metodologia/bitacora/pictures/.state/req018-full-mwvocojr/REQ-018-category-based-recommendations-of-assemb/EXECUTOR-r1-70873adb-1792355220173/attempts/att-0005-00f46831fa37eae0/handoff/manifest.json",
+    "manifest_sha256": "f3e2bb9ac0d0b8cc28ff494324eac140601048e5da2e086b6cb43d8b96e3d233"
+  },
+  "evidence_path": "/home/david/dev/metodologia/bitacora/pictures/.state/req018-full-mwvocojr/reviews/T1/evidence-att-0005.json",
+  "evidence_sha256": "4c6eb60ddaa756f666a790f312bef27182e42ece8d34fbfe4fdca05b518667da",
+  "replayed_tree": "63c6bf26559840627d032cecc0bab65ad6b05932"
+}

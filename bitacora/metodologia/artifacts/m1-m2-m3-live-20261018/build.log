@@ -1,0 +1,15 @@
+Building wheel...
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+    import setuptools.build_meta as backend
+ModuleNotFoundError: No module named 'setuptools'
+error: Failed to build `/home/david/dev/metodologia`
+  Caused by: The build backend returned an error
+  Caused by: Call to `setuptools.build_meta.build_wheel` failed (exit status: 1)
+
+hint: This error likely indicates that `bitacora@0.1.0` depends on `setuptools`, but doesn't declare it as a build dependency. If `bitacora` is a first-party package, consider adding `setuptools` to its `build-system.requires`. Otherwise, either add it to your `pyproject.toml` under:
+
+[tool.uv.extra-build-dependencies]
+bitacora = ["setuptools"]
+
+or `uv pip install setuptools` into the environment and re-run with `--no-build-isolation`.

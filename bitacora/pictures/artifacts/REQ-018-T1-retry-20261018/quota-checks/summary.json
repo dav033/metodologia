@@ -1,0 +1,224 @@
+{
+  "working_directory": "/home/david/dev/metodologia",
+  "checks": [
+    {
+      "name": "scheduler_quota_preflight",
+      "command": "python -m unittest discover -s skill/scripts/tests -p test_scheduler_quota_preflight.py",
+      "exit_code": 0,
+      "duration_seconds": 0.313,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "counts": {
+        "tests": 8,
+        "reported_test_duration_seconds": 0.011
+      },
+      "decisive_lines": [
+        "Ran 8 tests in 0.011s",
+        "OK"
+      ],
+      "stdout_log": "scheduler_quota_preflight.stdout.log",
+      "stderr_log": "scheduler_quota_preflight.stderr.log"
+    },
+    {
+      "name": "subscription_usage",
+      "command": "python -m unittest discover -s skill/scripts/tests -p test_subscription_usage.py",
+      "exit_code": 0,
+      "duration_seconds": 0.252,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "counts": {
+        "tests": 24,
+        "reported_test_duration_seconds": 0.075
+      },
+      "decisive_lines": [
+        "Ran 24 tests in 0.075s",
+        "OK"
+      ],
+      "stdout_log": "subscription_usage.stdout.log",
+      "stderr_log": "subscription_usage.stderr.log"
+    },
+    {
+      "name": "scheduler_decision_sources",
+      "command": "python -m unittest discover -s skill/scripts/tests -p test_scheduler_decision_sources.py",
+      "exit_code": 1,
+      "duration_seconds": 0.138,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "counts": {
+        "tests": 1,
+        "reported_test_duration_seconds": 0.0
+      },
+      "decisive_lines": [
+        "ERROR: test_scheduler_decision_sources (unittest.loader._FailedTest.test_scheduler_decision_sources)",
+        "Ran 1 test in 0.000s",
+        "FAILED (errors=1)"
+      ],
+      "stdout_log": "scheduler_decision_sources.stdout.log",
+      "stderr_log": "scheduler_decision_sources.stderr.log"
+    },
+    {
+      "name": "scheduler_decision_integration",
+      "command": "python -m unittest discover -s skill/scripts/tests -p test_scheduler_decision_integration.py",
+      "exit_code": 1,
+      "duration_seconds": 0.141,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "counts": {
+        "tests": 1,
+        "reported_test_duration_seconds": 0.0
+      },
+      "decisive_lines": [
+        "ERROR: test_scheduler_decision_integration (unittest.loader._FailedTest.test_scheduler_decision_integration)",
+        "Ran 1 test in 0.000s",
+        "FAILED (errors=1)"
+      ],
+      "stdout_log": "scheduler_decision_integration.stdout.log",
+      "stderr_log": "scheduler_decision_integration.stderr.log"
+    },
+    {
+      "name": "ruff_scoped",
+      "command": "ruff check skill/scripts/bt_scheduler_quota_preflight.py skill/scripts/tests/test_scheduler_quota_preflight.py",
+      "exit_code": 0,
+      "duration_seconds": 0.011,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "counts": {
+        "tests": null,
+        "reported_test_duration_seconds": null
+      },
+      "decisive_lines": [
+        "All checks passed!"
+      ],
+      "stdout_log": "ruff_scoped.stdout.log",
+      "stderr_log": "ruff_scoped.stderr.log"
+    },
+    {
+      "name": "scheduler_decision_sources_with_pythonpath",
+      "command": "PYTHONPATH=/home/david/dev/metodologia/skill/scripts python -m unittest discover -s skill/scripts/tests -p test_scheduler_decision_sources.py",
+      "exit_code": 0,
+      "duration_seconds": 1.275,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "counts": {
+        "tests": 14,
+        "reported_test_duration_seconds": 0.975
+      },
+      "decisive_lines": [
+        "Ran 14 tests in 0.975s",
+        "OK"
+      ],
+      "stdout_log": "scheduler_decision_sources_with_pythonpath.stdout.log",
+      "stderr_log": "scheduler_decision_sources_with_pythonpath.stderr.log"
+    },
+    {
+      "name": "scheduler_decision_integration_with_pythonpath",
+      "command": "PYTHONPATH=/home/david/dev/metodologia/skill/scripts python -m unittest discover -s skill/scripts/tests -p test_scheduler_decision_integration.py",
+      "exit_code": 1,
+      "duration_seconds": 2.891,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "counts": {
+        "tests": 15,
+        "reported_test_duration_seconds": 2.51
+      },
+      "decisive_lines": [
+        "FAIL: test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving",
+        "AssertionError: Items in the second set but not the first: antigravity, codex",
+        "Traceback: skill/scripts/tests/test_scheduler_decision_integration.py:398",
+        "Ran 15 tests in 2.510s",
+        "FAILED (failures=1)"
+      ],
+      "stdout_log": "scheduler_decision_integration_with_pythonpath.stdout.log",
+      "stderr_log": "scheduler_decision_integration_with_pythonpath.stderr.log"
+    },
+    {
+      "name": "uv_build_wheel_offline",
+      "command": "uv build --offline --wheel --out-dir /home/david/.local/tmp/req018-t1-retry-wbv54qd_/quota-checks/wheel",
+      "exit_code": 0,
+      "duration_seconds": 1.499,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "counts": {
+        "tests": null,
+        "reported_test_duration_seconds": null
+      },
+      "decisive_lines": [],
+      "stdout_log": "uv_build_wheel_offline.stdout.log",
+      "stderr_log": "uv_build_wheel_offline.stderr.log"
+    },
+    {
+      "name": "isolation_failing_test_current",
+      "command": "PYTHONPATH=/home/david/dev/metodologia/skill/scripts:/home/david/dev/metodologia/skill/scripts/tests python /home/david/.local/tmp/req018-t1-retry-wbv54qd_/quota-checks/isolate_failure.py current",
+      "exit_code": 1,
+      "duration_seconds": 0.587,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "counts": {
+        "tests": 1,
+        "reported_test_duration_seconds": 0.198
+      },
+      "decisive_lines": [
+        "FAIL: test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving (test_scheduler_decision_integration.DecisionAssignmentIntegration.test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving)",
+        "AssertionError: Items in the second set but not the first:",
+        "Ran 1 test in 0.198s",
+        "FAILED (failures=1)",
+        "ISOLATION_LABEL=current quota module",
+        "ISOLATION_TESTS_RUN=1",
+        "ISOLATION_FAILURES=1",
+        "ISOLATION_ERRORS=0"
+      ],
+      "stdout_log": "isolation_failing_test_current.stdout.log",
+      "stderr_log": "isolation_failing_test_current.stderr.log"
+    },
+    {
+      "name": "isolation_failing_test_head_function",
+      "command": "PYTHONPATH=/home/david/dev/metodologia/skill/scripts:/home/david/dev/metodologia/skill/scripts/tests python /home/david/.local/tmp/req018-t1-retry-wbv54qd_/quota-checks/isolate_failure.py head",
+      "exit_code": 1,
+      "duration_seconds": 0.6,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "counts": {
+        "tests": 1,
+        "reported_test_duration_seconds": 0.206
+      },
+      "decisive_lines": [
+        "FAIL: test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving (test_scheduler_decision_integration.DecisionAssignmentIntegration.test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving)",
+        "AssertionError: Items in the second set but not the first:",
+        "Ran 1 test in 0.206s",
+        "FAILED (failures=1)",
+        "ISOLATION_LABEL=HEAD quota refresh patched into memory",
+        "ISOLATION_TESTS_RUN=1",
+        "ISOLATION_FAILURES=1",
+        "ISOLATION_ERRORS=0"
+      ],
+      "stdout_log": "isolation_failing_test_head_function.stdout.log",
+      "stderr_log": "isolation_failing_test_head_function.stderr.log"
+    }
+  ],
+  "package_artifact_verification": {
+    "source": "skill/scripts/bt_scheduler_quota_preflight.py",
+    "wheel_file": "/home/david/.local/tmp/req018-t1-retry-wbv54qd_/quota-checks/wheel/bitacora-0.1.0-py3-none-any.whl",
+    "wheel_member": "bt_scheduler_quota_preflight.py",
+    "wheel_match": true,
+    "source_bytes": 5927,
+    "packaged_bytes": 5927
+  },
+  "failure_attribution": {
+    "scope": "one frozen REQ-017 integration test only; no suite expansion",
+    "same_assertion_current_and_head_function": true,
+    "preflight_is_mocked_inside_test": "test replaces bt_scheduler_adapter.refresh_quota_preflight with its quota fixture in the test context at test_scheduler_decision_integration.py:390",
+    "synthetic_candidate_generation": "synthetic_routes calls bt_agents.model_for(provider, tier, kind=kind), but decision routing then checks role-specific options via bt_scheduler_decision_adapter._route_options; bt_role_policy defaults contain no antigravity choices, and generic model_for models can differ from role choices.",
+    "interpretation": "failure is in the existing frozen integration fixture/policy expectation and is independent of the changed quota refresh implementation; no policy or assertion changed",
+    "same_assertion_evidence": {
+      "current": "The isolated test failed at test_scheduler_decision_integration.py:398; expected provider set contains codex and antigravity, actual set omits both.",
+      "head_function_patched_in_memory": "Same failure and assertion at line 398; 1 test run, 1 failure, 0 errors.",
+      "test_quota_fixture": "The test patches bt_scheduler_adapter.refresh_quota_preflight with a fixed quota dict at line 390, so bt_scheduler_quota_preflight.refresh does not run in either execution."
+    },
+    "synthetic_candidate_policy_diagnostic": {
+      "fixture_generation": "synthetic_routes calls bt_agents.model_for(provider, tier, kind=kind) for claude, codex, and antigravity.",
+      "role_policy": "The frozen plan tasks map to implementer, reviewer, and runner roles. Current role options include only claude/codex; none include antigravity.",
+      "model_mismatch": "For implementer/runner tasks, generic bt_agents.model_for yields codex gpt-6.1-sol, while role options allow gpt-6-luna; reviewer options do allow codex gpt-6.1-sol. Thus the fixture's generic candidates are not uniformly valid role-policy choices. This explains antigravity exclusion and invalid generic codex rows, though does not by itself establish why no codex route survives the reviewer task.",
+      "source_inspection_only": true
+    }
+  }
+}

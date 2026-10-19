@@ -1,0 +1,994 @@
+{
+  "schema_version": "1.2.0",
+  "plan_id": "REQ-018",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "interfaces": [
+    {
+      "consumer_tasks": [
+        "T2",
+        "T3",
+        "T4"
+      ],
+      "id": "IF-1",
+      "inputs": [
+        "Validated visible library records, customer category, optional explicit refinements, current catalogue event labels"
+      ],
+      "integration_criteria": [
+        "Category-only route and option queries call the same predicates",
+        "Thin/empty and new/modified-source cases retain their exact result membership through route integration"
+      ],
+      "integration_task": "T8",
+      "invariants": [
+        "Only current visible eligible records; no fixed ID/category whitelist or extra cache",
+        "Known category is required; absent refinements are unconstrained and supplied preferences are conjunctive",
+        "Source edits arrive through normal publication/build/deploy; injected successive inputs prove derivation, not runtime hot reload",
+        "Aliases equate only the same celebration; broad legacy affinity groups cannot introduce a cross-event match"
+      ],
+      "outputs": [
+        "Stable ordered actual design records, zero to six, with preserved identity and no approximate fill"
+      ],
+      "owner": "Guided-library matching domain (T1)",
+      "producer_task": "T1",
+      "title": "Strict category catalogue query"
+    },
+    {
+      "consumer_tasks": [
+        "T3",
+        "T4"
+      ],
+      "id": "IF-2",
+      "inputs": [
+        "Validated customer messages/partial brief and existing explicit action facts",
+        "Current validated visible catalogue through IF-1"
+      ],
+      "integration_criteria": [
+        "Actual route dispatch preserves all explicit-action branches and produces category-only data in the same response",
+        "Empty and matching outcomes are authoritative and cannot be replaced by model/generic fallback"
+      ],
+      "integration_task": "T8",
+      "invariants": [
+        "No plan/selection mutation and no provider calls",
+        "Latest affirmative unambiguous customer category beats stale brief; explicit action precedence wins over automatic discovery",
+        "Explicit unsupported category replacement never reuses stale category; resolved partial-brief snapshot retains unrelated confirmed fields"
+      ],
+      "outputs": [
+        "Suppressed, unknown/ambiguous, matching or empty outcome with reason, resolved partial-brief snapshot and actual design records"
+      ],
+      "owner": "Guided application turn policy (T2)",
+      "producer_task": "T2",
+      "title": "Read-only discovery turn outcome"
+    },
+    {
+      "consumer_tasks": [
+        "T4",
+        "T5"
+      ],
+      "id": "IF-3",
+      "inputs": [
+        "Typed IF-2 outcome and customer-visible category/preferences"
+      ],
+      "integration_criteria": [
+        "Handler uses deterministic discovery text before provider initialization",
+        "Sanitation/options and model-tool paths never turn empty into generic alternatives"
+      ],
+      "integration_task": "T8",
+      "invariants": [
+        "Stream chunks and final text agree on which designs exist",
+        "Suppressed turns preserve existing intentional flow text"
+      ],
+      "outputs": [
+        "Short matching or honest empty text; no automatic alternative/compulsory clarification for empty"
+      ],
+      "owner": "Guided response layer (T3)",
+      "producer_task": "T3",
+      "title": "Discovery response policy"
+    },
+    {
+      "consumer_tasks": [
+        "T5"
+      ],
+      "id": "IF-4",
+      "inputs": [
+        "Validated IF-2/IF-3 result and request/correlation IDs"
+      ],
+      "integration_criteria": [
+        "Real gallery receives zero/one/many actual records without copied sources",
+        "After empty result and reload/retry, ideasMostradas excludes older transcript candidates; old sessions remain readable"
+      ],
+      "integration_task": "T8",
+      "invariants": [
+        "No new wire/session fields or versions",
+        "Empty array persists as existing decoration widget boundary; missing field means no discovery update",
+        "Selected idea and plan unchanged until explicit existing actions",
+        "result.brief is the resolved validated partial snapshot, consistent with VistaGuiada setBrief replacement semantics"
+      ],
+      "outputs": [
+        "Existing texto/fin SSE; result.brief partial and result.decoraciones actual records or explicit []"
+      ],
+      "owner": "Guided API adapter (T4) and gallery state consumer (T5)",
+      "producer_task": "T4",
+      "title": "Existing v1 SSE and gallery empty boundary"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Strict matching and turn policy",
+      "acceptance_criteria": [
+        "Category-only queries return only complete eligible matches, with no padding and with source-derived additions/modifications reflected in controlled inputs.",
+        "Turn precedence and partial-brief decisions pass deterministic positive, negative and existing-plan cases without effects."
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Guided response and API integration",
+      "acceptance_criteria": [
+        "Actual validated SSE publishes same-turn strict matching or honest empty data with category alone.",
+        "Stream/final text, tools, browse/photo-suggestion branches and sanitation cannot reintroduce generic alternatives or intercept explicit actions."
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Gallery compatibility and verification",
+      "acceptance_criteria": [
+        "Live and restored gallery preserve authoritative identity, an explicit empty boundary and the selected idea/current plan without new session fields.",
+        "Producer tests and separate package registration exist; command execution records actual outcomes without repairs or acceptance judgment.",
+        "A distinct audit responsibility evaluates R1-R6, AC1-AC9 and IF-1..IF-4 against observed evidence, reporting any failure or blocker without owner approval."
+      ]
+    }
+  ],
+  "requirements": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6"
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Strict catalogue matching",
+      "objective": "Return only complete visible ideas satisfying category and explicit refinements, derived from the authoritative catalogue without padding or copied IDs. Follow SPEC Matching and decision contract and the task details in PLAN.md; checks are future implementation work.",
+      "repository": "pictures",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 140,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Uncalibrated engineering estimate: 25 minutes trace/extract shared category logic, 65 implement strict predicates/adapter, 50 controlled tests and focused regression. Queried history has unknown comparable durations/sample count; no historical median or execution budget inferred.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/lib/biblioteca-sempertex/biblioteca.ts",
+            "file:src/lib/ia/guiado/ideas-guiadas.ts"
+          ],
+          "justification": "Strict matching needs several conjunctive predicates and genuine event aliases, but SPEC fixes the algorithm and existing pure fixtures bound the decisions; high would require unresolved state or integration ownership that belongs to T2/T4."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/lib/biblioteca-sempertex/esquemas.ts",
+            "file:scripts/test/test-ideas-boda-guiada.ts"
+          ],
+          "justification": "Matching changes stay inside the guided library and its focused idea adapter and tests; the broader legacy search remains compatible."
+        },
+        "duration": {
+          "evidence": [
+            "file:scripts/test/test-busqueda-biblioteca-sempertex.ts",
+            "file:scripts/test/test-ideas-boda-guiada.ts",
+            "spec:SPEC.md#matching-and-decision-contract"
+          ],
+          "justification": "The matching work estimate includes shared-helper extraction, strict predicates and controlled successive-catalogue cases; existing search scripts provide the test harness."
+        },
+        "risk": {
+          "evidence": [
+            "file:src/lib/ia/guiado/ideas-guiadas.ts",
+            "spec:SPEC.md#acceptance-cases"
+          ],
+          "justification": "An incorrect matching predicate shows unrelated existing designs but does not itself mutate plans or prices; regression assertions expose that impact."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T3"
+          ],
+          "justification": "The strict-category-matching contract supplies turn policy and response option validation in dependent tasks."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/lib/biblioteca-sempertex/esquemas.ts",
+            "command:node --import=tsx scripts/test/test-ideas-boda-guiada.ts -> exit 0 legacy baseline re-executed during v2 planning; not strict acceptance"
+          ],
+          "justification": "Catalogue schemas, matchers and both focused baseline scripts were inspected and executed; stricter preference interpretation remains an uncalibrated estimate."
+        }
+      },
+      "expected_paths": [
+        "src/lib/biblioteca-sempertex/categorias.ts",
+        "src/lib/biblioteca-sempertex/recomendaciones-categoria.ts",
+        "src/lib/biblioteca-sempertex/biblioteca.ts",
+        "src/lib/ia/guiado/ideas-guiadas.ts",
+        "scripts/test/test-recomendaciones-categoria.ts",
+        "scripts/test/test-ideas-boda-guiada.ts"
+      ],
+      "shared_resources": [
+        "strict-category-matching"
+      ],
+      "acceptance_criteria": [
+        "Controlled matcher tests pass for category-only, all positive and negative explicit preferences, unknown theme, sparse/empty, identity, motif, tone/age/gender and successive source additions/modifications without fixed IDs or cross-celebration aliases.",
+        "Wedding regression passes with only matching designs while literal customer-theme fidelity and independent photo helper invariants remain covered.",
+        "Existing lower-level legacy search regression passes for other consumers without becoming a fallback for active-category recommendations."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-recomendaciones-categoria.ts",
+          "purpose": "Controlled matcher tests pass for category-only, all positive and negative explicit preferences, unknown theme, sparse/empty, identity, motif, tone/age/gender and successive source additions/modifications without fixed IDs or cross-celebration aliases.",
+          "created_by": "T1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-ideas-boda-guiada.ts",
+          "purpose": "Wedding regression passes with only matching designs while literal customer-theme fidelity and independent photo helper invariants remain covered.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-busqueda-biblioteca-sempertex.ts",
+          "purpose": "Existing lower-level legacy search regression passes for other consumers without becoming a fallback for active-category recommendations.",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Discovery turn decisions",
+      "objective": "Resolve category discovery and partial brief changes without intercepting explicit customer actions or modifying selected designs and plans. Follow SPEC Matching and decision contract and the task details in PLAN.md; checks are future implementation work.",
+      "repository": "pictures",
+      "after": [
+        "T1"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Uncalibrated estimate: 25 minutes trace existing intent facts, 50 implement the pure decision table, 45 precedence/negative-input tests. History returned unknown comparable duration and sample count; no statistical projection claimed.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:src/lib/ia/guiado/hechos-cliente.ts"
+          ],
+          "justification": "Turn decisions cross explicit actions, stale category replacement, negation and full partial-brief snapshots; medium understates precedence across consumers, while extreme would require unresolved architecture or migration absent here."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/lib/ia/contracts/asistente-guiado-v1.ts",
+            "spec:SPEC.md#matching-and-decision-contract"
+          ],
+          "justification": "The turn policy is one new pure use case plus a focused test script consuming existing facts and matching output."
+        },
+        "duration": {
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:scripts/test/test-asistente-guiado-contrato.ts"
+          ],
+          "justification": "Turn precedence needs an explicit branch matrix and negative cases after tracing the route guards; existing contract tests supply input fixtures."
+        },
+        "risk": {
+          "evidence": [
+            "file:src/lib/ia/guiado/edicion-plan-chat.ts",
+            "spec:SPEC.md#acceptance-cases"
+          ],
+          "justification": "Wrong turn routing can interrupt edits or explicit selection; the use case is read-only and downstream integration must preserve action guards."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3",
+            "task:T4"
+          ],
+          "justification": "The discovery-turn-outcome interface is consumed by response formatting and route dispatch with a common precedence contract."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:src/lib/ia/guiado/hechos-cliente.ts"
+          ],
+          "justification": "Existing route guards and customer fact extraction were inspected, while the new decision matrix has no comparable execution history."
+        }
+      },
+      "expected_paths": [
+        "src/lib/ia/guiado/turno-recomendaciones.ts",
+        "scripts/test/test-turno-recomendaciones.ts"
+      ],
+      "shared_resources": [
+        "discovery-turn-outcome"
+      ],
+      "acceptance_criteria": [
+        "Turn tests pass for explicit-action precedence, category-only brief, latest affirmative or unsupported replacement, negation/ambiguity, retained and removed preferences, complete resolved partial snapshot and immutable plan/selection with zero effect calls.",
+        "Existing v1 request tests accept partial briefs and retain deliberate invalid-input and explicit-action validation."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-turno-recomendaciones.ts",
+          "purpose": "Turn tests pass for explicit-action precedence, category-only brief, latest affirmative or unsupported replacement, negation/ambiguity, retained and removed preferences, complete resolved partial snapshot and immutable plan/selection with zero effect calls.",
+          "created_by": "T2",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-asistente-guiado-contrato.ts",
+          "purpose": "Existing v1 request tests accept partial briefs and retain deliberate invalid-input and explicit-action validation.",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R3",
+        "R5"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Honest matching and empty responses",
+      "objective": "Make presentation and instruction rules consume the discovery outcome without generating padded alternatives or compulsory clarification. Follow SPEC Matching and decision contract and the task details in PLAN.md; checks are future implementation work.",
+      "repository": "pictures",
+      "after": [
+        "T2"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 160,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 160 minutes: 35 trace stream/context transitions, 45 align response policy and instructions, 80 author fragmented-stream and conflicting-regression cases and run focused checks. Existing comparable history remains unknown; this is an engineering decomposition, not measured calibration.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/lib/ia/guiado/respuesta-guiada.ts",
+            "file:src/lib/ia/guiado/prompt-guiado.ts"
+          ],
+          "justification": "Response decisions span pending streamed sentences, late tool outcomes, option substitution and final sanitation; medium understates these interacting paths, while extreme is unwarranted with existing framing and a fixed typed outcome."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/lib/ia/guiado/opciones-catalogo.ts",
+            "file:scripts/test/test-respuesta-guiada-sin-fracaso.ts"
+          ],
+          "justification": "Presentation rules and focused regression scripts change within the guided response layer without introducing a new wire schema."
+        },
+        "duration": {
+          "evidence": [
+            "file:scripts/test/test-cambio-tematica-guiada.ts",
+            "file:scripts/test/test-opciones-catalogo-guiado.ts"
+          ],
+          "justification": "Response work includes changing stream and final handling plus authoring split-option and late-outcome cases; existing tests establish only a harness, not those future behaviors."
+        },
+        "risk": {
+          "evidence": [
+            "file:src/lib/ia/guiado/respuesta-guiada.ts",
+            "spec:SPEC.md#matching-and-decision-contract"
+          ],
+          "justification": "The response layer can hide empty outcomes or force misleading style alternatives; explicit plan instructions must remain untouched by discovery sanitation."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T4",
+            "file:src/lib/ia/guiado/respuesta-guiada.ts"
+          ],
+          "justification": "The discovery-response-policy crosses T2 outcome timing and T4 stream dispatch; both must preserve the same resolved matching and empty result."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/lib/ia/guiado/respuesta-guiada.ts",
+            "file:scripts/test/test-respuesta-guiada-sin-fracaso.ts"
+          ],
+          "justification": "Both sanitation implementations and their existing deterministic tests were inspected; new strict stream cases have not been implemented."
+        }
+      },
+      "expected_paths": [
+        "src/lib/ia/guiado/respuesta-recomendaciones.ts",
+        "src/lib/ia/guiado/respuesta-guiada.ts",
+        "src/lib/ia/guiado/prompt-guiado.ts",
+        "src/lib/ia/guiado/opciones-catalogo.ts",
+        "scripts/test/test-respuesta-recomendaciones.ts",
+        "scripts/test/test-respuesta-guiada-sin-fracaso.ts",
+        "scripts/test/test-cambio-tematica-guiada.ts",
+        "scripts/test/test-opciones-catalogo-guiado.ts"
+      ],
+      "shared_resources": [
+        "discovery-response-policy"
+      ],
+      "acceptance_criteria": [
+        "Response tests pass for matching/empty, fragmented chunks, options split across chunks and outcome updates after tool completion; streamed and final claims agree without padding, compulsory questions or changed suppressed-action text.",
+        "Response regressions pass with strict honest-empty assertions replacing category fallback assertions while unrelated flow safeguards remain covered.",
+        "Theme-change regressions pass without typical-colour suggestions for an absent theme and preserve literal customer preferences.",
+        "Option regressions pass without generic category fill while unrelated age/city/flow options remain unchanged."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-respuesta-recomendaciones.ts",
+          "purpose": "Response tests pass for matching/empty, fragmented chunks, options split across chunks and outcome updates after tool completion; streamed and final claims agree without padding, compulsory questions or changed suppressed-action text.",
+          "created_by": "T3",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-respuesta-guiada-sin-fracaso.ts",
+          "purpose": "Response regressions pass with strict honest-empty assertions replacing category fallback assertions while unrelated flow safeguards remain covered.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-cambio-tematica-guiada.ts",
+          "purpose": "Theme-change regressions pass without typical-colour suggestions for an absent theme and preserve literal customer preferences.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-opciones-catalogo-guiado.ts",
+          "purpose": "Option regressions pass without generic category fill while unrelated age/city/flow options remain unchanged.",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R3",
+        "R5",
+        "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Integrate category discovery into the guided API",
+      "objective": "Publish authoritative matching or empty outcomes through the existing SSE/tool contracts while preserving validation and intentional plan actions. Follow SPEC Matching and decision contract and the task details in PLAN.md; checks are future implementation work.",
+      "repository": "pictures",
+      "after": [
+        "T3"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 180 minutes: 35 trace all entry/fallback guards, 65 wire partial brief and rule-only SSE, 80 build actual-handler controlled doubles and execute route/action cases. Existing seams bound feasibility; comparable history is unknown and no route harness is credited as already built.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:src/lib/ia/guiado/pedido-ideas.ts"
+          ],
+          "justification": "Route discovery crosses tool validation, provider setup, browse/photo paths and validated SSE; medium misses integration and harness work, while extreme is unwarranted because existing request and event contracts remain fixed."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:src/lib/ia/contracts/asistente-guiado-v1.ts"
+          ],
+          "justification": "API integration changes several existing entry and fallback branches plus an executable route harness, beyond a localized predicate edit."
+        },
+        "duration": {
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:scripts/test/test-asistente-guiado-contrato.ts"
+          ],
+          "justification": "Route integration needs branch tracing and controlled SSE execution as well as edits; existing rule-only SSE and request validation provide reusable seams."
+        },
+        "risk": {
+          "evidence": [
+            "file:src/lib/ia/contracts/asistente-guiado-v1.ts",
+            "file:scripts/test/test-edicion-plan-chat-guiada.ts"
+          ],
+          "justification": "A wrong adapter can publish stale ideas or intercept plan actions; preserving wire schemas and guarded effects bounds migration risk."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2",
+            "task:T3",
+            "task:T5"
+          ],
+          "justification": "The guided-recommendation-sse-v1 result combines strict domain outcomes and presentation, then feeds gallery handling in T5."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:src/lib/ia/guiado/pedido-ideas.ts"
+          ],
+          "justification": "The actual request, tool, browse and SSE code was inspected, but the new no-provider route harness is still planned."
+        }
+      },
+      "expected_paths": [
+        "src/app/api/asistente-guiado/route.ts",
+        "src/lib/ia/guiado/pedido-ideas.ts",
+        "scripts/test/test-ruta-recomendaciones-categoria.ts"
+      ],
+      "shared_resources": [
+        "guided-recommendation-sse-v1"
+      ],
+      "acceptance_criteria": [
+        "Actual-handler tests pass for same-turn category-only/empty SSE, authoritative source updates, tool/browse/photo-suggestion strictness, partial brief, invalid inputs and explicit-action suppression with zero external discovery calls.",
+        "Existing v1 contract tests pass with no new wire field/version or weakening of complete-brief validation.",
+        "Existing plan edit and explicit idea-selection regressions pass without browsing side effects."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "node --conditions=react-server --import=tsx scripts/test/test-ruta-recomendaciones-categoria.ts",
+          "purpose": "Actual-handler tests pass for same-turn category-only/empty SSE, authoritative source updates, tool/browse/photo-suggestion strictness, partial brief, invalid inputs and explicit-action suppression with zero external discovery calls.",
+          "created_by": "T4",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-asistente-guiado-contrato.ts",
+          "purpose": "Existing v1 contract tests pass with no new wire field/version or weakening of complete-brief validation.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-edicion-plan-chat-guiada.ts",
+          "purpose": "Existing plan edit and explicit idea-selection regressions pass without browsing side effects.",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M3",
+      "title": "Preserve gallery identity and empty-turn selection",
+      "objective": "Render strict current recommendations in the existing gallery and prevent an empty turn from reactivating older suggestions while retaining the selected design and plan. Follow SPEC Matching and decision contract and the task details in PLAN.md; checks are future implementation work.",
+      "repository": "pictures",
+      "after": [
+        "T4"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 220,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 220 minutes: 45 implement and trace active/persisted state, 45 author full-view fixture and network doubles, 95 author/run browser transitions, 35 saved-session compatibility regressions. In-memory full-view bundling succeeded and system Chromium exists; launch and lifecycle tests remain unverified work. Comparable history is unknown.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/guiado/VistaGuiada.tsx",
+            "file:src/components/guiado/CarruselDecoraciones.tsx"
+          ],
+          "justification": "Gallery changes cross live SSE, active textual selection, persisted empty widgets, hydration and retry with a new full-view browser harness; medium understates state and verification work, while extreme would imply migration or new architecture absent here."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/guiado/estado-guardado.ts",
+            "file:src/lib/ia/guiado/widgets.ts"
+          ],
+          "justification": "The existing guided view and carousel receive a bounded state fix plus a local browser fixture, without a new screen or wire format."
+        },
+        "duration": {
+          "evidence": [
+            "file:scripts/test/test-hoja-armado-ui.ts",
+            "file:scripts/test/fixtures/hoja-armado-ui/arnes.tsx"
+          ],
+          "justification": "Gallery time includes constructing the missing full-view harness, intercepted SSE and session fixtures, not just running a pre-existing browser suite; static bundling establishes a bounded construction path."
+        },
+        "risk": {
+          "evidence": [
+            "file:src/components/guiado/VistaGuiada.tsx",
+            "file:src/components/guiado/estado-guardado.ts"
+          ],
+          "justification": "Empty discovery currently leaves older ideas available to textual selection; the persisted empty widget must avoid losing a selected design or plan."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4",
+            "task:T8",
+            "file:src/lib/ia/guiado/widgets.ts"
+          ],
+          "justification": "The guided-recommendation-sse-v1 and guided-session-widgets contracts couple T4 data to active selection and restored transcript behavior, then T8 reviews integration evidence."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/guiado/VistaGuiada.tsx",
+            "file:scripts/test/test-hoja-armado-ui.ts",
+            "file:src/components/guiado/estado-guardado.ts",
+            "assumption:System Chromium can launch under the later execution environment; report blocked if it cannot"
+          ],
+          "justification": "The actual full view bundled in memory, system Chromium exists and session schemas were inspected; browser launch and complete lifecycle cases remain unverified, so estimate confidence stays medium."
+        }
+      },
+      "expected_paths": [
+        "src/components/guiado/VistaGuiada.tsx",
+        "src/components/guiado/CarruselDecoraciones.tsx",
+        "scripts/test/test-ui-recomendaciones-categoria.ts",
+        "scripts/test/fixtures/recomendaciones-categoria-ui/arnes.tsx"
+      ],
+      "shared_resources": [
+        "guided-recommendation-sse-v1",
+        "guided-session-widgets"
+      ],
+      "acceptance_criteria": [
+        "Controlled full-view browser tests pass at desktop/narrow widths for zero/one/many identities, keyboard/button choice, absent versus empty updates, persisted empty widgets, next-request ideasMostradas and retry/restore with unchanged plan/selection and blocked unexpected network.",
+        "Existing saved-session regression passes with old sessions and explicit-action restoration intact."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium node --import=tsx scripts/test/test-ui-recomendaciones-categoria.ts",
+          "purpose": "Controlled full-view browser tests pass at desktop/narrow widths for zero/one/many identities, keyboard/button choice, absent versus empty updates, persisted empty widgets, next-request ideasMostradas and retry/restore with unchanged plan/selection and blocked unexpected network.",
+          "created_by": "T5",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "node --import=tsx scripts/test/test-sesion-guardada-accion-idea.ts",
+          "purpose": "Existing saved-session regression passes with old sessions and explicit-action restoration intact.",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R5",
+        "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M3",
+      "title": "Register category regression commands",
+      "objective": "Expose already authored category tests through existing package workflows without changing their assertions or runtime behavior.",
+      "repository": "pictures",
+      "after": [
+        "T5"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 25,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 25 minutes: 10 inspect current dirty package scripts, 10 add existing test commands, 5 validate command registration and diff. Newly queried low implement history returned unknown; no measured duration is inferred.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:package.json",
+            "task:T5"
+          ],
+          "justification": "Registration is additive wiring of known commands, so low fits; medium would require designing tests or diagnosing behavior, explicitly owned by T1-T5."
+        },
+        "scope": {
+          "evidence": [
+            "file:package.json"
+          ],
+          "justification": "Registration changes only the existing package script map and preserves unrelated dirty package entries."
+        },
+        "duration": {
+          "evidence": [
+            "file:package.json",
+            "task:T4",
+            "task:T5"
+          ],
+          "justification": "Registration time covers inspecting the actual scripts and adding known producer commands with a static assertion."
+        },
+        "risk": {
+          "evidence": [
+            "file:package.json"
+          ],
+          "justification": "Registration errors fail local checks and are reversible without changing production matching or session contracts."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1",
+            "task:T4",
+            "task:T5",
+            "task:T7"
+          ],
+          "justification": "The guided-test-registration resource consumes commands authored by T1-T5 before T7 executes the registered suites."
+        },
+        "confidence": {
+          "evidence": [
+            "file:package.json",
+            "file:scripts/test/test-hoja-armado-ui.ts"
+          ],
+          "justification": "Existing package commands and React conditions were inspected; new registrations depend on producer output and lack comparable history."
+        }
+      },
+      "expected_paths": [
+        "package.json"
+      ],
+      "shared_resources": [
+        "guided-test-registration"
+      ],
+      "acceptance_criteria": [
+        "Package registration adds T1-T4 new and affected existing deterministic scripts to guiada:test and a separate provider-free guiada:test-recomendaciones-ui entry for T5, preserving existing entries and required React conditions."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "node -e \"const p=require('./package.json'); for(const n of ['test-recomendaciones-categoria.ts','test-turno-recomendaciones.ts','test-respuesta-recomendaciones.ts','test-ruta-recomendaciones-categoria.ts','test-ideas-boda-guiada.ts','test-busqueda-biblioteca-sempertex.ts','test-respuesta-guiada-sin-fracaso.ts','test-cambio-tematica-guiada.ts','test-opciones-catalogo-guiado.ts','test-asistente-guiado-contrato.ts']) if(!p.scripts['guiada:test'].includes(n)) throw Error(n); if(p.scripts['guiada:test-recomendaciones-ui']!=='node --import=tsx scripts/test/test-ui-recomendaciones-categoria.ts') throw Error('UI script mismatch')\"",
+          "purpose": "Package registration adds T1-T4 new and affected existing deterministic scripts to guiada:test and a separate provider-free guiada:test-recomendaciones-ui entry for T5, preserving existing entries and required React conditions.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M3",
+      "title": "Run established verification commands",
+      "objective": "Return actual command exit codes, relevant warnings and exact failures or environment blockers for T8 to interpret; do not edit, diagnose causes, repair or approve acceptance.",
+      "repository": "pictures",
+      "after": [
+        "T6"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 90 minutes for sequential established suites/builds and concise outcomes. No repair or triage allowance is hidden here. Newly queried low test history returned unknown; run duration remains environment-dependent and uncalibrated.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:package.json",
+            "task:T8"
+          ],
+          "justification": "Runner executes specified commands and reports outcomes; low fits, while medium would require diagnosis or cross-contract judgment explicitly assigned to producers and T8."
+        },
+        "scope": {
+          "evidence": [
+            "file:package.json",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Command execution produces a bounded report of exit codes and diagnostics and owns no source changes."
+        },
+        "duration": {
+          "evidence": [
+            "file:package.json",
+            "task:T6"
+          ],
+          "justification": "Execution time allows workspace builds, types and guided/browser suites; machine-dependent durations have no verified comparable samples."
+        },
+        "risk": {
+          "evidence": [
+            "file:package.json",
+            "spec:SPEC.md#out-of-scope"
+          ],
+          "justification": "Read-only verification may fail or be blocked but cannot change acceptance rules, source code or deployment state."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "task:T8"
+          ],
+          "justification": "The verification-results report consumes guided-test-registration from T6 and supplies observed command evidence to T8."
+        },
+        "confidence": {
+          "evidence": [
+            "file:package.json",
+            "task:T4",
+            "task:T6"
+          ],
+          "justification": "Commands exist in the package or have explicit producer tasks; future suite duration and browser launch remain unmeasured."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "guided-test-registration",
+        "verification-results"
+      ],
+      "acceptance_criteria": [
+        "Lint command outcome is recorded with exit code and relevant diagnostics.",
+        "Workspace build command outcomes are recorded before application types.",
+        "Application type-check outcome is recorded with exact failures.",
+        "Registered guided regression outcome is recorded including the new deterministic cases.",
+        "Actual-handler SSE integration outcome is recorded without live providers.",
+        "Controlled browser integration outcome is recorded or explicitly blocked by environment.",
+        "Application build outcome is recorded without deployment or runtime changes.",
+        "Whitespace-check outcome is recorded without any Git mutation."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "Lint command outcome is recorded with exit code and relevant diagnostics.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "Workspace build command outcomes are recorded before application types.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "Application type-check outcome is recorded with exact failures.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run guiada:test",
+          "purpose": "Registered guided regression outcome is recorded including the new deterministic cases.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "node --conditions=react-server --import=tsx scripts/test/test-ruta-recomendaciones-categoria.ts",
+          "purpose": "Actual-handler SSE integration outcome is recorded without live providers.",
+          "created_by": "T4",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run guiada:test-recomendaciones-ui",
+          "purpose": "Controlled browser integration outcome is recorded or explicitly blocked by environment.",
+          "created_by": "T6",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "Application build outcome is recorded without deployment or runtime changes.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "git diff --check",
+          "purpose": "Whitespace-check outcome is recorded without any Git mutation.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M3",
+      "title": "Review integration and product acceptance evidence",
+      "objective": "Independently of implementation responsibility, interpret the final diff and T7 evidence against SPEC and all declared interfaces; report acceptance findings without editing, fixing, approving the plan or launching work.",
+      "repository": "pictures",
+      "after": [
+        "T7"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 75 minutes: 35 integration contract/evidence tracing, 25 acceptance and viewport/interaction review, 15 findings and coverage report. Newly queried audit history remains unknown; no measured quality or duration claimed.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "file:src/components/guiado/VistaGuiada.tsx",
+            "task:T7"
+          ],
+          "justification": "Acceptance requires reconciling domain matching, streaming, persisted UI and actual evidence; high fits over medium, while extreme would need unresolved architecture or product rules not present in SPEC."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#scope-in",
+            "task:T7"
+          ],
+          "justification": "Review covers this bounded category slice through documented evidence and diffs without authoring code, tests or a broader product audit."
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md#acceptance-cases",
+            "task:T7"
+          ],
+          "justification": "Review time includes tracing four interfaces and nine acceptance cases, interpreting command failures and recording unresolved evidence."
+        },
+        "risk": {
+          "evidence": [
+            "file:src/components/guiado/estado-guardado.ts",
+            "spec:SPEC.md#matching-and-decision-contract"
+          ],
+          "justification": "An incorrect acceptance judgment could miss stale selection or padded results; explicit failed and blocked criteria prevent false completion."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1",
+            "task:T2",
+            "task:T3",
+            "task:T4",
+            "task:T5",
+            "task:T7"
+          ],
+          "justification": "Review consumes verification-results and every declared interface from T1-T5; its integration ownership is distinct from their implementation consumer roles."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/lib/ia/guiado/widgets.ts",
+            "spec:SPEC.md#acceptance-cases"
+          ],
+          "justification": "Normative acceptance cases and real consumer paths were inspected; final implementation and observed results do not exist yet."
+        }
+      },
+      "expected_paths": [],
+      "shared_resources": [
+        "strict-category-matching",
+        "discovery-turn-outcome",
+        "discovery-response-policy",
+        "guided-recommendation-sse-v1",
+        "guided-session-widgets",
+        "verification-results"
+      ],
+      "acceptance_criteria": [
+        "Integration review traces IF-1 through IF-4 across actual producer/consumer diffs and command evidence, with each criterion accepted, failed or blocked and missing evidence explicit.",
+        "Product review traces R1-R6 and AC1-AC9 to observed behavior including desktop/narrow keyboard use, strict empty/source lifecycle and unchanged explicit actions, plan, selection and old sessions; scope and compatibility findings remain explicit."
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "Inspect IF-1..IF-4 producer and consumer diffs alongside actual SSE/browser evidence from T7",
+          "purpose": "Integration review traces IF-1 through IF-4 across actual producer/consumer diffs and command evidence, with each criterion accepted, failed or blocked and missing evidence explicit.",
+          "expected": "Every declared integration criterion has observed supporting evidence or an explicit failure/blocker; suite success alone does not establish integration acceptance.",
+          "category": "integration"
+        },
+        {
+          "type": "manual",
+          "value": "Review SPEC AC1-AC9 evidence, desktop/narrow browser behavior and scoped diff for R1-R6",
+          "purpose": "Product review traces R1-R6 and AC1-AC9 to observed behavior including desktop/narrow keyboard use, strict empty/source lifecycle and unchanged explicit actions, plan, selection and old sessions; scope and compatibility findings remain explicit.",
+          "expected": "Only actual matches; source-driven updates via normal publication; no stale active cards, silent plan/selection changes, new cache/DTO, hidden paid calls or REQ-017 imports. Report unmet criteria; review does not grant owner approval.",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6"
+      ],
+      "kind": "audit"
+    }
+  ]
+}

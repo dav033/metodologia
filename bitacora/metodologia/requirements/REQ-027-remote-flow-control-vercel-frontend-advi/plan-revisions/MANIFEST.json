@@ -1,0 +1,19 @@
+{
+ "schema": 1,
+ "revisions": [
+  {
+   "revision": 1,
+   "sha256": "566e1b2874d9cf32840cef4c1a33dca1a44809cb6707ba8e9b06f5b9e6cf2459",
+   "frozen_at": "2026-10-19T14:45:46",
+   "source": "approval",
+   "plan_md_sha256": "303838570994bfce0c5b4ba1c0e438488117c67efca619a16ac8d1d42cb3ec79"
+  },
+  {
+   "revision": 2,
+   "sha256": "0a285bc2ff981e51ceeb72b7b509dda7dd553b0a43d8ebce42fda3f909f0d4d3",
+   "frozen_at": "2026-10-19T14:57:37",
+   "source": "approval",
+   "plan_md_sha256": "e8e1ac91f411d236f6850f2806d51e6d8ba783c9f9d513d9a6a0195a7c8ac9f8"
+  }
+ ]
+}

@@ -1,0 +1,35 @@
+{
+  "req_id": "REQ-024",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-024-planner-v2-quality-and-benchmark",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "PLAN.json",
+    "plan-revisions"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-024-planner-v2-quality-and-benchmark/PLAN.md",
+      "sha256": "f4f89b47a612cd731d3b434ef2d529af9700d35c5feccd7fe260ea9d8b9a40e3"
+    },
+    {
+      "path": "PLAN.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-024-planner-v2-quality-and-benchmark/PLAN.json",
+      "sha256": "9c8d1b6955625d859ba6f35cb572fa15d97e243cd7cf8bbca9bfa3bb92846bcf"
+    },
+    {
+      "path": "plan-revisions/MANIFEST.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-024-planner-v2-quality-and-benchmark/plan-revisions/MANIFEST.json",
+      "sha256": "a9f799e53ccb9ff1f4d9dfe4ce9bd27a2819d67f8af1c96d6c6edcd2744089ff"
+    },
+    {
+      "path": "plan-revisions/PLAN.r1.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-024-planner-v2-quality-and-benchmark/plan-revisions/PLAN.r1.json",
+      "sha256": "5b9f9f35b173111d91eac02ebd43f71ded2951380ff4936821737f67632f31de"
+    }
+  ]
+}

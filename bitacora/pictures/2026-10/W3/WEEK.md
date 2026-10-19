@@ -37,3 +37,5 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 - REQ-018 owner choices recorded; Sol high/codex-luis produced3-milestone/6-task schema1.2 draft. Canonical check/report pass with9 explicit warnings; awaiting plan review for isolated Scheduler simulation, no implementation.
 
 - Owner-scoped REQ-018 real-plan simulation complete: two isolated M1/M2 runs,6 tasks each; all route/dependency assertions passed. Canonical plan remains draft, no implementation authorization. Evidence persisted in artifacts/REQ-018-m1m2-simulation/.
+
+- D-073 Planner responsibility/calibration repair validated by Pictures REQ-018 v2 (8 tasks), canonical check/report and two independent review axes. Previous draft preserved. One pre-existing profile check failure P-119; no new-plan execution or Git mutations.

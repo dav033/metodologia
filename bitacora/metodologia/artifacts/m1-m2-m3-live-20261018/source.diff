@@ -1,0 +1,410 @@
+diff --git a/skill/scripts/bt_scheduler_executor/README.md b/skill/scripts/bt_scheduler_executor/README.md
+index 57b0c9e..a06b9b0 100644
+--- a/skill/scripts/bt_scheduler_executor/README.md
++++ b/skill/scripts/bt_scheduler_executor/README.md
+@@ -117,6 +117,15 @@ commit (`refs/m3/handoff/<dirname>`; HEAD pinned at `refs/m3/head/<dirname>`; ig
+ "dirty only", "both" and "nothing" are all distinguished (`empty: true`). `continue.md` is a plain-text brief for a *different*
+ agent or a human: **no agent reasoning or conversation is transferred between providers**, and its author's report is only a claim.
+ 
++An explicit `Config(handoff_mode="patch")` provides an opt-in patch-only handoff for running agents against edited workspaces.
++It builds `changes.patch` against the pinned base from the real working tree with a temporary index, records its byte length and
++SHA-256, and leaves HEAD, the real index, branches and refs unchanged. The prompt tells the agent not to commit. Empty work is
++captured as a valid empty patch. If the patch exceeds `patch_max_bytes`, the attempt's handoff fails with `PATCH_TOO_LARGE`; a
++failure manifest is written and no captured status is reported. Patch-only handoffs have `snapshot_sha: null` and `refs: {}`.
++Their manifests use schema 2; schema 1 remains the snapshot contract.
++They can be applied manually with `git apply --binary` on the pinned base. Automatic predecessor integration requires snapshot
++refs and therefore cannot consume patch-only handoffs. The default remains `handoff_mode="snapshot"` with existing behavior.
++
+ ## Artefacts
+ 
+ `<root>/ledger.db`, `<root>/executor.lock`, `<root>/executor.log`, `<root>/ws/` (worktrees, intent manifests, `journal.jsonl`),
+@@ -126,7 +135,7 @@ explicit operator action (`GitWorkspaces.release`).
+ 
+ ## Configuration (`Config`, all explicit)
+ 
+-`max_running=2` (a safety ceiling; M1 owns global capacity), `max_queued=64`, `timeout_seconds=1800`, `max_timeout_seconds=86400`,
++`handoff_mode="snapshot"` (or opt-in `"patch"`), `max_running=2` (a safety ceiling; M1 owns global capacity), `max_queued=64`, `timeout_seconds=1800`, `max_timeout_seconds=86400`,
+ `grace_seconds=10`, `spare_interactive=True`, `heartbeat_seconds=30`, `poll_seconds=0.5`, `output_head_bytes=8 MiB`, `output_tail_bytes=256 KiB`,
+ `classify_head_bytes=64 KiB`, `patch_max_bytes=16 MiB`, `log_tail_bytes=64 KiB`, `max_event_backlog=10000`, `deliver_batch=100`,
+ `spawn_wait_seconds=10`, `settle_retry_seconds=5`, `handoff_tries=3`, `handoff_retry_seconds=0.5`. An order's own timeout wins over the default, both capped by the maximum.
+@@ -165,7 +174,7 @@ during/after the handoff, before/after the terminal transaction, between deliver
+ | US-1 run once | `test_start.test_the_same_order_twice_is_one_attempt`; `test_start.test_the_same_order_delivered_concurrently_starts_one_process_in_the_end`; `test_reconcile.test_an_accepted_but_never_started_order_is_started_exactly_once_by_the_new_executor`; `test_hardening.test_a_preparing_attempt_whose_shim_died_but_whose_agent_lives_is_never_relaunched`; `test_reconcile.test_an_attempt_whose_shim_started_but_was_never_recorded_as_running_is_adopted_not_duplicated` |
+ | US-2 route, profile, model | `test_scheduler_executor_adapter.test_a_model_that_does_not_belong_to_the_provider_is_invalid`; `test_scheduler_executor_adapter.test_claude_gets_its_model_effort_and_profile_account`; `test_scheduler_executor_adapter.test_the_child_environment_drops_parent_session_state_and_foreign_credentials`; `test_scheduler_executor_integration.test_each_agent_got_exactly_the_model_effort_profile_and_worktree_it_was_assigned`; `test_scheduler_executor_integration.test_a_work_only_profile_cannot_run_a_personal_project`; `test_start.test_an_unresolvable_route_is_rejected_before_any_side_effect_and_never_defaulted` |
+ | US-3 isolated worktrees | `test_concurrency.test_eight_parallel_attempts_on_one_repository_stay_apart`; `test_concurrency.test_attempts_on_different_repositories_run_together_and_do_not_mix`; `test_workspace.test_parallel_allocations_on_one_repository_all_succeed_and_are_distinct`; `test_executor.test_the_concurrency_ceiling_is_never_exceeded_and_the_rest_wait_in_the_queue` |
+-| US-4 preserve the work | `test_handoff.test_commits_only`; `test_handoff.test_dirty_tree_only_modified_tracked_plus_untracked`; `test_handoff.test_commits_and_uncommitted_work_together`; `test_handoff.test_an_attempt_that_changed_nothing_is_reported_empty_not_missing`; `test_handoff.test_the_branch_the_index_the_base_and_the_worktree_are_untouched`; `test_classification.test_quota_exhaustion_still_preserves_the_half_done_work`; `test_hardening.test_a_clean_exit_with_work_that_cannot_be_preserved_is_a_failure_not_a_success` |
++| US-4 preserve the work | `test_handoff.test_commits_only`; `test_handoff.test_dirty_tree_only_modified_tracked_plus_untracked`; `test_handoff.test_commits_and_uncommitted_work_together`; `test_handoff.test_an_attempt_that_changed_nothing_is_reported_empty_not_missing`; `test_handoff.test_the_branch_the_index_the_base_and_the_worktree_are_untouched`; `test_handoff.test_patch_mode_reapplies_dirty_binary_and_deletion_without_mutating_git_state`; `test_handoff.test_patch_mode_preserves_committed_files_that_are_now_ignored`; `test_handoff.test_patch_mode_cap_overflow_fails_with_failure_manifest_and_no_stale_patch`; `test_handoff.test_patch_mode_overflow_keeps_prior_patch_without_advertising_it_as_current`; `test_classification.test_quota_exhaustion_still_preserves_the_half_done_work`; `test_hardening.test_a_clean_exit_with_work_that_cannot_be_preserved_is_a_failure_not_a_success` |
+ | US-5 facts, not verdicts | `test_executor.test_finished_means_the_agent_stopped_never_that_the_task_is_done`; `test_events.test_the_failed_event_carries_cause_handoff_and_artifact_paths`; `test_scheduler_executor_integration.test_an_agent_that_says_it_finished_is_not_a_completed_task_until_the_verifier_says_so`; `test_classification.test_a_clean_exit_without_end_of_turn_evidence_is_never_finished` |
+ | US-6 cancel | `test_cancel.test_a_queued_attempt_is_cancelled_and_never_spawned`; `test_cancel.test_a_running_attempt_is_stopped_its_work_preserved_and_one_cancelled_event_emitted`; `test_cancel.test_a_wrong_token_is_rejected_and_the_attempt_carries_on`; `test_cancel.test_cancel_racing_the_natural_exit_always_ends_with_exactly_one_terminal_event`; `test_scheduler_executor_integration.test_cancelling_the_run_stops_the_running_agents_and_preserves_their_work` |
+ | US-7 reconcile | `test_reconcile.test_a_live_agent_is_reattached_after_a_restart_and_finishes_once`; `test_reconcile.test_an_agent_that_finished_while_no_executor_was_alive_is_finalised_from_its_exit_record`; `test_reconcile.test_a_vanished_agent_with_no_record_is_lost_and_its_work_is_preserved`; `test_reconcile.test_a_recycled_pid_is_never_signalled`; `test_scheduler_executor_integration.test_an_executor_restart_in_the_middle_of_a_run_loses_nothing_and_starts_nothing_twice` |
+@@ -181,7 +190,7 @@ during/after the handoff, before/after the terminal transaction, between deliver
+ | R9 safe cancel | `test_cancel.test_a_cancel_that_arrives_while_the_attempt_is_still_preparing_stops_it_before_any_process`; `test_cancel.test_cancelling_twice_is_one_cancellation_and_one_terminal_event`; `test_cancel.test_cancel_after_the_attempt_ended_changes_nothing` |
+ | R10 reconcile on construction | `test_reconcile.test_query_reflects_process_reality_not_just_the_ledger`; `test_reconcile.test_an_attempt_stuck_in_settling_is_settled_once_with_the_stored_outcome`; `test_reconcile.test_an_attempt_stuck_in_preparing_with_no_process_is_prepared_again_once` |
+ | R11 environment and secrets | `test_executor.test_the_child_gets_the_profile_environment_and_loses_the_other_profiles_secrets`; `test_executor.test_no_secret_reaches_the_ledger_the_artifacts_or_the_events`; `test_scheduler_executor_integration.test_no_secret_value_appears_in_the_executors_state_or_in_the_cores_audit`; `test_hardening.test_artifacts_are_private` |
+-| R12 prompt and claims | `test_executor.test_the_prompt_is_task_text_and_rules_and_is_private`; `test_events.test_the_agents_report_is_labelled_a_claim_in_the_event`; `test_hardening.test_the_agents_report_cannot_hang_or_exhaust_the_executor` |
++| R12 prompt and claims | `test_executor.test_the_prompt_is_task_text_and_rules_and_is_private`; `test_prompt.test_patch_mode_executor_prompt_forbids_commits`; `test_events.test_the_agents_report_is_labelled_a_claim_in_the_event`; `test_hardening.test_the_agents_report_cannot_hang_or_exhaust_the_executor` |
+ | R13 artefacts | `test_executor.test_artifacts_live_under_attempts_and_nothing_is_written_to_the_main_checkout`; `test_hardening.test_a_cancelled_attempt_has_a_manifest_and_a_brief_even_with_no_workspace`; `test_hardening.test_a_queue_full_refusal_leaves_no_empty_directory` |
+ | R14 real CLIs opt-in | `test_scheduler_executor_real.test_every_real_case_resolves_without_launching_anything` |
+ | R15 no regressions, opt-in | `test_scheduler_executor_integration.test_a_legacy_requirement_is_not_taken_over_and_its_run_json_is_untouched`; `test_scheduler_executor_integration.test_historical_runs_of_this_repository_are_byte_identical_after_a_whole_executor_session` |
+diff --git a/skill/scripts/bt_scheduler_executor/config.py b/skill/scripts/bt_scheduler_executor/config.py
+index fca2214..92d6e56 100644
+--- a/skill/scripts/bt_scheduler_executor/config.py
++++ b/skill/scripts/bt_scheduler_executor/config.py
+@@ -30,8 +30,11 @@ class Config:
+     handoff_retry_seconds: float = 0.5
+     settle_retry_seconds: float = 5.0  # a settle that failed is retried this slowly
+     spare_interactive: bool = True    # the worktree sweep leaves processes with a controlling terminal that are not the agent's live descendants
++    handoff_mode: str = "snapshot"    # snapshot (private refs) or patch (artifact only)
+ 
+     def validate(self) -> Config:
++        if self.handoff_mode not in ("snapshot", "patch"):
++            raise ExecutorError("CONFIG_INVALID", "handoff_mode must be 'snapshot' or 'patch'")
+         positive = ("max_running", "max_queued", "timeout_seconds", "max_timeout_seconds", "grace_seconds",
+                     "heartbeat_seconds", "poll_seconds", "output_head_bytes", "output_tail_bytes",
+                     "classify_head_bytes", "patch_max_bytes", "log_tail_bytes", "max_event_backlog", "deliver_batch",
+diff --git a/skill/scripts/bt_scheduler_executor/handoff.py b/skill/scripts/bt_scheduler_executor/handoff.py
+index 95266d0..a722995 100644
+--- a/skill/scripts/bt_scheduler_executor/handoff.py
++++ b/skill/scripts/bt_scheduler_executor/handoff.py
+@@ -1,10 +1,10 @@
+ """Recoverable handoff of an attempt's work, whatever way the agent ended.
+ 
+-Captures committed + uncommitted + untracked state WITHOUT touching the attempt's branch, its real index or the base:
+-a temporary index is filled from HEAD plus the working tree, written as a tree, and committed with `commit-tree` onto a
+-private ref (`refs/m3/handoff/<branch-without-m3/>`); HEAD itself is pinned under `refs/m3/head/<branch-without-m3/>`. A binary-safe patch
+-(`base..snapshot`) and a manifest are written next to it. The same call can be repeated after a crash: the dates come
+-from the caller, so the same work yields the same snapshot commit.
++Default snapshot mode captures committed + uncommitted + untracked state without changing the attempt's branch or real
++index: a temporary index is filled from HEAD and written as a tree, then `commit-tree` and private refs preserve it. An
++opt-in patch mode writes a capped, binary-safe patch against the pinned base and a schema-2 manifest; it creates no
++commit or refs. Both modes leave the working tree and real index alone. Snapshot captures can be repeated after a crash:
++the caller supplies dates so the same work yields the same snapshot commit.
+ 
+ What is handed over is CODE STATE plus a plain-text brief. Nothing here claims that an agent's reasoning, context or
+ conversation transfers to another provider: a different agent starts from the files and the brief only.
+@@ -37,60 +37,81 @@ def _atomic(path: Path, data: bytes) -> None:
+ 
+ 
+ def capture(ws: Workspace, directory: Path, *, dirname: str, attempt_id: str, when: float, patch_max: int,
+-            log_tail: bytes = b"") -> dict[str, Any]:
+-    """Write `<directory>/handoff/*` and the private refs; returns the manifest. Raises WORKSPACE_ERROR on a git failure
+-    (the worktree directory itself is untouched, so the work is still physically there)."""
++            log_tail: bytes = b"", mode: str = "snapshot") -> dict[str, Any]:
++    """Capture state using private refs (snapshot) or a recoverable patch artifact (patch)."""
+     out = Path(directory) / "handoff"
+     out.mkdir(parents=True, exist_ok=True)
++    if mode not in ("snapshot", "patch"):
++        raise ExecutorError("CONFIG_INVALID", "handoff mode must be 'snapshot' or 'patch'")
+     tree = Path(ws.path)
+     if not tree.is_dir():
+         raise ExecutorError("WORKSPACE_ERROR", f"worktree is gone: {ws.path}")
+-    stamp = f"{int(when)} +0000"
+-    ident = {"GIT_AUTHOR_NAME": "Bitacora M3", "GIT_AUTHOR_EMAIL": "m3@localhost", "GIT_AUTHOR_DATE": stamp,
+-             "GIT_COMMITTER_NAME": "Bitacora M3", "GIT_COMMITTER_EMAIL": "m3@localhost", "GIT_COMMITTER_DATE": stamp}
+     head = gitutil.run(tree, ["rev-parse", "HEAD"])
+     branch_now = gitutil.run(tree, ["symbolic-ref", "-q", "--short", "HEAD"], check=False) or "(detached)"
+     commits = gitutil.run(tree, ["rev-list", "--reverse", f"{ws.base_sha}..HEAD"], check=False).split()
+     status = gitutil.run(tree, ["status", "--porcelain=v1", "-z", "--untracked-files=all"], binary=True)
+     entries = [e for e in status.split(b"\0") if e]
+     untracked = sum(1 for e in entries if e.startswith(b"??"))
+-
++    repo = Path(ws.repo)
+     with tempfile.TemporaryDirectory(prefix="m3-index-") as scratch:
+-        env = {**ident, "GIT_INDEX_FILE": str(Path(scratch) / "index")}
++        env = {"GIT_INDEX_FILE": str(Path(scratch) / "index")}
+         gitutil.run(tree, ["read-tree", "HEAD"], env=env)
+         gitutil.run(tree, ["add", "-A"], env=env)
+         snap_tree = gitutil.run(tree, ["write-tree"], env=env)
++
++    base_tree = gitutil.run(repo, ["rev-parse", f"{ws.base_sha}^{{tree}}"])
++    names = gitutil.run(repo, ["diff", "--no-renames", "--name-status", ws.base_sha, snap_tree], check=False).splitlines()
++    if mode == "patch":
++        patch_path = out / "changes.patch"
++        raw = gitutil.run_capped(repo, ["diff", "--binary", "--full-index", "--no-renames", ws.base_sha, snap_tree],
++                                 patch_max)
++        if raw is None:
++            failure = {"schema": 2, "attempt_id": attempt_id, "worktree": ws.path, "repository": ws.repo,
++                       "base_sha": ws.base_sha, "branch": ws.branch, "head_sha": head, "snapshot_sha": None,
++                       "handoff_mode": mode, "patch_bytes": None, "patch_sha256": None,
++                       "patch": {"path": None, "bytes": None, "sha256": None, "error": "PATCH_TOO_LARGE",
++                                 "max_bytes": patch_max}, "refs": {}, "status": "failed", "error": "PATCH_TOO_LARGE"}
++            _atomic(out / "manifest.json", json.dumps(failure, indent=1, sort_keys=True).encode())
++            raise ExecutorError("ARTIFACT_ERROR", f"patch exceeds the {patch_max} byte cap; patch-only handoff cannot preserve it")
++        _atomic(patch_path, raw)
++        patch_info = {"path": str(patch_path), "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(), "skipped": ""}
++        snapshot = None
++        refs: dict[str, str] = {}
++    else:
++        stamp = f"{int(when)} +0000"
++        ident = {"GIT_AUTHOR_NAME": "Bitacora M3", "GIT_AUTHOR_EMAIL": "m3@localhost", "GIT_AUTHOR_DATE": stamp,
++                 "GIT_COMMITTER_NAME": "Bitacora M3", "GIT_COMMITTER_EMAIL": "m3@localhost", "GIT_COMMITTER_DATE": stamp}
+         if snap_tree == gitutil.run(tree, ["rev-parse", "HEAD^{tree}"]):
+             snapshot = head
+         else:
+             snapshot = gitutil.run(tree, ["commit-tree", snap_tree, "-p", head, "-m", f"m3 snapshot {attempt_id}"],
+-                                   env=env)
+-    repo = Path(ws.repo)
+-    key = ws.branch.removeprefix("m3/") if ws.branch.startswith("m3/") else dirname    # root-scoped, see workspace.allocate
+-    gitutil.run(repo, ["update-ref", f"refs/m3/handoff/{key}", snapshot])
+-    gitutil.run(repo, ["update-ref", f"refs/m3/head/{key}", head])
+-
+-    names = gitutil.run(repo, ["diff", "--no-renames", "--name-status", ws.base_sha, snapshot], check=False).splitlines()
+-    patch_info: dict[str, Any] = {"path": None, "bytes": 0, "sha256": None, "skipped": ""}
+-    if snapshot != ws.base_sha:
+-        raw = gitutil.run_capped(repo, ["diff", "--binary", "--full-index", "--no-renames", ws.base_sha, snapshot],
+-                                 patch_max)                       # streamed: a huge diff is never held in memory
+-        if raw is None:
+-            patch_info["skipped"] = f"patch is over the {patch_max} byte cap; the snapshot ref holds the work"
+-        else:
+-            _atomic(out / "changes.patch", raw)
+-            patch_info.update(path=str(out / "changes.patch"), bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest())
++                                   env=ident)
++        key = ws.branch.removeprefix("m3/") if ws.branch.startswith("m3/") else dirname
++        gitutil.run(repo, ["update-ref", f"refs/m3/handoff/{key}", snapshot])
++        gitutil.run(repo, ["update-ref", f"refs/m3/head/{key}", head])
++        refs = {"snapshot": f"refs/m3/handoff/{key}", "head": f"refs/m3/head/{key}"}
++        patch_info = {"path": None, "bytes": 0, "sha256": None, "skipped": ""}
++        if snapshot != ws.base_sha:
++            raw = gitutil.run_capped(repo, ["diff", "--binary", "--full-index", "--no-renames", ws.base_sha, snapshot],
++                                     patch_max)
++            if raw is None:
++                patch_info["skipped"] = f"patch is over the {patch_max} byte cap; the snapshot ref holds the work"
++            else:
++                _atomic(out / "changes.patch", raw)
++                patch_info.update(path=str(out / "changes.patch"), bytes=len(raw),
++                                  sha256=hashlib.sha256(raw).hexdigest())
+     if log_tail:
+         _atomic(out / "log-tail.txt", log_tail)
+     manifest = {
+-        "schema": 1, "attempt_id": attempt_id, "worktree": ws.path, "repository": ws.repo,
++        "schema": 2 if mode == "patch" else 1, "attempt_id": attempt_id, "worktree": ws.path, "repository": ws.repo,
+         "base_sha": ws.base_sha, "branch": ws.branch, "branch_at_end": branch_now, "head_sha": head,
+-        "snapshot_sha": snapshot, "has_commits": bool(commits), "commit_count": len(commits),
++        "snapshot_sha": snapshot, "handoff_mode": mode, "patch_bytes": patch_info.get("bytes", 0),
++        "patch_sha256": patch_info.get("sha256"), "has_commits": bool(commits), "commit_count": len(commits),
+         "commits": commits[:MAX_COMMITS], "dirty": bool(entries), "untracked_count": untracked,
+-        "empty": snapshot == ws.base_sha, "changed_total": len(names), "changed": names[:MAX_LISTED],
++        "empty": snap_tree == base_tree if mode == "patch" else snapshot == ws.base_sha,
++        "changed_total": len(names), "changed": names[:MAX_LISTED],
+         "patch": patch_info, "log_tail": str(out / "log-tail.txt") if log_tail else None,
+-        "refs": {"snapshot": f"refs/m3/handoff/{key}", "head": f"refs/m3/head/{key}"},
+-        "status": "captured"}
++        "refs": refs, "status": "captured"}
+     _atomic(out / "manifest.json", json.dumps(manifest, indent=1, sort_keys=True).encode())
+     return manifest
+ 
+@@ -108,11 +129,18 @@ def write_brief(directory: Path, *, attempt_id: str, task_id: str, title: str, o
+         lines += ["", "## Preserved state",
+                   f"- base commit: {manifest['base_sha']}", f"- attempt branch: {manifest['branch']}",
+                   f"- last commit: {manifest['head_sha']} ({manifest['commit_count']} commit(s) after the base)",
+-                  f"- snapshot incl. uncommitted/untracked files: {manifest['snapshot_sha']}",
+                   f"- files changed vs base: {manifest['changed_total']}",
+-                  "", "## To continue", f"- inspect: `git -C {manifest['repository']} diff {manifest['base_sha']} {manifest['snapshot_sha']}`",
+-                  f"- or apply `changes.patch` on a fresh worktree from {manifest['base_sha']}",
+-                  f"- the snapshot lives under `{manifest['refs']['snapshot']}`"]
++                  f"- handoff mode: {manifest.get('handoff_mode', 'snapshot')}",
++                  f"- patch: {manifest.get('patch_bytes', 0)} bytes, sha256 {manifest.get('patch_sha256') or '(empty)' }",
++                  "", "## To continue"]
++        if manifest.get("handoff_mode") == "patch":
++            lines.append(f"- apply `{manifest['patch']['path']}` on a fresh worktree from {manifest['base_sha']}")
++            lines.append("- no snapshot ref was created; automatic predecessor integration cannot use this patch-only handoff")
++        else:
++            lines += [f"- snapshot incl. uncommitted/untracked files: {manifest['snapshot_sha']}",
++                      f"- inspect: `git -C {manifest['repository']} diff {manifest['base_sha']} {manifest['snapshot_sha']}`",
++                      f"- or apply `changes.patch` on a fresh worktree from {manifest['base_sha']}",
++                      f"- the snapshot lives under `{manifest['refs']['snapshot']}`"]
+         if manifest.get("empty"):
+             lines.append("- NOTE: the attempt left no change at all")
+     else:
+diff --git a/skill/scripts/bt_scheduler_executor/prompt.py b/skill/scripts/bt_scheduler_executor/prompt.py
+index 311b303..55dee96 100644
+--- a/skill/scripts/bt_scheduler_executor/prompt.py
++++ b/skill/scripts/bt_scheduler_executor/prompt.py
+@@ -4,7 +4,8 @@ from __future__ import annotations
+ from .model import Brief, StartRequest
+ 
+ 
+-def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: str, report_path: str) -> str:
++def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: str, report_path: str,
++                 handoff_mode: str = "snapshot") -> str:
+     def bullets(items) -> str:
+         return "\n".join(f"- {i}" for i in items) if items else "- (none stated)"
+ 
+@@ -21,9 +22,13 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
+         parts.append(f"\n## Expected paths (guidance, not a limit)\n{bullets(brief.expected_paths)}")
+     if brief.notes:
+         parts.append(f"\n## Notes\n{brief.notes}")
++    if handoff_mode == "snapshot":
++        commit_rule = "You may commit there."
++    else:
++        commit_rule = "Do not create commits; the executor preserves the working tree as a patch artifact."
+     parts.append(f"""
+ ## Rules
+-- Work only inside `{workdir}`: it is your own git worktree on branch `{branch}`. You may commit there.
++- Work only inside `{workdir}`: it is your own git worktree on branch `{branch}`. {commit_rule}
+ - Do not push, merge, rebase onto other branches, force anything, or touch other worktrees or remotes.
+ - Do not read, print or write secrets or credentials.
+ - Do not declare the task verified: an independent check decides. Say plainly what you did and what is left.
+diff --git a/skill/scripts/bt_scheduler_executor/settle.py b/skill/scripts/bt_scheduler_executor/settle.py
+index a2de3f7..bb77425 100644
+--- a/skill/scripts/bt_scheduler_executor/settle.py
++++ b/skill/scripts/bt_scheduler_executor/settle.py
+@@ -154,7 +154,7 @@ class SettleMixin:
+         for attempt in range(self.cfg.handoff_tries):
+             try:
+                 return handoff.capture(workspace, adir, dirname=row["dirname"], attempt_id=row["attempt_id"], when=end,
+-                                       patch_max=self.cfg.patch_max_bytes,
++                                       patch_max=self.cfg.patch_max_bytes, mode=self.cfg.handoff_mode,
+                                        log_tail=artifacts.log_tail(adir, self.cfg.log_tail_bytes))
+             except (ExecutorError, OSError) as caught:
+                 error = caught
+@@ -170,7 +170,8 @@ class SettleMixin:
+         route = row["route"]
+         summary = {k: preserved.get(k) for k in ("status", "base_sha", "branch", "head_sha", "snapshot_sha",
+                                                   "has_commits", "commit_count", "dirty", "empty", "changed_total",
+-                                                  "refs", "worktree", "error", "detail", "reason") if k in preserved}
++                                                  "refs", "worktree", "error", "detail", "reason", "handoff_mode",
++                                                  "patch_bytes", "patch_sha256") if k in preserved}
+         for key, name in (("manifest", "manifest.json"), ("brief", "continue.md")):
+             if (adir / "handoff" / name).exists():              # only paths that exist are advertised
+                 summary[key] = str(adir / "handoff" / name)
+diff --git a/skill/scripts/bt_scheduler_executor/spawn.py b/skill/scripts/bt_scheduler_executor/spawn.py
+index 4cf99cf..c9ae77f 100644
+--- a/skill/scripts/bt_scheduler_executor/spawn.py
++++ b/skill/scripts/bt_scheduler_executor/spawn.py
+@@ -59,7 +59,7 @@ class SpawnMixin:
+                 return self._settle(attempt_id, {"reason": "cancelled", "returncode": None})
+             timeout = min(request.timeout_seconds or self.cfg.timeout_seconds, self.cfg.max_timeout_seconds)
+             prompt = build_prompt(brief, request, workdir=ws.path, branch=ws.branch,
+-                                  report_path=str(adir / "report.json"))
++                                  report_path=str(adir / "report.json"), handoff_mode=self.cfg.handoff_mode)
+             artifacts.atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
+             launch = self._guard_port(lambda: self.driver.prepare(route, prompt, ws, timeout))
+             shim = self._spawn(attempt_id, adir, launch, ws, timeout)
+diff --git a/skill/scripts/bt_scheduler_executor/tests/test_contracts.py b/skill/scripts/bt_scheduler_executor/tests/test_contracts.py
+index ac9f3f7..e364c46 100644
+--- a/skill/scripts/bt_scheduler_executor/tests/test_contracts.py
++++ b/skill/scripts/bt_scheduler_executor/tests/test_contracts.py
+@@ -13,6 +13,15 @@ from bt_scheduler_executor import model as m
+ 
+ 
+ class Types(unittest.TestCase):
++    def test_handoff_mode_defaults_to_snapshot_and_rejects_unknown_values(self):
++        self.assertEqual(ex.Config().validate().handoff_mode, "snapshot")
++        self.assertEqual(ex.Config(1).max_running, 1)
++        self.assertEqual(ex.Config(handoff_mode="patch").validate().handoff_mode, "patch")
++        for mode in ("", "commit", None, True):
++            with self.subTest(mode=mode), self.assertRaises(ex.ExecutorError) as caught:
++                ex.Config(handoff_mode=mode).validate()
++            self.assertEqual(caught.exception.code, "CONFIG_INVALID")
++
+     def test_a_start_request_round_trips_through_json(self):
+         req = support.order(3, "ok", timeout=12.5)
+         again = ex.StartRequest.from_dict(json.loads(json.dumps(req.to_dict())))
+diff --git a/skill/scripts/bt_scheduler_executor/tests/test_handoff.py b/skill/scripts/bt_scheduler_executor/tests/test_handoff.py
+index a073528..35d9be5 100644
+--- a/skill/scripts/bt_scheduler_executor/tests/test_handoff.py
++++ b/skill/scripts/bt_scheduler_executor/tests/test_handoff.py
+@@ -7,6 +7,7 @@ import sys
+ import tempfile
+ import unittest
+ from pathlib import Path
++from unittest import mock
+ 
+ sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[2])]
+ import bt_scheduler_executor as ex
+@@ -35,6 +36,95 @@ class Handoff(unittest.TestCase):
+         return handoff.capture(self.ws, self.out, dirname=self.dirname, attempt_id="att-0001", when=1_800_000_000,
+                                patch_max=kw.pop("patch_max", 1 << 20), **kw)
+ 
++    def test_patch_mode_reapplies_dirty_binary_and_deletion_without_mutating_git_state(self):
++        (self.wt / "README.md").unlink()
++        (self.wt / "src.txt").write_text("staged then edited\n")
++        binary = bytes(range(256)) * 11
++        (self.wt / "new blob.bin").write_bytes(binary)
++        git(self.wt, "add", "src.txt")
++        (self.wt / "src.txt").write_text("final working tree\n")
++        before = self.state()
++        refs = git(self.repo, "for-each-ref", "--format=%(refname) %(objectname)")
++        real_run = handoff.gitutil.run
++
++        def forbid_git_mutation(cwd, args, **kwargs):
++            if args and args[0] in ("commit-tree", "update-ref"):
++                self.fail(f"patch capture invoked forbidden git command: {args[0]}")
++            return real_run(cwd, args, **kwargs)
++
++        with mock.patch.object(handoff.gitutil, "run", side_effect=forbid_git_mutation):
++            manifest = self.capture(mode="patch")
++        self.assertIsNone(manifest["snapshot_sha"])
++        self.assertEqual(manifest["refs"], {})
++        self.assertEqual(manifest["handoff_mode"], "patch")
++        self.assertEqual(manifest["schema"], 2)
++        self.assertEqual(self.state(), before)
++        self.assertEqual(git(self.repo, "for-each-ref", "--format=%(refname) %(objectname)"), refs)
++        fresh = self.base / "patch-restore"
++        git(self.repo, "worktree", "add", "--detach", str(fresh), self.ws.base_sha)
++        git(fresh, "apply", "--binary", manifest["patch"]["path"])
++        self.assertFalse((fresh / "README.md").exists())
++        self.assertEqual((fresh / "src.txt").read_text(), "final working tree\n")
++        self.assertEqual((fresh / "new blob.bin").read_bytes(), binary)
++        raw = Path(manifest["patch"]["path"]).read_bytes()
++        self.assertEqual(manifest["patch_bytes"], len(raw))
++        self.assertEqual(manifest["patch_sha256"], hashlib.sha256(raw).hexdigest())
++
++    def test_patch_mode_empty_state_has_an_applicable_empty_artifact(self):
++        manifest = self.capture(mode="patch")
++        self.assertTrue(manifest["empty"])
++        self.assertEqual(manifest["schema"], 2)
++        self.assertIsNone(manifest["snapshot_sha"])
++        self.assertEqual(manifest["refs"], {})
++        self.assertEqual(Path(manifest["patch"]["path"]).read_bytes(), b"")
++        self.assertEqual(manifest["patch_bytes"], 0)
++
++    def test_patch_mode_preserves_committed_files_that_are_now_ignored(self):
++        (self.wt / ".gitignore").write_text("ignored.bin\n")
++        content = bytes(range(256))
++        (self.wt / "ignored.bin").write_bytes(content)
++        git(self.wt, "add", ".gitignore")
++        git(self.wt, "add", "-f", "ignored.bin")
++        git(self.wt, "commit", "-m", "force-add ignored binary")
++        manifest = self.capture(mode="patch")
++        fresh = self.base / "ignored-restore"
++        git(self.repo, "worktree", "add", "--detach", str(fresh), self.ws.base_sha)
++        git(fresh, "apply", "--binary", manifest["patch"]["path"])
++        self.assertEqual((fresh / "ignored.bin").read_bytes(), content)
++        self.assertIn("A\tignored.bin", manifest["changed"])
++
++    def test_patch_mode_cap_overflow_fails_with_failure_manifest_and_no_stale_patch(self):
++        (self.wt / "large.txt").write_text("x" * 4096)
++        with self.assertRaises(ex.ExecutorError) as caught:
++            self.capture(mode="patch", patch_max=100)
++        self.assertEqual(caught.exception.code, "ARTIFACT_ERROR")
++        manifest = json.loads((self.out / "handoff" / "manifest.json").read_text())
++        self.assertEqual((manifest["status"], manifest["error"], manifest["snapshot_sha"]),
++                         ("failed", "PATCH_TOO_LARGE", None))
++        self.assertFalse((self.out / "handoff" / "changes.patch").exists())
++
++    def test_patch_mode_overflow_keeps_prior_patch_without_advertising_it_as_current(self):
++        (self.wt / "small.txt").write_text("small\n")
++        first = self.capture(mode="patch")
++        prior_patch = Path(first["patch"]["path"]).read_bytes()
++        (self.wt / "large.txt").write_text("x" * 4096)
++        with self.assertRaises(ex.ExecutorError):
++            self.capture(mode="patch", patch_max=100)
++        self.assertEqual(Path(first["patch"]["path"]).read_bytes(), prior_patch)
++        failure = json.loads((self.out / "handoff" / "manifest.json").read_text())
++        self.assertEqual(failure["status"], "failed")
++        self.assertIsNone(failure["patch"]["path"])
++
++    def test_patch_continuation_brief_does_not_claim_snapshot_refs_or_diff(self):
++        (self.wt / "w.txt").write_text("w\n")
++        manifest = self.capture(mode="patch")
++        text = handoff.write_brief(self.out, attempt_id="a", task_id="T1", title="t", outcome="failed",
++                                   cause="lost", manifest=manifest).read_text()
++        self.assertIn("apply `", text)
++        self.assertIn("automatic predecessor integration cannot use", text)
++        self.assertNotIn("None", text)
++        self.assertNotIn("refs/m3/handoff", text)
++
+     def state(self):
+         return {"head": git(self.wt, "rev-parse", "HEAD"), "branch": git(self.wt, "rev-parse", self.ws.branch),
+                 "index": git(self.wt, "ls-files", "-s"), "status": git(self.wt, "status", "--porcelain"),

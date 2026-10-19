@@ -1,0 +1,18 @@
+{
+  "req_id": "REQ-007",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-007-engineering-workspace-migration-without",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-007-engineering-workspace-migration-without/PLAN.md",
+      "sha256": "a0909378989e2b9566d96fa7294ffa32d52f779eba345d5c56e3c3ba51cc7608"
+    }
+  ]
+}

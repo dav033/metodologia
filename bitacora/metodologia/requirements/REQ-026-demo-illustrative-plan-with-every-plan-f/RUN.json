@@ -1,0 +1,116 @@
+{
+  "status": "paused",
+  "heartbeat": {
+    "at": "2026-10-18T20:00:00",
+    "state": "DEMO: simulated run, paused on purpose"
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "status": "done",
+      "attempts": 1
+    },
+    {
+      "id": "T2",
+      "status": "done",
+      "attempts": 2
+    },
+    {
+      "id": "T3",
+      "status": "done",
+      "attempts": 1
+    },
+    {
+      "id": "T4",
+      "status": "in_progress",
+      "attempts": 1
+    },
+    {
+      "id": "T5",
+      "status": "blocked",
+      "attempts": 2
+    },
+    {
+      "id": "T6",
+      "status": "todo",
+      "attempts": 0
+    },
+    {
+      "id": "T7",
+      "status": "todo",
+      "attempts": 0
+    },
+    {
+      "id": "T8",
+      "status": "todo",
+      "attempts": 0
+    },
+    {
+      "id": "T9",
+      "status": "todo",
+      "attempts": 0
+    }
+  ],
+  "log": [
+    {
+      "task": "T1",
+      "agent": "claude",
+      "model": "haiku",
+      "profile": "claude-personal",
+      "effort": "low",
+      "result": "done",
+      "at": "2026-10-18T09:12:00",
+      "seconds": 140
+    },
+    {
+      "task": "T2",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-medium",
+      "profile": "antigravity",
+      "effort": "medium",
+      "result": "blocked",
+      "at": "2026-10-18T09:20:00",
+      "seconds": 310
+    },
+    {
+      "task": "T2",
+      "agent": "claude",
+      "model": "sonnet",
+      "profile": "claude-work",
+      "effort": "medium",
+      "result": "done",
+      "at": "2026-10-18T09:41:00",
+      "seconds": 420
+    },
+    {
+      "task": "T3",
+      "agent": "claude",
+      "model": "sonnet",
+      "profile": "claude-work",
+      "effort": "high",
+      "result": "done",
+      "at": "2026-10-18T10:30:00",
+      "seconds": 980
+    },
+    {
+      "task": "T5",
+      "agent": "codex",
+      "model": "gpt-6-luna",
+      "profile": "codex1",
+      "effort": "high",
+      "result": "blocked",
+      "at": "2026-10-18T11:05:00",
+      "seconds": 1500
+    },
+    {
+      "task": "T5",
+      "agent": "claude",
+      "model": "opus",
+      "profile": "claude-work",
+      "effort": "xhigh",
+      "result": "blocked",
+      "at": "2026-10-18T11:48:00",
+      "seconds": 2300
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving (test_scheduler_decision_integration.DecisionAssignmentIntegration.test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving) ... FAIL
+
+======================================================================
+FAIL: test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving (test_scheduler_decision_integration.DecisionAssignmentIntegration.test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_scheduler_decision_integration.py", line 398, in test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving
+    self.assertEqual({route.route_metadata["provider"] for route in routes},
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     {"claude", "codex", "antigravity"})
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Items in the second set but not the first:
+'codex'
+'antigravity'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.206s
+
+FAILED (failures=1)
+ISOLATION_LABEL=HEAD quota refresh patched into memory
+ISOLATION_TESTS_RUN=1
+ISOLATION_FAILURES=1
+ISOLATION_ERRORS=0

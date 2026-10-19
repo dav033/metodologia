@@ -1,0 +1,135 @@
+{
+  "working_directory": "/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures",
+  "checks": [
+    {
+      "name": "test-recomendaciones-categoria",
+      "command": "node --import=tsx scripts/test/test-recomendaciones-categoria.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.452,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "test_count": null,
+      "decisive_lines": [],
+      "stdout_log": "test-recomendaciones-categoria.stdout.log",
+      "stderr_log": "test-recomendaciones-categoria.stderr.log"
+    },
+    {
+      "name": "test-ideas-boda-guiada",
+      "command": "node --import=tsx scripts/test/test-ideas-boda-guiada.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.403,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "test_count": null,
+      "decisive_lines": [],
+      "stdout_log": "test-ideas-boda-guiada.stdout.log",
+      "stderr_log": "test-ideas-boda-guiada.stderr.log"
+    },
+    {
+      "name": "test-busqueda-biblioteca-sempertex",
+      "command": "node --import=tsx scripts/test/test-busqueda-biblioteca-sempertex.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.426,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "test_count": null,
+      "decisive_lines": [],
+      "stdout_log": "test-busqueda-biblioteca-sempertex.stdout.log",
+      "stderr_log": "test-busqueda-biblioteca-sempertex.stderr.log"
+    },
+    {
+      "name": "test-cambio-tematica-guiada",
+      "command": "node --import=tsx scripts/test/test-cambio-tematica-guiada.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.314,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "test_count": null,
+      "decisive_lines": [],
+      "stdout_log": "test-cambio-tematica-guiada.stdout.log",
+      "stderr_log": "test-cambio-tematica-guiada.stderr.log"
+    },
+    {
+      "name": "test-respuesta-guiada-sin-fracaso",
+      "command": "node --import=tsx scripts/test/test-respuesta-guiada-sin-fracaso.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.476,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "test_count": null,
+      "decisive_lines": [],
+      "stdout_log": "test-respuesta-guiada-sin-fracaso.stdout.log",
+      "stderr_log": "test-respuesta-guiada-sin-fracaso.stderr.log"
+    },
+    {
+      "name": "test-pedido-ideas",
+      "command": "node --import=tsx scripts/test/test-pedido-ideas.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.326,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "test_count": null,
+      "decisive_lines": [],
+      "stdout_log": "test-pedido-ideas.stdout.log",
+      "stderr_log": "test-pedido-ideas.stderr.log"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "exit_code": 0,
+      "duration_seconds": 95.531,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "test_count": null,
+      "decisive_lines": [
+        "✖ 50 problems (0 errors, 50 warnings)",
+        "  0 errors and 1 warning potentially fixable with the `--fix` option."
+      ],
+      "stdout_log": "lint.stdout.log",
+      "stderr_log": "lint.stderr.log"
+    },
+    {
+      "name": "typescript",
+      "command": "npx tsc --noEmit",
+      "exit_code": 2,
+      "duration_seconds": 11.684,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "test_count": null,
+      "decisive_lines": [
+        "src/app/layout.tsx(26,50): error TS2304: Cannot find name 'LayoutProps'."
+      ],
+      "stdout_log": "typescript.stdout.log",
+      "stderr_log": "typescript.stderr.log"
+    }
+  ],
+  "workspace_symlinks": [
+    {
+      "path": "node_modules/@sempertex/agente-core",
+      "symlink": true,
+      "target": "/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/packages/agente-core",
+      "inside_copy": true
+    },
+    {
+      "path": "node_modules/@sempertex/happie-package-ia",
+      "symlink": true,
+      "target": "/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/packages/happie-package-ia",
+      "inside_copy": true
+    }
+  ],
+  "source_hash_check": {
+    "files_before": 3669,
+    "files_after": 3669,
+    "changed_files": [],
+    "unchanged": true,
+    "before_file": "source-hashes-before.json",
+    "after_file": "source-hashes-after.json"
+  },
+  "build_reused_from_prior_independent_check": {
+    "command": "npm run build --workspaces --if-present",
+    "exit_code": 0,
+    "duration_seconds": 3.006,
+    "log_directory": "../independent-checks/",
+    "not_rerun_because_package_declarations_unchanged": true
+  }
+}

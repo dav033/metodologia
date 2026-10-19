@@ -1,0 +1,10 @@
+{
+  "provider": "claude",
+  "model": "sonnet",
+  "profile": "claude-work",
+  "effort": "medium",
+  "hooks_disabled": true,
+  "m3_agent_executor": true,
+  "worktree": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/ws/worktrees/att-0001-3c9f5c1f520fafa0",
+  "handoff_mode": "patch"
+}

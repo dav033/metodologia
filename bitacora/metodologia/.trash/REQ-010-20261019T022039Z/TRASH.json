@@ -1,0 +1,35 @@
+{
+  "req_id": "REQ-010",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-010-isolated-planner-contract-module",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "PLAN.json",
+    "plan-revisions"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-010-isolated-planner-contract-module/PLAN.md",
+      "sha256": "20d7a98c97a56b98398d713d7a0f3bfe1a0de94881df794d755de0b564aa7c70"
+    },
+    {
+      "path": "PLAN.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-010-isolated-planner-contract-module/PLAN.json",
+      "sha256": "8d205eee2b097fb4ae9992d12d14532de69c68f51c3c72a21ea520bad3f1f95c"
+    },
+    {
+      "path": "plan-revisions/MANIFEST.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-010-isolated-planner-contract-module/plan-revisions/MANIFEST.json",
+      "sha256": "0bdcb4474afee0f7fab317882feda188d90043965e267509e45f5233a0823376"
+    },
+    {
+      "path": "plan-revisions/PLAN.r1.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-010-isolated-planner-contract-module/plan-revisions/PLAN.r1.json",
+      "sha256": "8d205eee2b097fb4ae9992d12d14532de69c68f51c3c72a21ea520bad3f1f95c"
+    }
+  ]
+}

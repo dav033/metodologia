@@ -1,0 +1,3 @@
+AXIS: standards
+VERDICT: APPROVE
+No concrete findings. M1 persisted attempt count reaches typed nonnegative nonbool dispatch_generation, normalization, decision identity and batch fingerprint. Equal-generation polling remains idempotent; new attempts get independent refs, preserving M3 single-use. Generation0 omitted from identities retains historical default keys. Quota eligibility and candidate facts unchanged. Read-only reviewer inspected tests; coordinator independently ran all three new tests, passing. Worker ran 65 M2+13 contract+3 new tests and Ruff, passing. No Git fixture commands used.

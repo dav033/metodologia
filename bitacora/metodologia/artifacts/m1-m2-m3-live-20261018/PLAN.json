@@ -1,0 +1,176 @@
+{
+  "schema_version": "1.2.0",
+  "plan_id": "REQ-M3",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "requirements": [
+    "R1",
+    "R2"
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Actual executor flow",
+      "after": [],
+      "acceptance_criteria": [
+        "Native writes are preserved without commits and independently verified; successor stays unlaunched."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Implement isolated tag normalization probe",
+      "objective": "Create normalizeTags(values) as standalone ES module: require array of strings, throw TypeError for any invalid input, trim strings, normalize Unicode NFC, lowercase, discard empty tags, deduplicate preserving first-seen order, never mutate input. Write built-in node:test coverage. No product integration.",
+      "repository": "probe",
+      "after": [],
+      "covers": [
+        "R1"
+      ],
+      "kind": "implement",
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 15,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "expected_paths": [
+        "m3-smoke/normalize-tags.mjs",
+        "m3-smoke/normalize-tags.test.mjs"
+      ],
+      "shared_resources": [
+        "m3-smoke"
+      ],
+      "acceptance_criteria": [
+        "All specified normalization and validation cases pass using built-in node:test; only the two expected probe files change."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "node --test m3-smoke/normalize-tags.test.mjs",
+          "purpose": "Actual standalone behavior tests; no provider or product calls",
+          "category": "functional",
+          "created_by": "T1"
+        }
+      ],
+      "estimate_rationale": "Provisional bounded technical smoke task using Node built-in tests; no budget inferred.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "T1: Finite pure tag normalization with explicitly specified invalid inputs; medium would need unresolved state or several integration owners, absent from this probe.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "scope": {
+          "justification": "T1: Two new standalone probe files only; no product module changes or package setup.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "duration": {
+          "justification": "T1: Provisional fifteen minutes includes writing built-in tests and executing them; no historical latency or provider budget inferred.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "risk": {
+          "justification": "T1: Invalid normalization is confined to the isolated technical probe and caught by independent deterministic checks.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "coupling": {
+          "justification": "T1: No product consumers or shared wire contracts; successor is a gated sentinel with no actual execution.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "confidence": {
+          "justification": "T1: Actual M3 ports and capture code were inspected; deterministic Node built-in runner requires no external credentials or dependencies.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Run continuation sentinel after accepted probe",
+      "objective": "Continuation sentinel only; MUST NOT execute in this scoped smoke experiment.",
+      "repository": "probe",
+      "after": [
+        "T1"
+      ],
+      "covers": [
+        "R2"
+      ],
+      "kind": "test",
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 15,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "expected_paths": [
+        "m3-smoke/continuation.txt"
+      ],
+      "shared_resources": [
+        "m3-smoke"
+      ],
+      "acceptance_criteria": [
+        "Dependency promotion observed without launching the sentinel."
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "Inspect M1 snapshot",
+          "purpose": "Scoped dependency readiness",
+          "category": "integration",
+          "expected": "T2 ready with zero attempts"
+        }
+      ],
+      "estimate_rationale": "Provisional bounded technical smoke task using Node built-in tests; no budget inferred.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "T2: Finite pure tag normalization with explicitly specified invalid inputs; medium would need unresolved state or several integration owners, absent from this probe.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "scope": {
+          "justification": "T2: Two new standalone probe files only; no product module changes or package setup.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "duration": {
+          "justification": "T2: Provisional fifteen minutes includes writing built-in tests and executing them; no historical latency or provider budget inferred.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "risk": {
+          "justification": "T2: Invalid normalization is confined to the isolated technical probe and caught by independent deterministic checks.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "coupling": {
+          "justification": "T2: No product consumers or shared wire contracts; successor is a gated sentinel with no actual execution.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        },
+        "confidence": {
+          "justification": "T2: Actual M3 ports and capture code were inspected; deterministic Node built-in runner requires no external credentials or dependencies.",
+          "evidence": [
+            "spec:SPEC.md"
+          ]
+        }
+      }
+    }
+  ],
+  "interfaces": []
+}

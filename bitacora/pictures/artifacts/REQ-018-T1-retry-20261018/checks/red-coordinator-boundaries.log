@@ -1,0 +1,46 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: causas raíz sin corregir:
+- las comas no afirman colores de una enumeración negativa: Expected values to be strictly deep-equal:
+- una afirmación explícita termina la enumeración negativa: Expected values to be strictly deep-equal:
+- las frases léxicas anunciadas son una sola restricción: quiero tema arco iris
+- la etiqueta temática no forma parte del término excluido: no quiero tema gótico
+- solo-colores no introduce un estilo literal obligatorio: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'las comas no afirman colores de una enumeración negativa: Expected values to be strictly deep-equal:',
++   'una afirmación explícita termina la enumeración negativa: Expected values to be strictly deep-equal:',
++   'las frases léxicas anunciadas son una sola restricción: quiero tema arco iris',
++   'la etiqueta temática no forma parte del término excluido: no quiero tema gótico',
++   'solo-colores no introduce un estilo literal obligatorio: Expected values to be strictly deep-equal:'
++ ]
+- []
+
+    at assert (/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-recomendaciones-categoria.ts:305:8)
+    at Object.<anonymous> (/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-recomendaciones-categoria.ts:306:148)
+    at Module._compile (node:internal/modules/cjs/loader:1929:14)
+    at Object.transformer (/home/david/dev/pictures/node_modules/tsx/dist/register-C557imBs.cjs:9:3619)
+    at Module.load (node:internal/modules/cjs/loader:1651:32)
+    at Module._load (node:internal/modules/cjs/loader:1443:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:372:15)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:244:9)
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'las comas no afirman colores de una enumeración negativa: Expected values to be strictly deep-equal:',
+    'una afirmación explícita termina la enumeración negativa: Expected values to be strictly deep-equal:',
+    'las frases léxicas anunciadas son una sola restricción: quiero tema arco iris',
+    'la etiqueta temática no forma parte del término excluido: no quiero tema gótico',
+    'solo-colores no introduce un estilo literal obligatorio: Expected values to be strictly deep-equal:'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.21.0

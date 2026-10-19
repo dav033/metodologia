@@ -1,0 +1,18 @@
+{
+  "req_id": "REQ-023",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-023-require-m4-m6-in-the-scheduler-runtime/PLAN.md",
+      "sha256": "0ac79c2c20f9e21fa142b38b382ef8d4e705be013614ff929ba96dcff0b75af8"
+    }
+  ]
+}

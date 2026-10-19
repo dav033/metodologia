@@ -368,3 +368,34 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Consequences:** + Quality green on `2d924c10`. − The expectation was changed by an agent; the owner should confirm the intent.
 - **Rollback:** restore the previous fixture from `3254ab1b`.
 - **Source:** Quality fix on 2026-10-18 (`2d924c10`).
+
+## D-060 — Scope the actual REQ-018 experiment to isolated T1
+- **Date:** 2026-10-18 · **Status:** Accepted
+- **Context:** Synthetic M1/M2 runs demonstrated routing but not native execution or actual acceptance. Owner said "dale" and then "procede desde aqui" to the proposed single-task experiment.
+- **Decision:** Authorize actual M1/M2/native T1 and independent verification only in an isolated copy; keep canonical plan draft, no T2 launch, canonical integration, commit,push or deploy. Preserve negative acceptance rather than substituting scripted success. No routing/product policy amendment.
+- **Alternatives:** Another synthetic replay would not exercise the missing native/review boundary; canonical/full-plan execution exceeds this approval.
+- **Consequences:** Native Sonnet medium ran; independent review rejected four defects. M1 blocked T1 and kept T2 pending/unreachable. Repair/retry is tracked in P-120; the first result remains evidence, not an accepted implementation.
+- **Evidence:** artifacts/REQ-018-T1-live-20261018/REPORT.md.
+
+## D-061 — Authorize root-cause repair and isolated T1 retry
+- **Date:** 2026-10-18 · **Status:** Accepted
+- **Context:** D-060 actual T1 was rejected on four reproduced matching/preference defects. Owner explicitly requested root-cause repair and retry.
+- **Decision:** Repair strict lexical equivalence and polarity-aware preferences at their authoritative domain owners, add semantic regression tests, then run a new isolated T1 through real M1/M2/native execution and independent acceptance. Keep the prior rejected run immutable; do not launch T2 or integrate/commit/push/deploy canonical Pictures. Also align Scheduler quota preflight with the existing900s routing refresh policy instead of the hourly collector, preserving eligibility/backoff gates.
+- **Alternatives:** Repeating unchanged code or merely patching expected test outputs does not repair causes; positive scripted acceptance is forbidden.
+- **Consequences:** New isolated run /home/david/.local/tmp/req018-t1-retry-wbv54qd_, with separate M1/M2 stores; current attempt budget remains one in this new experiment. Role models/quota ranking are unchanged. No new full-plan approval.
+
+## D-062 — Reactivate REQ-018 only for the complete isolated product run
+
+- **Date:** 2026-10-18.
+- **Authority:** Owner requested full Pictures recommendation implementation through real M1/M2/M3 and explicitly revoked cancellation “del que está en aislamiento”.
+- **Scope:** Current eight-task product plan, separately approved/frozen in a new isolated run. Historical cancellation and prior scoped T1 acceptance remain evidence; acceptance is not transferred. Preserve canonical Pictures and unrelated work; no commits/commit-tree/push/merge/deploy/deletion.
+- **Execution:** Common pinned HEAD plus current dirty baseline; explicit cumulative schema2 patches. Every successor requires newly accepted predecessors, manifest/patch hashes, provenance and restored-tree verification before native launch. Default snapshot integration is not used.
+- **Current evidence:** T1 freshly accepted after repeated independent rejections/repairs, two review axes,11 functional checks, lint/package build/typegen/types and fresh artifact replay. Actual T2 starts on accepted T1 target tree; T3–T8 pending.
+- **Incident:** Native att0005 violated the no-deletion restriction by removing three generated diagnostic copies. Originals/source preserved, copies reconstructed with documented limits, command guards hardened. This is disclosed, not retroactively authorized or erased.
+- **Evidence:** artifacts/REQ-018-full-isolated-20261018/REPORT.md, authorization.json, accepted/T1/, deletion-incident.json. No full product-completion claim.
+
+## D-063 — Cancel the isolated REQ-018 run and revert this pass's code
+- **Date:** 2026-10-18 · **Authority:** Owner ("cancela todo y que todo el codigo hecho en esta pasada se revierta"), after clarifying the goal was a flow test (M1-M3), not the feature.
+- **Decision:** Scheduler run and T2 cancelled; worktrees att-0006..att-0012 and review replays removed; coordinator-authored reference code deleted and declared invalid as flow evidence. T1 acceptance (att-0001..0005) and review reports are retained. Canonical Pictures and other repos were never modified by this pass.
+- **Role rule:** in flow experiments the assistant supervises and reports; it does not write product code.
+- **Addendum (2026-10-18, owner):** the REQ-018 plan files (PLAN.md/PLAN.json) were also deleted: canonical `requirements/REQ-018-category-based-recommendations-of-assemb/`, `artifacts/REQ-018-replan-20261018/{before,after}/`, the run's frozen copy under `.state/req018-full-mwvocojr/`, and 8 temp simulation copies under `~/.local/tmp`. SPEC.md and rounds/ are kept. Canonical and `before/` copies are in git history; the frozen run copy and temp copies were never versioned. The REQ-018 index link to the draft plan is now dangling.

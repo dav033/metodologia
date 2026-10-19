@@ -1,0 +1,35 @@
+{
+  "req_id": "REQ-014",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-014-scheduler-m3-agent-executor",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "PLAN.json",
+    "plan-revisions"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-014-scheduler-m3-agent-executor/PLAN.md",
+      "sha256": "c70744da87b17b5aa6cbc00a7985ccc708b3515f0641136007979f709cffaa0d"
+    },
+    {
+      "path": "PLAN.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-014-scheduler-m3-agent-executor/PLAN.json",
+      "sha256": "32816fb6b5c5dbb11a6e5041f808574268325c5d62c104384031a16f05d517af"
+    },
+    {
+      "path": "plan-revisions/MANIFEST.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-014-scheduler-m3-agent-executor/plan-revisions/MANIFEST.json",
+      "sha256": "c61a07c58cb859026c44cf0aa881d954eb5d4fe63535654a71261e47659a8c24"
+    },
+    {
+      "path": "plan-revisions/PLAN.r1.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-014-scheduler-m3-agent-executor/plan-revisions/PLAN.r1.json",
+      "sha256": "46f399c6168115e3d8fa242796fd276effa392d20c49e2f9d6b64eebc1d19fe5"
+    }
+  ]
+}

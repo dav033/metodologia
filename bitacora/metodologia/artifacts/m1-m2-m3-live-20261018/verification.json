@@ -1,0 +1,36 @@
+{
+  "native-tests": {
+    "exit": 0
+  },
+  "independent-tests": {
+    "exit": 0
+  },
+  "replay-create": {
+    "exit": 0
+  },
+  "replay-apply": {
+    "exit": 0
+  },
+  "replay-tests": {
+    "exit": 0
+  },
+  "replay-native-tests": {
+    "exit": 0
+  },
+  "git-count": {
+    "exit": 0
+  },
+  "git-head": {
+    "exit": 0
+  },
+  "git_after": {
+    "count": "1133",
+    "head": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723"
+  },
+  "baseline": {
+    "commit_count": 1133,
+    "head": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723"
+  },
+  "patch_sha256": "3789f0d645cab08c4ff8a872fea6378fd8adc0138180eee211ec677362e5d0fa",
+  "replay_identical": true
+}

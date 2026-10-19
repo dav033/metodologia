@@ -1,0 +1,15 @@
+{
+  "time": "2026-10-18T20:24:45.083698+00:00",
+  "owner_confirmation": "revoco la canselacion del que esta en aislaiento",
+  "scope": "Reactivate REQ-018 for full isolated real M1/M2/M3 execution, independent verification/review; canonical Pictures preserved. Historical cancellation retained.",
+  "restrictions": [
+    "no commits",
+    "no commit-tree",
+    "no push",
+    "no merges",
+    "no deploys",
+    "no file deletion",
+    "no global hook changes"
+  ],
+  "status": "preparation; no product task accepted in this run"
+}

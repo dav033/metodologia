@@ -1,0 +1,15 @@
+{
+  "baseline_tree": "923d0de61682c151d574b0f1b2881d2ec2c23642",
+  "accepted_tree": "63c6bf26559840627d032cecc0bab65ad6b05932",
+  "product_paths": [
+    "scripts/test/test-ideas-boda-guiada.ts",
+    "scripts/test/test-recomendaciones-categoria.ts",
+    "src/lib/biblioteca-sempertex/biblioteca.ts",
+    "src/lib/biblioteca-sempertex/categorias.ts",
+    "src/lib/biblioteca-sempertex/preferencias-texto.ts",
+    "src/lib/biblioteca-sempertex/recomendaciones-categoria.ts",
+    "src/lib/ia/guiado/ideas-guiadas.ts"
+  ],
+  "product_patch_sha256": "060af1df53917eda8a4820d1000d9694c9dfff2345c29cee0a1e8b0f0213c79a",
+  "no_canonical_integration": true
+}

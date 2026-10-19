@@ -1,0 +1,11 @@
+{
+  "real_baseline_restore": true,
+  "tree": "aaad1d116e1f0ba5bbd3d72391eaceb9ec18ee22",
+  "absent_canonical_paths": [
+    "src/app/api/feedback-ia/admin/sesion/route.ts",
+    "src/components/admin/feedback-ia/AccesoAdminFeedback.tsx"
+  ],
+  "digest": "ExecutorError",
+  "missing": "FileNotFoundError",
+  "lineage": "ExecutorError"
+}

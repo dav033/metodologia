@@ -1,0 +1,20 @@
+{
+  "verdict": {
+    "verdict_id": "real-independent-review-T1-retry-accept",
+    "plan_id": "REQ-018",
+    "revision": 1,
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "accepted": true,
+    "verifier": "independent-spec-and-standards-review",
+    "evidence": "Actual independent spec and standards APPROVE after root-cause repair and targeted follow-up. Six deterministic scripts exit0; lint0/same50 baseline warnings; workspace build0; tsc retains sole baseline LayoutProps failure. reviews/verdicts.json, independent-checks-final/summary.json and final-source-hashes.json. Native plus explicitly recorded coordinator fixes; no T2 execution.",
+    "token": 1,
+    "occurred_at": ""
+  },
+  "ingest_result": {
+    "status": "applied",
+    "reason": "",
+    "event_id": "real-independent-review-T1-retry-accept"
+  },
+  "scope": "T1 only; T2 promoted to ready with zero attempts"
+}

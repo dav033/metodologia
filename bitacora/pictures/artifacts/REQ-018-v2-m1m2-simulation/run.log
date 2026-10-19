@@ -1,0 +1,3 @@
+{"case": "REQ018", "shape": "real-approved-plan", "difficulty": "mixed", "kind": "mixed", "claude_used": 20, "codex_used": 60, "tasks": 8, "routes": [["T1", "claude", "sonnet", "medium"], ["T2", "claude", "sonnet", "medium"], ["T3", "claude", "sonnet", "medium"], ["T4", "claude", "sonnet", "medium"], ["T5", "claude", "sonnet", "medium"], ["T6", "claude", "sonnet", "medium"], ["T7", "claude", "sonnet", "low"], ["T8", "codex", "gpt-6.1-sol", "high"]], "status": "completed", "account_order_invariant": true}
+Evidence: /home/david/.local/tmp/pictures-req018-v2-m1m2-d2_nrebl/run-gfcrnq1x
+PASS: 1 scenarios, 2 isolated runs, 16 simulated tasks

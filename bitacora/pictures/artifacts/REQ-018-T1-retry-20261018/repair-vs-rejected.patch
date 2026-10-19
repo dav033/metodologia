@@ -1,0 +1,499 @@
+--- a/src/lib/biblioteca-sempertex/recomendaciones-categoria.ts
++++ b/src/lib/biblioteca-sempertex/recomendaciones-categoria.ts
+@@ -1,7 +1,8 @@
+-import { ALIAS_COLORES_V2, clasificarColores, clasificarTonos, TONOS_V2, type TonoClaroV2 } from "@/lib/rag/taxonomy/v2";
+-import { formasTematicasEquivalentes, motivosNombrados, normalizarBusqueda, sinMotivosAjenos, tituloComparable, type CoincidenciaDecoracion } from "./biblioteca";
++import { clasificarColores, clasificarTonos, TONOS_V2, type TonoClaroV2 } from "@/lib/rag/taxonomy/v2";
++import { motivosNombrados, normalizarBusqueda, sinMotivosAjenos, tituloComparable, type CoincidenciaDecoracion } from "./biblioteca";
+ import { claveDeCategoria, decoracionEsDeCategoria, formasDeCategoria, vocabularioDeCategorias } from "./categorias";
+ import type { DecoracionSempertex } from "./esquemas";
++import { ALIAS_COLORES, ALIAS_TONOS, analizarPolaridad, ANUNCIOS_DE_ESTILO, formasLexicasEstrictas, MODIFICADORES_EXCLUSIVIDAD, PALABRAS_GENERO, PALABRAS_RELLENO, separarFrasesLexicas } from "./preferencias-texto";
+ 
+ /**
+  * Recomendación ESTRICTA por categoría (REQ-018, SPEC «Matching and decision contract» 1-5). Función pura: recibe los
+@@ -39,19 +40,8 @@
+ export type EstadoRecomendacion = "coincidencias" | "vacio" | "categoria_desconocida" | "categoria_ambigua";
+ export type ResultadoCategoria = { estado: EstadoRecomendacion; ideas: CoincidenciaDecoracion[] };
+ 
+-const PALABRAS_GENERO = new Set(["nino", "ninos", "nina", "ninas", "boy", "girl", "varon", "varoncito", "nena", "neutro", "neutra", "neutros", "neutral", "unisex"]);
+-const PALABRAS_RELLENO = new Set([
+-  "y", "e", "o", "u", "de", "del", "la", "las", "el", "los", "en", "con", "para", "por", "un", "una", "unos", "unas", "mi", "mis", "su", "tu",
+-  "que", "a", "al", "se", "lo", "me", "es", "quiero", "quisiera", "gustaria", "algo", "tipo", "estilo", "tono", "tonos", "color", "colores",
+-  "fiesta", "decoracion", "decoraciones", "globos", "idea", "ideas", "ano", "anos", "lleve", "lleven", "usar", "uses", "tenga", "tengan",
+-]);
+-
+-const normalizados = (formas: Iterable<string>): string[] => [...new Set([...formas].map(normalizarBusqueda).filter(Boolean))].sort((a, b) => b.length - a.length);
+-const ALIAS_TONOS = normalizados(Object.values(TONOS_V2).flatMap((tono) => tono.aliases));
+-const ALIAS_COLORES = normalizados(ALIAS_COLORES_V2.flatMap((color) => color.aliases));
+ const escapar = (texto: string): string => texto.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+-const CUE_NEGATIVO = new RegExp(`(?:^| )(?:sin|nada de|evita|evitar|excepto|menos|ni|no (?:quiero|quieres|me gusta|me gustan|lleve|uses|usar|con)|no(?= (?:${[...ALIAS_TONOS, ...ALIAS_COLORES].map(escapar).join("|")})(?: |$)))(?= |$)`);
+-const CUE_SOLO = /(?:^| )(?:solo|solamente|unicamente|exclusivamente)(?= |$)/;
++const CUE_SOLO = new RegExp(`(?:^| )(?:${MODIFICADORES_EXCLUSIVIDAD.join("|")})(?= |$)`);
+ 
+ function quitarFormas(texto: string, formas: readonly string[]): string {
+   return formas.reduce((resto, forma) => resto.replace(new RegExp(`(?<=^| )${escapar(forma)}(?= |$)`, "g"), " "), ` ${texto} `).replace(/\s+/g, " ").trim();
+@@ -61,38 +51,55 @@
+   return { tonos: clasificarTonos(texto).values, colores: clasificarColores(quitarFormas(normalizarBusqueda(texto), ALIAS_TONOS)).values };
+ }
+ 
+-type TextoAnalizado = { positivo: string; negativos: string[] };
+-
+-/** Separa lo que el cliente pide de lo que descarta («sin negro», «no quiero rosa», «nada de elegante»), cláusula a cláusula. */
+-function separarNegativas(texto: string | undefined): TextoAnalizado {
+-  const positivos: string[] = [];
+-  const negativos: string[] = [];
+-  for (const clausula of (texto ?? "").split(/[.;,!?¿¡\n]|\b(?:pero|aunque)\b/i)) {
+-    const normal = normalizarBusqueda(clausula);
+-    const corte = CUE_NEGATIVO.exec(normal);
+-    if (!corte) { positivos.push(normal); continue; }
+-    positivos.push(normal.slice(0, corte.index));
+-    const terminos = normal.slice(corte.index + corte[0].length).trim().split(/ (?:y|ni|o|e) /).map((termino) => termino.split(" ").filter((palabra) => !PALABRAS_RELLENO.has(palabra)).join(" ")).filter(Boolean);
+-    negativos.push(...terminos);
+-  }
+-  return { positivo: positivos.join(" ").replace(/\s+/g, " ").trim(), negativos };
++/**
++ * Estilos que el cliente anuncia con «estilo», «temática», «tema» o «motivo»: las palabras que siguen, hasta el primer
++ * relleno conversacional («gótico» en «quiero un estilo gótico para mi hija»). No depende del vocabulario del catálogo:
++ * un estilo desconocido sigue siendo una petición que ninguna idea satisface.
++ */
++function estilosAnunciados(positivo: string): string[] {
++  const palabras = positivo.split(" ").filter(Boolean);
++  const estilos: string[] = [];
++  let termino: string[] = [];
++  const cerrar = (): void => {
++    const { frases, resto } = separarFrasesLexicas(termino.join(" "));
++    estilos.push(...frases, ...resto.split(" ").filter(Boolean));
++    termino = [];
++  };
++  let anunciado = false;
++  palabras.forEach((palabra, indice) => {
++    if (ANUNCIOS_DE_ESTILO.has(palabra)) { cerrar(); anunciado = true; return; }
++    if (!anunciado) return;
++    if (PALABRAS_RELLENO.has(palabra) || PALABRAS_GENERO.has(palabra) || /^\d+$/.test(palabra)) {
++      const siguiente = palabras[indice + 1];
++      const enumeracion = (palabra === "y" || palabra === "e") && siguiente !== undefined && !PALABRAS_RELLENO.has(siguiente);
++      if (enumeracion) cerrar();
++      else if (termino.length > 0) { cerrar(); anunciado = false; }
++      return;
++    }
++    termino.push(palabra);
++  });
++  cerrar();
++  return estilos;
+ }
+ 
+ function analizarTexto(entrada: { tematica?: string; mensaje?: string; ignorar?: readonly string[] }): { preferencias: PreferenciasCategoria; positivo: string } {
+-  const delTema = separarNegativas(entrada.tematica);
+-  const delMensaje = separarNegativas(entrada.mensaje);
++  const delTema = analizarPolaridad(entrada.tematica);
++  const delMensaje = analizarPolaridad(entrada.mensaje);
+   const positivo = `${delTema.positivo} ${delMensaje.positivo}`.trim();
+   const { colores, tonos } = coloresDeTexto(positivo);
+   const antesDeSolo = CUE_SOLO.exec(positivo);
+   const tras = antesDeSolo ? positivo.slice(antesDeSolo.index + antesDeSolo[0].length) : "";
+   const soloColores = Boolean(antesDeSolo) && (clasificarColores(tras).values.length > 0 || clasificarTonos(tras).values.length > 0);
+   const sinColores = quitarFormas(delTema.positivo, [...(entrada.ignorar ?? []), ...ALIAS_TONOS, ...ALIAS_COLORES]);
+-  const delTemaEstilos = sinColores.split(" ").filter((palabra) => palabra && !PALABRAS_RELLENO.has(palabra) && !PALABRAS_GENERO.has(palabra) && !/^\d+$/.test(palabra));
++  const { frases, resto } = separarFrasesLexicas(sinColores);
++  const delTemaEstilos = [...frases, ...resto.split(" ").filter((palabra) => palabra && !PALABRAS_RELLENO.has(palabra) && !PALABRAS_GENERO.has(palabra) && !/^\d+$/.test(palabra))];
+   // Los motivos o personajes que el cliente nombra en su último mensaje también son petición («quiere dinosaurios»).
+-  const delMensajeMotivos = motivosNombrados(quitarFormas(delMensaje.positivo, entrada.ignorar ?? [])).map((motivo) => motivo.palabra);
++  const delMensajeSinFormas = quitarFormas(delMensaje.positivo, entrada.ignorar ?? []);
++  const delMensajeMotivos = motivosNombrados(delMensajeSinFormas).map((motivo) => motivo.palabra);
++  const delMensajeAnunciados = estilosAnunciados(quitarFormas(delMensajeSinFormas, [...ALIAS_TONOS, ...ALIAS_COLORES]));
+   return {
+     positivo,
+-    preferencias: { estilos: [...new Set([...delTemaEstilos, ...delMensajeMotivos])], colores, tonos, excluir: [...delTema.negativos, ...delMensaje.negativos], soloColores },
++    preferencias: { estilos: [...new Set([...delTemaEstilos, ...delMensajeMotivos, ...delMensajeAnunciados])], colores, tonos, excluir: [...delTema.negativos, ...delMensaje.negativos], soloColores },
+   };
+ }
+ 
+@@ -113,8 +120,7 @@
+ }
+ 
+ function tieneEvidenciaDeEstilo(texto: string, estilo: string): boolean {
+-  const formas = [estilo, `${estilo}s`, `${estilo}es`, estilo.replace(/(?:es|s)$/, ""), ...formasTematicasEquivalentes(estilo)];
+-  return formas.some((forma) => forma.length > 0 && contiene(texto, forma));
++  return formasLexicasEstrictas(estilo).some((forma) => contiene(texto, forma));
+ }
+ 
+ function cumpleEdad(decoracion: DecoracionSempertex, edad: number | undefined): boolean {
+@@ -134,7 +140,7 @@
+   }
+   if (preferencias.excluir.some((termino) => {
+     const pedido = coloresDeTexto(termino);
+-    return contiene(texto, termino) || pedido.colores.some((color) => suyos.colores.has(color)) || pedido.tonos.some((tono) => suyos.tonos.has(tono));
++    return formasLexicasEstrictas(termino).some((forma) => contiene(texto, forma)) || pedido.colores.some((color) => suyos.colores.has(color)) || pedido.tonos.some((tono) => suyos.tonos.has(tono));
+   })) return false;
+   return preferencias.estilos.every((estilo) => tieneEvidenciaDeEstilo(texto, estilo));
+ }
+--- /dev/null
++++ b/src/lib/biblioteca-sempertex/preferencias-texto.ts
+@@ -0,0 +1,136 @@
++import { ALIAS_COLORES_V2, TONOS_V2 } from "@/lib/rag/taxonomy/v2";
++import { normalizarBusqueda } from "./biblioteca";
++
++/**
++ * Dueño único de dos reglas de la recomendación ESTRICTA (REQ-018, SPEC «Matching and decision contract» 3): la polaridad
++ * de lo que el cliente escribe («sin negro y con dorado») y las formas léxicas de un término de estilo. Funciones puras,
++ * sin dependencia de la búsqueda legacy ni de sus grupos de afinidad. Consumidores: `recomendaciones-categoria.ts` y la
++ * interpretación del género de baby shower en `ia/guiado/ideas-guiadas.ts`.
++ */
++
++export const PALABRAS_GENERO = new Set(["nino", "ninos", "nina", "ninas", "boy", "girl", "varon", "varoncito", "nena", "neutro", "neutra", "neutros", "neutral", "unisex"]);
++export const ANUNCIOS_DE_ESTILO = new Set(["estilo", "estilos", "tematica", "tematicas", "tema", "temas", "motivo", "motivos"]);
++export const MODIFICADORES_EXCLUSIVIDAD = ["solo", "solamente", "unicamente", "exclusivamente"];
++export const PALABRAS_RELLENO = new Set([
++  "y", "e", "o", "u", "de", "del", "la", "las", "el", "los", "en", "con", "para", "por", "un", "una", "unos", "unas", "mi", "mis", "su", "tu",
++  "que", "a", "al", "se", "lo", "me", "es", "quiero", "quisiera", "gustaria", "algo", "tipo", "estilo", "tono", "tonos", "color", "colores",
++  "fiesta", "decoracion", "decoraciones", "globos", "idea", "ideas", "ano", "anos", "lleve", "lleven", "usar", "uses", "tenga", "tengan",
++  ...ANUNCIOS_DE_ESTILO, ...MODIFICADORES_EXCLUSIVIDAD,
++]);
++
++const normalizados = (formas: Iterable<string>): string[] => [...new Set([...formas].map(normalizarBusqueda).filter(Boolean))].sort((a, b) => b.length - a.length);
++export const ALIAS_TONOS = normalizados(Object.values(TONOS_V2).flatMap((tono) => tono.aliases));
++export const ALIAS_COLORES = normalizados(ALIAS_COLORES_V2.flatMap((color) => color.aliases));
++
++const PALABRAS_DE_CORTE = /[.;,!?¿¡\n]/;
++const MARCADORES_NEGATIVOS = [["sin"], ["nada", "de"], ["evita"], ["evitar"], ["excepto"], ["menos"], ["ni"], ["no", "quiero"], ["no", "quieres"], ["no", "me", "gusta"], ["no", "me", "gustan"], ["no", "lleve"], ["no", "uses"], ["no", "usar"], ["no", "con"]];
++const MARCADORES_POSITIVOS = [["con"], ["pero"], ["aunque"], ["si"], ["quiero"], ["quisiera"], ["me", "gusta"], ["me", "gustan"], ["me", "gustaria"], ["gustaria"]];
++/** «no» solo niega lo que le sigue si lo que le sigue es un color, un tono o un género («no negro», «no niña»). */
++const NEGABLES = [...ALIAS_TONOS, ...ALIAS_COLORES, ...PALABRAS_GENERO].map((forma) => forma.split(" "));
++const MARCADORES = [
++  ...MARCADORES_NEGATIVOS.map((palabras) => ({ palabras, negativo: true })),
++  ...MARCADORES_POSITIVOS.map((palabras) => ({ palabras, negativo: false })),
++].sort((a, b) => b.palabras.length - a.palabras.length);
++
++function empiezaCon(palabras: readonly string[], posicion: number, forma: readonly string[]): boolean {
++  return forma.every((palabra, desplazamiento) => palabras[posicion + desplazamiento] === palabra);
++}
++
++function marcadorEn(palabras: readonly string[], posicion: number): { largo: number; negativo: boolean } | null {
++  const marcador = MARCADORES.find((candidato) => empiezaCon(palabras, posicion, candidato.palabras));
++  if (marcador) return { largo: marcador.palabras.length, negativo: marcador.negativo };
++  if (palabras[posicion] === "no" && NEGABLES.some((forma) => empiezaCon(palabras, posicion + 1, forma))) return { largo: 1, negativo: true };
++  return null;
++}
++
++export type TextoConPolaridad = {
++  /** Lo que el cliente pide: el texto sin las cláusulas negadas ni los marcadores de polaridad. */
++  positivo: string;
++  /** Términos que el cliente descarta, uno por elemento, sin relleno («sin negro ni rosa» → negro, rosa). */
++  negativos: string[];
++};
++
++/**
++ * Separa lo pedido de lo descartado, cláusula a cláusula. Cada marcador fija la polaridad de lo que le sigue hasta el
++ * siguiente marcador o fin de oración: «sin negro y con dorado» descarta negro y pide dorado; «no quiero negro
++ * pero sí dorado» igual; «sin flores y sin gótico» descarta ambos. Los marcadores nunca quedan como términos literales.
++ * Las comas separan elementos de una enumeración sin cambiar su polaridad.
++ */
++export function analizarPolaridad(texto: string | undefined): TextoConPolaridad {
++  const positivos: string[] = [];
++  const negativos: string[] = [];
++  let negativo = false;
++  for (const clausula of (texto ?? "").split(/([.;,!?¿¡\n])/)) {
++    if (clausula.length === 1 && PALABRAS_DE_CORTE.test(clausula)) {
++      if (clausula !== ",") negativo = false;
++      continue;
++    }
++    const palabras = normalizarBusqueda(clausula).split(" ").filter(Boolean);
++    let termino: string[] = [];
++    const cerrar = (): void => { if (termino.length) negativos.push(termino.join(" ")); termino = []; };
++    for (let posicion = 0; posicion < palabras.length;) {
++      const marcador = marcadorEn(palabras, posicion);
++      if (marcador) { cerrar(); negativo = marcador.negativo; posicion += marcador.largo; continue; }
++      const palabra = palabras[posicion]!;
++      posicion += 1;
++      if (!negativo) { positivos.push(palabra); continue; }
++      if (["y", "e", "o", "u"].includes(palabra)) cerrar();
++      else if (!PALABRAS_RELLENO.has(palabra)) termino.push(palabra);
++    }
++    cerrar();
++  }
++  return { positivo: positivos.join(" "), negativos };
++}
++
++/** Grupos de formas de UNA misma palabra o expresión (variantes de escritura y de número), nunca de afinidad semántica. */
++const VARIANTES_LEXICAS: ReadonlyArray<readonly string[]> = [
++  ["dinosaurio", "dinosaurios", "dino", "dinos"],
++  ["unicornio", "unicornios"],
++  ["arcoiris", "arco iris"],
++  ["princesa", "princesas"],
++  ["superheroe", "superheroes", "super heroe", "super heroes"],
++  ["flor", "flores", "floral", "florales"],
++  ["navidad", "navideno", "navidena", "navidenos", "navidenas"],
++  ["hawaiano", "hawaiana", "hawaianos", "hawaianas", "hawai"],
++];
++
++const LARGO_MINIMO = 3;
++
++function conNumeroYGenero(forma: string): string[] {
++  const formas = [forma, `${forma}s`, `${forma}es`];
++  if (forma.endsWith("es") && forma.length - 2 >= LARGO_MINIMO) formas.push(forma.slice(0, -2));
++  if (forma.endsWith("s") && forma.length - 1 >= LARGO_MINIMO) formas.push(forma.slice(0, -1));
++  // El cambio -o/-a es género gramatical («romántico»/«romántica»), pero «niño» y «niña» son géneros distintos, no variantes.
++  if (!PALABRAS_GENERO.has(forma) && forma.length > LARGO_MINIMO) {
++    if (forma.endsWith("o")) formas.push(`${forma.slice(0, -1)}a`, `${forma.slice(0, -1)}as`);
++    if (forma.endsWith("a")) formas.push(`${forma.slice(0, -1)}o`, `${forma.slice(0, -1)}os`);
++  }
++  return formas;
++}
++
++/**
++ * Formas léxicas de un término de estilo, motivo o exclusión: él mismo, su número y género gramatical, y las variantes
++ * de escritura conocidas («dino» → dinosaurio, dinos…). «elegante» no es «negro y dorado», «unicornio» no es «arcoíris»
++ * y «tulipanes» no es «margaritas»: eso es afinidad, no equivalencia. Vacío si el término no tiene palabras.
++ */
++export function formasLexicasEstrictas(termino: string): string[] {
++  const consulta = normalizarBusqueda(termino);
++  if (!consulta) return [];
++  const base = new Set(conNumeroYGenero(consulta));
++  for (const grupo of VARIANTES_LEXICAS) if (grupo.some((forma) => base.has(forma))) grupo.forEach((forma) => base.add(forma));
++  return [...base];
++}
++
++const FRASES_LEXICAS = [...new Set(VARIANTES_LEXICAS.flat().filter((forma) => forma.includes(" ")))].sort((a, b) => b.length - a.length);
++
++/** Saca de un texto normalizado las expresiones léxicas de varias palabras («arco iris») para no partirlas en estilos sueltos. */
++export function separarFrasesLexicas(texto: string): { frases: string[]; resto: string } {
++  const frases: string[] = [];
++  let resto = ` ${texto} `;
++  for (const frase of FRASES_LEXICAS) {
++    if (!resto.includes(` ${frase} `)) continue;
++    frases.push(frase);
++    resto = resto.replace(` ${frase} `, "  ");
++  }
++  return { frases, resto: resto.replace(/\s+/g, " ").trim() };
++}
+--- a/src/lib/ia/guiado/ideas-guiadas.ts
++++ b/src/lib/ia/guiado/ideas-guiadas.ts
+@@ -1,5 +1,6 @@
+ import { bibliotecaVisible, buscarDecoracionesSempertex, normalizarBusqueda, type CoincidenciaDecoracion } from "@/lib/biblioteca-sempertex/biblioteca";
+ import type { DecoracionSempertex } from "@/lib/biblioteca-sempertex/esquemas";
++import { analizarPolaridad } from "@/lib/biblioteca-sempertex/preferencias-texto";
+ import { recomendarPorCategoria, type ResultadoCategoria } from "@/lib/biblioteca-sempertex/recomendaciones-categoria";
+ import { ALIAS_COLORES_V2, clasificarColores, clasificarTonos, plegarTexto, TONOS_V2 } from "@/lib/rag/taxonomy/v2";
+ 
+@@ -35,10 +36,15 @@
+   return texto.includes(" baby shower ") || texto.includes(" babyshower ") || texto.includes(" bienvenida de bebe ");
+ }
+ 
++/** Los géneros que nombra un texto, en el orden de `GENEROS_BEBE`. */
++function generosNombrados(texto: string): GeneroBebe[] {
++  const conjunto = palabras(texto);
++  return GENEROS_BEBE.filter((genero) => tieneAlguna(conjunto, PALABRAS_GENERO[genero]));
++}
++
+ /** El género que nombra un texto («Niña», «para niño», «algo neutro»); null si no nombra ninguno o nombra varios. */
+ export function generoBebeDe(texto: string): GeneroBebe | null {
+-  const conjunto = palabras(texto);
+-  const nombrados = GENEROS_BEBE.filter((genero) => tieneAlguna(conjunto, PALABRAS_GENERO[genero]));
++  const nombrados = generosNombrados(texto);
+   return nombrados.length === 1 ? nombrados[0]! : null;
+ }
+ 
+@@ -215,15 +221,29 @@
+  * Sin categoría no hay recomendaciones; la biblioteca visible se lee en cada búsqueda.
+  */
+ export function ideasEstrictasDeCategoria(entrada: EntradaIdeas, catalogo: DecoracionSempertex[] = bibliotecaVisible()): ResultadoCategoriaGuiada {
+-  const genero = esBabyShower(entrada.evento) ? generoBebeDe(entrada.ultimoUsuario ?? "") ?? generoBebeDe(entrada.tematica ?? "") : null;
+-  const resultado = recomendarPorCategoria(catalogo, {
+-    categoria: entrada.evento ?? "",
+-    edad: entrada.edad,
+-    tematica: entrada.tematica,
+-    mensaje: entrada.ultimoUsuario,
+-    admite: genero ? (decoracion) => generoDeDecoracion(decoracion) === genero : undefined,
+-  });
++  const { genero, excluidos } = generoConPolaridad(entrada);
++  const admite = genero || excluidos.length
++    ? (decoracion: DecoracionSempertex): boolean => {
++      const delGenero = generoDeDecoracion(decoracion);
++      return (!genero || delGenero === genero) && (delGenero === null || !excluidos.includes(delGenero));
++    }
++    : undefined;
++  const resultado = recomendarPorCategoria(catalogo, { categoria: entrada.evento ?? "", edad: entrada.edad, tematica: entrada.tematica, mensaje: entrada.ultimoUsuario, admite });
+   return { ...resultado, genero };
++}
++
++/**
++ * Género de baby shower pedido y géneros descartados, con la misma polaridad que usa la recomendación estricta: «no quiero
++ * niña» descarta niña y no la elige. Manda lo último que dijo el cliente sobre la temática guardada; un género descartado
++ * en cualquiera de los dos no se puede pedir. Fuera del baby shower no hay género.
++ */
++function generoConPolaridad(entrada: EntradaIdeas): { genero: GeneroBebe | null; excluidos: GeneroBebe[] } {
++  if (!esBabyShower(entrada.evento)) return { genero: null, excluidos: [] };
++  const delMensaje = analizarPolaridad(entrada.ultimoUsuario);
++  const delTema = analizarPolaridad(entrada.tematica);
++  const excluidos = generosNombrados([...delMensaje.negativos, ...delTema.negativos].join(" "));
++  const genero = [delMensaje.positivo, delTema.positivo].map(generoBebeDe).find((nombrado) => nombrado !== null && !excluidos.includes(nombrado)) ?? null;
++  return { genero, excluidos };
+ }
+ 
+ /**
+--- a/scripts/test/test-recomendaciones-categoria.ts
++++ b/scripts/test/test-recomendaciones-categoria.ts
+@@ -2,8 +2,9 @@
+ import { bibliotecaVisible } from "@/lib/biblioteca-sempertex/biblioteca";
+ import { claveDeCategoria, vocabularioDeCategorias } from "@/lib/biblioteca-sempertex/categorias";
+ import type { DecoracionSempertex } from "@/lib/biblioteca-sempertex/esquemas";
++import { analizarPolaridad, formasLexicasEstrictas } from "@/lib/biblioteca-sempertex/preferencias-texto";
+ import { preferenciasDeTexto, recomendarPorCategoria, TOPE_RECOMENDACIONES, type ConsultaCategoria } from "@/lib/biblioteca-sempertex/recomendaciones-categoria";
+-import { ideasEstrictasDeCategoria } from "@/lib/ia/guiado/ideas-guiadas";
++import { generoDeDecoracion, ideasEstrictasDeCategoria } from "@/lib/ia/guiado/ideas-guiadas";
+ 
+ /**
+  * REQ-018 T1: recomendación estricta por categoría (evento). Sin red ni modelo: catálogos controlados que se construyen
+@@ -154,4 +155,152 @@
+ // El buscador legacy conserva su relleno: no se vuelve la ruta de la categoría activa.
+ assert.equal(ideasEstrictasDeCategoria({ evento: "jubilación" }, real).ideas.length, 0, "la categoría activa nunca cae al buscador legacy con relleno");
+ 
++
++// ── 10. Causas raíz del rechazo previo (afinidad ≠ equivalencia léxica, polaridad, estilos desconocidos, género negado) ──
++// Se recolectan todos los fallos para que una sola ejecución muestre cada causa.
++const fallos: string[] = [];
++function caso(nombre: string, comprobacion: () => void): void {
++  try { comprobacion(); } catch (error) { fallos.push(`${nombre}: ${error instanceof Error ? error.message.split("\n")[0] : String(error)}`); }
++}
++
++// Causa 1: la afinidad semántica no prueba el estilo ni el motivo. Solo valen las variantes léxicas genuinas.
++const eleganteSoloColores = idea("Arco negro y dorado", "Negro y dorado", ["Boda"]);
++const eleganteLiteral = idea("Arco clásico", "Elegante blanco", ["Boda"]);
++const romanticoSoloOroRosa = idea("Semiarco blanco y oro rosa", "Oro rosa", ["Boda"]);
++const romanticoLiteral = idea("Semiarco pastel", "Romántico", ["Boda"]);
++const arcoirisIdea = idea("Arco arcoíris", "Arcoíris", ["Cumpleaños"]);
++const unicornioIdea = idea("Arco de unicornios", "Unicornio", ["Cumpleaños"]);
++const margaritasIdea = idea("Arco de margaritas", "Margaritas", ["Boda"]);
++const tulipanesIdea = idea("Arco de tulipanes", "Tulipanes", ["Boda"]);
++const estilos = [eleganteSoloColores, eleganteLiteral, romanticoSoloOroRosa, romanticoLiteral, arcoirisIdea, unicornioIdea, margaritasIdea, tulipanesIdea];
++caso("elegante no es negro y dorado (temática)", () => assert.deepEqual(ids(estilos, { categoria: "boda", tematica: "elegante" }), [eleganteLiteral.id]));
++caso("elegante no es negro y dorado (mensaje)", () => assert.deepEqual(ids(estilos, { categoria: "boda", mensaje: "quiero un estilo elegante" }), [eleganteLiteral.id]));
++caso("romántico no es oro rosa", () => assert.deepEqual(ids(estilos, { categoria: "boda", tematica: "romántico" }), [romanticoLiteral.id]));
++caso("romántica es variante léxica de romántico", () => assert.deepEqual(ids(estilos, { categoria: "boda", tematica: "romántica" }), [romanticoLiteral.id]));
++caso("unicornio no es arcoíris", () => assert.deepEqual(ids(estilos, { categoria: "cumpleaños", tematica: "unicornio" }), [unicornioIdea.id]));
++caso("unicornios es variante de unicornio", () => assert.deepEqual(ids(estilos, { categoria: "cumpleaños", mensaje: "quiere unicornios" }), [unicornioIdea.id]));
++caso("arcoíris no es unicornio", () => assert.deepEqual(ids(estilos, { categoria: "cumpleaños", tematica: "arcoíris" }), [arcoirisIdea.id]));
++caso("arco iris es variante de arcoíris", () => assert.deepEqual(ids(estilos, { categoria: "cumpleaños", tematica: "arco iris" }), [arcoirisIdea.id]));
++caso("tulipanes no es margaritas", () => assert.deepEqual(ids(estilos, { categoria: "boda", tematica: "tulipanes" }), [tulipanesIdea.id]));
++caso("tulipán es singular de tulipanes", () => assert.deepEqual(ids(estilos, { categoria: "boda", tematica: "tulipán" }), [tulipanesIdea.id]));
++caso("dino sigue siendo variante de dinosaurios", () => assert.deepEqual(ids([dinos], { categoria: "cumpleaños", tematica: "dinos" }), [dinos.id]));
++caso("sin elegante no excluye lo solo negro y dorado", () => assert.deepEqual(ids(estilos, { categoria: "boda", mensaje: "sin elegante", tematica: "negro y dorado" }), [eleganteSoloColores.id]));
++
++// Causa 2: la polaridad es un dato estructurado por cláusula; los marcadores repetidos y los regresos a positivo se conservan.
++const florBoda = idea("Arco de flores", "Flores blancas", ["Boda"]);
++const goticoBoda = idea("Arco gótico negro", "Gótico", ["Boda"]);
++const polaridad = [bodaBlancoDorado, bodaNegroDorado, florBoda, goticoBoda, bodaBlancoDoradoNude];
++caso("sin flores y sin gótico: dos negativas", () => assert.deepEqual(preferenciasDeTexto({ mensaje: "sin flores y sin gótico" }).excluir, ["flores", "gotico"]));
++caso("sin flores y sin gótico filtra ambas", () => assert.deepEqual(ids(polaridad, { categoria: "boda", mensaje: "sin flores y sin gótico" }), [bodaBlancoDorado.id, bodaNegroDorado.id, bodaBlancoDoradoNude.id]));
++caso("sin negro y con dorado: dorado es positivo", () => {
++  const preferencias = preferenciasDeTexto({ mensaje: "sin negro y con dorado" });
++  assert.deepEqual(preferencias.excluir, ["negro"]);
++  assert.deepEqual(preferencias.colores, ["dorado"]);
++});
++caso("sin negro y con dorado filtra", () => assert.deepEqual(ids(catalogo, { categoria: "boda", mensaje: "sin negro y con dorado" }), [bodaBlancoDorado.id, bodaBlancoDoradoNude.id]));
++caso("no quiero negro pero sí dorado", () => {
++  const preferencias = preferenciasDeTexto({ mensaje: "no quiero negro pero sí dorado" });
++  assert.deepEqual(preferencias.excluir, ["negro"]);
++  assert.deepEqual(preferencias.colores, ["dorado"]);
++  assert.deepEqual(ids(catalogo, { categoria: "boda", mensaje: "no quiero negro pero sí dorado" }), [bodaBlancoDorado.id, bodaBlancoDoradoNude.id]);
++});
++caso("sin negro ni rosa", () => assert.deepEqual(preferenciasDeTexto({ mensaje: "sin negro ni rosa" }), { estilos: [], colores: [], tonos: [], excluir: ["negro", "rosa"], soloColores: false }));
++caso("negativas repetidas por cláusula", () => assert.deepEqual(preferenciasDeTexto({ mensaje: "no quiero negro, no quiero rosa" }).excluir, ["negro", "rosa"]));
++caso("negativa y petición del mismo mensaje", () => {
++  const preferencias = preferenciasDeTexto({ mensaje: "no quiero negro y quiero dorado" });
++  assert.deepEqual([preferencias.excluir, preferencias.colores], [["negro"], ["dorado"]]);
++});
++caso("control mixto: blanco y dorado pero sin nude", () => assert.deepEqual(ids(catalogo, { categoria: "boda", mensaje: "quiero blanco y dorado pero sin nude" }), [bodaBlancoDorado.id]));
++caso("control positivo puro no excluye nada", () => assert.deepEqual(preferenciasDeTexto({ mensaje: "con dorado y con blanco" }).excluir, []));
++
++// Causa 3: el estilo o la temática explícitos del cliente se conservan aunque el catálogo no los conozca.
++caso("quiero un estilo gótico conservado", () => assert.deepEqual(preferenciasDeTexto({ mensaje: "quiero un estilo gótico" }).estilos, ["gotico"]));
++caso("quiero estilo gótico sin evidencia: vacío", () => assert.deepEqual(ids(catalogo, { categoria: "boda", mensaje: "quiero estilo gótico" }), []));
++caso("quiero temática X sin evidencia: vacío", () => assert.deepEqual(ids(catalogo, { categoria: "boda", mensaje: "quiero temática vintage" }), []));
++caso("quiero un estilo gótico con evidencia literal", () => assert.deepEqual(ids(polaridad, { categoria: "boda", mensaje: "quiero un estilo gótico" }), [goticoBoda.id]));
++caso("el relleno conversacional no es estilo", () => {
++  assert.deepEqual(preferenciasDeTexto({ mensaje: "hola, quiero algo bonito para mi hija" }).estilos, []);
++  assert.deepEqual(ids(catalogo, { categoria: "boda", mensaje: "hola, es para mi hija" }), ids(catalogo, { categoria: "boda" }));
++});
++caso("el estilo termina antes del relleno posterior", () => assert.deepEqual(preferenciasDeTexto({ mensaje: "quiero un estilo gótico para mi hija" }).estilos, ["gotico"]));
++caso("estilo negado no es petición", () => assert.deepEqual(preferenciasDeTexto({ mensaje: "no quiero un estilo gótico" }).estilos, []));
++
++// Causa 4: el género del baby shower consume los mismos hechos con polaridad.
++const babyDerivadaNina = idea("Guirnalda fucsia", "Fucsia y rosa", ["Baby shower"]);
++const babyNeutro = idea("Guirnalda blanca", "Blanco y dorado", ["Baby shower"]);
++const bebes = [babyNina, babyDerivadaNina, babyNino, babyNeutro];
++caso("no quiero niña no selecciona niña", () => {
++  const resultado = ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "no quiero niña" }, bebes);
++  assert.equal(resultado.genero, null);
++  assert.deepEqual(resultado.ideas.map((item) => item.id), [babyNino.id, babyNeutro.id]);
++});
++caso("no quiero niña con temática guardada de niña", () => assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower", tematica: "Niña", ultimoUsuario: "no quiero niña" }, bebes).ideas.map((item) => item.id), [babyNino.id, babyNeutro.id]));
++caso("sin niña y con azul: preferencias independientes", () => assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "sin niña y con azul" }, bebes).ideas.map((item) => item.id), [babyNino.id]));
++caso("no quiero niña ni plateado conserva la exclusión léxica", () => assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "no quiero niña ni plateado" }, bebes).ideas.map((item) => item.id), [babyNeutro.id]));
++caso("control: niño positivo", () => assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "es un niño" }, bebes).ideas.map((item) => item.id), [babyNino.id]));
++caso("control: niña positiva incluye la derivada", () => assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "es una niña" }, bebes).ideas.map((item) => item.id), [babyNina.id, babyDerivadaNina.id]));
++caso("control: neutro positivo", () => assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "algo neutro" }, bebes).ideas.map((item) => item.id), [babyNeutro.id]));
++caso("no quiero niño deja niña y neutro", () => assert.deepEqual(ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "no quiero niño" }, bebes).ideas.map((item) => item.id), [babyNina.id, babyDerivadaNina.id, babyNeutro.id]));
++caso("biblioteca real: no quiero niña no admite diseños de niña", () => {
++  const resultado = ideasEstrictasDeCategoria({ evento: "Baby shower", ultimoUsuario: "no quiero niña" }, real);
++  assert.equal(resultado.genero, null);
++  assert.ok(resultado.ideas.every((item) => generoDeDecoracion(item) !== "nina"), "ninguna idea de género niña");
++});
++
++// Helper puro: variantes léxicas y polaridad, sin afinidad semántica.
++caso("formas léxicas genuinas", () => {
++  for (const forma of ["dinosaurio", "dinosaurios", "dino", "dinos"]) assert.ok(formasLexicasEstrictas("dino").includes(forma), forma);
++  assert.ok(formasLexicasEstrictas("romántica").includes("romantico"));
++  assert.ok(formasLexicasEstrictas("arco iris").includes("arcoiris"));
++});
++caso("formas léxicas sin afinidad", () => {
++  assert.ok(!formasLexicasEstrictas("elegante").some((forma) => forma.includes("negro") || forma.includes("dorado")));
++  assert.ok(!formasLexicasEstrictas("romantico").includes("oro rosa"));
++  assert.ok(!formasLexicasEstrictas("unicornio").includes("arcoiris"));
++  assert.ok(!formasLexicasEstrictas("tulipanes").includes("margaritas"));
++  assert.ok(!formasLexicasEstrictas("nino").includes("nina"), "niño y niña no son variantes");
++});
++caso("polaridad estructurada", () => {
++  assert.deepEqual(analizarPolaridad("sin negro y con dorado"), { positivo: "dorado", negativos: ["negro"] });
++  assert.deepEqual(analizarPolaridad("sin flores y sin gótico"), { positivo: "", negativos: ["flores", "gotico"] });
++  assert.deepEqual(analizarPolaridad("no quiero negro pero sí dorado"), { positivo: "dorado", negativos: ["negro"] });
++  assert.deepEqual(analizarPolaridad("sin negro ni rosa"), { positivo: "", negativos: ["negro", "rosa"] });
++  assert.deepEqual(analizarPolaridad(undefined), { positivo: "", negativos: [] });
++});
++
++caso("las comas no afirman colores de una enumeración negativa", () => {
++  assert.deepEqual(analizarPolaridad("sin negro, rosa ni azul"), { positivo: "", negativos: ["negro", "rosa", "azul"] });
++  const soloRosa = idea("Aro rosa", "Rosa", ["Boda"]);
++  const soloDorado = idea("Aro dorado", "Dorado", ["Boda"]);
++  assert.deepEqual(ids([soloRosa, soloDorado], { categoria: "Boda", mensaje: "sin negro, rosa ni azul" }), [soloDorado.id]);
++});
++caso("una afirmación explícita termina la enumeración negativa", () => {
++  assert.deepEqual(analizarPolaridad("sin negro, con dorado"), { positivo: "dorado", negativos: ["negro"] });
++  assert.deepEqual(analizarPolaridad("sin negro. Quiero dorado"), { positivo: "dorado", negativos: ["negro"] });
++  assert.deepEqual(analizarPolaridad("sin flores, gótico"), { positivo: "", negativos: ["flores", "gotico"] });
++});
++caso("las frases léxicas anunciadas son una sola restricción", () => {
++  for (const mensaje of ["quiero tema arco iris", "quiero un estilo arco iris", "quiero temática arco iris"]) {
++    assert.deepEqual(preferenciasDeTexto({ mensaje }).estilos, ["arco iris"], mensaje);
++    assert.deepEqual(ids([arcoirisIdea], { categoria: "Cumpleaños", mensaje }), [arcoirisIdea.id], mensaje);
++  }
++});
++caso("la etiqueta temática no forma parte del término excluido", () => {
++  for (const etiqueta of ["tema", "temática", "estilo", "motivo"]) {
++    const mensaje = `no quiero ${etiqueta} gótico`;
++    assert.deepEqual(preferenciasDeTexto({ mensaje }).excluir, ["gotico"], mensaje);
++    assert.deepEqual(ids([goticoBoda, bodaBlancoDorado], { categoria: "Boda", mensaje }), [bodaBlancoDorado.id], mensaje);
++  }
++});
++caso("solo-colores no introduce un estilo literal obligatorio", () => {
++  for (const marcador of ["solo", "solamente", "únicamente", "exclusivamente"]) {
++    const tematica = `${marcador} blanco y dorado`;
++    const preferencias = preferenciasDeTexto({ tematica });
++    assert.equal(preferencias.soloColores, true);
++    assert.deepEqual(preferencias.estilos, []);
++    assert.deepEqual(ids([bodaBlancoDorado, bodaBlancoDoradoNude], { categoria: "Boda", tematica }), [bodaBlancoDorado.id]);
++  }
++});
++
++assert.deepEqual(fallos, [], `causas raíz sin corregir:\n- ${fallos.join("\n- ")}`);
+ console.log("test-recomendaciones-categoria: categoría estricta, alias genuinos, preferencias positivas/negativas, sin relleno, fuentes sucesivas.");

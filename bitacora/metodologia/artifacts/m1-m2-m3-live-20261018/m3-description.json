@@ -1,0 +1,146 @@
+{
+  "attempt_id": "att-0001",
+  "state": "finished",
+  "outcome": {
+    "cause": "clean",
+    "claim": {
+      "claimed": true,
+      "status": "done",
+      "summary": "Wrote m3-smoke/normalize-tags.mjs and m3-smoke/normalize-tags.test.mjs. Tests were written first (red: module missing), then the implementation; node --test m3-smoke/normalize-tags.test.mjs gave 10/10 passing locally. Independent acceptance is left to the parent."
+    },
+    "cost_usd": 0.1365309,
+    "detail": "",
+    "exit": {
+      "child_pid": 725060,
+      "ended_at": 1792353648.4019732,
+      "started_at": 1792353628.6230052
+    },
+    "final": "finished",
+    "output": {
+      "bytes": 33746,
+      "dropped": 0
+    },
+    "reason": "exited",
+    "reset_epoch": null,
+    "returncode": 0,
+    "signal": "",
+    "terminal_event": true,
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 25338,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 25338,
+      "cache_read_input_tokens": 111229,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 8,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 437,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 437,
+          "cache_read_input_tokens": 34924,
+          "input_tokens": 2,
+          "output_tokens": 394,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 2404,
+      "output_tokens_details": {
+        "thinking_tokens": 17
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    }
+  },
+  "handoff": {
+    "attempt_id": "att-0001",
+    "base_sha": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723",
+    "branch": "m3/att-0001-3c9f5c1f520fafa0-e8dbd005",
+    "branch_at_end": "m3/att-0001-3c9f5c1f520fafa0-e8dbd005",
+    "changed": [
+      "A\tm3-smoke/normalize-tags.mjs",
+      "A\tm3-smoke/normalize-tags.test.mjs"
+    ],
+    "changed_total": 2,
+    "commit_count": 0,
+    "commits": [],
+    "dirty": true,
+    "empty": false,
+    "handoff_mode": "patch",
+    "has_commits": false,
+    "head_sha": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723",
+    "log_tail": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/handoff/log-tail.txt",
+    "patch": {
+      "bytes": 3185,
+      "path": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/handoff/changes.patch",
+      "sha256": "3789f0d645cab08c4ff8a872fea6378fd8adc0138180eee211ec677362e5d0fa",
+      "skipped": ""
+    },
+    "patch_bytes": 3185,
+    "patch_sha256": "3789f0d645cab08c4ff8a872fea6378fd8adc0138180eee211ec677362e5d0fa",
+    "refs": {},
+    "repository": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/repository",
+    "schema": 2,
+    "snapshot_sha": null,
+    "status": "captured",
+    "untracked_count": 2,
+    "worktree": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/ws/worktrees/att-0001-3c9f5c1f520fafa0"
+  },
+  "stream": {
+    "schema_version": "1.0.0",
+    "execution_id": "att-0001",
+    "plan_revision": 1,
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "process_identity": {
+      "platform": "linux",
+      "host_boot_id": "7743599f-17f0-4af0-a663-1602ba578a3c",
+      "pid": 725060,
+      "start_ticks": 2324151
+    },
+    "stream_ref": "stream.fifo",
+    "provider": "claude",
+    "profile_id": "claude-work",
+    "model": "sonnet",
+    "stdout_bytes_read": 33746,
+    "stdout_bytes_sent": 0,
+    "stdout_bytes_dropped": 33746,
+    "stderr_bytes_read": 0,
+    "stderr_bytes_sent": 0,
+    "stderr_bytes_dropped": 0,
+    "stdout_last_sequence": 19,
+    "stdout_last_offset": 33746,
+    "stderr_last_sequence": 0,
+    "stderr_last_offset": 0,
+    "dropped_ranges": [
+      {
+        "dropped_bytes": 33746,
+        "dropped_frames": 19,
+        "first_offset": 0,
+        "first_sequence": 0,
+        "last_offset": 33746,
+        "last_sequence": 18,
+        "stream": "stdout"
+      }
+    ]
+  },
+  "artifacts": {
+    "dir": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0",
+    "order": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/order.json",
+    "route": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/route.json",
+    "prompt": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/prompt.txt",
+    "output": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/output.log",
+    "tail": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/output.tail",
+    "exit": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/exit.json",
+    "shim": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/shim.json",
+    "handoff": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/attempts/att-0001-3c9f5c1f520fafa0/handoff"
+  }
+}

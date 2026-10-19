@@ -1,0 +1,47 @@
+{
+  "cli_reported_model": "claude-sonnet-5-5",
+  "requested_effort": "medium",
+  "effective_effort_attested": false,
+  "session_id": "a7276091-75be-4cfa-9742-732d9dee32cb",
+  "result_subtype": "success",
+  "is_error": false,
+  "num_turns": 22,
+  "duration_ms": 483578,
+  "reported_cost_usd": 0.9477579000000003,
+  "usage": {
+    "input_tokens": 40,
+    "cache_creation_input_tokens": 107738,
+    "cache_read_input_tokens": 1671659,
+    "output_tokens": 34956,
+    "output_tokens_details": {
+      "thinking_tokens": 16542
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 107738,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1336,
+        "cache_read_input_tokens": 116710,
+        "cache_creation_input_tokens": 1051,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1051
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "hook_event_count": 0,
+  "post_native_coordinator_fixes": true
+}

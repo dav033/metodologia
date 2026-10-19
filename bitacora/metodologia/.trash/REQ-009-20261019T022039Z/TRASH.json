@@ -1,0 +1,35 @@
+{
+  "req_id": "REQ-009",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-009-planner-plan-json-classification-contrac",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "PLAN.json",
+    "plan-revisions"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-009-planner-plan-json-classification-contrac/PLAN.md",
+      "sha256": "bcaa7c5bc8a485d8c3106e5578e00a0b360d54349999483fce6d8633373b4f6e"
+    },
+    {
+      "path": "PLAN.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-009-planner-plan-json-classification-contrac/PLAN.json",
+      "sha256": "4f19850eb82ef4b82ca1a67e02063b2040a10730df48f91b3da0713a78cfb815"
+    },
+    {
+      "path": "plan-revisions/MANIFEST.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-009-planner-plan-json-classification-contrac/plan-revisions/MANIFEST.json",
+      "sha256": "997e0e00f0e06f3728d3f98c6f163ffa99d02cd39fc8b605cc61af0dddb89e47"
+    },
+    {
+      "path": "plan-revisions/PLAN.r1.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-009-planner-plan-json-classification-contrac/plan-revisions/PLAN.r1.json",
+      "sha256": "4f19850eb82ef4b82ca1a67e02063b2040a10730df48f91b3da0713a78cfb815"
+    }
+  ]
+}

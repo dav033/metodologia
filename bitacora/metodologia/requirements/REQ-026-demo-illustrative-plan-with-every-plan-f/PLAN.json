@@ -1,0 +1,703 @@
+{
+  "schema_version": "1.1.0",
+  "plan_id": "REQ-026",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Understand the current UI",
+      "acceptance_criteria": [
+        "The owner can see which colors are hard-coded and which come from tokens.",
+        "Open questions about persistence are answered or turned into a stated assumption."
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Build the theme and the plan health badge",
+      "acceptance_criteria": [
+        "Light and dark render from one token set, with a manual override.",
+        "Each plan card shows progress and blocked work without opening the plan."
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Verify the result",
+      "acceptance_criteria": [
+        "Regression tests cover the token layer and the badge.",
+        "An independent audit approves the diff against the spec."
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Close out",
+      "acceptance_criteria": [
+        "Documentation and the bitácora describe what changed and what remains."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Inventory the color tokens and the places that hard-code colors",
+      "repository": "skill",
+      "after": [],
+      "expected_paths": [
+        "skill/assets/style.css",
+        "skill/scripts/bt_page_plans.py"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "grep -c \"var(--\" skill/assets/style.css",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "List every token and every literal color in the plan pages.",
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 20,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Two files, one pass.",
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "A table of tokens and literal colors exists in the task evidence."
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "For inventory the color tokens and the places that hard-code colors: A read-only inventory of two files.",
+          "evidence": [
+            "file:skill/assets/style.css",
+            "file:skill/scripts/bt_page_plans.py"
+          ]
+        },
+        "scope": {
+          "justification": "For inventory the color tokens and the places that hard-code colors: Reads two files and writes nothing.",
+          "evidence": [
+            "file:skill/assets/style.css"
+          ]
+        },
+        "duration": {
+          "justification": "For inventory the color tokens and the places that hard-code colors: Two files, one pass.",
+          "evidence": [
+            "precedent:D-045"
+          ]
+        },
+        "risk": {
+          "justification": "For inventory the color tokens and the places that hard-code colors: Nothing is modified, so nothing can regress.",
+          "evidence": [
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "For inventory the color tokens and the places that hard-code colors: No other task changes these files at the same time.",
+          "evidence": [
+            "file:skill/scripts/bt_page_plans.py"
+          ]
+        },
+        "confidence": {
+          "justification": "For inventory the color tokens and the places that hard-code colors: Both files were opened while writing this plan.",
+          "evidence": [
+            "file:skill/assets/style.css",
+            "file:skill/scripts/bt_page_plans.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Research how the page can follow the system theme and keep a manual choice",
+      "repository": "skill",
+      "after": [],
+      "expected_paths": [
+        "skill/scripts/bt_server.py"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "grep -q static skill/scripts/bt_server.py",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "Decide where the owner's choice can be stored without a database.",
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 30,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "A short spike.",
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The note names one storage place and why, or states the assumption that replaces it."
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "For research how the page can follow the system theme and keep a manual ch: Reading browser behavior and the server's static handler.",
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ]
+        },
+        "scope": {
+          "justification": "For research how the page can follow the system theme and keep a manual ch: No product file changes.",
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ]
+        },
+        "duration": {
+          "justification": "For research how the page can follow the system theme and keep a manual ch: A short spike.",
+          "evidence": [
+            "assumption:the browser keeps a cookie or local value without server changes"
+          ]
+        },
+        "risk": {
+          "justification": "For research how the page can follow the system theme and keep a manual ch: A wrong note only delays T5.",
+          "evidence": [
+            "task:T5"
+          ]
+        },
+        "coupling": {
+          "justification": "For research how the page can follow the system theme and keep a manual ch: Independent of every other task.",
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ]
+        },
+        "confidence": {
+          "justification": "For research how the page can follow the system theme and keep a manual ch: The server handler was inspected but browser storage behavior is assumed.",
+          "evidence": [
+            "assumption:local browser storage is available in the owner's browsers"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M2",
+      "title": "Add the light and dark token layer with a manual override attribute",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "expected_paths": [
+        "skill/assets/style.css",
+        "skill/scripts/bt_pages.py"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_page_plans",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "Define one token set for both themes and let a data attribute override the system choice.",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Comparable to the earlier token rewrite.",
+      "shared_resources": [
+        "style-tokens"
+      ],
+      "acceptance_criteria": [
+        "Both themes render every page without a literal color left in the plan pages.",
+        "An explicit attribute wins over the system preference."
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "For add the light and dark token layer with a manual override attribute: One token block plus a small selector change.",
+          "evidence": [
+            "file:skill/assets/style.css"
+          ]
+        },
+        "scope": {
+          "justification": "For add the light and dark token layer with a manual override attribute: Changes the shared stylesheet and one page module.",
+          "evidence": [
+            "file:skill/assets/style.css",
+            "file:skill/scripts/bt_pages.py"
+          ]
+        },
+        "duration": {
+          "justification": "For add the light and dark token layer with a manual override attribute: Comparable to the earlier token rewrite.",
+          "evidence": [
+            "precedent:D-045"
+          ]
+        },
+        "risk": {
+          "justification": "For add the light and dark token layer with a manual override attribute: A bad token can make text unreadable on every page.",
+          "evidence": [
+            "task:T1"
+          ]
+        },
+        "coupling": {
+          "justification": "For add the light and dark token layer with a manual override attribute: Every page reads the shared tokens.",
+          "evidence": [
+            "file:skill/assets/style.css"
+          ]
+        },
+        "confidence": {
+          "justification": "For add the light and dark token layer with a manual override attribute: The inventory from T1 lists exactly what has to move.",
+          "evidence": [
+            "task:T1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Show progress and blocked work on each plan card",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "expected_paths": [
+        "skill/scripts/bt_page_plans.py",
+        "skill/scripts/tests/test_page_plans.py"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_page_plans",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "Add a compact health line to the plan cards using data the status API already returns.",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Similar to adding a chip row.",
+      "shared_resources": [
+        "plan-cards"
+      ],
+      "acceptance_criteria": [
+        "A card shows done/total tasks and the number of blocked tasks.",
+        "A plan with no tasks says so instead of showing 0/0."
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "For show progress and blocked work on each plan card: A rendering change over existing fields.",
+          "evidence": [
+            "file:skill/scripts/bt_page_plans.py"
+          ]
+        },
+        "scope": {
+          "justification": "For show progress and blocked work on each plan card: One page module and its test.",
+          "evidence": [
+            "file:skill/scripts/bt_page_plans.py",
+            "file:skill/scripts/tests/test_page_plans.py"
+          ]
+        },
+        "duration": {
+          "justification": "For show progress and blocked work on each plan card: Similar to adding a chip row.",
+          "evidence": [
+            "precedent:D-049"
+          ]
+        },
+        "risk": {
+          "justification": "For show progress and blocked work on each plan card: A wrong count misleads the owner about a plan.",
+          "evidence": [
+            "file:skill/scripts/tests/test_page_plans.py"
+          ]
+        },
+        "coupling": {
+          "justification": "For show progress and blocked work on each plan card: Only the plans page consumes it.",
+          "evidence": [
+            "file:skill/scripts/bt_page_plans.py"
+          ]
+        },
+        "confidence": {
+          "justification": "For show progress and blocked work on each plan card: The fields exist in the status payload.",
+          "evidence": [
+            "file:skill/scripts/bt_page_plans.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Keep the owner's theme choice between sessions",
+      "repository": "skill",
+      "after": [
+        "T2",
+        "T3"
+      ],
+      "expected_paths": [
+        "skill/scripts/bt_pages.py",
+        "skill/scripts/bt_server.py",
+        "skill/assets/style.css"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_page_plans",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "Store the choice in the browser and apply it before first paint, with no flash of the wrong theme.",
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "low",
+      "estimate_rationale": "Unknown until T2 settles where the value lives.",
+      "shared_resources": [
+        "style-tokens",
+        "server-static"
+      ],
+      "acceptance_criteria": [
+        "Reloading keeps the chosen theme.",
+        "Without a stored choice the system theme is used.",
+        "No request carries the choice to the server."
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "For keep the owner's theme choice between sessions: Touches rendering order, the server handler and storage.",
+          "evidence": [
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_pages.py"
+          ]
+        },
+        "scope": {
+          "justification": "For keep the owner's theme choice between sessions: Three product files across layers.",
+          "evidence": [
+            "file:skill/scripts/bt_pages.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/assets/style.css"
+          ]
+        },
+        "duration": {
+          "justification": "For keep the owner's theme choice between sessions: Unknown until T2 settles where the value lives.",
+          "evidence": [
+            "task:T2"
+          ]
+        },
+        "risk": {
+          "justification": "For keep the owner's theme choice between sessions: A flash of the wrong theme or a broken first paint affects every page.",
+          "evidence": [
+            "task:T3"
+          ]
+        },
+        "coupling": {
+          "justification": "For keep the owner's theme choice between sessions: Shares the token layer with T3 and the static handler.",
+          "evidence": [
+            "task:T3",
+            "file:skill/scripts/bt_server.py"
+          ]
+        },
+        "confidence": {
+          "justification": "For keep the owner's theme choice between sessions: The storage place is still an assumption from T2.",
+          "evidence": [
+            "assumption:browser storage works for the owner's local server origin"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M2",
+      "title": "Check contrast of every badge and chip in both themes",
+      "repository": "skill",
+      "after": [
+        "T5"
+      ],
+      "expected_paths": [
+        "skill/assets/style.css"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "grep -q -- --accent skill/assets/style.css",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "Measure text and background pairs and fix those below 4.5:1.",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 50,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "About fifty pairs at a minute each.",
+      "shared_resources": [
+        "style-tokens"
+      ],
+      "acceptance_criteria": [
+        "Every text/background pair is at least 4.5:1 in both themes."
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "For check contrast of every badge and chip in both themes: Measuring pairs and adjusting a few tokens.",
+          "evidence": [
+            "file:skill/assets/style.css"
+          ]
+        },
+        "scope": {
+          "justification": "For check contrast of every badge and chip in both themes: One stylesheet.",
+          "evidence": [
+            "file:skill/assets/style.css"
+          ]
+        },
+        "duration": {
+          "justification": "For check contrast of every badge and chip in both themes: About fifty pairs at a minute each.",
+          "evidence": [
+            "assumption:about fifty pairs need checking"
+          ]
+        },
+        "risk": {
+          "justification": "For check contrast of every badge and chip in both themes: Low: failures only produce a report and token tweaks.",
+          "evidence": [
+            "file:skill/assets/style.css"
+          ]
+        },
+        "coupling": {
+          "justification": "For check contrast of every badge and chip in both themes: Edits the same tokens as T3, so it waits for it.",
+          "evidence": [
+            "task:T3"
+          ]
+        },
+        "confidence": {
+          "justification": "For check contrast of every badge and chip in both themes: The pair count is an estimate.",
+          "evidence": [
+            "assumption:about fifty pairs need checking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M3",
+      "title": "Add regression tests for the token layer and the health line",
+      "repository": "skill",
+      "after": [
+        "T3",
+        "T4"
+      ],
+      "expected_paths": [
+        "skill/scripts/tests/test_page_plans.py"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_page_plans",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "Cover the override attribute, both themes and the health line, including the empty-plan case.",
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Matches earlier page tests.",
+      "shared_resources": [
+        "plan-cards"
+      ],
+      "acceptance_criteria": [
+        "The tests fail if the override attribute stops winning.",
+        "The 0/0 case renders the empty wording."
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "For add regression tests for the token layer and the health line: Assertions over rendered HTML.",
+          "evidence": [
+            "file:skill/scripts/tests/test_page_plans.py"
+          ]
+        },
+        "scope": {
+          "justification": "For add regression tests for the token layer and the health line: One test module.",
+          "evidence": [
+            "file:skill/scripts/tests/test_page_plans.py"
+          ]
+        },
+        "duration": {
+          "justification": "For add regression tests for the token layer and the health line: Matches earlier page tests.",
+          "evidence": [
+            "precedent:D-050"
+          ]
+        },
+        "risk": {
+          "justification": "For add regression tests for the token layer and the health line: Weak tests would let regressions through.",
+          "evidence": [
+            "task:T3",
+            "task:T4"
+          ]
+        },
+        "coupling": {
+          "justification": "For add regression tests for the token layer and the health line: Depends on T3 and T4 markup.",
+          "evidence": [
+            "task:T3",
+            "task:T4"
+          ]
+        },
+        "confidence": {
+          "justification": "For add regression tests for the token layer and the health line: The existing test module already renders these pages.",
+          "evidence": [
+            "file:skill/scripts/tests/test_page_plans.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M3",
+      "title": "Independent audit of the M2 changes against the spec",
+      "repository": "skill",
+      "after": [
+        "T6",
+        "T7"
+      ],
+      "expected_paths": [
+        "skill/assets/style.css",
+        "skill/scripts/bt_page_plans.py",
+        "skill/scripts/bt_pages.py",
+        "skill/scripts/bt_server.py",
+        "skill/scripts/tests/test_page_plans.py"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "PYTHONPATH=skill/scripts:skill/scripts/tests python -W error::ResourceWarning -m unittest test_page_plans",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "A fresh reviewer compares the whole M2 diff with the spec and standards and reports findings.",
+      "complexity": "extreme",
+      "scope": "full_feature",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Two hours for a careful pass.",
+      "shared_resources": [
+        "m2-diff"
+      ],
+      "acceptance_criteria": [
+        "Every requirement R1-R4 is traced to a change and a test.",
+        "Findings are fixed or recorded as proposals."
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "For independent audit of the m2 changes against the spec: Reviews five files across layers with no shortcuts allowed.",
+          "evidence": [
+            "file:skill/assets/style.css",
+            "file:skill/scripts/bt_server.py"
+          ]
+        },
+        "scope": {
+          "justification": "For independent audit of the m2 changes against the spec: The whole feature.",
+          "evidence": [
+            "file:skill/scripts/bt_pages.py",
+            "file:skill/scripts/bt_page_plans.py"
+          ]
+        },
+        "duration": {
+          "justification": "For independent audit of the m2 changes against the spec: Two hours for a careful pass.",
+          "evidence": [
+            "precedent:D-057"
+          ]
+        },
+        "risk": {
+          "justification": "For independent audit of the m2 changes against the spec: A missed defect ships to every page.",
+          "evidence": [
+            "spec:SPEC.md#requirements"
+          ]
+        },
+        "coupling": {
+          "justification": "For independent audit of the m2 changes against the spec: Needs every M2 task finished.",
+          "evidence": [
+            "task:T5",
+            "task:T6",
+            "task:T7"
+          ]
+        },
+        "confidence": {
+          "justification": "For independent audit of the m2 changes against the spec: The size of the diff is not known yet.",
+          "evidence": [
+            "assumption:the M2 diff stays under 400 lines"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M4",
+      "title": "Update the documentation and the bitácora",
+      "repository": "skill",
+      "after": [
+        "T8"
+      ],
+      "expected_paths": [
+        "skill/references/documentation.md"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "grep -q web skill/references/documentation.md",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "objective": "Describe the theme toggle and the health line where the web UI is documented.",
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 25,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "A short edit.",
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The documentation names the toggle, the health line and what was left out."
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "For update the documentation and the bitácora: Prose in one reference file.",
+          "evidence": [
+            "file:skill/references/documentation.md"
+          ]
+        },
+        "scope": {
+          "justification": "For update the documentation and the bitácora: One document.",
+          "evidence": [
+            "file:skill/references/documentation.md"
+          ]
+        },
+        "duration": {
+          "justification": "For update the documentation and the bitácora: A short edit.",
+          "evidence": [
+            "precedent:D-049"
+          ]
+        },
+        "risk": {
+          "justification": "For update the documentation and the bitácora: Documentation only.",
+          "evidence": [
+            "spec:SPEC.md#out-of-scope"
+          ]
+        },
+        "coupling": {
+          "justification": "For update the documentation and the bitácora: Written after the audit.",
+          "evidence": [
+            "task:T8"
+          ]
+        },
+        "confidence": {
+          "justification": "For update the documentation and the bitácora: The reference file exists.",
+          "evidence": [
+            "file:skill/references/documentation.md"
+          ]
+        }
+      }
+    }
+  ]
+}

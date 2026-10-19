@@ -1,0 +1,8 @@
+{
+  "pid": 854372,
+  "parent": 848682,
+  "command": "/bin/bash -c source /home/david/.claude-work/shell-snapshots/snapshot-bash-1792356372542-1gihxp.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd /home/david/dev/metodologia/bitacora/pictures/.state/req018-full-mwvocojr/REQ-018-category-based-recommendations-of-assemb/EXECUTOR-r1-70873adb-1792355220173/chain-ws/worktrees/att-0005-00f46831fa37eae0; until [ -s .logs-t1/tsc.log ] || pgrep -f \"tsc --noEmit\" >/dev/null && ! pgrep -f \"tsc --noEmit\" >/dev/null; do sleep 5; done 2>/dev/null; timeout 100 bash -c '\"'\"'while pgrep -f \"npm run|next typegen|tsc --noEmit\" >/dev/null; do sleep 3; done'\"'\"'; ls -la .logs-t1; cat .logs-t1/*.log | grep -iE \"error|fail\" | head' < /dev/null && pwd -P >| /home/david/.local/tmp/claude-404b-cwd ",
+  "cause": "successful tsc produces empty log; until condition cannot become true; pgrep matches monitoring command itself",
+  "action": "SIGTERM to verified native Bash monitoring child only; source and test processes untouched",
+  "time": 1792356821.8014338
+}

@@ -1,0 +1,143 @@
+{
+ "round": 1,
+ "title": "Alcance, ejecución remota y seguridad",
+ "intro": "Hallazgos: el panel (bt_server, stdlib, sin login) solo escucha en 127.0.0.1:8765 y ya hay un túnel inverso a advin. advin: 8 núcleos, 15 GB RAM, disco al 85 % (24 GB libres), Caddy en Docker con dominios marosconstruction.com y sslip.io; tiene node y git pero NO tiene claude ni codex instalados. Vercel CLI logueado como dav033. Las acciones de control que ya existen: cancelar intento, reabrir tarea, revisar plan, hold/resume, cancelar/borrar plan, aprobar plan, responder rondas.",
+ "coverage": "3/10",
+ "questions": [
+  {
+   "id": "q1",
+   "type": "choice",
+   "text": "¿Dónde corre la ejecución (scheduler + agentes)?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Siempre en el portátil; advin solo es plano de control"
+    },
+    {
+     "key": "b",
+     "label": "Ambos: cada plan elige runner (portátil o advin), con el mismo protocolo"
+    },
+    {
+     "key": "c",
+     "label": "Mover todo a advin"
+    }
+   ],
+   "recommended": "b",
+   "why": "Es lo que pediste ('local y también en el VPS'). Por fases: primero plano de control + runner local; después runner en advin."
+  },
+  {
+   "id": "q2",
+   "type": "choice",
+   "text": "Credenciales de Claude/Codex en advin para el runner remoto",
+   "options": [
+    {
+     "key": "a",
+     "label": "Login nuevo en advin (device code) solo de las cuentas que elijas"
+    },
+    {
+     "key": "b",
+     "label": "Copiar las credenciales del portátil"
+    },
+    {
+     "key": "c",
+     "label": "Ninguna: advin no ejecuta agentes por ahora"
+    }
+   ],
+   "recommended": "a",
+   "why": "Copiar tokens OAuth entre máquinas es frágil y riesgoso; un login propio se revoca por separado. Dime qué cuentas (p. ej. codex-2 y claude-personal; claude-work no, por ser de trabajo)."
+  },
+  {
+   "id": "q3",
+   "type": "choice",
+   "text": "Login de la web pública (Vercel)",
+   "options": [
+    {
+     "key": "a",
+     "label": "GitHub OAuth restringido a dav033 + confirmación extra en acciones destructivas"
+    },
+    {
+     "key": "b",
+     "label": "Passkey (WebAuthn) propio"
+    },
+    {
+     "key": "c",
+     "label": "Token largo pegado una vez en el móvil"
+    }
+   ],
+   "recommended": "a",
+   "why": "Ya usas GitHub, no hay contraseñas que guardar y se revoca desde GitHub. Hoy el panel no tiene login, así que esto es obligatorio antes de exponerlo."
+  },
+  {
+   "id": "q4",
+   "type": "choice",
+   "text": "¿Qué se puede hacer desde el móvil?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Ver + controlar runs: pausar/reanudar, cancelar intento, reintentar/reabrir tarea, ver fallos y logs"
+    },
+    {
+     "key": "b",
+     "label": "a + aprobar/lanzar planes y responder rondas de preguntas"
+    },
+    {
+     "key": "c",
+     "label": "Solo lectura"
+    }
+   ],
+   "recommended": "b",
+   "why": "Es todo lo que ya hace el panel local; lanzar un plan es la acción de más riesgo, así que lleva doble confirmación."
+  },
+  {
+   "id": "q5",
+   "type": "choice",
+   "text": "Avisos de fallos al móvil",
+   "options": [
+    {
+     "key": "a",
+     "label": "Web Push (la web instalada como PWA)"
+    },
+    {
+     "key": "b",
+     "label": "Telegram bot"
+    },
+    {
+     "key": "c",
+     "label": "ntfy (app ntfy, servidor propio en advin)"
+    },
+    {
+     "key": "d",
+     "label": "Sin avisos; solo lo veo al abrir la web"
+    }
+   ],
+   "recommended": "a",
+   "why": "Sin app extra ni terceros; el aviso abre directo el fallo. Si tu móvil es iPhone exige instalarla en la pantalla de inicio (iOS 16.4+)."
+  }
+ ],
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": ""
+  },
+  "q2": {
+   "choice": "c",
+   "note": "advin does not have the credentials (moot: execution always on the laptop)"
+  },
+  "q3": {
+   "choice": "a",
+   "note": ""
+  },
+  "q4": {
+   "choice": "b",
+   "note": "extend functionality beyond the current local panel"
+  },
+  "q5": {
+   "choice": "b",
+   "note": ""
+  }
+ },
+ "created_at": "2026-10-19T12:48:24",
+ "answered_at": "2026-10-19T13:59:34",
+ "answered_via": "terminal"
+}

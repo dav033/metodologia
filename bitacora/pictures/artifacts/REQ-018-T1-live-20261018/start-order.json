@@ -1,0 +1,35 @@
+{
+  "idempotency_key": "REQ-018:r1:att-0001:start",
+  "plan_id": "REQ-018",
+  "revision": 1,
+  "task_id": "T1",
+  "attempt_id": "att-0001",
+  "token": 1,
+  "executor": "route:m2:v1:5a7110460b82def4c36fc68fa968579ab6677b55a31ad6670aa281f285e80df2:3383f811755faae1b38cc9f06c478622dd7d019ca25271c7166fbb4cb4117d75",
+  "acceptance_criteria": [
+    "Controlled matcher tests pass for category-only, all positive and negative explicit preferences, unknown theme, sparse/empty, identity, motif, tone/age/gender and successive source additions/modifications without fixed IDs or cross-celebration aliases.",
+    "Wedding regression passes with only matching designs while literal customer-theme fidelity and independent photo helper invariants remain covered.",
+    "Existing lower-level legacy search regression passes for other consumers without becoming a fallback for active-category recommendations."
+  ],
+  "verification": [
+    {
+      "category": "functional",
+      "created_by": "T1",
+      "purpose": "Controlled matcher tests pass for category-only, all positive and negative explicit preferences, unknown theme, sparse/empty, identity, motif, tone/age/gender and successive source additions/modifications without fixed IDs or cross-celebration aliases.",
+      "type": "command",
+      "value": "node --import=tsx scripts/test/test-recomendaciones-categoria.ts"
+    },
+    {
+      "category": "regression",
+      "purpose": "Wedding regression passes with only matching designs while literal customer-theme fidelity and independent photo helper invariants remain covered.",
+      "type": "command",
+      "value": "node --import=tsx scripts/test/test-ideas-boda-guiada.ts"
+    },
+    {
+      "category": "regression",
+      "purpose": "Existing lower-level legacy search regression passes for other consumers without becoming a fallback for active-category recommendations.",
+      "type": "command",
+      "value": "node --import=tsx scripts/test/test-busqueda-biblioteca-sempertex.ts"
+    }
+  ]
+}

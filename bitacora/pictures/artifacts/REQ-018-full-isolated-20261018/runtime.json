@@ -1,0 +1,16 @@
+{
+  "root": "/home/david/bitacora/pictures/.state/req018-full-mwvocojr",
+  "requirement": "/home/david/bitacora/pictures/.state/req018-full-mwvocojr/REQ-018-category-based-recommendations-of-assemb",
+  "base_sha": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723",
+  "candidate_files_verified": {
+    "src/lib/biblioteca-sempertex/biblioteca.ts": "a14fea9c097f23aa598015298174aa29785c52406b1095cfac3ba9d0b84e9691",
+    "src/lib/biblioteca-sempertex/categorias.ts": "030c9874627ac1aeaf07718b46c8e11c3b923f35a0a6be89a3d5decbe48de1da",
+    "src/lib/biblioteca-sempertex/recomendaciones-categoria.ts": "fc8f81040cded7a5efc750f51f4de6247836d445ba220f2d4aa11ff717168339",
+    "src/lib/biblioteca-sempertex/preferencias-texto.ts": "2a689d2bc021ec09dbd8f6f3521e75714e12851a3ef5adc7fe876e6f1e739b70",
+    "src/lib/ia/guiado/ideas-guiadas.ts": "33657698b857df510dd4a7ab6f61d7c51f086b882d91427561b1221b46e4a7fc",
+    "scripts/test/test-recomendaciones-categoria.ts": "d0774a5a0782ceaeea10e66518b5ecdbbef9a4c766e1bb18f7dbce752a638c71",
+    "scripts/test/test-ideas-boda-guiada.ts": "6381c160ec01c343decc162a7accbbef619f74384beba234996067656e2ed4d3"
+  },
+  "canonical_inventory_count": 4169,
+  "plan_semantically_equal_to_prior_t1": true
+}

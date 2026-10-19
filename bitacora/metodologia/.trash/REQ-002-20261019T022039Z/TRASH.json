@@ -1,0 +1,18 @@
+{
+  "req_id": "REQ-002",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-002-proactive-skill-guidance-and-permanent-i",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-002-proactive-skill-guidance-and-permanent-i/PLAN.md",
+      "sha256": "905c613cf4b5fbde78908e98464ca2288e7a88d014777e07a60481f1f65580e7"
+    }
+  ]
+}

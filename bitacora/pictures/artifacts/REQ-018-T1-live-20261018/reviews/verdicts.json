@@ -1,0 +1,61 @@
+{
+  "spec": {
+    "verdict": "CHANGES_NEEDED",
+    "findings": [
+      "F1",
+      "F2",
+      "F3"
+    ],
+    "agent": "/root/t1_live_spec_review"
+  },
+  "standards": {
+    "verdict": "CHANGES_NEEDED",
+    "findings": [
+      "F1",
+      "F3",
+      "F4"
+    ],
+    "agent": "/root/t1_live_standards_review"
+  },
+  "deduplicated_findings": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "title": "Theme-affinity groups are treated as strict lexical equivalence",
+      "file": "src/lib/biblioteca-sempertex/recomendaciones-categoria.ts",
+      "line": 116,
+      "trigger": "Boda + tematica elegante returns a solely Negro y dorado design as exacta",
+      "remedy": "Use genuine lexical equivalents only; never infer style from colour affinity."
+    },
+    {
+      "id": "F2",
+      "severity": "high",
+      "title": "Compound negative and positive clauses lose their polarity",
+      "file": "src/lib/biblioteca-sempertex/recomendaciones-categoria.ts",
+      "line": 75,
+      "trigger": "sin flores y sin gotico retains sin gotico as literal; sin negro y con dorado excludes dorado",
+      "remedy": "Parse clause polarity explicitly and strip each polarity marker; add mixed/repeated-clause regressions."
+    },
+    {
+      "id": "F3",
+      "severity": "medium",
+      "title": "Explicit unknown style in latest message is dropped",
+      "file": "src/lib/biblioteca-sempertex/recomendaciones-categoria.ts",
+      "line": 92,
+      "trigger": "mensaje quiero un estilo gotico yields estilos [] and unrelated exact designs",
+      "remedy": "Preserve explicitly requested style/theme even if absent from known motif vocabulary."
+    },
+    {
+      "id": "F4",
+      "severity": "medium",
+      "title": "Negated baby gender becomes a positive preference",
+      "file": "src/lib/ia/guiado/ideas-guiadas.ts",
+      "line": 218,
+      "trigger": "Baby shower + no quiero nina selects genero nina and fuchsia girl design",
+      "remedy": "Extract positive gender only after polarity analysis, preserve negative exclusion; test adapter and matcher."
+    }
+  ],
+  "parent_reproduction": "reviews/reproduce.ts -> exit 0 asserting all five defective outputs across four root causes; reviews/reproductions.json",
+  "scope": "T1 only; no T2-T8 acceptance demanded",
+  "disposition": "Actual M1 rejected T1; implementation preserved for repair, no acceptance/fixes silently substituted"
+}

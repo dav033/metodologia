@@ -1,0 +1,70 @@
+[
+  {
+    "seq": 28,
+    "at": 1792355579.2362463,
+    "kind": "reserved",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0002",
+    "detail": {
+      "executor": "route:m2:v1:8e56f83c972c9fff6ad0680ea500abc4944f4fa1bac666f297f7a041613a0f07:3383f811755faae1b38cc9f06c478622dd7d019ca25271c7166fbb4cb4117d75",
+      "resources": [
+        "path:pictures:scripts/test/test-ideas-boda-guiada.ts",
+        "path:pictures:scripts/test/test-recomendaciones-categoria.ts",
+        "path:pictures:src/lib/biblioteca-sempertex/biblioteca.ts",
+        "path:pictures:src/lib/biblioteca-sempertex/categorias.ts",
+        "path:pictures:src/lib/biblioteca-sempertex/recomendaciones-categoria.ts",
+        "path:pictures:src/lib/ia/guiado/ideas-guiadas.ts",
+        "repo:pictures",
+        "res:strict-category-matching"
+      ],
+      "token": 2
+    }
+  },
+  {
+    "seq": 29,
+    "at": 1792355579.2362463,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0002",
+    "detail": {
+      "kind": "start",
+      "outbox": "out-00003"
+    }
+  },
+  {
+    "seq": 30,
+    "at": 1792355579.7779522,
+    "kind": "dispatch_rejected",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0002",
+    "detail": {
+      "detail": "ROUTE_INVALID: this route reference already started attempt att-0001",
+      "kind": "start"
+    }
+  },
+  {
+    "seq": 31,
+    "at": 1792355579.7779522,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0002",
+    "detail": {
+      "cause": "execution_failed",
+      "from": "reserved",
+      "to": "failed"
+    }
+  },
+  {
+    "seq": 32,
+    "at": 1792355579.7779522,
+    "kind": "reservation_released",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0002",
+    "detail": {}
+  }
+]

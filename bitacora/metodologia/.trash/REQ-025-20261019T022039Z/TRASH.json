@@ -1,0 +1,35 @@
+{
+  "req_id": "REQ-025",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-025-m2-quota-aware-provider-and-account-rout",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "PLAN.json",
+    "plan-revisions"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-025-m2-quota-aware-provider-and-account-rout/PLAN.md",
+      "sha256": "d247b783145255716b32edae857f46342b78f31c2fbed580bb59617f76867066"
+    },
+    {
+      "path": "PLAN.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-025-m2-quota-aware-provider-and-account-rout/PLAN.json",
+      "sha256": "d0589e4905cde0f728a30baf93a0423d514f9cc83e01d4bf10002b6a6b25f1cb"
+    },
+    {
+      "path": "plan-revisions/MANIFEST.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-025-m2-quota-aware-provider-and-account-rout/plan-revisions/MANIFEST.json",
+      "sha256": "7bb23975f5a3baf6823bd68c433e5ab3ca560b6fc01d104b471c416f3e6886d8"
+    },
+    {
+      "path": "plan-revisions/PLAN.r1.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-025-m2-quota-aware-provider-and-account-rout/plan-revisions/PLAN.r1.json",
+      "sha256": "99617f5f076822e037da7aa59fd85a9191343d1a96a53ea60eb0f00e636d6489"
+    }
+  ]
+}

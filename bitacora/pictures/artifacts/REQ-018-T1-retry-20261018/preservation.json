@@ -1,0 +1,12 @@
+{
+  "canonical_source_original_hashes": 4164,
+  "canonical_source_changed_paths": [],
+  "canonical_plan_status": "draft",
+  "canonical_frozen_revisions_created": false,
+  "prior_rejected_run_preserved": true,
+  "isolated_source": "/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures",
+  "methodology_source_changed_only": [
+    "skill/scripts/bt_scheduler_quota_preflight.py",
+    "skill/scripts/tests/test_scheduler_quota_preflight.py"
+  ]
+}

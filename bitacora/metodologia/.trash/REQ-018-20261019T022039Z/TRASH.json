@@ -1,0 +1,35 @@
+{
+  "req_id": "REQ-018",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-018-scheduler-m1-m4-integration-and-offline",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "PLAN.json",
+    "plan-revisions"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.md",
+      "sha256": "05b6f27ddbe8567438f3feb4515a0bf61862de07baf74872bbb552201c2325bd"
+    },
+    {
+      "path": "PLAN.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-018-scheduler-m1-m4-integration-and-offline/PLAN.json",
+      "sha256": "e86a78b9a3c1271badfcc2437db9310ea066923cf311a287362dc956b9cde127"
+    },
+    {
+      "path": "plan-revisions/MANIFEST.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-018-scheduler-m1-m4-integration-and-offline/plan-revisions/MANIFEST.json",
+      "sha256": "ecc357281eb69911337aa6efd158e7103a05a4eaec77b8e7381c921a2fecee21"
+    },
+    {
+      "path": "plan-revisions/PLAN.r1.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-018-scheduler-m1-m4-integration-and-offline/plan-revisions/PLAN.r1.json",
+      "sha256": "3e33e70b37d8bffe029dab2f45ff6da258af5736cebdd9470f2dc522be8c52af"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "req_id": "REQ-005",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-005-rtk-runtime-measurement",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-005-rtk-runtime-measurement/PLAN.md",
+      "sha256": "f4114e8fd24a2b9eb2d520e2896da6841f8941497bd051b0a8ebbed452af0d74"
+    }
+  ]
+}

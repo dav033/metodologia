@@ -1,0 +1,105 @@
+{
+ "round": 2,
+ "title": "Desconexión, dominios, Telegram y funciones nuevas",
+ "intro": "Decidido: ejecución siempre en el portátil; advin es solo plano de control (gateway: login, caché del último estado, registro de comandos, bot), conectado al panel local por el túnel SSH inverso que ya existe. GitHub OAuth, control completo + funciones nuevas, avisos por Telegram. Faltan dos llaves que no encontré y solo tú puedes crear: token de un bot de @BotFather y la OAuth App de GitHub (esta la puedo crear yo en el Firefox de agentes si tiene tu sesión de GitHub). El DNS de marosconstruction.com está en NS1 y necesita tu login.",
+ "coverage": "6/10",
+ "questions": [
+  {
+   "id": "q1",
+   "type": "choice",
+   "text": "Portátil apagado/suspendido o sin red: ¿qué hace la web?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Muestra el último estado con 'sin conexión desde HH:MM' y rechaza comandos"
+    },
+    {
+     "key": "b",
+     "label": "Igual que a, pero encola comandos que caducan a los 15 min"
+    },
+    {
+     "key": "c",
+     "label": "Encola sin caducidad"
+    }
+   ],
+   "recommended": "a",
+   "why": "Determinista: nada se ejecuta en un momento que no viste. Un comando encolado podría cancelar un intento que ya no es el que tenías delante."
+  },
+  {
+   "id": "q2",
+   "type": "choice",
+   "text": "Dominios",
+   "options": [
+    {
+     "key": "a",
+     "label": "Ahora flow-<x>.vercel.app + flow-api.185-147-157-25.sslip.io; dominio propio después"
+    },
+    {
+     "key": "b",
+     "label": "Desde el inicio flow.marosconstruction.com + flow-api.marosconstruction.com (me haces los registros en NS1)"
+    }
+   ],
+   "recommended": "a",
+   "why": "No depende de tu login en NS1; Caddy saca TLS solo. Cambiar a dominio propio luego es una variable de entorno y un CNAME."
+  },
+  {
+   "id": "q3",
+   "type": "choice",
+   "text": "Alcance del bot de Telegram",
+   "options": [
+    {
+     "key": "a",
+     "label": "Solo avisos con enlace al fallo en la web"
+    },
+    {
+     "key": "b",
+     "label": "Avisos + botones para acciones seguras (pausar, reanudar, reintentar, ver) + /estado"
+    },
+    {
+     "key": "c",
+     "label": "Control completo desde el bot, incluido lanzar planes"
+    }
+   ],
+   "recommended": "b",
+   "why": "Lo urgente se resuelve desde la notificación; lanzar/aprobar/borrar queda en la web con GitHub + doble confirmación. El bot solo obedece a tu chat_id."
+  },
+  {
+   "id": "q4",
+   "type": "open",
+   "text": "Funciones nuevas (dijiste 'extiende funcionalidades'): ¿cuáles entran en esta versión?",
+   "suggested": "Todas estas: 1) reintentar una tarea con otra ruta/modelo/cuenta; 2) editar brief/criterios de una tarea antes de reintentar; 3) ver diff, salida de verificación y causa del intento fallido; 4) nota a una tarea que el agente lee en el siguiente intento; 5) cuotas de cuentas en vivo; 6) historial de comandos (qué, cuándo, desde dónde, resultado).",
+   "why": "Son las que convierten 'ver un fallo' en 'arreglarlo desde el móvil' sin abrir el portátil."
+  },
+  {
+   "id": "q5",
+   "type": "open",
+   "text": "¿Qué eventos te avisan por Telegram?",
+   "suggested": "Tarea fallida sin más reintentos o bloqueada; run terminado; ronda o aprobación esperando respuesta; todas las cuentas sin cuota; intento sin señales >10 min; portátil desconectado >15 min con un run activo. Sin horario de silencio.",
+   "why": "Solo lo que pide acción tuya o cambia el estado de un run; el resto se ve en la web."
+  }
+ ],
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": ""
+  },
+  "q2": {
+   "choice": "a",
+   "note": ""
+  },
+  "q3": {
+   "choice": "b",
+   "note": ""
+  },
+  "q4": {
+   "text": "All six suggested: retry with another route/model/account; edit task brief/criteria before retry; failed attempt diff + verification output + cause; note to a task read by the next attempt; live account quotas; command history."
+  },
+  "q5": {
+   "text": "All suggested: task failed with no retries left or blocked; run finished; round or approval waiting; every account out of quota; attempt silent >10 min; laptop disconnected >15 min with an active run. No quiet hours."
+  }
+ },
+ "created_at": "2026-10-19T14:00:35",
+ "answered_at": "2026-10-19T14:03:23",
+ "answered_via": "terminal"
+}

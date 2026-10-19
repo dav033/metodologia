@@ -1,0 +1,20 @@
+E
+======================================================================
+ERROR: test_scheduler_decision_integration (unittest.loader._FailedTest.test_scheduler_decision_integration)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_scheduler_decision_integration
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/unittest/loader.py", line 433, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.14/unittest/loader.py", line 374, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/home/david/dev/metodologia/skill/scripts/tests/test_scheduler_decision_integration.py", line 14, in <module>
+    import bt_agents
+ModuleNotFoundError: No module named 'bt_agents'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

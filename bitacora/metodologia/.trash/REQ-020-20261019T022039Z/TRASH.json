@@ -1,0 +1,46 @@
+{
+  "req_id": "REQ-020",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "PLAN.json",
+    "plan-revisions",
+    "HANDOFF.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/PLAN.md",
+      "sha256": "870b132e781f27f55461e5ea328d3bbfff36fe7342f4f3279201426b3dffd7c8"
+    },
+    {
+      "path": "PLAN.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/PLAN.json",
+      "sha256": "dfd63d11ce2198d6bdb42b783406bb824c368b58a657462346b13b57afdc8386"
+    },
+    {
+      "path": "plan-revisions/MANIFEST.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/plan-revisions/MANIFEST.json",
+      "sha256": "726e342327462c06dfbce522a35aa83c68759b3d25c3713ca2bf8591d521b120"
+    },
+    {
+      "path": "plan-revisions/PLAN.r1.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/plan-revisions/PLAN.r1.json",
+      "sha256": "d105f92a30d17e52b2cb3ff85e9ddca6b3aa13d1db63e28da62b637f5aefb6a0"
+    },
+    {
+      "path": "plan-revisions/PLAN.r2.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/plan-revisions/PLAN.r2.json",
+      "sha256": "9d2e37102b2a823efff8f6c97714d72c9b415ba964a19ed6b69bde7b119cc1b3"
+    },
+    {
+      "path": "HANDOFF.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-020-scheduler-m2-learning-and-quota-optimiza/HANDOFF.md",
+      "sha256": "d376244e7c74a6e7227b242d128124a15e95fa58f2c929f9dfa9baa4cfd7a8b3"
+    }
+  ]
+}

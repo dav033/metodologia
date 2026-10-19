@@ -1,0 +1,103 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: causas raíz sin corregir:
+- elegante no es negro y dorado (temática): Expected values to be strictly deep-equal:
+- elegante no es negro y dorado (mensaje): Expected values to be strictly deep-equal:
+- romántico no es oro rosa: Expected values to be strictly deep-equal:
+- romántica es variante léxica de romántico: Expected values to be strictly deep-equal:
+- unicornio no es arcoíris: Expected values to be strictly deep-equal:
+- unicornios es variante de unicornio: Expected values to be strictly deep-equal:
+- arco iris es variante de arcoíris: Expected values to be strictly deep-equal:
+- tulipanes no es margaritas: Expected values to be strictly deep-equal:
+- sin flores y sin gótico: dos negativas: Expected values to be strictly deep-equal:
+- sin flores y sin gótico filtra ambas: Expected values to be strictly deep-equal:
+- sin negro y con dorado: dorado es positivo: Expected values to be strictly deep-equal:
+- sin negro y con dorado filtra: Expected values to be strictly deep-equal:
+- negativa y petición del mismo mensaje: Expected values to be strictly deep-equal:
+- quiero un estilo gótico conservado: Expected values to be strictly deep-equal:
+- quiero estilo gótico sin evidencia: vacío: Expected values to be strictly deep-equal:
+- quiero temática X sin evidencia: vacío: Expected values to be strictly deep-equal:
+- quiero un estilo gótico con evidencia literal: Expected values to be strictly deep-equal:
+- el estilo termina antes del relleno posterior: Expected values to be strictly deep-equal:
+- no quiero niña no selecciona niña: Expected values to be strictly equal:
+- no quiero niña con temática guardada de niña: Expected values to be strictly deep-equal:
+- sin niña y con azul: preferencias independientes: Expected values to be strictly deep-equal:
+- no quiero niña ni plateado conserva la exclusión léxica: Expected values to be strictly deep-equal:
+- no quiero niño deja niña y neutro: Expected values to be strictly deep-equal:
+- biblioteca real: no quiero niña no admite diseños de niña: Expected values to be strictly equal:
++ actual - expected
+
++ [
++   'elegante no es negro y dorado (temática): Expected values to be strictly deep-equal:',
++   'elegante no es negro y dorado (mensaje): Expected values to be strictly deep-equal:',
++   'romántico no es oro rosa: Expected values to be strictly deep-equal:',
++   'romántica es variante léxica de romántico: Expected values to be strictly deep-equal:',
++   'unicornio no es arcoíris: Expected values to be strictly deep-equal:',
++   'unicornios es variante de unicornio: Expected values to be strictly deep-equal:',
++   'arco iris es variante de arcoíris: Expected values to be strictly deep-equal:',
++   'tulipanes no es margaritas: Expected values to be strictly deep-equal:',
++   'sin flores y sin gótico: dos negativas: Expected values to be strictly deep-equal:',
++   'sin flores y sin gótico filtra ambas: Expected values to be strictly deep-equal:',
++   'sin negro y con dorado: dorado es positivo: Expected values to be strictly deep-equal:',
++   'sin negro y con dorado filtra: Expected values to be strictly deep-equal:',
++   'negativa y petición del mismo mensaje: Expected values to be strictly deep-equal:',
++   'quiero un estilo gótico conservado: Expected values to be strictly deep-equal:',
++   'quiero estilo gótico sin evidencia: vacío: Expected values to be strictly deep-equal:',
++   'quiero temática X sin evidencia: vacío: Expected values to be strictly deep-equal:',
++   'quiero un estilo gótico con evidencia literal: Expected values to be strictly deep-equal:',
++   'el estilo termina antes del relleno posterior: Expected values to be strictly deep-equal:',
++   'no quiero niña no selecciona niña: Expected values to be strictly equal:',
++   'no quiero niña con temática guardada de niña: Expected values to be strictly deep-equal:',
++   'sin niña y con azul: preferencias independientes: Expected values to be strictly deep-equal:',
++   'no quiero niña ni plateado conserva la exclusión léxica: Expected values to be strictly deep-equal:',
++   'no quiero niño deja niña y neutro: Expected values to be strictly deep-equal:',
++   'biblioteca real: no quiero niña no admite diseños de niña: Expected values to be strictly equal:'
++ ]
+- []
+
+    at assert (/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-recomendaciones-categoria.ts:249:8)
+    at Object.<anonymous> (/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-recomendaciones-categoria.ts:250:148)
+    at Module._compile (node:internal/modules/cjs/loader:1929:14)
+    at Object.transformer (/home/david/dev/pictures/node_modules/tsx/dist/register-C557imBs.cjs:9:3619)
+    at Module.load (node:internal/modules/cjs/loader:1651:32)
+    at Module._load (node:internal/modules/cjs/loader:1443:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:372:15)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:244:9)
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'elegante no es negro y dorado (temática): Expected values to be strictly deep-equal:',
+    'elegante no es negro y dorado (mensaje): Expected values to be strictly deep-equal:',
+    'romántico no es oro rosa: Expected values to be strictly deep-equal:',
+    'romántica es variante léxica de romántico: Expected values to be strictly deep-equal:',
+    'unicornio no es arcoíris: Expected values to be strictly deep-equal:',
+    'unicornios es variante de unicornio: Expected values to be strictly deep-equal:',
+    'arco iris es variante de arcoíris: Expected values to be strictly deep-equal:',
+    'tulipanes no es margaritas: Expected values to be strictly deep-equal:',
+    'sin flores y sin gótico: dos negativas: Expected values to be strictly deep-equal:',
+    'sin flores y sin gótico filtra ambas: Expected values to be strictly deep-equal:',
+    'sin negro y con dorado: dorado es positivo: Expected values to be strictly deep-equal:',
+    'sin negro y con dorado filtra: Expected values to be strictly deep-equal:',
+    'negativa y petición del mismo mensaje: Expected values to be strictly deep-equal:',
+    'quiero un estilo gótico conservado: Expected values to be strictly deep-equal:',
+    'quiero estilo gótico sin evidencia: vacío: Expected values to be strictly deep-equal:',
+    'quiero temática X sin evidencia: vacío: Expected values to be strictly deep-equal:',
+    'quiero un estilo gótico con evidencia literal: Expected values to be strictly deep-equal:',
+    'el estilo termina antes del relleno posterior: Expected values to be strictly deep-equal:',
+    'no quiero niña no selecciona niña: Expected values to be strictly equal:',
+    'no quiero niña con temática guardada de niña: Expected values to be strictly deep-equal:',
+    'sin niña y con azul: preferencias independientes: Expected values to be strictly deep-equal:',
+    'no quiero niña ni plateado conserva la exclusión léxica: Expected values to be strictly deep-equal:',
+    'no quiero niño deja niña y neutro: Expected values to be strictly deep-equal:',
+    'biblioteca real: no quiero niña no admite diseños de niña: Expected values to be strictly equal:'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.21.0

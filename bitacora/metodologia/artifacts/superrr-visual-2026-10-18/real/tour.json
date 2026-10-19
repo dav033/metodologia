@@ -1,0 +1,542 @@
+[
+ {
+  "page": "dashboard",
+  "path": "/",
+  "size": "desktop",
+  "theme": "light",
+  "png": "dashboard-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "dashboard",
+  "path": "/",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "dashboard-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "dashboard",
+  "path": "/",
+  "size": "mobile",
+  "theme": "light",
+  "png": "dashboard-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "dashboard",
+  "path": "/",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "dashboard-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "plans",
+  "path": "/plans",
+  "size": "desktop",
+  "theme": "light",
+  "png": "plans-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "plans",
+  "path": "/plans",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "plans-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "plans",
+  "path": "/plans",
+  "size": "mobile",
+  "theme": "light",
+  "png": "plans-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "plans",
+  "path": "/plans",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "plans-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "now",
+  "path": "/now",
+  "size": "desktop",
+  "theme": "light",
+  "png": "now-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "now",
+  "path": "/now",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "now-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "now",
+  "path": "/now",
+  "size": "mobile",
+  "theme": "light",
+  "png": "now-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "now",
+  "path": "/now",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "now-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "flow",
+  "path": "/flow",
+  "size": "desktop",
+  "theme": "light",
+  "png": "flow-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "flow",
+  "path": "/flow",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "flow-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "flow",
+  "path": "/flow",
+  "size": "mobile",
+  "theme": "light",
+  "png": "flow-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "flow",
+  "path": "/flow",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "flow-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "metrics",
+  "path": "/metrics",
+  "size": "desktop",
+  "theme": "light",
+  "png": "metrics-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "metrics",
+  "path": "/metrics",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "metrics-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "metrics",
+  "path": "/metrics",
+  "size": "mobile",
+  "theme": "light",
+  "png": "metrics-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "metrics",
+  "path": "/metrics",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "metrics-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-overview",
+  "path": "/p/metodologia?tab=overview",
+  "size": "desktop",
+  "theme": "light",
+  "png": "project-overview-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-overview",
+  "path": "/p/metodologia?tab=overview",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "project-overview-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-overview",
+  "path": "/p/metodologia?tab=overview",
+  "size": "mobile",
+  "theme": "light",
+  "png": "project-overview-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-overview",
+  "path": "/p/metodologia?tab=overview",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "project-overview-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-pending",
+  "path": "/p/metodologia?tab=pending",
+  "size": "desktop",
+  "theme": "light",
+  "png": "project-pending-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-pending",
+  "path": "/p/metodologia?tab=pending",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "project-pending-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-pending",
+  "path": "/p/metodologia?tab=pending",
+  "size": "mobile",
+  "theme": "light",
+  "png": "project-pending-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-pending",
+  "path": "/p/metodologia?tab=pending",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "project-pending-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-plans",
+  "path": "/p/metodologia?tab=plans",
+  "size": "desktop",
+  "theme": "light",
+  "png": "project-plans-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-plans",
+  "path": "/p/metodologia?tab=plans",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "project-plans-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-plans",
+  "path": "/p/metodologia?tab=plans",
+  "size": "mobile",
+  "theme": "light",
+  "png": "project-plans-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-plans",
+  "path": "/p/metodologia?tab=plans",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "project-plans-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-requirements",
+  "path": "/p/metodologia?tab=requirements",
+  "size": "desktop",
+  "theme": "light",
+  "png": "project-requirements-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-requirements",
+  "path": "/p/metodologia?tab=requirements",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "project-requirements-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-requirements",
+  "path": "/p/metodologia?tab=requirements",
+  "size": "mobile",
+  "theme": "light",
+  "png": "project-requirements-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-requirements",
+  "path": "/p/metodologia?tab=requirements",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "project-requirements-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-decisions",
+  "path": "/p/metodologia?tab=decisions",
+  "size": "desktop",
+  "theme": "light",
+  "png": "project-decisions-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-decisions",
+  "path": "/p/metodologia?tab=decisions",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "project-decisions-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-decisions",
+  "path": "/p/metodologia?tab=decisions",
+  "size": "mobile",
+  "theme": "light",
+  "png": "project-decisions-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-decisions",
+  "path": "/p/metodologia?tab=decisions",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "project-decisions-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-summary",
+  "path": "/p/metodologia?tab=summary",
+  "size": "desktop",
+  "theme": "light",
+  "png": "project-summary-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-summary",
+  "path": "/p/metodologia?tab=summary",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "project-summary-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "project-summary",
+  "path": "/p/metodologia?tab=summary",
+  "size": "mobile",
+  "theme": "light",
+  "png": "project-summary-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "project-summary",
+  "path": "/p/metodologia?tab=summary",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "project-summary-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "graph",
+  "path": "/p/metodologia/graph",
+  "size": "desktop",
+  "theme": "light",
+  "png": "graph-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "graph",
+  "path": "/p/metodologia/graph",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "graph-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "graph",
+  "path": "/p/metodologia/graph",
+  "size": "mobile",
+  "theme": "light",
+  "png": "graph-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "graph",
+  "path": "/p/metodologia/graph",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "graph-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "plan-detail",
+  "path": "/plans/metodologia/REQ-026",
+  "size": "desktop",
+  "theme": "light",
+  "png": "plan-detail-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "plan-detail",
+  "path": "/plans/metodologia/REQ-026",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "plan-detail-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "plan-detail",
+  "path": "/plans/metodologia/REQ-026",
+  "size": "mobile",
+  "theme": "light",
+  "png": "plan-detail-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "plan-detail",
+  "path": "/plans/metodologia/REQ-026",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "plan-detail-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "requirement",
+  "path": "/p/metodologia/req/REQ-026",
+  "size": "desktop",
+  "theme": "light",
+  "png": "requirement-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "requirement",
+  "path": "/p/metodologia/req/REQ-026",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "requirement-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "requirement",
+  "path": "/p/metodologia/req/REQ-026",
+  "size": "mobile",
+  "theme": "light",
+  "png": "requirement-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "requirement",
+  "path": "/p/metodologia/req/REQ-026",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "requirement-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "flow-run",
+  "path": "/flow?scope=run:metodologia/REQ-026",
+  "size": "desktop",
+  "theme": "light",
+  "png": "flow-run-desktop-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "flow-run",
+  "path": "/flow?scope=run:metodologia/REQ-026",
+  "size": "desktop",
+  "theme": "dark",
+  "png": "flow-run-desktop-dark.png",
+  "ok": true,
+  "overflow_px": null
+ },
+ {
+  "page": "flow-run",
+  "path": "/flow?scope=run:metodologia/REQ-026",
+  "size": "mobile",
+  "theme": "light",
+  "png": "flow-run-mobile-light.png",
+  "ok": true,
+  "overflow_px": 0
+ },
+ {
+  "page": "flow-run",
+  "path": "/flow?scope=run:metodologia/REQ-026",
+  "size": "mobile",
+  "theme": "dark",
+  "png": "flow-run-mobile-dark.png",
+  "ok": true,
+  "overflow_px": null
+ }
+]

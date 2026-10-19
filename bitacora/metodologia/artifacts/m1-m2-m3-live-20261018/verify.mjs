@@ -1,0 +1,14 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { pathToFileURL } from 'node:url';
+import path from 'node:path';
+const source = process.env.M3_VERIFY_WORKTREE;
+assert.ok(source, 'independent verifier requires an explicit worktree');
+const { normalizeTags } = await import(pathToFileURL(path.join(source, 'm3-smoke/normalize-tags.mjs')));
+test('trim/lowercase/stable deduplication', () => assert.deepEqual(normalizeTags(['  Rosa ', 'AZUL', 'rosa',' verde ','azul']), ['rosa','azul','verde']));
+test('Unicode NFC equivalence', () => assert.deepEqual(normalizeTags(['ÁRBOL', 'A\u0301rbol', 'arbol']), ['árbol','arbol']));
+test('empty inputs and whitespace', () => {assert.deepEqual(normalizeTags([]), []);assert.deepEqual(normalizeTags(['', ' \t ', '\u00a0']), []);});
+test('input array stays immutable', () => {const input=Object.freeze([' B ', 'A', 'b']);assert.deepEqual(normalizeTags(input), ['b','a']);assert.deepEqual(input,[' B ','A','b']);});
+test('reject non-array values', () => {for(const value of [undefined,null,'a',1,{},true]) assert.throws(()=>normalizeTags(value),TypeError);});
+test('reject every non-string element', () => {for(const value of [null,undefined,1,{},[],false]) assert.throws(()=>normalizeTags(['a',value,'b']),TypeError);});
+test('preserve stable first occurrence order', () => assert.deepEqual(normalizeTags(['C','b','a','C','A']),['c','b','a']));

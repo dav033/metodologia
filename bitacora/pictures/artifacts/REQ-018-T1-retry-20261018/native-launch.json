@@ -1,0 +1,10 @@
+{
+  "provider": "claude",
+  "profile": "claude-work",
+  "model": "sonnet",
+  "effort": "medium",
+  "hooks_disabled": true,
+  "custom_execution_port": true,
+  "timeout_seconds": 1200,
+  "m3_used": false
+}

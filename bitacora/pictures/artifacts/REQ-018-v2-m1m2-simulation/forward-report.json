@@ -1,0 +1,584 @@
+{
+  "case": [
+    "REQ018",
+    "real-approved-plan",
+    "mixed",
+    "mixed",
+    20,
+    60,
+    "per-task-policy"
+  ],
+  "reversed_accounts": false,
+  "simulation_plan_sha256": "70873adb64235c629a41b676dd8dfb066286e219bd0c505b7c33728f3832e54c",
+  "approval_scope": "isolated-simulation-only; real frozen Pictures plan",
+  "result": {
+    "plan_id": "REQ-018",
+    "revision": 1,
+    "plan_sha256": "70873adb64235c629a41b676dd8dfb066286e219bd0c505b7c33728f3832e54c",
+    "status": "completed",
+    "paused": false,
+    "cancel_requested": false,
+    "tasks": {
+      "T1": {
+        "state": "completed",
+        "unreachable": false,
+        "attempts": 1,
+        "reason": "",
+        "attempt": "att-0001",
+        "attempt_state": "accepted",
+        "executor": "route:m2:v1:e814560023191ca4c3ff8a5204165f29acb2c385683027ec1554fe5f1776d167:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+        "verifier": "simulated-validator",
+        "evidence": "scripted offline acceptance",
+        "route_metadata": {
+          "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+          "decision_id": "e814560023191ca4c3ff8a5204165f29acb2c385683027ec1554fe5f1776d167",
+          "effort": "medium",
+          "model": "sonnet",
+          "profile": "sim-claude",
+          "provider": "claude",
+          "quota_observed_at": "999999.0",
+          "quota_reason": "",
+          "quota_state": "fresh",
+          "quota_used_percent": "20",
+          "quota_valid_until": "1007199.0",
+          "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+          "schema_version": "1.0.0",
+          "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+        },
+        "route_status": "assigned",
+        "route_reason": ""
+      },
+      "T2": {
+        "state": "completed",
+        "unreachable": false,
+        "attempts": 1,
+        "reason": "",
+        "attempt": "att-0002",
+        "attempt_state": "accepted",
+        "executor": "route:m2:v1:063a3a4da4db32ad37630aca524e3cc2760e07761eeaed4d57302659ee0d9132:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+        "verifier": "simulated-validator",
+        "evidence": "scripted offline acceptance",
+        "route_metadata": {
+          "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+          "decision_id": "063a3a4da4db32ad37630aca524e3cc2760e07761eeaed4d57302659ee0d9132",
+          "effort": "medium",
+          "model": "sonnet",
+          "profile": "sim-claude",
+          "provider": "claude",
+          "quota_observed_at": "999999.0",
+          "quota_reason": "",
+          "quota_state": "fresh",
+          "quota_used_percent": "20",
+          "quota_valid_until": "1007199.0",
+          "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+          "schema_version": "1.0.0",
+          "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+        },
+        "route_status": "assigned",
+        "route_reason": ""
+      },
+      "T3": {
+        "state": "completed",
+        "unreachable": false,
+        "attempts": 1,
+        "reason": "",
+        "attempt": "att-0003",
+        "attempt_state": "accepted",
+        "executor": "route:m2:v1:f4dd89a11947f4e847b4693b8d00c973c286ee24952d16f6954c066776e6351c:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+        "verifier": "simulated-validator",
+        "evidence": "scripted offline acceptance",
+        "route_metadata": {
+          "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+          "decision_id": "f4dd89a11947f4e847b4693b8d00c973c286ee24952d16f6954c066776e6351c",
+          "effort": "medium",
+          "model": "sonnet",
+          "profile": "sim-claude",
+          "provider": "claude",
+          "quota_observed_at": "999999.0",
+          "quota_reason": "",
+          "quota_state": "fresh",
+          "quota_used_percent": "20",
+          "quota_valid_until": "1007199.0",
+          "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+          "schema_version": "1.0.0",
+          "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+        },
+        "route_status": "assigned",
+        "route_reason": ""
+      },
+      "T4": {
+        "state": "completed",
+        "unreachable": false,
+        "attempts": 1,
+        "reason": "",
+        "attempt": "att-0004",
+        "attempt_state": "accepted",
+        "executor": "route:m2:v1:31c48551663e835153ae56438d534c061262a879c97bba90d7c3118255e7e9a6:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+        "verifier": "simulated-validator",
+        "evidence": "scripted offline acceptance",
+        "route_metadata": {
+          "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+          "decision_id": "31c48551663e835153ae56438d534c061262a879c97bba90d7c3118255e7e9a6",
+          "effort": "medium",
+          "model": "sonnet",
+          "profile": "sim-claude",
+          "provider": "claude",
+          "quota_observed_at": "999999.0",
+          "quota_reason": "",
+          "quota_state": "fresh",
+          "quota_used_percent": "20",
+          "quota_valid_until": "1007199.0",
+          "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+          "schema_version": "1.0.0",
+          "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+        },
+        "route_status": "assigned",
+        "route_reason": ""
+      },
+      "T5": {
+        "state": "completed",
+        "unreachable": false,
+        "attempts": 1,
+        "reason": "",
+        "attempt": "att-0005",
+        "attempt_state": "accepted",
+        "executor": "route:m2:v1:2e24b3e048b509b75e3630f273ce8b4f594463b2d68a04406f4e3873f78c383d:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+        "verifier": "simulated-validator",
+        "evidence": "scripted offline acceptance",
+        "route_metadata": {
+          "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+          "decision_id": "2e24b3e048b509b75e3630f273ce8b4f594463b2d68a04406f4e3873f78c383d",
+          "effort": "medium",
+          "model": "sonnet",
+          "profile": "sim-claude",
+          "provider": "claude",
+          "quota_observed_at": "999999.0",
+          "quota_reason": "",
+          "quota_state": "fresh",
+          "quota_used_percent": "20",
+          "quota_valid_until": "1007199.0",
+          "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+          "schema_version": "1.0.0",
+          "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+        },
+        "route_status": "assigned",
+        "route_reason": ""
+      },
+      "T6": {
+        "state": "completed",
+        "unreachable": false,
+        "attempts": 1,
+        "reason": "",
+        "attempt": "att-0006",
+        "attempt_state": "accepted",
+        "executor": "route:m2:v1:e5b7beb9f2ca104f47270cb032335021499ef37d0acd95141afdb204f09dabc6:f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+        "verifier": "simulated-validator",
+        "evidence": "scripted offline acceptance",
+        "route_metadata": {
+          "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+          "decision_id": "e5b7beb9f2ca104f47270cb032335021499ef37d0acd95141afdb204f09dabc6",
+          "effort": "medium",
+          "model": "sonnet",
+          "profile": "sim-claude",
+          "provider": "claude",
+          "quota_observed_at": "999999.0",
+          "quota_reason": "",
+          "quota_state": "fresh",
+          "quota_used_percent": "20",
+          "quota_valid_until": "1007199.0",
+          "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+          "schema_version": "1.0.0",
+          "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+        },
+        "route_status": "assigned",
+        "route_reason": ""
+      },
+      "T7": {
+        "state": "completed",
+        "unreachable": false,
+        "attempts": 1,
+        "reason": "",
+        "attempt": "att-0007",
+        "attempt_state": "accepted",
+        "executor": "route:m2:v1:5083053ef05acd11f370e5ae1fcb3142af4557ce71b637de16f1ad6e43f34e87:6a2329d96dd810934a554973214dd8a943c4357d1c0a5895994310669fc64558",
+        "verifier": "simulated-validator",
+        "evidence": "scripted offline acceptance",
+        "route_metadata": {
+          "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+          "decision_id": "5083053ef05acd11f370e5ae1fcb3142af4557ce71b637de16f1ad6e43f34e87",
+          "effort": "low",
+          "model": "sonnet",
+          "profile": "sim-claude",
+          "provider": "claude",
+          "quota_observed_at": "999999.0",
+          "quota_reason": "",
+          "quota_state": "fresh",
+          "quota_used_percent": "20",
+          "quota_valid_until": "1007199.0",
+          "route_id": "6a2329d96dd810934a554973214dd8a943c4357d1c0a5895994310669fc64558",
+          "schema_version": "1.0.0",
+          "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+        },
+        "route_status": "assigned",
+        "route_reason": ""
+      },
+      "T8": {
+        "state": "completed",
+        "unreachable": false,
+        "attempts": 1,
+        "reason": "",
+        "attempt": "att-0008",
+        "attempt_state": "accepted",
+        "executor": "route:m2:v1:4249d53d218561ffa226e7f6c7132186ff503c2757129c356c0379c81c1f0a4c:b066d752a69a1d15138161909c58e0600ff16430264beb21ca4897e49aedcfda",
+        "verifier": "simulated-validator",
+        "evidence": "scripted offline acceptance",
+        "route_metadata": {
+          "account_ref": "acct:96b245890f768a78665e2277b7f3d98c334faf942297a839148c068ff68e2c66",
+          "decision_id": "4249d53d218561ffa226e7f6c7132186ff503c2757129c356c0379c81c1f0a4c",
+          "effort": "high",
+          "model": "gpt-6.1-sol",
+          "profile": "sim-codex",
+          "provider": "codex",
+          "quota_observed_at": "999999.0",
+          "quota_reason": "",
+          "quota_state": "fresh",
+          "quota_used_percent": "60",
+          "quota_valid_until": "1007199.0",
+          "route_id": "b066d752a69a1d15138161909c58e0600ff16430264beb21ca4897e49aedcfda",
+          "schema_version": "1.0.0",
+          "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+        },
+        "route_status": "assigned",
+        "route_reason": ""
+      }
+    },
+    "counts": {
+      "completed": 8,
+      "live_attempts": 0
+    },
+    "unreachable": [],
+    "attention": [],
+    "pending_outbox": 0
+  },
+  "routes": [
+    {
+      "task": "T1",
+      "kind": "implement",
+      "provider": "claude",
+      "model": "sonnet",
+      "profile": "sim-claude",
+      "effort": "medium"
+    },
+    {
+      "task": "T2",
+      "kind": "implement",
+      "provider": "claude",
+      "model": "sonnet",
+      "profile": "sim-claude",
+      "effort": "medium"
+    },
+    {
+      "task": "T3",
+      "kind": "implement",
+      "provider": "claude",
+      "model": "sonnet",
+      "profile": "sim-claude",
+      "effort": "medium"
+    },
+    {
+      "task": "T4",
+      "kind": "implement",
+      "provider": "claude",
+      "model": "sonnet",
+      "profile": "sim-claude",
+      "effort": "medium"
+    },
+    {
+      "task": "T5",
+      "kind": "implement",
+      "provider": "claude",
+      "model": "sonnet",
+      "profile": "sim-claude",
+      "effort": "medium"
+    },
+    {
+      "task": "T6",
+      "kind": "implement",
+      "provider": "claude",
+      "model": "sonnet",
+      "profile": "sim-claude",
+      "effort": "medium"
+    },
+    {
+      "task": "T7",
+      "kind": "test",
+      "provider": "claude",
+      "model": "sonnet",
+      "profile": "sim-claude",
+      "effort": "low"
+    },
+    {
+      "task": "T8",
+      "kind": "audit",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "profile": "sim-codex",
+      "effort": "high"
+    }
+  ],
+  "trace": [
+    {
+      "interaction": "full DAG",
+      "recommendations": [
+        {
+          "task_id": "T1",
+          "route_metadata": {
+            "schema_version": "1.0.0",
+            "batch_id": "30810d975ba535dcbd889ce7fae19db96a19d5ec8da634dd453cb17d5615c867",
+            "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+            "provider": "claude",
+            "model": "sonnet",
+            "profile": "sim-claude",
+            "effort": "medium",
+            "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+            "assignment_reason": "route_policy_preferred",
+            "policy_rank": "1",
+            "quota_state": "fresh",
+            "quota_reason": "quota_fresh",
+            "quota_observed_at": "999999.0",
+            "quota_valid_until": "1007199.0",
+            "quota_used_percent": "20"
+          },
+          "reason": "",
+          "contract_version": "1.0.0"
+        },
+        {
+          "task_id": "T2",
+          "route_metadata": {
+            "schema_version": "1.0.0",
+            "batch_id": "30810d975ba535dcbd889ce7fae19db96a19d5ec8da634dd453cb17d5615c867",
+            "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+            "provider": "claude",
+            "model": "sonnet",
+            "profile": "sim-claude",
+            "effort": "medium",
+            "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+            "assignment_reason": "route_policy_preferred",
+            "policy_rank": "1",
+            "quota_state": "fresh",
+            "quota_reason": "quota_fresh",
+            "quota_observed_at": "999999.0",
+            "quota_valid_until": "1007199.0",
+            "quota_used_percent": "20"
+          },
+          "reason": "",
+          "contract_version": "1.0.0"
+        },
+        {
+          "task_id": "T3",
+          "route_metadata": {
+            "schema_version": "1.0.0",
+            "batch_id": "30810d975ba535dcbd889ce7fae19db96a19d5ec8da634dd453cb17d5615c867",
+            "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+            "provider": "claude",
+            "model": "sonnet",
+            "profile": "sim-claude",
+            "effort": "medium",
+            "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+            "assignment_reason": "route_policy_preferred",
+            "policy_rank": "1",
+            "quota_state": "fresh",
+            "quota_reason": "quota_fresh",
+            "quota_observed_at": "999999.0",
+            "quota_valid_until": "1007199.0",
+            "quota_used_percent": "20"
+          },
+          "reason": "",
+          "contract_version": "1.0.0"
+        },
+        {
+          "task_id": "T4",
+          "route_metadata": {
+            "schema_version": "1.0.0",
+            "batch_id": "30810d975ba535dcbd889ce7fae19db96a19d5ec8da634dd453cb17d5615c867",
+            "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+            "provider": "claude",
+            "model": "sonnet",
+            "profile": "sim-claude",
+            "effort": "medium",
+            "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+            "assignment_reason": "route_policy_preferred",
+            "policy_rank": "1",
+            "quota_state": "fresh",
+            "quota_reason": "quota_fresh",
+            "quota_observed_at": "999999.0",
+            "quota_valid_until": "1007199.0",
+            "quota_used_percent": "20"
+          },
+          "reason": "",
+          "contract_version": "1.0.0"
+        },
+        {
+          "task_id": "T5",
+          "route_metadata": {
+            "schema_version": "1.0.0",
+            "batch_id": "30810d975ba535dcbd889ce7fae19db96a19d5ec8da634dd453cb17d5615c867",
+            "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+            "provider": "claude",
+            "model": "sonnet",
+            "profile": "sim-claude",
+            "effort": "medium",
+            "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+            "assignment_reason": "route_policy_preferred",
+            "policy_rank": "1",
+            "quota_state": "fresh",
+            "quota_reason": "quota_fresh",
+            "quota_observed_at": "999999.0",
+            "quota_valid_until": "1007199.0",
+            "quota_used_percent": "20"
+          },
+          "reason": "",
+          "contract_version": "1.0.0"
+        },
+        {
+          "task_id": "T6",
+          "route_metadata": {
+            "schema_version": "1.0.0",
+            "batch_id": "30810d975ba535dcbd889ce7fae19db96a19d5ec8da634dd453cb17d5615c867",
+            "route_id": "f22c67da7078c47e57cd654be87a3bdd59c1f2542a46dc053ba6c2904bcdf57f",
+            "provider": "claude",
+            "model": "sonnet",
+            "profile": "sim-claude",
+            "effort": "medium",
+            "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+            "assignment_reason": "route_policy_preferred",
+            "policy_rank": "1",
+            "quota_state": "fresh",
+            "quota_reason": "quota_fresh",
+            "quota_observed_at": "999999.0",
+            "quota_valid_until": "1007199.0",
+            "quota_used_percent": "20"
+          },
+          "reason": "",
+          "contract_version": "1.0.0"
+        },
+        {
+          "task_id": "T7",
+          "route_metadata": {
+            "schema_version": "1.0.0",
+            "batch_id": "30810d975ba535dcbd889ce7fae19db96a19d5ec8da634dd453cb17d5615c867",
+            "route_id": "6a2329d96dd810934a554973214dd8a943c4357d1c0a5895994310669fc64558",
+            "provider": "claude",
+            "model": "sonnet",
+            "profile": "sim-claude",
+            "effort": "low",
+            "account_ref": "acct:63965c331f67a8574a8f2d1c17af8407f13e7855a9ef67b61d1b819f63534c8d",
+            "assignment_reason": "route_policy_preferred",
+            "policy_rank": "1",
+            "quota_state": "fresh",
+            "quota_reason": "quota_fresh",
+            "quota_observed_at": "999999.0",
+            "quota_valid_until": "1007199.0",
+            "quota_used_percent": "20"
+          },
+          "reason": "",
+          "contract_version": "1.0.0"
+        },
+        {
+          "task_id": "T8",
+          "route_metadata": {
+            "schema_version": "1.0.0",
+            "batch_id": "30810d975ba535dcbd889ce7fae19db96a19d5ec8da634dd453cb17d5615c867",
+            "route_id": "b066d752a69a1d15138161909c58e0600ff16430264beb21ca4897e49aedcfda",
+            "provider": "codex",
+            "model": "gpt-6.1-sol",
+            "profile": "sim-codex",
+            "effort": "high",
+            "account_ref": "acct:96b245890f768a78665e2277b7f3d98c334faf942297a839148c068ff68e2c66",
+            "assignment_reason": "route_policy_preferred",
+            "policy_rank": "1",
+            "quota_state": "fresh",
+            "quota_reason": "quota_fresh",
+            "quota_observed_at": "999999.0",
+            "quota_valid_until": "1007199.0",
+            "quota_used_percent": "60"
+          },
+          "reason": "",
+          "contract_version": "1.0.0"
+        }
+      ]
+    },
+    {
+      "interaction": "READY assignment",
+      "ready": [
+        "T1"
+      ],
+      "selected": [
+        "T1"
+      ]
+    },
+    {
+      "interaction": "READY assignment",
+      "ready": [
+        "T2"
+      ],
+      "selected": [
+        "T2"
+      ]
+    },
+    {
+      "interaction": "READY assignment",
+      "ready": [
+        "T3"
+      ],
+      "selected": [
+        "T3"
+      ]
+    },
+    {
+      "interaction": "READY assignment",
+      "ready": [
+        "T4"
+      ],
+      "selected": [
+        "T4"
+      ]
+    },
+    {
+      "interaction": "READY assignment",
+      "ready": [
+        "T5"
+      ],
+      "selected": [
+        "T5"
+      ]
+    },
+    {
+      "interaction": "READY assignment",
+      "ready": [
+        "T6"
+      ],
+      "selected": [
+        "T6"
+      ]
+    },
+    {
+      "interaction": "READY assignment",
+      "ready": [
+        "T7"
+      ],
+      "selected": [
+        "T7"
+      ]
+    },
+    {
+      "interaction": "READY assignment",
+      "ready": [
+        "T8"
+      ],
+      "selected": [
+        "T8"
+      ]
+    }
+  ]
+}

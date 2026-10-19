@@ -1,0 +1,18 @@
+{
+  "req_id": "REQ-006",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-006-automatic-requirement-to-milestones-flow",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-006-automatic-requirement-to-milestones-flow/PLAN.md",
+      "sha256": "3a836b5b99d6af3cdd1aadd62e6ad1e4e22d3ca7650a8ca78aa72f5f4e85d7d6"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "owner_request": "arreglalo desde el origen y vuelve a intentarlo",
+  "scope": "root-cause repair and actual isolated T1 rerun only; no T2 launch/integration/commit/push",
+  "prior_rejected_run": "/home/david/.local/tmp/req018-t1-live-6ml2566g",
+  "canonical_plan_status": "draft",
+  "new_scheduler_run": "separate databases; prior rejection immutable"
+}

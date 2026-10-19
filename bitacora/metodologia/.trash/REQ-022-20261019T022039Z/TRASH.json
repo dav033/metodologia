@@ -1,0 +1,30 @@
+{
+  "req_id": "REQ-022",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "HANDOFF.md",
+    "RUN.json"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/PLAN.md",
+      "sha256": "e3e1adb5b58a9f98ce013315e70c9a3c7004cf8ebcedfbbae20c7553cb09b233"
+    },
+    {
+      "path": "HANDOFF.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/HANDOFF.md",
+      "sha256": "4b78bd952432540f2b4f17c5d28cb1b35c8170d4088819572220622ef401fe8c"
+    },
+    {
+      "path": "RUN.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-022-opt-in-scheduler-runtime-status-and-reco/RUN.json",
+      "sha256": "55e7326e06f4506f285f95b44129c56a34b588e15a88202b78746dd9c1663149"
+    }
+  ]
+}

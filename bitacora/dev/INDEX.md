@@ -1,10 +1,10 @@
 # Index — dev
 
-_Generated 2026-10-18 12:50 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-19 14:40 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/dev) · [graph](http://127.0.0.1:8765/p/dev/graph)  
-**Last activity:** 2026-10-18
+**Last activity:** 2026-10-19
 
 ## Workspace
 
@@ -35,13 +35,24 @@ _None yet._
 
 ## Top pending (urgency, then complexity)
 
-_None._
+- P-006 · [closed 2026-10-19 by session 71481911: owner asked to free ≥100 GB; Baldur's Gate 3 insta · high/S
+- P-129 · Baldur's Gate 3 install (146 GB) deleted by mistake during the disk cleanup (owner wanted  · high/S
+- P-012 · [closed 2026-10-19 by D-016: `scheduler-watch` restarts a dead owner with backoff and a fa · high/M
+- P-001 · Remove the marathon (relocate shared bt_run* helpers, scheduler as the only launch/handoff · high/L
+- P-007 · [closed 2026-10-19 by D-018: the execution port answers PortNotReady until the executor ex · med/S
+- P-128 · pictures/REQ-019's M4 store keeps ~83 k old `stream_gap` rows and ~48 k info incidents (22 · med/S
+- P-008 · Oracles written by the agent that builds the feature (the phone audit by T4) can be weaker · med/M
 
 ## Recent decisions
 
-_None yet._
+- D-019 — M4 treats a replayed event as the same event when only its read time differs
+- D-018 — A port that is not composed yet says «not ready», not «unknown»
+- D-017 — The verifier accepts a publication snapshot already on origin/main; `scheduler-op retry`
+- D-016 — A watchdog keeps a run alive; operator moves are commands; the verifier has an end-to-end smoke test
+- D-015 — Up to 3 tasks at once; a large scope runs alone in its repository
 
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
+  - [W4](2026-10/W4/WEEK.md): [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [17](2026-10/W3/2026-10-17.md)

@@ -1,0 +1,13 @@
+{
+  "canonical_changed_paths_relative_to_original_baseline": [],
+  "canonical_source_preserved": true,
+  "reviewed_source_hashes": {
+    "src/lib/biblioteca-sempertex/biblioteca.ts": "a14fea9c097f23aa598015298174aa29785c52406b1095cfac3ba9d0b84e9691",
+    "src/lib/biblioteca-sempertex/categorias.ts": "030c9874627ac1aeaf07718b46c8e11c3b923f35a0a6be89a3d5decbe48de1da",
+    "src/lib/biblioteca-sempertex/recomendaciones-categoria.ts": "601a6bc4a969280627110d2d5d2bf4935f2a139cc0ce02156b18d4d9487b2792",
+    "src/lib/ia/guiado/ideas-guiadas.ts": "88ebadd3c7e645685919c7e78131352410d842572ccac96e37492db3df1aaaa8",
+    "scripts/test/test-recomendaciones-categoria.ts": "a4ae8aa3360935b4de4ad6b4c3c6ab50621914215e4ec4bfe792632afb4999cb",
+    "scripts/test/test-ideas-boda-guiada.ts": "6381c160ec01c343decc162a7accbbef619f74384beba234996067656e2ed4d3"
+  },
+  "no_integration_or_git_commits": true
+}

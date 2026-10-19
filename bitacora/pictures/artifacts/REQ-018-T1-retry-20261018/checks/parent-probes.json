@@ -1,0 +1,49 @@
+[
+  {
+    "name": "multiword lexical style",
+    "expected": 1,
+    "actual": 0,
+    "preferences": {
+      "estilos": [
+        "arco iris",
+        "arco",
+        "iris"
+      ],
+      "colores": [],
+      "tonos": [],
+      "excluir": [],
+      "soloColores": false
+    }
+  },
+  {
+    "name": "negative theme marker",
+    "expected": 0,
+    "actual": 1,
+    "preferences": {
+      "estilos": [],
+      "colores": [],
+      "tonos": [],
+      "excluir": [
+        "tematica gotica"
+      ],
+      "soloColores": false
+    }
+  },
+  {
+    "name": "stored only-colours marker",
+    "expected": 1,
+    "actual": 0,
+    "preferences": {
+      "estilos": [
+        "solo"
+      ],
+      "colores": [
+        "blanco",
+        "dorado"
+      ],
+      "tonos": [],
+      "excluir": [],
+      "soloColores": true
+    }
+  }
+]

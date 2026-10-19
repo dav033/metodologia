@@ -1,0 +1,45 @@
+{
+  "req_id": "REQ-017",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-017-scheduler-m4-agent-monitor",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "PLAN.json",
+    "plan-revisions"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.md",
+      "sha256": "9974866bc888e49c2afba375ffa52c0c99bc75c25f12373089ecad414dbadb77"
+    },
+    {
+      "path": "PLAN.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-017-scheduler-m4-agent-monitor/PLAN.json",
+      "sha256": "1c42502df93712858f771b68dae6d15cb73f2add2716cf37a96fb861da73af12"
+    },
+    {
+      "path": "plan-revisions/MANIFEST.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-017-scheduler-m4-agent-monitor/plan-revisions/MANIFEST.json",
+      "sha256": "02a1605a01aebfaf40a9efbfa7fec54bbb3ac87ce26b063b663cc2d533c069b6"
+    },
+    {
+      "path": "plan-revisions/PLAN.r1.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-017-scheduler-m4-agent-monitor/plan-revisions/PLAN.r1.json",
+      "sha256": "349e0a94ca8a0fcabb10332528cd36745d3ca17826923acd1b6e50df43b13977"
+    },
+    {
+      "path": "plan-revisions/PLAN.r2.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-017-scheduler-m4-agent-monitor/plan-revisions/PLAN.r2.json",
+      "sha256": "5308e28ec53cda7023c09289ef54f719374dd9868139404821623fd82e20b769"
+    },
+    {
+      "path": "plan-revisions/PLAN.r3.json",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-017-scheduler-m4-agent-monitor/plan-revisions/PLAN.r3.json",
+      "sha256": "1c42502df93712858f771b68dae6d15cb73f2add2716cf37a96fb861da73af12"
+    }
+  ]
+}

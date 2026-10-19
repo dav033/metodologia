@@ -1,0 +1,248 @@
+[
+  {
+    "seq": 1,
+    "at": 1792350920.9972847,
+    "kind": "run_created",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "sha256": "70873adb64235c629a41b676dd8dfb066286e219bd0c505b7c33728f3832e54c",
+      "tasks": 8
+    }
+  },
+  {
+    "seq": 2,
+    "at": 1792350920.9972847,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 3,
+    "at": 1792350927.0996494,
+    "kind": "plan_routes_received",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "contract_version": "1.0.0",
+      "recommended": 8,
+      "tasks": 8,
+      "unavailable": 0
+    }
+  },
+  {
+    "seq": 4,
+    "at": 1792350927.2099664,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0001",
+      "from": "ready",
+      "to": "active"
+    }
+  },
+  {
+    "seq": 5,
+    "at": 1792350927.2099664,
+    "kind": "reserved",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "executor": "route:m2:v1:b65ba952fb9c38b70a54fc74fe47a22749b877ddc6830113fb8bdd308ec68a23:3383f811755faae1b38cc9f06c478622dd7d019ca25271c7166fbb4cb4117d75",
+      "resources": [
+        "path:pictures:scripts/test/test-ideas-boda-guiada.ts",
+        "path:pictures:scripts/test/test-recomendaciones-categoria.ts",
+        "path:pictures:src/lib/biblioteca-sempertex/biblioteca.ts",
+        "path:pictures:src/lib/biblioteca-sempertex/categorias.ts",
+        "path:pictures:src/lib/biblioteca-sempertex/recomendaciones-categoria.ts",
+        "path:pictures:src/lib/ia/guiado/ideas-guiadas.ts",
+        "repo:pictures",
+        "res:strict-category-matching"
+      ],
+      "token": 1
+    }
+  },
+  {
+    "seq": 6,
+    "at": 1792350927.2099664,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "kind": "start",
+      "outbox": "out-00001"
+    }
+  },
+  {
+    "seq": 7,
+    "at": 1792350927.2567093,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "ack": "accepted",
+      "kind": "start"
+    }
+  },
+  {
+    "seq": 8,
+    "at": 1792350927.2567093,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "ack": "accepted",
+      "from": "reserved",
+      "to": "dispatched"
+    }
+  },
+  {
+    "seq": 9,
+    "at": 1792351412.9017363,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "from": "dispatched",
+      "source": "native-process-adapter",
+      "to": "running"
+    }
+  },
+  {
+    "seq": 10,
+    "at": 1792351412.9017363,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "from": "running",
+      "source": "native-process-adapter",
+      "to": "verifying"
+    }
+  },
+  {
+    "seq": 11,
+    "at": 1792351412.9017363,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "kind": "verify",
+      "outbox": "out-00002"
+    }
+  },
+  {
+    "seq": 12,
+    "at": 1792351413.922389,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "ack": "accepted",
+      "kind": "verify"
+    }
+  },
+  {
+    "seq": 13,
+    "at": 1792351413.929875,
+    "kind": "run_paused",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "by": "David-scoped-T1-experiment",
+      "reason": "Await actual independent review; T2 launch forbidden"
+    }
+  },
+  {
+    "seq": 14,
+    "at": 1792351745.510365,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "from": "verifying",
+      "to": "accepted",
+      "verifier": "independent-spec-and-standards-review"
+    }
+  },
+  {
+    "seq": 15,
+    "at": 1792351745.510365,
+    "kind": "reservation_released",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {}
+  },
+  {
+    "seq": 16,
+    "at": 1792351745.510365,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0001",
+      "from": "active",
+      "to": "completed",
+      "verifier": "independent-spec-and-standards-review"
+    }
+  },
+  {
+    "seq": 17,
+    "at": 1792351745.510365,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T2",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 18,
+    "at": 1792351745.533123,
+    "kind": "run_resumed",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "by": "David-scoped-T1-retry",
+      "reason": "Observe accepted T1 dependency promotion only; all further assignments prohibited"
+    }
+  },
+  {
+    "seq": 19,
+    "at": 1792351745.558851,
+    "kind": "run_paused",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "by": "David-scoped-T1-retry",
+      "reason": "T1 experiment accepted; T2 ready but execution outside approved scope"
+    }
+  }
+]

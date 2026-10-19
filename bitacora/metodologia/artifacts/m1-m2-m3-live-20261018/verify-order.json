@@ -1,0 +1,20 @@
+{
+  "idempotency_key": "REQ-M3:r1:att-0001:verify",
+  "plan_id": "REQ-M3",
+  "revision": 1,
+  "task_id": "T1",
+  "attempt_id": "att-0001",
+  "token": 1,
+  "acceptance_criteria": [
+    "All specified normalization and validation cases pass using built-in node:test; only the two expected probe files change."
+  ],
+  "verification": [
+    {
+      "category": "functional",
+      "created_by": "T1",
+      "purpose": "Actual standalone behavior tests; no provider or product calls",
+      "type": "command",
+      "value": "node --test m3-smoke/normalize-tags.test.mjs"
+    }
+  ]
+}

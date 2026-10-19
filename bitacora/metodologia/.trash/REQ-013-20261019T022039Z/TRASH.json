@@ -1,0 +1,18 @@
+{
+  "req_id": "REQ-013",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-013-scheduler-m2-decision-engine-with-local",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-013-scheduler-m2-decision-engine-with-local/PLAN.md",
+      "sha256": "6a191e713fb349ec55f3f582c1a81947b0baa74743cb87ce0189f1e97998542f"
+    }
+  ]
+}

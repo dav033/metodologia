@@ -1,0 +1,20 @@
+{
+  "scope": "isolated-simulation-only",
+  "owner_request": "ahora pruebalo con m1 y m2",
+  "canonical_status": "draft",
+  "canonical_sha256": "c20ddcf5581e09a57a2dec9393cbf5b93b44dad90c6c2c773b9f3a404f0e7d1a",
+  "frozen_sha256": "70873adb64235c629a41b676dd8dfb066286e219bd0c505b7c33728f3832e54c",
+  "real_components": [
+    "M1 SchedulerCore",
+    "M2 DecisionAssignmentPort",
+    "role routing"
+  ],
+  "synthetic_components": [
+    "accounts",
+    "quotas",
+    "execution",
+    "verification"
+  ],
+  "claude_used_percent": 20,
+  "codex_used_percent": 60
+}

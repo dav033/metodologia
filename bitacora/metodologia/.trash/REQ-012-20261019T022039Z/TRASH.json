@@ -1,0 +1,18 @@
+{
+  "req_id": "REQ-012",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-012-planner-phase-1-closure-strict-plan-sync",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-012-planner-phase-1-closure-strict-plan-sync/PLAN.md",
+      "sha256": "6ae8f8ed54ab542e835b689f80dda5e627ac735b10d92ff634a7638fec749974"
+    }
+  ]
+}

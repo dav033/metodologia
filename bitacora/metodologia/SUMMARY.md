@@ -1,9 +1,19 @@
 # metodologia — Summary
 
+- 2026-10-18 Full isolated Pictures REQ-018 product run IN PROGRESS after owner reactivation. New explicit cumulative patch workspace port verifies base/manifest/patch/tree/provenance; default snapshot mode unchanged. Actual retry uncovered reused M2 single-use route; optional dispatch_generation now binds persisted M1 attempt ordinal, preserving legacy initial identities (81 tests + independent review). T1 freshly accepted; actual T2 now receives its verified cumulative patch; see ../pictures/artifacts/REQ-018-full-isolated-20261018/REPORT.md for native rejections, checks and operational incident.
+
+- 2026-10-18 Root-cause repair/retry COMPLETE for isolated REQ-018 T1 (D-061). Native Sonnet medium repaired F1-F4; coordinator closed comma/phrase/label/only-colour boundaries; both reviews APPROVE and real M1 accepted T1,T2 ready0 attempts,run paused. Six scripts,lint/workspace build pass; types retain sole baseline LayoutProps error. Quota preflight fixed at900s with tests/build; both project P-120 entries closed locally. P-121 role-fixture debt remains with existing P-117/P-118/P-119. Canonical Pictures source/plan remain unchanged/draft. Evidence: /home/david/bitacora/pictures/artifacts/REQ-018-T1-retry-20261018/REPORT.md
+
+- 2026-10-18 Actual isolated REQ-018 T1: native claude-work/Sonnet medium launched through real M1/M2; independent reviews REJECT four reproduced strict-matching defects. M1 T1 blocked/attempt rejected,T2 pending/unreachable; no canonical integration. Six scripts,lint/workspace build pass; types retain baseline LayoutProps failure. Pictures D-060/P-120 and metodologia P-120 track scope/repair/quota-refresh issue. Evidence: /home/david/bitacora/pictures/artifacts/REQ-018-T1-live-20261018/REPORT.md
+
+- 2026-10-18 REQ-018 v2 isolated M1/M2 simulation PASS:8 tasks,2 account orders,16 simulated executions; T1–T6 Sonnet medium,T7 Sonnet low,T8 Sol high. Canonical plan remains draft; execution/verdicts synthetic, no Pictures implementation. Evidence: /home/david/bitacora/pictures/artifacts/REQ-018-v2-m1m2-simulation/REPORT.md
+
 ## Purpose
 The user's working method for Claude Code and Codex, with the provider-neutral Planner also available in Antigravity: prioritized requirements → approved plan → autonomous execution; engineering standards, agent roles, per-project bitácora, local web UI, tools and infrastructure registry. The private `github.com/dav033/metodologia` repo holds the skill, evals, installer and bitácora copies (D-008, D-009, D-011), including Pictures since D-012; the remaining live bitácora is `~/bitacora`.
 
 ## Current state
+- 2026-10-18 D-074 actual M1/M2/M3 smoke PASS: native Sonnet medium, T1 independently accepted, sentinel T2 ready/0 attempts, paused. Schema2 patch replays identical files;10 native +7 independent tests pass original/restored. No new commits (1133 unchanged). Patch opt-in retains default snapshot; no automatic successor integration. Evidence: artifacts/m1-m2-m3-live-20261018/REPORT.md. P-118 remains separate.
+- 2026-10-18 D-073 strengthens Planner responsibility/kind and calibration review. Regenerated Pictures REQ-018 v2:8 tasks, canonical check/report pass with9 explicit warnings; independent spec/standards APPROVE. Runtime14 tests/resource build pass; profile metadata test has proven pre-existing failure P-119. Requested native child hooks disabled; shared workspace nonetheless recorded automatic push ae37a9c from session-labelled aa047071 automation (P-118 remains unresolved). No v2 approval/freeze/implementation or simulation.
 - 2026-10-18 D-072 fixes Implementer assignments: complexity no longer reverses Sonnet medium/Luna high or outranks quota; alternative remains availability-based. Other roles unchanged.115 targeted tests, Ruff, offline wheel and installed source checks pass;10-case matrix and real Pictures REQ-018 pass with T1–T5 Sonnet medium/T6 Sonnet low at20%/60% used. No commit/push; P-117/P-118 separate.
 - 2026-10-18 M1/M2 quota/difficulty matrix:10 scenarios,5 unique DAGs,3 complexities,4 task kinds;20 order-invariant runs/80 simulated tasks passed with real candidate/router code and synthetic external facts/execution. Evidence: /home/david/.local/tmp/m1-m2-matrix-20261018-v2/REPORT.md. No runtime policy change or live-model validation.
 - 2026-10-18 isolated M1/M2 simulation verified on approved REQ-018: real full-DAG routing and READY assignment, all5 tasks completed with synthetic quota/accounts and fake executor/verifier. Five adapter contract tests pass. Prior m2_batch_invalid was a harness quota-reason error, corrected without production edits; evidence in /home/david/.local/tmp/m1-m2-isolated-n1d_ectu/. No live-provider verification claimed.
@@ -74,6 +84,8 @@ The user's working method for Claude Code and Codex, with the provider-neutral P
 - Installed on 2026-10-08: hooks, HQ and launcher, web UI on 127.0.0.1:8765, gitleaks, trace graph, review and merge,
   evals 10/10. The first end-to-end run passed on 2026-10-14 (P-002 closed).
 
+- 2026-10-19 SUPERRR (D-076): the web service now shows each Scheduler attempt's own route/tokens/duration, what is running now (`/now`, "Ahora" strip), an animated module map (`/flow`), model statistics (`/metrics/model/...`), clickable ids (`/go/<ID>`), plan amendments and run rebase onto revision N+1; verified by `test_flow_e2e`/`test_flow_contract` and 60 reviewed screenshots plus a real-provider run. Report: `~/Downloads/SUPERRR.md`. Uncommitted.
+
 ## Active focus
 - REQ-024 T16/T17 contract hardening is verified offline: benchmark records now pin the configured profile and runtime version, so later cells can reject drift. T15/P-108 are complete. The P-109 pilot measured one identical review on three profiles, but reviewer selection/P-109 and the exact Claude isolation session check still gate manifest freeze; no formal benchmark run was added.
 - REQ-024 Claude isolation has a supported CLI-flag candidate that preserves the selected profile while suppressing user/project customizations; runtime isolation still needs a no-model session check before T17 freeze.
@@ -97,6 +109,7 @@ The user's working method for Claude Code and Codex, with the provider-neutral P
   D-022 M1 Scheduler Core is an isolated module · D-021 Planner phase 1 closes with schema 1.1.0 · D-020 methodology modules
 
 ## Known issues
+- P-119: pre-existing Planner profile test rejects native model/effort metadata;18/19 combined profile/runtime tests pass. No suppression; runtime14/14 passes.
 - P-118 confirmed: round CLI and native session hooks auto-commit/push despite owner restrictions; actual pushes recorded in origin/main reflog through5bc98f3. User informed; no rollback or fix. Avoid wrappers unless VCS is effectively disabled.
 - P-039: broad Ruff 0.16.7 audit reports 83 style findings in the pre-existing M4 monitor package; focused REQ-018 integration files lint clean.
 - Codex hooks need one-time approval with `/hooks` on each machine.

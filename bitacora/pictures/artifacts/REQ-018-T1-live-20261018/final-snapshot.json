@@ -1,0 +1,159 @@
+{
+  "plan_id": "REQ-018",
+  "revision": 1,
+  "plan_sha256": "70873adb64235c629a41b676dd8dfb066286e219bd0c505b7c33728f3832e54c",
+  "status": "blocked",
+  "paused": false,
+  "cancel_requested": false,
+  "tasks": {
+    "T1": {
+      "state": "blocked",
+      "unreachable": false,
+      "attempts": 1,
+      "reason": "attempts_exhausted",
+      "attempt": "att-0001",
+      "attempt_state": "rejected",
+      "executor": "route:m2:v1:5a7110460b82def4c36fc68fa968579ab6677b55a31ad6670aa281f285e80df2:3383f811755faae1b38cc9f06c478622dd7d019ca25271c7166fbb4cb4117d75",
+      "verifier": "independent-spec-and-standards-review",
+      "evidence": "Independent spec and standards reviews: CHANGES_NEEDED. Parent independently reproduced F1 style from colour affinity, F2 incorrect clause polarity, F3 dropped explicit unknown style, F4 negated baby gender as positive. reviews/reproductions.json; planned checks pass but do not establish acceptance.",
+      "route_metadata": {
+        "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
+        "decision_id": "5a7110460b82def4c36fc68fa968579ab6677b55a31ad6670aa281f285e80df2",
+        "effort": "medium",
+        "model": "sonnet",
+        "profile": "claude-work",
+        "provider": "claude",
+        "quota_observed_at": "1792349632.6088164",
+        "quota_reason": "",
+        "quota_state": "fresh",
+        "quota_used_percent": "5.0",
+        "quota_valid_until": "1792356832.6088164",
+        "route_id": "3383f811755faae1b38cc9f06c478622dd7d019ca25271c7166fbb4cb4117d75",
+        "schema_version": "1.0.0",
+        "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+      },
+      "route_status": "assigned",
+      "route_reason": ""
+    },
+    "T2": {
+      "state": "pending",
+      "unreachable": true,
+      "attempts": 0,
+      "reason": "",
+      "attempt": "",
+      "attempt_state": "",
+      "executor": "",
+      "verifier": "",
+      "evidence": "",
+      "route_metadata": {},
+      "route_status": "unavailable",
+      "route_reason": "no_eligible_route"
+    },
+    "T3": {
+      "state": "pending",
+      "unreachable": true,
+      "attempts": 0,
+      "reason": "",
+      "attempt": "",
+      "attempt_state": "",
+      "executor": "",
+      "verifier": "",
+      "evidence": "",
+      "route_metadata": {},
+      "route_status": "unavailable",
+      "route_reason": "no_eligible_route"
+    },
+    "T4": {
+      "state": "pending",
+      "unreachable": true,
+      "attempts": 0,
+      "reason": "",
+      "attempt": "",
+      "attempt_state": "",
+      "executor": "",
+      "verifier": "",
+      "evidence": "",
+      "route_metadata": {},
+      "route_status": "unavailable",
+      "route_reason": "no_eligible_route"
+    },
+    "T5": {
+      "state": "pending",
+      "unreachable": true,
+      "attempts": 0,
+      "reason": "",
+      "attempt": "",
+      "attempt_state": "",
+      "executor": "",
+      "verifier": "",
+      "evidence": "",
+      "route_metadata": {},
+      "route_status": "unavailable",
+      "route_reason": "no_eligible_route"
+    },
+    "T6": {
+      "state": "pending",
+      "unreachable": true,
+      "attempts": 0,
+      "reason": "",
+      "attempt": "",
+      "attempt_state": "",
+      "executor": "",
+      "verifier": "",
+      "evidence": "",
+      "route_metadata": {},
+      "route_status": "unavailable",
+      "route_reason": "no_eligible_route"
+    },
+    "T7": {
+      "state": "pending",
+      "unreachable": true,
+      "attempts": 0,
+      "reason": "",
+      "attempt": "",
+      "attempt_state": "",
+      "executor": "",
+      "verifier": "",
+      "evidence": "",
+      "route_metadata": {},
+      "route_status": "unavailable",
+      "route_reason": "no_eligible_route"
+    },
+    "T8": {
+      "state": "pending",
+      "unreachable": true,
+      "attempts": 0,
+      "reason": "",
+      "attempt": "",
+      "attempt_state": "",
+      "executor": "",
+      "verifier": "",
+      "evidence": "",
+      "route_metadata": {},
+      "route_status": "unavailable",
+      "route_reason": "no_eligible_route"
+    }
+  },
+  "counts": {
+    "blocked": 1,
+    "pending": 7,
+    "live_attempts": 0
+  },
+  "unreachable": [
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6",
+    "T7",
+    "T8"
+  ],
+  "attention": [
+    {
+      "kind": "blocked_task",
+      "task_id": "T1",
+      "reason": "attempts_exhausted"
+    }
+  ],
+  "pending_outbox": 0
+}

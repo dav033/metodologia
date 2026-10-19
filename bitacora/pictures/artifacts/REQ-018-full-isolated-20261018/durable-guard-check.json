@@ -1,0 +1,7 @@
+{
+  "installer_executed": true,
+  "exit_code": 126,
+  "file_preserved": true,
+  "stderr": "REQ-018: deletion commands prohibited; retain all files",
+  "scope": "process PATH command wrappers only; not a filesystem sandbox"
+}

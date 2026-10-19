@@ -1,0 +1,24 @@
+node:internal/modules/cjs/loader:1564
+  const err = new Error(message);
+              ^
+
+Error: Cannot find module '@/lib/biblioteca-sempertex/categorias'
+Require stack:
+- /home/david/.local/tmp/req018-t1-live-6ml2566g/pictures/scripts/test/test-recomendaciones-categoria.ts
+    at node:internal/modules/cjs/loader:1564:15
+    at j._resolveFilename (file:///home/david/dev/pictures/node_modules/tsx/dist/register-C4vWVmug.mjs:2:17957)
+    at nextResolveSimple (/home/david/dev/pictures/node_modules/tsx/dist/register-C557imBs.cjs:10:1006)
+    at /home/david/dev/pictures/node_modules/tsx/dist/register-C557imBs.cjs:9:4959
+    at /home/david/dev/pictures/node_modules/tsx/dist/register-C557imBs.cjs:9:4261
+    at resolveTsPaths (/home/david/dev/pictures/node_modules/tsx/dist/register-C557imBs.cjs:10:759)
+    at Module._resolveFilename (/home/david/dev/pictures/node_modules/tsx/dist/register-C557imBs.cjs:10:1199)
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at defaultResolve (node:internal/modules/cjs/loader:1199:20) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/home/david/.local/tmp/req018-t1-live-6ml2566g/pictures/scripts/test/test-recomendaciones-categoria.ts'
+  ]
+}
+
+Node.js v24.21.0

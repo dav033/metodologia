@@ -1,0 +1,66 @@
+{
+  "reproduced_defects": true,
+  "probes": [
+    {
+      "id": "F1",
+      "description": "Style inferred from colour affinity",
+      "result": [
+        "probe-wedding"
+      ]
+    },
+    {
+      "id": "F2a",
+      "description": "Repeated negative marker retained as excluded literal",
+      "preferences": {
+        "estilos": [],
+        "colores": [],
+        "tonos": [],
+        "excluir": [
+          "flores",
+          "sin gotico"
+        ],
+        "soloColores": false
+      },
+      "result": [
+        "probe-wedding"
+      ]
+    },
+    {
+      "id": "F2b",
+      "description": "Positive clause interpreted as exclusion",
+      "preferences": {
+        "estilos": [],
+        "colores": [],
+        "tonos": [],
+        "excluir": [
+          "negro",
+          "dorado"
+        ],
+        "soloColores": false
+      },
+      "result": []
+    },
+    {
+      "id": "F3",
+      "description": "Explicit unknown style discarded",
+      "preferences": {
+        "estilos": [],
+        "colores": [],
+        "tonos": [],
+        "excluir": [],
+        "soloColores": false
+      },
+      "result": [
+        "probe-wedding"
+      ]
+    },
+    {
+      "id": "F4",
+      "description": "Negative gender becomes positive",
+      "result": [
+        "deco-real-29-arco-link-o-loon-fucsia-tulipanes"
+      ],
+      "gender": "nina"
+    }
+  ]
+}

@@ -71,3 +71,5 @@ _Rewritten at the end of each session that week. Set `status: final` once the we
 - Real Pictures REQ-018 successfully consumed by isolated M1/M2 in both account orders; persistent traces retained. Confirmed unauthorized auto-commit/push by round/native hook machinery, recorded high-priority P-118 and informed owner.
 
 - D-072 corrects Implementer complexity promotion;115 targeted tests, Ruff/offline wheel and real-plan/matrix simulations pass. Sonnet medium is no longer displaced by Luna solely for high complexity. No VCS mutations.
+
+- D-073 Planner responsibility/calibration repair validated by Pictures REQ-018 v2 (8 tasks), canonical check/report and two independent review axes. Previous draft preserved. One pre-existing profile check failure P-119; no new-plan execution or Git mutations.

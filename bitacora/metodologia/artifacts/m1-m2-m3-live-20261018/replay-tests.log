@@ -1,0 +1,15 @@
+✔ trim/lowercase/stable deduplication (2.720542ms)
+✔ Unicode NFC equivalence (0.279699ms)
+✔ empty inputs and whitespace (1.271758ms)
+✔ input array stays immutable (0.400741ms)
+✔ reject non-array values (0.639386ms)
+✔ reject every non-string element (0.260887ms)
+✔ preserve stable first occurrence order (0.185745ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 92.116712

@@ -1,0 +1,12 @@
+{
+  "provider": "claude",
+  "model": "sonnet",
+  "profile": "claude-work",
+  "effort": "medium",
+  "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
+  "quota_valid_until": 1792356832.6088164,
+  "plan_id": "REQ-018",
+  "revision": 1,
+  "plan_sha256": "70873adb64235c629a41b676dd8dfb066286e219bd0c505b7c33728f3832e54c",
+  "task_id": "T1"
+}

@@ -1,0 +1,77 @@
+{
+  "plan_id": "REQ-M3",
+  "revision": 1,
+  "plan_sha256": "3adc3bde6412680cf25c892d3b099d549de7e5deea900bdaf1c76da477824969",
+  "status": "paused",
+  "paused": true,
+  "cancel_requested": false,
+  "tasks": {
+    "T1": {
+      "state": "active",
+      "unreachable": false,
+      "attempts": 1,
+      "reason": "",
+      "attempt": "att-0001",
+      "attempt_state": "verifying",
+      "executor": "route:m2:v1:38c023e802b5fd194657bf7041bdf916ee13eb350e7f1332617bf6bad6e71749:3383f811755faae1b38cc9f06c478622dd7d019ca25271c7166fbb4cb4117d75",
+      "verifier": "",
+      "evidence": "",
+      "route_metadata": {
+        "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
+        "decision_id": "38c023e802b5fd194657bf7041bdf916ee13eb350e7f1332617bf6bad6e71749",
+        "effort": "medium",
+        "model": "sonnet",
+        "profile": "claude-work",
+        "provider": "claude",
+        "quota_observed_at": "1792353619.470583",
+        "quota_reason": "",
+        "quota_state": "fresh",
+        "quota_used_percent": "15.0",
+        "quota_valid_until": "1792360819.470583",
+        "route_id": "3383f811755faae1b38cc9f06c478622dd7d019ca25271c7166fbb4cb4117d75",
+        "schema_version": "1.0.0",
+        "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous"
+      },
+      "route_status": "assigned",
+      "route_reason": ""
+    },
+    "T2": {
+      "state": "pending",
+      "unreachable": false,
+      "attempts": 0,
+      "reason": "",
+      "attempt": "",
+      "attempt_state": "",
+      "executor": "",
+      "verifier": "",
+      "evidence": "",
+      "route_metadata": {
+        "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
+        "assignment_reason": "route_policy_preferred",
+        "batch_id": "3f96c2dd8bffd805e3944c65e5463c9e3aa9a8051275141a80eca15c166a4f2d",
+        "effort": "low",
+        "model": "sonnet",
+        "policy_rank": "1",
+        "profile": "claude-work",
+        "provider": "claude",
+        "quota_observed_at": "1792353619.470583",
+        "quota_reason": "quota_fresh",
+        "quota_state": "fresh",
+        "quota_used_percent": "15.0",
+        "quota_valid_until": "1792360819.470583",
+        "route_id": "da4b93078261e3b24c738e7923be853cd1cb33b68877763388408029fc15bffc",
+        "schema_version": "1.0.0"
+      },
+      "route_status": "recommended",
+      "route_reason": ""
+    }
+  },
+  "counts": {
+    "active": 1,
+    "pending": 1,
+    "live_attempts": 1
+  },
+  "unreachable": [],
+  "attention": [],
+  "pending_outbox": 0
+}

@@ -1,0 +1,27 @@
+{
+  "spec": {
+    "agent": "/root/t1_live_spec_review",
+    "initial_retry_verdict": "CHANGES_NEEDED",
+    "initial_remaining_findings": [
+      "negative comma enumeration loses polarity",
+      "announced lexical phrases fragment into extra constraints"
+    ],
+    "final_verdict": "APPROVE",
+    "scope": "Targeted T1 root-cause fixes and bounded follow-up; quota preflight APPROVE"
+  },
+  "standards": {
+    "agent": "/root/t1_live_standards_review",
+    "initial_retry_verdict": "CHANGES_NEEDED",
+    "initial_remaining_findings": [
+      "announced lexical phrases fragment into extra constraints"
+    ],
+    "final_verdict": "APPROVE",
+    "scope": "Correctness, ownership, boundaries/consumers; bounded fix follow-up and quota preflight"
+  },
+  "coordinator_reproduced_extra_cases": [
+    "negated thematic field cue becomes excluded literal phrase",
+    "stored exclusive colour modifier becomes a required style"
+  ],
+  "verification": "Both reviewers independently executed test-recomendaciones-categoria.ts exit0 on final source; independent runner six scripts/lint/build, baseline-only LayoutProps type failure; final-source-hashes.json binds reviewed source",
+  "attribution": "Native fixed original F1-F4; coordinator completed remaining shared semantic boundaries. Native output preserved separately in native-after/."
+}

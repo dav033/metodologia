@@ -1,0 +1,148 @@
+{
+  "builder": {
+    "profile": "codex-luis",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "exit_code": 0,
+    "hooks_disabled_for_child": true,
+    "native_session": "01a15019-b5dd-7221-ae07-1f395f6b2fd4",
+    "reported_tokens": 193984
+  },
+  "checks": {
+    "canonical_plan_check_exit": 0,
+    "plan_errors": 0,
+    "warnings": 9,
+    "future_test_warnings": 7,
+    "manual_criteria_warnings": 2,
+    "planner_runtime_tests": {
+      "passed": 14
+    },
+    "combined_profile_runtime_tests": {
+      "passed": 18,
+      "failed_preexisting": 1
+    },
+    "profile_failure_reproduced_without_new_instruction": true,
+    "offline_build": "pass",
+    "wheel_resource_bytes": "pass",
+    "scoped_whitespace": "pass",
+    "native_existing_search_and_wedding_tests": "reported exit0",
+    "native_full_view_in_memory_bundle": "reported exit0",
+    "browser_execution": "not run"
+  },
+  "independent_reviews": {
+    "spec": {
+      "task": "/root/planner_replan_spec_review",
+      "verdict": "APPROVE",
+      "actionable_findings": [],
+      "limit": "read-only scope/traceability review, not product acceptance"
+    },
+    "standards": {
+      "task": "/root/planner_replan_standards_review",
+      "verdict": "APPROVE",
+      "actionable_findings": [],
+      "limit": "static code/evidence review, no tests/browser execution"
+    }
+  },
+  "after_hashes": {
+    "SPEC.md": "82d4175f3a6e02343fd28f324faa300a3c7d398f53bfde6a0034978a7d8496a6",
+    "PLAN.md": "871418845b65a03e9351c0c2b44e62158db5fd3ee5cbea705339a4dd73b8132b",
+    "PLAN.json": "c20ddcf5581e09a57a2dec9393cbf5b93b44dad90c6c2c773b9f3a404f0e7d1a"
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Strict catalogue matching",
+      "kind": "implement",
+      "complexity": "medium",
+      "after": []
+    },
+    {
+      "id": "T2",
+      "title": "Discovery turn decisions",
+      "kind": "implement",
+      "complexity": "high",
+      "after": [
+        "T1"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Honest matching and empty responses",
+      "kind": "implement",
+      "complexity": "high",
+      "after": [
+        "T2"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Integrate category discovery into the guided API",
+      "kind": "implement",
+      "complexity": "high",
+      "after": [
+        "T3"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Preserve gallery identity and empty-turn selection",
+      "kind": "implement",
+      "complexity": "high",
+      "after": [
+        "T4"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Register category regression commands",
+      "kind": "implement",
+      "complexity": "low",
+      "after": [
+        "T5"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Run established verification commands",
+      "kind": "test",
+      "complexity": "low",
+      "after": [
+        "T6"
+      ]
+    },
+    {
+      "id": "T8",
+      "title": "Review integration and product acceptance evidence",
+      "kind": "audit",
+      "complexity": "high",
+      "after": [
+        "T7"
+      ]
+    }
+  ],
+  "not_authorized_or_run": [
+    "plan approval/freeze",
+    "M1/M2 simulation of new draft",
+    "Pictures implementation",
+    "deployment"
+  ],
+  "source_sizes": {
+    "skill/agents/planner.md": 6016,
+    "skill/agents/planner/skills/wbs-dag-decomposition/SKILL.md": 5702,
+    "skill/agents/planner/skills/adversarial-plan-review/SKILL.md": 3766
+  },
+  "planner_source_hashes": {
+    "skill/agents/planner.md": "af68a7ef9340a384c6d5c841e7f6255f6532041106dd78e3a7632a4d78709f3f",
+    "skill/agents/planner/skills/wbs-dag-decomposition/SKILL.md": "c5d1585696d14bc4962572d760c97a69453a80255f88f785f84c31b22784ec8c",
+    "skill/agents/planner/skills/adversarial-plan-review/SKILL.md": "5f5930aa248de437d41b71c564b922a65ab3d10ca1b75d495961c908325982c7"
+  },
+  "workspace_vcs_incident": {
+    "commit": "ae37a9c",
+    "label": "dev: session aa047071 end",
+    "push_confirmed_by_origin_main_reflog": true,
+    "manual_git_mutation_invoked_by_coordinator": false,
+    "requested_native_child_hooks": false,
+    "source_of_global_session_automation": "not conclusively attributed",
+    "resolution": "P-118 remains open; no rollback/global config edit"
+  }
+}

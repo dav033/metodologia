@@ -1,0 +1,41 @@
+{
+  "status": "completed",
+  "reset_epoch": null,
+  "terminal_event": true,
+  "text": "Aye.\n\n```\nSTATUS: DONE\nSUMMARY: Repar\u00e9 las cuatro causas ra\u00edz en un helper puro nuevo y las conect\u00e9 al matcher y al adaptador de g\u00e9nero. Las pruebas de comportamiento nuevas fallaron contra el c\u00f3digo rechazado (24 fallos sem\u00e1nticos) y ahora pasan. Los tres comandos de verificaci\u00f3n de T1 salen con exit 0.\nCHANGES:\n- src/lib/biblioteca-sempertex/preferencias-texto.ts (nuevo, puro) \u2014 due\u00f1o \u00fanico de `analizarPolaridad` (positivo/negativos por cl\u00e1usula), `formasLexicasEstrictas` y `separarFrasesLexicas`.\n- src/lib/biblioteca-sempertex/recomendaciones-categoria.ts \u2014 usa el helper. Se quit\u00f3 el parser negativo propio y la afinidad sem\u00e1ntica. Nuevo `estilosAnunciados` para \"estilo/tem\u00e1tica/tema/motivo\".\n- src/lib/ia/guiado/ideas-guiadas.ts \u2014 `generoConPolaridad` consume el mismo parser. `ideasEstrictasDeCategoria` excluye los g\u00e9neros negados. `generoBebeDe` queda igual, apoyado en `generosNombrados`.\n- scripts/test/test-recomendaciones-categoria.ts \u2014 secci\u00f3n 10 con regresiones de las 4 causas y pruebas del helper. Las aserciones antiguas no se tocaron; el console.log final pas\u00f3 al final.\nVERIFICATION (logs en ../checks/):\n- Rojo: `node --import=tsx scripts/test/test-recomendaciones-categoria.ts` \u2192 exit 1, 24 fallos sem\u00e1nticos (red-t1-matcher.log).\n- Verde: ese mismo comando, `test-ideas-boda-guiada.ts` y `test-busqueda-biblioteca-sempertex.ts` \u2192 exit 0 (green-t1-*.log).\n- `npm run lint` \u2192 0 errores, 50 warnings (igual que la base). `npm run build --workspaces --if-present` \u2192 sin errores.\n- `npx tsc --noEmit` \u2192 solo el error previo `src/app/layout.tsx(26,50) LayoutProps`. No lo toqu\u00e9.\nCOMMITS: none\nRULINGS:\n- Las variantes l\u00e9xicas estrictas son n\u00famero/g\u00e9nero gramatical m\u00e1s una tabla corta de variantes de escritura (dino, arco iris, flor/floral\u2026). \"ni\u00f1o\" y \"ni\u00f1a\" no son variantes entre s\u00ed.\n- La puntuaci\u00f3n reinicia la polaridad a positiva. Los marcadores `con/pero/si/quiero` vuelven a positivo; `sin/ni/no quiero/nada de` pasan a negativo.\n- \"flores\" ya no admite \"tulipanes\" (hiper\u00f3nimo, no variante l\u00e9xica); `tulipanes` no admite `margaritas`.\n- Un g\u00e9nero negado en el mensaje o en la tem\u00e1tica guardada no puede pedirse. Si solo hay negado, `genero` es null y se admiten los otros g\u00e9neros y el neutro.\n- Las exclusiones literales tambi\u00e9n usan las formas l\u00e9xicas estrictas.\nCONCERNS:\n- `estilosAnunciados` (mensaje) no agrupa frases de varias palabras como \"arco iris\". Solo la tem\u00e1tica guardada lo hace.\n- `ideasGuiadas` y `generoBebeDe` (legacy) no son polarity-aware a prop\u00f3sito, para no cambiar a los dem\u00e1s consumidores.\n- Los logs `green-lint.log` y `green-tsc.log` se generaron en una sola ejecuci\u00f3n en segundo plano; no guard\u00e9 los exit codes por separado, solo la salida.\n```",
+  "usage": {
+    "input_tokens": 40,
+    "cache_creation_input_tokens": 107738,
+    "cache_read_input_tokens": 1671659,
+    "output_tokens": 34956,
+    "output_tokens_details": {
+      "thinking_tokens": 16542
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 107738,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1336,
+        "cache_read_input_tokens": 116710,
+        "cache_creation_input_tokens": 1051,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1051
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "cost_usd": 0.9477579000000003
+}

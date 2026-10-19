@@ -1,0 +1,253 @@
+[
+  {
+    "seq": 1,
+    "at": 1792353618.908528,
+    "kind": "run_created",
+    "plan_id": "REQ-M3",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "sha256": "3adc3bde6412680cf25c892d3b099d549de7e5deea900bdaf1c76da477824969",
+      "tasks": 2
+    }
+  },
+  {
+    "seq": 2,
+    "at": 1792353618.908528,
+    "kind": "task_transition",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 3,
+    "at": 1792353627.5762222,
+    "kind": "plan_routes_received",
+    "plan_id": "REQ-M3",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "contract_version": "1.0.0",
+      "recommended": 2,
+      "tasks": 2,
+      "unavailable": 0
+    }
+  },
+  {
+    "seq": 4,
+    "at": 1792353627.7410135,
+    "kind": "task_transition",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0001",
+      "from": "ready",
+      "to": "active"
+    }
+  },
+  {
+    "seq": 5,
+    "at": 1792353627.7410135,
+    "kind": "reserved",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "executor": "route:m2:v1:38c023e802b5fd194657bf7041bdf916ee13eb350e7f1332617bf6bad6e71749:3383f811755faae1b38cc9f06c478622dd7d019ca25271c7166fbb4cb4117d75",
+      "resources": [
+        "path:probe:m3-smoke/normalize-tags.mjs",
+        "path:probe:m3-smoke/normalize-tags.test.mjs",
+        "repo:probe",
+        "res:m3-smoke"
+      ],
+      "token": 1
+    }
+  },
+  {
+    "seq": 6,
+    "at": 1792353627.7410135,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "kind": "start",
+      "outbox": "out-00001"
+    }
+  },
+  {
+    "seq": 7,
+    "at": 1792353627.817755,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "ack": "accepted",
+      "kind": "start"
+    }
+  },
+  {
+    "seq": 8,
+    "at": 1792353627.817755,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "ack": "accepted",
+      "from": "reserved",
+      "to": "dispatched"
+    }
+  },
+  {
+    "seq": 9,
+    "at": 1792353628.666326,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "from": "dispatched",
+      "source": "executor",
+      "to": "running"
+    }
+  },
+  {
+    "seq": 10,
+    "at": 1792353649.0291095,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "from": "running",
+      "source": "executor",
+      "to": "verifying"
+    }
+  },
+  {
+    "seq": 11,
+    "at": 1792353649.0291095,
+    "kind": "dispatch_intent",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "kind": "verify",
+      "outbox": "out-00002"
+    }
+  },
+  {
+    "seq": 12,
+    "at": 1792353649.2867637,
+    "kind": "dispatch_delivered",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "ack": "accepted",
+      "kind": "verify"
+    }
+  },
+  {
+    "seq": 13,
+    "at": 1792353649.3115726,
+    "kind": "run_paused",
+    "plan_id": "REQ-M3",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "by": "David-M3-smoke",
+      "reason": "Actual executor terminal; await external verification, successor forbidden"
+    }
+  },
+  {
+    "seq": 14,
+    "at": 1792353837.6582587,
+    "kind": "run_resumed_by_process",
+    "plan_id": "REQ-M3",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {}
+  },
+  {
+    "seq": 15,
+    "at": 1792353837.6903868,
+    "kind": "attempt_transition",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {
+      "from": "verifying",
+      "to": "accepted",
+      "verifier": "parent-independent-verifier"
+    }
+  },
+  {
+    "seq": 16,
+    "at": 1792353837.6903868,
+    "kind": "reservation_released",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "att-0001",
+    "detail": {}
+  },
+  {
+    "seq": 17,
+    "at": 1792353837.6903868,
+    "kind": "task_transition",
+    "plan_id": "REQ-M3",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "attempt": "att-0001",
+      "from": "active",
+      "to": "completed",
+      "verifier": "parent-independent-verifier"
+    }
+  },
+  {
+    "seq": 18,
+    "at": 1792353837.6903868,
+    "kind": "task_transition",
+    "plan_id": "REQ-M3",
+    "task_id": "T2",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 19,
+    "at": 1792353837.7238832,
+    "kind": "run_resumed",
+    "plan_id": "REQ-M3",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "by": "David-M3-smoke",
+      "reason": "Apply independently verified verdict; never launch sentinel"
+    }
+  },
+  {
+    "seq": 20,
+    "at": 1792353837.7616365,
+    "kind": "run_paused",
+    "plan_id": "REQ-M3",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "by": "David-M3-smoke",
+      "reason": "Smoke complete; successor forbidden"
+    }
+  }
+]

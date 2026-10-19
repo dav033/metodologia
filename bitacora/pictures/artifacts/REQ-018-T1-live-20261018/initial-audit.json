@@ -1,0 +1,53 @@
+[
+  {
+    "seq": 1,
+    "at": 1792349591.757068,
+    "kind": "run_created",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "sha256": "70873adb64235c629a41b676dd8dfb066286e219bd0c505b7c33728f3832e54c",
+      "tasks": 8
+    }
+  },
+  {
+    "seq": 2,
+    "at": 1792349591.757068,
+    "kind": "task_transition",
+    "plan_id": "REQ-018",
+    "task_id": "T1",
+    "attempt_id": "",
+    "detail": {
+      "from": "pending",
+      "reason": "prerequisites_completed",
+      "to": "ready"
+    }
+  },
+  {
+    "seq": 3,
+    "at": 1792349598.8367593,
+    "kind": "plan_routes_received",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "contract_version": "1.0.0",
+      "recommended": 0,
+      "tasks": 8,
+      "unavailable": 8
+    }
+  },
+  {
+    "seq": 4,
+    "at": 1792349598.856116,
+    "kind": "run_paused",
+    "plan_id": "REQ-018",
+    "task_id": "",
+    "attempt_id": "",
+    "detail": {
+      "by": "David-scoped-T1-experiment",
+      "reason": "Actual quota or auth unavailable; no synthetic fallback"
+    }
+  }
+]

@@ -1,0 +1,34 @@
+{
+  "schema": 2,
+  "attempt_id": "att-0001",
+  "worktree": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/REQ-M3/EXECUTOR-r1-3adc3bde-1792353618908/ws/worktrees/att-0001-3c9f5c1f520fafa0",
+  "repository": "/home/david/dev/metodologia/bitacora/pictures/.state/m3-flow-xm9hnyg1/repository",
+  "base_sha": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723",
+  "branch": "m3/att-0001-3c9f5c1f520fafa0-e8dbd005",
+  "branch_at_end": "m3/att-0001-3c9f5c1f520fafa0-e8dbd005",
+  "head_sha": "5f9104980d31e0074c6bbb5ed16cae1e8c92a723",
+  "snapshot_sha": null,
+  "handoff_mode": "patch",
+  "patch_bytes": 3185,
+  "patch_sha256": "3789f0d645cab08c4ff8a872fea6378fd8adc0138180eee211ec677362e5d0fa",
+  "has_commits": false,
+  "commit_count": 0,
+  "commits": [],
+  "dirty": true,
+  "untracked_count": 2,
+  "empty": false,
+  "changed_total": 2,
+  "changed": [
+    "A\tm3-smoke/normalize-tags.mjs",
+    "A\tm3-smoke/normalize-tags.test.mjs"
+  ],
+  "patch": {
+    "path": "/home/david/bitacora/pictures/.state/m3-flow-xm9hnyg1/final-source-recapture/handoff/changes.patch",
+    "bytes": 3185,
+    "sha256": "3789f0d645cab08c4ff8a872fea6378fd8adc0138180eee211ec677362e5d0fa",
+    "skipped": ""
+  },
+  "log_tail": null,
+  "refs": {},
+  "status": "captured"
+}

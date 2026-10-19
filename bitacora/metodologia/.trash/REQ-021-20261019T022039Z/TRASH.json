@@ -1,0 +1,18 @@
+{
+  "req_id": "REQ-021",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-021-scheduler-m5-m6-runtime-integration",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-021-scheduler-m5-m6-runtime-integration/PLAN.md",
+      "sha256": "dd81eb9c3dda6e3ae04b8a5031eb27789067b2f85fe5db1b81050d989c322944"
+    }
+  ]
+}

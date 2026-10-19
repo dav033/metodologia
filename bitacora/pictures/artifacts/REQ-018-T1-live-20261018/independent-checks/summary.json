@@ -1,0 +1,95 @@
+{
+  "working_directory": "/home/david/.local/tmp/req018-t1-live-6ml2566g/pictures",
+  "checks": [
+    {
+      "name": "test-recomendaciones-categoria",
+      "command": "node --import=tsx scripts/test/test-recomendaciones-categoria.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.246,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "test-recomendaciones-categoria.stdout.log",
+      "stderr_log": "test-recomendaciones-categoria.stderr.log"
+    },
+    {
+      "name": "test-ideas-boda-guiada",
+      "command": "node --import=tsx scripts/test/test-ideas-boda-guiada.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.246,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "test-ideas-boda-guiada.stdout.log",
+      "stderr_log": "test-ideas-boda-guiada.stderr.log"
+    },
+    {
+      "name": "test-busqueda-biblioteca-sempertex",
+      "command": "node --import=tsx scripts/test/test-busqueda-biblioteca-sempertex.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.271,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "test-busqueda-biblioteca-sempertex.stdout.log",
+      "stderr_log": "test-busqueda-biblioteca-sempertex.stderr.log"
+    },
+    {
+      "name": "test-cambio-tematica-guiada",
+      "command": "node --import=tsx scripts/test/test-cambio-tematica-guiada.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.197,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "test-cambio-tematica-guiada.stdout.log",
+      "stderr_log": "test-cambio-tematica-guiada.stderr.log"
+    },
+    {
+      "name": "test-respuesta-guiada-sin-fracaso",
+      "command": "node --import=tsx scripts/test/test-respuesta-guiada-sin-fracaso.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.281,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "test-respuesta-guiada-sin-fracaso.stdout.log",
+      "stderr_log": "test-respuesta-guiada-sin-fracaso.stderr.log"
+    },
+    {
+      "name": "test-pedido-ideas",
+      "command": "node --import=tsx scripts/test/test-pedido-ideas.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.198,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "test-pedido-ideas.stdout.log",
+      "stderr_log": "test-pedido-ideas.stderr.log"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "exit_code": 0,
+      "duration_seconds": 65.173,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "stdout_log": "lint.stdout.log",
+      "stderr_log": "lint.stderr.log"
+    },
+    {
+      "name": "build-workspaces",
+      "command": "npm run build --workspaces --if-present",
+      "exit_code": 0,
+      "duration_seconds": 1.962,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "build-workspaces.stdout.log",
+      "stderr_log": "build-workspaces.stderr.log"
+    },
+    {
+      "name": "typescript",
+      "command": "npx tsc --noEmit",
+      "exit_code": 1,
+      "duration_seconds": 6.257,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "typescript.stdout.log",
+      "stderr_log": "typescript.stderr.log"
+    }
+  ]
+}

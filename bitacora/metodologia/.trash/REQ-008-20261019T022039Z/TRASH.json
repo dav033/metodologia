@@ -1,0 +1,24 @@
+{
+  "req_id": "REQ-008",
+  "project": "metodologia",
+  "req_dir": "metodologia/requirements/REQ-008-fresh-milestone-orchestration-and-bounde",
+  "deleted_at": "2026-10-19T02:20:39+00:00",
+  "by": "claude-session-9ff5bc3e",
+  "reason": "owner asked to remove all metodologia plans",
+  "artifacts": [
+    "PLAN.md",
+    "HANDOFF.md"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-008-fresh-milestone-orchestration-and-bounde/PLAN.md",
+      "sha256": "75760f1f846142e0133ec7f657c3ec0be15abc1e498dcfa925680c7f9473b42e"
+    },
+    {
+      "path": "HANDOFF.md",
+      "original": "/home/david/dev/metodologia/bitacora/metodologia/requirements/REQ-008-fresh-milestone-orchestration-and-bounde/HANDOFF.md",
+      "sha256": "2c4b4d8174e4bc38eba4cfb077741087b90d1f54e1ac5e5d83a6c9b04442ef2e"
+    }
+  ]
+}

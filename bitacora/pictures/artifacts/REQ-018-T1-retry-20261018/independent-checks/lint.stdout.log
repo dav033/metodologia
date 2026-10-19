@@ -1,0 +1,132 @@
+
+> demo-decoracion@0.1.0 lint
+> eslint
+
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/catalogo/import-cdn-catalog.ts
+  48:43  warning  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/catalogo/validate-source-snapshots.ts
+  45:43  warning  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/dataset/scrape-ideas-fiesta.ts
+  41:7  warning  'TIPOS_ESTRUCTURA' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/eval/eval-event-query-parser.ts
+   14:10  warning  'ok' is defined but never used                           @typescript-eslint/no-unused-vars
+   14:14  warning  'equal' is defined but never used                        @typescript-eslint/no-unused-vars
+   14:21  warning  'deepEqual' is defined but never used                    @typescript-eslint/no-unused-vars
+   14:32  warning  'notDeepEqual' is defined but never used                 @typescript-eslint/no-unused-vars
+   14:56  warning  'assertThrows' is defined but never used                 @typescript-eslint/no-unused-vars
+   15:74  warning  'deriveDefaultRequestedViews' is defined but never used  @typescript-eslint/no-unused-vars
+   20:8   warning  'WeddingIntentFixture' is defined but never used         @typescript-eslint/no-unused-vars
+   22:31  warning  'SceneSlotSchema' is defined but never used              @typescript-eslint/no-unused-vars
+   25:29  warning  'computeProgramHash' is defined but never used           @typescript-eslint/no-unused-vars
+  357:11  warning  'styleTerms' is assigned a value but never used          @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/exp/hoja-boda.ts
+  7:35  warning  'readFileSync' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-crud-plan-chat-guiada.ts
+  42:8  warning  'SEMIARCO' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-editar-seleccion.ts
+  46:7  warning  'codigoDe' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-escenografia-referencia.ts
+  247:41  warning  '_p' is defined but never used  @typescript-eslint/no-unused-vars
+  247:62  warning  '_n' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-guia-escena-sin-foto.ts
+  83:24  warning  '_armadoArco' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-imagen-fiel-foto.ts
+  149:96  warning  '_cantidad' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-motor-guiada-auditoria-plan.ts
+  386:11  warning  'respuesta' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-motor-guiada-editar-ruta.ts
+  169:18  warning  '_quitada' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-motor-guiada-plan-ruta.ts
+  286:9   warning  'deEspec' is assigned a value but only used as a type  @typescript-eslint/no-unused-vars
+  305:18  warning  '_quitada' is assigned a value but never used          @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-panel-ia-componentes.ts
+  51:7  warning  'desactivado' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-reference-analysis-perceptual.ts
+  18:17  warning  '_p' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-render-mobiliario.ts
+  17:165  warning  'promptRender3dFiel' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-sesion-dueno-2.ts
+  33:7  warning  'AVISO' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-similitud-refinado.ts
+  129:26  warning  '_quitada' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/scripts/test/test-zonas-foto.ts
+  60:60  warning  '_' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/components/tres-d/EditorMueble.tsx
+  59:77  warning  '_viejo' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/components/tres-d/EditorRemate.tsx
+  25:23  warning  '_fuera' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/components/tres-d/escena-globos.ts
+  207:10  warning  'azar' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/components/tres-d/ia/PanelIA.tsx
+  69:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/compilar-lectura.ts
+   29:15   warning  'ColorLeido' is defined but never used  @typescript-eslint/no-unused-vars
+  185:119  warning  '_' is defined but never used           @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/herramientas-escena-mobiliario.ts
+  5:15  warning  'AcabadoEscenografia' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/herramientas-escena-pintar.ts
+  55:23  warning  '_fuera' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/herramientas-escena-remate.ts
+  46:23  warning  '_fuera' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/mobiliario-asientos.ts
+  2:48  warning  'mat' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/motor/ediciones-pieza.ts
+   89:18  warning  '_capas' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  282:19  warning  '_anteriores' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/salon-ajustar.ts
+  159:34  warning  '_antes' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/salon-armar.ts
+  61:18  warning  '_anotado' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/salon-centros.ts
+  2:41  warning  'NodoEscena' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/salon-zonas-editar.ts
+  52:46  warning  '_vacio' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/globos3d/seleccion-datos.ts
+  149:21  warning  '_fuera' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/rag/retrieval/by-scene-slot.ts
+  164:3  warning  'minCapabilityConfidence' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/rag/retrieval/scene-rerank.ts
+  113:45  warning  'position' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/david/.local/tmp/req018-t1-retry-wbv54qd_/pictures/src/lib/rag/sources/fetch.ts
+  63:39  warning  'T' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 50 problems (0 errors, 50 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

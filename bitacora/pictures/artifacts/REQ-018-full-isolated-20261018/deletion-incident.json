@@ -1,0 +1,32 @@
+{
+  "incident": "Native agent executed rm scripts/test/.rep-*.mts contrary to explicit no-deletion instruction. Command evidence preserved. Three generated diagnostic copies were absent afterward; original evidence scripts and reviewed product sources remained intact.",
+  "restored": [
+    {
+      "path": "/home/david/dev/metodologia/bitacora/pictures/.state/req018-full-mwvocojr/REQ-018-category-based-recommendations-of-assemb/EXECUTOR-r1-70873adb-1792355220173/chain-ws/worktrees/att-0005-00f46831fa37eae0/scripts/test/.rep-att-0004-shared-rules.mjs.mts",
+      "source": "/home/david/bitacora/pictures/.state/req018-full-mwvocojr/reviews/T1/att-0004-shared-rules.mjs",
+      "source_sha256": "bd1afb8491692d5f63b99363e84cf5008edbf4e2a6851b4bea1742374e273cfe",
+      "reconstructed_sha256": "a7cf3fcbad87ed8afd60a9b64186f0edb01bdf6649de4ebf8edd0e55074d3e40",
+      "method": "exact recorded sed substitution; reconstructed diagnostic copy, original copy hash was not recorded"
+    },
+    {
+      "path": "/home/david/dev/metodologia/bitacora/pictures/.state/req018-full-mwvocojr/REQ-018-category-based-recommendations-of-assemb/EXECUTOR-r1-70873adb-1792355220173/chain-ws/worktrees/att-0005-00f46831fa37eae0/scripts/test/.rep-att-0003-boundaries.mjs.mts",
+      "source": "/home/david/bitacora/pictures/.state/req018-full-mwvocojr/reviews/T1/att-0003-boundaries.mjs",
+      "source_sha256": "c3d369b9d17a413c7ddac536732770f22913152c89df33751721c9525ce348b3",
+      "reconstructed_sha256": "9d975ea3ef683299ec869e281720ab9f312dc5ecc75ed84f4758fd9facbe9a8f",
+      "method": "exact recorded sed substitution; reconstructed diagnostic copy, original copy hash was not recorded"
+    },
+    {
+      "path": "/home/david/dev/metodologia/bitacora/pictures/.state/req018-full-mwvocojr/REQ-018-category-based-recommendations-of-assemb/EXECUTOR-r1-70873adb-1792355220173/chain-ws/worktrees/att-0005-00f46831fa37eae0/scripts/test/.rep-natural-style-repro.mjs.mts",
+      "source": "/home/david/bitacora/pictures/.state/req018-full-mwvocojr/reviews/T1/natural-style-repro.mjs",
+      "source_sha256": "9b3c194021a6bc8e13b940273addd6de65d538417b21e5bcaf1290e43374417d",
+      "reconstructed_sha256": "911959ac123bd726400a0a6efabefac62590da5a57a05ae91bf5f9881a0811da",
+      "method": "exact recorded sed substitution; reconstructed diagnostic copy, original copy hash was not recorded"
+    }
+  ],
+  "guard_test": {
+    "returncode": 126,
+    "file_preserved": true,
+    "stderr": "REQ-018: deletion commands are prohibited; preserve files"
+  },
+  "scope": "child-process PATH only; no global configuration changed; no cleanup performed"
+}

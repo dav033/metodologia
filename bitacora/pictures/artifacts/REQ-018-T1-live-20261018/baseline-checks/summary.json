@@ -1,0 +1,55 @@
+{
+  "working_directory": "/home/david/.local/tmp/req018-t1-live-6ml2566g/baseline-pictures",
+  "checks": [
+    {
+      "name": "test-ideas-boda-guiada",
+      "command": "node --import=tsx scripts/test/test-ideas-boda-guiada.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.353,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "test-ideas-boda-guiada.stdout.log",
+      "stderr_log": "test-ideas-boda-guiada.stderr.log"
+    },
+    {
+      "name": "test-busqueda-biblioteca-sempertex",
+      "command": "node --import=tsx scripts/test/test-busqueda-biblioteca-sempertex.ts",
+      "exit_code": 0,
+      "duration_seconds": 0.337,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "test-busqueda-biblioteca-sempertex.stdout.log",
+      "stderr_log": "test-busqueda-biblioteca-sempertex.stderr.log"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "exit_code": 0,
+      "duration_seconds": 64.601,
+      "timeout_seconds": 120,
+      "timed_out": false,
+      "stdout_log": "lint.stdout.log",
+      "stderr_log": "lint.stderr.log"
+    },
+    {
+      "name": "build-workspaces",
+      "command": "npm run build --workspaces --if-present",
+      "exit_code": 0,
+      "duration_seconds": 1.947,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "build-workspaces.stdout.log",
+      "stderr_log": "build-workspaces.stderr.log"
+    },
+    {
+      "name": "typescript",
+      "command": "npx tsc --noEmit",
+      "exit_code": 2,
+      "duration_seconds": 44.755,
+      "timeout_seconds": 180,
+      "timed_out": false,
+      "stdout_log": "typescript.stdout.log",
+      "stderr_log": "typescript.stderr.log"
+    }
+  ]
+}
