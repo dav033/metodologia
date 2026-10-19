@@ -1,0 +1,83 @@
+{
+ "round": 3,
+ "title": "Riesgos de ejecución del plan r2",
+ "intro": "Revisé el plan contra cómo corre realmente el scheduler: el verificador ejecuta cada verify en bubblewrap sin red ni home y rechaza $, |, ;, comillas de shell anidadas y comandos con deploy/publish; el trabajo aceptado vive en refs/m3 y no llega a main ni al panel vivo hasta que alguien lo fusione; el intento muere a los 120 min; corren hasta 3 tareas a la vez.",
+ "coverage": "10/10 (ronda de ejecución)",
+ "questions": [
+  {
+   "id": "q1",
+   "type": "choice",
+   "text": "Pasos externos o que solo tú puedes hacer (T1 spike con preview en Vercel + stub en AdvIn; T16 token de @BotFather y OAuth App; T17 Caddy en AdvIn, que sirve otros sitios en producción; T18 Vercel prod; T19 login GitHub y lectura de Telegram)",
+   "options": [
+    {
+     "key": "a",
+     "label": "Los agentes preparan todo; esos pasos quedan como verificación manual y el run se detiene en un solo punto para que yo (o tú conmigo) los ejecute"
+    },
+    {
+     "key": "b",
+     "label": "Los agentes los hacen solos con sus permisos completos"
+    }
+   ],
+   "recommended": "a",
+   "why": "Hoy fallarían seguro (el verificador no tiene red: ssh/curl/vercel no funcionan) y además tocan producción compartida con lotm, maros y otros servicios."
+  },
+  {
+   "id": "q2",
+   "type": "choice",
+   "text": "T1 (el spike) necesita red real; ¿cuándo se hace?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Lo hago yo ahora en esta sesión, antes de reanudar, y el resultado entra como evidencia de T3"
+    },
+    {
+     "key": "b",
+     "label": "Lo hace el scheduler con verificación manual"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es 1 h y es la suposición que puede cambiar el diseño; mejor saberlo antes de gastar intentos en T3–T15."
+  },
+  {
+   "id": "q3",
+   "type": "choice",
+   "text": "El código del portátil (T4–T9) no estará en el panel vivo hasta fusionarlo a main; sin eso, T17–T19 prueban contra un panel sin /api/remote",
+   "options": [
+    {
+     "key": "a",
+     "label": "Añadir una tarea-puerta tras M2: el run se para, te muestro el diff, fusiono a main con tu OK y reinicio bitacora-web"
+    },
+    {
+     "key": "b",
+     "label": "Fusión automática a main al aceptar M2"
+    },
+    {
+     "key": "c",
+     "label": "El gateway se prueba solo contra un portátil falso; lo real después del plan"
+    }
+   ],
+   "recommended": "a",
+   "why": "Fusionar a main es decisión tuya y cambia el código que usa el propio scheduler; una sola parada lo resuelve."
+  },
+  {
+   "id": "q4",
+   "type": "choice",
+   "text": "Tareas que pasan del límite de 120 min por intento (T15 240 min; T5, T8, T14 150 min)",
+   "options": [
+    {
+     "key": "a",
+     "label": "Dividirlas en tareas de ≤90 min"
+    },
+    {
+     "key": "b",
+     "label": "Subir el timeout de este run a 240 min"
+    }
+   ],
+   "recommended": "a",
+   "why": "Un intento que muere a los 120 min se reintenta desde cero y gasta cuota; tareas cortas además se auditan mejor."
+  }
+ ],
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-19T15:16:49"
+}

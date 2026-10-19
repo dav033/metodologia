@@ -7,8 +7,6 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
-- P-128 · Push bitácora commit `570a223` (local only): decide whether to drop the 188 PNG screenshots (16 MB) of `artifacts/superrr-visual-2026-10-18/` before pushing · urgency: high · complexity: S · added 2026-10-19 · session 5efc0680
-  - Recommended: remove the PNGs from the commit, keep them on disk, add the folder to .gitignore; push becomes ~2 MB. GitHub HTTPS push timed out (HTTP 408) on the 16 MB pack.
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin = GitHub, 778 bitácora files already on `origin/main`), so a push is the backup; BUT the repo is PUBLIC (checked 2026-10-14 with `gh`) while these notes called it private: owner decision 2026-10-14: no push for now, work locally; revisit before any push (make the repo private first) · urgency: high · complexity: M · added 2026-10-13 · user: "tenemos un problema" (GitHub review)
   - Context: since remote commit `4cfd74f` the bitácora lives outside the repo (D-007). Its legacy history reached GitHub with `a67371f`. The silent push failure no longer applies, because nothing pushes the live copy.
   - Options: (1) a private remote for `~/bitacora` with `push_async` plus a push-failure log (`.state/push.log`, warning at SessionStart), the approved fix; (2) local git plus a scheduled backup; (3) no sync, single machine. The session-end commit creates a local git repo in `~/bitacora` (`ensure_repo`).
@@ -90,6 +88,7 @@ month summary._
 _None_
 
 ## Recently closed
+- P-128 · [closed 2026-10-19: images untracked and ignored (owner: «no nos interesan las imágenes en el remoto»); bitácora pushed as fecb3e1 + b9214f0] Push bitácora commit without the 16 MB of PNGs
 - P-120 · CLOSED 2026-10-18 — Refresh expired quota windows before Scheduler eligibility
   - Preflight now uses existing ensure_fresh(..., project=project)900s routing cadence.8 preflight,24 subscription,14 decision-source tests pass;14/15 integration tests pass, one pre-existing role-fixture failure reproduced with original HEAD refresh (P-121). Scoped Ruff/offline wheel/content checks and both independent reviews pass. Original module/test clean before this two-file fix; no eligibility/backoff weakening. Evidence: ../pictures/artifacts/REQ-018-T1-retry-20261018/REPORT.md.
 - P-110 · CLOSED — Explorer experiment waived by owner · closed 2026-10-18 · D-071; remaining execution, grading and final report cancelled; existing evidence retained, not a successful experimental completion.
