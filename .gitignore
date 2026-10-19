@@ -8,3 +8,9 @@ __pycache__/
 evals/results/
 # build output of `uv tool install --editable`
 *.egg-info/
+# images in the bitácora stay local: the remote does not keep them (owner, 2026-10-19)
+bitacora/**/*.png
+bitacora/**/*.jpg
+bitacora/**/*.jpeg
+bitacora/**/*.webp
+bitacora/**/*.gif
