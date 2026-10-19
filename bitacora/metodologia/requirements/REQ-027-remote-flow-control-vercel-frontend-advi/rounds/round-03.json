@@ -77,7 +77,26 @@
    "why": "Un intento que muere a los 120 min se reintenta desde cero y gasta cuota; tareas cortas además se auditan mejor."
   }
  ],
- "status": "open",
- "answers": {},
- "created_at": "2026-10-19T15:16:49"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "Owner agreed to one final stop; go-live steps run with the owner after the scheduler run, not as agent tasks."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "The coordinator runs the spike before resuming."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Merge to main and panel restart happen at the final stop, together with AdvIn and Vercel (owner: development is not orchestrated by the new panel)."
+  },
+  "q4": {
+   "choice": "a",
+   "note": "Owner: always divide (divide y vencerás)."
+  }
+ },
+ "created_at": "2026-10-19T15:16:49",
+ "answered_at": "2026-10-19T15:39:45",
+ "answered_via": "terminal"
 }

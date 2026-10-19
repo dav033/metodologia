@@ -1,6 +1,6 @@
 # Index — dev
 
-_Generated 2026-10-19 14:40 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-19 15:24 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/dev) · [graph](http://127.0.0.1:8765/p/dev/graph)  
@@ -45,11 +45,11 @@ _None yet._
 
 ## Recent decisions
 
+- D-020 — A run asks its owner through decision requests; the watchdog waits for the answer
 - D-019 — M4 treats a replayed event as the same event when only its read time differs
 - D-018 — A port that is not composed yet says «not ready», not «unknown»
 - D-017 — The verifier accepts a publication snapshot already on origin/main; `scheduler-op retry`
 - D-016 — A watchdog keeps a run alive; operator moves are commands; the verifier has an end-to-end smoke test
-- D-015 — Up to 3 tasks at once; a large scope runs alone in its repository
 
 ## Timeline
 
