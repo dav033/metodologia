@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/5 · tareas 26/31 · generado: 2026-10-19T17:46:11-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: done · hitos 5/5 · tareas 31/31 · generado: 2026-10-19T18:09:26-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -43,7 +43,7 @@ created: 2026-10-19
 | T14a | Telegram delivery with retries, backoff and history | media | completada | gpt-6-luna | codex-luis | 1 |
 | T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | gpt-6-luna | codex-luis | 1 |
 
-**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 6/7
+**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 7/7
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
@@ -53,16 +53,16 @@ created: 2026-10-19
 | T15c | Failure review screen | baja | completada | gpt-6-luna | codex-luis | 1 |
 | T15d | Control sheet with typed confirmations and command history | media | completada | gpt-6-luna | codex-luis | 1 |
 | T15e | Plans, question rounds and decision requests screens | media | completada | gpt-6-luna | codex-luis | 1 |
-| T15f | Recovery forms and live quotas | media | en curso | gpt-6-luna | codex-luis | 1 |
+| T15f | Recovery forms and live quotas | media | completada | gpt-6-luna | codex-luis | 1 |
 
-**M5 — Go-live kit and audit** · dificultad alta · 0/4
+**M5 — Go-live kit and audit** · dificultad alta · 4/4
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | pendiente | — | — | 0 |
-| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | pendiente | — | — | 0 |
-| T18 | Independent security and spec audit by another provider | alta | pendiente | — | — | 0 |
-| T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | — | — | 0 |
+| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | gpt-6-luna | codex-luis | 1 |
+| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | completada | sonnet | claude-work | 1 |
+| T18 | Independent security and spec audit by another provider | alta | completada | gpt-6.1-sol | codex-luis | 1 |
+| T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | completada | gemini-3.8-flash-low | antigravity | 1 |
 <!-- bitacora:status:end -->
 
 ## Approach
