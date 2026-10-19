@@ -65,6 +65,7 @@ CSS = """<style>
 .pl .card .go{margin-top:auto;font-size:13.5px;font-weight:600}
 @media (max-width:1000px){.pl .mosaic{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:640px){.pl .mosaic{grid-template-columns:1fr}.pl .card.wide{grid-column:auto}.pl .seg{margin-left:0}}
+@media (max-width:640px){.pl .task{grid-template-columns:40px minmax(0,1fr)}.pl .task>*:not(.tid){grid-column:2;min-width:0}.pl .task .meta{white-space:normal;text-align:left;margin:0;overflow-wrap:anywhere}.pl .task .meta span{overflow-wrap:anywhere}}
 .pl .ms{border:1px solid var(--border);border-radius:18px;background:var(--surface);margin:0 0 20px;padding:8px 24px 14px}
 .pl .mh{display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--border)}
 .pl .mh b{font:500 12px var(--mono);color:var(--accent)}.pl .mh .mt{font-weight:700;font-size:17px;letter-spacing:-.01em}
@@ -83,6 +84,7 @@ CSS = """<style>
 .pl .back{display:inline-block;margin:0 0 16px;font-size:13.5px}
 .pl .flash-new{animation:plflash 1.6s ease-out}
 @keyframes plflash{from{background:color-mix(in srgb,var(--mauve) 35%,transparent)}to{background:transparent}}
+.pl .asks{display:grid;gap:12px}.pl .ask-pill{border-color:var(--warn);color:var(--warn);margin-left:6px;cursor:pointer}.pl .ask{border:1px solid var(--accent);border-radius:var(--radius);padding:12px 16px}.pl .ask .opt{margin:10px 0}.pl .ask textarea{width:100%;min-height:64px;box-sizing:border-box}.pl .ask button{min-height:44px;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--surface);color:var(--text);cursor:pointer}.pl .ask button.primary{background:var(--accent);color:var(--on-accent)}
 .pl .run-plan{margin:18px 0}.pl .run-plan button{min-height:44px;padding:10px 22px;font-size:1.05em;background:var(--accent);color:var(--on-accent);border:0;border-radius:var(--radius);cursor:pointer;font-weight:600}
 .pl .danger{border:1px solid var(--bad);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
 .pl .msg{padding:12px 16px;border-radius:var(--radius);background:var(--accent-soft);color:var(--text);margin:0 0 20px}
@@ -258,7 +260,15 @@ def _row(r: dict) -> str:
     return (f'<div class="prow{" done" if _finished(r) else ""}"><span class="id">{e(r["req_id"])}</span>'
             f'<a class="t" href="{_purl(r["project"], r["req_id"])}" title="{e(title)}">{e(title)}</a>'
             f'<span class="st {tone}" title="{e(r["plan_status"] or "")}"><i class="dot {tone}{" live" if r["active"] else ""}">'
-            f'</i>{trail}</span></div>')
+            f'</i>{trail}</span>{_asks_pill(r)}</div>')
+
+
+def _asks_pill(r: dict) -> str:
+    n = r.get("asks") or 0
+    if not n:
+        return ""
+    return (f'<a class="pill ask-pill" href="{_purl(r["project"], r["req_id"])}#asks" '
+            f'title="Esperando tu decisión">⚠ {n}</a>')
 
 
 def index_page(rows: list[dict], filt: str, trash: dict[str, list[dict]], token: str, msg: str = "") -> str:
@@ -455,7 +465,7 @@ def detail_page(s: dict, token: str, msg: str = "") -> str:
     body = (f'<div class="pl"><a class="back" href="/plans">← Planes</a> <span class="live-dot" id="live-dot"></span>{_flash(msg)}'
             f'<div id="live" data-api="/api/plans/{quote(project)}/{quote(req)}?html=1" '
             f'data-events="/events?plan={quote(project)}/{quote(req)}" data-event="plan">{detail_fragment(s)}</div>'
-            f'{_run_form(s, base, token)}{_actions(s, base, token)}</div>{CSS}{JS}')
+            f'{_decisions(s, base, token)}{_run_form(s, base, token)}{_actions(s, base, token)}</div>{CSS}{JS}')
     return layout(f"{req} · Plan", body, [("Planes", "/plans"), (project, f"/p/{quote(project)}")])
 
 
@@ -464,6 +474,36 @@ def _confirm_form(base: str, action: str, token: str, req: str, label: str, warn
             f'<input type="hidden" name="token" value="{e(token)}">'
             f'<input type="text" name="confirm" placeholder="Escribe {e(req)} para confirmar" autocomplete="off" required>'
             f'<p><button type="submit">{label}</button></p></form>')
+
+
+def _decisions(s: dict, base: str, token: str) -> str:
+    """Everything the plan waits on from its owner, answerable here: decision requests and open question rounds."""
+    out = []
+    project, req = s["project"], s["req_id"]
+    for n in s.get("open_rounds") or []:
+        out.append(f'<div class="ask"><b>Ronda {n} de preguntas abierta.</b> '
+                   f'<a href="/p/{quote(project)}/req/{quote(req)}?tab=rounds">Responder</a></div>')
+    for r in s.get("decisions") or []:
+        flag = ' <span class="pill bad">nadie puede responder por ti</span>' if r.get("unskippable") else ""
+        ev = "".join(f"<li>{e(x)}</li>" for x in (r.get("evidence") or [])[:8])
+        opts = []
+        for o in r.get("options") or []:
+            star = " (recomendada)" if o["id"] == r.get("recommended") else ""
+            needs = o["id"] in ("retry_with_note", "review_pass", "review_fail")
+            note = (f'<textarea name="reason" required placeholder="Escribe tu indicación o razón"></textarea>'
+                    if needs else "")
+            cls = "primary" if o["id"] == r.get("recommended") else ""
+            opts.append(f'<form method="post" action="{base}/decide" class="opt">'
+                        f'<input type="hidden" name="token" value="{e(token)}">'
+                        f'<input type="hidden" name="request" value="{e(r["id"])}">'
+                        f'<input type="hidden" name="option" value="{e(o["id"])}">{note}'
+                        f'<button type="submit" class="{cls}">{e(o["label"])}{star}</button>'
+                        f'<p class="muted">{e(o["consequence"])}</p></form>')
+        out.append(f'<div class="ask" id="d-{e(r["id"])}"><h3>{e(r["title"])}{flag}</h3><p>{e(r["what"])}</p>'
+                   f'<ul class="muted">{ev}</ul>{"".join(opts)}</div>')
+    if not out:
+        return ""
+    return f'<h2 id="asks">Esperando tu decisión</h2><div class="asks">{"".join(out)}</div>'
 
 
 def _run_form(s: dict, base: str, token: str) -> str:

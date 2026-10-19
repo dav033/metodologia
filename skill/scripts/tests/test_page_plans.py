@@ -166,6 +166,54 @@ class RunButtonTests(PlansBase):
         launch.assert_not_called()
 
 
+REQUEST = {"id": "T3:2", "source": "task", "task": "T3", "attempt": "att-0002", "title": "T3 bloqueada: timeout_repeated",
+           "what": "El agente superó dos veces el límite de tiempo.", "reason": "m5:timeout_repeated",
+           "evidence": ["intentos: 2"], "recommended": "retry", "unskippable": False,
+           "options": [{"id": "retry", "label": "Reintentar", "consequence": "Un intento nuevo."},
+                       {"id": "retry_with_note", "label": "Reintentar con una indicación tuya", "consequence": "Con tu nota."}]}
+
+
+class DecisionTests(PlansBase):
+    def scheduler_req(self, status="launched"):
+        rdir = self.req(status=status)
+        (rdir / "RUN.projection.json").write_text(json.dumps({"status": "running"}), encoding="utf-8")
+        return rdir
+
+    def test_open_requests_and_rounds_are_answerable_on_the_plan_page(self):
+        rdir = self.scheduler_req()
+        (rdir / "rounds").mkdir()
+        (rdir / "rounds" / "round-01.json").write_text(json.dumps({"round": 1, "status": "open", "questions": []}),
+                                                        encoding="utf-8")
+        with patch("bt_scheduler_decisions.open_requests", return_value=[REQUEST]):
+            html = self.get("/plans/demo/REQ-001")[1]
+        self.assertIn("Esperando tu decisión", html)
+        self.assertIn('name="request" value="T3:2"', html)
+        self.assertIn("Reintentar (recomendada)", html)
+        self.assertEqual(html.count("<textarea"), 1)          # only the option that needs a reason asks for one
+        self.assertIn("/p/demo/req/REQ-001?tab=rounds", html)
+
+    def test_a_decision_posted_from_the_page_goes_through_the_decision_module(self):
+        self.scheduler_req()
+        with patch("bt_scheduler_decisions.answer", return_value=["T3: reopened"]) as answer:
+            status, loc = self.post("/plans/demo/REQ-001/decide",
+                                    {"token": self.tok(), "request": "T3:2", "option": "retry", "reason": ""})
+        self.assertEqual(status, 303)
+        self.assertEqual(answer.call_args.args[3:5], ("T3:2", "retry"))
+        self.assertEqual(answer.call_args.kwargs["by"], "web")
+        self.assertIn("T3: reopened", unquote(loc))
+
+    def test_a_refused_decision_is_reported_not_applied(self):
+        self.scheduler_req()
+        with patch("bt_scheduler_decisions.answer", side_effect=ValueError("no open request T3:2")):
+            status, loc = self.post("/plans/demo/REQ-001/decide", {"token": self.tok(), "request": "T3:2", "option": "retry"})
+        self.assertEqual(status, 303)
+        self.assertIn("No se aplicó", unquote(loc))
+
+    def test_a_plan_without_a_scheduler_run_asks_nothing(self):
+        self.req(status="approved")
+        self.assertNotIn("Esperando tu decisión", self.get("/plans/demo/REQ-001")[1])
+
+
 class SseTests(PlansBase):
     def read_event(self, resp, name, timeout=4.0):
         end = time.time() + timeout

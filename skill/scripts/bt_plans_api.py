@@ -66,7 +66,46 @@ def status_of(root: Path, project: str, req: str) -> dict[str, Any]:
     rdir = req_dir(root, project, req)
     status = ps.plan_status(project, rdir)
     status["run_action"] = run_action(project, req, rdir)
+    status["decisions"] = open_decisions(rdir)
+    status["open_rounds"] = open_rounds(rdir)
     return status
+
+
+def open_decisions(rdir: Path) -> list[dict[str, Any]]:
+    """What the run asks its owner now (D-020); a plan without a readable scheduler run asks nothing."""
+    if not (rdir / scheduler_.PROJECTION).is_file():
+        return []
+    try:
+        import bt_scheduler_decisions
+        return bt_scheduler_decisions.open_requests(rdir)
+    except Exception:  # noqa: BLE001 - the plan page must render even when the run state cannot be read
+        return []
+
+
+def open_rounds(rdir: Path) -> list[int]:
+    import bt_rounds
+    out = []
+    for f in bt_rounds.list_rounds(rdir):
+        try:
+            data = bt_rounds.load(f)
+        except (OSError, ValueError):
+            continue
+        if data.get("status") == "open":
+            out.append(int(data.get("round") or 0))
+    return out
+
+
+def decide(root: Path, project: str, req: str, request_id: str, option: str, reason: str, by: str = "web") -> str:
+    """Answer one decision request from the plan page; the request must still be open and offer that option."""
+    import bt_scheduler_decisions
+    rdir = req_dir(root, project, req)
+    try:
+        lines = bt_scheduler_decisions.answer(project, req, rdir, request_id, option, reason, by=by)
+    except ValueError as exc:
+        raise PlanError(f"No se aplicó: {exc}. Recarga la página: la petición pudo cambiar.") from exc
+    except scheduler_.core.SchedulerError as exc:
+        raise PlanError(str(exc)) from exc
+    return f"Decisión {request_id} → {option}: " + "; ".join(lines)
 
 
 # ---------------------------------------------------------------- trash

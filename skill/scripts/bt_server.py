@@ -257,6 +257,8 @@ class Handler(BaseHTTPRequestHandler):
     def plans_post(self, parts: list[str], form: dict) -> None:
         import bt_plans_api as api
         actions = {"run": lambda p, r: self.run_plan(api, p, r, form.get("expected", "")),
+                   "decide": lambda p, r: api.decide(ROOT, p, r, form.get("request", ""), form.get("option", ""),
+                                                     form.get("reason", "")),
                    "cancel": lambda p, r: api.cancel_plan(ROOT, p, r, form.get("confirm", "")),
                    "delete": lambda p, r: api.delete_plan(ROOT, p, r, form.get("confirm", ""))}
         try:

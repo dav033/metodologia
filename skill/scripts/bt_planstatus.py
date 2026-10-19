@@ -372,8 +372,25 @@ def list_plans(root: Path | None = None, include_inactive: bool = True) -> list[
                      "active": status["run"]["active"],
                      "progress": {"done": summary["tasks_done"], "total": summary["tasks_total"]},
                      "difficulty": summary["difficulty"], "updated_at": status["run"]["updated_at"]
-                     or _mtime_iso(rdir / "PLAN.md")})
+                     or _mtime_iso(rdir / "PLAN.md"), "asks": _asks(rdir)})
     return rows
+
+
+def _asks(rdir: Path) -> int:
+    """How many things the plan waits on from its owner: open question rounds and decision requests (D-020)."""
+    n = 0
+    for f in sorted((rdir / "rounds").glob("round-*.json")):
+        try:
+            n += json.loads(f.read_text(encoding="utf-8")).get("status") == "open"
+        except (OSError, ValueError, AttributeError):
+            continue
+    if (rdir / scheduler_.PROJECTION).is_file():
+        try:
+            import bt_scheduler_decisions
+            n += len(bt_scheduler_decisions.open_requests(rdir))
+        except Exception:  # noqa: BLE001 - a run whose state cannot be read asks nothing here
+            pass
+    return n
 
 
 def fingerprint(root: Path | None = None) -> str:
