@@ -34,6 +34,17 @@ def close(wiring: api.Wiring) -> None:
                     wiring.executor.close()
 
 
+def _with_owner_notes(rdir, base):
+    """The prompt notes of a retry, preceded by what the owner wrote for the task in answer to a decision request."""
+    import bt_scheduler_decisions
+
+    def notes(request):
+        owner = bt_scheduler_decisions.operator_notes(rdir, request.task_id)
+        rest = base(request)
+        return "\n\n".join(part for part in (owner, rest) if part)
+    return notes
+
+
 def wire(rdir: Path, *, project: str, assignment=None, verification=None, recovery=None, config=None,
          executor_config: api.m3.Config | None = None, resolver: api.m3.RouteResolver | None = None,
          m2_lookup: api.M2_LOOKUP | None = None, m2_ledger: Path | str | None = None, allow_direct: bool | None = None,
@@ -118,7 +129,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             wiring.recovery.metrics()
             scheduler.ports.recovery = wiring.recovery
             port.base_ref = continuation.base_ref
-            executor.briefs.notes = continuation.notes
+            executor.briefs.notes = _with_owner_notes(rdir, continuation.notes)
         if quality_store_path is not None:
             from bt_scheduler_quality.store import QualityStore
             from bt_scheduler_quality_adapter import QualityVerificationPort

@@ -39,11 +39,14 @@ class Watch:
     def __init__(self, project: str, req: str, rdir: Path, *, now: Callable[[], float] = time.monotonic,
                  sleep: Callable[[float], None] = time.sleep, spawn: Callable[[bool], "subprocess.Popen"] | None = None,
                  free_bytes: Callable[[], int] | None = None, notify: Callable[[str, str], None] = bt_notify.notify,
-                 log: Callable[[str], None] | None = None):
+                 log: Callable[[str], None] | None = None, announce: Callable[[], object] | None = None,
+                 pending: Callable[[], int] | None = None):
         self.project, self.req, self.rdir = project, req, Path(rdir)
         self.now, self.sleep, self.notify = now, sleep, notify
         self.spawn = spawn or self._spawn
         self.free_bytes = free_bytes or (lambda: shutil.disk_usage(self.rdir).free)
+        self.announce = announce or self._announce
+        self.pending = pending or self._pending
         self.log = log or (lambda text: print(f"{time.strftime('%H:%M:%S')} {text}", flush=True))
         self.failures: collections.deque[float] = collections.deque()
         self.backoff = BACKOFF_START
@@ -100,6 +103,8 @@ class Watch:
             self.log(f"owner started (pid {owner.pid})")
             code = self._wait(owner)
             if code == 0:
+                if self._wait_for_decisions():
+                    continue
                 self.log("owner finished: the run is terminal or stalled")
                 return 0
             if ops.on_hold(self.rdir) or code == -signal.SIGTERM:      # stopped on purpose, not a crash
@@ -119,11 +124,36 @@ class Watch:
             self.backoff = min(BACKOFF_CAP, self.backoff * 2)
         return 0
 
+    def _pending(self) -> int:
+        import bt_scheduler_decisions
+
+        try:
+            return len(bt_scheduler_decisions.open_requests(self.rdir))
+        except Exception:  # noqa: BLE001 - a run without readable state asks nothing
+            return 0
+
+    def _wait_for_decisions(self) -> bool:
+        """A stalled run that asks its owner something is not finished: wait for the answer, then run again. Waiting is
+        the safe state, so no timeout ever answers for the owner."""
+        if not self.pending():
+            return False
+        self.log("the run waits for a decision of its owner")
+        while self.pending():
+            self.announce()
+            self.sleep(POLL_SECONDS * 4)
+        return True
+
+    def _announce(self) -> None:
+        import bt_scheduler_decisions
+
+        bt_scheduler_decisions.announce(self.project, self.req, self.rdir)
+
     def _wait(self, owner) -> int:
         while True:
             code = owner.poll()
             if code is not None:
                 return code
+            self.announce()
             self.sleep(POLL_SECONDS)
 
 

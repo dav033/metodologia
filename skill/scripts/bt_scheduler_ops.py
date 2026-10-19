@@ -155,6 +155,11 @@ def status(project: str, req: str, rdir: Path) -> dict:
     out["revision"] = doc.get("revision")
     out["live_attempts"] = [{"attempt": a["id"], "task": a["task_id"], "state": a["state"]}
                             for a in doc.get("attempts", {}).values() if a.get("state") in live]
+    try:
+        import bt_scheduler_decisions
+        out["open_decisions"] = [r["id"] for r in bt_scheduler_decisions.open_requests(rdir)]
+    except Exception:  # noqa: BLE001 - status must answer even when the run has no readable state
+        out["open_decisions"] = []
     out["blocked_tasks"] = [t for t, r in doc.get("tasks", {}).items() if r.get("state") == "blocked"]
     return out
 

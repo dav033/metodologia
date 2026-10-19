@@ -112,7 +112,12 @@ durable run; it never approves a plan or creates a replacement run. To run unatt
 gives up with a notification after 5 failures in 30 min) and login autostart launches it. Moves on a live run are
 commands, not scripts: `scheduler-op REQ-NNN status|stop|resume|cancel-attempt ATT|reopen TASK|revise` (stop the owner
 under a hold, apply through M1, kill the attempt's agent, release the hold; `revise` cancels live attempts and rebases onto
-the latest frozen plan revision). Cancelling a scheduler plan (web "Planes" view,
+the latest frozen plan revision). When a run cannot go on alone (a blocked task, an open verifier review) it asks:
+`scheduler-op REQ-NNN decisions` lists the requests (what happened, evidence, closed options with their consequence, a
+recommendation; some are marked «nadie puede responder por ti»: integrity anomalies, human overrides of the verifier and
+reasons the system does not know) and `scheduler-op REQ-NNN decide <request> <option> [--reason …]` answers one. The
+watchdog notifies each new request once and keeps the run waiting for the answer; no timeout ever answers for the owner.
+`retry_with_note` puts the owner's text in the task's next prompt. Cancelling a scheduler plan (web "Planes" view,
 confirm with the REQ id) is irreversible. The routing (model, effort and the escalation after a failed attempt) is the
 router's job and is recorded per attempt, not set here (`agents.md`, `modules.md` §Scheduler core).
 

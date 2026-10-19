@@ -6,7 +6,7 @@ import json
 
 import bt_scheduler_adapter as adapter
 
-ACTIONS = ("status", "stop", "resume", "cancel-attempt", "reopen", "retry", "revise")
+ACTIONS = ("status", "decisions", "decide", "stop", "resume", "cancel-attempt", "reopen", "retry", "revise")
 
 
 def register(subparsers) -> None:
@@ -16,7 +16,9 @@ def register(subparsers) -> None:
     op = subparsers.add_parser("scheduler-op", help="mover un plan en marcha: cancelar intento, reabrir tarea, revisar el plan")
     op.add_argument("req", help="REQ-NNN")
     op.add_argument("action", choices=ACTIONS)
-    op.add_argument("target", nargs="?", default="", help="ATT-id for cancel-attempt, task id for reopen")
+    op.add_argument("target", nargs="?", default="",
+                    help="attempt id for cancel-attempt, task id for reopen and retry, request id for decide")
+    op.add_argument("option", nargs="?", default="", help="the option to take, for decide")
     op.add_argument("--reason", default="", help="why (kept in the run's audit trail)")
     op.add_argument("--hold", action="store_true", help="leave the run stopped; `resume` releases it")
 
@@ -35,6 +37,22 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
         return 2
     if args.action == "status":
         print(json.dumps(ops.status(project, args.req, rdir), indent=1))
+        return 0
+    if args.action == "decisions":
+        import bt_scheduler_decisions as decisions
+        print(decisions.render(decisions.open_requests(rdir), args.req))
+        return 0
+    if args.action == "decide":
+        import bt_scheduler_decisions as decisions
+        if not args.target or not args.option:
+            print("decide needs a request id and an option: scheduler-op REQ decide <request> <option> [--reason …]")
+            return 2
+        try:
+            for line in decisions.answer(project, args.req, rdir, args.target, args.option, args.reason):
+                print(line)
+        except (ValueError, adapter.core.SchedulerError) as exc:
+            print(exc)
+            return 2
         return 0
     if args.action == "resume":
         print(ops.resume(project, args.req, rdir))
