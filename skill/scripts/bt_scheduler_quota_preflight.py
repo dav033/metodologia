@@ -32,7 +32,7 @@ def refresh(project: str, maximum_accounts: int = _MAX_ACCOUNTS) -> dict[str, di
                         if profiles[ids[0]].get("provider") in ("claude", "codex")]
     result: dict[str, dict[str, object]] = {}
     try:
-        rows = bt_subscriptions.poll(subscription_ids) if subscription_ids else []
+        rows = bt_subscriptions.ensure_fresh(subscription_ids, project=project) if subscription_ids else []
         if not isinstance(rows, list):
             raise TypeError("quota poll returned an invalid result")
         poll_failed = False

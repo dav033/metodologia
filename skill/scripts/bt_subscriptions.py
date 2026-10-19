@@ -16,6 +16,7 @@ POLL_SECONDS = 3600
 # Match the timer's 60s accuracy + 60s jitter without accidentally skipping every other hour.
 MIN_POLL_SECONDS = POLL_SECONDS - 120
 MAX_AGE_SECONDS = 7200
+ROUTE_REFRESH_SECONDS = 900
 
 
 def load(state: Path | None = None) -> dict:
@@ -96,7 +97,7 @@ def _write_samples(accounts: dict) -> None:
     tmp.replace(path)
 
 
-def _reserve(key: str, profile: str, provider: str, now: float) -> dict | None:
+def _reserve(key: str, profile: str, provider: str, now: float, min_interval: float = MIN_POLL_SECONDS) -> dict | None:
     """Reserve this account's hourly attempt under a short lock, before external I/O."""
     with central_lock("subscription-usage"):
         current = load()
@@ -105,18 +106,21 @@ def _reserve(key: str, profile: str, provider: str, now: float) -> dict | None:
         if old.get("status") == "manual_challenge":
             return None
         try:
-            due = max(number(old.get("attempted_at", 0)) + MIN_POLL_SECONDS, number(old.get("retry_at") or 0))
+            due = max(number(old.get("attempted_at") or old.get("observed_at") or 0) + min_interval,
+                      number(old.get("retry_at") or 0))
         except UsageError:
             due = 0
         if now < due:
             return None
+        # attempted_at reserves the I/O; keep the last effective pressure/auth state for concurrent routers.
         current[key] = {**old, "profile": profile, "provider": provider,
-                        "status": "sampling", "attempted_at": now}
+                        "status": old.get("status", "sampling"), "attempted_at": now}
         _write_samples(current)
         return old
 
 
-def poll(selected_profiles: list[str] | tuple[str, ...] | None = None) -> list[dict]:
+def poll(selected_profiles: list[str] | tuple[str, ...] | None = None, *,
+         min_interval: float = MIN_POLL_SECONDS) -> list[dict]:
     """One bounded sequential read per unique registered account per hour; no model calls."""
     import bt_agents
     updates, seen = {}, set()
@@ -140,7 +144,7 @@ def poll(selected_profiles: list[str] | tuple[str, ...] | None = None) -> list[d
         seen.add(identity)
         key = bt_agents.account_key(pid)
         now = time.time()
-        old = _reserve(key, pid, provider, now)
+        old = _reserve(key, pid, provider, now, min_interval)
         if old is None:
             continue
         row = {"profile": pid, "provider": provider, "attempted_at": now}
@@ -174,6 +178,16 @@ def poll(selected_profiles: list[str] | tuple[str, ...] | None = None) -> list[d
                     stream.write(json.dumps({"schema_version": 1, "account": key, **row}) + "\n")
             history.chmod(0o600)
     return summary(selected_profiles)
+
+
+def ensure_fresh(pool: list[str] | tuple[str, ...], *, project: str | None = None) -> list[dict]:
+    """Refresh eligible Claude/Codex accounts at most once per 900s before routing.
+    Uses the same reservation lock, challenge stop and Retry-After deadlines as the hourly collector."""
+    profiles = bt_profiles.load()
+    selected = [pid for pid in pool if pid in profiles and
+                not (project is not None and profiles[pid].get("work_only") and
+                     not bt_profiles.is_work_project(project))]
+    return poll(selected, min_interval=ROUTE_REFRESH_SECONDS)
 
 
 def summary(selected_profiles: list[str] | tuple[str, ...] | None = None) -> list[dict]:

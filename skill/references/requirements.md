@@ -62,9 +62,9 @@ clear → build it. Broad or with real decisions → interview, spec, plan in mi
 one question about scope before anything else, then decide. Do not ask the user to pick the track.
 
 The track (how much to specify) and the execution mode (how the work runs: `direct` in this session, `coordinated`
-with a leader plus delegated tasks, or `marathon`) are different axes. Never start a marathon only because the track
+with a leader plus delegated tasks, or `scheduler`: `launch`/`handoff`) are different axes. Never start a scheduler run only because the track
 is Deep, and never require an interview or a plan only because the work is delegated. Pick the mode from the plan:
-a few hours or fewer tasks → direct/coordinated; days of independent work → marathon.
+a few hours or fewer tasks → direct/coordinated; days of independent work → scheduler.
 
 ## 2. Explore before asking
 
@@ -216,6 +216,11 @@ or one that contradicts PLAN.md; approval freezes that revision and every launch
 run, resume) refuses anything that is not exactly the approved revision (a launch never freezes it itself). Run `plan-json check REQ-NNN` and read
 `plan-json report REQ-NNN` before.
 
+**One command for the whole chain:** `bitacora.py --project P go REQ-NNN` takes a written SPEC.md + PLAN.md, creates the
+PLAN.json skeleton, has the Planner agent classify every task (router-chosen model, up to 2 rounds, `--no-ai` to skip),
+runs `plan-json check` and then `handoff` (below). It stops, and says why, on an invalid plan or when risk reasons need the
+owner's approval. `--dry-run` only reports what the hand-off would do.
+
 It validates the plan (tasks, dependencies, repo roles) and decides:
 
 - **No risk reasons → it approves the plan itself and starts the execution in the background** (a detached tmux
@@ -228,7 +233,7 @@ It validates the plan (tasks, dependencies, repo roles) and decides:
 **Stay the control tower.** This conversation is not replaced by the executors: it is where the user keeps talking,
 often from a phone through Remote Control. Right after a `launched` hand-off, run `bitacora.py --project P watch
 REQ-NNN` **in the background** (Claude Code: a background Bash command; the session is woken when it exits). It returns
-at the next piece of news — a settled milestone or audit, a blocked task, a wait for usage limits, a silent supervisor,
+at the next piece of news — a settled milestone or audit, a blocked task, a wait for usage limits, a silent scheduler,
 the end. Tell the user in two or three lines in Spanish what happened, then run it again, until it prints
 `terminal: true`. On `blocked`, read PENDING.md and say what is needed. Never `/clear` this conversation to "make room":
 the executors already start clean, and clearing here only loses the thread the user is following. In a CLI without

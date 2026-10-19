@@ -34,9 +34,10 @@ def install(project: str, req: str, root: Path, cli: Path, *, scheduler: bool = 
     path = entry_path(project, req)
     name = path.stem
     state = root / ".state"
-    command = "scheduler-run" if scheduler else "run"
+    # a Scheduler run comes back through its watchdog, which resumes the owner and keeps it alive
+    command = ["scheduler-watch", req] if scheduler else ["run", req, "--resume"]
     script = host.write_script(state / "launch" / name, root,
-                               [sys.executable, str(cli), "--project", project, command, req, "--resume"],
+                               [sys.executable, str(cli), "--project", project, *command],
                                {"BITACORA_ROOT": str(root), "PATH": os.environ.get("PATH", "")})
     argv = ["/bin/bash", "-l", str(script)]
     path.parent.mkdir(parents=True, exist_ok=True)

@@ -77,108 +77,11 @@ print('REPORT_DRIFT_REJECTED',flush=True)
         code, output = self.finish(*self.start(self.source(environment, body)), timeout=30)
         self.assertEqual(code, 0, output)
 
-    def test_settlement_failure_reopens_task_preserving_history_and_counters(self):
-        _rdir, _work, environment = prepare(self.base)
-        environment['FIXTURE_FAIL_SETTLE'] = 'T1'
-        body = f'''
-import subprocess
-cli=[sys.executable,{str(SCRIPTS / 'bitacora.py')!r},'--project','demo','run','REQ-001',
-     '--foreground','--once','--no-autostart','--no-audit']
-assert subprocess.run(cli,check=False).returncode==0
-state=rs.load(rdir)
-assert rs.get_task(state,'T1')['status']=='todo',state
-first_attempts=rs.get_task(state,'T1')['attempts']
-journal=json.loads(next(rdir.glob('ACTIONS-*.json')).read_text())
-first_decisions=journal['decisions']
-old_effects=len(journal['effects'])
-assert subprocess.run(cli+['--resume'],check=False).returncode==0
-state=rs.load(rdir)
-assert rs.get_task(state,'T1')['status']=='done',state
-assert rs.get_task(state,'T1')['attempts']==first_attempts
-journal=json.loads(next(rdir.glob('ACTIONS-*.json')).read_text())
-assert journal['decisions']>first_decisions
-assert len(journal['effects'])>old_effects
-assert len(rs.get_task(state,'T1')['orchestration_invalidations'])==1
-archives=list(rdir.glob('CHECKPOINT-*-revision-*.json'))
-assert len(archives)==1
-assert 'T1' in json.loads(archives[0].read_text())['completed']
-current=json.loads(next(path for path in rdir.glob('CHECKPOINT-*.json') if '-revision-' not in path.name).read_text())
-assert current['runtime']['sequence']>=json.loads(archives[0].read_text())['runtime']['sequence']
-print('REOPENED_AND_REPAIRED',flush=True)
-'''
-        code, output = self.finish(*self.start(self.source(environment, body)), timeout=30)
-        self.assertEqual(code, 0, output)
-        workers = [json.loads(line) for line in Path(str(self.rows) + '.workers').read_text().splitlines()]
-        self.assertEqual([worker['task'] for worker in workers], ['T1', 'T2', 'T1'])
 
-    def test_worker_claim_then_grace_termination_still_finishes_after_verify(self):
-        rdir, _work, environment = prepare(self.base)
-        environment['FIXTURE_WORKER_LINGER'] = '1'
-        body = f'''
-import subprocess
-assert subprocess.run([sys.executable,{str(SCRIPTS / 'bitacora.py')!r},'--project','demo','run','REQ-001',
- '--foreground','--once','--no-autostart','--no-audit'],check=False).returncode==0
-assert all(task['status']=='done' for task in rs.load(rdir)['tasks'])
-'''
-        code, output = self.finish(*self.start(self.source(environment, body)), timeout=30)
-        self.assertEqual(code, 0, output)
-        journal = json.loads(next(rdir.glob('ACTIONS-*.json')).read_text())
-        delegates = [effect['receipt'] for effect in journal['effects'] if effect['action']['kind'] == 'delegate']
-        self.assertTrue(all(receipt['early_exit'] and receipt['rc'] == -15 and receipt['ok'] for receipt in delegates))
 
-    def test_foreground_interrupt_stops_continuous_cli_without_starting_another_child(self):
-        rdir, _work, environment = prepare(self.base)
-        environment['FIXTURE_INTERRUPT'] = '1'
-        body = f'''
-import subprocess, termios
-before=termios.tcgetattr(0)
-result=subprocess.run([sys.executable,{str(SCRIPTS / 'bitacora.py')!r},'--project','demo','run','REQ-001',
- '--foreground','--no-autostart','--no-audit','--max-attempts','1'],timeout=5,check=False)
-assert result.returncode==0,result
-assert termios.tcgetattr(0)==before
-assert os.tcgetpgrp(0)==os.getpgrp()
-assert rs.load(rdir)['status']=='stopped'
-assert rs.load(rdir)['control']=='stop'
-'''
-        code, output = self.finish(*self.start(self.source(environment, body)), timeout=8)
-        self.assertEqual(code, 0, output)
-        rows = self.wait_rows(1)
-        self.assertEqual(len(rows), 1)
-        self.assertEqual(json.loads((rdir / 'RUN.json').read_text())['tasks'][0]['attempts'], 0)
 
-    def interrupt_verify(self, phase):
-        rdir, work, environment = prepare(self.base)
-        environment['FIXTURE_VERIFY_INTERRUPT'] = phase
-        body = f'''
-import subprocess, termios
-before=termios.tcgetattr(0)
-result=subprocess.run([sys.executable,{str(SCRIPTS / 'bitacora.py')!r},'--project','demo','run','REQ-001',
- '--foreground','--no-autostart','--no-audit','--max-attempts','1'],timeout=7,check=False)
-assert Path(os.environ['ROWS']+'.verification-interrupt').exists(), 'verify interrupt fixture never reached'
-assert result.returncode==0,result
-assert rs.load(rdir)['status']=='stopped'
-assert rs.load(rdir)['control']=='stop'
-assert all(task['attempts']==0 for task in rs.load(rdir)['tasks'])
-assert termios.tcgetattr(0)==before
-assert os.tcgetpgrp(0)==os.getpgrp()
-'''
-        code, output = self.finish(*self.start(self.source(environment, body)), timeout=10)
-        self.assertEqual(code, 0, output)
-        rows = self.wait_rows(2)
-        marker = json.loads(Path(str(self.rows) + '.verification-interrupt').read_text())
-        workers = [json.loads(line) for line in Path(str(self.rows) + '.workers').read_text().splitlines()]
-        self.assertEqual(len(rows), marker['rows'])
-        self.assertEqual(len(workers), marker['workers'])
-        self.assertEqual({path.name: path.read_text() for path in work.glob('verify-T*')}, marker['verifications'])
-        if phase == 'runtime':
-            self.assertEqual([worker['task'] for worker in workers], ['T1'])
-        self.assertIsNone(json.loads((rdir / 'RUN.json').read_text())['foreground_child'])
 
-    def test_runtime_verify_interrupt_stops_before_next_reasoning_or_worker(self):
-        self.interrupt_verify('runtime')
 
-    def test_independent_settlement_verify_interrupt_does_not_count_failure(self):
-        self.interrupt_verify('settlement')
 
     def test_recovered_native_route_reaches_settlement_and_independent_audit(self):
         _rdir, _work, environment = prepare(self.base)
@@ -189,7 +92,7 @@ assert os.tcgetpgrp(0)==os.getpgrp()
 from unittest.mock import patch
 import bt_orchestration_effects as effects
 import bt_orchestration_context as context
-import bt_run
+from bt_runsettle import settle_task
 import bt_runsession
 from bt_orchestration_actions import ActionEngine
 def action(kind,task='T1',text='',action_id='one'):
@@ -214,13 +117,22 @@ engine.reconcile(executor.reconcile)
 for kind in ('verify','document','finish'):
     engine.execute(action(kind,action_id=kind,text='Verified scoped work'),executor)
 info=runtime.run_session('demo',rdir,rs.load(rdir),task,2,work,None,[task],route)
-assert bt_run._settle_unit('demo',rdir,[task],2,info,work)=={'T1':'done'}
+task_info={**info,**info['delegations']['T1']}
+task_info.update(stopped=info['stopped'] or task_info.get('stopped',False),
+                 timed_out=info['timed_out'] or task_info.get('timed_out',False),
+                 rc=info['rc'] or task_info['rc'])
+assert settle_task('demo',rdir,'T1',task_info['session'],task_info,work)=='done'
 state=rs.load(rdir)
 assert rs.get_task(state,'T1')['last_route']['agent']=='codex'
 assert rs.get_task(state,'T1')['last_route']['profile']=='codex'
 audit=dict(id='M1-audit',kind='audit',synthetic=True,milestone='M1',after=['T1'],tier=0)
 assert rs.builders_of(state,audit)=={'codex'}
-audit_route=bt_runsession.session_route('demo',{**state,'pool':['codex','claude']},audit,[audit])
+import bt_subscriptions
+quota={name:dict(used_percent=20,resets_at=time.time()+3600,window_minutes=minutes)
+       for name,minutes in (('five_hour',300),('seven_day',10080))}
+with patch.object(bt_subscriptions,'read_claude',return_value=quota), \
+     patch.object(bt_subscriptions,'read_codex',return_value=quota):
+    audit_route=bt_runsession.session_route('demo',{**state,'pool':['codex','claude']},audit,[audit])
 assert audit_route['agent']=='claude',audit_route
 print('HONEST_RECOVERED_BUILDER',flush=True)
 '''
@@ -233,7 +145,7 @@ class RecoveryStateTests(unittest.TestCase):
 
     def test_recovered_worker_keeps_predispatch_route_and_session(self):
         from bt_orchestration_storage import atomic_json as write_json
-        # Real native worker and task CLI; only the post-dispatch persistence fault is injected.
+        # Real native worker and controlled completion claim; only the post-dispatch persistence fault is injected.
         base = self.rdir / 'native'
         base.mkdir()
         rdir, work, environment = prepare(base)

@@ -14,16 +14,13 @@ import shlex
 import subprocess
 
 import bt_agents
+import bt_routing_policy
 
 TOP = bt_agents.TOP
 LADDER = ("haiku", "sonnet", "opus")
-EFFORT = "xhigh"
-# Tier 0 is bounded tightly; a stored `session_timeout_min` (an explicit --timeout, or a run started before the table
-# existed) stays the cap and, without `session_timeout_by_tier`, the only timeout. Sessions carrying several tasks
-# scale by MILESTONE_TIMEOUT_FACTOR in bt_runsession, so the budget stays proportional and bounded.
-TIMEOUT_BY_TIER = {"0": 25, "1": 45, "2": 60}
+# Every new session defaults to 25 minutes, regardless of task count. Stored explicit timeout overrides survive.
+TIMEOUT_BY_TIER = {"0": 25, "1": 25, "2": 25}
 GROUP_MAX = {"0": 3, "1": 1, "2": 1}  # tasks per session, by tier (milestone grouping, bt_runstate.unit_of)
-TARGETS = {"sonnet": 1, "opus": 2, "standard": 1, "top": 2}  # `task escalate --to`
 
 
 def start_tier(level: str | None, kind: str | None = None, complexity: str | None = None,
@@ -35,7 +32,7 @@ def start_tier(level: str | None, kind: str | None = None, complexity: str | Non
 
 def tier_of(task: dict | None) -> int:
     try:
-        return max(0, min(TOP, int((task or {}).get("tier") or 0)))
+        return bt_routing_policy.cap_tier((task or {}).get("tier") or 0, (task or {}).get("kind"))
     except (TypeError, ValueError):
         return 0
 
@@ -79,7 +76,7 @@ def _by_tier(table, tier: int, default: dict):
 
 def session_timeout_min(limits: dict, tier: int) -> float:
     """Timeout of a single-task session at `tier`: the tier's budget capped by the run's `session_timeout_min`."""
-    cap = float(limits.get("session_timeout_min") or 60)
+    cap = float(limits.get("session_timeout_min") or 25)
     budget = (limits.get("session_timeout_by_tier") or {}).get(str(tier))
     return min(cap, float(budget)) if budget else cap
 
@@ -89,6 +86,7 @@ def group_max(limits: dict, tier: int) -> int:
     configured = bt_agents._config("routing.group_max", {})
     value = _by_tier(limits.get("group_max"), tier, configured if isinstance(configured, dict) else {})
     try:
-        return max(1, int(value if value is not None else GROUP_MAX[str(min(max(tier, 0), TOP))]))
+        hard_cap = GROUP_MAX[str(min(max(tier, 0), TOP))]
+        return min(hard_cap, max(1, int(value if value is not None else hard_cap)))
     except (TypeError, ValueError):
         return 1

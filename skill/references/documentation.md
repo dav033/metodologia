@@ -43,6 +43,33 @@ central files. The web UI shows it as an interactive graph (project → Grafo) a
 dashboard of projects, every document rendered, artifacts, question rounds and plan approval. It starts by itself
 when a session opens in the HQ.
 
+**Plan progress:** `bitacora.py [--project P] plan-status [REQ-NNN|--all] [--write] [--json]` reads it from PLAN.json,
+`SCHEDULER.db`/`RUN.projection.json` and PLAN.md (read-only; `--write` refreshes the block below). `launch` and every
+rewrite of the scheduler projection refresh a generated block in PLAN.md between `<!-- bitacora:status:begin -->` and
+`<!-- bitacora:status:end -->`: progress per milestone/task, DIFFICULTY (task `complexity`; a milestone shows the highest
+of its tasks) and the model and account of the current attempt. Never edit it by hand; the planner's drift check ignores
+it and PLAN.json is never written with state, model or account. Active plans (no limit) appear in the SessionStart
+"Planes" section. The web server's live "Planes" view: `/plans` (`?filter=active`), `/plans/<project>/<REQ>`, SSE
+`/events`, JSON `/api/plans`. Plans there are read-only; the actions are cancel (irreversible for a scheduler plan; type
+the REQ id to confirm) and delete (moves the plan artifacts to `<project>/.trash/<REQ>-<UTC>/` with `TRASH.json`;
+restorable from the same view).
+
+**Live Scheduler views** (all read-only over the module stores; nothing is written):
+- Every attempt shows its OWN route (provider · model · effort · account, from the M2 ledger), duration, last activity and
+  tokens as the provider reported them (`—`/«no informado» when it did not; a total is never computed). A task also shows
+  the route assigned from the start and, while an attempt is alive, a «trabajando» line. Model chips link to
+  `/metrics/model/<provider>/<model>[/<effort>]` (attempts, verified rate, p50/p90, tokens per done task, last 20).
+- `/now` and the «Ahora» strip under every header list what is running in all projects; `/live?scope=` is the SSE feed
+  (`global`, `project:P`, `run:P/REQ`, `task:P/REQ/T`; `Last-Event-ID` resumes), `/api/now`, `/api/flow?scope=&after=`.
+- `/flow` is the animated map of Planner + M1–M6: every real message between them as a particle on its edge (read from M1's
+  audit and the M2–M6 stores by `bt_flow_bus`), filters, «Seguir tarea», replay at 1×/5×/20× and «Simular» (the DEMO plan on
+  the core's doubles). `/go/<ID>` opens any REQ/P/D/LG id (`/go/<project>/REQ-005/T4` lands on the task).
+- Plan evolution: `plan-json amend` records classification changes (see `plan-contract.md`) and `scheduler-run --rebase`
+  continues a run on revision N+1; the plan page shows `~~medium~~ → high` per task and a timeline of revisions and amendments.
+- `scripts/tools/visual_tour.py` takes desktop/phone × light/dark screenshots of every page (and probes horizontal
+  overflow); `?theme=light|dark` forces a theme and `?live=0` keeps a page static so a headless browser can finish.
+  Fonts and Shoelace components are vendored under `assets/vendor/` (no CDN at runtime).
+
 ## Artifacts
 
 When a visual page would help — a dashboard, a diagram, a comparison, a report, a UI mockup, a weekly summary

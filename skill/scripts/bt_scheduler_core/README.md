@@ -37,6 +37,7 @@ output (M4) and retry strategy (M5) live in sibling modules that implement the p
 | `events.py`, `recovery.py`, `operations.py` | applying facts/verdicts, recovery decisions & reconciliation, operator actions |
 | `dispatch.py` | outbox delivery (write-ahead) and reconciliation queries |
 | `scheduler.py` | `SchedulerCore`: transactions + ports + `step()`/`run()` |
+| `rebase.py` | `rebase_run`: move a run onto revision N+1 keeping accepted, unchanged work (see *Rebase*) |
 | `simulators.py`, `simulation.py` | deterministic doubles of M2–M5 and a scripted "world" |
 | `cli.py`, `__main__.py` | command line |
 
@@ -76,7 +77,8 @@ outbox (`pending_orders()` for pull-style adapters); no recovery port → "retry
 block". `Config` (all explicit, none inferred from the plan; an estimate is never a timeout): `max_parallel_tasks=1`,
 `max_attempts=1`, `lease_seconds=300`, `reconcile_seconds=60`, `repository_isolation="shared"`,
 `unknown_surface="serialize"`, `max_recovery_wait=3600`, `max_recovery_waits=3`, `max_deliveries=5`,
-`require_independent_verifier=True`. A recovery `wait` always holds at least one second and, like any wait, is not
+`require_independent_verifier=True`, `exclusive_scopes=()` (plan `scope` values whose tasks claim their whole repository
+exclusively: the one classification field the core reads, and only when the operator names values here). A recovery `wait` always holds at least one second and, like any wait, is not
 progress. `run()` also returns when the only live attempts left are `uncertain` (an operator must resolve them).
 The outbox is bounded: past 1000 items, settled orders of closed attempts are pruned (newest 500 kept).
 
@@ -131,6 +133,17 @@ core.run()                                                          # event-driv
 core.ingest(event); core.submit_verdict(verdict); core.snapshot(); core.audit_log()
 core.pause(by) / resume / cancel / reopen(task_id, by) / resolve_attempt(attempt_id, outcome, by)
 ```
+
+## Rebase (a new approved revision without losing accepted work)
+
+`rebase_run(repository, old_plan, new_plan)` moves the persisted run from revision N to N+1 in one transaction.
+An accepted task whose *fingerprint* (id, prerequisites, repository, acceptance criteria, verification; never the
+classification) is unchanged, and whose prerequisites were all kept, stays accepted with its attempts and route.
+Every other existing task returns to `pending` with a fresh attempt budget (its old attempts stay in the history);
+new tasks start `pending`; removed tasks leave the run. A run with a live attempt is refused (`NOT_ALLOWED`), and so are
+another plan id, a revision that is not later, and a cancelled run; a run bound to another plan is `PLAN_MISMATCH`.
+Audit: `run_rebased {from_rev, to_rev, kept, reset, added, removed}` plus a `task_transition` (`decision: rebase`) per
+reset task. After it, `SchedulerCore(new_plan, repository).start()` binds the run to revision N+1.
 
 ## Errors (stable codes, `SchedulerError.code`)
 

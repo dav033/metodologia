@@ -11,7 +11,7 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 
-import bt_events  # noqa: E402  (imports bt_core: this file must sort after test_marathon.py)
+import bt_events  # noqa: E402  (imports bt_core: test_00_isolation establishes the disposable root)
 
 CLAUDE_RESULT = {"type": "result", "subtype": "success", "is_error": False, "total_cost_usd": 0.0037, "result": "ok",
                  "usage": {"input_tokens": 2, "cache_creation_input_tokens": 18058, "cache_read_input_tokens": 8607,

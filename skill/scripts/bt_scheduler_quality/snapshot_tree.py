@@ -14,12 +14,17 @@ from .policy import QualityPolicy
 from .snapshot_git import (
     GIT_TIMEOUT_SECONDS,
     read_bounded_stream,
+    read_git_blob,
     run_git,
     start_git_stream,
     stop_process,
     wait_git_process,
 )
 from .snapshot_paths import safe_snapshot_path
+
+
+class _BytesDiffer(QualityError):
+    """A regular file whose bytes differ from its blob: `git archive` may have rewritten it (export-subst)."""
 
 
 class SnapshotTreeVerifier:
@@ -80,7 +85,11 @@ class SnapshotTreeVerifier:
             process.stdout.close()
 
     def verify_tree(
-        self, repo: Path, expected: dict[str, tuple[str, str]], checkout: Path
+        self,
+        repo: Path,
+        expected: dict[str, tuple[str, str]],
+        checkout: Path,
+        snapshot_sha: str | None = None,
     ) -> tuple[int, int]:
         object_format = _git_object_format(repo)
         actual = {
@@ -92,7 +101,15 @@ class SnapshotTreeVerifier:
         byte_count = 0
         for relative, (mode, oid) in expected.items():
             path = checkout.joinpath(*PurePosixPath(relative).parts)
-            byte_count += _verify_tree_entry(object_format, path, mode, oid)
+            try:
+                byte_count += _verify_tree_entry(object_format, path, mode, oid)
+            except _BytesDiffer:
+                if snapshot_sha is None or not _has_export_subst(repo, snapshot_sha, relative):
+                    raise
+                # `git archive` expands $Format$ in export-subst files: restore the pinned blob, then verify it
+                # exactly like any other file, so the checkout still equals the tree byte for byte.
+                _restore_blob(repo, oid, path, self.policy.max_snapshot_bytes - byte_count)
+                byte_count += _verify_tree_entry(object_format, path, mode, oid)
             if byte_count > self.policy.max_snapshot_bytes:
                 raise QualityError(
                     "SNAPSHOT_INVALID", "snapshot exceeds its uncompressed byte cap"
@@ -189,10 +206,24 @@ def _verify_tree_entry(object_format: str, path: Path, mode: str, oid: str) -> i
         size = info.st_size
         actual_oid = _git_blob_file_digest(object_format, path, size)
     if actual_oid != oid:
-        raise QualityError(
+        raise _BytesDiffer(
             "SNAPSHOT_INVALID", "snapshot file bytes differ from the Git tree"
         )
     return size
+
+
+def _has_export_subst(repo: Path, snapshot_sha: str, relative: str) -> bool:
+    result = run_git(
+        repo, "check-attr", f"--source={snapshot_sha}", "export-subst", "--", relative,
+        check=False,
+    )
+    return result.returncode == 0 and result.stdout.rstrip("\n").rsplit(": ", 1)[-1] == "set"
+
+
+def _restore_blob(repo: Path, oid: str, path: Path, remaining_bytes: int) -> None:
+    content = read_git_blob(repo, oid, remaining_bytes)
+    with open(path, "wb") as stream:   # the entry was just verified as a regular file: truncation keeps its mode
+        stream.write(content)
 
 
 def _git_blob_digest(object_format: str, content: bytes) -> str:

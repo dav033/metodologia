@@ -195,7 +195,7 @@ def plan_full_dag(core_module, port, request, refresh_quota: object):
                 (candidate.route_id, candidate.account_ref): candidate for candidate in candidates
             }
             evidence_by_task[view.id] = _route_evidence(candidates, requested_at)
-            preserve_baseline[view.id] = kind == "audit"
+            preserve_baseline[view.id] = kind != "docs"
 
         batch = port.ledger.batch_decisions.persist(
             tuple(decision_requests), route_evidence_by_task=evidence_by_task,

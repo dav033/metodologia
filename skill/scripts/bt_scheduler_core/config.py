@@ -14,6 +14,8 @@ class Config:
     reconcile_seconds: float = 60.0      # longest an idle loop sleeps before it re-checks leases and holds
     repository_isolation: str = "shared"  # "shared": same-repo tasks may overlap; "exclusive": one per repository
     unknown_surface: str = "serialize"   # task with no repository/paths/resources: "serialize" (global lock) | "allow"
+    exclusive_scopes: tuple[str, ...] = ()  # plan `scope` values that run alone in their repository (the only
+    #                                        classification the core ever reads, and only when the operator names it)
     max_recovery_wait: float = 3600.0    # cap on a recovery proposal's `wait`
     max_recovery_waits: int = 3          # a recovery module may ask to wait this many times per task, then the task blocks
     max_deliveries: int = 5              # an order whose delivery keeps failing is abandoned (attempt becomes uncertain)
@@ -36,6 +38,8 @@ class Config:
                 problems.append(f"{name} must be a number > 0")
         if self.repository_isolation not in ("shared", "exclusive"):
             problems.append("repository_isolation must be 'shared' or 'exclusive'")
+        if not (isinstance(self.exclusive_scopes, tuple) and all(isinstance(s, str) and s for s in self.exclusive_scopes)):
+            problems.append("exclusive_scopes must be a tuple of non-empty strings")
         if self.unknown_surface not in ("serialize", "allow"):
             problems.append("unknown_surface must be 'serialize' or 'allow'")
         if problems:

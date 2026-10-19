@@ -159,7 +159,9 @@ class SchedulerCore:
             planned = recommended = 0
             for item in proposals:
                 rec = ctx.state.tasks[item.task_id]
-                if rec.attempts:
+                if rec.state in (T.COMPLETED.value, T.CANCELLED.value):
+                    continue                    # a rebased run keeps the route of accepted work; nothing to recommend
+                if rec.attempts and rec.state not in (T.PENDING.value, T.READY.value):
                     continue  # an older run may predate route maps; never replace a route after work has started
                 planned += 1
                 rec.route_metadata = dict(item.route_metadata)

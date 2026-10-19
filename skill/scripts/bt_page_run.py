@@ -1,13 +1,14 @@
 """Run tab of a requirement: authority-specific status view and pause/resume/stop controls.
 
-Legacy runs read RUN.json and update its control field. Scheduler runs read RUN.projection.json and send controls to M1.
+Legacy runs (RUN.json written by the retired supervisor) are shown read-only. Scheduler runs read RUN.projection.json
+and send controls to M1.
 """
 from __future__ import annotations
 
 import math
-import socket
 from html import escape as e
 
+import bt_page_attempts as attempts_
 import bt_runtier as tier_
 import bt_scheduler_adapter as scheduler_
 from bt_core import *  # noqa: F403
@@ -124,18 +125,8 @@ def apply_control(rdir: Path, action: str) -> str:
         scheduler_.apply_control(rdir, action, by="web")
         return {"pause": "Ejecución Scheduler pausada.", "resume": "Ejecución Scheduler reanudada.",
                 "stop": "Cancelación enviada a M1."}[action]
-    if load_run(rdir) is None:
-        raise SystemExit("Este requerimiento no tiene RUN.json (no se lanzó en modo maratón).")
-    import bt_runstate  # locked read-modify-write: never overwrites what the supervisor saved meanwhile
-    run = bt_runstate.update(rdir, lambda s: s.update(control=CONTROLS[action]))
-    status = run.get("status")
-    if action == "resume":
-        if status in ("stopped", "blocked", "done"):
-            return (f"Control limpiado, pero la maratón está '{status}': no hay supervisor corriendo. "
-                    f"Relánzala con bitacora.py run {run.get('req', '')} --resume.")
-        return "Maratón reanudada: el supervisor continúa en su próximo ciclo."
-    where = "al terminar la sesión en curso" if status == "running" else "en su próximo ciclo"
-    return f"Orden '{action}' enviada: el supervisor la aplica {where}."
+    raise SystemExit("Ejecución heredada (RUN.json): su supervisor fue retirado y ya no admite controles. "
+                     "Los planes nuevos corren con el Scheduler (bitacora.py launch).")
 
 
 def _tier_cell(run: dict, t: dict) -> str:
@@ -168,11 +159,11 @@ def _task_rows(run: dict) -> str:
 def _log_rows(run: dict) -> str:
     rows = []
     for x in reversed((run.get("log") or [])[-30:]):
-        model = tier_.label(x["model"], x.get("effort")) if x.get("model") else "—"
+        model = attempts_.model_chip(x.get("agent"), x.get("model"), x.get("effort")) if x.get("model") else "—"
         if x.get("profile") or x.get("agent"):
-            model = f'{x.get("profile") or x.get("agent")} · {model}'
+            model = f'{e(str(x.get("profile") or x.get("agent")))} · {model}'
         rows.append(f'<tr><td>{e(str(x.get("at", ""))[:19].replace("T", " "))}</td><td>#{e(str(x.get("session", "")))}</td>'
-                    f'<td>{e(str(x.get("task", "")))}</td><td>{e(model)}</td><td>{badge(str(x.get("result", "")))}</td>'
+                    f'<td>{e(str(x.get("task", "")))}</td><td>{model}</td><td>{badge(str(x.get("result", "")))}</td>'
                     f'<td>{e(str(x.get("seconds", "")))}s</td><td>{e(str(x.get("summary", "")))}</td></tr>')
     return ('<table><tr><th>Hora</th><th>Sesión</th><th>Tarea</th><th>Agente · modelo</th><th>Resultado</th><th>Duración</th>'
             f'<th>Resumen</th></tr>{"".join(rows)}</table>') if rows else '<p class="muted">Sin sesiones todavía.</p>'
@@ -185,7 +176,7 @@ def run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
             command = f"bitacora.py --project {project} scheduler-run {rid} --resume"
             return (f'<div class="notice warn">La proyección Scheduler no disponible. La base M1 se conserva. '
                     f'Reconstruye la vista con <code>{e(command)}</code>.</div>')
-        return '<p class="muted">Este requerimiento no se lanzó en modo maratón.</p>'
+        return '<p class="muted">Este requerimiento no tiene ejecución registrada.</p>'
     if run.get("authority") == scheduler_.AUTHORITY:
         return _scheduler_run_panel(project, rid, run, token)
     done, total = progress(run)
@@ -202,28 +193,11 @@ def run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
         kpis.append(f'<span class="kpi">espera hasta {e(str(run["waiting_until"])[:16].replace("T", " "))}</span>')
     if run.get("control"):
         kpis.append(f'<span class="kpi">orden pendiente: {e(str(run["control"]))}</span>')
-    notes = ""
-    if is_stale(run):
-        mins = ((run.get("limits") or {}).get("session_timeout_min") or 60) + STALE_EXTRA_MIN
-        notes += (f'<div class="notice warn">El latido tiene más de {mins} min: el supervisor parece detenido '
-                  f'(¿reinicio o ventana cerrada?). Relánzalo con <code>bitacora.py --project {e(project)} run '
-                  f'{e(rid)} --resume</code>.</div>')
-    if hb.get("machine") and hb["machine"] != socket.gethostname():
-        notes += f'<div class="notice warn">Esta maratón corre en otra máquina: {e(str(hb["machine"]))}.</div>'
+    notes = '<div class="notice warn">Ejecución heredada (RUN.json): solo lectura; su supervisor fue retirado.</div>'
     if hb.get("state"):
         notes += f'<p class="muted">{e(str(hb["state"]))}</p>'
     bar = f'<progress max="{max(total, 1)}" value="{done}" style="width:100%"></progress>'
-    act = purl(project, "req", rid, "run")
-
-    def btn(action: str, label: str, cls: str = "secondary") -> str:
-        return (f'<form method="post" action="{act}" style="display:inline">'
-                f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="action" value="{action}">'
-                f'<button class="{cls}" type="submit">{label}</button></form>')
-    controls = (f'<div class="actions">{btn("pause", "Pausar")}{btn("resume", "Reanudar", "")}{btn("stop", "Detener")}'
-                f'{btn("monitor", "Abrir monitor remoto")}</div>'
-                f'<p class="muted">Monitor remoto: sesión «{e(project)} {e(rid)} maratón» en claude.ai/code o la app de '
-                f'Claude (Remote Control) — pregúntale cómo va, o pídele pausar/reanudar/detener.</p>')
-    return (f'<div class="kpis">{"".join(kpis)}</div>{bar}{notes}{controls}<h2>Tareas</h2>{_task_rows(run)}'
+    return (f'<div class="kpis">{"".join(kpis)}</div>{bar}{notes}<h2>Tareas</h2>{_task_rows(run)}'
             f'<h2>Últimas sesiones</h2>{_log_rows(run)}')
 
 
@@ -247,15 +221,20 @@ def _scheduler_run_panel(project: str, rid: str, run: dict, token: str) -> str:
         if not isinstance(task, dict):
             continue
         model = str(task.get("model") or "")
+        model_cell = None
         if model:
             model_label = " · ".join(part for part in (str(task.get("provider") or ""),
                                                         str(task.get("profile") or ""), model) if part)
             if task.get("effort"):
                 model_label += f' ({task["effort"]})'
+            prefix = " · ".join(part for part in (str(task.get("provider") or ""), str(task.get("profile") or "")) if part)
+            model_cell = (f'{e(prefix + " · " if prefix else "")}'
+                          f'{attempts_.model_chip(task.get("provider"), model, task.get("effort") or None)}')
             route_status = {"recommended": "planificado", "assigned": "revalidado al iniciar"}.get(
                 str(task.get("route_status", "")), "")
             if route_status:
                 model_label += f" · {route_status}"
+                model_cell += f" · {e(route_status)}"
         else:
             model_label = {"unavailable": "Sin ruta elegible", "unplanned": "Pendiente"}.get(
                 str(task.get("route_status", "")), "—")
@@ -289,7 +268,7 @@ def _scheduler_run_panel(project: str, rid: str, run: dict, token: str) -> str:
         rows.append(
             f'<tr><td>{e(str(task.get("id", "")))}</td><td>{e(str(task.get("milestone") or "—"))}</td>'
             f'<td>{e(str(task.get("title", "")))}</td><td>{e(str(task.get("complexity") or "—"))}</td>'
-            f'<td>{e(model_label)}</td><td>{route_detail}</td>'
+            f'<td>{model_cell if model_cell is not None else e(model_label)}</td><td>{route_detail}</td>'
             f'<td>{badge(str(task.get("scheduler_state", task.get("status", "?"))))}</td>'
             f'<td>{e(str(task.get("attempts", 0)))}</td></tr>')
     table = (f'<table><tr><th>ID</th><th>Hito</th><th>Tarea</th><th>Complejidad</th><th>Modelo M2</th>'

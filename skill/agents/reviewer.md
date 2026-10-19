@@ -3,10 +3,11 @@ name: reviewer
 description: Fresh-context, read-only reviewer of a diff along ONE axis given in the brief — "spec" (does it do what the spec/plan says, nothing more) or "standards" (correctness, security, the user's engineering standards). Use after each plan phase and before closing. Run the two axes as two parallel instances.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit
-model: sonnet
-effort: medium
 color: purple
 codex_sandbox: read-only
+model: sonnet
+effort: medium
+codex_model: gpt-6.1-sol
 codex_effort: medium
 ---
 

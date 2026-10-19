@@ -47,14 +47,14 @@ metodologia/
 Compatible con Windows, Linux y macOS (Python 3.12+). En Linux, el lanzador busca
 kitty, GNOME Terminal, Konsole, xterm o x-terminal-emulator. En macOS usa Terminal
 mediante `osascript`; el sistema puede pedir permiso para automatizar Terminal.
-Sin terminal gráfica se puede ejecutar el supervisor directamente con `bitacora.py run`.
+Sin terminal gráfica se puede ejecutar el scheduler directamente con `bitacora.py scheduler-run REQ-001` (o `launch --background`).
 
 La reanudación después de iniciar sesión utiliza systemd de usuario en Linux
 (sin sudo), XDG Autostart si no hay systemd, LaunchAgents en macOS y Startup en Windows.
 Los compositores que no procesen XDG Autostart necesitan un gestor de sesión compatible
-o ejecutar `run --resume` manualmente. `--no-autostart` desactiva el registro.
+o ejecutar `scheduler-run REQ-001 --resume` manualmente. `--no-autostart` desactiva el registro.
 Las notificaciones usan notify-send en Linux, osascript en macOS y WinRT en Windows.
-No hay cambios de configuración ni servicios hasta ejecutar el instalador o iniciar un maratón.
+No hay cambios de configuración ni servicios hasta ejecutar el instalador o lanzar un plan.
 
 | | Para qué | ¿Obligatorio? |
 |---|---|---|
@@ -114,7 +114,8 @@ hacer push, ni aprobar los hooks de Codex por ti.
 | Saber en qué estamos | "¿en qué estamos?" |
 | Registrar un proyecto de varios repos | `bitacora.py --project <p> workspace add <rol> <ruta>` |
 | Clonar en esta máquina los repos que falten | `bitacora.py --project <p> workspace clone` |
-| Correr un plan aprobado por días (maratón: una sesión limpia por tarea, Haiku 5.5 + ultracode) | Aprobar con **Modo: Maratón** en el panel · `bitacora.py --project <p> launch REQ-001 --mode marathon` · reanudar tras reiniciar: `bitacora.py --project <p> run REQ-001 --resume` |
+| Correr un plan aprobado y congelado (scheduler: un intento por tarea, ruta modelo/cuenta elegida por el router) | Aprobar en el panel · `bitacora.py --project <p> launch REQ-001` (exige `plan-json freeze`) · seguir: `watch REQ-001` · reanudar tras reiniciar: `bitacora.py --project <p> scheduler-run REQ-001 --resume` |
+| Ver el avance y la dificultad de los planes | Panel → **Planes** (`/plans`) · `bitacora.py --project <p> plan-status --all` · bloque de estado generado en `PLAN.md` |
 | Lanzar un plan sin más conversación (valida, aprueba si es seguro, corre por hitos con el mejor agente) | `bitacora.py --project <p> handoff REQ-001` (`--dry-run` para ver la decisión) |
 | Ver agentes, cuentas y cuotas · qué ruta se usaría | `bitacora.py agents` · `bitacora.py --project <p> agents route --kind audit` |
 | Delegar una tarea a otro agente o suscripción | `bitacora.py --project <p> delegate start "<tarea>" --kind test --verify "<cmd>"` |
@@ -122,7 +123,7 @@ hacer push, ni aprobar los hooks de Codex por ti.
 | Ver o confirmar lo aprendido | `bitacora.py --project <p> learn list` · `learn confirm L-003` · `learn reject L-003` |
 | Dar a un agente todo el contexto en una pantalla | `bitacora.py --project <p> context` |
 | Ajustes de la máquina (aprobación automática, auditorías, pool de cuentas) | `bitacora.py config get` · `config set audit.mode off` |
-| Pausar, reanudar o detener un maratón | Pestaña **Maratón** del requerimiento · `bitacora.py --project <p> run-control REQ-001 pause\|resume\|stop` |
+| Cancelar o borrar un plan (borrar = mover a `<p>/.trash/`, recuperable) | Panel → **Planes** → acciones (cancelar es irreversible; se confirma escribiendo el id) |
 | Revisar la trazabilidad | `bitacora.py --project <p> trace` |
 | Correr las evaluaciones de la skill | `python ~/metodologia/evals/run.py` (≈ USD 1.5, tope configurable) |
 

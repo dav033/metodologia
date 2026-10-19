@@ -22,6 +22,11 @@ DEFAULTS: dict = {
     "quota": {"default_cooldown_min": 30},
     "relay": {"enabled": False, "threshold_percent": 92, "exit_current": True, "max_chain": 3, "auto": True},
     "run": {"isolation": "off"},
+    # a run without a human retries; up to 3 tasks at once when dependencies, files and resources allow it, but a task
+    # whose plan scope is large runs alone in its repository; an agent process may work up to 2 h (the final gate takes
+    # longer than 30 min)
+    "scheduler": {"max_attempts": 3, "max_parallel_tasks": 3, "attempt_timeout_minutes": 120,
+                  "exclusive_scopes": ["large_change", "full_feature", "full_system"]},
 }
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),

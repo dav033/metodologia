@@ -85,6 +85,8 @@ class RetryContinuation:
             if len(rec.attempts) < 2:
                 return None
             current, old = (ctx.state.attempts[rec.attempts[i]] for i in (-1, -2))
+            if not old.key.startswith(f"{ctx.state.plan_id}:r{ctx.state.revision}:"):
+                return None  # an attempt of an earlier plan revision (the run was rebased): this one starts fresh
             if (rec.state != "active" or current.state not in {"reserved", "dispatched", "running"}
                     or old.state not in {"failed", "rejected"} or ctx.state.cancel_requested):
                 raise integration.IntegrationError("PREDECESSOR_HANDOFF_MISSING", "retry is not authorised")
@@ -98,6 +100,8 @@ class RetryContinuation:
         if prior is None:
             return None
         facts = self.describe(prior["attempt_id"])
+        if facts is None:
+            return None  # the executor never accepted that start (it was rejected): there is no work to continue
         if (not facts or facts["request"] != prior or facts["state"] not in {"failed", "finished"}
                 or facts["cancel_requested"] or not facts["snapshot_verified"]):
             raise integration.IntegrationError("PREDECESSOR_HANDOFF_MISSING", "retry snapshot is missing or unsettled")

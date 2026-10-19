@@ -9,7 +9,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 
-import bt_runsettle as settle  # noqa: E402  (imports bt_core: this file must sort after test_marathon.py)
+import bt_runsettle as settle  # noqa: E402  (imports bt_core: test_00_isolation establishes the disposable root)
 
 QUOTA_ERROR = json.dumps({"event": "result", "result": {
     "status": "ERROR", "error": "Individual quota reached. Please upgrade your subscription to increase your limits. "

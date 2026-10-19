@@ -114,3 +114,14 @@ license texts: [third-party-notices.md](third-party-notices.md).
 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | `2e08b9177c07bb7249a8a2d1a6758e5db281d002` | [Caveman skill](https://github.com/JuliusBrussee/caveman/blob/2e08b9177c07bb7249a8a2d1a6758e5db281d002/plugins/caveman/skills/caveman/SKILL.md), [licensing](https://github.com/JuliusBrussee/caveman/blob/2e08b9177c07bb7249a8a2d1a6758e5db281d002/LICENSING.md) | Apache-2.0; retained legacy MIT notice |
 | [rtk-ai/rtk](https://github.com/rtk-ai/rtk) | `311ebcbfd8efdb09b03219e7615a153b5b5e3c97` | [Awareness prompt](https://github.com/rtk-ai/rtk/blob/311ebcbfd8efdb09b03219e7615a153b5b5e3c97/hooks/rtk-awareness-full.md), [usage and recovery](https://github.com/rtk-ai/rtk/blob/311ebcbfd8efdb09b03219e7615a153b5b5e3c97/README.md) | Apache-2.0 |
 | [mattpocock/skills](https://github.com/mattpocock/skills) | `49dd158d1076134a641b33efb035946536778336` | [Grill Me entrypoint](https://github.com/mattpocock/skills/blob/49dd158d1076134a641b33efb035946536778336/skills/productivity/grill-me/SKILL.md), [grilling prompt](https://github.com/mattpocock/skills/blob/49dd158d1076134a641b33efb035946536778336/skills/productivity/grilling/SKILL.md) | MIT |
+
+
+## Clickable ids
+
+`bitacora-web` resolves short links: `/go/<project>/REQ-005`, `/go/<project>/REQ-005/T4` (opens that task in the plan),
+`/go/P-013`, `/go/D-045`, `/go/LG-001` (a bare id works when only one project has it; otherwise the page lists the
+projects). In chat, write `[REQ-005](http://127.0.0.1:8765/go/metodologia/REQ-005)` so the terminal makes it clickable
+(Claude Code renders markdown links as OSC 8 hyperlinks; check the port with `BITACORA_PORT`, default 8765). The
+CLI (`pending`, `context`, `plan-status`) wraps ids in OSC 8 itself when stdout is an interactive terminal
+(`BITACORA_LINKS=0` disables it, `=1` forces it). For ids in plain text that nobody linked, the kitty shortcut
+`ctrl+shift+i` (`bt-go`) highlights every visible id and opens `/go/<id>`.

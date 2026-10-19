@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from bt_scheduler_monitor_adapter import (
     NORMALIZER_VERSION,
     SCHEMA_VERSION,
+    STDERR_TEXT,
     BoundedFrameQueue,
     CollectorOutput,
     DetectorContext,
@@ -175,6 +176,8 @@ class M4StreamIngestor:
             cursor = SourceCursor(context.execution_id, context.stream, context.host_boot_id,
                                   provider_gap.last_sequence, provider_gap.last_offset)
             cursors.append(cursor)
+            if context.stream == "stderr" and provider_gap.reason in STDERR_TEXT:
+                continue  # a CLI's plain-text progress line: keep the position (it acknowledges the frames), not an event
             events.append(self._gap_event(context, provider_gap, index))
         if source_gap is not None:
             last_sequence = source_gap.last_sequence if source_gap.last_sequence is not None else source_gap.sequence
@@ -213,12 +216,26 @@ class M4StreamIngestor:
             for frame in safe:
                 self._fed_frames.pop(id(frame), None)
 
+    def _cursors_not_behind_store(self, cursors: tuple[SourceCursor, ...]) -> tuple[SourceCursor, ...]:
+        """After a restart the queue replays input the store already holds: keep the stored position instead of
+        rewinding it. The store keeps rejecting a real regression (another boot) and the rows stay idempotent."""
+        kept = []
+        for cursor in cursors:
+            stored = self.store.get_cursor(cursor.execution_id, cursor.stream)
+            if stored is not None and stored.host_boot_id == cursor.host_boot_id and (
+                    cursor.sequence < stored.sequence or cursor.offset_bytes < stored.offset_bytes):
+                cursor = SourceCursor(cursor.execution_id, cursor.stream, cursor.host_boot_id,
+                                      max(cursor.sequence, stored.sequence),
+                                      max(cursor.offset_bytes, stored.offset_bytes))
+            kept.append(cursor)
+        return tuple(kept)
+
     def _commit_pending(self) -> None:
         pending = self._pending_write
         if pending is None:
             return
         self.store.append_batch(events=pending.events, metrics=pending.metrics,
-                                gaps=pending.gaps, cursors=pending.cursors)
+                                gaps=pending.gaps, cursors=self._cursors_not_behind_store(pending.cursors))
         for event in pending.events:
             for incident in detect_events((event,), DetectorContext(event.received_at)):
                 self.store.enqueue_incident(incident, "m4:" + incident.incident_id)

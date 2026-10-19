@@ -11,6 +11,7 @@ from .contracts import QualityError
 from .policy import CheckSpec, QualityPolicy, _parse_command
 from .runner_execution import SandboxExecution
 from .runner_types import CommandOutcome
+from .sandbox_mounts import Mount
 
 
 class SandboxRunner:
@@ -27,6 +28,7 @@ class SandboxRunner:
         snapshot_root: Path,
         *,
         timeout_seconds: int | None = None,
+        mounts: tuple[Mount, ...] = (),
     ) -> CommandOutcome:
         started = time.monotonic()
         requested_timeout = (
@@ -80,14 +82,19 @@ class SandboxRunner:
                 )
                 return self._outcome("unknown", None, started, b"", b"", code, False)
 
-            return self._execute(check, root, timeout, started)
+            return self._execute(check, root, timeout, started, mounts)
         finally:
             self._slots.release()
 
     def _execute(
-        self, check: CheckSpec, root: Path, timeout: int, started: float
+        self,
+        check: CheckSpec,
+        root: Path,
+        timeout: int,
+        started: float,
+        mounts: tuple[Mount, ...] = (),
     ) -> CommandOutcome:
-        return self._execution.execute(check, root, timeout, started)
+        return self._execution.execute(check, root, timeout, started, mounts)
 
     def _redact(self, value: bytes) -> bytes:
         for secret in sorted(self.policy.secret_values, key=len, reverse=True):

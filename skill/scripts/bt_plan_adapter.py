@@ -311,3 +311,41 @@ def freeze_approved(rdir: Path, *, compatibility_report: dict[str, object] | Non
 def run_state_fields(rdir: Path) -> dict:
     """Fields a NEW run state records about its plan: `plan_ref`, or `plan_ref_error` when the store is damaged."""
     return planner.run_reference(rdir)
+
+
+# ---- classification amendments (the plan's estimate changing while it runs; scope still needs a new revision)
+def amend(rdir: Path, task: str, field: str, to: object, *, reason: str, evidence: list[str] | None = None, by: str,
+          proposed_by: str) -> dict:
+    """Append one amendment to the requirement's `PLAN.amendments.jsonl` (planner rules: an agent may only raise a
+    level, with evidence). Raises `planner.PlanContractError` (stable `.code`) when refused."""
+    return planner.amendments.append(rdir, task, field, to, reason=reason, evidence=evidence, by=by,
+                                     proposed_by=proposed_by)
+
+
+def amendments(rdir: Path) -> list[dict]:
+    return planner.amendments.read(rdir)
+
+
+def effective_overrides(rdir: Path) -> dict[str, dict[str, object]]:
+    """{task id: {field: value in force}} for the classification fields an amendment changed; {} when none (or when the
+    plan or the file cannot be read: the plan's own classification stays in force)."""
+    try:
+        records = planner.amendments.read(rdir)
+        if not records:
+            return {}
+        last = planner.latest(rdir)
+        plan = planner.load_revision(rdir, last["revision"]) if last else planner.load(Path(rdir) / planner.PLAN_JSON)
+        in_force = planner.amendments.effective(plan, records)
+    except (planner.PlanContractError, OSError, ValueError):
+        return {}
+    own = {t["id"]: t for t in plan.get("tasks", []) if isinstance(t, dict) and "id" in t}
+    return {tid: {f: v for f, v in fields.items() if v != own.get(tid, {}).get(f)}
+            for tid, fields in in_force.items() if any(v != own.get(tid, {}).get(f) for f, v in fields.items())}
+
+
+def revisions(rdir: Path) -> list[dict]:
+    """The frozen revisions of a plan, oldest first: [{revision, sha256, frozen_at, ...}]; [] when none or unreadable."""
+    try:
+        return planner.list_revisions(rdir)
+    except (planner.PlanContractError, OSError, ValueError):
+        return []

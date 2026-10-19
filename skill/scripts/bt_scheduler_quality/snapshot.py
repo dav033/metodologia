@@ -32,6 +32,7 @@ class SnapshotSource:
     manifest_path: Path
     base_sha: str
     snapshot_sha: str
+    worktree: Path | None = None  # the attempt's own checkout (dependencies), derived from the trusted attempt layout
 
 
 @dataclass(frozen=True)
@@ -65,7 +66,9 @@ class SnapshotResolver:
             checkout.mkdir(mode=0o700)
             self.archive.extract(archive_path, checkout)
             expected = self.tree.tree_entries(repo, snapshot_sha)
-            byte_count, file_count = self.tree.verify_tree(repo, expected, checkout)
+            byte_count, file_count = self.tree.verify_tree(
+                repo, expected, checkout, snapshot_sha
+            )
             archive_path.unlink()
             yield MaterializedSnapshot(
                 checkout,
@@ -151,11 +154,18 @@ class SnapshotResolver:
         ancestry = run_git(
             repo, "merge-base", "--is-ancestor", base_sha, snapshot_sha, check=False
         )
-        if ancestry.returncode != 0:
+        if ancestry.returncode != 0 and not _published(repo, snapshot_sha):
             raise QualityError(
                 "SNAPSHOT_INVALID", "M3 snapshot does not descend from its pinned base"
             )
         return base_sha, snapshot_sha
+
+
+def _published(repo: Path, snapshot_sha: str) -> bool:
+    """A publication task rebases its branch onto the remote main and pushes, so its snapshot no longer descends from
+    the base it started from. A snapshot that is already part of `origin/main` is accepted without that ancestry: the
+    archive and the tree check below still read exactly the snapshot commit."""
+    return run_git(repo, "merge-base", "--is-ancestor", snapshot_sha, "origin/main", check=False).returncode == 0
 
 
 def _read_private_manifest(path: Path) -> bytes:

@@ -23,6 +23,8 @@ from bt_vcs import commit
 
 ASSETS = SKILL_DIR / "assets"
 DEFAULT_PORT = int(os.environ.get("BITACORA_PORT", "8765"))
+SIMULATE_MAX_BYTES = 256 * 1024     # a demonstration, not a way to make the server grind on any plan
+SIMULATE_MAX_TASKS = 60
 
 
 def token() -> str:
@@ -88,16 +90,61 @@ class Handler(BaseHTTPRequestHandler):
         parts = [unquote(p) for p in u.path.strip("/").split("/") if p]
         if not parts:
             return self.send(pages.dashboard())
+        if parts[:2] == ["metrics", "model"] and len(parts) in (4, 5):
+            import bt_page_model
+            return self.send(bt_page_model.model_page(parts[2], parts[3], parts[4] if len(parts) == 5 else None,
+                                                      bt_page_model.all_rows()))
         if parts == ["metrics"]:
             from bt_page_metrics import metrics_page
             return self.send(metrics_page())
-        if parts[0] == "static" and len(parts) == 2:
-            return self.file(safe_path(ASSETS, parts[1]))
+        if parts == ["live"]:
+            import bt_live_api as live
+            return live.stream(self, ROOT, q.get("scope", "global"),
+                               self.headers.get("Last-Event-ID") or q.get("last", ""))
+        if parts and parts[0] == "go":
+            return self.go(parts[1:])
+        if parts == ["learnings"]:
+            return self.send(pages.layout("Aprendizajes", pages.md("doc", pages.read(ROOT / "LEARNINGS.md")),
+                                          [("Aprendizajes", "/learnings")]))
+        if parts == ["flow"]:
+            import bt_page_flow
+            scope = q.get("scope", "global")
+            sim = "/".join(scope.split(":", 1)[1].split("/")[:2]) if scope.startswith(("run:", "task:")) else \
+                "metodologia/REQ-026"
+            return self.send(bt_page_flow.flow_page(scope, sim))
+        if parts == ["now"]:
+            import bt_live_api as live
+            import bt_page_now
+            return self.send(bt_page_now.now_page(live.now_items(ROOT), live.sessions(ROOT)))
+        if parts == ["api", "now"]:
+            import bt_live_api as live
+            return self.send(json.dumps({"items": live.now_items(ROOT), "sessions": live.sessions(ROOT)}), 200, "application/json; charset=utf-8")
+        if parts == ["api", "simulate"]:
+            return self.simulate(q)
+        if parts == ["api", "flow"]:
+            import bt_live_api as live
+            scope = q.get("scope", "global")
+            events, digests, _ = live.flow_events(ROOT, scope, q.get("after", ""),
+                                                  limit=min(int(q.get("limit", "2000") or 2000), 5000))
+            return self.send(json.dumps({"events": events, "digests": digests, "runs": live.run_summaries(ROOT, scope)}),
+                             200, "application/json; charset=utf-8")
+        if parts == ["api", "flow", "agent"]:
+            import bt_live_api as live
+            return self.send(json.dumps({"attempts": live.agent_activity(ROOT, q.get("run", ""))}, ensure_ascii=False), 200,
+                             "application/json; charset=utf-8")
+        if parts == ["api", "flow", "runs"]:
+            import bt_live_api as live
+            return self.send(json.dumps({"runs": live.run_summaries(ROOT, q.get("scope", "global"))}), 200,
+                             "application/json; charset=utf-8")
+        if parts and parts[0] in ("plans", "events", "api"):
+            return self.plans_get(parts, q)
+        if parts[0] == "static" and len(parts) >= 2:            # nested for vendored libraries (static/vendor/<lib>/…)
+            return self.file(safe_path(ASSETS, "/".join(parts[1:])))
         if parts[0] != "p" or len(parts) < 2 or not (ROOT / parts[1]).is_dir():
             return self.send("Not found", 404, "text/plain")
         project, rest = parts[1], parts[2:]
         if not rest:
-            return self.send(pages.project_page(project, q.get("tab", "summary")))
+            return self.send(pages.project_page(project, q.get("tab", "overview")))
         kind, sub = rest[0], "/".join(rest[1:])
         if kind == "doc" and sub.endswith(".md") and safe_path(ROOT / project, sub):
             return self.send(pages.doc_page(project, sub))
@@ -122,6 +169,8 @@ class Handler(BaseHTTPRequestHandler):
         host = self.headers.get("Host") or ""
         if form.get("token") != token() or (origin and urlparse(origin).netloc != host):
             return self.send("Forbidden", 403, "text/plain")
+        if parts and parts[0] == "plans":
+            return self.plans_post(parts, form)
         if len(parts) != 5 or parts[0] != "p" or parts[2] != "req":
             return self.send("Not found", 404, "text/plain")
         project, req, action = parts[1], parts[3], parts[4]
@@ -144,6 +193,89 @@ class Handler(BaseHTTPRequestHandler):
         except SystemExit as exc:
             return self.send(pages.layout("Error", f"<p>{exc}</p>"), 400)
         self.send("Not found", 404, "text/plain")
+
+    def simulate(self, q: dict) -> None:
+        """A demonstration run of one plan on the core's doubles (read-only: nothing is created or executed)."""
+        import bt_flow_bus
+        import bt_plans_api as api
+        import bt_scheduler_adapter as scheduler_adapter
+        try:
+            rdir = api.req_dir(ROOT, q.get("project", ""), q.get("req", ""))
+            plan = rdir / "PLAN.json"
+            if not plan.exists():
+                raise api.PlanError("Ese requerimiento no tiene PLAN.json.")
+            if plan.stat().st_size > SIMULATE_MAX_BYTES:
+                raise api.PlanError("El PLAN.json es demasiado grande para simularlo.")
+            tasks = [t["id"] for t in json.loads(plan.read_text(encoding="utf-8")).get("tasks", [])]
+            if len(tasks) > SIMULATE_MAX_TASKS:
+                raise api.PlanError("El plan tiene demasiadas tareas para simularlo.")
+        except (api.PlanError, ValueError) as exc:
+            return self.send(str(exc), 404, "text/plain; charset=utf-8")
+        script = {"fail": {tasks[1]: 1} if len(tasks) > 1 else {}, "reject": {tasks[2]: 1} if len(tasks) > 2 else {}}
+        audit = scheduler_adapter.simulate_audit(plan, **script)
+        events = bt_flow_bus.simulated(f"simulación/{q.get('project', '')}/{rdir.name}", audit)
+        return self.send(json.dumps({"events": events, "script": script}), 200, "application/json; charset=utf-8")
+
+    def go(self, parts: list[str]) -> None:
+        import bt_go
+        found = bt_go.resolve(ROOT, parts)
+        if "url" in found:
+            return self.redirect(found["url"])
+        if "choices" in found:
+            links = "".join(f'<li><a href="{quote(url, safe="/#?=&:")}">{pages.e(project)}</a></li>'
+                            for project, url in found["choices"])
+            return self.send(pages.layout(found["id"], f'<h1>{pages.e(found["id"])}</h1><p>Existe en varios proyectos:</p>'
+                                                         f'<ul>{links}</ul>'))
+        self.send(pages.layout("No encontrado", f'<h1>No encontrado</h1><p>{pages.e(found["error"])}</p>'), 404)
+
+    def plans_get(self, parts: list[str], q: dict) -> None:
+        import bt_page_plans as pp
+        import bt_plans_api as api
+        try:
+            if parts == ["plans"]:
+                filt = "active" if q.get("filter") == "active" else "all"
+                return self.send(pp.index_page(api.plans_payload(ROOT), filt, api.all_trash(ROOT), token(),
+                                               q.get("msg", "")))
+            if len(parts) == 3 and parts[0] == "plans":
+                return self.send(pp.detail_page(api.status_of(ROOT, parts[1], parts[2]), token(), q.get("msg", "")))
+            if parts == ["events"]:
+                plan = tuple(q["plan"].split("/", 1)) if "/" in q.get("plan", "") else None
+                return api.stream(self, ROOT, plan, "active" if q.get("filter") == "active" else "all")
+            if parts == ["api", "plans"]:
+                filt = "active" if q.get("filter") == "active" else "all"
+                rows = api.plans_payload(ROOT, filt)
+                data = {"plans": rows, **({"html": pp.index_fragment(rows, filt)} if q.get("html") else {})}
+                return self.send(json.dumps(data), 200, "application/json; charset=utf-8")
+            if len(parts) == 4 and parts[:2] == ["api", "plans"]:
+                status = api.status_of(ROOT, parts[2], parts[3])
+                data = {**status, **({"html": pp.detail_fragment(status)} if q.get("html") else {})}
+                return self.send(json.dumps(data), 200, "application/json; charset=utf-8")
+        except api.PlanError as exc:
+            return self.send(str(exc), 404, "text/plain; charset=utf-8")
+        self.send("Not found", 404, "text/plain")
+
+    def plans_post(self, parts: list[str], form: dict) -> None:
+        import bt_plans_api as api
+        actions = {"run": lambda p, r: self.run_plan(api, p, r, form.get("expected", "")),
+                   "cancel": lambda p, r: api.cancel_plan(ROOT, p, r, form.get("confirm", "")),
+                   "delete": lambda p, r: api.delete_plan(ROOT, p, r, form.get("confirm", ""))}
+        try:
+            if len(parts) == 3 and parts[2] == "restore":
+                msg = api.restore_plan(ROOT, parts[1], form.get("entry", ""))
+                return self.redirect(f"/plans?msg={quote(msg)}")
+            if len(parts) == 4 and parts[3] in actions:
+                msg = actions[parts[3]](parts[1], parts[2])
+                dest = "/plans" if parts[3] == "delete" else f"/plans/{quote(parts[1])}/{quote(parts[2])}"
+                return self.redirect(f"{dest}?msg={quote(msg)}")
+        except api.PlanError as exc:
+            back = f"/plans/{quote(parts[1])}/{quote(parts[2])}" if len(parts) == 4 else "/plans"
+            return self.redirect(f"{back}?msg={quote(str(exc))}")
+        self.send("Not found", 404, "text/plain")
+
+    def run_plan(self, api, project: str, rid: str, expected: str) -> str:
+        msg = api.run_plan(ROOT, project, rid, expected)
+        commit(ROOT, f"{project}: {rid} run from the plan page (web)")
+        return msg
 
     def answer(self, project: str, rid: str, rdir: Path, form: dict) -> str:
         f = rounds.rounds_dir(rdir) / form.get("round", "")
@@ -174,26 +306,12 @@ class Handler(BaseHTTPRequestHandler):
         if not approve:
             return "Cambios pedidos. El agente del HQ los verá en PLAN.md."
         from bt_launch import launch
-        mode = "marathon" if form.get("mode", "marathon") == "marathon" else "loop"
-        chosen = form.get("agent", "auto")
-        auto = chosen not in ("claude", "codex")  # the router picks account, model and effort per session
-        info = launch(project, rid, agent="claude" if auto else chosen, mode=mode, model="haiku",
-                      pool="auto" if auto and mode == "marathon" else None)
-        kind = "Maratón lanzada" if mode == "marathon" else "Ejecutor lanzado"
-        who = "agente automático" if auto and mode == "marathon" else info["agent"]
-        return f"Plan aprobado. {kind} ({who}) en {info['workdir']}."
+        info = launch(project, rid)
+        return f"Plan aprobado. Ejecución Scheduler lanzada en {info['workdir']}."
 
     def run_control(self, project: str, rid: str, rdir: Path, form: dict) -> str:
-        if form.get("action") == "monitor":
-            from bt_monitor import open_monitor
-            info = open_monitor(project, rid)
-            return f"Monitor abierto: conéctate a «{info['session']}» desde claude.ai/code o la app de Claude."
         from bt_page_run import apply_control
-        msg = apply_control(rdir, form.get("action", ""))
-        from bt_page_run import scheduler_authority
-        if not scheduler_authority(rdir):
-            commit(ROOT, f"{project}: {rid} marathon {form.get('action')} (web)")
-        return msg
+        return apply_control(rdir, form.get("action", ""))
 
 
     def review(self, project: str, rid: str, rdir: Path, form: dict) -> str:
@@ -206,11 +324,8 @@ class Handler(BaseHTTPRequestHandler):
                 return "Para pedir cambios escribe qué cambiar."
             with plan.open("a", encoding="utf-8") as fh:
                 fh.write(f"- {stamp} REVIEW: changes requested (web): {comments}\n")
-            set_front(plan, "status", "approved")
             commit(ROOT, f"{project}: {rid} review — changes requested (web)")
-            from bt_launch import launch
-            info = launch(project, rid, agent="claude", force=True)
-            return f"Cambios anotados en el plan. Ejecutor relanzado en {info['workdir']}."
+            return "Cambios anotados en el plan. Revisa y aprueba una nueva revisión antes de iniciar otra ejecución."
         lines = rv.merge(project, rdir, push=decision == "merge_push")
         merged = any("fusionada" in l for l in lines)
         with plan.open("a", encoding="utf-8") as fh:
@@ -246,6 +361,8 @@ def serve(port: int = DEFAULT_PORT) -> None:
     (STATE / "server.json").write_text(json.dumps({"pid": os.getpid(), "port": port, "version": code_version(),
                                                    "root": str(ROOT)}), encoding="utf-8")
     httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    import bt_live_api
+    bt_live_api.warm(ROOT)
     print(f"Bitácora at {url(port)}  (Ctrl+C to stop)")
     httpd.serve_forever()
 
@@ -276,8 +393,29 @@ def _stale(port: int) -> bool:
     return True
 
 
+WEB_UNIT = "bitacora-web.service"            # the user's systemd unit for the panel on the default port, if installed
+
+
+def _unit_enabled() -> bool:
+    if platform() != "linux":
+        return False
+    try:
+        out = subprocess.run(["systemctl", "--user", "is-enabled", WEB_UNIT], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return out.stdout.strip() == "enabled"
+
+
 def ensure_server(port: int = DEFAULT_PORT) -> str:
     """Start the server detached in the background if it isn't running (or restart it if its code is stale)."""
+    if port == DEFAULT_PORT and _unit_enabled():
+        # systemd owns the panel: (re)start it there; a loose copy would hold the port and leave the unit failing
+        if not is_running(port) or _stale(port):
+            try:
+                subprocess.run(["systemctl", "--user", "restart", WEB_UNIT], capture_output=True, timeout=30)
+            except (OSError, subprocess.SubprocessError):
+                pass
+        return url(port)
     if is_running(port):
         _stale(port)
     if not is_running(port):

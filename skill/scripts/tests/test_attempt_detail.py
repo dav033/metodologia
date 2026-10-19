@@ -21,23 +21,10 @@ import bt_events  # noqa: E402
 import bt_notify  # noqa: E402
 import bt_page_metrics  # noqa: E402
 import bt_profiles  # noqa: E402
-import bt_run  # noqa: E402
 import bt_runprompt as rp  # noqa: E402
 import bt_runsettle as settle  # noqa: E402
 import bt_runstate as rs  # noqa: E402
 import bt_runtask as rt  # noqa: E402
-
-
-MARATHON_STUB = r'''
-import os, pathlib, subprocess, sys
-env = os.environ
-task = env["BITACORA_TASK"]
-if task == "FINAL":
-    pathlib.Path(env["STUB_RDIR"], "REPORT.md").write_text("# report\n")
-    raise SystemExit(0)
-cli = [sys.executable, env["STUB_SCRIPT"], "--project", env["BITACORA_PROJECT"]]
-subprocess.run(cli + ["task", "done", env["BITACORA_RUN"], task, "--evidence", "verify evidence <ok>"], check=True)
-'''
 
 
 class IsolatedCase(unittest.TestCase):
@@ -56,7 +43,6 @@ class IsolatedCase(unittest.TestCase):
             bt_profiles: {"ROOT": self.root, "STATE": self.state},
             bt_events: {"STATE": self.state},
             bt_delegate: {"ROOT": self.root, "STATE": self.state, "DIR": self.state / "delegations"},
-            bt_run: {"ROOT": self.root},
             rs: {"STATE": self.state},
             rp: {"ROOT": self.root},
             settle: {"ROOT": self.root},
@@ -79,29 +65,9 @@ class IsolatedCase(unittest.TestCase):
         p = patch("bt_agents.shutil.which", return_value="/stub-agent")
         p.start()
         self.addCleanup(p.stop)
-        bt_run.commit_bitacora = lambda *args, **kwargs: None
         bt_notify.notify = lambda *args, **kwargs: None
         bt_notify.install_autostart = lambda *args, **kwargs: None
         bt_notify.remove_autostart = lambda *args, **kwargs: None
-
-    def make_run(self, task_line: str, behavior: dict | None = None):
-        self.project = "sample"
-        self.rdir = self.root / self.project / "requirements" / "REQ-001-demo"
-        self.rdir.mkdir(parents=True)
-        (self.rdir / "SPEC.md").write_text("---\nstatus: approved\n---\n# Demo\n", encoding="utf-8")
-        (self.rdir / "PLAN.md").write_text(
-            "---\nstatus: approved\n---\n# Plan\n\n## Tasks\n" + task_line + "\n", encoding="utf-8")
-        self.work = self.base / "work"
-        self.work.mkdir()
-        cfg = self.work / "stub.json"
-        cfg.write_text(json.dumps(behavior or {}), encoding="utf-8")
-        self.stub = self.base / "marathon_stub.py"
-        self.stub.write_text(MARATHON_STUB, encoding="utf-8")
-        os.environ.update(STUB_CFG=str(cfg), STUB_ORDER=str(self.work / "order.json"), STUB_RDIR=str(self.rdir),
-                          STUB_SCRIPT=str(SCRIPTS / "bitacora.py"))
-        self.cmd = f'"{sys.executable}" "{self.stub.as_posix()}"'
-        return self.project, self.rdir
-
 
 class AttemptDetails(IsolatedCase):
     def test_complexity_declared_largest_and_inference_rules(self):
@@ -179,29 +145,6 @@ class AttemptDetails(IsolatedCase):
         self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", page)
         self.assertIn("&lt;img src=x&gt;", page)
         self.assertNotIn("<script>alert(1)</script>", page)
-
-    def test_marathon_attempt_telemetry_declared_verified_and_verify_failed(self):
-        verify = f'"{sys.executable}" -c "import sys; sys.exit(0)"'
-        self.make_run(f"- [ ] T1 — Build feature · complexity: L · verify: `{verify}`")
-        self.assertEqual(bt_run.supervise(self.project, "REQ-001", agent_cmd=self.cmd, once=True,
-                                          no_autostart=True, audit=False), 0)
-        row = bt_events.read_all()[0]
-        self.assertEqual((row["complexity"], row["complexity_source"], row["outcome"]), ("L", "declared", "verified"))
-        self.assertIn("verify evidence <ok>", row["why"])
-
-        bad_verify = f'"{sys.executable}" -c "import sys; sys.exit(1)"'
-        self.project = "sample"
-        self.rdir = self.root / self.project / "requirements" / "REQ-002-demo"
-        self.rdir.mkdir(parents=True)
-        (self.rdir / "SPEC.md").write_text("---\nstatus: approved\n---\n# Demo\n", encoding="utf-8")
-        (self.rdir / "PLAN.md").write_text(
-            "---\nstatus: approved\n---\n# Plan\n\n## Tasks\n"
-            f"- [ ] T1 — Build feature · complexity: M · verify: `{bad_verify}`\n", encoding="utf-8")
-        self.assertEqual(bt_run.supervise(self.project, "REQ-002", agent_cmd=self.cmd, once=True,
-                                          no_autostart=True, audit=False), 0)
-        row = bt_events.read_all()[1]
-        self.assertEqual(row["outcome"], "verify_failed")
-        self.assertIn(bad_verify, row["why"])
 
     def test_metrics_cli_attempts_and_why_read_a_handwritten_month_file(self):
         events = self.state / "events"

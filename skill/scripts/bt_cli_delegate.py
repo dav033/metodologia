@@ -15,8 +15,10 @@ def register(sub) -> None:
     p_del.add_argument("--agent", choices=["claude", "codex", "antigravity"], help="when no --profile (neither: the router chooses)")
     p_del.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research"],
                        help="what the work is (routing; default: inferred from the task text)")
+    from bt_role_policy import ROLES
+    p_del.add_argument("--role", choices=ROLES, help="approved role model policy; otherwise inferred from kind")
     p_del.add_argument("--tier", type=int, choices=[0, 1, 2], help="capability tier: 0 light, 1 standard, 2 top")
-    p_del.add_argument("--complexity", choices=["S", "M", "L"], help="how big the task is (telemetry)")
+    p_del.add_argument("--complexity", choices=["S", "M", "L"], help="L selects the high-complexity role alternative")
     p_del.add_argument("--wait-quota", action="store_true",
                        help="when every account is waiting for a usage-limit reset, wait and run it then")
     p_del.add_argument("--workdir", help="folder the agent works in (default: --cwd)")
@@ -61,7 +63,7 @@ def dispatch(a) -> None:
     if a.retries < 0 or a.retries > 3:
         sys.exit("--retries must be between 0 and 3")
     order = bt_delegate.create(project, a.target, a.profile, a.agent, Path(a.workdir or a.cwd), a.allow,
-                               a.verify, a.timeout, a.model, a.effort, a.kind, a.tier, a.complexity, a.wait_quota)
+                               a.verify, a.timeout, a.model, a.effort, a.kind, a.tier, a.complexity, a.wait_quota, a.role)
     order["retries"], order["worktree_mode"] = a.retries, a.worktree
     (bt_delegate.path_of(order["id"]) / "TASK.json").write_text(
         json.dumps(order, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")

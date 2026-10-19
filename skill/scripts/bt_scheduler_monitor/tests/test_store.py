@@ -10,6 +10,7 @@ from unittest.mock import patch
 from bt_scheduler_monitor.contracts import Incident, NormalizedEvent, ProcessIdentity
 from bt_scheduler_monitor.store import (MAX_OUTBOX_CLAIM_BATCH, MAX_OUTBOX_CLAIM_TOKEN_BYTES,
                                        MAX_OUTBOX_ITEMS, MAX_OUTBOX_KEY_BYTES, MonitorStore, SourceCursor,
+                                       StreamGapRecord,
                                        StoreError)
 from bt_scheduler_monitor.storage_limits import measured_store_bytes
 from bt_scheduler_monitor.store_migrations import ensure_duplicate_table_headroom
@@ -91,6 +92,31 @@ class MonitorStoreTests(unittest.TestCase):
         self.assertEqual(self.store.list_stream_gaps()[0]["recorded_at"], NOW)
         with self.assertRaisesRegex(ValueError, "regressing content"):
             self.store.record_stream_gap(**{**values, "dropped_bytes": 24})
+
+    def test_batch_gap_replay_after_restart_keeps_first_recorded_at(self) -> None:
+        values = dict(gap_id="gap-1", execution_id="exec-1", stream="stdout", first_sequence=4,
+                      last_sequence=6, first_offset=32, last_offset=56, dropped_bytes=24,
+                      dropped_frames=3, reason="queue_overflow", recorded_at=NOW)
+        cursor = SourceCursor("exec-1", "stdout", "boot-a", 6, 56)
+        self.store.append_batch(gaps=(StreamGapRecord(**values),), cursors=(cursor,))
+        self.store = MonitorStore(self.path)
+        later = StreamGapRecord(**{**values, "recorded_at": "2026-10-15T16:05:00Z"})
+        self.store.append_batch(gaps=(later,), cursors=(cursor,))
+        self.assertEqual(self.store.list_stream_gaps(execution_id="exec-1"), ({"gap_id": "gap-1", **values},))
+        with self.assertRaisesRegex(ValueError, "regressing content"):
+            self.store.append_batch(gaps=(StreamGapRecord(**{**values, "dropped_bytes": 23}),), cursors=(cursor,))
+
+    def test_event_replay_after_restart_ignores_when_it_was_read_but_not_what_it_says(self) -> None:
+        first = event(1)
+        cursor = SourceCursor("exec-1", "stdout", "boot-a", 1, 8)
+        self.assertTrue(self.store.append_event(first, cursor))
+        self.store = MonitorStore(self.path)
+        later = replace(first, received_at="2026-10-15T16:09:00Z", received_monotonic_ns=123)
+        self.assertFalse(self.store.append_event(later, cursor))
+        self.assertEqual(self.store.append_batch(events=(later,), cursors=(cursor,)), True)
+        changed = replace(first, payload=(("status", "stopped"),))
+        with self.assertRaisesRegex(ValueError, "different content"):
+            self.store.append_event(changed, cursor)
 
     def test_stream_gap_store_failure_is_visible_and_not_acknowledged(self) -> None:
         connection = sqlite3.connect(self.path)

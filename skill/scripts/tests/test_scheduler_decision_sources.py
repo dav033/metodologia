@@ -28,18 +28,24 @@ from bt_scheduler_decision.tests.support import request as m2_request
 
 
 class MethodologyDecisionSourceTests(unittest.TestCase):
-    def test_route_options_follow_the_supported_provider_ladder_and_task_floor(self):
-        self.assertEqual(m2_adapter._route_options("claude", 0, "implement"),
-                         (("haiku", None), ("sonnet", "medium"), ("opus", "high")))
-        self.assertEqual(m2_adapter._route_options("codex", 1, "implement"),
-                         (("gpt-6.1-sol", "medium"), ("gpt-6.1-sol", "high")))
+    def test_route_options_use_only_selected_role_models_and_explicit_complexity(self):
+        for tier in (0, 1, 2):
+            self.assertEqual(m2_adapter._route_options("claude", tier, "implement"),
+                             (("sonnet", "medium"),))
+            self.assertEqual(m2_adapter._route_options("codex", tier, "implement"),
+                             (("gpt-6-luna", "high"),))
+            self.assertEqual(m2_adapter._route_options("claude", tier, "audit"),
+                             (("sonnet", "medium"),))
+            self.assertEqual(m2_adapter._route_options("codex", tier, "audit"),
+                             (("gpt-6.1-sol", "medium"),))
+        for complexity in ("high", "L", "high_complexity"):
+            self.assertEqual(m2_adapter._route_options("claude", 0, "audit", complexity),
+                             (("sonnet", "high"),))
+            self.assertEqual(m2_adapter._route_options("codex", 0, "audit", complexity),
+                             (("gpt-6.1-sol", "high"),))
         self.assertEqual(m2_adapter._route_options("codex", 0, "docs"),
-                         (("gpt-6-luna", "low"), ("gpt-6.1-sol", "medium"),
-                          ("gpt-6.1-sol", "high")))
-        self.assertEqual(m2_adapter._route_options("claude", 1, "audit"),
-                         (("sonnet", "medium"), ("opus", "high")))
-        self.assertEqual(m2_adapter._route_options("antigravity", 0, "implement"),
-                         (("gemini-3.8-flash-low", None), ("gemini-3.8-flash-medium", None)))
+                         (("gpt-6-luna", "low"),))
+        self.assertEqual(m2_adapter._route_options("antigravity", 0, "implement"), ())
         self.assertEqual(m2_adapter._route_options("unsupported", 0, "implement"), ())
 
     def test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion(self):
@@ -62,6 +68,13 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
         self.assertEqual(m2_adapter._tier_for({**medium_risk, "complexity": "extreme", "risk": "low"},
                                                "implement"), 2)
         self.assertEqual(m2_adapter._tier_for(medium_risk, "audit"), 1)
+
+    def test_kind_ceiling_bounds_scheduler_classification_promotions(self):
+        classifications = {"risk": "high", "estimated_minutes": 240, "scope": "full_system",
+                           "complexity": "extreme", "coupling": "high"}
+        for kind, ceiling in (("docs", 0), ("test", 1), ("research", 1)):
+            with self.subTest(kind=kind):
+                self.assertEqual(m2_adapter._tier_for(classifications, kind), ceiling)
 
     def test_tier_floor_explanation_names_classifications_and_rules_that_raise_it(self):
         tier, rules = m2_adapter._tier_floor({"complexity": "high", "scope": "large_change",
@@ -87,13 +100,13 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
             keys["codex-a"]: {"status": "network_unavailable", "observed_at": 95.0},
         }
         telemetry = [
-            {"agent": "claude", "model": "haiku", "profile": "claude-a", "effort": "", "kind": "implement",
+            {"agent": "claude", "model": "sonnet", "profile": "claude-a", "effort": "medium", "kind": "implement",
              "origin": "real", "outcome": "verified", "result": "done", "seconds": 10,
              "usage": {"total_tokens": 100}},
-            {"agent": "claude", "model": "haiku", "profile": "claude-a", "effort": "", "kind": "implement",
+            {"agent": "claude", "model": "sonnet", "profile": "claude-a", "effort": "medium", "kind": "implement",
              "origin": "real", "outcome": "claimed_unverified", "result": "done", "seconds": 20,
              "usage": {"total_tokens": 200}},
-            {"agent": "claude", "model": "haiku", "profile": "claude-a", "effort": "", "kind": "implement",
+            {"agent": "claude", "model": "sonnet", "profile": "claude-a", "effort": "medium", "kind": "implement",
              "origin": "synthetic", "outcome": "verified", "result": "done", "seconds": 1,
              "usage": {"total_tokens": 1}},
         ]
@@ -103,14 +116,12 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
                 return None, now + 300
             if row.get("status") != "ok":
                 return None, None
-            if row is usage[keys["claude-a"]] and model == "opus":
-                return None, now + 300
             return (35.0, None) if row is usage[keys["claude-a"]] else (None, None)
 
         routes = [
-            {"profile": "claude-a", "agent": "claude", "model": "haiku", "effort": None},
-            {"profile": "claude-b", "agent": "claude", "model": "haiku", "effort": None},
-            {"profile": "codex-a", "agent": "codex", "model": "gpt-6-luna", "effort": "medium"},
+            {"profile": "claude-a", "agent": "claude", "model": "sonnet", "effort": "medium"},
+            {"profile": "claude-b", "agent": "claude", "model": "sonnet", "effort": "medium"},
+            {"profile": "codex-a", "agent": "codex", "model": "gpt-6-luna", "effort": "high"},
             {"profile": "agy-a", "agent": "antigravity", "model": "gemini-3.8-flash-low", "effort": None},
         ]
         with patch.object(bt_agents, "pool_for", return_value=list(profiles)), \
@@ -127,37 +138,32 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
             rows = m2_adapter._candidate_rows("fixture", "implement", {"risk": "low", "scope": "small_change"}, now)
 
         by_route = {(row.profile, row.model, row.effort): row for row in rows}
-        self.assertEqual(len(rows), 11)
+        self.assertEqual(len(rows), 3)
         self.assertEqual(set(by_route), {
-            ("claude-a", "haiku", None), ("claude-a", "sonnet", "medium"),
-            ("claude-a", "opus", "high"), ("claude-b", "haiku", None),
-            ("claude-b", "sonnet", "medium"), ("claude-b", "opus", "high"),
-            ("codex-a", "gpt-6-luna", "medium"), ("codex-a", "gpt-6.1-sol", "medium"),
-            ("codex-a", "gpt-6.1-sol", "high"), ("agy-a", "gemini-3.8-flash-low", None),
-            ("agy-a", "gemini-3.8-flash-medium", None),
+            ("claude-a", "sonnet", "medium"), ("claude-b", "sonnet", "medium"),
+            ("codex-a", "gpt-6-luna", "high"),
         })
-        self.assertEqual(by_route[("claude-a", "haiku", None)].baseline_rank, 0)
-        self.assertEqual(by_route[("claude-b", "haiku", None)].baseline_rank, 1)
-        self.assertEqual(by_route[("codex-a", "gpt-6-luna", "medium")].baseline_rank, 2)
-        self.assertEqual(by_route[("agy-a", "gemini-3.8-flash-low", None)].baseline_rank, 3)
-        self.assertIsNone(by_route[("claude-a", "sonnet", "medium")].baseline_rank)
-        self.assertEqual(by_route[("claude-a", "haiku", None)].account_ref,
-                         by_route[("claude-a", "opus", "high")].account_ref)
-        self.assertEqual(by_route[("claude-a", "haiku", None)].quota_status, "available")
-        self.assertEqual(by_route[("claude-a", "opus", "high")].quota_status, "exhausted")
-        self.assertEqual(by_route[("claude-a", "haiku", None)].history.verified_successes, 1)
-        self.assertEqual(by_route[("claude-a", "haiku", None)].history.claimed_unverified, 1)
-        self.assertEqual(by_route[("claude-a", "haiku", None)].history.duration_samples, 2)
-        self.assertEqual(by_route[("claude-a", "haiku", None)].history.median_duration_seconds, 15)
-        self.assertEqual(by_route[("claude-a", "haiku", None)].history.median_total_tokens, 150)
-        self.assertEqual(by_route[("codex-a", "gpt-6-luna", "medium")].quota_status, "unknown")
-        self.assertEqual(by_route[("codex-a", "gpt-6-luna", "medium")].auth_status, "unknown")
-        self.assertEqual(by_route[("claude-b", "haiku", None)].quota_status, "exhausted")
-        self.assertEqual(by_route[("agy-a", "gemini-3.8-flash-low", None)].quota_status, "available")
+        available = by_route[("claude-a", "sonnet", "medium")]
+        exhausted = by_route[("claude-b", "sonnet", "medium")]
+        unknown = by_route[("codex-a", "gpt-6-luna", "high")]
+        self.assertEqual(available.baseline_rank, 0)
+        self.assertEqual(exhausted.baseline_rank, 1)
+        self.assertEqual(unknown.baseline_rank, 2)
+        self.assertNotEqual(available.account_ref, exhausted.account_ref)
+        self.assertEqual(available.quota_status, "available")
+        self.assertEqual(available.auth_status, "valid")
+        self.assertEqual(available.history.verified_successes, 1)
+        self.assertEqual(available.history.claimed_unverified, 1)
+        self.assertEqual(available.history.duration_samples, 2)
+        self.assertEqual(available.history.median_duration_seconds, 15)
+        self.assertEqual(available.history.median_total_tokens, 150)
+        self.assertEqual(unknown.quota_status, "unknown")
+        self.assertEqual(unknown.auth_status, "unknown")
+        self.assertEqual(exhausted.quota_status, "exhausted")
         ranked = rank_candidates(m2_request(candidates=rows, requested_at=now))
-        self.assertEqual({row.profile for row in ranked.eligible}, {"claude-a", "agy-a"})
+        self.assertEqual({row.profile for row in ranked.eligible}, {"claude-a"})
         self.assertTrue(any("capacity_exhausted" in item.reason_codes for item in ranked.exclusions))
-        self.assertNotEqual(by_route[("claude-a", "haiku", None)].account_ref, keys["claude-a"])
+        self.assertNotEqual(available.account_ref, keys["claude-a"])
 
     def test_unknown_and_stale_quota_are_not_eligible(self):
         now = 100.0

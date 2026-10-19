@@ -231,6 +231,7 @@ class Brief:
     verification: tuple[str, ...] = ()         # human-readable commands/checks
     expected_paths: tuple[str, ...] = ()
     notes: str = ""
+    publishes: bool = False                    # the frozen plan's own check requires HEAD to be on origin/main
 
 
 @dataclass(frozen=True)

@@ -1,12 +1,13 @@
 """Router policy knobs: start tier by kind/complexity/risk, effort weights, bounded exploration and pressure buckets.
 
-Everything here is a default the owner can override with `bitacora.py config` (routing.*). None of it is a hard
-ceiling: a task that declares architecture level, high risk or large complexity may always start higher, and the reason
-is returned so it can be recorded next to the task.
+Routing defaults are configurable through `bitacora.py config` (routing.*). MAX_KIND_TIER is a hard budget:
+docs never exceed tier 0, tests/research never exceed tier 1. Architecture and risk still lift implementation/audits.
 """
 from __future__ import annotations
 
 TOP = 2
+MAX_KIND_TIER = {"docs": 0, "test": 1, "research": 1}
+HIGH_PRESSURE = 85.0
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 # Heuristic weights of the quota a model burns at an effort, relative to its default effort. Estimates, never
 # observations (references/agents.md): replace them with measured tokens as soon as the telemetry carries them.
@@ -26,7 +27,19 @@ def config(key: str, default):
         return default
 
 
+def cap_tier(tier: int, kind: str | None = None) -> int:
+    """Hard budget ceiling shared by selection, saved tasks and retry escalation."""
+    return max(0, min(int(tier or 0), MAX_KIND_TIER.get(kind, TOP)))
+
+
 def start_tier(level: str | None, kind: str | None = None, complexity: str | None = None,
+               risk: str | None = None) -> tuple[int, str]:
+    tier, reason = _start_tier(level, kind, complexity, risk)
+    capped = cap_tier(tier, kind)
+    return capped, reason + (f"; {kind} ceiling {capped}" if capped < tier else "")
+
+
+def _start_tier(level: str | None, kind: str | None = None, complexity: str | None = None,
                risk: str | None = None) -> tuple[int, str]:
     """(tier, reason) where a task starts on the ladder. Architecture-level work starts at the top whatever its kind;
     an audit starts at the standard tier; large complexity or high risk lift every other kind one tier (two when both
@@ -69,6 +82,13 @@ def pressure_bucket(pressure: float | None) -> int:
     an unsampled one beats a known 90 % account."""
     value = UNKNOWN_PRESSURE if pressure is None else float(pressure)
     return int(value // PRESSURE_BUCKET)
+
+
+def subscription_blocked(row: object) -> bool:
+    """Known sign-in/challenge failures rank behind healthy accounts, even with weekly pace penalties.
+    Missing/stale samples keep neutral pressure; a blocked sample remains a fallback until a successful poll."""
+    return isinstance(row, dict) and row.get("status") in {
+        "invalid_credentials", "auth_unavailable", "manual_challenge", "http_401", "http_403"}
 
 
 def is_critical(tier: int | None, risk: str | None, complexity: str | None, kind: str | None = None) -> bool:

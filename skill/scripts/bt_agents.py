@@ -1,15 +1,7 @@
-"""Agent catalog and router: which account, model and effort a piece of work runs with.
+"""Account router and quota/history ranking. Model catalog: bt_agent_models.
 
-The catalog lists the models this toolkit drives (Claude Code and Codex CLIs). A *route* is (profile, agent, model,
-effort). Work is described by a capability tier (0 light, 1 standard, 2 top: the escalation ladder) and a kind
-(implement, test, docs, audit, research). With a pool of profiles the router picks, among the routes of that tier:
-a profile that is allowed for the project and not cooling down after a usage limit, preferably another provider than
-the one that just failed (or, for an audit, than the one that built the work), then the best measured success rate,
-then the least used account in the current window. No provider is preferred because it is the one hosting the
-current session: the best measured route for the kind wins. Without a pool the run's own profile is used, as before.
-
-Quota state is machine-local (<root>/.state/quota.json): a profile that reported a usage limit is skipped until its
-announced reset. Rules for agents: references/agents.md.
+Public catalog/selection names remain re-exported here for existing callers.
+Quota state is machine-local (<root>/.state/quota.json); see references/agents.md.
 """
 from __future__ import annotations
 
@@ -25,117 +17,20 @@ import bt_profiles
 import bt_routing_policy
 from bt_core import STATE
 
-PROVIDERS = ("claude", "codex", "antigravity")
-KINDS = ("implement", "test", "docs", "audit", "research")
-TOP = 2
-EFFORTS = ("low", "medium", "high", "xhigh", "max")
-_DEFAULT_ACCOUNT_DIRECTORIES = {"CLAUDE_CONFIG_DIR": ".claude", "CODEX_HOME": ".codex"}
+from bt_agent_models import (  # public compatibility surface
+    PROVIDERS, KINDS, TOP, EFFORTS, MODELS, LADDER, KIND_TIER, AUDIT_LADDER, MAX_KIND_TIER,
+    infer_kind, start_tier, rank_of, provider_of_model, model_for, legacy_model_for, apply_explicit_effort,
+)
 
-# rank: the lowest tier the model is a sensible default for. cost: relative weight on its subscription's quota.
-MODELS: dict[str, dict] = {
-    "haiku": {"provider": "claude", "label": "Haiku 5.5", "rank": 0, "cost": 1,
-              "use": "mechanical edits, docs, small well-specified tasks, running and reading tests"},
-    "sonnet": {"provider": "claude", "label": "Sonnet 5.5", "rank": 1, "cost": 3,
-               "use": "everyday implementation, debugging, reviews"},
-    "opus": {"provider": "claude", "label": "Opus 5.5", "rank": 2, "cost": 8,
-             "use": "architecture, hard debugging, audits of risky changes"},
-    "gpt-6-luna": {"provider": "codex", "label": "GPT-6 Luna", "rank": 0, "cost": 1,
-                   "use": "fast subagent work: well-specified modules, tests, docs, exploration"},
-    "gpt-6.1-sol": {"provider": "codex", "label": "GPT-6.1 Sol", "rank": 1, "cost": 6,
-                    "use": "implementation that needs judgment, independent audits, architecture at xhigh"},
-    # Gemini 3.8 Flash (Antigravity CLI, Google AI Pro): the effort is part of the id. Measured 3-6x slower than the
-    # others and high effort only costs time (D-004): low is the working level.
-    "gemini-3.8-flash-low": {"provider": "antigravity", "label": "Gemini 3.8 Flash low", "rank": 0, "cost": 2,
-                             "use": "default AUDITOR (spec/security review, no false positives measured); reserve "
-                                    "builder when Claude and Codex are exhausted; not for interactive or urgent work"},
-    "gemini-3.8-flash-medium": {"provider": "antigravity", "label": "Gemini 3.8 Flash medium", "rank": 1, "cost": 4,
-                                "use": "long-horizon agentic work only (not measured); 2.5x slower than low"},
-    "gemini-3.8-flash-high": {"provider": "antigravity", "label": "Gemini 3.8 Flash high", "rank": 2, "cost": 5,
-                              "use": "avoid: timed out twice on a task low solved"},
-}
-# (model, effort) per provider and tier. Codex always gets an explicit effort: an account's config.toml default may
-# name a level the model does not support.
-LADDER: dict[str, tuple] = {
-    # No rung climbs to xhigh by itself: xhigh is an explicit per-task `effort:` choice (bt_routing_policy).
-    "claude": (("haiku", None), ("sonnet", "medium"), ("opus", "high")),
-    "codex": (("gpt-6-luna", "medium"), ("gpt-6.1-sol", "medium"), ("gpt-6.1-sol", "high")),
-    # Flash never goes to `high` automatically: a failure moves the work to another provider instead (router rule).
-    "antigravity": (("gemini-3.8-flash-low", None), ("gemini-3.8-flash-low", None), ("gemini-3.8-flash-medium", None)),
-}
-KIND_TIER = {"audit": 1}  # audits start with the standard budget, independently of the builder's model
-AUDIT_LADDER = {
-    "claude": (("sonnet", "medium"), ("sonnet", "medium"), ("opus", "high")),
-    "codex": (("gpt-6.1-sol", "medium"), ("gpt-6.1-sol", "medium"), ("gpt-6.1-sol", "high")),
-    "antigravity": (("gemini-3.8-flash-low", None), ("gemini-3.8-flash-low", None), ("gemini-3.8-flash-medium", None)),
-}
+_DEFAULT_ACCOUNT_DIRECTORIES = {"CLAUDE_CONFIG_DIR": ".claude", "CODEX_HOME": ".codex"}
 LOAD_WINDOW_SEC = 5 * 3600
 LOAD_BUCKET_SEC = 1800
 MIN_SAMPLES = 5
-_KIND_WORDS = (("audit", ("audit", "review", "revis", "auditor")),
-               ("docs", ("docs", "documentation", "readme", "document", "changelog", "skill.md")),
-               ("test", ("test", "e2e", "coverage", "prueba")),
-               ("research", ("research", "investigate", "compare", "spike")))
-
-
-def infer_kind(title: str | None, explicit: str | None = None) -> str:
-    """The task's kind: the PLAN line's `kind:` when valid, else guessed from the title, else implement."""
-    if explicit and explicit.strip().lower() in KINDS:
-        return explicit.strip().lower()
-    text = (title or "").lower()
-    for kind, words in _KIND_WORDS:
-        if any(re.search(r"\b" + re.escape(w), text) for w in words):
-            return kind
-    return "implement"
-
-
-def start_tier(level: str | None, kind: str | None = None, complexity: str | None = None,
-               risk: str | None = None) -> int:
-    """Where a task starts on the ladder (policy and reason: bt_routing_policy.start_tier): architecture-level work at
-    the top; an audit, work declared large (`complexity: L`) or risky (`risk: high`) at the standard tier or above;
-    everything else at the light tier. A floor, never a ceiling: escalation can still raise it."""
-    import bt_routing_policy
-    return bt_routing_policy.start_tier(level, kind, complexity, risk)[0]
-
-
-def rank_of(model: str | None) -> int:
-    name = (model or "").lower()
-    if name in MODELS:
-        return MODELS[name]["rank"]
-    return 2 if "opus" in name else 1 if ("sonnet" in name or "sol" in name) else 0
-
-
-def provider_of_model(model: str | None) -> str | None:
-    name = (model or "").lower()
-    if name in MODELS:
-        return MODELS[name]["provider"]
-    if name.startswith("gemini"):
-        return "antigravity"
-    if any(w in name for w in ("opus", "sonnet", "haiku", "claude")):
-        return "claude"
-    return "codex" if name.startswith(("gpt", "codex", "o3", "o4")) else None
-
-
-def model_for(provider: str, tier: int, configured: str | None = None, kind: str | None = None
-              ) -> tuple[str | None, str | None]:
-    """(model, effort) of `provider` at `tier`. A configured model of the same provider that is at least as strong as
-    the tier's is kept (only the effort follows the ladder). Documentation never needs more than low effort at tier 0."""
-    tier = max(0, min(TOP, int(tier or 0)))
-    if kind == "audit":
-        # A builder's configured model must not inflate the independent audit's budget.
-        return AUDIT_LADDER.get(provider, AUDIT_LADDER["claude"])[tier]
-    model, effort = LADDER.get(provider, LADDER["claude"])[tier]
-    if configured and provider_of_model(configured) == provider and (tier == 0 or rank_of(configured) >= rank_of(model)):
-        model = configured
-    if provider == "codex" and tier == 0 and kind == "docs":
-        effort = "low"
-    return model, effort
-
 
 # ---------------------------------------------------------------- quota
 
 def _quota_path() -> Path:
     return STATE / "quota.json"
-
 
 def _quota_load() -> dict:
     try:
@@ -143,7 +38,6 @@ def _quota_load() -> dict:
     except (OSError, ValueError):
         return {}
     return data if isinstance(data, dict) else {}
-
 
 def quota_mark(profile: str | None, agent: str | None, until_epoch: int | float, reason: str = "",
                model: str | None = None, default_min: int | None = None) -> float:
@@ -169,7 +63,6 @@ def quota_mark(profile: str | None, agent: str | None, until_epoch: int | float,
         tmp.replace(path)
     return float(until_epoch)
 
-
 def quota_clear(profile: str | None, agent: str | None = None) -> bool:
     from bt_lock import central_lock
     with central_lock("quota"):
@@ -179,13 +72,11 @@ def quota_clear(profile: str | None, agent: str | None = None) -> bool:
         _quota_path().write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
     return True
 
-
 def cooling_until(profile: str | None, agent: str | None = None) -> float | None:
     """Epoch until which the account must not be used, None when it is free."""
     row = _quota_load().get(account_key(profile, agent))
     until = float(row.get("until") or 0) if isinstance(row, dict) else 0
     return until if until > time.time() else None
-
 
 def account_key(profile: str | None, agent: str | None = None) -> str:
     """Return the stable legacy quota-cache key encoded from this profile's environment overlay."""
@@ -197,7 +88,6 @@ def account_key(profile: str | None, agent: str | None = None) -> str:
         return profile
     env = sorted((spec.get("env") or {}).items())
     return f"{spec['provider']}:" + (",".join(f"{k}={v}" for k, v in env) if env else "default")
-
 
 def _pool_account_identity(profile: str, spec: dict) -> tuple[str, tuple[tuple[str, str | None], ...]]:
     """Identify the effective account for in-memory pool deduplication without changing persisted quota keys."""
@@ -214,14 +104,12 @@ def _pool_account_identity(profile: str, spec: dict) -> tuple[str, tuple[tuple[s
         selectors.append((key, value))
     return provider, tuple(selectors)
 
-
 def _config(key: str, default):
     try:
         import bt_config
         return bt_config.get(key, default)
     except Exception:
         return default
-
 
 # ---------------------------------------------------------------- pool and routing
 
@@ -258,7 +146,6 @@ def pool_for(project: str, requested: list[str] | None = None) -> list[str]:
         out.append(pid)
     return out
 
-
 class _Rates(dict):
     """Success rates by (agent, model, effort, kind) with enough samples; `.samples` holds every judged-attempt count, so a
     provider with 1-4 attempts is known to be under-sampled instead of looking the same as an unseen one."""
@@ -268,7 +155,6 @@ class _Rates(dict):
     recent: dict = {}  # admitted explorations in the last 7 days by (agent, model): the exploration budget's counter
     recent_total: int = 0
     pooled: dict = {}  # (agent, model, kind): outcomes of every effort together, with the per-effort split
-
 
 def _stats() -> tuple[dict, dict]:
     """(success rate by (agent, model, kind) with enough samples, seconds used per account in the load window)."""
@@ -315,7 +201,6 @@ def _stats() -> tuple[dict, dict]:
     rates.recent, rates.recent_total = bt_explore.used(now)
     return rates, load
 
-
 def _quality_order(agent: str, kind: str, rate: float | None, pressure: float | None, samples: int = 0,
                    explore: bool = False, critical: bool = False, best: float | None = None,
                    point: float | None = None) -> tuple:
@@ -348,10 +233,9 @@ def _quality_order(agent: str, kind: str, rate: float | None, pressure: float | 
                 and best - point > bt_routing_policy.quality_gap())
     return int(inferior), headroom, band
 
-
 def candidates(project: str, pool: list[str], tier: int, kind: str = "implement", configured: str | None = None,
                avoid_providers: set | None = None, busy: set | None = None, risk: str | None = None,
-               complexity: str | None = None, allow_explore: bool = True, effort: str | None = None
+               complexity: str | None = None, allow_explore: bool = True, effort: str | None = None, role: str | None = None
                ) -> tuple[list[dict], float | None]:
     """(routes of `tier` ordered best first, earliest epoch a cooling account frees up when none is available).
     `busy`: account keys already taken by sessions being started in the same batch (they go last). `risk` and
@@ -360,9 +244,13 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
     persistent budget (bt_explore) and asks again with `allow_explore=False` when the budget is spent. `effort`: an effort
     the work asked for explicitly: it is applied BEFORE the routes are compared, so the quality evidence consulted is the
     one of the effort that will really run."""
+    if role:
+        from bt_role_routing import candidates as role_candidates
+        return role_candidates(project, pool, tier, kind, role, configured, avoid_providers, busy, complexity, effort)
     from bt_subscriptions import capacity
     from bt_subscriptions import load as load_usage
     samples = load_usage(STATE)
+    tier = bt_routing_policy.cap_tier(tier, kind)
     rates, load = _stats()
     profiles = bt_profiles.load()
     critical = bt_routing_policy.is_critical(tier, risk, complexity, kind)
@@ -376,7 +264,7 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
         if spec.get("work_only") and not bt_profiles.is_work_project(project):
             continue  # a pool saved while the project was work must not outlive that flag
         model, ladder_effort = model_for(agent, tier, configured, kind)
-        effort = apply_explicit_effort(agent, model, ladder_effort, asked_effort)
+        effort = apply_explicit_effort(agent, model, ladder_effort, asked_effort, kind)
         pressure, exhausted = capacity(samples.get(account_key(pid, agent)), model)
         if agent == "antigravity":  # Google's own quota report, refreshed by the supervisor (bt_agy)
             import bt_agy
@@ -401,9 +289,11 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
         cost = MODELS.get(model, {}).get("cost", 2) * bt_routing_policy.effort_weight(effort)
         routes.append({"profile": pid, "agent": agent, "model": model, "effort": effort, "tier": tier, "kind": kind,
                        "exploring": explore, "account": acc, "evidence": evidence,
-                       "_key": (acc in (busy or ()),
+                       "_key": (bt_routing_policy.subscription_blocked(samples.get(acc)), acc in (busy or ()),
                                 agent in (avoid_providers or ()),
                                 _role_rank(agent, kind, pressure),
+                                agent in ("claude", "codex") and pressure is not None and
+                                pressure >= bt_routing_policy.HIGH_PRESSURE,
                                 *_quality_order(agent, kind, lower, ranked_pressure, seen, explore, critical, best, rate),
                                 int(cost / max(lower if lower is not None else 0.5, 0.1)),  # expected cost per verified task
                                 int(load.get(acc, 0) // (LOAD_BUCKET_SEC * 2)), index),
@@ -420,9 +310,7 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
         r.pop("_key")
     return routes, soonest
 
-
 AGY_BUSY_PERCENT = 85  # above this, Flash stops being the preferred auditor and is kept as a reserve
-
 
 def _role_rank(agent: str, kind: str, pressure: float | None) -> int:
     """0 = preferred for this kind of work, 1 = otherwise. Audits prefer the configured auditor provider (default
@@ -435,19 +323,9 @@ def _role_rank(agent: str, kind: str, pressure: float | None) -> int:
         return 1
     return 1 if agent == "antigravity" else 0
 
-
 AGGREGATE_DISCOUNT = 0.2  # indirect evidence ranks one 20-point band below what it would show if it were direct
 POOR_AGGREGATE = 0.3      # other efforts of this model measured below this lower bound: do not spend exploration on it
 
-
-def apply_explicit_effort(agent: str, model: str | None, effort: str | None, asked: str | None) -> str | None:
-    """The effort that really runs: a task may ask for a stronger one than its tier's (Claude and Codex, never Haiku),
-    never a weaker one. Used by the router (so the evidence consulted is the executed effort's) and by the session."""
-    if asked not in EFFORTS or agent not in ("claude", "codex") or model == "haiku":
-        return effort
-    if effort in EFFORTS and EFFORTS.index(effort) >= EFFORTS.index(asked):
-        return effort
-    return asked
 
 
 def evidence_for(rates, agent: str, model: str, effort: str | None, kind: str) -> tuple[dict, float | None, float | None]:
@@ -477,7 +355,6 @@ def evidence_for(rates, agent: str, model: str, effort: str | None, kind: str) -
                 None, max(0.0, agg_lower - AGGREGATE_DISCOUNT))
     return {"kind": "none", "samples": samples, "rate": None, "lower": None}, None, None
 
-
 def _why(agent, avoid, rate, load, lower=None, seen: int = 0, evidence: dict | None = None) -> str:
     bits = []
     if avoid:
@@ -492,7 +369,6 @@ def _why(agent, avoid, rate, load, lower=None, seen: int = 0, evidence: dict | N
     bits.append(f"load {int(load // 60)} weighted-min in the last 5 h")
     return "; ".join(bits)
 
-
 class NoRoute(Exception):
     """Every account of the pool is cooling down; `until` is the earliest reset epoch."""
 
@@ -500,25 +376,42 @@ class NoRoute(Exception):
         super().__init__(f"every account is cooling down until {until}")
         self.until = until or (time.time() + 1800)
 
-
 def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_providers: set | None = None,
           busy: set | None = None, risk: str | None = None, complexity: str | None = None,
-          allow_explore: bool = True, effort: str | None = None, decision_key: str | None = None) -> dict:
+          allow_explore: bool = True, effort: str | None = None, decision_key: str | None = None, role: str | None = None) -> dict:
     """The route of one session. Fixed mode (no pool): the run's own agent/profile at the tier's model. Pool mode:
     the best available candidate; raises NoRoute when all accounts are cooling down. The route carries its `decision`
     (bt_explore): exploit, explore (admitted against the persistent budget), fallback (an account was cooling),
     escalation (a failure moved the work) or explicit (a pinned agent)."""
     import bt_explore
+    import bt_role_policy
+    role = role or state.get("role") or bt_role_policy.role_for_kind(kind)
+    tier = bt_routing_policy.cap_tier(tier, kind)
     pool = state.get("pool") or []
     if not pool:
+        asked_effort = effort
         agent = state.get("agent") or "claude"
-        model, effort = model_for(agent, tier, kind=kind) if kind == "audit" else legacy_model_for(state, tier)
+        model, effort = (model_for(agent, tier, kind=kind) if kind == "audit" or kind in MAX_KIND_TIER
+                         else legacy_model_for(state, tier))
+        if role:
+            choices = [(m, e) for p, m, e in bt_role_policy.options(role, complexity) if p == agent]
+            configured = state.get("model") if kind != "audit" or state.get("role") else None
+            if choices:
+                model = configured or choices[0][0]
+                effort = next((e for m, e in choices if m == model), None if model == "haiku" else choices[0][1])
+        effort = asked_effort or effort
         return {"profile": state.get("profile"), "agent": agent, "model": model, "effort": effort, "tier": tier,
-                "kind": kind, "why": "fixed (no pool)",
+                "kind": kind, "role": role, "why": "fixed (no pool)",
                 "decision": bt_explore.decision_for("explicit", "the run is pinned to one agent (no pool)")}
-    _refresh_google_quota(pool)
-    args = (project, pool, tier, kind, state.get("model"), avoid_providers, busy, risk, complexity)
-    routes, soonest = candidates(*args, allow_explore=allow_explore, effort=effort)
+    from bt_subscriptions import ensure_fresh
+    ensure_fresh(pool, project=project)
+    if not role:
+        _refresh_google_quota(pool)
+    configured = state.get("model")
+    if (role and configured == "haiku" and not state.get("model_pinned")) or (kind == "audit" and not state.get("role")):
+        configured = None
+    args = (project, pool, tier, kind, configured, avoid_providers, busy, risk, complexity)
+    routes, soonest = candidates(*args, allow_explore=allow_explore, effort=effort, role=role)
     if not routes:
         if soonest is None:  # nothing is cooling: no account of the pool may run this project any more
             raise bt_profiles.ProfileError(f"No account of the pool ({', '.join(pool)}) may run '{project}'. "
@@ -536,11 +429,11 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
             f"and {len(routes) - 1} other admissible route(s) exist",
             limit, int(global_limit or 0) or None, key=decision_key)
         if record is None:  # the weekly budget is spent (possibly by a concurrent supervisor): rank it as unproven
-            routes, soonest = candidates(*args, allow_explore=False, effort=effort)
+            routes, soonest = candidates(*args, allow_explore=False, effort=effort, role=role)
             chosen = routes[0]
     if record:
         decision = bt_explore.decision_for("explore", record["reason"], record)
-    elif avoid_providers and kind != "audit":
+    elif avoid_providers and kind != "audit" and not role:
         decision = bt_explore.decision_for("escalation", "a failed attempt moved the work to another provider: "
                                            + "/".join(sorted(avoid_providers)) + " avoided")
     elif soonest is not None:
@@ -551,7 +444,6 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
     decision["evidence"] = chosen.get("evidence")  # what the choice rested on: direct, aggregate or none
     chosen = {k: v for k, v in chosen.items() if k != "exploring"}
     return {**chosen, "decision": decision}
-
 
 def _refresh_google_quota(pool: list[str]) -> None:
     """Antigravity reports its quota through its own CLI (`agy --print=/usage`, no model turn). Done here, once per
@@ -564,23 +456,6 @@ def _refresh_google_quota(pool: list[str]) -> None:
     except Exception:
         pass
 
-
-def legacy_model_for(state: dict, tier: int) -> tuple[str | None, str | None]:
-    """A run pinned to one agent. Claude: the configured model at tier 0 (haiku by default), the ladder above it.
-    Codex: a configured Codex model is kept and only the effort follows the ladder (medium at tier 1, high at tier 2;
-    xhigh only when a task asks for it); with no Codex model configured the CLI's own default model runs."""
-    agent, configured = state.get("agent") or "claude", state.get("model")
-    if agent == "antigravity":
-        return (configured if provider_of_model(configured) == "antigravity" else "gemini-3.8-flash-low"), None
-    if agent == "codex":
-        model = configured if configured and provider_of_model(configured) != "claude" else None
-        return model, LADDER["codex"][min(TOP, max(0, tier))][1] if tier >= 1 else None
-    if tier <= 0:
-        return configured or "haiku", None
-    tier = min(tier, TOP)
-    ladder = LADDER["claude"][tier]
-    return (configured if rank_of(configured) >= tier and provider_of_model(configured) == "claude" else ladder[0]), \
-        ladder[1]
 
 
 # ---------------------------------------------------------------- views
@@ -599,35 +474,12 @@ def catalog(project: str | None = None) -> dict:
                          "allowed_here": allowed if project else None,
                          "installed": bool(shutil.which(spec.get("bin") or spec["provider"])),
                          "cooling_until": time.strftime("%Y-%m-%d %H:%M", time.localtime(until)) if until else None})
-    return {"models": [{"id": k, **v} for k, v in MODELS.items()],
+    import bt_role_policy
+    return {"roles": {role: bt_role_policy.options(role) for role in bt_role_policy.ROLES},
+            "models": [{"id": k, **v} for k, v in MODELS.items()],
             "ladder": {p: [{"tier": i, "model": m, "effort": e} for i, (m, e) in enumerate(rungs)]
                        for p, rungs in LADDER.items()},
             "kinds": list(KINDS), "accounts": accounts,
             "pool": pool_for(project) if project else None}
 
-
-def brief(project: str | None = None) -> str:
-    """Compact markdown of the catalog for prompts and `bitacora.py context`."""
-    cat = catalog(project)
-    lines = ["### Agents available (any session may delegate to any of them)",
-             "| model | provider | tier | use it for |", "|---|---|---|---|"]
-    tiers = {}
-    for provider, rungs in LADDER.items():
-        for i, (m, e) in enumerate(rungs):
-            tiers.setdefault(m, []).append(f"{i}{'·' + e if e else ''}")
-    for m in cat["models"]:
-        lines.append(f"| `{m['id']}` ({m['label']}) | {m['provider']} | {', '.join(tiers.get(m['id'], []))} | {m['use']} |")
-    acc = []
-    for a in cat["accounts"]:
-        if a["profile"] in bt_profiles.DEFAULTS and any(
-                account_key(a["profile"]) == account_key(b["profile"]) for b in cat["accounts"] if b is not a):
-            continue
-        flags = [f for f, on in (("work projects only", a["work_only"]), ("NOT allowed for this project", a["allowed_here"] is False),
-                                 (f"usage limit until {a['cooling_until']}", a["cooling_until"]),
-                                 ("CLI missing", not a["installed"])) if on]
-        acc.append(f"`{a['profile']}` ({a['provider']}{'; ' + '; '.join(flags) if flags else ''})")
-    lines.append("Accounts: " + ", ".join(acc) + ".")
-    lines.append("Audits: Gemini 3.8 Flash low first (D-004, config audit.provider); fallback Sonnet 5.5 medium; Opus "
-                 "5.5 high for demonstrated difficulty/high risk; Codex fallback GPT-6.1 Sol medium. No xhigh/max by "
-                 "default; Flash high and medium are not used automatically.")
-    return "\n".join(lines)
+from bt_agent_views import brief  # public compatibility surface

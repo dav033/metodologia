@@ -64,7 +64,7 @@ class BlockingRunner:
         self.release = threading.Event()
         self.calls = []
 
-    def run(self, check, snapshot_root, *, timeout_seconds=None):
+    def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
         self.calls.append(check.command)
         self.started.set()
         if not self.release.wait(timeout=5):
@@ -79,7 +79,7 @@ class ScriptedRunner:
         self.failing_commands = set(failing_commands)
         self.calls = []
 
-    def run(self, check, snapshot_root, *, timeout_seconds=None):
+    def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
         self.calls.append(check.command)
         if check.command in self.failing_commands:
             return CommandOutcome("fail", 5, 2, b"test failure\n", b"", None, True)

@@ -1,7 +1,7 @@
 {
   "name": "l-long-autonomous-development",
-  "description": "Long autonomous development is routed to the durable marathon workflow",
-  "checks": "marathon.md and agent-orchestration.md",
+  "description": "Long autonomous development is routed to the durable scheduler workflow",
+  "checks": "execution.md §1c, modules.md and agent-orchestration.md",
   "fixture": "empty",
   "max_turns": 8,
   "budget_usd": 0.25,
@@ -10,22 +10,22 @@
   ],
   "graders": [
     {
-      "name": "mentions-marathon-capability",
+      "name": "mentions-scheduler-capability",
       "type": "regex",
-      "pattern": "marat[oó]n",
+      "pattern": "scheduler|planificador",
       "flags": "i"
     },
     {
       "name": "mentions-durable-resume",
       "type": "regex",
-      "pattern": "RUN\\.json|reanuda|reanudar|recupera.*interrupci[oó]n|punto de control",
+      "pattern": "SCHEDULER\\.db|scheduler-run|reanuda|reanudar|recupera.*interrupci[oó]n|punto de control",
       "flags": "i"
     },
     {
-      "name": "reads-marathon-guidance",
+      "name": "reads-scheduler-guidance",
       "type": "tool_used",
       "tool": "Read|Skill",
-      "input_match": "marathon\\.md"
+      "input_match": "execution\\.md|modules\\.md"
     },
     {
       "name": "does-not-promise-unsafe-autonomy",

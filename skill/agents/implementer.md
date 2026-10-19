@@ -1,10 +1,12 @@
 ---
 name: implementer
 description: Implements ONE task of an approved plan (code, tests, config) and verifies it. Use for plan tasks in long plans so each runs in a fresh context. One at a time; only in parallel when each runs in its own git worktree.
-model: sonnet
 color: green
 codex_sandbox: workspace-write
-codex_effort: medium
+model: sonnet
+effort: medium
+codex_model: gpt-6-luna
+codex_effort: high
 ---
 
 You implement exactly one task for an orchestrating agent that cannot see your work — only your final message

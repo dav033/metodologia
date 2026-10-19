@@ -99,18 +99,18 @@ class WatchTests(unittest.TestCase):
         out = self.watch()
         self.assertIn("blocked tasks: T3", out)
         self.assertIn("terminal: true", out)
-        self.assertIn("--retry-blocked", out)
+        self.assertIn("blocked: see PENDING.md", out)
         again = self.watch()  # a finished run answers at once, without repeating itself
         self.assertIn("nothing new since the last report", again)
         self.assertIn("terminal: true", again)
 
-    def test_a_silent_supervisor_is_reported_once_with_the_resume_command(self):
+    def test_a_silent_legacy_supervisor_reports_retirement_once(self):
         self.save()
         self.watch()
         with patch.object(rs, "is_stale", return_value=True):
             out = self.watch()
             self.assertIn("may have died", out)
-            self.assertIn("run REQ-001 --resume", out)
+            self.assertIn("there is no resume command", out)
             self.assertNotIn("may have died", self.watch())
 
     def test_no_run_yet_says_so(self):

@@ -46,9 +46,12 @@ def build(tier_fn):
               "complexity": cx, "risk": risk, "milestone": m, "status": "todo", "attempts": 0, "error_hashes": [],
               "tier": tier_fn(level, kind, cx, risk)} for i, m, kind, level, cx, risk, after in PLAN]
     for m in ("M1", "M2", "M3"):
-        members = [t["id"] for t in tasks if t["milestone"] == m]
-        tasks.append({"id": f"{m}-audit", "title": "audit", "repo": None, "after": members, "verify": None,
-                      "kind": "audit", "synthetic": True, "milestone": m, "status": "todo", "tier": 1, "risk": None,
+        members = [t for t in tasks if t["milestone"] == m]
+        level = "architecture" if any(t.get("risk") == "high" or t.get("level") == "architecture"
+                                      for t in members) else None
+        tasks.append({"id": f"{m}-audit", "title": "audit", "repo": None, "after": [t["id"] for t in members], "verify": None,
+                      "kind": "audit", "level": level, "synthetic": True, "milestone": m, "status": "todo",
+                      "tier": bt_agents.start_tier(level, "audit"), "risk": None,
                       "attempts": 0, "error_hashes": []})
     return {"tasks": tasks, "limits": dict(rs.DEFAULT_LIMITS)}
 
@@ -72,6 +75,15 @@ def old_unit_of(state, first):
 
 def replay(state, unit_fn, ladder, antagonist_per_commit, floor_fn):
     sessions_log, fails = [], dict(FAILS)
+    # One commit per builder task in this fixture; evaluate coverage before the audits are marked done.
+    reviews = [t for t in state["tasks"] if not t.get("synthetic") and
+               (antagonist_per_commit or bt_review_policy.commit_review_rule(state, [t]) == bt_review_policy.GATE)]
+    antagonist_cost = 0.0
+    for t in reviews:
+        level = "architecture" if t.get("risk") == "high" or t.get("level") == "architecture" else None
+        model, effort = (("opus", "high") if antagonist_per_commit else
+                         bt_agents.model_for("claude", bt_agents.start_tier(level, "audit"), kind="audit"))
+        antagonist_cost += bt_agents.MODELS[model]["cost"] * policy.effort_weight(effort)
     attempts = verified = failed = escalations = violations = 0
     while True:
         done = {t["id"] for t in state["tasks"] if t["status"] == "done"}
@@ -80,8 +92,14 @@ def replay(state, unit_fn, ladder, antagonist_per_commit, floor_fn):
             break
         unit = unit_fn(state, first)
         tier = max(t["tier"] for t in unit)
-        model, effort = ladder["claude"][tier] if first["kind"] != "audit" else bt_agents.AUDIT_LADDER["claude"][1]
-        # one session is paid once whatever number of tasks it carries; the unit is the same for both policies
+        if first["kind"] == "audit":
+            model, effort = bt_agents.AUDIT_LADDER["claude"][tier]
+        elif ladder is bt_agents.LADDER:
+            model, effort = bt_agents.model_for("claude", tier, kind=first["kind"])
+        else:
+            model, effort = ladder["claude"][tier]
+        # cost * len(unit) weights task-work units by the session's model/effort, penalising sessions that
+        # overprovision lower-tier tasks. It does not model a fixed session charge or measured consumption.
         cost = bt_agents.MODELS[model]["cost"] * policy.effort_weight(effort)
         failing = [t["id"] for t in unit if fails.get(t["id"], 0) > 0]
         sessions_log.append({"tasks": [t["id"] for t in unit], "tier": tier, "model": model, "effort": effort,
@@ -92,7 +110,8 @@ def replay(state, unit_fn, ladder, antagonist_per_commit, floor_fn):
             violations += tier < floor_fn(t)  # ran below the floor the CURRENT policy declares for the task
             if t["id"] in failing:
                 fails[t["id"]] -= 1
-                t["tier"] = min(bt_agents.TOP, t["tier"] + 1)  # a failed task retries one tier up
+                t["tier"] = (policy.cap_tier(t["tier"] + 1, t["kind"]) if ladder is bt_agents.LADDER else
+                             min(bt_agents.TOP, t["tier"] + 1))  # retries obey the current kind ceiling
                 failed += 1
                 escalations += t["tier"] > tier
             else:
@@ -106,8 +125,8 @@ def replay(state, unit_fn, ladder, antagonist_per_commit, floor_fn):
             "escalations": escalations, "below_floor_attempts": violations,
             "xhigh_sessions": sum(s["effort"] == "xhigh" for s in sessions_log),
             "overprovisioned_tasks": sum(len(s["overprovisioned"]) for s in sessions_log),
-            "antagonist_passes_per_commit": (len(PLAN) if antagonist_per_commit else
-                                             sum(1 for _, _, _, lv, _, rk, _ in PLAN if rk == "high" or lv == "architecture")),
+            "antagonist_passes_per_commit": len(reviews),
+            "antagonist_relative_cost_units": round(antagonist_cost, 2),
             "relative_cost_units": total,
             "relative_cost_units_per_verified_task": round(total / verified, 2) if verified else None,
             "log": sessions_log}

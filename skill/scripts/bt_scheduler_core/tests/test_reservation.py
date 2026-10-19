@@ -112,6 +112,23 @@ class Capacity(unittest.TestCase):
         self.assertEqual(set(h.states().values()), {"active"})
 
 
+    def test_a_large_scope_runs_alone_in_its_repository_only_when_the_operator_names_it(self):
+        tasks = [task("T1", repo="app", paths=["src/a/**"], scope="small_change"),
+                 task("T2", repo="app", paths=["src/b/**"], scope="large_change"),
+                 task("T3", repo="app", paths=["src/c/**"], scope="isolated_fix"),
+                 task("T4", repo="other", paths=["x/**"], scope="full_feature")]
+        plain = Harness(tasks, parallel=3)
+        plain.core.step()
+        self.assertEqual(sorted(t for t, s in plain.states().items() if s == "active"), ["T1", "T2", "T3"])
+        ruled = Harness(tasks, config=sc.Config(max_parallel_tasks=3, exclusive_scopes=("large_change", "full_feature")))
+        ruled.core.step()
+        ruled.core.step()                                   # a refused claim leaves its slot for the next pass
+        active = sorted(t for t, s in ruled.states().items() if s == "active")
+        self.assertNotIn("T2", active)                      # waits: small tasks already hold the repository
+        self.assertEqual(active, ["T1", "T3", "T4"])        # the large one in another repository runs beside them
+        with self.assertRaises(sc.SchedulerError):
+            sc.Config(exclusive_scopes=["large_change"])
+
 class Concurrency(unittest.TestCase):
     """Two or more real claimers racing for the same task: at most one is authorised to write (SC-AC07)."""
 

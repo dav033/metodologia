@@ -134,3 +134,35 @@ def remove_autostart(project: str, req: str) -> None:
         autostart_path(project, req).unlink(missing_ok=True)
     except OSError:
         pass
+
+
+# ---------------------------------------------------------------- task alerts (opt-in per project)
+
+_ALERT = {"accepted": "aceptada", "rejected": "rechazada", "failed": "falló", "blocked": "bloqueada"}
+
+
+def task_alert(event: dict, enabled: bool = False) -> tuple[str, str] | None:
+    """(title, message) for a flow-bus `state_change`/`task_state` event worth a desktop alert, else None.
+    Alerts are opt-in per project (`project.json: {"notify_tasks": true}`); `enabled` is that flag."""
+    state = (event.get("data") or {}).get("state")
+    if not enabled or event.get("kind") not in ("state_change", "task_state") or state not in _ALERT:
+        return None
+    if event.get("kind") == "state_change" and state not in ("accepted", "rejected", "failed"):
+        return None
+    run = str(event.get("run") or "")
+    return (f"Bitácora · {run}", f"{event.get('task') or 'tarea'}: {_ALERT[state]} · {event.get('summary')}")
+
+
+def notify_task_events(project_dir: Path, events: list[dict]) -> int:
+    """Send the opt-in alerts for new bus events of one project; returns how many were sent."""
+    try:
+        enabled = bool(json.loads((Path(project_dir) / "project.json").read_text(encoding="utf-8")).get("notify_tasks"))
+    except (OSError, ValueError, AttributeError):
+        enabled = False
+    sent = 0
+    for event in events:
+        alert = task_alert(event, enabled)
+        if alert:
+            notify(*alert)
+            sent += 1
+    return sent

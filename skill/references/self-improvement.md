@@ -14,7 +14,7 @@ Explain a capability when all of these are true:
 
 Name the capability and its practical effect in one short, contextual sentence, then continue with the task. Examples:
 for a multi-repository product, explain that the architecture audit can map the repositories as one product; for a
-request with a reviewed plan likely to run for days, explain that marathon mode checkpoints tasks and can resume after
+request with a reviewed plan likely to run for days, explain that the scheduler checkpoints tasks in its durable run database and `scheduler-run --resume` continues after
 interruption; for a project-status question, explain that SUMMARY, PENDING and recent logs provide the durable
 status. Do not recite the skill's feature list, announce the skill on unrelated tasks, or repeat an explanation the
 user has already received in the current workflow.

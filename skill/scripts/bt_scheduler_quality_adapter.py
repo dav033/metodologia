@@ -329,6 +329,17 @@ class QualityVerificationPort:
         return "pending"
 
 
+def _attempt_worktree(attempts_root: Path, attempt_dir: Path) -> Path | None:
+    """`<executor>/ws/worktrees/<same name as the attempt directory>`, only when it really sits there."""
+    try:
+        parent = (attempts_root.parent / "ws" / "worktrees").resolve(strict=True)
+        worktree = (parent / attempt_dir.name).resolve(strict=True)
+        worktree.relative_to(parent)
+    except (OSError, ValueError):
+        return None
+    return worktree if worktree.is_dir() else None
+
+
 def _read_snapshot_inputs(
     executor: m3.AgentExecutor,
     repository_for_order: RepositoryResolver,
@@ -403,6 +414,7 @@ def _build_snapshot_source(
             expected_manifest,
             base_sha,
             snapshot_sha,
+            _attempt_worktree(root, attempt_real),
         )
     except (OSError, ValueError):
         return None

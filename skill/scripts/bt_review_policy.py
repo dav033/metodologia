@@ -12,9 +12,9 @@ GATE = ("Follow references/engineering.md of the `metodologia` skill and run the
         "(references/subagents.md) before EVERY commit.")
 WITH_AUDIT = ("Follow references/engineering.md of the `metodologia` skill. Run the task's verify, tests and linters "
               "before every commit. Do NOT run the antagonist per commit: the independent milestone audit reviews "
-              "this work. Run it once, on the staged diff, only when the task is `risk: high` or `level: "
-              "architecture`, or the change touches authentication, secrets, permissions, data migration or "
-              "payments.")
+              "the consolidated milestone diff at the end. Invoking the antagonist subagent (Opus / Codex High) "
+              "on individual commits is forbidden while this audit covers the work, including high-risk and "
+              "architecture tasks. Keep all security checks mandatory.")
 
 
 def milestone_audit_active(state: dict | None, unit: list[dict] | None = None) -> bool:
@@ -32,6 +32,4 @@ def commit_review_rule(state: dict | None, unit: list[dict] | None = None) -> st
     """The prompt line that tells a builder how much review to run before a commit."""
     if not milestone_audit_active(state, unit if unit else None):
         return GATE
-    if any(t.get("risk") == "high" or t.get("level") == "architecture" for t in unit or ()):
-        return GATE  # the risk itself asks for the extra pass
     return WITH_AUDIT

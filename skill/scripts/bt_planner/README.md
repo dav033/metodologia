@@ -3,7 +3,8 @@
 Part of the methodology, isolated by construction. It **describes and classifies work**: a human `PLAN.md` next to a
 validated, versioned `PLAN.json` that a deterministic scheduler can read without interpreting prose. It inspects nothing
 about who will run the work: it never picks a model, account or worker count, never supervises, and never writes
-execution state. Only two things are written: `PLAN.json` (`init`) and `plan-revisions/` (`freeze`).
+execution state. Only three things are written: `PLAN.json` (`init`), `plan-revisions/` (`freeze`) and the append-only
+`PLAN.amendments.jsonl` (`amend`: how hard a task turned out to be, never what to build).
 
 ## Boundaries (enforced by `tests/test_boundaries.py`)
 
@@ -19,6 +20,7 @@ execution state. Only two things are written: `PLAN.json` (`init`) and `plan-rev
 | File | Role |
 |---|---|
 | `contract.py` | enums, validator, canonical JSON, `load`, `PlanContractError`, `Report` |
+| `amendments.py` | classification amendments during a run (`PLAN.amendments.jsonl`): `append`, `read`, `effective`, `direction` |
 | `revisions.py` | immutable approved revisions (`plan-revisions/`), manifest + sha256, `run_reference` |
 | `markdown.py` | the `PLAN.md` task-line / milestone grammar (own parser) and what it would otherwise drop silently |
 | `evidence.py` | classification evidence (schema 1.1.0): typed references, justification quality, confidence rules |
@@ -260,3 +262,24 @@ python3 -I -m unittest discover -s bt_planner/tests                             
 
 `tests/test_isolation.py` copies the package alone to a temporary directory and runs this suite and an end-to-end CLI
 session there with `python -I`, so nothing from the methodology can be silently relied on.
+
+
+## Amendments (classification changes while a plan runs)
+
+An approved revision never changes. How hard a task turned out to be (`complexity`, `scope`, `risk`, `coupling`,
+`confidence`, `estimated_minutes`) does change once the work reveals it, so the change is recorded in
+`PLAN.amendments.jsonl` (one JSON object per line, append-only, written under `.amend.lock`):
+
+```json
+{"seq": 1, "task": "T4", "field": "complexity", "from": "medium", "to": "high", "reason": "...", "evidence": ["file:..."],
+ "by": "claude", "proposed_by": "agent", "at": "2026-10-18T22:00:00+00:00", "plan_ref": {"plan_id": "REQ-026", "revision": 1}}
+```
+
+`python -m bt_planner amend <dir> --task T4 --field complexity --to high --reason "..." --evidence file:x --by claude
+--proposed-by agent` appends one; `amendments <dir>` lists them. Rules: only classification fields with valid values;
+`from` must equal the value in force (a stale one is refused on append and ignored on read); raising a level may be proposed
+by an agent **with evidence**, lowering needs `--proposed-by owner`; amendments bind to the revision they were written
+against and do not carry to revision N+1 (a new revision restates the classification). `amendments.effective(plan, read(dir))`
+is the classification in force; consumers use it for the NEXT decision, never to rewrite history. Stable error codes:
+`AMEND_FIELD`, `AMEND_VALUE`, `AMEND_NOOP`, `AMEND_REASON`, `AMEND_AUTHOR`, `AMEND_TASK`, `AMEND_EVIDENCE`,
+`AMEND_LOWER_NEEDS_OWNER`, `AMEND_NO_PLAN`, `AMEND_UNREADABLE`, `AMEND_FULL`.

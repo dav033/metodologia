@@ -78,8 +78,8 @@ def news(project: str, req: str, state: dict, cursor: dict) -> tuple[list[str], 
             value = ", ".join(snap[key]) if isinstance(snap[key], list) else snap[key]
             lines.append(f"- {label}: {value}")
     if snap["stale"] and not cursor.get("stale"):
-        lines.append(f"- the supervisor has not reported for {STALE_MIN}+ min: it may have died. Resume with: "
-                     f"bitacora.py --project {project} run {req} --resume")
+        lines.append(f"- the legacy supervisor has not reported for {STALE_MIN}+ min: it may have died "
+                     "(the marathon supervisor was retired; there is no resume command)")
     new = {**snap, "at": str(log[-1].get("at")) if log else seen}
     return lines, new
 
@@ -91,7 +91,7 @@ def report(project: str, req: str, state: dict, lines: list[str]) -> str:
     out = [head, *lines]
     if terminal:
         tail = {"done": "finished: read REPORT.md next to the plan",
-                "blocked": "blocked: see PENDING.md, fix, then run --resume --retry-blocked",
+                "blocked": "blocked: see PENDING.md",
                 "stopped": "stopped"}[snap["status"]]
         out.append(f"terminal: true ({tail})")
     else:

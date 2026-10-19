@@ -11,6 +11,9 @@ from .contracts import Incident, NormalizedEvent, ProcessIdentity
 from .process_identity import corroborate_process_identity
 from .validation import SCHEMA_VERSION
 
+# Gap causes that, on stderr, only mean "a line of plain text": a CLI's progress output, never a lost event.
+STDERR_TEXT = frozenset(("malformed_json", "unsupported_event"))
+
 
 @dataclass(frozen=True)
 class DetectorConfig:
@@ -192,7 +195,9 @@ def detect_events(events: Iterable[NormalizedEvent], context: DetectorContext,
             result.append(_incident(event, "connection_error", "connection_error", "medium", "medium",
                                     f"connection:{event.event_id}", context.observed_at,
                                     {"diagnostic_code": "connection"}))
-        if event.event_type == "stream_gap":
+        if event.event_type == "stream_gap" and not (event.stream == "stderr" and p.get("cause") in STDERR_TEXT):
+            # A line of plain text on stderr is not a JSON event, by nature: it is no incident (a CLI prints one per
+            # second). Text that happens to parse as a JSON scalar ("42", "[1]") is unsupported_event, same thing.
             facts = {k: p[k] for k in ("first_sequence", "last_sequence", "first_offset", "last_offset",
                                         "dropped_bytes", "dropped_frames") if k in p}
             result.append(_incident(event, "stream_gap", "stream_gap", "info", "medium",

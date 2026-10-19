@@ -30,6 +30,20 @@ class DetectorTests(unittest.TestCase):
         self.assertEqual(detect_events((event("stderr_diagnostic", payload=(("diagnostic_code", "other"),)),),
                                        DetectorContext(NOW, m3_exit_code=1)), ())
 
+    def test_plain_text_on_stderr_is_not_a_stream_gap_incident_but_a_real_gap_is(self) -> None:
+        gap = (("cause", "malformed_json"), ("dropped_bytes", 21), ("dropped_frames", 1))
+        text_line = event("stream_gap", payload=gap, stream="stderr")
+        self.assertEqual(detect_events((text_line,), DetectorContext(NOW)), ())
+        scalar = (("cause", "unsupported_event"), ("dropped_bytes", 6), ("dropped_frames", 1))   # a "12345" line
+        self.assertEqual(detect_events((event("stream_gap", payload=scalar, stream="stderr"),), DetectorContext(NOW)), ())
+        for stream, cause in (("stdout", "malformed_json"), ("stdout", "unsupported_event"), ("stderr", "invalid_utf8"),
+                              ("stderr", "oversized_line")):
+            with self.subTest(stream=stream, cause=cause):
+                real = event("stream_gap", payload=(("cause", cause), ("dropped_bytes", 21), ("dropped_frames", 1)),
+                             stream=stream)
+                found = detect_events((real,), DetectorContext(NOW))
+                self.assertEqual([item.detector_id for item in found], ["stream_gap"])
+
     def test_structured_errors_without_source_code_use_event_identity(self) -> None:
         for kind, detector in (("quota_error", "quota_explicit"), ("auth_error", "auth_failure"),
                                ("transport_error", "connection_error")):

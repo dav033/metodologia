@@ -13,6 +13,7 @@ from .contracts import (
     Assignment,
     AssignmentRequest,
     CancelOrder,
+    PortNotReady,
     Event,
     ExecutionStatus,
     FailureContext,
@@ -51,6 +52,7 @@ class FakeExecutor:
         self.status: dict[str, ExecutionStatus] = {}
         self.crash_after_start = False
         self.unavailable = False
+        self.not_ready = False                # the port exists but cannot answer yet (PortNotReady)
         self.reject_start = False
         self.fail_next_starts = 0
         self.latency_hook: Callable[[], None] | None = None
@@ -81,6 +83,8 @@ class FakeExecutor:
         return Ack("accepted")
 
     def query(self, attempt_id: str) -> ExecutionStatus:
+        if self.not_ready:
+            raise PortNotReady("not composed yet")
         if self.unavailable:
             raise ConnectionError("executor down")
         with self.lock:

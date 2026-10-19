@@ -78,7 +78,9 @@ class PlannerThroughM6(support.World):
 
         tasks = [{"id": "T1", "title": "Complete the checked output", "repo": "app", "after": []}]
         pipeline = chain.Pipeline(self, "chainproj", "REQ-061", tasks, ["README.md"])
-        (pipeline.rdir / "SPEC.md").write_text("# Local M6 integration proof\n", encoding="utf-8")
+        (pipeline.rdir / "SPEC.md").write_text(
+            "# Local M6 integration proof\n\n## Requirements\n"
+            "- R1. Deliver the task through planner, scheduler, M5 retry and the M6 verifier.\n", encoding="utf-8")
         plan_markdown = chain.plan_md("REQ-061", tasks).replace(
             'python3 -c "raise SystemExit(0)"', "python3 verify_result.py"
         )
@@ -93,10 +95,12 @@ class PlannerThroughM6(support.World):
             "type": "command",
             "value": "python3 verify_result.py",
             "purpose": self.criterion,
+            "category": "functional",
         }]
         plan_path.write_text(json.dumps(plan, indent=2), encoding="utf-8")
-        pipeline.step("check")
-        pipeline.step("freeze")
+        with patch.object(chain.bt_core, "ROOT", self.root):  # resolve the project's repositories for file: evidence
+            pipeline.step("check")
+            pipeline.step("freeze")
         self.rdir = pipeline.rdir
         return chain.bt_plan_adapter.run_state_fields(self.rdir)
 

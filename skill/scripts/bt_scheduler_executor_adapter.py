@@ -19,12 +19,17 @@ What lives here, and what does not:
 """
 from __future__ import annotations
 
+import contextlib
+import json
 import math
 import os
 import re
 import shutil
+import signal
+import sqlite3
 import time
 from collections.abc import Callable, Mapping
+from contextlib import closing
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -266,6 +271,11 @@ class MethodologyDriver:
 
 
 # ------------------------------------------------------------------------------------------------------ brief
+# A task whose approved verification requires the branch to be on origin/main is the plan's publication step: the owner
+# approved that push with the plan, so only that task's prompt allows it (once, fast-forward, to main).
+PUBLISH_CHECK = "git merge-base --is-ancestor HEAD origin/main"
+
+
 class PlanBriefs:
     """The task of the frozen plan, as the agent's brief."""
 
@@ -279,9 +289,11 @@ class PlanBriefs:
         except core.SchedulerError:
             raise m3.ExecutorError("ORDER_INVALID", f"{request.task_id} is not a task of the approved plan") from None
         checks = tuple(f"{v.get('purpose') or v.get('type', 'check')}: {v.get('value', '')}" for v in spec.verification)
+        publishes = any(str(v.get("value", "")).strip() == PUBLISH_CHECK for v in spec.verification)
         return m3.Brief(title=str(spec.meta.get("title", spec.id)), objective=str(spec.meta.get("objective", "")),
                         acceptance_criteria=tuple(spec.acceptance_criteria), verification=checks,
-                        expected_paths=tuple(spec.expected_paths), notes=self.notes(request) if self.notes else "")
+                        expected_paths=tuple(spec.expected_paths), notes=self.notes(request) if self.notes else "",
+                        publishes=publishes)
 
 
 # ------------------------------------------------------------------------------------------------------ core ports
@@ -332,6 +344,8 @@ class CoreExecutionPort:
         return core.Ack(receipt.status, f"{receipt.code}: {receipt.detail}".strip(": ")[:300])
 
     def query(self, attempt_id: str):
+        if self.executor is None:      # `start()` reconciles while the executor is still being composed
+            raise core.PortNotReady("the executor is not composed yet")
         status = self.executor.query(attempt_id)
         return core.ExecutionStatus(STATE_OF[status.state], (status.cause or status.detail)[:300])
 
@@ -440,10 +454,36 @@ def _accepted_attempts(scheduler) -> dict[str, str]:
 
 
 def _snapshot_sha(executor, attempt_id: str) -> str | None:
-    """The snapshot commit the executor preserved for that attempt (None when the handoff failed or is absent)."""
-    described = executor.describe(attempt_id) or {}
+    """The snapshot commit the executor preserved for that attempt (None when the handoff failed or is absent).
+
+    A rebase keeps accepted tasks but starts an executor root for the new plan revision. Their attempts stay in the
+    roots of the same core run (same run birth), which are read here, read-only, when this one has no record."""
+    described = executor.describe(attempt_id)
+    if described is None:
+        return _sibling_snapshot_sha(Path(executor.root), attempt_id)
     handoff = described.get("handoff") or {}
     return handoff.get("snapshot_sha") if handoff.get("status") == "captured" else None
+
+
+def _sibling_snapshot_sha(root: Path, attempt_id: str) -> str | None:
+    birth = root.name.rpartition("-")[2]
+    if not birth.isdigit():
+        return None
+    stem = root.name.split("-r", 1)[0]
+    for sibling in sorted(root.parent.glob(f"{stem}-r*-*-{birth}")):
+        ledger = sibling / "ledger.db"
+        if sibling == root or not ledger.is_file():
+            continue
+        try:
+            with closing(sqlite3.connect(f"{ledger.resolve().as_uri()}?mode=ro", uri=True, timeout=0.5)) as db:
+                row = db.execute("SELECT handoff FROM attempts WHERE attempt_id = ?", (attempt_id,)).fetchone()
+            handoff = json.loads(row[0]) if row and row[0] else {}
+        except (sqlite3.Error, OSError, ValueError, TypeError):
+            continue
+        if isinstance(handoff, dict) and handoff.get("status") == "captured":
+            sha = handoff.get("snapshot_sha")
+            return sha if isinstance(sha, str) else None
+    return None
 
 
 def wire(rdir: Path, **options) -> Wiring:
@@ -453,3 +493,48 @@ def wire(rdir: Path, **options) -> Wiring:
     """
     from bt_scheduler_executor_wiring import wire as compose
     return compose(rdir, **options)
+
+
+def _executor_attempts(project: str, req: str, attempt_id: str) -> list[dict]:
+    """Executor ledger rows of this attempt id, across every plan revision's executor root."""
+    rows = []
+    for ledger in (bt_core.ROOT / ".state" / "executor").glob(f"{project}-{req}-r*/ledger.db"):
+        try:
+            conn = sqlite3.connect(f"{ledger.resolve().as_uri()}?mode=ro", uri=True, timeout=2)
+        except sqlite3.Error:
+            continue
+        try:
+            for workspace, shim in conn.execute("SELECT workspace, shim FROM attempts WHERE attempt_id = ? "
+                                                "AND state NOT IN ('finished', 'failed', 'cancelled')", (attempt_id,)):
+                rows.append({"workspace": _json(workspace), "shim": _json(shim)})
+        except sqlite3.Error:
+            pass
+        finally:
+            conn.close()
+    return rows
+
+
+def _json(text) -> dict:
+    try:
+        value = json.loads(text) if text else {}
+    except ValueError:
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def kill_attempt_processes(project: str, req: str, attempt_id: str) -> int:
+    """Stop what the executor started for this attempt: its shim, its process group and any straggler left in its
+    worktree, in every plan revision's executor root. Returns how many processes were signalled."""
+    procinfo = m3.procinfo
+
+    hit = 0
+    for row in _executor_attempts(project, req, attempt_id):
+        shim, workspace = row["shim"], row["workspace"]
+        for key, send in (("pgid", procinfo.signal_group), ("pid", procinfo.signal_pid)):
+            if isinstance(shim.get(key), int) and shim[key] > 1:
+                with contextlib.suppress(Exception):
+                    send(shim[key], signal.SIGKILL)
+                    hit += 1
+        if isinstance(workspace.get("path"), str) and workspace["path"].startswith("/") and Path(workspace["path"]).is_dir():
+            hit += procinfo.kill_in_cwd(workspace["path"], signal.SIGKILL)
+    return hit

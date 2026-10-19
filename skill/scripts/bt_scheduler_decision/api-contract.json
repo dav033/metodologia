@@ -15,6 +15,10 @@
       "checkpoint_revision"
     ],
     "nullable": ["checkpoint_revision"],
+    "optional": {
+      "dispatch_generation": {"type": "integer", "minimum": 0, "default": 0,
+        "meaning": "M1 attempts already consumed; distinguishes authorized retry route references"}
+    },
     "plan_sha256_pattern": "^[0-9a-f]{64}$",
     "revision_minimum": 1,
     "free_slots_minimum": 1,

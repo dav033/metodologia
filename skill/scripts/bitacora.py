@@ -23,16 +23,25 @@ import os
 import sys
 from pathlib import Path
 
+# The uv editable install maps only the modules that existed when it was installed; a module added later would raise
+# ModuleNotFoundError until a reinstall. Falling back to this directory keeps the command working without one.
+_HERE = str(Path(__file__).resolve().parent)
+if _HERE not in sys.path:
+    sys.path.append(_HERE)
+
 from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _load_bindings, _save_bindings
 from bt_views import *  # noqa: F403
 from bt_hooks import hook_end, hook_start, hook_stop
 import bt_cli_accounts
+import bt_links
 import bt_cli_diagram
 import bt_cli_docs
 import bt_cli_launch
 import bt_cli_scheduler_recovery
+import bt_cli_scheduler_ops
 import bt_cli_scheduler_run
+import bt_cli_go
 import bt_cli_delegate
 import bt_cli_learn
 import bt_cli_review
@@ -60,52 +69,11 @@ def main() -> None:
     p_bind.add_argument("session_id")
     p_bind.add_argument("project")
     bt_cli_launch.register(sub)
-    p_run = sub.add_parser("run", help="marathon: supervise a plan, a fresh headless session per task or per milestone (days)")
-    p_run.add_argument("req", help="REQ-NNN")
-    p_run.add_argument("--agent", choices=["claude", "codex", "antigravity"])
-    p_run.add_argument("--pool", help="accounts the router may use: auto (every account allowed for the project), "
-                                      "profile ids a,b, or none (pin to --agent/--profile)")
-    p_run.add_argument("--audit", dest="audit", action="store_true", default=None,
-                       help="independent audit session after each milestone (default with a pool)")
-    p_run.add_argument("--no-audit", dest="audit", action="store_false")
-    p_run.add_argument("--workers", type=int, help="sessions at once, only across different repos (default 1, max 2)")
-    p_run.add_argument("--isolation", choices=["off", "worktree"], help="isolate same-repo sessions in worktrees")
-    p_run.add_argument("--profile", help="account profile (bitacora.py profiles list); sets the agent")
-    p_run.add_argument("--model", help="tier 0 of the escalation ladder (default haiku)")
-    p_run.add_argument("--no-ultracode", action="store_true")
-    p_run.add_argument("--max-attempts", type=int, help="per task (default 4: haiku, sonnet, opus, opus)")
-    p_run.add_argument("--session-timeout", type=int, help="minutes per session (default 60)")
-    p_run.add_argument("--resume", action="store_true", help="continue from RUN.json (autostart uses this)")
-    p_run.add_argument("--retry-blocked", action="store_true", help="with --resume: give blocked tasks a fresh start")
-    p_run.add_argument("--agent-cmd", help="tests: command template with {prompt_file} {workdir} {task} {req} {project} "
-                                           "{model_args}")
-    p_run.add_argument("--once", action="store_true", help="run a single session and exit")
-    p_run.add_argument("--no-autostart", action="store_true", help="do not install the per-user login resume entry")
-    p_run.add_argument("--foreground", action="store_true", help="same-terminal bounded milestone coordinator (runtime capability preflight)")
-    p_task = sub.add_parser("task", help="marathon agent report: done / fail / note / escalate on a plan task")
-    p_task.add_argument("action", choices=["done", "fail", "note", "escalate"])
-    p_task.add_argument("req", help="REQ-NNN")
-    p_task.add_argument("task", help="T3")
-    p_task.add_argument("--evidence", default="", help="done: what proves it")
-    p_task.add_argument("--findings", type=int, help="done (audit): number of defects found in the milestone, 0 when clean")
-    p_task.add_argument("--severity", help="done (audit): high=N,med=N,low=N; must add up to --findings")
-    p_task.add_argument("--reason", default="", help="fail / escalate: why")
-    p_task.add_argument("--to", choices=["standard", "top", "sonnet", "opus"],
-                        help="escalate: top (architecture; alias opus) or standard (stuck; alias sonnet)")
-    p_task.add_argument("--text", default="", help="note: advice for the next attempt")
-    p_task.add_argument("--blocked", action="store_true", help="fail: needs a human, do not retry")
-    p_rc = sub.add_parser("run-control", help="pause / resume / stop a running marathon")
-    p_rc.add_argument("req", help="REQ-NNN")
-    p_rc.add_argument("action", choices=["pause", "resume", "stop"])
     p_watch = sub.add_parser("watch", help="wait for the next news of a run (settled session, block, wait, end), "
                                            "print it and exit; run it in the background and re-arm it")
     p_watch.add_argument("req", help="REQ-NNN")
     p_watch.add_argument("--timeout", type=float, default=360, help="minutes to wait for news (default 360)")
     p_watch.add_argument("--poll", type=float, default=15, help="seconds between checks")
-    p_mon = sub.add_parser("monitor", help="open the marathon's Remote Control monitor session (watch it from the phone)")
-    p_mon.add_argument("req", help="REQ-NNN")
-    p_mon.add_argument("--model", default="haiku")
-    p_mon.add_argument("--dry-run", action="store_true")
     p_round = sub.add_parser("round", help="question rounds shared with the web UI")
     p_round.add_argument("action", choices=["new", "wait", "answer", "show"])
     p_round.add_argument("req", help="REQ-NNN")
@@ -134,6 +102,7 @@ def main() -> None:
     p_work.add_argument("value", nargs="?", choices=["true", "false"])
     bt_cli_requirements_gate.add_parser(sub)
     bt_cli_plan.add_parser(sub)
+    bt_cli_plan.add_status_parser(sub)
     bt_cli_planner.register(sub)
     bt_cli_delegate.register(sub)
     bt_cli_review.register(sub)
@@ -142,13 +111,12 @@ def main() -> None:
     bt_cli_docs.register(sub)
     bt_cli_scheduler_recovery.register(sub)
     bt_cli_scheduler_run.register(sub)
+    bt_cli_scheduler_ops.register(sub)
+    bt_cli_go.add_parser(sub)
     bt_cli_learn.register(sub)
-    p_ho = sub.add_parser("handoff", help="validate a plan, approve it when safe and start it in the background")
+    p_ho = sub.add_parser("handoff", help="validate a plan, approve it when safe and start it in the background", allow_abbrev=False)
     p_ho.add_argument("req", help="REQ-NNN")
     p_ho.add_argument("--dry-run", action="store_true", help="only say what would happen and why")
-    p_ho.add_argument("--pool", help="accounts the router may use (default: auto)")
-    p_ho.add_argument("--profile", help="preferred account among equals")
-    p_ho.add_argument("--model", help="tier 0 model of the preferred provider")
     p_ho.add_argument("--foreground", action="store_true", help="approved same-terminal transition via the relay parent")
     p_ho.add_argument("--planning-session", help="provider session id for verified end-of-turn handoff")
     sub.add_parser("context", help="one screen for an agent: who is available, routing, delegation, learnings, docs")
@@ -291,7 +259,7 @@ def main() -> None:
             project = bt_audit.project_for_cwd(ROOT, Path(a.cwd))
         if a.cmd == "context":
             import bt_context
-            print(bt_context.text(project))
+            print(bt_links.linkify(bt_context.text(project), project))
             return
         if a.cmd == "agents":
             bt_cli_accounts.dispatch_agents(a, project)
@@ -392,44 +360,28 @@ def main() -> None:
         sys.exit(bt_cli_requirements_gate.dispatch(a, ROOT, project))
     elif a.cmd == "plan-json":
         sys.exit(bt_cli_plan.dispatch(a, ROOT, project))
+    elif a.cmd == "plan-status":
+        sys.exit(bt_cli_plan.dispatch_status(a, ROOT, project))
     elif a.cmd == "planner":
         sys.exit(bt_cli_planner.dispatch(a, project, cwd, ROOT))
     elif a.cmd == "launch":
         bt_cli_launch.dispatch(a, project)
-    elif a.cmd == "run":
-        from bt_run import supervise
-        sys.exit(supervise(project, a.req, agent=a.agent, model=a.model, ultracode=False if a.no_ultracode else None,
-                           max_attempts=a.max_attempts, session_timeout=a.session_timeout,
-                           retry_blocked=a.retry_blocked, agent_cmd=a.agent_cmd, once=a.once,
-                           no_autostart=a.no_autostart, profile=a.profile,
-                           workers=a.workers, pool=a.pool, audit=a.audit, isolation=a.isolation,
-                           foreground=a.foreground))
+    elif a.cmd in ("scheduler-watch", "scheduler-op"):
+        sys.exit(bt_cli_scheduler_ops.dispatch(a, project, pdir))
     elif a.cmd == "scheduler-run":
         sys.exit(bt_cli_scheduler_run.dispatch(a, project, pdir))
+    elif a.cmd == "go":
+        sys.exit(bt_cli_go.run(ROOT, project, a.req, a.dry_run, a.no_ai, a.timeout))
     elif a.cmd == "handoff":
         import bt_handoff
         extra = {"foreground": True, "planning_session": a.planning_session} if a.foreground else {}
-        result = bt_handoff.handoff(project, a.req, a.dry_run, a.pool, a.model, a.profile, **extra)
+        result = bt_handoff.handoff(project, a.req, a.dry_run, **extra)
         print(json.dumps(result, indent=1, ensure_ascii=False))
         sys.exit(0 if result["decision"] in ("launched", "would_launch", "already_running", "done", "prepared", "would_prepare") else
                  3 if result["decision"] == "needs_approval" else 2)
     elif a.cmd == "watch":
         import bt_watch
         print(bt_watch.watch(project, a.req, a.timeout, a.poll))
-    elif a.cmd == "monitor":
-        from bt_monitor import open_monitor
-        print(json.dumps(open_monitor(project, a.req, a.model, a.dry_run), indent=1, ensure_ascii=False))
-    elif a.cmd in ("task", "run-control"):
-        rdir = find_req(pdir, a.req)
-        if a.cmd == "run-control":
-            import bt_cli_run_control
-            print(bt_cli_run_control.dispatch(rdir, a.action))
-        else:
-            import bt_runtask as rt
-            print({"done": lambda: rt.task_done(rdir, a.task, a.evidence, a.findings, a.severity),
-                   "fail": lambda: rt.task_fail(rdir, a.task, a.reason, a.blocked),
-                   "note": lambda: rt.task_note(rdir, a.task, a.text),
-                   "escalate": lambda: rt.task_escalate(rdir, a.task, a.to or "", a.reason)}[a.action]())
     elif a.cmd == "workspace":
         if a.action == "add":
             if not (a.role and a.path):
@@ -468,7 +420,7 @@ def main() -> None:
     elif a.cmd == "pending":
         import bt_pending
         print("sorted" if bt_pending.sort_file(pdir) else "already sorted")
-        print("\n".join(bt_pending.top(pdir, 10)))
+        print(bt_links.linkify("\n".join(bt_pending.top(pdir, 10)), project))
     elif a.cmd == "index":
         print(write_index(pdir).as_posix())
         print(write_global_index().as_posix())

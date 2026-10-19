@@ -252,6 +252,11 @@ class Ack:
     detail: str = ""
 
 
+class PortNotReady(Exception):
+    """Raised by a port that exists but cannot answer yet (what backs it is still being composed). The core leaves the
+    attempt as it is, flags it for reconciliation and asks again on a later step: it never reads this as «unknown»."""
+
+
 @dataclass(frozen=True)
 class ExecutionStatus:
     state: str                      # running | finished | failed | cancelled | not_found | unknown

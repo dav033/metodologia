@@ -13,6 +13,8 @@ import bt_agy
 import bt_events
 import bt_outcomes
 import bt_profiles
+import bt_routing_policy
+import bt_role_policy
 import bt_subscriptions
 import bt_usage
 from bt_scheduler_decision import (
@@ -110,7 +112,10 @@ def _tier_floor(classifications: Mapping[str, object], kind: str) -> tuple[int, 
     if risk == "high":
         tier = max(tier, bt_agents.TOP)
         rules.append("risk:high")
-    return tier, tuple(rules)
+    capped = bt_routing_policy.cap_tier(tier, kind)
+    if capped < tier:
+        rules.append(f"kind_ceiling:{capped}")
+    return capped, tuple(rules)
 
 
 def _tier_for(classifications: Mapping[str, object], kind: str) -> int:
@@ -123,8 +128,11 @@ def _token_count(row: Mapping[str, Any]) -> int | None:
     return bt_usage.measured_total(row.get("usage"), row.get("agent"))
 
 
-def _route_options(provider: str, tier: int, task_kind: str) -> tuple[tuple[str, str | None], ...]:
+def _route_options(provider: str, tier: int, task_kind: str, complexity: str | None = None) -> tuple[tuple[str, str | None], ...]:
     """Enumerate configured model/effort rungs at or above the task floor."""
+    role = bt_role_policy.role_for_kind(task_kind)
+    if role:
+        return tuple((model, effort) for p, model, effort in bt_role_policy.options(role, complexity) if p == provider)
     if provider not in bt_agents.PROVIDERS:
         return ()
     options: list[tuple[str, str | None]] = []
@@ -225,7 +233,7 @@ def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, 
     tier = _tier_for(classifications, task_kind)
     routes, _ = bt_agents.candidates(project, pool, tier, task_kind, risk=str(classifications.get("risk") or "") or None,
                                     complexity=str(classifications.get("complexity") or "") or None,
-                                    allow_explore=False)
+                                    allow_explore=False, role=bt_role_policy.role_for_kind(task_kind))
     router_rank = {
         (route.get("profile"), route.get("agent"), route.get("model"), route.get("effort")): index
         for index, route in enumerate(routes)
@@ -237,7 +245,7 @@ def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, 
         if not isinstance(spec, Mapping):
             continue
         provider = str(spec.get("provider") or "")
-        options = _route_options(provider, tier, task_kind)
+        options = _route_options(provider, tier, task_kind, str(classifications.get("complexity") or ""))
         if not options:
             continue
         key = bt_agents.account_key(profile, provider)

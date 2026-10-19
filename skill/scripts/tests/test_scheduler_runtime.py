@@ -71,16 +71,10 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(error.exception.code, "AUTHORITY_CONFLICT")
 
     def test_owner_lock_refuses_a_second_startup_owner(self):
-        from bt_runentry import _legacy_start_lock
-
         with adapter.owner_lock(self.rdir):
-            legacy_owner = _legacy_start_lock(self.rdir)
-            with self.assertRaises(SystemExit) as legacy_error:
-                legacy_owner.__enter__()
             scheduler_owner = adapter.owner_lock(self.rdir)
             with self.assertRaises(adapter.core.SchedulerError) as scheduler_error:
                 scheduler_owner.__enter__()
-        self.assertIn("OWNER_ACTIVE", str(legacy_error.exception))
         self.assertEqual(scheduler_error.exception.code, "OWNER_ACTIVE")
 
     def test_owner_loop_writes_heartbeat_and_deduplicates_terminal_notification(self):
@@ -215,6 +209,49 @@ class RuntimeTests(unittest.TestCase):
                 self.assertRaises(runtime.RuntimeErrorCode) as error:
             runtime._runtime_binding(self.rdir, resume=True)
         self.assertEqual(error.exception.code, "PLAN_MISMATCH")
+
+    def test_rebind_keeps_the_runtime_identity_and_follows_the_new_revision(self):
+        plan = SimpleNamespace(plan_id="REQ-042", revision=1, sha256="a" * 64)
+        with patch.object(adapter, "approved_plan", return_value=plan):
+            identity = runtime._runtime_binding(self.rdir, resume=False)
+        newer = SimpleNamespace(plan_id="REQ-042", revision=2, sha256="b" * 64)
+        with patch.object(adapter, "approved_plan", return_value=newer):
+            runtime.rebind_runtime(self.rdir)
+            self.assertEqual(runtime._runtime_binding(self.rdir, resume=True), identity)
+        with patch.object(adapter, "approved_plan", return_value=plan), \
+                self.assertRaises(runtime.RuntimeErrorCode) as error:
+            runtime._runtime_binding(self.rdir, resume=True)
+        self.assertEqual(error.exception.code, "PLAN_MISMATCH")
+
+    def test_the_executor_timeout_comes_from_the_configuration_with_a_sane_fallback(self):
+        import bt_config
+
+        with patch.object(bt_config, "get", return_value=90):
+            self.assertEqual(runtime._executor_config().timeout_seconds, 5400.0)
+        for bad in (0, -5, True, "x", None):
+            with patch.object(bt_config, "get", return_value=bad):
+                self.assertEqual(runtime._executor_config().timeout_seconds, 7200.0)
+        self.assertEqual(bt_config.get("scheduler.attempt_timeout_minutes"), 120)
+
+    def test_rebind_without_a_binding_is_refused(self):
+        newer = SimpleNamespace(plan_id="REQ-042", revision=2, sha256="b" * 64)
+        with patch.object(adapter, "approved_plan", return_value=newer), \
+                self.assertRaises(runtime.RuntimeErrorCode) as error:
+            runtime.rebind_runtime(self.rdir)
+        self.assertEqual(error.exception.code, "RUNTIME_BINDING_MISSING")
+
+
+
+class RunLimits(unittest.TestCase):
+    def test_parallelism_and_exclusive_scopes_reach_the_core_and_the_executor_ceiling(self):
+        import bt_config
+        import bt_scheduler_run as run
+        with patch.object(bt_config, "load", return_value={"scheduler": {"max_parallel_tasks": 3, "max_attempts": 3,
+                                                                           "attempt_timeout_minutes": 120,
+                                                                           "exclusive_scopes": ["large_change"]}}):
+            core_config, m3_config = run._run_config(), run._executor_config()
+        self.assertEqual((core_config.max_parallel_tasks, core_config.exclusive_scopes), (3, ("large_change",)))
+        self.assertEqual((m3_config.max_running, m3_config.timeout_seconds), (3, 7200.0))
 
 
 if __name__ == "__main__":

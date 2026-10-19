@@ -6,3 +6,16 @@ document.querySelectorAll('script.md-src').forEach((block) => {
   const src = JSON.parse(block.textContent).replace(/^---\n[\s\S]*?\n---\n/, ''); // drop front matter
   target.innerHTML = window.marked.parse(src);
 });
+
+// Ids in rendered markdown headings (## D-045 — ...) become anchors, so /go/D-045 lands on the exact section.
+(function () {
+  var ID = /^(REQ|P|D|LG)-\d+/i;
+  document.querySelectorAll('.md h1, .md h2, .md h3, .md h4').forEach(function (h) {
+    var m = ID.exec(h.textContent.trim());
+    if (m && !h.id) h.id = m[0].toUpperCase();
+  });
+  if (location.hash) {
+    var el = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (el) el.scrollIntoView();
+  }
+})();

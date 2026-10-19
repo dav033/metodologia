@@ -13,6 +13,9 @@ autonomously as possible, and leave a trail anyone (including the next session) 
   subagents' reports to you don't need it.
 - **Talk to the user in Spanish. Bitácora files in English. Code in the repository's language** (English for new
   projects).
+- **Cite ids as links.** In messages to the user write a bitácora id as a link to the web service:
+  `[REQ-005](http://127.0.0.1:8765/go/<project>/REQ-005)`; the same for `P-`, `D-`, `LG-`, and `/T4` after a REQ for a
+  task. The terminal shows them clickable; only for ids that exist. Files, commits and code keep plain ids.
 - **Answer first; keep every technical fact.** Use concise, natural Spanish; remove ceremony and repeated
   explanations. Preserve negations, conditions, numbers, units, code, commands, paths and decisive error text.
   Use full sentences for questions, approvals, risky actions or ambiguity. Keep required progress updates and
@@ -73,8 +76,8 @@ current state, pending items, what the last session said to start with, and any 
 When the session runs inside the bitácora root (`~/bitacora`), the context says **HQ MODE**. The HQ is where the user
 plans: pick or create the project (`bind`), run the requirements interview (reading the project's repo, path in
 `<project>/project.json`), write spec and plan, get the plan approved — then `launch` it into a separate executor
-session with full permissions (`references/execution.md` §1c) — **marathon mode** (a supervisor running one fresh
-session per task, for multi-day plans) is the default. Don't edit project repos from the HQ.
+session with full permissions (`references/execution.md` §1c): only the scheduler runs an approved, frozen plan
+(`launch`/`handoff` -> `scheduler-run`). Don't edit project repos from the HQ.
 
 The HQ also starts the **local web UI** (`bitacora.py web`): dashboard, documents, artifacts, question rounds
 answerable by form, and plan approval with a button that launches the executor. Everything it shows or receives is
@@ -96,11 +99,11 @@ files in the bitácora, versioned with local git — no dependency on any agent 
 | Which agent/model/effort for a piece of work, delegating to another provider or subscription, usage limits, telemetry, what was learned | `references/agents.md` (live copy: `bitacora.py context`) |
 | Interactive one-task delegation, retries, isolated branches, recovery, or independent review | `delegate start --retries/--worktree`, `delegate resume`, `bitacora review`; read `references/agents.md` |
 | An interactive session near its 5 h quota; relay to another account in the same pane; `relay handoff` | `references/relay.md` |
-| An approved plan that will run for days; "maratón"; supervised run, pause/resume/stop, stuck or blocked tasks, usage limits | `references/marathon.md` (launch details in `execution.md` §1c) |
-| Large independent workstreams, safe concurrency, agent delegation, or work that must resume across sessions | `references/agent-orchestration.md` (+ `references/subagents.md`; use `references/marathon.md` for multi-day execution) |
+| An approved plan that will run for days; scheduler run, `scheduler-run --resume`, `watch`, blocked tasks, usage limits | `references/execution.md` §1c, `references/modules.md` §Scheduler core |
+| Large independent workstreams, safe concurrency, agent delegation, or work that must resume across sessions | `references/agent-orchestration.md` (+ `references/subagents.md`; use `references/execution.md` §1c for multi-day execution) |
 | Designing, writing, refactoring, reviewing or debugging code | `references/engineering.md` (+ the `references/stacks/*.md` it points to) |
 | Building or auditing interfaces, visual mockups or product copy | `references/interface-quality.md` (direction, honest content and interaction evidence; use the existing requirements/review flow) |
-| Anything worth recording happened; wrap-up; Stop hook reminder; rollups; "¿en qué estamos?"; a visual page/artifact would help; the web UI | `references/documentation.md` |
+| Anything worth recording happened; wrap-up; Stop hook reminder; rollups; "¿en qué estamos?"; a visual page/artifact would help; the web UI; plan progress (`plan-status`, the "Planes" context section, web `/plans`, the generated status block in PLAN.md) | `references/documentation.md` |
 | An ambiguous or conflicting domain term; creating or editing `GLOSSARY.md` | `references/domain-glossary.md` (file format: `glossary-conventions.md`) |
 | Something broken, failing, flaky or slow, before any repair | `references/diagnosing-bugs.md` |
 | An explicit retro, or "qué salió mal" after repeated friction | `references/retro-feedback.md` |

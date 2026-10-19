@@ -166,6 +166,19 @@ class Reconciliation(unittest.TestCase):
         self.assertEqual(h.send("T1", "execution_finished").status, "applied")
         self.assertEqual(h.core.snapshot().tasks["T1"]["attempt_state"], "verifying")
 
+    def test_a_port_that_is_not_ready_at_restart_leaves_running_attempts_running_and_asks_again(self):
+        h = self.running()
+        h.executor.not_ready = True
+        h.crash()
+        snap = h.core.snapshot()
+        self.assertEqual(snap.tasks["T1"]["attempt_state"], "running")                 # not «uncertain»: nothing was observed
+        self.assertTrue(h.core.read(lambda c: c.state.attempts[h.attempt("T1")].needs_reconcile))
+        h.executor.not_ready = False
+        h.core.step()
+        self.assertEqual(h.core.snapshot().tasks["T1"]["attempt_state"], "running")
+        self.assertFalse(h.core.read(lambda c: c.state.attempts[h.attempt("T1")].needs_reconcile))
+        self.assertNotIn("port_error", h.audit_kinds())
+
     def test_uncertainty_resolves_when_the_executor_answers_again(self):
         h = self.running()
         h.executor.unavailable = True

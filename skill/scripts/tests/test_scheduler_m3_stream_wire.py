@@ -32,6 +32,24 @@ from bt_scheduler_stream_adapter import M3StreamAdapter
 
 
 class StreamWireTests(unittest.TestCase):
+    def test_restart_replay_never_rewinds_the_stored_cursor(self):
+        from bt_scheduler_m4_stream_bridge import M4StreamIngestor
+        with tempfile.TemporaryDirectory() as temp:
+            store = MonitorStore(Path(temp) / "m4.sqlite3")
+            stored = SourceCursor("exec-1", "stderr", "boot-a", 277, 426880)
+            store.append_batch(cursors=(stored,))
+            ingestor = M4StreamIngestor(None, store)
+            replay = SourceCursor("exec-1", "stderr", "boot-a", 65, 165152)
+            other_boot = SourceCursor("exec-1", "stderr", "boot-b", 65, 165152)
+            ahead = SourceCursor("exec-1", "stderr", "boot-a", 300, 500000)
+            fresh = SourceCursor("exec-2", "stdout", "boot-a", 1, 8)
+            kept = ingestor._cursors_not_behind_store((replay, other_boot, ahead, fresh))
+            self.assertEqual(kept, (stored, other_boot, ahead, fresh))
+            store.append_batch(cursors=(kept[0],))
+            self.assertEqual(store.get_cursor("exec-1", "stderr"), stored)
+            with self.assertRaisesRegex(ValueError, "boot identity"):
+                store.append_batch(cursors=(kept[1],))
+
     def test_summary_gap_tracking_has_a_global_capacity(self):
         with tempfile.TemporaryDirectory() as temp:
             adapter = M3StreamAdapter(temp)

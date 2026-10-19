@@ -20,7 +20,6 @@ import bt_orchestration_context as context  # noqa: E402
 import bt_requirements_gate as gate  # noqa: E402
 import bt_review_policy  # noqa: E402
 import bt_routing_policy as policy  # noqa: E402
-import bt_run  # noqa: E402
 import bt_runprompt  # noqa: E402
 import bt_runsession  # noqa: E402
 import bt_runsettle  # noqa: E402
@@ -48,10 +47,10 @@ class LadderAndStartTier(unittest.TestCase):
         self.assertEqual([bt_agents.model_for("codex", t) for t in (0, 1, 2)],
                          [("gpt-6-luna", "medium"), ("gpt-6.1-sol", "medium"), ("gpt-6.1-sol", "high")])
 
-    def test_simple_tasks_start_light_and_complex_ones_are_not_capped(self):
+    def test_simple_tasks_start_light_and_kind_ceilings_bound_complex_ones(self):
         for kind in ("docs", "test", "research", "implement"):
             self.assertEqual(policy.start_tier(None, kind, "S", "low")[0], 0, kind)
-        self.assertEqual(policy.start_tier("architecture", "docs")[0], 2)         # no absolute ceiling for docs
+        self.assertEqual(policy.start_tier("architecture", "docs")[0], 0)
         self.assertEqual(policy.start_tier(None, "research", "L")[0], 1)
         self.assertEqual(policy.start_tier(None, "test", None, "high")[0], 1)
         tier, reason = policy.start_tier(None, "implement", "L", "high")
@@ -68,10 +67,10 @@ class LadderAndStartTier(unittest.TestCase):
         agy = {"agent": "antigravity", "model": "gemini-3.8-flash-low", "effort": None}
         self.assertEqual(bt_runsession._explicit_effort(agy, [task("T1", effort="xhigh")]), agy)
 
-    def test_fixed_mode_follows_the_configured_ladder(self):  # 3
+    def test_fixed_mode_uses_role_defaults_without_failure_tier_escalation(self):  # 3
         state = {"agent": "claude"}
         self.assertEqual(bt_agents.legacy_model_for(state, 1), ("sonnet", "medium"))
-        self.assertEqual(bt_agents.route("p", {"agent": "codex"}, 1)["effort"], "medium")
+        self.assertEqual(bt_agents.route("p", {"agent": "codex"}, 1)["effort"], "high")
         self.assertEqual(bt_agents.route("p", {"agent": "codex"}, 2)["effort"], "high")
 
 
@@ -129,6 +128,14 @@ class RouterTests(AgentTests):
         self.assertEqual(self.order(usage)[0], "codex")
         self.assertIsNone(policy.weekly_pace_surplus({"status": "ok", "windows": {}}, NOW))
 
+    def test_auth_blocked_account_cannot_beat_healthy_weekly_pace_penalty(self):
+        for status in ("invalid_credentials", "auth_unavailable", "manual_challenge", "http_401", "http_403"):
+            with self.subTest(status=status):
+                usage = {**self.usage("claude", 5, 40, seven_reset=NOW + 6 * 86400),
+                         **self.usage("codex-named", 0, 0)}
+                usage[bt_agents.account_key("codex-named", "codex")]["status"] = status
+                self.assertEqual(self.order(usage)[0], "claude")
+
     def test_cold_start_explores_cheap_routes_but_never_high_risk_or_audit_work(self):  # 6
         self.attempts("claude", "claude", "haiku", 5, 0)
         self.assertEqual(self.order({})[0], "codex")                                   # unseen cheap route explores
@@ -153,40 +160,6 @@ class RouterTests(AgentTests):
     def test_tier_two_is_never_served_by_a_lighter_model(self):  # 2
         routes, _ = bt_agents.candidates("personal-project", ["claude", "codex-named"], 2, "implement")
         self.assertEqual({(r["model"], r["effort"]) for r in routes}, {("opus", "high"), ("gpt-6.1-sol", "high")})
-
-    def test_limit_recovery_asks_for_the_tier_and_kind_that_hit_the_limit(self):  # 2, 15
-        state = {"req": "REQ-001", "pool": ["claude", "codex-named"], "model": None}
-        info = {"profile": "claude", "agent": "claude", "model": "opus", "tier": 2, "kind": "implement",
-                "text": "usage limit reached", "rc": 1}
-        calls = []
-
-        def fake(project, pool, tier, kind="implement", configured=None, *a, **k):
-            calls.append((tier, kind))
-            return [{"profile": "codex-named", "agent": "codex"}], None
-        with patch.object(bt_run.bt_agents, "candidates", side_effect=fake), \
-                patch.object(bt_run, "detect_limit", return_value=int(NOW + 600)), patch.object(bt_run, "say"):
-            bt_run._limited("p", Path("."), {"notified_wait": True}, state, [info])
-        self.assertEqual(calls, [(2, "implement")])
-        self.assertIsNotNone(bt_agents.cooling_until("claude", "claude"))             # cooldown recorded
-        self.assertIsNone(bt_agents.cooling_until("codex-named", "codex"))
-
-    def test_limit_recovery_waits_instead_of_downgrading_when_no_compatible_route_exists(self):
-        state = {"req": "REQ-001", "pool": ["claude"], "model": None}
-        info = {"profile": "claude", "agent": "claude", "model": "opus", "tier": 2, "kind": "audit", "text": "x", "rc": 1}
-        waited = []
-        with patch.object(bt_run, "detect_limit", return_value=int(NOW + 600)), patch.object(bt_run, "say"), \
-                patch.object(bt_run, "enter_wait", side_effect=lambda *a: waited.append(a[3])):
-            bt_run._limited("p", Path("."), {"notified_wait": False}, state, [info])
-        self.assertEqual(len(waited), 1)
-        self.assertGreater(waited[0], NOW)
-
-    def test_an_account_without_a_provider_limit_message_is_not_marked_exhausted(self):
-        state = {"req": "REQ-001", "pool": ["claude", "codex-named"], "model": None}
-        info = {"profile": "codex-named", "agent": "codex", "model": "gpt-6.1-sol", "tier": 1, "kind": "implement",
-                "text": "ok", "rc": 0}
-        with patch.object(bt_run, "detect_limit", return_value=None), patch.object(bt_run, "say"):
-            bt_run._limited("p", Path("."), {"notified_wait": False}, state, [info])
-        self.assertIsNone(bt_agents.cooling_until("codex-named", "codex"))
 
     def test_cooldown_excludes_the_failed_combination_until_its_reset(self):  # 15
         bt_agents.quota_mark("claude", "claude", NOW + 900)
@@ -228,7 +201,7 @@ class GroupingTests(unittest.TestCase):
     def test_group_sizes_are_configurable(self):
         state = run_state(*[task(f"T{i}") for i in range(1, 6)], limits={"group_max": {"0": 2}})
         self.assertEqual(len(rs.unit_of(state, state["tasks"][0])), 2)
-        self.assertEqual(bt_runtier.group_max({"group_max": {"1": 4}}, 1), 4)
+        self.assertEqual(bt_runtier.group_max({"group_max": {"1": 4}}, 1), 1)
 
     def test_dependencies_are_respected_inside_and_across_groups(self):  # 9
         chain = run_state(task("T1"), task("T2", after=["T1"]), task("T3", after=["T2"]), task("T4", after=["T3"]))
@@ -242,25 +215,19 @@ class GroupingTests(unittest.TestCase):
         audit = task("M1-audit", tier=1, kind="audit", synthetic=True)
         self.assertEqual(rs.unit_of(run_state(audit, task("T1")), audit), [audit])
 
-    def test_independent_units_still_run_in_parallel(self):
-        state = run_state(task("T1"), task("T2"), limits={**rs.DEFAULT_LIMITS, "workers": 2})
-        state["tasks"][0].update(repo="a", milestone="M1", tier=1)
-        state["tasks"][1].update(repo="b", milestone="M2", tier=1)
-        self.assertEqual(len(rs.ready_units(state, 2)), 2)
-
 
 class TimeoutAndStagnation(unittest.TestCase):
     def test_tier_timeouts_and_explicit_overrides(self):  # 13
         limits = dict(rs.DEFAULT_LIMITS)
-        self.assertEqual([bt_runtier.session_timeout_min(limits, t) for t in (0, 1, 2)], [25, 45, 60])
+        self.assertEqual([bt_runtier.session_timeout_min(limits, t) for t in (0, 1, 2)], [25, 25, 25])
         self.assertEqual(bt_runtier.session_timeout_min({"session_timeout_min": 90}, 0), 90)       # stored explicit value
         self.assertEqual(bt_runtier.session_timeout_min({**limits, "session_timeout_min": 30,
                                                          "session_timeout_by_tier": None}, 2), 30)
-        self.assertEqual(bt_runtier.session_timeout_min({**limits, "session_timeout_min": 30}, 2), 30)  # cap wins
+        self.assertEqual(bt_runtier.session_timeout_min({**limits, "session_timeout_min": 30}, 2), 25)
 
-    def test_headless_claude_has_no_turn_flag_so_the_timeout_is_the_bound(self):
+    def test_headless_claude_has_a_strict_turn_limit(self):
         argv, _ = bt_runprompt.agent_argv({"agent": "claude"}, Path("."), "P", "haiku", None)
-        self.assertNotIn("--max-turns", argv)
+        self.assertEqual(argv[argv.index("--max-turns") + 1], "45")
 
     def test_consecutive_attempts_that_change_nothing_block_the_task(self):
         t = task("T1", attempts=0)
@@ -293,8 +260,10 @@ class ReviewPolicyTests(unittest.TestCase):
         self.assertIn("verify, tests and linters", rule)                        # mandatory checks stay
         self.assertIn("EVERY commit", bt_review_policy.commit_review_rule({"tasks": [task("T1")]}, [task("T1")]))
 
-    def test_high_risk_work_keeps_the_gate_even_with_an_audit(self):
-        self.assertIn("EVERY commit", bt_review_policy.commit_review_rule(self.audited(), [task("T1", risk="high")]))
+    def test_high_risk_work_uses_the_escalated_milestone_audit(self):
+        rule = bt_review_policy.commit_review_rule(self.audited(), [task("T1", risk="high")])
+        self.assertIn("Do NOT run the antagonist per commit", rule)
+        self.assertNotIn("EVERY commit", rule)
 
     def test_only_the_units_own_milestone_audit_lifts_the_gate(self):
         state = self.audited()

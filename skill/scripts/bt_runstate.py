@@ -26,13 +26,12 @@ from bt_core import STATE
 from bt_runtier import TIMEOUT_BY_TIER, group_max, start_tier
 
 LOG_KEEP = 200
-DEFAULT_LIMITS = {"max_attempts": 4, "session_timeout_min": 60, "max_sessions": 300, "workers": 1,
+DEFAULT_LIMITS = {"max_attempts": 4, "session_timeout_min": 25, "max_sessions": 300, "workers": 1,
                   "isolation": "off", "session_timeout_by_tier": dict(TIMEOUT_BY_TIER)}  # group_max: bt_runtier / config  # 4 = haiku, sonnet, opus, opus
 TASK_RE = re.compile(r"^\s*[-*]\s+\[( |x|X)\]\s+(T\d+(?:\.\d+)?[a-z]?)\s*(?:—|–|--|-|:)\s*(.+?)\s*$")
 MILESTONE_RE = re.compile(r"^#{3,4}\s+(M\d+)\b\s*(?:—|–|--|-|:)?\s*(.*?)\s*$")
 HEADING_RE = re.compile(r"^#{1,4}\s+\S")
 AUDIT_SUFFIX = "-audit"
-MILESTONE_TIMEOUT_FACTOR = 3  # a milestone session gets at most this many task timeouts
 
 
 def now_iso() -> str:
@@ -387,80 +386,6 @@ def builders_of(state: dict, audit: dict) -> set:
             if logged or state.get("agent"):
                 out.add(logged or state["agent"])
     return out
-
-
-MAX_WORKERS = 2  # until the machine's behaviour under several agent sessions has been measured
-
-
-def ready_units(state: dict, workers: int = 1) -> list[list[dict]]:
-    """Units that may run at the same time: ready_batch's rule applied to whole units. Further units join only when
-    every task of both names a repo role and the role sets do not overlap."""
-    first = next_unit(state)
-    if not first:
-        return []
-    isolated = state.get("limits", {}).get("isolation") == "worktree"
-    cap = max(1, min(int(workers or 1), 3 if isolated else MAX_WORKERS))
-    units = [first]
-    if cap == 1 or any(not t.get("repo") for t in first):
-        return units
-    done = {t["id"] for t in state["tasks"] if t["status"] == "done"}
-    taken_repos = {t["repo"] for t in first} | {t.get("repo") for t in state["tasks"] if t["status"] == "in_progress"}
-    taken_ids = {t["id"] for t in first}
-    for t in state["tasks"]:
-        if len(units) >= cap:
-            break
-        if t["id"] in taken_ids or t["status"] != "todo" or not all(a in done for a in t["after"]):
-            continue
-        unit = unit_of(state, t)
-        repos = {u.get("repo") for u in unit}
-        same_repo_isolated = isolated and len(repos) == 1 and repos == taken_repos
-        if None in repos or (repos & taken_repos and not same_repo_isolated) or any(u["id"] in taken_ids for u in unit):
-            continue
-        if same_repo_isolated:
-            if any(not task.get("files") for member in [*units, unit] for task in member):
-                continue
-            from bt_worktree import parallel_capacity
-            proposed = [*units, unit]
-            summaries = [{"id": str(index), "scopes": [path for task in member for path in task["files"]],
-                          "resources": sorted({tag for task in member for tag in (task.get("resources") or [])})}
-                         for index, member in enumerate(proposed)]
-            grouped = parallel_capacity(summaries, max_workers=3)
-            if len(grouped) != 1 or len(grouped[0]) != len(proposed):
-                continue
-        units.append(unit)
-        if not same_repo_isolated:
-            taken_repos |= repos
-        taken_ids |= {u["id"] for u in unit}
-    return units
-
-
-def ready_batch(state: dict, workers: int = 1) -> list[dict]:
-    """Tasks that may run at the same time, in plan order. The first runnable task always runs; further tasks join only
-    when everything is safe: both name a repo role, the roles differ, and no task of that role is already in
-    progress. A task without a repo role (workspace root) may touch anything, so it runs alone. Two sessions are
-    therefore never editing the same repository."""
-    done = {t["id"] for t in state["tasks"] if t["status"] == "done"}
-    busy = {t.get("repo") for t in state["tasks"] if t["status"] == "in_progress"}
-    runnable = [t for t in state["tasks"] if t["status"] == "todo" and all(a in done for a in t["after"])]
-    if busy:  # something is still running: never start a task on that repo, nor an unscoped one
-        runnable = [t for t in runnable if t.get("repo") and t["repo"] not in busy]
-    if not runnable:
-        return []
-    first = runnable[0]
-    cap = max(1, min(int(workers or 1), MAX_WORKERS))
-    batch = [first]
-    if cap == 1 or not first.get("repo"):
-        return batch
-    taken = {first["repo"]} | busy
-    for t in state["tasks"]:
-        if len(batch) >= cap:
-            break
-        if (t is first or t["status"] != "todo" or not t.get("repo") or t["repo"] in taken
-                or not all(a in done for a in t["after"])):
-            continue
-        batch.append(t)
-        taken.add(t["repo"])
-    return batch
 
 
 def mark(state: dict, task_id: str, status: str, **fields) -> dict:

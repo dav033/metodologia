@@ -354,6 +354,9 @@ def validate_request(request: object) -> ValidatedRequest:
         raise DecisionInputError(["plan_sha256:invalid"])
     if not isinstance(request.free_slots, int) or isinstance(request.free_slots, bool) or request.free_slots < 1:
         raise DecisionInputError(["free_slots:invalid"])
+    if (not isinstance(request.dispatch_generation, int) or isinstance(request.dispatch_generation, bool)
+            or request.dispatch_generation < 0):
+        raise DecisionInputError(["dispatch_generation:invalid"])
     requested_at = _finite(request.requested_at, "requested_at")
     task = request.task
     if not isinstance(task, TaskFacts):
@@ -386,7 +389,7 @@ def validate_request(request: object) -> ValidatedRequest:
     checkpoint = None if request.checkpoint_revision is None else \
         _text(request.checkpoint_revision, "checkpoint_revision", maximum=256)
     normalized = DecisionRequest(plan_id, request.revision, request.plan_sha256, request.free_slots, requested_at,
-                                 normalized_task, candidates, policy_version, checkpoint)
+                                 normalized_task, candidates, policy_version, checkpoint, request.dispatch_generation)
     task_digest_payload = {
         "task_id": task_id,
         "brief_sha256": sha256_json(brief),

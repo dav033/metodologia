@@ -13,13 +13,13 @@ definition, not by asking nicely.
 
 | Role | Use for | Writes? | Model |
 |---|---|---|---|
-| `planner` | Inspecting a requirement and codebase, then drafting a scoped milestone/task plan under `PLAN.json` | Requirement documents only | caller-selected |
-| `explorer` | Where is X, what calls Y, how is Z done here, find similar examples | No | haiku |
-| `researcher` | External docs, library comparisons, API/version checks, web research | Notes file only | sonnet |
-| `implementer` | One plan task in a fresh context | Yes | sonnet (pass `opus` for hard tasks) |
-| `reviewer` | Fresh-eyes review on one axis: `spec` or `standards` | No | sonnet (medium; audit budget in `agents.md`) |
-| `runner` | Test suites, builds, lint/typecheck, logs, server status — returns only failures | No | haiku |
-| `antagonist` | **Before every commit:** attacks the staged change (architecture, correctness, security, tests) | No | opus |
+| `planner` | Inspecting a requirement and codebase, then drafting a scoped milestone/task plan under `PLAN.json` | Requirement documents only | Astra high / Opus xhigh |
+| `explorer` | Where is X, what calls Y, how is Z done here, find similar examples | No | Luna high / Sonnet medium |
+| `researcher` | External docs, library comparisons, API/version checks, web research | Notes file only | Luna high / Sonnet low |
+| `implementer` | One plan task in a fresh context | Yes | Sonnet medium / Luna high |
+| `reviewer` | Fresh-eyes review on one axis: `spec` or `standards` | No | Sol medium / Sonnet medium; high for explicit complexity |
+| `runner` | Test suites, builds, lint/typecheck, logs, server status — returns only failures | No | Luna high / Sonnet low |
+| `antagonist` | **Before every commit:** attacks the staged change (architecture, correctness, security, tests) | No | Sonnet medium / Opus high |
 
 Only `planner` loads the private resources in `agents/planner/skills/`. They are not registered as generally discoverable skills. The role may write requirement documents but never product code, approve or freeze a plan, or launch execution.
 
@@ -29,12 +29,12 @@ In Claude Code and Codex, invoke installed roles by name. In Antigravity, select
 
 For work that deserves **another model or another subscription** — an independent audit, a cheap fast worker for a
 well-specified module, a stronger model for one hard piece, or simply because your account is near its limit — use
-`bitacora.py delegate` (`agents.md`): it routes across eligible registered accounts by quota and measured results
+`bitacora.py delegate` (`agents.md`): it routes approved role configurations across eligible registered accounts by provider-family quota
 unless you pin one, and returns a compact result.
 
 ## Normal sessions
 
-Use `delegate start` for one task, with `--retries 1..3` for tier climbs or `--worktree` for branch isolation; use
+Use `delegate start` for one task, with `--role ROLE` and `--complexity L` for approved alternatives, `--retries 1..3` for bounded retries or `--worktree` for branch isolation; use
 `bitacora review` for an independent read-only audit and `delegate resume ID` after an interrupted process. Read the
 compact result, never the session log.
 
@@ -159,8 +159,9 @@ Quick-track one-liners (typo, config value, copy) skip the gate.
 
 **With the independent milestone audit active** (a pool run with an `M<n>-audit` task still pending) that audit is the
 milestone's adversarial review, so per-commit passes are not repeated: the task runs its verify, tests and linters
-before each commit and calls the antagonist once only for `risk: high` / `level: architecture` work or changes to
-authentication, secrets, permissions, data migration or payments. Without a milestone audit the gate above stays
+before each commit. Invoking Antagonist on individual commits is forbidden under that coverage, including high-risk
+or architecture tasks; their milestone audit starts at the higher budget. All security checks remain mandatory.
+Without a milestone audit the gate above stays
 mandatory. The supervisor's prompts take this rule from `bt_review_policy.commit_review_rule`.
 
 ## Where they plug into the flow

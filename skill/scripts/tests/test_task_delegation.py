@@ -12,7 +12,7 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 
-import bt_delegate  # noqa: E402  (imports bt_core: this file must sort after test_marathon.py)
+import bt_delegate  # noqa: E402  (imports bt_core: test_00_isolation establishes the disposable root)
 import bt_profiles  # noqa: E402
 
 STUB = """

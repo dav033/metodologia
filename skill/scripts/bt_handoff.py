@@ -3,8 +3,8 @@
 `assess` reads PLAN.md (and SPEC.md) and answers two questions. Is the plan runnable (problems: no tasks, unknown or
 circular dependencies, an unknown repo role)? Does it need the owner's approval first (reasons: too many milestones or
 tasks, an architecture-level or high-risk task, or text that names an irreversible, external, financial or
-security-sensitive action)? `handoff` then either approves the plan itself and starts the marathon in the background
-with the account pool, or puts the plan in review and says exactly why. A plan the owner already approved is launched
+security-sensitive action)? `handoff` then either approves the plan itself and starts the Scheduler run in the
+background, or puts the plan in review and says exactly why. A plan the owner already approved is launched
 whatever the reasons. Thresholds: bt_config (approval.*). Rules: references/requirements.md, "Automatic hand-off".
 """
 from __future__ import annotations
@@ -172,16 +172,18 @@ def assess(project: str, rdir: Path) -> dict:
             "unverified": unverified}
 
 
-def handoff(project: str, req: str, dry_run: bool = False, pool: str | None = None, model: str | None = None,
+def handoff(project: str, req: str, dry_run: bool = False, model: str | None = None,
             profile: str | None = None, foreground: bool = False, planning_session: str | None = None) -> dict:
     """Approve-and-launch when the plan is safe to start unattended, otherwise leave it in review with the reasons.
     Returns {decision: launched | needs_approval | invalid | already_running, ...}."""
+    if model is not None or profile is not None:
+        raise SystemExit("SCHEDULER_ROUTING_REQUIRED: the Scheduler selects model and account through M2")
     rdir = find_req(ROOT / project, req)
     if foreground:
         from bt_orchestration_terminal import TerminalError
         from bt_orchestration_transition import launch as foreground_launch
         try:
-            return foreground_launch(project, req, dry_run=dry_run, profile=profile, pool=pool,
+            return foreground_launch(project, req, dry_run=dry_run, profile=profile,
                                      model=model, session=planning_session)
         except TerminalError as exc:
             raise SystemExit(str(exc)) from exc
@@ -196,7 +198,7 @@ def handoff(project: str, req: str, dry_run: bool = False, pool: str | None = No
         return {**out, "decision": "invalid", "next": "fix the plan problems, then run handoff again"}
     if status in ("launched", "done"):
         return {**out, "decision": "already_running" if status == "launched" else "done",
-                "next": f"bitacora.py --project {project} run-control {rid} pause|resume|stop"}
+                "next": f"bitacora.py --project {project} watch {rid} · resume: bitacora.py --project {project} scheduler-run {rid} --resume"}
     approved = status == "approved"
     if report["reasons"] and not approved:
         if not dry_run:
@@ -209,18 +211,16 @@ def handoff(project: str, req: str, dry_run: bool = False, pool: str | None = No
         return {**out, "decision": "needs_approval",
                 "next": f"owner approves (web, or: bitacora.py --project {project} plan approve {rid}), then handoff again"}
     display = bt_config.get("executor.display", "background")
-    mode_pool = pool or ("auto" if bt_config.get("routing.mode", "auto") == "auto" else None)
     if dry_run:
-        return {**out, "decision": "would_launch", "pool": mode_pool, "display": display}
+        return {**out, "decision": "would_launch", "display": display}
     if not approved:
         rounds.plan_decide(rdir, True, "no approval reasons found by the automatic hand-off", "handoff")
     from bt_launch import launch
     extra = {"profile": profile} if profile else {}
-    result = launch(project, rid, mode="marathon", model=model or "haiku", pool=mode_pool,
-                    background=display == "background", **extra)
-    return {**out, "decision": "launched", "pool": mode_pool, "display": display, "opened": result["opened"],
+    result = launch(project, rid, background=display == "background", **extra)
+    return {**out, "decision": "launched", "display": display, "opened": result["opened"],
             "handoff": result["handoff"],
             "watch": f"bitacora.py --project {project} watch {rid}",
             "next": f"keep the user informed: run `bitacora.py --project {project} watch {rid}` in the background, relay "
                     f"what it prints when it exits and run it again until it says `terminal: true` · panel: "
-                    f"bitacora.py web · control: bitacora.py --project {project} run-control {rid} pause|resume|stop"}
+                    f"bitacora.py web (Scheduler run panel) · resume: bitacora.py --project {project} scheduler-run {rid} --resume"}

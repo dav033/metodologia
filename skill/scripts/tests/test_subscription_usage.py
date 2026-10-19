@@ -96,11 +96,11 @@ class SubscriptionUsageTests(AgentTests):
         row["windows"]["five_hour"]["used_percent"] = True
         self.assertEqual(usage.capacity(row, "sonnet"), (None, None))
 
-    def test_audit_provider_preference_is_not_overridden_by_codex_headroom(self):
+    def test_audit_budget_preference_yields_at_high_pressure(self):
         self.save({bt_agents.account_key("claude"): self.row(short=95),
                    bt_agents.account_key("codex-named"): self.row(short=0, weekly=0)})
         routes, _ = bt_agents.candidates("personal-project", ["codex-named", "claude"], 1, "audit")
-        self.assertEqual((routes[0]["agent"], routes[0]["effort"]), ("claude", "medium"))
+        self.assertEqual((routes[0]["agent"], routes[0]["effort"]), ("codex", "medium"))
 
     def test_exhausted_claude_audit_falls_back_to_codex(self):
         self.save({bt_agents.account_key("claude"): self.row(short=100)})

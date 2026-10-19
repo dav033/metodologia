@@ -30,8 +30,11 @@ class Config:
     handoff_retry_seconds: float = 0.5
     settle_retry_seconds: float = 5.0  # a settle that failed is retried this slowly
     spare_interactive: bool = True    # the worktree sweep leaves processes with a controlling terminal that are not the agent's live descendants
+    handoff_mode: str = "snapshot"    # snapshot (private refs) or patch (artifact only)
 
     def validate(self) -> Config:
+        if self.handoff_mode not in ("snapshot", "patch"):
+            raise ExecutorError("CONFIG_INVALID", "handoff_mode must be 'snapshot' or 'patch'")
         positive = ("max_running", "max_queued", "timeout_seconds", "max_timeout_seconds", "grace_seconds",
                     "heartbeat_seconds", "poll_seconds", "output_head_bytes", "output_tail_bytes",
                     "classify_head_bytes", "patch_max_bytes", "log_tail_bytes", "max_event_backlog", "deliver_batch",

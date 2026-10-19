@@ -13,6 +13,7 @@ from .evidence import build_evidence, sha256_bytes, validate_result_contract
 from .policy import CheckSpec, QualityPolicy, compile_verification
 from .review import ReviewerPort, validate_reviewer_evidence
 from .runner import CommandOutcome, SandboxRunner
+from .sandbox_mounts import attempt_mounts
 from .snapshot import SHA_LENGTHS, SnapshotResolver, SnapshotSource
 from .store import QualityStore
 
@@ -179,7 +180,9 @@ class QualityEngine:
     ) -> _ExecutionEvidence:
         with self.resolver.materialize(source) as snapshot:
             specs = compile_verification(order, snapshot.directory, self.policy)
-            outcomes, issue_codes = self._run_checks(specs, snapshot.directory, started)
+            outcomes, issue_codes = self._run_checks(
+                specs, snapshot.directory, started, source.worktree, source.repository
+            )
             return _ExecutionEvidence(
                 specs,
                 outcomes,
@@ -196,10 +199,17 @@ class QualityEngine:
             )
 
     def _run_checks(
-        self, specs: tuple[CheckSpec, ...], snapshot_root: Path, started: float
+        self,
+        specs: tuple[CheckSpec, ...],
+        snapshot_root: Path,
+        started: float,
+        worktree: Path | None = None,
+        repository: Path | None = None,
     ) -> tuple[dict[str, CommandOutcome], list[str]]:
         outcomes: dict[str, CommandOutcome] = {}
         issue_codes: list[str] = []
+        mounts = attempt_mounts(self.policy, worktree, repository, snapshot_root)
+        done: dict[tuple[tuple[str, ...], str], CommandOutcome] = {}
         for spec in specs:
             if spec.kind == "manual":
                 outcomes[spec.id] = _unknown("CHECK_MANUAL")
@@ -209,11 +219,18 @@ class QualityEngine:
                 outcomes[spec.id] = _unknown("CHECK_NOT_RUN")
                 issue_codes.append("CHECK_NOT_RUN")
                 continue
-            outcome = self.runner.run(
-                spec,
-                snapshot_root,
-                timeout_seconds=min(self.policy.max_command_seconds, remaining),
-            )
+            # One criterion per check is the plan's shape: the same command often serves several criteria, and the
+            # snapshot cannot change between them, so it runs once.
+            same = (spec.argv, spec.cwd)
+            outcome = done.get(same)
+            if outcome is None:
+                outcome = self.runner.run(
+                    spec,
+                    snapshot_root,
+                    timeout_seconds=min(self.policy.max_command_seconds, remaining),
+                    mounts=mounts,
+                )
+                done[same] = outcome
             outcomes[spec.id] = outcome
             if outcome.issue_code:
                 issue_codes.append(outcome.issue_code)

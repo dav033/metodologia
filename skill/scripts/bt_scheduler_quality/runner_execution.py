@@ -15,6 +15,7 @@ from pathlib import Path
 from .policy import CheckSpec, QualityPolicy
 from .runner_sandbox_process import NAMESPACE_FIELDS, SandboxSession, sandbox_available
 from .runner_types import CommandOutcome
+from .sandbox_mounts import Mount
 
 
 @dataclass
@@ -49,7 +50,12 @@ class SandboxExecution:
         self.redact = redact
 
     def execute(
-        self, check: CheckSpec, root: Path, timeout: int, started: float
+        self,
+        check: CheckSpec,
+        root: Path,
+        timeout: int,
+        started: float,
+        mounts: tuple[Mount, ...] = (),
     ) -> CommandOutcome:
         if not sandbox_available(self.policy):
             return self.make_outcome(
@@ -57,7 +63,7 @@ class SandboxExecution:
             )
         session = SandboxSession()
         try:
-            session.start(check, root, self.policy)
+            session.start(check, root, self.policy, mounts)
             collected = self._collect(session, started, timeout)
             return self._to_outcome(collected, started)
         except (OSError, subprocess.SubprocessError, ValueError, TypeError):

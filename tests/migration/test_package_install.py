@@ -142,8 +142,8 @@ class InstalledRuntimeTests(PackageCase):
         self.assertIn("--resume", done.stdout)
         self.assertIn("--no-autostart", done.stdout)
 
-    def test_scheduler_run_control_helper_is_packaged_without_starting_a_run(self) -> None:
-        done = self.installed("-c", "import bt_cli_run_control")
+    def test_retired_run_control_helper_is_absent_from_installed_wheel(self) -> None:
+        done = self.installed("-c", "import importlib.util; assert importlib.util.find_spec('bt_cli_run_control') is None")
         self.assertEqual(done.returncode, 0, done.stderr)
 
     def test_planner_module_runs_standalone_from_the_installed_wheel(self) -> None:

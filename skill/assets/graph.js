@@ -207,8 +207,20 @@
   document.getElementById('zoom-in').onclick = () => zoomBy(1.3);
   document.getElementById('zoom-out').onclick = () => zoomBy(1 / 1.3);
   document.getElementById('zoom-fit').onclick = () => { clear(); showEmpty(); cy.animate({ fit: { padding: 40 } }, { duration: 300 }); };
+  // the canvas can change size after the first layout (fonts, phone rotation): measure again and fit the whole graph
+  let fitTimer = null;
+  const refit = () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => { cy.resize(); if (!initialFocus) cy.fit(undefined, 40); }, 120); };
+  window.addEventListener('resize', refit);
+  refit();
+  window.addEventListener('load', refit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
+  if (window.ResizeObserver) new ResizeObserver(refit).observe(document.getElementById('cy') || document.body);
+  if (/[?&]probe=1\b/.test(location.search)) setTimeout(() => {
+    document.documentElement.dataset.cy = [cy.width(), cy.height(), cy.zoom().toFixed(2), JSON.stringify(cy.pan()), JSON.stringify(cy.extent())].join(' ');
+  }, 1500);
   showEmpty();
   // deep link: /p/<project>/graph?focus=REQ-004 opens the graph focused on that node
   const initial = new URLSearchParams(location.search).get('focus');
+  const initialFocus = !!initial;
   if (initial) setTimeout(() => focus(initial), 60);
 })();

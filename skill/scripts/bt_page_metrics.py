@@ -5,6 +5,7 @@ from html import escape as e
 
 import bt_agents
 import bt_events
+import bt_scheduler_rows
 from bt_pages import layout
 
 OUTCOME_CLASS = {"done": "done", "verified": "done", "claimed": "review", "partial": "review"}
@@ -35,6 +36,14 @@ def _avg_seconds(group, rows, keys) -> int | None:
     return round(sum(values) / len(values)) if values else None
 
 
+def _model_cell(g) -> str:
+    """The model name as a link to its statistics (and effort when the row has one)."""
+    import bt_page_attempts
+    if not g.get("agent") or not g.get("model"):
+        return _value(g.get("model"))
+    return bt_page_attempts.model_chip(g["agent"], g["model"], None)
+
+
 def _main_rows(groups, work_profiles, source_rows) -> str:
     rendered = []
     for g in groups:
@@ -42,7 +51,7 @@ def _main_rows(groups, work_profiles, source_rows) -> str:
         work = ' <span class="badge">work</span>' if g.get("profile") in work_profiles else ""
         rate = DASH if g.get("success_rate") is None else f'{g["success_rate"]:.0%}'
         coverage = DASH if g.get("coverage") is None else f'{g["coverage"]:.0%}'
-        rendered.append(f"<tr><td>{_value(g.get('agent'))}</td><td>{profile}{work}</td><td>{_value(g.get('model'))}</td>"
+        rendered.append(f"<tr><td>{_value(g.get('agent'))}</td><td>{profile}{work}</td><td>{_model_cell(g)}</td>"
                     f"<td>{_effort(g)}</td><td>{g['attempts']}</td><td>{g['done']}</td><td>{g['failed']}</td>"
                     f"<td>{g['other']}</td><td>{rate}</td><td>{_rate(g.get('verified_task_success_rate'))}</td><td>{_number(_avg_seconds(g, source_rows, ('agent', 'profile', 'model', 'effort')))}</td>"
                     f"<td>{_number(g.get('tokens_measured') if g.get('measured') else None)}</td>"
@@ -134,7 +143,7 @@ def _attempt_cards(rows, count: int = 8) -> str:
 
 
 def metrics_page() -> str:
-    rows = bt_events.read_all()
+    rows = sorted(bt_events.read_all() + bt_scheduler_rows.rows(), key=lambda r: r.get("ts") or "")
     catalog = bt_agents.catalog()
     work_profiles = {a["profile"] for a in catalog["accounts"] if a.get("work_only")}
     groups = bt_events.summary(rows, ("agent", "profile", "model", "effort"))
@@ -143,8 +152,8 @@ def metrics_page() -> str:
     sized = bt_events.summary(rows, ("kind", "complexity", "agent", "model", "effort"))
     why = bt_events.reasons(rows)
     advice = "".join(f"<li>{e(text)}</li>" for text in bt_events.advice(rows, defects=defects))
-    body = f"""<h1>Métricas de agentes</h1>
-<p class="muted">Cada fila agrupa intentos de maratón y delegaciones. Un dato que el proveedor no informó queda en «—»,
+    body = f"""<div class="head"><div><p class="eyebrow">suscripciones y modelos</p><h1>Métricas de agentes</h1></div></div>
+<p class="muted">Cada fila agrupa intentos de maratón, delegaciones e intentos del Scheduler (derivados de su estado, solo lectura). Un dato que el proveedor no informó queda en «—»,
 nunca en 0; los tokens solo cuentan intentos con medición (columna cobertura). No son un saldo de suscripción.
 «Tasa por sesión» cuenta una sesión parcial como un intento fallido; «Tasa verificada por tarea» (la que usa el router)
 cuenta cada tarea con su veredicto y excluye pérdidas del proveedor, omitidas y no verificadas.</p>

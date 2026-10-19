@@ -19,10 +19,11 @@ from collections.abc import Callable
 from pathlib import Path
 
 from . import contract as pc
-from . import interfaces, quality, resources, sync, traceability
+from . import amendments, interfaces, quality, resources, sync, traceability
 from . import revisions as rev
 
-ACTIONS = ("init", "check", "freeze", "bind", "report", "show", "compat", "validate", "schema", "example")
+ACTIONS = ("init", "check", "freeze", "bind", "report", "show", "compat", "validate", "schema", "example", "amend",
+           "amendments")
 
 
 def _report(report: pc.Report, as_json: bool, emit: Callable[[str], None]) -> None:
@@ -38,7 +39,8 @@ def _report(report: pc.Report, as_json: bool, emit: Callable[[str], None]) -> No
 
 def run(action: str, target: str | Path | None = None, *, plan_id: str | None = None, force: bool = False,
         as_json: bool = False, approved_states: tuple[str, ...] | None = None,
-        repo_roots: dict[str, Path] | None = None, ref_exists=None, emit: Callable[[str], None] = print) -> int:
+        repo_roots: dict[str, Path] | None = None, ref_exists=None, amend: dict | None = None,
+        emit: Callable[[str], None] = print) -> int:
     """Execute one action and return the exit code. `target` is a plan directory (a file for `validate`).
     `repo_roots` maps repository roles to paths so that `file:` evidence is verified, not just accepted; `ref_exists`
     (kind, value, repository) does the same for `command:` / `precedent:` references."""
@@ -119,6 +121,17 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
         if action == "compat":
             emit(json.dumps(sync.compat(target, plan_id), indent=1, ensure_ascii=False))
             return 0
+        if action == "amendments":
+            emit(json.dumps(amendments.read(target), indent=1, ensure_ascii=False))
+            return 0
+        if action == "amend":
+            if not amend:
+                emit("ERROR amend needs --task, --field, --to, --reason and --by")
+                return 2
+            record = amendments.append(target, **amend)
+            emit(f"amended {record['task']}.{record['field']}: {record['from']} → {record['to']} "
+                 f"(#{record['seq']}, {record['proposed_by']})")
+            return 0
         emit(f"ERROR unknown action {action!r}")
         return 2
     except pc.PlanContractError as exc:
@@ -140,12 +153,24 @@ def main(argv: list[str] | None = None) -> int:
                         help="repository role and its checkout, repeatable; makes check/freeze verify `file:` evidence")
     parser.add_argument("--approved-states", help="comma-separated PLAN.md status words that allow freeze "
                                                   f"(default {','.join(sync.APPROVED_STATES)})")
+    parser.add_argument("--task", help="amend: task id (T4)")
+    parser.add_argument("--field", help=f"amend: one of {', '.join(amendments.FIELDS)}")
+    parser.add_argument("--to", dest="to_value", help="amend: the new value")
+    parser.add_argument("--reason", help="amend: why the classification changed")
+    parser.add_argument("--evidence", action="append", default=[], help="amend: evidence reference, repeatable")
+    parser.add_argument("--by", default="cli", help="amend: who or what makes the change")
+    parser.add_argument("--proposed-by", choices=amendments.PROPOSERS, default="owner")
     args = parser.parse_args(argv)
     states = tuple(s.strip() for s in args.approved_states.split(",") if s.strip()) if args.approved_states else None
+    amend_args = None
+    if args.action == "amend" and args.task and args.field and args.to_value is not None and args.reason:
+        value = int(args.to_value) if args.field == "estimated_minutes" and args.to_value.isdigit() else args.to_value
+        amend_args = {"task": args.task, "field": args.field, "to": value, "reason": args.reason,
+                      "evidence": args.evidence, "by": args.by, "proposed_by": args.proposed_by}
     roots = {role.strip(): Path(path) for role, _, path in (item.partition("=") for item in args.repo)
              if role.strip() and path}
     return run(args.action, args.target, plan_id=args.plan_id, force=args.force, as_json=args.json,
-               approved_states=states, repo_roots=roots or None)
+               approved_states=states, repo_roots=roots or None, amend=amend_args)
 
 
 if __name__ == "__main__":

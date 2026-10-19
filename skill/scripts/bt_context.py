@@ -59,7 +59,7 @@ def text(project: str | None) -> str:
                 out.append(f"- {label}: `{(pdir / f).as_posix()}`")
     for label, f in (("Skill router", "SKILL.md"), ("Agents and routing", "references/agents.md"),
                      ("Requirements and hand-off", "references/requirements.md"),
-                     ("Execution", "references/execution.md"), ("Marathon", "references/marathon.md"),
+                     ("Execution", "references/execution.md"),
                      ("Self-improvement", "references/self-improvement.md")):
         if (SKILL / f).exists():
             out.append(f"- {label}: `{(SKILL / f).as_posix()}`")

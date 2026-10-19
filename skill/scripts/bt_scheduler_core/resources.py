@@ -4,6 +4,7 @@ A claim is `(resource, mode)`; mode "s" = shared, "x" = exclusive. Resources are
 `*` (everything), `repo:<name>`, `res:<name>` (declared shared_resources, always exclusive), `path:<repo>:<pattern>`
 (expected_paths; two path claims in one repository conflict when one static prefix contains the other). Paths are
 hints, not proof of independence: they only ever ADD conflicts. Worktree isolation is M3's job; this is logical.
+A task whose plan `scope` is in `Config.exclusive_scopes` claims its whole repository exclusively: it runs alone there.
 """
 from __future__ import annotations
 
@@ -23,6 +24,8 @@ def claims_for(task: TaskSpec, config: Config) -> list[Claim]:
     if repo:
         out.append((f"repo:{repo}", "x" if config.repository_isolation == "exclusive" else "s"))
         out += [(f"path:{repo}:{_norm(p)}", "x") for p in task.expected_paths]
+    if config.exclusive_scopes and task.meta.get("scope") in config.exclusive_scopes:
+        out.append((f"repo:{repo}", "x") if repo else (ALL, "x"))
     known = bool(task.shared_resources or (repo and task.expected_paths))
     if not known and config.unknown_surface == "serialize":
         out.append((f"repo:{repo}", "x") if repo else (ALL, "x"))

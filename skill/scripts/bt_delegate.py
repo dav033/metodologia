@@ -60,15 +60,19 @@ def path_of(did: str) -> Path:
     return DIR / did
 
 
-def auto_route(project: str, kind: str, tier: int | None, avoid: set | None = None, effort: str | None = None) -> dict:
+def auto_route(project: str, kind: str, tier: int | None, avoid: set | None = None, effort: str | None = None, role: str | None = None,
+               complexity: str | None = None, model: str | None = None) -> dict:
     """The router's choice for a delegation nobody pinned to an account: every account allowed for the project is a
     candidate, usage limits and measured results decide (bt_agents.route)."""
+    import bt_role_policy
+    role = role or bt_role_policy.role_for_kind(kind)
     pool = bt_agents.pool_for(project, bt_agents._config("routing.pool", []) or None)
     if not pool:
         raise SystemExit(f"No account may run '{project}'. Check: bitacora.py agents")
     tier = bt_agents.start_tier(None, kind) if tier is None else tier
     try:
-        return bt_agents.route(project, {"pool": pool}, tier, kind, avoid, allow_explore=False, effort=effort)
+        return bt_agents.route(project, {"pool": pool, "model": model, "model_pinned": bool(model), "role": role}, tier, kind, avoid, allow_explore=False,
+                               effort=effort, role=role, complexity=complexity)
     except bt_agents.NoRoute as exc:
         raise SystemExit(f"Every account is waiting for a usage-limit reset (earliest "
                          f"{dt.datetime.fromtimestamp(exc.until):%Y-%m-%d %H:%M}). Nothing was sent.") from exc
@@ -77,16 +81,22 @@ def auto_route(project: str, kind: str, tier: int | None, avoid: set | None = No
 def create(project: str, task: str, profile: str | None, agent: str | None, workdir: Path, allow: list[str],
            verify: str | None, timeout_min: int, model: str | None, effort: str | None,
            kind: str | None = None, tier: int | None = None, complexity: str | None = None,
-           wait_quota: bool = False) -> dict:
+           wait_quota: bool = False, role: str | None = None) -> dict:
     """Validate and write TASK.json. The permission gate runs here, before any prompt with code exists. With neither
     --profile nor --agent the router picks account, model and effort for the task's kind and tier."""
     kind = kind if kind in bt_agents.KINDS else bt_agents.infer_kind(task[:200])
+    import bt_role_policy
+    role = role or bt_role_policy.role_for_kind(kind)
+    if role and role not in bt_role_policy.ROLES:
+        raise SystemExit(f"Unknown role: {role}")
+    requested_effort, requested_model = effort, model
     routed = None
     if not profile and not agent:
         own = os.environ.get("BITACORA_KIND")  # an audit delegated from a builder session goes to another provider
         avoid = {bt_profiles.ambient_provider()} if kind == "audit" and own != "audit" else None
         routed = auto_route(project, kind, tier, avoid - {None} if avoid else None,
-                            **({"effort": effort} if effort else {}))
+                            **{k: v for k, v in {"effort": effort, "role": role, "complexity": complexity, "model": model}.items()
+                               if v is not None})
         profile, model, effort = routed["profile"], model or routed["model"], effort or routed["effort"]
     if profile:
         bt_profiles.authorize(profile, project)
@@ -94,17 +104,23 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
         ok, why = bt_profiles.gate_cwd(profile, workdir)  # the folder must belong to a work project too
         if not ok:
             raise SystemExit(why)
-        if tier is not None and not model:
+        if tier is not None and not model and not role:
             model, effort = bt_agents.model_for(agent, tier, None, kind)[0], effort or bt_agents.model_for(agent, tier, None, kind)[1]
     elif agent in bt_profiles.LAUNCHABLE:
         bt_profiles.authorize_ambient(agent, project, workdir)  # the inherited account may be a work-only one
     if agent not in bt_profiles.LAUNCHABLE:
         raise SystemExit(f"Pass --profile ID, --agent {'|'.join(bt_profiles.LAUNCHABLE)}, or neither to let the router choose")
-    if kind == "audit":
+    if kind == "audit" and not role:
         tier = bt_agents.start_tier(None, kind) if tier is None else tier
         default_model, default_effort = bt_agents.model_for(agent, tier, kind=kind)
         model = model or default_model
         effort = effort or default_effort
+    if role and not routed:
+        choice = next(((m, e) for p, m, e in bt_role_policy.options(role, complexity) if p == agent), None)
+        if choice:
+            model, effort = model or choice[0], effort or choice[1]
+        elif not model:
+            raise SystemExit(f"No approved {role} configuration for pinned provider {agent}; use automatic routing or an explicit --model")
     if agent == "codex" and model and not effort:  # an account's config default may not suit this model
         effort = "medium"
     workdir = Path(workdir).expanduser().resolve()
@@ -114,8 +130,9 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
     order = {"id": did, "project": project, "profile": profile, "agent": agent, "task": task.strip(),
              "workdir": str(workdir), "allow": allow, "verify": verify, "timeout_min": timeout_min,
              "model": model, "effort": effort, "kind": kind, "tier": tier if tier is not None else (routed or {}).get("tier"),
-             "routed": (routed or {}).get("why"), "auto": bool(routed),
-             "complexity": complexity if complexity in ("S", "M", "L") else None, "wait_quota": bool(wait_quota),
+             "routed": (routed or {}).get("why"), "auto": bool(routed), "role": role,
+             "requested_effort": requested_effort, "requested_model": requested_model,
+             "complexity": "L" if bt_role_policy.high_complexity(complexity) else complexity if complexity in ("S", "M") else None, "wait_quota": bool(wait_quota),
              "created": dt.datetime.now().astimezone().isoformat(timespec="seconds")}
     d = path_of(did)
     d.mkdir(parents=True, exist_ok=True)
@@ -130,6 +147,11 @@ def _prompt(order: dict, result: Path) -> str:
     prompt = PROMPT.format(project=order["project"], task=order["task"], workdir=order["workdir"], allow=allow,
                            verify=verify, result=result.as_posix(), id=order["id"])
     previous = str(order.get("previous_attempt") or "")[:600]
+    if order.get("role"):
+        from bt_resources import resource_root
+        source = resource_root() / "agents" / f"{order['role']}.md"
+        body = source.read_text(encoding="utf-8").split("\n---\n", 1)[1]
+        prompt += f"\n## Role: {order['role']}\n{body}"
     return prompt + (f"\n## Previous attempt\n{previous}\n" if previous else "")
 
 
@@ -249,7 +271,9 @@ def _next_route(order: dict) -> dict | None:
         if order.get("auto"):
             pool = bt_agents.pool_for(order["project"], bt_agents._config("routing.pool", []) or None)
             routes, soonest = bt_agents.candidates(order["project"], pool, tier, order.get("kind") or "implement",
-                                                   allow_explore=False, effort=order.get("effort"))
+                                                   allow_explore=False, effort=order.get("requested_effort"),
+                                                   configured=order.get("requested_model"), role=order.get("role"),
+                                                   complexity=order.get("complexity"))
             if routes:
                 return routes[0]
         else:

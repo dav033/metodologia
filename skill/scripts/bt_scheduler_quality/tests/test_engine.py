@@ -21,7 +21,7 @@ class ScriptedRunner:
         self.status, self.exit_code = status, exit_code
         self.calls = []
 
-    def run(self, check, snapshot_root, *, timeout_seconds=None):
+    def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
         self.calls.append((check.id, timeout_seconds))
         return CommandOutcome(
             self.status,
@@ -158,6 +158,25 @@ class QualityEngineTests(unittest.TestCase):
             "CRITERION_AMBIGUOUS", {item["code"] for item in result["issues"]}
         )
         self.assertEqual(len(runner.calls), 2)
+
+    def test_the_same_command_serving_several_criteria_runs_once(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, source, _, _ = _make_snapshot(root)
+            self.raw["acceptance_criteria"] = ["first criterion", "second criterion"]
+            self.raw["verification"] = [
+                dict(self.raw["verification"][0], purpose="first criterion"),
+                dict(self.raw["verification"][0], purpose="second criterion"),
+            ]
+            runner = ScriptedRunner()
+            with QualityStore(":memory:") as store:
+                result = QualityEngine(QualityPolicy(), store, runner=runner).verify(
+                    self.raw, source
+                )
+
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual([item["status"] for item in result["criteria"]], ["pass", "pass"])
+        self.assertEqual(len(runner.calls), 1)
 
     def test_duplicate_request_returns_persisted_result_without_rerunning_checks(self):
         with tempfile.TemporaryDirectory() as temporary:

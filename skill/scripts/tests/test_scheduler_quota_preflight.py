@@ -1,9 +1,12 @@
 """Scheduler quota refresh stays inside its project's authorized account pool."""
 from __future__ import annotations
 
+import json
 import sys
+import tempfile
 import time
 import unittest
+from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import patch
 
@@ -16,6 +19,32 @@ import bt_subscriptions
 
 
 class QuotaPreflightTests(unittest.TestCase):
+    def test_refreshes_a_reset_window_when_routing_interval_elapsed(self):
+        now = 2_000_000.0
+        old = {"profile": "claude-work", "provider": "claude", "status": "ok",
+               "observed_at": now - 1800, "attempted_at": now - 1800,
+               "windows": {"five_hour": {"used_percent": 13, "resets_at": now - 30, "window_minutes": 300},
+                           "seven_day": {"used_percent": 5, "resets_at": now + 10000, "window_minutes": 10080}}}
+        refreshed = {**old["windows"],
+                     "five_hour": {"used_percent": 0, "resets_at": now + 18000, "window_minutes": 300}}
+        with tempfile.TemporaryDirectory() as tmp:
+            state = Path(tmp)
+            (state / "subscription-usage.json").write_text(
+                json.dumps({"schema_version": 1, "accounts": {"fixture-account": old}}))
+            with patch("bt_agents.pool_for", return_value=["claude-work"]), \
+                    patch.object(bt_profiles, "load", return_value={"claude-work": {"provider": "claude"}}), \
+                    patch("bt_agents._pool_account_identity", return_value=("claude", "fixture-account")), \
+                    patch("bt_agents.account_key", return_value="fixture-account"), \
+                    patch.object(bt_subscriptions, "STATE", state), \
+                    patch.object(bt_subscriptions, "central_lock", side_effect=lambda _: nullcontext()), \
+                    patch.object(bt_subscriptions.time, "time", return_value=now), \
+                    patch.object(bt_subscriptions, "read_claude", return_value=refreshed) as reader:
+                self.assertEqual(bt_subscriptions.capacity(old, "sonnet", now), (None, None))
+                result = adapter.refresh_quota_preflight("demo")["claude-work"]
+                self.assertEqual((result["status"], result["state"], result["used_percent"]),
+                                 ("available", "fresh", 5))
+                reader.assert_called_once_with("claude-work")
+
     def test_refreshes_only_authorized_pool_and_reports_unavailable_sources(self):
         profiles = {"claude-work": {"provider": "claude"},
                     "gemini-work": {"provider": "antigravity"},
@@ -27,7 +56,7 @@ class QuotaPreflightTests(unittest.TestCase):
                 patch.object(bt_agy, "refresh", return_value={"status": "error"}) as refresh, \
                 patch.object(bt_agy, "capacity", return_value=(None, None)):
             result = adapter.refresh_quota_preflight("demo")
-        poll.assert_called_once_with(["claude-work"])
+        poll.assert_called_once_with(["claude-work"], min_interval=bt_subscriptions.ROUTE_REFRESH_SECONDS)
         refresh.assert_called_once_with()
         self.assertEqual(result["claude-work"]["state"], "refresh_failed")
         self.assertEqual(result["claude-work"]["reason"], "quota_refresh_failed")
@@ -39,7 +68,7 @@ class QuotaPreflightTests(unittest.TestCase):
                 patch.object(bt_subscriptions, "poll", return_value=[]) as poll, \
                 patch.object(bt_agy, "refresh") as refresh:
             adapter.refresh_quota_preflight("demo")
-        poll.assert_called_once_with(["codex-work"])
+        poll.assert_called_once_with(["codex-work"], min_interval=bt_subscriptions.ROUTE_REFRESH_SECONDS)
         refresh.assert_not_called()
 
     def test_reports_subscription_poll_failure_explicitly(self):

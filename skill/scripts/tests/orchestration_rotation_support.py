@@ -32,8 +32,12 @@ if '--safe-mode' not in sys.argv:
     if task=='FINAL':
         pathlib.Path(os.environ['FIXTURE_RDIR'],'REPORT.md').write_text('# Verified final report\\n')
     else:
-        subprocess.run([sys.executable,os.environ['FIXTURE_CLI'],'--project','demo','task','done','REQ-001',task,
-                        '--evidence','controlled worker completed '+task],check=True)
+        # Test-only stand-in for the retired completion-reporting CLI.
+        sys.path.insert(0,str(pathlib.Path(os.environ['FIXTURE_CLI']).parent))
+        import bt_runstate as rs
+        rs.update(pathlib.Path(os.environ['FIXTURE_RDIR']),
+                  lambda state: rs.mark(state,task,'in_progress',claimed_done=True,
+                                        evidence='controlled worker completed '+task))
     if os.environ.get('FIXTURE_WORKER_LINGER'):
         time.sleep(20)
     print(json.dumps(dict(type='result',subtype='success',is_error=False,result='worker done')))

@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[2])]
 import bt_scheduler_executor as ex
@@ -34,6 +35,95 @@ class Handoff(unittest.TestCase):
     def capture(self, **kw):
         return handoff.capture(self.ws, self.out, dirname=self.dirname, attempt_id="att-0001", when=1_800_000_000,
                                patch_max=kw.pop("patch_max", 1 << 20), **kw)
+
+    def test_patch_mode_reapplies_dirty_binary_and_deletion_without_mutating_git_state(self):
+        (self.wt / "README.md").unlink()
+        (self.wt / "src.txt").write_text("staged then edited\n")
+        binary = bytes(range(256)) * 11
+        (self.wt / "new blob.bin").write_bytes(binary)
+        git(self.wt, "add", "src.txt")
+        (self.wt / "src.txt").write_text("final working tree\n")
+        before = self.state()
+        refs = git(self.repo, "for-each-ref", "--format=%(refname) %(objectname)")
+        real_run = handoff.gitutil.run
+
+        def forbid_git_mutation(cwd, args, **kwargs):
+            if args and args[0] in ("commit-tree", "update-ref"):
+                self.fail(f"patch capture invoked forbidden git command: {args[0]}")
+            return real_run(cwd, args, **kwargs)
+
+        with mock.patch.object(handoff.gitutil, "run", side_effect=forbid_git_mutation):
+            manifest = self.capture(mode="patch")
+        self.assertIsNone(manifest["snapshot_sha"])
+        self.assertEqual(manifest["refs"], {})
+        self.assertEqual(manifest["handoff_mode"], "patch")
+        self.assertEqual(manifest["schema"], 2)
+        self.assertEqual(self.state(), before)
+        self.assertEqual(git(self.repo, "for-each-ref", "--format=%(refname) %(objectname)"), refs)
+        fresh = self.base / "patch-restore"
+        git(self.repo, "worktree", "add", "--detach", str(fresh), self.ws.base_sha)
+        git(fresh, "apply", "--binary", manifest["patch"]["path"])
+        self.assertFalse((fresh / "README.md").exists())
+        self.assertEqual((fresh / "src.txt").read_text(), "final working tree\n")
+        self.assertEqual((fresh / "new blob.bin").read_bytes(), binary)
+        raw = Path(manifest["patch"]["path"]).read_bytes()
+        self.assertEqual(manifest["patch_bytes"], len(raw))
+        self.assertEqual(manifest["patch_sha256"], hashlib.sha256(raw).hexdigest())
+
+    def test_patch_mode_empty_state_has_an_applicable_empty_artifact(self):
+        manifest = self.capture(mode="patch")
+        self.assertTrue(manifest["empty"])
+        self.assertEqual(manifest["schema"], 2)
+        self.assertIsNone(manifest["snapshot_sha"])
+        self.assertEqual(manifest["refs"], {})
+        self.assertEqual(Path(manifest["patch"]["path"]).read_bytes(), b"")
+        self.assertEqual(manifest["patch_bytes"], 0)
+
+    def test_patch_mode_preserves_committed_files_that_are_now_ignored(self):
+        (self.wt / ".gitignore").write_text("ignored.bin\n")
+        content = bytes(range(256))
+        (self.wt / "ignored.bin").write_bytes(content)
+        git(self.wt, "add", ".gitignore")
+        git(self.wt, "add", "-f", "ignored.bin")
+        git(self.wt, "commit", "-m", "force-add ignored binary")
+        manifest = self.capture(mode="patch")
+        fresh = self.base / "ignored-restore"
+        git(self.repo, "worktree", "add", "--detach", str(fresh), self.ws.base_sha)
+        git(fresh, "apply", "--binary", manifest["patch"]["path"])
+        self.assertEqual((fresh / "ignored.bin").read_bytes(), content)
+        self.assertIn("A\tignored.bin", manifest["changed"])
+
+    def test_patch_mode_cap_overflow_fails_with_failure_manifest_and_no_stale_patch(self):
+        (self.wt / "large.txt").write_text("x" * 4096)
+        with self.assertRaises(ex.ExecutorError) as caught:
+            self.capture(mode="patch", patch_max=100)
+        self.assertEqual(caught.exception.code, "ARTIFACT_ERROR")
+        manifest = json.loads((self.out / "handoff" / "manifest.json").read_text())
+        self.assertEqual((manifest["status"], manifest["error"], manifest["snapshot_sha"]),
+                         ("failed", "PATCH_TOO_LARGE", None))
+        self.assertFalse((self.out / "handoff" / "changes.patch").exists())
+
+    def test_patch_mode_overflow_keeps_prior_patch_without_advertising_it_as_current(self):
+        (self.wt / "small.txt").write_text("small\n")
+        first = self.capture(mode="patch")
+        prior_patch = Path(first["patch"]["path"]).read_bytes()
+        (self.wt / "large.txt").write_text("x" * 4096)
+        with self.assertRaises(ex.ExecutorError):
+            self.capture(mode="patch", patch_max=100)
+        self.assertEqual(Path(first["patch"]["path"]).read_bytes(), prior_patch)
+        failure = json.loads((self.out / "handoff" / "manifest.json").read_text())
+        self.assertEqual(failure["status"], "failed")
+        self.assertIsNone(failure["patch"]["path"])
+
+    def test_patch_continuation_brief_does_not_claim_snapshot_refs_or_diff(self):
+        (self.wt / "w.txt").write_text("w\n")
+        manifest = self.capture(mode="patch")
+        text = handoff.write_brief(self.out, attempt_id="a", task_id="T1", title="t", outcome="failed",
+                                   cause="lost", manifest=manifest).read_text()
+        self.assertIn("apply `", text)
+        self.assertIn("automatic predecessor integration cannot use", text)
+        self.assertNotIn("None", text)
+        self.assertNotIn("refs/m3/handoff", text)
 
     def state(self):
         return {"head": git(self.wt, "rev-parse", "HEAD"), "branch": git(self.wt, "rev-parse", self.ws.branch),

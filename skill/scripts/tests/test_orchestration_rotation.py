@@ -22,8 +22,6 @@ import bt_orchestration_provider as provider
 import bt_orchestration_runtime as runtime
 import bt_runstate as rs
 from bt_orchestration_actions import ActionEngine, ActionError
-from orchestration_rotation_support import prepare
-from orchestration_terminal_support import SCRIPTS, ForegroundHarness
 
 
 def action(kind, task='T1', text='', reference='', action_id='one'):
@@ -162,58 +160,6 @@ class RotationTests(unittest.TestCase):
             numeric_signal.assert_not_called()
 
 
-class ControlledCliTests(ForegroundHarness, unittest.TestCase):
-    def run_cli(self, environment):
-        source = f'''
-import os, sys
-os.environ.update({environment!r})
-os.execv(sys.executable,[sys.executable,{str(SCRIPTS / 'bitacora.py')!r},'--project','demo',
-                       'run','REQ-001','--foreground','--once','--no-autostart','--no-audit'])
-'''
-        return self.finish(*self.start(source), timeout=30)
-
-    def test_actual_cli_delegates_verifies_documents_and_rotates_without_duplicate_work(self):
-        rdir, work, environment = prepare(self.base)
-        code, output = self.run_cli(environment)
-        self.assertEqual(code, 0, output)
-        state = json.loads((rdir / 'RUN.json').read_text())
-        self.assertEqual([task['status'] for task in state['tasks']], ['done', 'done'], output)
-        workers = [json.loads(line) for line in Path(str(self.rows) + '.workers').read_text().splitlines()]
-        self.assertEqual([worker['task'] for worker in workers], ['T1', 'T2'])
-        self.assertEqual(len({worker['session'] for worker in workers}), 2)
-        rows = self.wait_rows(8)
-        self.assertGreaterEqual(len(rows), 8)
-        self.assertEqual(len({row['session'] for row in rows}), len(rows))
-        self.assertTrue(all(row['pgid'] == row['foreground'] == row['pid'] for row in rows))
-        self.assertEqual(len({row['tty'] for row in rows}), 1)
-        checkpoint = json.loads(next(rdir.glob('CHECKPOINT-*.json')).read_text())
-        self.assertGreater(checkpoint['runtime']['generation'], 0)
-        self.assertEqual(checkpoint['completed'], ['T1', 'T2'])
-        self.assertIsNone(state['foreground_child'])
-        self.assertGreaterEqual(int((work / 'verify-count').read_text()), 4)
-        self.assertEqual(len(list(rdir.glob('ORCHESTRATION-*.json'))), 6)
-
-    def test_actual_cli_rejects_unsupported_provider_before_worker_dispatch(self):
-        rdir, _work, environment = prepare(self.base)
-        environment['FIXTURE_VERSION'] = '9.9.9'
-        code, output = self.run_cli(environment)
-        self.assertNotEqual(code, 0)
-        self.assertIn('UNSUPPORTED_REASONING_VERSION', output)
-        self.assertFalse(Path(str(self.rows) + '.workers').exists())
-        self.assertNotIn('foreground-v1', (rdir / 'RUN.json').read_text())
-
-    def test_claim_without_real_implementation_cannot_finish_or_tick_plan(self):
-        rdir, _work, environment = prepare(self.base)
-        environment['FIXTURE_BROKEN'] = '1'
-        code, output = self.run_cli(environment)
-        self.assertEqual(code, 0, output)
-        state = json.loads((rdir / 'RUN.json').read_text())
-        self.assertTrue(all(task['status'] != 'done' for task in state['tasks']))
-        self.assertNotIn('[x]', (rdir / 'PLAN.md').read_text())
-        journal = json.loads(next(rdir.glob('ACTIONS-*.json')).read_text())
-        failed = [effect for effect in journal['effects'] if effect['action']['kind'] == 'verify']
-        self.assertFalse(failed[0]['receipt']['ok'])
-        self.assertIn('FileNotFoundError', failed[0]['receipt']['detail'])
 
 
 class ProviderTests(unittest.TestCase):

@@ -49,7 +49,7 @@ record the blocker, preserve evidence, and continue independent work.
 ## Continue across sessions
 
 Use a durable execution mechanism when work will outlast one session. For this skill, an approved PLAN.md is the
-task contract and the marathon supervisor's `RUN.json` is the execution state. Keep each task small enough for one
+task contract (with its frozen `PLAN.json`) and the scheduler's `SCHEDULER.db` is the execution state. Keep each task small enough for one
 fresh session, with a machine-runnable `verify` whenever possible. Persist status, attempts, last error, escalation
 notes, evidence and next actions at task boundaries; include enough context in the next prompt to resume without
 replaying the conversation.
@@ -62,7 +62,7 @@ verification passes; a run is complete only when all required tasks and final re
 or unavailable work as such.
 
 For a plan of a few hours, use the normal execution loop or Codex goal. For multi-day, overnight, or many-task work,
-explain the marathon capability in context and use `references/marathon.md`. Do not promise unattended completion
+explain that `launch`/`handoff` run the plan through the scheduler and use `references/execution.md` §1c. Do not promise unattended completion
 when the current machine, runtime, or approval model cannot guarantee it.
 
 ## Adapted public patterns

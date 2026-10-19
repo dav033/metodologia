@@ -19,9 +19,9 @@ NOW = "2026-10-15T20:00:00Z"
 IDENTITY = ProcessIdentity("linux", "boot-1", 1234, 5678)
 
 
-def frame(execution_id: str, sequence: int, offset: int, data: bytes) -> ExecutionOutputFrame:
+def frame(execution_id: str, sequence: int, offset: int, data: bytes, stream: str = "stdout") -> ExecutionOutputFrame:
     return ExecutionOutputFrame("1.0.0", "run-1", 1, "task-1", "attempt-1", execution_id,
-                                IDENTITY, "claude", "stdout", sequence, offset, NOW, data,
+                                IDENTITY, "claude", stream, sequence, offset, NOW, data,
                                 profile_id="claude-test", model="claude-sonnet-test")
 
 
@@ -109,6 +109,18 @@ class SchedulerMonitorRuntimeTests(unittest.TestCase):
         self.assertEqual(self.queue.buffered_frames, 0)
         self.assertEqual(self.store.get_cursor("execution-3", "stdout").offset_bytes, len(raw))
         self.assertEqual(query_events(self.store.path, execution_id="execution-3")["count"], 0)
+
+    def test_plain_text_on_stderr_advances_the_cursor_without_storing_an_event(self) -> None:
+        raw = b"reading prompt from stdin\nOpenAI Codex v0.1\n12345\n[1, 2]\n"     # text, also text that parses as JSON
+        self.queue.put(frame("execution-5", 0, 0, raw, stream="stderr"))
+
+        self.ingestor.consume("execution-5", terminal_drained=True)
+
+        cursor = self.store.get_cursor("execution-5", "stderr")
+        self.assertIsNotNone(cursor)
+        self.assertEqual(cursor.offset_bytes, len(raw))
+        self.assertEqual(query_events(self.store.path, execution_id="execution-5")["count"], 0)
+        self.assertEqual(self.queue.buffered_frames, 0)
 
     def test_source_gap_becomes_durable_event_and_audit_only_m1_outbox(self) -> None:
         self.queue.record_gap("stdout", 0, 0, 5, 1, execution_id="execution-4", host_boot_id="boot-1")

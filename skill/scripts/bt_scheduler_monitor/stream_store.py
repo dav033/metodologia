@@ -88,6 +88,22 @@ def _bounded_token(value: object, name: str, maximum: int) -> str:
     return value
 
 
+_REPLAY_VOLATILE = ("received_at", "received_monotonic_ns")      # when the frame was read: a restart replays it later
+
+
+def _same_replay(existing: str, body: str) -> bool:
+    """A replayed event is the same event when only the time it was read differs."""
+    if existing == body:
+        return True
+    try:
+        old, new = json.loads(existing), json.loads(body)
+    except ValueError:
+        return False
+    if not isinstance(old, dict) or not isinstance(new, dict):
+        return False
+    return all(old.get(key) == new.get(key) for key in (old.keys() | new.keys()) - set(_REPLAY_VOLATILE))
+
+
 def _json(value: object) -> str:
     def validate(item: object, depth: int = 0) -> None:
         if depth > 32:
@@ -166,7 +182,7 @@ def append_batch(store: _Store, *, events: tuple[NormalizedEvent, ...] = (),
                 existing = connection.execute("SELECT body FROM normalized_events WHERE event_id=?",
                                               (event.event_id,)).fetchone()
                 if existing is not None:
-                    if existing["body"] != body:
+                    if not _same_replay(existing["body"], body):
                         raise ValueError("event_id replay has different content")
                     continue
                 connection.execute("INSERT INTO normalized_events VALUES(?,?,?,?,?,?)",
@@ -194,7 +210,7 @@ def append_batch(store: _Store, *, events: tuple[NormalizedEvent, ...] = (),
                                   "first_offset", "last_offset", "dropped_bytes", "dropped_frames", "reason", "recorded_at"))
                 if existing == body:
                     continue
-                immutable = (0, 1, 2, 4, 8, 9)
+                immutable = (0, 1, 2, 4, 8)  # recorded_at keeps the first write: a restart replays with a new stamp
                 monotonic = (3, 5, 6, 7)
                 if any(existing[index] != body[index] for index in immutable) or any(
                         body[index] < existing[index] for index in monotonic):
@@ -239,7 +255,7 @@ def append_event(store: _Store, event: NormalizedEvent, cursor: SourceCursor) ->
             existing = connection.execute("SELECT body FROM normalized_events WHERE event_id=?",
                                           (event.event_id,)).fetchone()
             if existing is not None:
-                if existing["body"] != body:
+                if not _same_replay(existing["body"], body):
                     raise ValueError("event_id replay has different content")
                 connection.commit()
                 return False

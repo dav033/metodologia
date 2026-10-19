@@ -18,6 +18,7 @@ import datetime as dt
 import json
 import os
 import re
+import sqlite3
 import tempfile
 from collections.abc import Callable, Iterator
 from dataclasses import replace
@@ -303,7 +304,9 @@ class DecisionAssignmentPort:
 
     def __init__(self, project: str, ledger_path: str | Path, *, laya_root: str | Path,
                  checkpoint: str = "typed-decisions",
-                 quality_artifacts: tuple[str | Path, str | Path, str | Path, str | Path, str | Path] | None = None):
+                 quality_artifacts: tuple[str | Path, str | Path, str | Path, str | Path, str | Path] | None = None,
+                 classification_overlay: Callable[[], dict[str, dict[str, object]]] | None = None):
+        self.classification_overlay = classification_overlay
         if checkpoint not in CHECKPOINTS:
             raise ValueError("unsupported Laya checkpoint")
         if quality_artifacts is None:
@@ -324,6 +327,17 @@ class DecisionAssignmentPort:
         self.chooser = LocalLayaClient(LocalLayaConfig(Path(laya_root).expanduser(), checkpoint, device="auto")) \
             if quality_gate.enabled else None
         self.engine = DecisionEngine(self.ledger, chooser=self.chooser, quality_gate=quality_gate)
+
+    def effective_meta(self, task_id: str, meta: Any) -> Any:
+        """The task's classification as it stands NOW: the plan's `meta` with the amendments in force laid over it.
+        Only the next decision sees a change; an attempt already running keeps the route it was started with."""
+        if self.classification_overlay is None or not isinstance(meta, dict):
+            return meta
+        try:
+            changed = self.classification_overlay().get(task_id) or {}
+        except Exception:                      # an unreadable overlay never blocks assignment
+            return meta
+        return {**meta, **changed} if changed else meta
 
     @staticmethod
     def _route_metadata(decision_id: str, route, candidate) -> dict[str, str]:
@@ -357,7 +371,11 @@ class DecisionAssignmentPort:
             quota_preflight = refresh_quota_preflight(self.project)
         except Exception:  # noqa: BLE001 - an unavailable refresh must not reuse cached quota as current.
             quota_preflight = {"*": {"status": "unavailable", "reason": "quota_refresh_failed"}}
-        from bt_scheduler_plan_routing import _quota_evidence, persist_dispatch_batch, quota_aware_requested_at
+        from bt_scheduler_plan_routing import (
+            _quota_evidence,
+            persist_dispatch_batch,
+            quota_aware_requested_at,
+        )
         requested_at = quota_aware_requested_at(request.now, quota_preflight)
         decision_requests = []
         candidates_by_task = {}
@@ -365,8 +383,8 @@ class DecisionAssignmentPort:
         quota_evidence_by_task = {}
         for view in views:
             task, kind, classifications = decision_sources.task_facts(
-                view.id, view.meta, view.dependencies, view.acceptance_criteria, view.verification,
-                view.shared_resources, view.expected_paths,
+                view.id, self.effective_meta(view.id, view.meta), view.dependencies, view.acceptance_criteria,
+                view.verification, view.shared_resources, view.expected_paths,
             )
             candidates = decision_sources._candidate_rows(self.project, kind, classifications, requested_at)
             candidates = tuple(
@@ -382,9 +400,10 @@ class DecisionAssignmentPort:
                 request.plan_id, request.revision, request.plan_sha256, request.free_slots, requested_at, task,
                 candidates,
                 decision_sources.POLICY_VERSION, checkpoint_revision,
+                dispatch_generation=view.attempts,
             )
             decision_requests.append(decision_request)
-            preserve_baseline_by_task[view.id] = kind == "audit"
+            preserve_baseline_by_task[view.id] = kind != "docs"
             quota_evidence_by_task[view.id] = _quota_evidence(view.id, candidates, quota_preflight)
             candidates_by_task[view.id] = {
                 (candidate.route_id, candidate.account_ref): candidate
@@ -491,9 +510,80 @@ def write_projection(rdir: Path, scheduler: core.SchedulerCore) -> Path:
     except BaseException:
         Path(tmp).unlink(missing_ok=True)
         raise
+    _refresh_plan_block(rdir)
     return target
+
+
+def _refresh_plan_block(rdir: Path) -> None:
+    """Keep the generated status block of PLAN.md in step with the projection; best-effort, never raises."""
+    try:
+        if authority(rdir) != AUTHORITY:  # a projection beside a legacy run owns nothing: leave that PLAN.md alone
+            return
+        import bt_planblock
+        bt_planblock.refresh_plan_block(Path(rdir).resolve().parents[1].name, rdir)
+    except Exception:
+        pass
 
 
 def is_stalled(scheduler: core.SchedulerCore, snapshot: core.Snapshot | None = None) -> bool:
     """Expose M1's idle-stop decision to the owner without duplicating its state rules."""
     return scheduler._stalled(snapshot or scheduler.snapshot())
+
+
+def simulate_audit(plan_path: Path, *, fail: dict[str, int] | None = None, reject: dict[str, int] | None = None,
+                   start: float | None = None) -> list[dict[str, Any]]:
+    """Run a plan file through the core's deterministic doubles (no provider, no database, nothing written) and return
+    its audit trail as rows `{seq, at, kind, plan_id, task_id, attempt_id, detail}`. `fail` / `reject` script how many
+    attempts of a task fail to execute / are rejected by the verifier. Time is simulated: one step = one second after
+    `start` (default: now). The frozen-plan check is bypassed on purpose: a demonstration runs any valid plan."""
+    import hashlib
+
+    from bt_scheduler_core.simulation import Script, simulate
+    from bt_scheduler_core.simulators import ManualClock
+    path = Path(plan_path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    plan = core.load_plan_file(path, approved_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                               plan_id=data["plan_id"], revision=data["revision"])
+    clock = ManualClock(dt.datetime.now(dt.UTC).timestamp() if start is None else start)
+    _, scheduler = simulate(plan, core.InMemoryRepository(), script=Script(fail=fail or {}, reject=reject or {}),
+                            recovery=core.ScriptedRecovery(), config=core.Config(max_attempts=3), clock=clock)  # M5 double: retry
+    return [entry.to_dict() for entry in scheduler.audit_log()]
+
+
+def record_amendment(rdir: Path, record: dict[str, Any]) -> bool:
+    """Note an applied amendment in the run's audit (`amendment_applied`), as an observation: no task or attempt state
+    changes and nothing is decided. False when the requirement has no Scheduler run (nothing to note)."""
+    if authority(rdir) != AUTHORITY:
+        return False
+    repository = core.SqliteRepository(run_db_path(rdir))
+    with repository.transaction() as tx:
+        if tx.state is None:
+            return False
+        tx.audit("amendment_applied", at=dt.datetime.now(dt.UTC).timestamp(), task_id=record["task"],
+                 field=record["field"], old=record["from"], new=record["to"], by=record["by"],
+                 proposed_by=record["proposed_by"], reason=record["reason"][:160], seq=record["seq"])
+    return True
+
+
+def rebase_to_latest(rdir: Path) -> Any:
+    """Move this requirement's Scheduler run onto the latest frozen plan revision, keeping accepted work that did not
+    change (M1's `rebase_run`). Refused while an owner process holds the run or any attempt is alive."""
+    rdir = Path(rdir)
+    if authority(rdir) != AUTHORITY:
+        raise core.SchedulerError("NOT_ALLOWED", f"{rdir.name} has no Scheduler run to rebase")
+    new = approved_plan(rdir)
+    db = run_db_path(rdir)
+    try:
+        conn = sqlite3.connect(f"{db.resolve().as_uri()}?mode=ro", uri=True, timeout=1)
+        try:
+            row = conn.execute("SELECT doc FROM state WHERE id = 1").fetchone()
+        finally:
+            conn.close()
+        doc = json.loads(row[0])
+    except (sqlite3.Error, TypeError, ValueError) as exc:
+        raise core.SchedulerError("STATE_UNREADABLE", f"cannot read the run of {rdir.name}") from exc
+    old_path = rdir / REVISIONS / f"PLAN.r{doc['revision']}.json"
+    old = core.load_plan_file(old_path, approved_sha256=doc["plan_sha256"], plan_id=doc["plan_id"],
+                              revision=doc["revision"])
+    with owner_lock(rdir):
+        return core.rebase_run(core.SqliteRepository(db), old, new)

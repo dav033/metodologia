@@ -7,12 +7,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from test_marathon_robust import RobustCase  # noqa: F401  (sets BITACORA_ROOT before bt_* imports)
+import run_case_support  # noqa: F401  (sets BITACORA_ROOT before bt_* imports)
 
 import bt_events  # noqa: E402
 import bt_quality  # noqa: E402
-import bt_runstate as rs  # noqa: E402
-import bt_runtask as rt  # noqa: E402
 
 EXISTING_FIELDS = ("attempts", "done", "failed", "other", "seconds", "measured", "tokens_measured",
                    "cost_usd_reported", "cost_measured", "success_rate", "avg_seconds", "coverage", "tokens_per_done")
@@ -44,18 +42,6 @@ class ParseFindingsTests(unittest.TestCase):
 
     def test_positive_count_without_severity_keeps_severity_unknown(self):
         self.assertEqual(bt_quality.parse_findings(2, None), (2, None))
-
-
-class TaskDonePersistsFindingsTests(RobustCase):
-    def test_flag_is_stored_and_missing_flag_is_null(self):
-        self.seed(["- [ ] T1 — a"])
-        rt.task_done(self.rdir, "T1", "ok", 2, "high=1,med=1")
-        task = rs.get_task(rs.load(self.rdir), "T1")
-        self.assertEqual((task["findings"], task["severity"]), (2, {"high": 1, "med": 1, "low": 0}))
-        rt.task_done(self.rdir, "T1", "again")
-        task = rs.get_task(rs.load(self.rdir), "T1")
-        self.assertIsNone(task["findings"])  # unknown, never 0
-        self.assertIsNone(task["severity"])
 
 
 def attempt(session, task, result="done", kind="implement", model="haiku", milestone="M1", tokens=100, **extra):

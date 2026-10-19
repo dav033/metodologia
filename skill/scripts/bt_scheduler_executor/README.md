@@ -117,6 +117,15 @@ commit (`refs/m3/handoff/<dirname>`; HEAD pinned at `refs/m3/head/<dirname>`; ig
 "dirty only", "both" and "nothing" are all distinguished (`empty: true`). `continue.md` is a plain-text brief for a *different*
 agent or a human: **no agent reasoning or conversation is transferred between providers**, and its author's report is only a claim.
 
+An explicit `Config(handoff_mode="patch")` provides an opt-in patch-only handoff for running agents against edited workspaces.
+It builds `changes.patch` against the pinned base from the real working tree with a temporary index, records its byte length and
+SHA-256, and leaves HEAD, the real index, branches and refs unchanged. The prompt tells the agent not to commit. Empty work is
+captured as a valid empty patch. If the patch exceeds `patch_max_bytes`, the attempt's handoff fails with `PATCH_TOO_LARGE`; a
+failure manifest is written and no captured status is reported. Patch-only handoffs have `snapshot_sha: null` and `refs: {}`.
+Their manifests use schema 2; schema 1 remains the snapshot contract.
+They can be applied manually with `git apply --binary` on the pinned base. Automatic predecessor integration requires snapshot
+refs and therefore cannot consume patch-only handoffs. The default remains `handoff_mode="snapshot"` with existing behavior.
+
 ## Artefacts
 
 `<root>/ledger.db`, `<root>/executor.lock`, `<root>/executor.log`, `<root>/ws/` (worktrees, intent manifests, `journal.jsonl`),
@@ -126,7 +135,7 @@ explicit operator action (`GitWorkspaces.release`).
 
 ## Configuration (`Config`, all explicit)
 
-`max_running=2` (a safety ceiling; M1 owns global capacity), `max_queued=64`, `timeout_seconds=1800`, `max_timeout_seconds=86400`,
+`handoff_mode="snapshot"` (or opt-in `"patch"`), `max_running=2` (a safety ceiling; M1 owns global capacity), `max_queued=64`, `timeout_seconds=1800`, `max_timeout_seconds=86400`,
 `grace_seconds=10`, `spare_interactive=True`, `heartbeat_seconds=30`, `poll_seconds=0.5`, `output_head_bytes=8 MiB`, `output_tail_bytes=256 KiB`,
 `classify_head_bytes=64 KiB`, `patch_max_bytes=16 MiB`, `log_tail_bytes=64 KiB`, `max_event_backlog=10000`, `deliver_batch=100`,
 `spawn_wait_seconds=10`, `settle_retry_seconds=5`, `handoff_tries=3`, `handoff_retry_seconds=0.5`. An order's own timeout wins over the default, both capped by the maximum.
@@ -165,7 +174,7 @@ during/after the handoff, before/after the terminal transaction, between deliver
 | US-1 run once | `test_start.test_the_same_order_twice_is_one_attempt`; `test_start.test_the_same_order_delivered_concurrently_starts_one_process_in_the_end`; `test_reconcile.test_an_accepted_but_never_started_order_is_started_exactly_once_by_the_new_executor`; `test_hardening.test_a_preparing_attempt_whose_shim_died_but_whose_agent_lives_is_never_relaunched`; `test_reconcile.test_an_attempt_whose_shim_started_but_was_never_recorded_as_running_is_adopted_not_duplicated` |
 | US-2 route, profile, model | `test_scheduler_executor_adapter.test_a_model_that_does_not_belong_to_the_provider_is_invalid`; `test_scheduler_executor_adapter.test_claude_gets_its_model_effort_and_profile_account`; `test_scheduler_executor_adapter.test_the_child_environment_drops_parent_session_state_and_foreign_credentials`; `test_scheduler_executor_integration.test_each_agent_got_exactly_the_model_effort_profile_and_worktree_it_was_assigned`; `test_scheduler_executor_integration.test_a_work_only_profile_cannot_run_a_personal_project`; `test_start.test_an_unresolvable_route_is_rejected_before_any_side_effect_and_never_defaulted` |
 | US-3 isolated worktrees | `test_concurrency.test_eight_parallel_attempts_on_one_repository_stay_apart`; `test_concurrency.test_attempts_on_different_repositories_run_together_and_do_not_mix`; `test_workspace.test_parallel_allocations_on_one_repository_all_succeed_and_are_distinct`; `test_executor.test_the_concurrency_ceiling_is_never_exceeded_and_the_rest_wait_in_the_queue` |
-| US-4 preserve the work | `test_handoff.test_commits_only`; `test_handoff.test_dirty_tree_only_modified_tracked_plus_untracked`; `test_handoff.test_commits_and_uncommitted_work_together`; `test_handoff.test_an_attempt_that_changed_nothing_is_reported_empty_not_missing`; `test_handoff.test_the_branch_the_index_the_base_and_the_worktree_are_untouched`; `test_classification.test_quota_exhaustion_still_preserves_the_half_done_work`; `test_hardening.test_a_clean_exit_with_work_that_cannot_be_preserved_is_a_failure_not_a_success` |
+| US-4 preserve the work | `test_handoff.test_commits_only`; `test_handoff.test_dirty_tree_only_modified_tracked_plus_untracked`; `test_handoff.test_commits_and_uncommitted_work_together`; `test_handoff.test_an_attempt_that_changed_nothing_is_reported_empty_not_missing`; `test_handoff.test_the_branch_the_index_the_base_and_the_worktree_are_untouched`; `test_handoff.test_patch_mode_reapplies_dirty_binary_and_deletion_without_mutating_git_state`; `test_handoff.test_patch_mode_preserves_committed_files_that_are_now_ignored`; `test_handoff.test_patch_mode_cap_overflow_fails_with_failure_manifest_and_no_stale_patch`; `test_handoff.test_patch_mode_overflow_keeps_prior_patch_without_advertising_it_as_current`; `test_classification.test_quota_exhaustion_still_preserves_the_half_done_work`; `test_hardening.test_a_clean_exit_with_work_that_cannot_be_preserved_is_a_failure_not_a_success` |
 | US-5 facts, not verdicts | `test_executor.test_finished_means_the_agent_stopped_never_that_the_task_is_done`; `test_events.test_the_failed_event_carries_cause_handoff_and_artifact_paths`; `test_scheduler_executor_integration.test_an_agent_that_says_it_finished_is_not_a_completed_task_until_the_verifier_says_so`; `test_classification.test_a_clean_exit_without_end_of_turn_evidence_is_never_finished` |
 | US-6 cancel | `test_cancel.test_a_queued_attempt_is_cancelled_and_never_spawned`; `test_cancel.test_a_running_attempt_is_stopped_its_work_preserved_and_one_cancelled_event_emitted`; `test_cancel.test_a_wrong_token_is_rejected_and_the_attempt_carries_on`; `test_cancel.test_cancel_racing_the_natural_exit_always_ends_with_exactly_one_terminal_event`; `test_scheduler_executor_integration.test_cancelling_the_run_stops_the_running_agents_and_preserves_their_work` |
 | US-7 reconcile | `test_reconcile.test_a_live_agent_is_reattached_after_a_restart_and_finishes_once`; `test_reconcile.test_an_agent_that_finished_while_no_executor_was_alive_is_finalised_from_its_exit_record`; `test_reconcile.test_a_vanished_agent_with_no_record_is_lost_and_its_work_is_preserved`; `test_reconcile.test_a_recycled_pid_is_never_signalled`; `test_scheduler_executor_integration.test_an_executor_restart_in_the_middle_of_a_run_loses_nothing_and_starts_nothing_twice` |
@@ -181,7 +190,7 @@ during/after the handoff, before/after the terminal transaction, between deliver
 | R9 safe cancel | `test_cancel.test_a_cancel_that_arrives_while_the_attempt_is_still_preparing_stops_it_before_any_process`; `test_cancel.test_cancelling_twice_is_one_cancellation_and_one_terminal_event`; `test_cancel.test_cancel_after_the_attempt_ended_changes_nothing` |
 | R10 reconcile on construction | `test_reconcile.test_query_reflects_process_reality_not_just_the_ledger`; `test_reconcile.test_an_attempt_stuck_in_settling_is_settled_once_with_the_stored_outcome`; `test_reconcile.test_an_attempt_stuck_in_preparing_with_no_process_is_prepared_again_once` |
 | R11 environment and secrets | `test_executor.test_the_child_gets_the_profile_environment_and_loses_the_other_profiles_secrets`; `test_executor.test_no_secret_reaches_the_ledger_the_artifacts_or_the_events`; `test_scheduler_executor_integration.test_no_secret_value_appears_in_the_executors_state_or_in_the_cores_audit`; `test_hardening.test_artifacts_are_private` |
-| R12 prompt and claims | `test_executor.test_the_prompt_is_task_text_and_rules_and_is_private`; `test_events.test_the_agents_report_is_labelled_a_claim_in_the_event`; `test_hardening.test_the_agents_report_cannot_hang_or_exhaust_the_executor` |
+| R12 prompt and claims | `test_executor.test_the_prompt_is_task_text_and_rules_and_is_private`; `test_prompt.test_patch_mode_executor_prompt_forbids_commits`; `test_events.test_the_agents_report_is_labelled_a_claim_in_the_event`; `test_hardening.test_the_agents_report_cannot_hang_or_exhaust_the_executor` |
 | R13 artefacts | `test_executor.test_artifacts_live_under_attempts_and_nothing_is_written_to_the_main_checkout`; `test_hardening.test_a_cancelled_attempt_has_a_manifest_and_a_brief_even_with_no_workspace`; `test_hardening.test_a_queue_full_refusal_leaves_no_empty_directory` |
 | R14 real CLIs opt-in | `test_scheduler_executor_real.test_every_real_case_resolves_without_launching_anything` |
 | R15 no regressions, opt-in | `test_scheduler_executor_integration.test_a_legacy_requirement_is_not_taken_over_and_its_run_json_is_untouched`; `test_scheduler_executor_integration.test_historical_runs_of_this_repository_are_byte_identical_after_a_whole_executor_session` |
@@ -203,7 +212,7 @@ during/after the handoff, before/after the terminal transaction, between deliver
 - Stragglers: after an attempt ends the executor kills every process whose working directory is inside the worktree (this catches
   `setsid` escapes), but a descendant that `chdir`s away and escapes the process group is out of reach (no subreaper: the module may not use `ctypes`).
 - Trust boundary: the agent runs as the same user and without a sandbox (the providers are launched in their permission-bypass modes, as the
-  existing supervisor does); it can read or forge files in the attempt directory (`exit.json`, `descendants.json`) and edit the repository's git configuration. Files
+  methodology launcher does); it can read or forge files in the attempt directory (`exit.json`, `descendants.json`) and edit the repository's git configuration. Files
   are 0600 and directories 0700 (root 0700, `ledger.db` 0600, `executor.log` 0600) against other users only. `exit.json`, `shim.json`
   and `descendants.json` are shape-checked on read: a forged or malformed `exit.json` is treated as a vanished supervisor (cause `lost`),
   and invalid descendant evidence identifies no terminal process as agent-owned. A well-formed same-uid forgery remains inside the declared trust boundary.

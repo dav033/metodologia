@@ -32,9 +32,9 @@ class LaunchPaths(Isolated):
         with patch.object(bt_launch, "find_req", return_value=self.rdir), \
                 patch("bt_requirements_gate.require_ready", return_value={"status": "ready"}), \
                 patch.object(bt_launch.ws, "clone_missing"), \
-                patch.object(bt_launch, "write_handoff", side_effect=Stop):
+                patch.object(bt_launch, "scheduler_script", side_effect=Stop):
             try:
-                bt_launch.launch("sample", "REQ-001", mode="marathon", **kw)
+                bt_launch.launch("sample", "REQ-001", **kw)
             except Stop:
                 return "passed the gate"
         return "completed"
@@ -49,10 +49,9 @@ class LaunchPaths(Isolated):
             return transition.launch("sample", "REQ-001", **kw)
 
     def open_run(self):
-        import bt_run
-        with patch.object(bt_run.rs, "load", return_value=None), patch.object(bt_run.rs, "save"), \
-                patch.object(bt_run, "_pool", return_value=None):
-            return bt_run._open("sample", self.rdir, {"agent": "claude", "model": "haiku"})
+        adapter.freeze_on_launch(self.rdir, compatibility_report=self.compatibility_report())
+        revision = planner.list_revisions(self.rdir)[-1]
+        return {"plan_ref": {"plan_id": "REQ-001", "revision": revision["revision"], "sha256": revision["sha256"]}}
 
     # -- standard / web / handoff launch (bt_launch.launch) ---------------------------------------------------------
     def test_standard_launch_refuses_content_nobody_approved(self):
@@ -75,11 +74,12 @@ class LaunchPaths(Isolated):
         self.assertEqual(self.revisions(), [1, 2])
         self.assertEqual(self.standard_launch(), "passed the gate")
 
-    def test_force_still_validates_and_freezes_what_it_launches(self):
+    def test_force_neither_approves_nor_freezes_what_it_launches(self):
         self.good_plan()
         self.set_status("review")
-        self.assertEqual(self.standard_launch(force=True), "passed the gate")
-        self.assertEqual(self.revisions(), [1])
+        with self.assertRaisesRegex(SystemExit, "requires PLAN.md status 'approved'"):
+            self.standard_launch(force=True)
+        self.assertEqual(self.revisions(), [])
         broken = self.rdir.parent / "REQ-002-broken"
         broken.mkdir()
         (broken / "SPEC.md").write_text("# s\n", encoding="utf-8")
@@ -160,18 +160,12 @@ class LaunchPaths(Isolated):
             self.open_run()
         self.assertIn("PLAN_NOT_APPROVED", str(ctx.exception))
 
-    def test_legacy_plans_start_runs_exactly_as_before(self):
-        self.set_status("draft")
-        state = self.open_run()
-        self.assertNotIn("plan_ref", state)
-        self.assertFalse((self.rdir / "plan-revisions").exists())
 
     def resume(self, existing: dict):
-        import bt_run
-        with patch.object(bt_run.rs, "load", return_value=existing), \
-                patch.object(bt_run.rs, "update", side_effect=lambda rdir, fn: existing), \
-                patch.object(bt_run, "_pool", return_value=None), patch.object(bt_run, "reap_orphans", return_value=[]):
-            return bt_run._open("sample", self.rdir, {"agent": "claude"})
+        problem = adapter.resume_problem(self.rdir, existing, compatibility_report=self.compatibility_report())
+        if problem:
+            raise SystemExit(problem)
+        return existing
 
     def test_a_resumed_run_is_never_rewritten_and_never_runs_unapproved_content(self):
         plan = self.approved()
@@ -290,8 +284,8 @@ class LaunchPaths(Isolated):
     def test_every_entry_that_creates_a_run_or_launches_goes_through_the_gate(self):
         callers = {path.name for path in SCRIPTS.glob("*.py")
                    if "init_state(" in path.read_text(encoding="utf-8") and path.name != "bt_runstate.py"}
-        self.assertEqual(callers, {"bt_run.py"}, "a new module creates run state: route it through the launch gate")
-        gated = {"bt_run.py": "validate_run_plan(", "bt_launch.py": "freeze_on_launch(",
+        self.assertEqual(callers, set(), "a new module creates run state: route it through the launch gate")
+        gated = {"bt_launch.py": "freeze_on_launch(",
                  "bt_orchestration_transition.py": "launch_problem("}
         for name, call in gated.items():
             self.assertIn(call, (SCRIPTS / name).read_text(encoding="utf-8"), name)

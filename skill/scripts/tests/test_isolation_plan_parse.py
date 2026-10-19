@@ -8,11 +8,11 @@ from pathlib import Path
 _TEST_HOME = Path(tempfile.mkdtemp(prefix="isolation-plan-home-"))
 os.environ["HOME"] = str(_TEST_HOME)
 
-from test_marathon import MarathonCase
+from run_case_support import RunCase
 import bt_runstate as rs
 
 
-class IsolationPlanMetadata(MarathonCase):
+class IsolationPlanMetadata(RunCase):
     def test_parse_task_line_keeps_absent_metadata_as_none(self):
         parsed = rs.parse_task_line("A task · repo: app · files: src/a, docs/b · resources: lockfile, port:5432")
         self.assertEqual(parsed["files"], ["src/a", "docs/b"])

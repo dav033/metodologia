@@ -282,6 +282,11 @@ class Translation(s.World):
         self.fake = self.FakeExecutor()
         return adapter.CoreExecutionPort(self.fake, self.plan, project="proj", **kw)
 
+    def test_a_query_before_the_executor_is_composed_is_not_ready_rather_than_an_attribute_error(self):
+        port = adapter.CoreExecutionPort(None, self.plan, project="proj")
+        with self.assertRaises(core.PortNotReady):
+            port.query("att-0001")
+
     def order(self, **kw):
         base = {"idempotency_key": "REQ-042:r1:att-0001:start", "plan_id": "REQ-042", "revision": 1,
                 "task_id": "T1", "attempt_id": "att-0001", "token": 7, "executor": "direct:claude/sonnet",

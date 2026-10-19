@@ -103,7 +103,7 @@ class SchedulerRunViews(unittest.TestCase):
                 patch.object(bt_page_req, "_front", return_value="launched"), \
                 patch.object(bt_page_req, "_first_heading", return_value="Demo"):
             html = bt_page_req.req_page("metodologia", "REQ-042", "", "token")
-        self.assertIn('?tab=run">Maratón', html)
+        self.assertIn('?tab=run">Ejecución', html)
         self.assertIn("proyección Scheduler no disponible", html)
 
     def test_scheduler_run_panel_renders_projection_and_m1_controls(self):
@@ -128,8 +128,8 @@ class SchedulerRunViews(unittest.TestCase):
 
         self.assertIn("Complejidad", html)
         self.assertIn("Modelo M2", html)
-        self.assertIn("claude-work · sonnet (xhigh) · revalidado al iniciar", html)
-        self.assertIn("claude-default · haiku · planificado", html)
+        self.assertIn('claude-work · <span class="mchip">sonnet · xhigh</span> · revalidado al iniciar', html)
+        self.assertIn('claude-default · <span class="mchip">haiku</span> · planificado', html)
 
     def test_scheduler_run_panel_displays_route_account_quota_and_stable_unavailable_reason_escaped(self):
         run = self.projection()
@@ -144,7 +144,7 @@ class SchedulerRunViews(unittest.TestCase):
                 patch.object(bt_page_run, "scheduler_authority", return_value=True):
             html = bt_page_run.run_panel("metodologia", "REQ-042", self.rdir, "token")
 
-        for expected in ("Cuenta y evidencia de cuota", "claude · claude-work · sonnet (high) · planificado",
+        for expected in ("Cuenta y evidencia de cuota", 'claude · claude-work · <a class="mchip" href="/metrics/model/claude/sonnet/high">sonnet · high</a> · planificado',
                          "acct:opaque-1", "cuota fresh", "observada 2026-10-16 17:00:00 UTC",
                          "válida hasta sin dato", "uso 12.5%", "selección route_policy_preferred",
                          "motivo: m2_batch_unavailable &lt;script&gt;"):

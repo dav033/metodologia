@@ -82,12 +82,6 @@ def build_context(project: str | None, session_id: str, cwd: Path, source: str) 
            f"Script: \"{PYTHON}\" \"{SCRIPT.as_posix()}\" <cmd>   (cmds: where, id D|P|REQ, req new, index, rollups)"]
     if continuation:
         out += ["", continuation]
-    try:  # supervised marathon session: whatever the source (startup, compact…), restate the one task at hand
-        from bt_runprompt import marathon_block
-        if block := marathon_block():
-            out += ["", block]
-    except Exception:
-        pass
     if in_hq(cwd):
         repo = ws.describe(ROOT, project)
         out.append(f"HQ MODE (planning room): do requirements → spec → plan here; read the code at "
@@ -119,6 +113,9 @@ def build_context(project: str | None, session_id: str, cwd: Path, source: str) 
     if unsized:
         out.append(f"({unsized} pending item(s) have no complexity estimate yet: when you touch this project, "
                    f"estimate them S/M/L in PENDING.md — the file re-sorts itself.)")
+    import bt_planblock
+    if planes := bt_planblock.planes_context(project, ROOT):
+        out += ["", *planes]
     import bt_learn
     learned = bt_learn.context_brief(project)
     if learned:

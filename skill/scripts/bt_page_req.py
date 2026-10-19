@@ -1,6 +1,7 @@
 """Requirement page: spec, plan (with the approval form), question rounds (with the answer form), handoff."""
 from __future__ import annotations
 
+import re
 from html import escape as e
 
 import bt_rounds as rounds
@@ -25,7 +26,7 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> 
         tab = "rounds" if open_round else ("plan" if plan_status == "review" else
                                            ("run" if live or (run_available and run is None) else
                                             ("review" if plan_status in ("done", "launched") else "spec")))
-    tab_list = REQ_TABS + ([("run", "Maratón")] if run_available else [])
+    tab_list = REQ_TABS + ([("run", "Ejecución")] if run_available else [])
     tabs = "".join(
         f'<a class="{"on" if k == tab else ""}" href="{purl(project, "req", rid)}?tab={k}">{v}'
         f'{" ●" if (k == "rounds" and open_round) or (k == "plan" and plan_status == "review") or (k == "run" and live) else ""}</a>'
@@ -49,8 +50,10 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> 
     else:
         content = md("doc", read(spec))
     note = f'<div class="notice">{e(notice)}</div>' if notice else ""
-    head = (f'<h1>{e(_first_heading(spec))}</h1><div class="kpis">spec {badge(_front(spec, "status"))}'
-            f'{" · plan " + badge(plan_status) if plan_status else ""}</div>')
+    title = re.sub(r"^REQ-\d+\s*[—–:-]\s*", "", _first_heading(spec)) or rid
+    head = (f'<div class="head"><div><p class="eyebrow">{e(project)} · {e(rid)}</p><h1>{e(title)}</h1>'
+            f'<div class="kpis"><span class="kpi">spec {badge(_front(spec, "status"))}</span>'
+            f'{"<span class=kpi>plan " + badge(plan_status) + "</span>" if plan_status else ""}</div></div></div>')
     body = f'{head}{note}<div class="tabs">{tabs}</div><div class="panel">{content}</div>'
     return layout(rid, body, [(project, purl(project)), (rid, purl(project, "req", rid))])
 
@@ -104,12 +107,8 @@ def plan_panel(project: str, rid: str, plan: Path, status: str | None, token: st
 <input type="hidden" name="token" value="{e(token)}">
 <div class="question"><strong>Comentarios</strong> <span class="muted">(opcional; obligatorio si pides cambios)</span>
 <textarea name="comments"></textarea>
-<div class="actions" style="margin-top:10px"><label>Modo
-<select name="mode"><option value="marathon">Maratón (días · Haiku 5.5 · ultracode)</option><option value="loop">Loop (una sesión)</option></select>
-</label><label>Ejecutor
-<select name="agent"><option value="auto">Automático (mejor agente por tarea)</option><option value="claude">Solo Claude Code</option><option value="codex">Solo Codex</option></select>
-</label></div></div>
-<div class="actions"><button type="submit" name="decision" value="approve">Aprobar y lanzar ejecutor</button>
+</div>
+<div class="actions"><button type="submit" name="decision" value="approve">Aprobar y lanzar Scheduler</button>
 <button class="secondary" type="submit" name="decision" value="changes">Pedir cambios</button></div></form>"""
     elif status in ("approved", "launched", "in-progress", "done"):
         form = f'<div class="notice">Plan {e(status)}.</div>'

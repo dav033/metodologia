@@ -119,6 +119,8 @@ class DecisionRequest:
     candidates: tuple[Candidate, ...]
     policy_version: str
     checkpoint_revision: str | None
+    # M1 attempts already consumed; zero retains initial/planning identity.
+    dispatch_generation: int = 0
 
 
 @dataclass(frozen=True)

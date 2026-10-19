@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bitacora"
 version = "0.1.0"
-description = "Local engineering workspace: bitácora documents, marathon supervisor, provider routing and web UI"
+description = "Local engineering workspace: bitácora documents, Scheduler runs, provider routing and web UI"
 requires-python = ">=3.12"
 dependencies = []  # stdlib only; optional Node is a separate capability (REQ-007 M7)
 
@@ -29,6 +29,10 @@ packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "plan_bench
 py-modules = [
   "bitacora",
   "bt_agents",
+  "bt_agent_models",
+  "bt_role_policy",
+  "bt_role_routing",
+  "bt_agent_views",
   "bt_agy",
   "bt_audit",
   "bt_autostart",
@@ -36,7 +40,6 @@ py-modules = [
   "bt_cli_diagram",
   "bt_cli_docs",
   "bt_cli_launch",
-  "bt_cli_run_control",
   "bt_cli_delegate",
   "bt_cli_learn",
   "bt_cli_review",
@@ -63,6 +66,9 @@ py-modules = [
   "bt_plan_history",
   "bt_plan_bench",
   "bt_planner_runtime",
+  "bt_planblock",
+  "bt_planstatus",
+  "bt_plans_api",
   "bt_scheduler_adapter",
   "bt_scheduler_plan_compat",
   "bt_scheduler_plan_routing",
@@ -75,12 +81,14 @@ py-modules = [
   "bt_scheduler_retry",
   "bt_cli_scheduler_recovery",
   "bt_cli_scheduler_run",
+  "bt_cli_go",
   "bt_scheduler_monitor_adapter",
   "bt_scheduler_monitor_recovery",
   "bt_scheduler_stream_adapter",
   "bt_scheduler_m4_stream_bridge",
   "bt_scheduler_m4_wiring",
   "bt_scheduler_integrator",
+  "bt_scheduler_patch_chain",
   # Scheduler module adapters and local M2 runtime modules.
   "bt_scheduler_decision_adapter",
   "bt_scheduler_decision_benchmark",
@@ -111,15 +119,29 @@ py-modules = [
   "bt_launch",
   "bt_learn",
   "bt_lock",
-  "bt_monitor",
   "bt_notify",
   "bt_nowindow",
   "bt_page_graph",
   "bt_page_metrics",
+  "bt_page_plans",
+  "bt_attempt_facts",
+  "bt_agent_now",
+  "bt_flow_bus",
+  "bt_go",
+  "bt_links",
+  "bt_live_api",
+  "bt_page_attempts",
+  "bt_page_flow",
+  "bt_page_model",
+  "bt_page_now",
+  "bt_run_stores",
+  "bt_scheduler_rows",
   "bt_page_req",
   "bt_page_review",
   "bt_page_run",
   "bt_pages",
+  "bt_presence",
+  "bt_plan_gate",
   "bt_pending",
   "bt_platform",
   "bt_profile_matrix",
@@ -136,11 +158,6 @@ py-modules = [
   "bt_resources",
   "bt_review",
   "bt_rounds",
-  "bt_run",
-  "bt_run_plan_gate",
-  "bt_runentry",
-  "bt_runloop",
-  "bt_run_isolated",
   "bt_runprompt",
   "bt_runsession",
   "bt_runsettle",
@@ -182,7 +199,7 @@ bt_scheduler_monitor = ["README.md"]
 bt_scheduler_recovery = ["README.md"]
 bt_scheduler_quality = ["api-contract.json", "README.md"]
 bitacora_resources = [
-  "SKILL.md", "templates/*", "templates/**/*", "assets/*", "agents/*", "agents/**/*",
+  "SKILL.md", "templates/*", "templates/**/*", "assets/*", "assets/vendor/**/*", "agents/*", "agents/**/*",
   "agents/*/skills/*/SKILL.md", "githooks/*",
   "references/*.md", "references/stacks/*", "vendor/archify/**/*",
 ]

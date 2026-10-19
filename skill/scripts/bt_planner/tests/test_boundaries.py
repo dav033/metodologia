@@ -132,7 +132,7 @@ class Boundaries(unittest.TestCase):
                 names = {n for n, level, _ in imports(f) if not level}
                 self.assertFalse(names <= (STDLIB | ALLOWED_LOCAL), source)
 
-    def test_writes_are_confined_to_the_two_documented_places(self):
+    def test_writes_are_confined_to_the_documented_places(self):
         writers = {}
         for path in self.sources():
             if "tests" in path.relative_to(MODULE).parts:
@@ -141,7 +141,7 @@ class Boundaries(unittest.TestCase):
             writers[path.name] = [w for w in ("write_text", "os.replace", "open(", "unlink", "mkdir", "chmod")
                                   if w in text]
         self.assertEqual(sorted(name for name, hits in writers.items() if hits),
-                         ["_lock.py", "revisions.py", "sync.py"])
+                         ["_lock.py", "amendments.py", "revisions.py", "sync.py"])   # amendments: PLAN.amendments.jsonl
 
 
 if __name__ == "__main__":

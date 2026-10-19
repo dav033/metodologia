@@ -76,13 +76,9 @@ class RequirementsGateTests(unittest.TestCase):
     def test_runtime_launch_force_and_supervisor_cannot_bypass(self):
         import bt_handoff
         import bt_launch
-        import bt_run
         with (patch.object(bt_launch, "find_req", return_value=self.rdir),
               self.assertRaisesRegex(SystemExit, "REQUIREMENTS_REVALIDATION_REQUIRED")):
             bt_launch.launch("test", "REQ-001", force=True, dry_run=True)
-        with (patch.object(bt_run, "find_req", return_value=self.rdir),
-              self.assertRaisesRegex(SystemExit, "REQUIREMENTS_REVALIDATION_REQUIRED")):
-            bt_run.supervise("test", "REQ-001", once=True)
         with (patch.object(bt_handoff, "find_req", return_value=self.rdir),
               self.assertRaisesRegex(SystemExit, "REQUIREMENTS_REVALIDATION_REQUIRED")):
             bt_handoff.handoff("test", "REQ-001", dry_run=True)
@@ -128,27 +124,6 @@ class RequirementsGateTests(unittest.TestCase):
         plan.write_text(plan.read_text().replace("approved", "launched").replace("[ ]", "[x]"))
         self.assertEqual(gate.check(self.rdir)["status"], "ready")
 
-    def test_pause_then_authority_drift_blocks_dispatch_but_stop_remains_available(self):
-        import bt_run
-        import bt_runstate
-        state = bt_runstate.init_state("test", self.rdir, "codex", None, False)
-        state["control"] = "pause"
-        bt_runstate.save(self.rdir, state)
-        ctx = {"install": False, "once": True, "workdir": self.rdir}
-        self.assertEqual(bt_run._step("test", self.rdir, ctx), 0)
-        state = bt_runstate.load(self.rdir)
-        state["control"] = None
-        bt_runstate.save(self.rdir, state)
-        (self.rdir / "SPEC.md").write_text("Changed scope")
-        self.assertEqual(bt_run._step("test", self.rdir, ctx), 0)
-        blocked = bt_runstate.load(self.rdir)
-        self.assertEqual(blocked["status"], "needs_revalidation")
-        self.assertEqual(blocked["sessions"], 0)
-        blocked["control"] = "stop"
-        bt_runstate.save(self.rdir, blocked)
-        with patch.object(bt_run, "_finish") as finish:
-            self.assertEqual(bt_run._step("test", self.rdir, ctx), 0)
-            self.assertEqual(finish.call_args.args[2], "stopped")
 
     def test_last_dispatch_guard_persists_revalidation_and_releases_unstarted_tasks(self):
         import bt_runsession

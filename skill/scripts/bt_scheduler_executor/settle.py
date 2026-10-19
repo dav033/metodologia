@@ -154,7 +154,7 @@ class SettleMixin:
         for attempt in range(self.cfg.handoff_tries):
             try:
                 return handoff.capture(workspace, adir, dirname=row["dirname"], attempt_id=row["attempt_id"], when=end,
-                                       patch_max=self.cfg.patch_max_bytes,
+                                       patch_max=self.cfg.patch_max_bytes, mode=self.cfg.handoff_mode,
                                        log_tail=artifacts.log_tail(adir, self.cfg.log_tail_bytes))
             except (ExecutorError, OSError) as caught:
                 error = caught
@@ -170,7 +170,8 @@ class SettleMixin:
         route = row["route"]
         summary = {k: preserved.get(k) for k in ("status", "base_sha", "branch", "head_sha", "snapshot_sha",
                                                   "has_commits", "commit_count", "dirty", "empty", "changed_total",
-                                                  "refs", "worktree", "error", "detail", "reason") if k in preserved}
+                                                  "refs", "worktree", "error", "detail", "reason", "handoff_mode",
+                                                  "patch_bytes", "patch_sha256") if k in preserved}
         for key, name in (("manifest", "manifest.json"), ("brief", "continue.md")):
             if (adir / "handoff" / name).exists():              # only paths that exist are advertised
                 summary[key] = str(adir / "handoff" / name)

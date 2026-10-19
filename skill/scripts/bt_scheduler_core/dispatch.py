@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .contracts import ACK, Ack, CancelOrder, ExecutionStatus, StartOrder, VerifyOrder
+from .contracts import ACK, Ack, CancelOrder, ExecutionStatus, PortNotReady, StartOrder, VerifyOrder
 from .recovery import apply_observation
 from .states import ATTEMPT_LIVE, ATTEMPT_TERMINAL
 from .states import AttemptState as A
@@ -135,6 +135,8 @@ class Dispatcher:
             return ExecutionStatus("unknown", "no execution port")
         try:
             status = port.query(attempt_id)
+        except PortNotReady:
+            raise
         except Exception as exc:  # noqa: BLE001 - a dead or buggy adapter must not stop the core
             self.core.record("port_error", attempt_id=attempt_id, port="query", error=type(exc).__name__)
             return ExecutionStatus("unknown", type(exc).__name__)
@@ -159,7 +161,11 @@ class Dispatcher:
 
         changed = 0
         for attempt_id in core.read(targets):
-            status = self._query(attempt_id)
+            try:
+                status = self._query(attempt_id)
+            except PortNotReady:       # nothing was observed: keep the attempt as it is and ask again on a later step
+                core.write(lambda c, a=attempt_id: setattr(c.state.attempts[a], "needs_reconcile", True))
+                continue
             core.write(lambda c, a=attempt_id, s=status: apply_observation(c, a, s))
             changed += 1
         return changed

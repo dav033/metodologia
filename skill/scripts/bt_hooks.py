@@ -148,6 +148,14 @@ def hook_stop(harness: str = "claude") -> None:
         return
     from bt_continuation import save_checkpoint
     save_checkpoint(ROOT, project, sid)
+    try:
+        import bt_plan_gate
+        held = bt_plan_gate.hold_reason(ROOT, project, sid)
+    except Exception:                       # the gate must never trap a session on its own error
+        held = None
+    if held:
+        print(json.dumps({"decision": "block", "reason": held}))
+        return
     if data.get("stop_hook_active"):
         return
     day = day_paths(ROOT / project, today())["day"]
@@ -167,6 +175,11 @@ def hook_stop(harness: str = "claude") -> None:
 def hook_end() -> None:
     data = _read_stdin_json()
     sid = data.get("session_id", "")
+    try:
+        import bt_presence
+        bt_presence.record(ROOT, {**data, "hook_event_name": "SessionEnd"}, None)
+    except Exception:
+        pass
     cwd = Path(data.get("cwd") or os.getcwd())
     project = resolve_project(cwd, sid)
     if not project:

@@ -207,66 +207,6 @@ os.execv(sys.executable,[sys.executable,{str(SCRIPTS / 'relay_run.py')!r},'plann
                                    'planning-test', facts)
             stop.assert_not_called()
 
-    def test_existing_supervisor_dispatches_bounded_fresh_milestones_without_commits(self):
-        source = f'''
-import json, os, sys
-from pathlib import Path
-os.environ['BITACORA_ROOT']={str(self.base / 'supervised-root')!r}
-import bt_core as core
-import bt_run as engine
-import bt_runentry as entry
-import bt_runstate as rs
-import bt_requirements_gate as gate
-import bt_orchestration_context as context
-import bt_orchestration_terminal as t
-pdir=core.ROOT/'demo'
-rdir=pdir/'requirements/REQ-001-demo'
-rdir.mkdir(parents=True)
-(pdir/'project.json').write_text(json.dumps(dict(repo={str(self.base)!r})))
-(rdir/'SPEC.md').write_text('Approved controlled lifecycle proof')
-(rdir/'PLAN.md').write_text('---\\nstatus: approved\\nexecution_contract: requirements-v1\\n---\\n'
-    '# Plan\\n## Tasks\\n### M1 — First\\n- [ ] T1 — first · verify: `python -V`\\n'
-    '### M2 — Second\\n- [ ] T2 — second · after: T1 · verify: `python -V`\\n## Progress log\\n')
-review={{key:key+' reviewed' for key in gate.FIELDS}}
-gate.record(rdir,{{**review,'evidence':['SPEC.md','PLAN.md'],'unresolved':[]}})
-entry.keep_awake=lambda: None
-engine.notify=lambda *args: None
-def forbidden(*args): raise AssertionError('foreground must never auto-commit')
-engine.commit_bitacora=forbidden
-def route(project,state,task,unit):
-    return dict(agent='claude',profile=None,model='controlled',effort='medium',kind='implement' if task else 'audit',tier=0)
-def session(project,rdir,state,task,n,workdir,agent_cmd,unit,route):
-    milestone=rs.unit_label(unit) if task else 'FINAL'
-    package=context.build_package(rdir,state,unit,milestone)
-    info=t.run_child([sys.executable,os.environ['CHILD']],package,workdir,dict(os.environ),timeout=3,output_bytes=1024)
-    assert json.loads(info['text'])['session_id']
-    assert not info['stopped'] and not info['overflow'] and info['rc']==0
-    if task:
-        def claim(current):
-            for member in unit:
-                rs.mark(current,member['id'],'in_progress',claimed_done=True,evidence='controlled lifecycle')
-        rs.update(rdir,claim)
-    else:
-        (rdir/'REPORT.md').write_text('# Controlled report\\nVerification passed\\n')
-    return dict(info,early_exit=False,**{{key:route[key] for key in ('agent','profile','model','effort','kind','tier')}})
-runtime=t.ForegroundRuntime(session,route,lambda: None)
-assert engine.supervise('demo','REQ-001',foreground=True,foreground_runtime=runtime,no_autostart=True,audit=False)==0
-state=rs.load(rdir)
-assert state['status']=='done'
-assert state['sessions']==3
-assert all(task['status']=='done' for task in state['tasks'])
-assert state['orchestration_mode']=='foreground-v1'
-assert (rdir/'REPORT.md').exists()
-print('SUPERVISOR_VERIFIED',flush=True)
-'''
-        pid, fd = self.start(source)
-        code, output = self.finish(pid, fd)
-        self.assertEqual(code, 0, output)
-        self.assertIn('SUPERVISOR_VERIFIED', output)
-        rows = self.wait_rows(3)
-        self.assertEqual(len({row['pid'] for row in rows}), 3)
-        self.assertEqual(len({row['session_id'] for row in rows}), 3)
-        self.assertEqual([row['package']['tasks'][0]['id'] for row in rows[:2]], ['T1', 'T2'])
 
     def test_missing_parent_returns_exact_manual_checkout_command_without_effects(self):
         import bt_orchestration_transition as transition
@@ -274,8 +214,10 @@ print('SUPERVISOR_VERIFIED',flush=True)
         rdir = self.base / 'requirement'
         rdir.mkdir()
         (rdir / 'PLAN.md').write_text('---\nstatus: approved\n---\n')
+        (rdir / 'PLAN.json').write_text('{}')
         with patch.object(transition.core, 'find_req', return_value=rdir), \
                 patch.object(transition.gate, 'require_ready', return_value={'status': 'ready'}), \
+                patch.object(transition.plan_adapter, 'launch_problem', return_value=None), \
                 patch.object(transition.state_, 'load', return_value=None), \
                 patch.object(transition.core.ws, 'workdir', return_value=self.base), \
                 patch.object(transition.client, 'locate', return_value={'wrapper': None, 'why': 'no parent'}), \
@@ -284,23 +226,10 @@ print('SUPERVISOR_VERIFIED',flush=True)
             result = transition.launch('demo', 'REQ-001')
             self.assertEqual(result['decision'], 'manual')
             self.assertIn(str(SCRIPTS / 'bitacora.py'), result['command'])
-            self.assertIn('run REQ-001 --foreground --no-autostart', result['command'])
+            self.assertIn('scheduler-run REQ-001 --no-autostart', result['command'])
             spawn.assert_not_called()
             stop.assert_not_called()
 
-    def test_public_foreground_entry_fails_before_opening_or_reserving_a_run(self):
-        import bt_requirements_gate as gate
-        import bt_run as engine
-
-        with patch.object(engine, 'find_req', return_value=self.base), \
-                patch.object(gate, 'require_ready', return_value={'status': 'ready'}), \
-                patch.object(engine.rs, 'load', return_value=None), \
-                patch.object(terminal, 'configured_runtime', return_value=None), \
-                patch.object(engine, '_open') as open_run:
-            with self.assertRaisesRegex(SystemExit, 'FOREGROUND_RUNTIME_NOT_ACTIVATED'):
-                engine.supervise('demo', 'REQ-001', foreground=True)
-            open_run.assert_not_called()
-        self.assertFalse((self.base / 'RUN.json').exists())
 
     def test_malformed_successor_and_missing_wrapper_never_signal(self):
         import bt_orchestration_transition as transition
@@ -328,23 +257,6 @@ print('SUPERVISOR_VERIFIED',flush=True)
             self.assertEqual(pending.read_text(), 'existing quota successor')
             stop.assert_not_called()
 
-    def test_configured_worktree_is_rejected_before_opening_foreground_run(self):
-        import bt_config
-        import bt_requirements_gate as gate
-        import bt_run as engine
-
-        runtime = terminal.ForegroundRuntime(lambda: None, lambda: None, lambda: None)
-        with patch.object(engine, 'find_req', return_value=self.base), \
-                patch.object(gate, 'require_ready', return_value={'status': 'ready'}), \
-                patch.object(engine.rs, 'load', return_value=None), \
-                patch.object(terminal, 'preflight', return_value=runtime), \
-                patch.object(bt_config, 'get', return_value='worktree'), \
-                patch.object(engine, '_open') as open_run:
-            with self.assertRaisesRegex(SystemExit, 'FOREGROUND_SERIAL_REQUIRED'):
-                engine.supervise('demo', 'REQ-001', foreground=True)
-            open_run.assert_not_called()
-        with self.assertRaisesRegex(SystemExit, 'native batch dispatch is forbidden'):
-            engine._run_batch('demo', self.base, {'foreground_runtime': runtime}, {}, [])
 
     def test_concurrent_successor_published_during_turn_wait_is_never_removed(self):
         import bt_relay_launch as launcher

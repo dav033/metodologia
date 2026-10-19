@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 # Configure the disposable bitácora root before importing the prompt module.
-from test_marathon import MarathonCase
+import run_case_support  # noqa: F401 — Establish the disposable root before prompt imports.
 
 # isort: split
 
@@ -285,39 +285,6 @@ class OrchestrationContextTests(unittest.TestCase):
         self.assertEqual(package["history"]["items"][0]["text"], "decisive verification failure")
 
 
-class AssignmentSettlementTests(MarathonCase):
-    def test_bounded_task_audit_and_final_contracts_settle_through_real_supervisor(self):
-        self.make_req(["### M1 — Build", "- [ ] T1 — implementation · verify: `python -V`"])
-        plan = self.rdir / "PLAN.md"
-        plan.write_text(plan.read_text().replace("status: approved", "status: approved\nexecution_contract: requirements-v1")
-                        + "\n## Progress log\n")
-        review = {key: key + " approved" for key in gate.FIELDS}
-        gate.record(self.rdir, {**review, "evidence": ["SPEC.md", "PLAN.md"], "unresolved": []})
-        provider = self.work / "bounded-provider.py"
-        provider.write_text("""
-import json, pathlib, subprocess, sys
-package = json.loads(pathlib.Path(sys.argv[1]).read_text())
-assignment = package['assignment']
-assert len(pathlib.Path(sys.argv[1]).read_bytes()) <= 16384
-if assignment['kind'] == 'final':
-    pathlib.Path(assignment['required_artifact']).write_text('# REPORT\\nVerification evidence\\n')
-else:
-    if assignment['kind'] == 'audit':
-        assert assignment['members'][0]['verify']
-        pathlib.Path(assignment['required_artifact']).write_text('Verdict: pass\\nFindings: 0\\n')
-    for verdict in assignment['verdicts']:
-        replacements = {'<verification evidence>': 'controlled provider evidence', '<N>': '0',
-                        'high=<n>,med=<n>,low=<n>': 'high=0,med=0,low=0'}
-        subprocess.run([replacements.get(value, value) for value in verdict['done']], check=True)
-""")
-        self.cmd = f'"{sys.executable}" "{provider}" "{{prompt_file}}"'
-        self.assertEqual(self.run_sup(audit=True), 0)
-        state = self.state()
-        self.assertEqual(state["status"], "done")
-        self.assertEqual(state["sessions"], 3)
-        self.assertTrue(all(task["status"] == "done" for task in state["tasks"]))
-        self.assertTrue((self.rdir / "AUDIT-M1.md").exists())
-        self.assertTrue((self.rdir / "REPORT.md").exists())
 
 
 if __name__ == "__main__":

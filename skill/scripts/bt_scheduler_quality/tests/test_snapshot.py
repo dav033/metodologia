@@ -92,6 +92,24 @@ class SnapshotResolverTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "SNAPSHOT_INVALID")
 
+    def test_a_snapshot_already_published_to_origin_main_need_not_descend_from_its_base(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            repo, source, _, snapshot_sha = _make_snapshot(root)
+            tree = _git(repo, "rev-parse", f"{snapshot_sha}^{{tree}}")
+            unrelated = _git(repo, "commit-tree", tree, "-m", "base before the rebase")
+            source = SnapshotSource(
+                source.attempt_id, source.repository, source.artifact_root, source.manifest_path,
+                unrelated, source.snapshot_sha,
+            )
+            data = json.loads(source.manifest_path.read_text(encoding="utf-8"))
+            data["base_sha"] = unrelated
+            source.manifest_path.write_text(json.dumps(data), encoding="utf-8")
+            _git(repo, "update-ref", "refs/remotes/origin/main", snapshot_sha)
+
+            with SnapshotResolver(QualityPolicy()).materialize(source) as materialized:
+                self.assertEqual(materialized.snapshot_sha, snapshot_sha)
+
     def test_refuses_manifest_symlink_before_following_it(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -152,16 +170,37 @@ class SnapshotResolverTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "SNAPSHOT_INVALID")
 
-    def test_rejects_git_archive_export_subst_changing_snapshot_content(self):
+    def test_export_subst_files_are_restored_to_the_exact_captured_bytes(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             _, source, _, _ = _make_snapshot(root, export_subst=True)
 
-            with (
-                self.assertRaises(QualityError) as raised,
-                SnapshotResolver(QualityPolicy()).materialize(source),
-            ):
-                self.fail("export-subst must not change bytes from the captured tree")
+            with SnapshotResolver(QualityPolicy()).materialize(source) as snapshot:
+                self.assertEqual(
+                    (snapshot.directory / "substituted.txt").read_text(encoding="utf-8"),
+                    "captured $Format:%H$ text\n",
+                )
+                self.assertEqual(
+                    (snapshot.directory / "tracked.txt").read_text(encoding="utf-8"),
+                    "dirty tracked data\n",
+                )
+
+    def test_other_byte_differences_are_still_rejected(self):
+        from bt_scheduler_quality import snapshot_tree
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            _, source, _, _ = _make_snapshot(root, export_subst=True)
+            original = snapshot_tree._has_export_subst
+            snapshot_tree._has_export_subst = lambda *args: False
+            try:
+                with (
+                    self.assertRaises(QualityError) as raised,
+                    SnapshotResolver(QualityPolicy()).materialize(source),
+                ):
+                    self.fail("a changed file without export-subst must be rejected")
+            finally:
+                snapshot_tree._has_export_subst = original
 
         self.assertEqual(raised.exception.code, "SNAPSHOT_INVALID")
 

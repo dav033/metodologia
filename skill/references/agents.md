@@ -3,21 +3,25 @@
 Which agent does what, on which account, with how much effort — and how the system gets better at deciding. Any agent
 can print the live version of this page for a project with `bitacora.py --project P context`.
 
-## Documented owner Planner policy (2026-10-17; D-064)
+## Active owner role policy (2026-10-18; Implementer amended by D-072)
 
-The default Planner is GPT-6 Astra (`gpt-6-astra`) **high**; its fallback is Claude Opus 5.5 (`claude-opus-5-5`) **xhigh**. Astra high was measured in the native Planner pilot; Opus xhigh was not. This documents the selected policy without changing runtime configuration. Account profiles and fallback activation conditions are not yet pinned. Preserve D-054's explicit caller selection and prohibition of silent substitution within a pinned request.
+Automatic role routes select the Claude/Codex family by subscription headroom and then an eligible account; no fixed production profile. The family score uses its best eligible account, with aliases deduplicated, existing10-point pressure buckets and weekly pacing. Missing/stale usage is neutral50%, >=85% is fallback priority and100% excludes. Work-only gates, cooldowns, busy-account protection and independent-review provider avoidance remain. Ties use the role preference and pool order; measured quality/cold-start experiments do not replace the selected configurations.
 
-## Documented owner reviewer policy (2026-10-17; D-063)
+| Role | Default | Alternative / explicit high complexity |
+|---|---|---|
+| Planner | Astra high | Opus xhigh |
+| Reviewer | Sol medium / Sonnet medium | The same pair at high |
+| Explorer | Luna high | Sonnet medium; high complexity uses Sol medium / Sonnet medium |
+| Implementer | Sonnet medium | Luna high for quota/availability; complexity does not change preferences |
+| Researcher | Luna high | Sonnet low |
+| Runner | Luna high | Sonnet low |
+| Antagonist | Sonnet medium | Opus high |
 
-The selected review pair is GPT-6.1 Sol (`gpt-6.1-sol`) **medium** and Claude Sonnet 5.5 (`claude-sonnet-5-5`) **medium**. For more difficult reviews, use the respective model's **high** variant. The owner has not specified a numerical difficulty threshold. This supersedes earlier reviewer-model proposals as the desired policy.
+Quota may select the approved alternative. For Implementer, complexity never reverses preferences or outranks quota: subscription headroom selects the family and equal pressure uses Sonnet medium. No stronger configuration is inferred from the fallback's effort label. For other roles, an explicit `complexity: L` (API aliases `high`/`high_complexity`) prefers the high-complexity option among healthy routes; quota protection can force another approved option. Risk, architecture, failure count and time alone do not switch role models/efforts. Explicit caller model/effort/account/provider selections stay pinned. Documentation tasks without an explicit role retain their existing budget. Restricted orchestration's structured reasoning boundary is a separate pinned runtime.
 
-This decision is documented only, at the owner's request. The runtime routing/catalog descriptions below have not been changed to implement it. Formal REQ-024 account profiles still require explicit pinning; the experiment's accounts are not automatically the formal reviewer identities.
+Use `bitacora.py --project P agents route --role runner [--complexity L]` to preview, and `delegate start "<task>" --role runner [--complexity L]` to run. `implement/test/audit/research` infer Implementer/Runner/Reviewer/Researcher. `planner invoke` without provider/profile uses the quota-aware Planner policy; explicit profile/provider calls remain pinned.
 
-## Documented owner Explorer policy (2026-10-17; D-065)
-
-Default: GPT-6 Luna (`gpt-6-luna`) **high**. For complicated exploration, use GPT-6.1 Sol (`gpt-6.1-sol`) **medium**; Claude Sonnet 5.5 (`claude-sonnet-5-5`) **medium** is an alternative to Sol medium. Haiku is not selected. No numerical complexity threshold or production account is specified; future Sol comparisons use `codex-2` by owner instruction.
-
-This is the selected policy, not a runtime rollout. The source Explorer still declares Claude `haiku` and Codex `low` effort; checked installations retain those values, and generated Codex roles inherit the model unless otherwise selected. P-110's experiment closure remains pending independently of this decision. See `artifacts/explorer-ladder-20261017/matched-comparison.json` for the bounded quality and format evidence.
+Provider-native installed roles pin the approved configuration for their host provider. Native subagents cannot rotate accounts/providers themselves: use the methodology router for family balancing and high-complexity alternatives. Codex has no owner-selected Antagonist configuration; its existing native role remains an explicit host-inherited invocation, while automatic Antagonist routing selects Claude Sonnet/Opus. Sonnet low was not measured in the Runner pilot; all frozen experiments and P-116 remain separate.
 
 ## The catalog
 
@@ -39,30 +43,9 @@ the ladder live in `scripts/bt_agents.py` (`MODELS`, `LADDER`): edit them there 
 
 ## How a route is chosen
 
-A **route** is account + model + effort. Work is described by a **tier** (0 light, 1 standard, 2 top) and a **kind**
-(`implement`, `test`, `docs`, `audit`, `research`; the PLAN line's `kind:`, otherwise inferred from the title).
+The active role policy above governs automatic role routes (`bt_role_policy`, `bt_role_routing`). The generic tier catalog remains for documentation work, explicit legacy model selection and separate pinned runtimes; a retry tier never replaces a role configuration. Subscription samples refresh before routing at most every900s/account, retaining existing challenge and Retry-After handling.100% usage excludes the account until its reset; known auth failures rank behind healthy accounts.
 
-1. **Tier.** A task starts at 0; `level: architecture` starts at 2; an audit and a task declared `complexity: L`
-   start at 1 (a milestone session runs at the highest tier among its tasks). Every failed attempt
-   (`failed`, `verify_failed`, `timeout`) climbs one tier. A usage limit or a stop never moves it.
-2. **Candidates.** One route per account of the pool at that tier (`run --pool auto`, the default of `handoff`: every
-   account allowed for the project; `--pool a,b` to restrict; the `routing.pool` setting does it machine-wide).
-3. **Drop** accounts cooling down after a usage limit and work-only accounts on a non-work project.
-4. **Order:** for implementation, another provider than the one that just failed this task. For audits: another
-   provider than the builder's first (D-004 independence), then the configured auditor (`audit.provider`) while it
-   has room, then the best
-   measured audit success rate (5+ judged attempts), then the audit budget order (Claude Sonnet and Flash before
-   Codex Sol; subscription headroom does not push an audit to Codex), then fresh real subscription headroom. For
-   implementation, headroom comes before the measured success rate, and a provider/model with fewer than five
-   judged attempts of that kind is tried first (bounded cold start: five attempts, then its own rate decides; it
-   never overrides avoidance after a failure, cooldowns, work-only gates or the audit order). Last tie-breakers: the account
-   least used in the last 5 hours (weighted by model cost); then pool order.
-
-The provider a session runs on never limits whom it may call: a Claude session delegates to Codex and a Codex
-session to Claude with the same command. A run without a pool (`run --agent X` / `--profile X` alone) is pinned to
-that agent and follows the historical ladder (`marathon.md`).
-
-`bitacora.py --project P agents route --kind audit --tier 1` previews the choice with its reason.
+The scheduler's router uses every eligible registered account; `launch --profile X` / `--agent X` pins the account. `delegate start --profile X` stays pinned. Provider independence precedes quota balancing for audits. Source model aliases, installed role files and CLI argv all consume the same role policy table.
 
 ## Antigravity (Gemini 3.8 Flash): the default auditor (D-004)
 
@@ -265,7 +248,7 @@ change, the documentation the change makes stale, decisions in `DECISIONS.md`, a
 
 ## Telemetry: deciding with measurements
 
-Every marathon session and every delegation appends one row to `.state/events/attempts-YYYY-MM.jsonl`: agent,
+Every scheduler attempt and every delegation appends one row to `.state/events/attempts-YYYY-MM.jsonl`: agent,
 profile, model, effort, kind, tier, tasks, result, seconds, and the provider's own usage figures (a figure it did not
 report is `null`, never 0). Each row also says **what** the work was and **why** it ended as it did:
 

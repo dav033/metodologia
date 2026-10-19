@@ -18,6 +18,9 @@ def register(sub):
     p_ag.add_argument("action", nargs="?", choices=["list", "route", "brief", "quota-clear"], default="list")
     p_ag.add_argument("profile", nargs="?", help="quota-clear: profile id")
     p_ag.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research"], default="implement")
+    from bt_role_policy import ROLES
+    p_ag.add_argument("--role", choices=ROLES)
+    p_ag.add_argument("--complexity", choices=["S", "M", "L"])
     p_ag.add_argument("--tier", type=int, choices=[0, 1, 2])
     p_usage = sub.add_parser("usage", help="subscription 5h/weekly quotas without model calls")
     p_usage.add_argument("action", choices=["poll", "show", "install-timer", "timer-status"], default="show", nargs="?")
@@ -70,6 +73,6 @@ def dispatch_agents(a, project: str | None):
         if not project:
             sys.exit("agents route needs a project (--project <name>)")
         import bt_delegate
-        print(json.dumps(bt_delegate.auto_route(project, a.kind, a.tier), indent=1, ensure_ascii=False))
+        print(json.dumps(bt_delegate.auto_route(project, a.kind, a.tier, role=a.role, complexity=a.complexity), indent=1, ensure_ascii=False))
     else:
         print(json.dumps(bt_agents.catalog(project), indent=1, ensure_ascii=False))

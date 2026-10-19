@@ -25,8 +25,9 @@ def _route(order: dict, tier: int, avoid: set[str]) -> dict:
     if not pool:
         raise SystemExit(f"No account may run '{order['project']}'. Check: bitacora.py agents")
     try:
-        return bt_agents.route(order["project"], {"pool": pool}, tier, order.get("kind") or "implement", avoid,
-                                allow_explore=False, effort=order.get("effort"))
+        return bt_agents.route(order["project"], {"pool": pool, "model": order.get("requested_model"), "model_pinned": bool(order.get("requested_model")), "role": order.get("role")}, tier, order.get("kind") or "implement", avoid,
+                                allow_explore=False, effort=order.get("requested_effort"),
+                                role=order.get("role"), complexity=order.get("complexity"))
     except bt_agents.NoRoute as exc:
         raise SystemExit(f"Every account is waiting for a usage-limit reset (earliest {exc.until}).") from exc
 
@@ -106,7 +107,7 @@ def execute(did: str, agent_cmd: str | None, retries: int = 0, worktree: bool = 
         order["attempt"] = attempt
         if attempt > 1:
             order["tier"] = min(int(order.get("tier") or 0) + 1, bt_agents.TOP)
-            if order.get("auto") or route_avoid:
+            if order.get("auto"):
                 route = _route(order, order["tier"], route_avoid)
                 order.update(profile=route.get("profile"), agent=route["agent"], model=route.get("model"),
                              effort=route.get("effort"), routed=route.get("why"))

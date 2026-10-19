@@ -130,9 +130,9 @@ class Launch(Isolated):
             pass
         with patch.object(bt_launch, "find_req", return_value=self.rdir), \
                 patch("bt_requirements_gate.require_ready", return_value={"status": "ready"}), \
-                patch.object(bt_launch.ws, "clone_missing"), patch.object(bt_launch, "write_handoff", side_effect=Stop):
+                patch.object(bt_launch.ws, "clone_missing"), patch.object(bt_launch, "scheduler_script", side_effect=Stop):
             with self.assertRaises(Stop):
-                bt_launch.launch("sample", "REQ-001", mode="marathon")
+                bt_launch.launch("sample", "REQ-001")
 
     def test_launch_binds_the_revision_frozen_at_approval_and_never_creates_it(self):
         self.good_plan()
@@ -152,13 +152,14 @@ class Launch(Isolated):
         with patch.object(bt_launch, "find_req", return_value=self.rdir), \
                 patch("bt_requirements_gate.require_ready", return_value={"status": "ready"}):
             with self.assertRaises(SystemExit) as ctx:
-                bt_launch.launch("sample", "REQ-001", mode="marathon")
+                bt_launch.launch("sample", "REQ-001")
         self.assertIn("PLAN_INVALID", str(ctx.exception))
         self.assertEqual(planner.list_revisions(self.rdir), [])
 
-    def test_legacy_plans_launch_as_before(self):
+    def test_a_plan_without_plan_json_is_refused_and_never_runs(self):
         self.set_status("approved")
-        self.launch_until_after_freeze()
+        with self.assertRaisesRegex(SystemExit, "PLAN_NOT_FROZEN.*plan-json init"):
+            self.launch_until_after_freeze()
         self.assertFalse((self.rdir / "plan-revisions").exists())
 
     def test_dry_run_never_writes(self):
@@ -168,9 +169,9 @@ class Launch(Isolated):
         before = sorted(p.name for p in (self.rdir / "plan-revisions").iterdir())
         with patch.object(bt_launch, "find_req", return_value=self.rdir), \
                 patch("bt_requirements_gate.require_ready", return_value={"status": "ready"}), \
-                patch.object(bt_launch, "write_handoff", side_effect=RuntimeError("stop")), \
+                patch.object(bt_launch, "scheduler_script", side_effect=RuntimeError("stop")), \
                 self.assertRaises(RuntimeError):
-            bt_launch.launch("sample", "REQ-001", mode="marathon", dry_run=True)
+            bt_launch.launch("sample", "REQ-001", dry_run=True)
         self.assertEqual(sorted(p.name for p in (self.rdir / "plan-revisions").iterdir()), before)
 
 

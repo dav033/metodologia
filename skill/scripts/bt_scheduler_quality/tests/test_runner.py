@@ -5,9 +5,11 @@ import time
 import unittest
 import uuid
 from pathlib import Path
+from unittest.mock import patch
 
 from bt_scheduler_quality.policy import CheckSpec, QualityPolicy
 from bt_scheduler_quality.runner import SandboxRunner
+from bt_scheduler_quality.sandbox_mounts import attempt_mounts
 
 
 class SandboxRunnerTests(unittest.TestCase):
@@ -16,7 +18,8 @@ class SandboxRunnerTests(unittest.TestCase):
             root = Path(directory)
             (root / "probe.py").write_text(
                 "import os, socket, sys\n"
-                "if os.path.exists('/home/david'): sys.exit(2)\n"
+                "private = ('.ssh', '.gnupg', '.config', '.claude', '.bashrc', 'dev')\n"
+                "if any(os.path.exists('/home/david/' + name) for name in private): sys.exit(2)\n"
                 "if 'M6_HOST_ONLY_PROBE' in os.environ: sys.exit(3)\n"
                 "if os.environ.get('M6_APPROVED') != 'yes': sys.exit(4)\n"
                 "sock = socket.socket(); sock.settimeout(0.2)\n"
@@ -37,6 +40,196 @@ class SandboxRunnerTests(unittest.TestCase):
             {name for name, _ in result.namespace_ids},
             {"mnt", "net", "pid", "ipc", "uts"},
         )
+
+    def test_toolchain_mounts_are_read_only_and_leave_the_rest_of_home_hidden(self):
+        from bt_scheduler_quality import sandbox_mounts
+
+        with tempfile.TemporaryDirectory() as directory:
+            tools = Path(directory) / "tools"
+            (tools / "bin").mkdir(parents=True)
+            (tools / "bin" / "marker").write_text("#!/bin/sh\n", encoding="utf-8")
+            root = Path(directory) / "snap"
+            root.mkdir()
+            (root / "probe.py").write_text(
+                "import os, sys\n"
+                f"if not os.path.exists({str(tools / 'bin' / 'marker')!r}): sys.exit(2)\n"
+                f"try:\n    open({str(tools / 'bin' / 'new')!r}, 'w')\n    sys.exit(3)\n"
+                "except OSError:\n    pass\n"
+                "if os.path.exists('/home/david/.ssh'): sys.exit(4)\n",
+                encoding="utf-8",
+            )
+            fake = sandbox_mounts.Toolchain((sandbox_mounts.Mount(str(tools), str(tools)),))
+            with patch.object(sandbox_mounts, "toolchain", return_value=fake), \
+                    patch("bt_scheduler_quality.runner_sandbox_process.toolchain", return_value=fake):
+                result = SandboxRunner(QualityPolicy()).run(_check("probe.py"), root)
+
+        self.assertEqual((result.status, result.exit_code), ("pass", 0))
+
+    def test_attempt_dependencies_are_shown_inside_the_workspace_read_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            worktree = Path(directory) / "worktree"
+            (worktree / "node_modules" / "dep").mkdir(parents=True)
+            (worktree / "node_modules" / "dep" / "index.js").write_text("x\n", encoding="utf-8")
+            root = Path(directory) / "snap"
+            root.mkdir()
+            (root / "probe.py").write_text(
+                "import os, sys\n"
+                "if not os.path.exists('node_modules/dep/index.js'): sys.exit(2)\n"
+                "try:\n    open('node_modules/dep/new', 'w')\n    sys.exit(3)\n"
+                "except OSError:\n    pass\n",
+                encoding="utf-8",
+            )
+            policy = QualityPolicy()
+            mounts = attempt_mounts(policy, worktree)
+            result = SandboxRunner(policy).run(_check("probe.py"), root, mounts=mounts)
+
+        self.assertEqual(len(mounts), 1)
+        self.assertEqual((result.status, result.exit_code), ("pass", 0))
+
+    def test_linked_worktree_git_metadata_is_visible_read_only(self):
+        import subprocess
+
+        def git(*args, cwd):
+            subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True,
+                           env={"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@x", "GIT_COMMITTER_NAME": "t",
+                                "GIT_COMMITTER_EMAIL": "t@x", "PATH": "/usr/bin:/bin", "HOME": "/nonexistent"})
+
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory) / "repo"
+            repo.mkdir()
+            git("init", "-q", "-b", "main", cwd=repo)
+            (repo / "a.txt").write_text("a\n", encoding="utf-8")
+            git("add", "a.txt", cwd=repo)
+            git("commit", "-q", "-m", "one", cwd=repo)
+            git("update-ref", "refs/remotes/origin/main", "HEAD", cwd=repo)
+            worktree = Path(directory) / "worktree"
+            git("worktree", "add", "-q", "-b", "feature", str(worktree), cwd=repo)
+            snapshot = Path(directory) / "snap"
+            snapshot.mkdir()
+            (snapshot / "a.txt").write_text("a\n", encoding="utf-8")
+            policy = QualityPolicy()
+            mounts = attempt_mounts(policy, worktree, repo)
+            ancestor = CheckSpec("C1", "command", "git merge-base --is-ancestor HEAD origin/main",
+                                 ("git", "merge-base", "--is-ancestor", "HEAD", "origin/main"), ".", "p")
+            write = _check("probe.py")
+            (snapshot / "probe.py").write_text(
+                "import subprocess, sys\n"
+                "r = subprocess.run(['git', 'update-ref', 'refs/heads/x', 'HEAD'], capture_output=True)\n"
+                "sys.exit(0 if r.returncode != 0 else 3)\n",
+                encoding="utf-8",
+            )
+            visible = SandboxRunner(policy).run(ancestor, snapshot, mounts=mounts)
+            read_only = SandboxRunner(policy).run(write, snapshot, mounts=mounts)
+            hidden = SandboxRunner(policy).run(ancestor, snapshot)
+
+        self.assertEqual(len(mounts), 2)
+        self.assertEqual((visible.status, visible.exit_code), ("pass", 0))
+        self.assertEqual((read_only.status, read_only.exit_code), ("pass", 0))
+        self.assertEqual(hidden.status, "fail")
+
+    def test_workspace_packages_are_built_inside_the_sandbox_before_the_check(self):
+        import json
+
+        from bt_scheduler_quality import sandbox_mounts, sandbox_prepare
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "package.json").write_text(json.dumps({"workspaces": ["packages/*"]}), encoding="utf-8")
+            (root / "packages" / "lib").mkdir(parents=True)
+            (root / "packages" / "lib" / "package.json").write_text(
+                json.dumps({"name": "lib", "scripts": {"build": "x"}}), encoding="utf-8")
+            (root / "probe.py").write_text(
+                "import sys\nsys.exit(0 if open('packages/lib/dist/out.txt').read() == 'built' else 2)\n",
+                encoding="utf-8",
+            )
+            build = ("python3", "-c", "import os; os.makedirs('packages/lib/dist'); "
+                     "open('packages/lib/dist/out.txt', 'w').write('built')")
+            with patch.object(sandbox_prepare, "BUILD_WORKSPACES", build):
+                dep = (sandbox_mounts.Mount(str(root), "/workspace/node_modules"),)
+                detected = sandbox_prepare.prepare_steps(QualityPolicy(), root, dep)
+                built = SandboxRunner(QualityPolicy()).run(_check("probe.py"), root, mounts=dep)
+            plain = SandboxRunner(QualityPolicy()).run(_check("probe.py"), root)
+            self.assertEqual(detected, (build,))
+            self.assertEqual((built.status, built.exit_code), ("pass", 0))
+            self.assertEqual(plain.status, "fail")
+            self.assertEqual(sandbox_prepare.prepare_steps(QualityPolicy(toolchain=False), root), ())
+
+    def test_a_failing_prepare_step_is_reported_as_a_failed_check_with_its_output(self):
+        import json
+
+        from bt_scheduler_quality import sandbox_mounts, sandbox_prepare
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "package.json").write_text(json.dumps({"workspaces": ["packages/*"]}), encoding="utf-8")
+            (root / "packages" / "lib").mkdir(parents=True)
+            (root / "packages" / "lib" / "package.json").write_text(
+                json.dumps({"scripts": {"build": "x"}}), encoding="utf-8")
+            (root / "probe.py").write_text("print('never')\n", encoding="utf-8")
+            broken = ("python3", "-c", "import sys; sys.stderr.write('tsc exploded\\n'); sys.exit(2)")
+            dep = (sandbox_mounts.Mount(str(root), "/workspace/node_modules"),)
+            with patch.object(sandbox_prepare, "BUILD_WORKSPACES", broken):
+                result = SandboxRunner(QualityPolicy()).run(_check("probe.py"), root, mounts=dep)
+
+        self.assertEqual((result.status, result.exit_code), ("fail", 1))
+        self.assertIn(b"tsc exploded", result.stderr)
+        self.assertNotIn(b"never", result.stdout)
+
+    def test_repository_dependencies_stand_in_only_for_an_identical_lockfile(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            repo, worktree, snap = base / "repo", base / "worktree", base / "snap"
+            for path in (repo / "node_modules" / "dep", worktree, snap):
+                path.mkdir(parents=True)
+            (repo / "package-lock.json").write_text('{"v":1}', encoding="utf-8")
+            (snap / "package-lock.json").write_text('{"v":1}', encoding="utf-8")
+            policy = QualityPolicy()
+            shared = attempt_mounts(policy, worktree, repo, snap)
+            (snap / "package-lock.json").write_text('{"v":2}', encoding="utf-8")
+            changed = attempt_mounts(policy, worktree, repo, snap)
+            (worktree / "node_modules").mkdir()
+            own = attempt_mounts(policy, worktree, repo, snap)
+
+        self.assertEqual([m.source for m in shared], [str((repo / "node_modules").resolve())])
+        self.assertEqual(changed, ())
+        self.assertEqual([m.source for m in own], [str((worktree / "node_modules").resolve())])
+
+    def test_workspace_packages_are_not_built_when_no_dependencies_are_mounted(self):
+        import json
+
+        from bt_scheduler_quality import sandbox_prepare
+        from bt_scheduler_quality.sandbox_mounts import Mount
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "package.json").write_text(json.dumps({"workspaces": ["packages/*"]}), encoding="utf-8")
+            (root / "packages" / "lib").mkdir(parents=True)
+            (root / "packages" / "lib" / "package.json").write_text(
+                json.dumps({"scripts": {"build": "x"}}), encoding="utf-8")
+            policy = QualityPolicy()
+            self.assertEqual(sandbox_prepare.prepare_steps(policy, root), ())
+            with_deps = sandbox_prepare.prepare_steps(policy, root, (Mount("/a", "/workspace/node_modules"),))
+        self.assertEqual(with_deps, (sandbox_prepare.BUILD_WORKSPACES,))
+
+    def test_next_projects_generate_their_route_types_before_a_check(self):
+        import json
+
+        from bt_scheduler_quality import sandbox_prepare
+        from bt_scheduler_quality.sandbox_mounts import Mount
+
+        dep = (Mount("/a", "/workspace/node_modules"),)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "package.json").write_text(json.dumps({"dependencies": {"next": "^16"}}), encoding="utf-8")
+            plain = Path(directory) / "plain"
+            plain.mkdir()
+            (plain / "package.json").write_text(json.dumps({"dependencies": {"react": "^19"}}), encoding="utf-8")
+            policy = QualityPolicy()
+            self.assertEqual(sandbox_prepare.prepare_steps(policy, root, dep), (sandbox_prepare.NEXT_TYPEGEN,))
+            self.assertEqual(sandbox_prepare.prepare_steps(policy, plain, dep), ())
+            self.assertEqual(sandbox_prepare.prepare_steps(policy, root), ())
+        self.assertNotIn("network", " ".join(sandbox_prepare.NEXT_TYPEGEN))
+        self.assertIn("--no-install", sandbox_prepare.NEXT_TYPEGEN)
 
     def test_times_out_and_kills_sandbox_children(self):
         marker = f"m6-child-{uuid.uuid4().hex}"

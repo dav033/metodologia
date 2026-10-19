@@ -17,9 +17,9 @@ _Copied from the spec: things every task must respect._
 - [ ] T2 — <what> · repo: backend · after: T1 · verify: `npm test -- orders` · covers: R2
 - [ ] T3 — <hard design problem> · level: architecture · after: T1 · verify: `<command>` · covers: R3
 Plans for the scheduler also carry a classified `PLAN.json` (references/plan-contract.md): `bitacora.py plan-json init|check REQ-NNN`.
-Marathon mode parses these lines: repo:, after: (task ids), verify: and level: are optional; verify is run by the
-supervisor only when it is a command inside backticks; level: architecture starts the task on opus (effort xhigh)
-instead of haiku. Keep each task to one session of work. -->
+The scheduler (via `PLAN.json`) reads these lines: repo:, after: (task ids), verify: and level: are optional; verify is run by the
+verifier only when it is a command inside backticks; level: architecture marks a hard task for the router (it picks the
+model and effort). Keep each task to one session of work. -->
 
 ## Verification
 _End-to-end check that proves the spec's acceptance criteria (tests, running the app, a dry run of the process)._

@@ -16,7 +16,7 @@ ORDER_FIXTURE = Path(__file__).parent / "fixtures" / "verify-order-pass.json"
 
 
 class FixedRunner:
-    def run(self, check, snapshot_root, *, timeout_seconds=None):
+    def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
         return CommandOutcome("pass", 0, 1, b"ok\n", b"", None, True)
 
 

@@ -23,6 +23,9 @@ from . import traceability
 PLAN_MD = "PLAN.md"
 PLAN_JSON = "PLAN.json"
 DEFAULT_SPEC_REF = "SPEC.md"
+STATUS_BEGIN = "<!-- bitacora:status:begin -->"  # generated progress block (bt_planblock): not narrative, not drift
+STATUS_END = "<!-- bitacora:status:end -->"
+_STATUS_REGION = re.compile(re.escape(STATUS_BEGIN) + r".*?" + re.escape(STATUS_END) + r"\n?", re.S)
 APPROVED_STATES = ("approved", "launched", "done", "merged")  # PLAN.md `status:` words that allow a freeze
 
 
@@ -42,6 +45,7 @@ def narrative_digest(directory: Path) -> str | None:
     except (OSError, UnicodeError):
         return None
     text = re.sub(r"\A---\n.*?\n---\n", "", text, count=1, flags=re.S)
+    text = _STATUS_REGION.sub("", text)
     lines = []
     for line in text.splitlines():
         if re.match(r"^\s*-\s+\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}\b", line):

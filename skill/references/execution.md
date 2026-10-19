@@ -19,7 +19,7 @@ Design with `references/engineering.md` (and the matching `references/stacks/*.m
 - **Tasks:** small steps (minutes, not hours) in dependency order, one line each, in the template's format:
   ``- [ ] T3 — <what> · repo: backend · after: T1, T2 · verify: `npm test -- orders` · covers: R1, US-2``.
   `repo:` when the workspace has several, `after:` for dependencies, files (or for business work:
-  deliverable/owner), how to verify it (a command inside backticks is machine-runnable — marathon mode runs it),
+  deliverable/owner), how to verify it (a command inside backticks is machine-runnable — the scheduler's verifier runs it),
   and which requirements (R1, US-2…) it covers. Every requirement must be
   covered by some task. Group them in phases that each end in a green, committable state.
 
@@ -53,25 +53,27 @@ approves and launches a plan on its own unless it finds a reason for the owner t
 high-risk task, nothing verifiable, or an irreversible/external/financial/security action in the text). Use it as
 the default way out of planning; the manual review above is what happens when it answers `needs_approval`.
 
-## 1c. Run the approved plan: marathon, loop or goal
+## 1c. Run the approved plan: scheduler, loop or goal
 
-**Marathon is the default for plans that will take days** (many tasks, or anything that won't finish in one
-sitting): an external supervisor runs one fresh headless session per task, with caps, stuck detection, usage-limit
-waits and reboot recovery — see `references/marathon.md`. Keep the **loop** (or Codex goal) for a plan of a few
-hours. Rule of thumb: more than ~8 tasks or "this will run overnight" → marathon.
+**The scheduler is the only way an approved plan runs in the background.** `launch` and `handoff` (and the web approval)
+start `scheduler-run`, which composes the scheduler core (state machine and `SCHEDULER.db`), the router (M2), the executor
+(M3) and the independent verifier/audits. Prerequisites: PLAN.md `status: approved` and a frozen `PLAN.json`
+(`plan-json init` -> `check` -> `freeze`); a plan without one is refused with `PLAN_NOT_FROZEN` and nothing is started.
+Keep the **loop** (or Codex goal) for a plan of a few hours done inside the current session. Rule of thumb: more than ~8
+tasks or "this will run overnight" -> `launch`/`handoff`. Design: `references/modules.md` §Scheduler core.
 
-**Routing across agents** (`run --pool auto`, what `handoff` uses): the supervisor picks account, model and effort
-per session from every account allowed for the project — by tier, kind of work, usage limits and measured results —
-and closes each milestone with an independent audit by another agent. The whole model is in `agents.md`.
+**Routing across agents:** for each task attempt the router picks provider, model, profile and effort from every account
+allowed for the project — by tier, kind of work, usage limits and measured results — and closes each milestone with an
+independent audit (reviewer role) by another agent. The whole model is in `agents.md`.
 Audits use Sonnet 5.5 medium, Opus 5.5 high for escalation/high risk, or Sol medium when Claude is unavailable;
 they do not inherit the implementation ladder's effort. Reuse milestone audits for closing review rather than
 launching duplicate full passes; the final session consolidates evidence and cross-milestone risks.
 
-**Account profiles** (`bitacora.py profiles list|doctor`, `launch|run --profile ID`): a profile is a provider plus the
+**Account profiles** (`bitacora.py profiles list|doctor`, `launch --profile ID`): a profile is a provider plus the
 env that selects its account (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`); credentials stay in each provider's own directory.
 Only `work_only` profiles (`claude-work`) are gated: they run solely for projects with `"work": true` in
 `project.json` (`bitacora.py --project P work true|false`; missing = false). The gate runs before the handoff, the
-prompt or the first session, and again on every marathon session. Every other profile may run any project. It is a
+prompt or the first session, and again on every scheduler attempt. Every other profile may run any project. It is a
 launcher guarantee, not a sandbox: calling the provider binary directly bypasses it. Over SSH (no display) the
 launcher opens a `tmux` session (`BITACORA_TERMINAL=tmux` forces it) or a transient `systemd-run --user` unit.
 
@@ -86,10 +88,10 @@ follow-ups; the full log stays in `.state/delegations/<id>/session.log`. `claime
 only, so ask for a `--verify` command whenever one exists. `delegate status <id>` and `delegate list` read back.
 Delegate only when the task is independent and checkable; edits to the same worktree must not run in parallel.
 
-**Concurrency**: `run --workers 2` runs tasks of *different* repos at once (marathon.md §Concurrent
-sessions); the default is sequential.
+**Concurrency**: the scheduler decides how many ready tasks run at once from capacity and resource reservations
+(M1/M2); a delegation is always a single task.
 
-**Attempt telemetry**: every marathon session appends one line to `<root>/.state/events/attempts-YYYY-MM.jsonl`
+**Attempt telemetry**: every scheduler attempt and every delegation appends one line to `<root>/.state/events/attempts-YYYY-MM.jsonl`
 (profile, agent, model, effort, seconds, result, tokens). A measure the provider did not report is `null`, never 0;
 Codex only reports a grand total. `bitacora.py metrics` summarizes per agent/profile/model with the share of attempts
 that carried usage. Counts are per-attempt and not comparable across task difficulty: do not rank models from them
@@ -99,21 +101,29 @@ without comparing like with like. Local and private; nothing here is a subscript
 context says HQ MODE: don't execute here. Set PLAN.md `status: approved`, then launch a separate executor session:
 
 ```
-python <skill>/scripts/bitacora.py --project <project> launch REQ-NNN [--mode marathon|loop] [--model haiku] [--agent codex] [--repo <path>]
+python <skill>/scripts/bitacora.py --project <project> launch REQ-NNN [--agent codex] [--profile ID] [--repo <path>] [--background] [--dry-run]
 ```
 
-From the web UI, the plan-approval form has a **Modo** select (Maratón, the default, or Loop) and launches it for
-you. Marathon runs with Haiku 5.5 + ultracode by default and escalates a failing task to Sonnet, then Opus (effort
-high; `marathon.md` §Escalation ladder); control it from the req's **Maratón** tab or
-`bitacora.py --project <p> run-control REQ-NNN pause|resume|stop`.
+From the web UI, the plan-approval form launches it for you. Follow progress with `bitacora.py --project <p> watch REQ-NNN`
+(waits for the next news: settled attempt, block, wait, end), `plan-status REQ-NNN` or the web "Planes" view
+(`documentation.md`). After a reboot or crash, `bitacora.py --project <p> scheduler-run REQ-NNN --resume` reopens the same
+durable run; it never approves a plan or creates a replacement run. To run unattended use
+`bitacora.py --project <p> scheduler-watch REQ-NNN --detach`: the watchdog resumes the owner whenever it dies (backoff,
+gives up with a notification after 5 failures in 30 min) and login autostart launches it. Moves on a live run are
+commands, not scripts: `scheduler-op REQ-NNN status|stop|resume|cancel-attempt ATT|reopen TASK|revise` (stop the owner
+under a hold, apply through M1, kill the attempt's agent, release the hold; `revise` cancels live attempts and rebases onto
+the latest frozen plan revision). Cancelling a scheduler plan (web "Planes" view,
+confirm with the REQ id) is irreversible. The routing (model, effort and the escalation after a failed attempt) is the
+router's job and is recorded per attempt, not set here (`agents.md`, `modules.md` §Scheduler core).
 
-`launch` writes `HANDOFF.md` next to the plan (everything the executor needs), and opens a native terminal window (Linux terminal, macOS Terminal, or Windows Terminal) in
-the project's repo running Claude Code with `--dangerously-skip-permissions` and a self-paced `/loop` (or Codex with `--yolo`
-and `/goal`; or, in marathon mode, the supervisor, which starts each session with the same permission flags). Executor
-sessions always start with these flags — that's the user's rule; never launch one without them. The repo path is remembered per project
-(`<project>/project.json`); pass `--repo` the first time or for a new project (the folder is created). Then log the
-launch in today's log, tell the user in one line, and stay available in the HQ for the next requirement.
-Default agent: Claude Code unless the user says Codex.
+`launch` writes `HANDOFF.md` next to the plan (everything the executor needs), refreshes the PLAN.md status block, and
+opens a native terminal window (Linux terminal, macOS Terminal, or Windows Terminal) in the project's repo running
+`scheduler-run`, whose agent sessions start with `--dangerously-skip-permissions` (Claude Code) or `--yolo` (Codex).
+Executor sessions always start with these flags — that's the user's rule; never launch one without them. The repo path
+is remembered per project (`<project>/project.json`); pass `--repo` the first time or for a new project (the folder is
+created). `--foreground` (with `--planning-session`) replaces a verified planning child in the same terminal instead of
+opening a window. Then log the launch in today's log, tell the user in one line, and stay available in the HQ for the
+next requirement. Default agent: Claude Code unless the user says Codex.
 
 **Inside the project repo** (no HQ), run the plan in this session:
 
@@ -185,9 +195,12 @@ bitácora explicitly (the Stop hook won't remind you).
 - **Workspaces with several repos:** the same branch name in every repo the requirement touches; commit and
   verify per repo; keep cross-repo contracts (API shapes, shared types) in sync within the same phase; the
   branches are merged together, as one change.
-- **Before every commit, the antagonist gate** (`subagents.md` §The antagonist gate): it attacks the staged
-  change, you triage — fix what's relevant now, defer the rest to PENDING.md with urgency/complexity — one review
-  plus at most one re-review, never more.
+- **Before committing, apply `bt_review_policy.py`** (`subagents.md` §The antagonist gate): with a pending
+  independent milestone audit (`Mn-audit`), routine tasks use that audit instead of a duplicate Antagonist pass
+  per commit, including high-risk/architecture work: the audit uses the milestone's appropriate risk budget.
+  Run the staged Antagonist review when no milestone audit covers the session; keep all security checks. Triage findings:
+  fix what's relevant now, defer the rest to PENDING.md with urgency/complexity — one review plus at most one
+  re-review, never more.
 - Commit after every green phase (Conventional Commits, in the repo's language). Keep refactor commits separate from behavior
   commits.
 - **Cite IDs in commits** so the trace graph links code to the bitácora: a trailer line `Refs: REQ-012 T3`

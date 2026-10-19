@@ -53,20 +53,20 @@ be simulated with `bt_scheduler_core.simulators`.
   no run), opens the run database at `<bitácora root>/.state/scheduler/<project>-<REQ>.db` (local, untracked; outside that
   layout `<requirement>/SCHEDULER.db`), and can write a `RUN.json`-shaped read model marked `authority: "scheduler"` as
   `<requirement>/RUN.projection.json`.
-- **One authority per requirement**: a requirement is run by the legacy supervisor (`RUN.json`) or by the core (its run
-  database), never both; the database alone decides. The projection is never called `RUN.json`, so no legacy control can
-  write into it and no legacy state file can be overwritten by it. The adapter refuses to open a core over a legacy
-  `RUN.json`; `bt_runentry.supervise` refuses a scheduler-owned requirement. Historical runs are not migrated.
-- Opt-in: nothing in the existing commands changes; the core is used by calling the adapter or `python -m bt_scheduler_core`.
+- **One authority per requirement**: the core's run database decides. The projection is never called `RUN.json`, so no
+  legacy file can be overwritten by it. The adapter refuses to open a core over a legacy `RUN.json` (a run from before the
+  marathon supervisor was removed); such files are historical, read-only and not migrated.
+- The core is the only way an approved plan runs: `launch`/`handoff` call `scheduler-run`. It can also be driven directly
+  through the adapter or `python -m bt_scheduler_core`.
 - Tests: module suite `bt_scheduler_core/tests/` (boundaries, lone-copy isolation, CLI end to end, fuzzed invariants,
   crash-at-every-commit restarts) and `tests/test_scheduler_integration.py` (boundary from outside, frozen-plan hand-over,
   authority rules, historical `RUN.json` byte-identical).
 
 ### Scheduler owner runtime (REQ-022)
 
-- Start a supervised run only with `bitacora.py --project <project> launch <REQ> --mode marathon --scheduler`; the
-  legacy marathon path remains the default. The launcher requires the normal project readiness gate and an already
-  approved, frozen `PLAN.json` revision. `--force` cannot bypass this gate.
+- Start a run with `bitacora.py --project <project> launch <REQ>` (or `handoff`, or the web approval). There is no other
+  mode and no `--force`: the launcher requires the normal project readiness gate and an already approved, frozen
+  `PLAN.json` revision (`PLAN_NOT_FROZEN` otherwise).
 - `bt_scheduler_run.py` composes one durable M1 owner with the existing M2 decision and M3 executor adapters.
   `bitacora.py --project <project> scheduler-run <REQ> --resume` reopens the same M1 run identity and lets M3
   reconcile its captured process state;
@@ -80,8 +80,12 @@ be simulated with `bt_scheduler_core.simulators`.
   to legacy `RUN.json`.
 - CLI and web pause/resume/stop controls route to M1 (stop means cancel). Notifications are deduplicated by the latest
   state-changing M1 audit sequence; unreadable local claim state skips delivery rather than interrupting execution.
-  `scheduler-run` installs the matching per-user login resume entry unless `--no-autostart` is passed; this is not a
-  global service.
+- Status for people: `bt_planstatus` (read-only data layer) feeds `plan-status`, the generated PLAN.md block
+  (`bt_planblock.refresh_plan_block`, at launch and whenever the projection is rewritten), the SessionStart "Planes"
+  section and the web "Planes" view (`documentation.md`). PLAN.json never carries state, model or account.
+  `scheduler-run` installs the matching per-user login entry unless `--no-autostart` is passed; it launches
+  `scheduler-watch` (`bt_scheduler_watch`), the per-run watchdog that restarts the owner, and `scheduler-op`
+  (`bt_scheduler_ops`) is the operator's hand on a live run (`execution.md` §1c). This is not a global service.
 - REQ-022 originally left M4/M5/M6 inactive. REQ-023 supersedes that activation boundary: both supported owner
   commands (`scheduler-run` and `launch --scheduler`) now compose all three with separate private per-run stores.
   The owner loop drains M3 output into M4 and delivers its audit-only incidents through M1; M5 and M6 use M1's

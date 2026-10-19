@@ -30,7 +30,7 @@ def graph_page(project: str) -> str:
     legend = "".join(f'<span><i class="ln {k}"></i>{v}</span>' for k, v in
                      [("covers", "cubre"), ("plans", "planifica"), ("defines", "define"), ("refs", "commit cita"),
                       ("supersedes", "reemplaza"), ("mentions", "mencionados juntos")])
-    body = f"""<div class="graph-head"><div><h1>Grafo · {e(project)}</h1>
+    body = f"""<div class="graph-head"><div><p class="eyebrow">grafo de trazabilidad</p><h1>{e(project)}</h1>
 <p class="muted">Derivado de los IDs de la bitácora y de los commits que los citan. Pasa el mouse para ver el vecindario;
 clic para fijarlo.</p></div><div>{health}</div></div>
 <div class="graph-toolbar">{toggles}

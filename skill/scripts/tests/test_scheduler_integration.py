@@ -17,7 +17,6 @@ import tempfile
 import tomllib
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
@@ -119,9 +118,11 @@ class Boundary(unittest.TestCase):
         self.assertIn("bt_scheduler_adapter", config["py-modules"])
         self.assertIn("README.md", tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["setuptools"]["package-data"]["bt_scheduler_core"])
 
-    def test_the_legacy_supervisor_asks_the_adapter_before_opening_a_run(self):
-        source = (SCRIPTS / "bt_runentry.py").read_text(encoding="utf-8")
-        self.assertLess(source.index("refuse_legacy_run(rdir)"), source.index("require_ready(rdir)"))
+    def test_retired_supervisor_is_not_packaged(self):
+        config = tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["setuptools"]
+        for name in ("bt_run", "bt_runentry", "bt_run_isolated"):
+            self.assertNotIn(name, config["py-modules"])
+            self.assertFalse((SCRIPTS / (name + ".py")).exists())
 
 
 class ApprovedPlan(Case):
@@ -210,17 +211,6 @@ class Authority(Case):
             adapter.refuse_legacy_run(self.rdir)
         self.assertIn("AUTHORITY_CONFLICT", str(cm.exception))
 
-    def test_the_real_supervisor_entry_point_refuses_before_touching_anything(self):
-        import bt_run
-        import bt_runentry
-        freeze(self.rdir, plan_text(1))
-        adapter.open_scheduler(self.rdir)
-        with patch.object(bt_run, "find_req", return_value=self.rdir), \
-                patch("bt_requirements_gate.require_ready", side_effect=AssertionError("gate must not even be consulted")), \
-                self.assertRaises(SystemExit) as cm:
-            bt_runentry.supervise("sample", "REQ-042")
-        self.assertIn("AUTHORITY_CONFLICT", str(cm.exception))
-        self.assertFalse((self.rdir / "RUN.json").exists())
 
     def test_a_requirement_without_any_run_is_free_for_the_legacy_supervisor(self):
         self.assertEqual(adapter.authority(self.rdir), "none")

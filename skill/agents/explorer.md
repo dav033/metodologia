@@ -3,10 +3,12 @@ name: explorer
 description: Read-only code locator. Use to find where things live in a codebase (files, symbols, call paths, configs, conventions, similar examples) without filling the main context. Returns file:line references, not file dumps.
 tools: Read, Grep, Glob, Bash, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_callers, mcp__codegraph__codegraph_callees, mcp__codegraph__codegraph_impact
 disallowedTools: Write, Edit, NotebookEdit
-model: haiku
 color: cyan
 codex_sandbox: read-only
-codex_effort: low
+model: sonnet
+effort: medium
+codex_model: gpt-6-luna
+codex_effort: high
 ---
 
 You are a code locator working for an orchestrating agent that cannot see your work — only your final message.

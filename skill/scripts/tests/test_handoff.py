@@ -159,15 +159,14 @@ class HandoffTests(IsolatedCase):
         self.addCleanup(launch.stop); self.addCleanup(commit.stop)
         return launch_mock
 
-    def test_handoff_approves_and_launches_clean_plan_with_configured_routing(self):
+    def test_handoff_approves_and_launches_clean_plan_through_the_scheduler(self):
         plan = self.write_plan()
         launch = self.launch_patches()
         out = bt_handoff.handoff(self.project, "REQ-001")
         self.assertEqual(out["decision"], "launched")
         self.assertEqual(bt_handoff._front(plan, "status"), "approved")
         self.assertEqual(launch.call_count, 1)
-        self.assertEqual(launch.call_args.kwargs, {"mode": "marathon", "model": "haiku", "pool": "auto",
-                                                   "background": True})
+        self.assertEqual(launch.call_args.kwargs, {"background": True})
 
     def test_handoff_window_fixed_risk_review_approval_invalid_and_existing_status(self):
         plan = self.write_plan()
@@ -176,7 +175,7 @@ class HandoffTests(IsolatedCase):
                           {"executor.display": "window", "routing.mode": "fixed"}.get(key, default)):
             out = bt_handoff.handoff(self.project, "REQ-001")
         self.assertEqual(out["decision"], "launched")
-        self.assertIsNone(out["pool"])
+        self.assertNotIn("pool", out)
         self.assertFalse(launch.call_args.kwargs["background"])
 
         plan = self.write_plan(["- [ ] T1 — deploy app · repo: app · verify: `check`"])
@@ -230,13 +229,13 @@ class DelegateTests(IsolatedCase):
         self.assertEqual(order["profile"], "codex-test")
         self.assertEqual(order["agent"], "codex")
         self.assertEqual((order["kind"], order["tier"], order["model"], order["effort"]),
-                         ("research", 1, "gpt-6.1-sol", "medium"))
+                         ("research", 1, "gpt-6-luna", "high"))
         self.assertEqual(json.loads((bt_delegate.DIR / order["id"] / "TASK.json").read_text()), order)
 
     def test_audit_created_inside_claude_prefers_codex_account(self):
         seen = {}
-        def route(project, kind, tier, avoid=None):
-            seen.update(project=project, kind=kind, tier=tier, avoid=avoid)
+        def route(project, kind, tier, avoid=None, **kwargs):
+            seen.update(project=project, kind=kind, tier=tier, avoid=avoid, **kwargs)
             return {"profile": "codex-test", "agent": "codex", "model": "gpt-6.1-sol", "effort": "high",
                     "tier": tier, "why": "other provider"}
         with patch.dict(os.environ, {"CLAUDECODE": "1", "BITACORA_KIND": "implement"}), \
@@ -244,6 +243,7 @@ class DelegateTests(IsolatedCase):
             order = bt_delegate.create("sample", "Review this change", None, None, self.work, [], None, 1,
                                        None, None, kind="audit")
         self.assertEqual(seen["avoid"], {"claude"})
+        self.assertEqual(seen["role"], "reviewer")
         self.assertEqual(order["profile"], "codex-test")
 
     def test_all_accounts_cooling_says_nothing_was_sent(self):

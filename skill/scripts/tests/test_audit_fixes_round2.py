@@ -12,8 +12,8 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 
-# Import the disposable marathon harness first so bt_core never captures the real bitácora.
-from test_milestones import MilestoneTests  # noqa: E402
+# Import the disposable-root harness first so bt_core never captures the real bitácora.
+import run_case_support  # noqa: E402,F401
 from test_handoff import IsolatedCase  # noqa: E402
 import bt_agents  # noqa: E402
 import bt_config  # noqa: E402
@@ -23,7 +23,6 @@ import bt_events  # noqa: E402
 import bt_handoff  # noqa: E402
 import bt_learn  # noqa: E402
 import bt_profiles  # noqa: E402
-import bt_run  # noqa: E402
 import bt_runprompt as rp  # noqa: E402
 import bt_runsettle as settle  # noqa: E402
 import bt_runstate as rs  # noqa: E402
@@ -217,53 +216,6 @@ class RunStateRound2(IsolatedCase):
         state["tasks"][0]["tier"] = 2
         rs.sync_plan(state, rdir)
         self.assertEqual(state["tasks"][0]["tier"], 2)
-
-
-class RunBatchRound2(IsolatedCase):
-    _clear_env = staticmethod(MilestoneTests._clear_env)
-
-    def setUp(self):
-        # Reuse only the milestone harness setup; this class intentionally inherits no harness test cases.
-        super().setUp()
-        MilestoneTests.setUp(self)
-        self.addCleanup(MilestoneTests._clear_env)
-
-    def run_pool(self, profiles):
-        tasks = ["- [ ] T1 — front · repo: frontend", "- [ ] T2 — back · repo: backend"]
-        MilestoneTests.make_req(self, tasks)
-        self.batch_sizes = []
-        original = bt_run._run_batch
-
-        def observe_batch(project, rdir, config, state, units):
-            before = state["sessions"]
-            result = original(project, rdir, config, state, units)
-            self.batch_sizes.append(rs.load(rdir)["sessions"] - before)
-            return result
-
-        with patch.object(bt_run, "_run_batch", side_effect=observe_batch):
-            return MilestoneTests.run_sup(self, workers=2, pool=profiles, audit=False)
-
-    def test_batch_uses_only_one_unit_for_one_account_and_distinct_accounts_for_two(self):
-        single_home = self.base / "single-home"
-        single_home.mkdir()
-        bt_profiles.add("claude-single", "claude", {"CLAUDE_CONFIG_DIR": str(single_home)})
-        self.assertEqual(self.run_pool(["claude-single"]), 0)
-        state = rs.load(self.rdir)
-        self.assertEqual(state["sessions"], 3)  # one implementation, then the final session
-        self.assertTrue(self.batch_sizes)
-        self.assertEqual(max(self.batch_sizes), 1)
-
-        claude_home, codex_home = self.base / "claude-home", self.base / "codex-home"
-        claude_home.mkdir()
-        codex_home.mkdir()
-        bt_profiles.add("claude-pool", "claude", {"CLAUDE_CONFIG_DIR": str(claude_home)})
-        bt_profiles.add("codex-pool", "codex", {"CODEX_HOME": str(codex_home)})
-        self.assertEqual(self.run_pool(["claude-pool", "codex-pool"]), 0)
-        state = rs.load(self.rdir)
-        self.assertEqual(state["sessions"], 3)  # two implementations, then the final session
-        self.assertGreaterEqual(self.batch_sizes[0], 2)
-        self.assertEqual({row["provider"] for row in [json.loads(line) for line in self.order.read_text(encoding="utf-8").splitlines() if line.strip()]
-                          if row["tasks"] != ["FINAL"]}, {"claude", "codex"})
 
 
 class ResetRound2(IsolatedCase):

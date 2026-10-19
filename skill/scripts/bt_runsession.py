@@ -4,7 +4,6 @@ the final session) and a grace period passed: `claude -p` can stay alive for man
 the agent has finished."""
 from __future__ import annotations
 
-import socket
 import re
 import hashlib
 import subprocess
@@ -89,57 +88,6 @@ def _track_pid(rdir: Path, n: int, pid: int | None) -> None:
         rs.update(rdir, fn)
     except Exception:  # bookkeeping must never stop a session
         pass
-
-
-def reap_orphans(project: str, state: dict) -> list[str]:
-    """reap_orphan for every session pid the previous run recorded (several run at once with --workers)."""
-    hb = state.get("heartbeat") or {}
-    pids = list((hb.get("session_pids") or {}).values())
-    if hb.get("session_pid"):  # recorded by a run from before concurrent sessions
-        pids.append(hb["session_pid"])
-    out = []
-    for pid in pids:
-        msg = reap_orphan(project, {**state, "heartbeat": {**hb, "session_pid": pid, "session_pids": None}})
-        if msg:
-            out.append(msg)
-    return out
-
-
-def reap_orphan(project: str, state: dict) -> str | None:
-    """End an agent session left running by a supervisor that was killed (crash, `kill -9`): a resumed run would
-    otherwise start a second session editing the same worktree. Identity is proven from the process environment
-    (BITACORA_RUN/BITACORA_PROJECT), so a recycled pid is never touched; that proof needs /proc (Linux), elsewhere the
-    orphan is only reported. Returns a one-line message, or None when there was nothing to do."""
-    hb = state.get("heartbeat") or {}
-    pid = hb.get("session_pid")
-    if (not isinstance(pid, int) or isinstance(pid, bool) or pid <= 1 or pid == os.getpid()
-            or hb.get("machine") != socket.gethostname()):
-        return None
-    if _gone(pid):
-        return None
-    environ = Path(f"/proc/{pid}/environ")
-    if not environ.exists():
-        return f"session process {pid} from the previous run may still be running; verify and stop it manually"
-    try:
-        env = dict(item.split("=", 1) for item in environ.read_bytes().decode("utf-8", "replace").split("\0")
-                   if "=" in item)
-    except OSError:
-        return None
-    if env.get("BITACORA_RUN") != state.get("req") or env.get("BITACORA_PROJECT") != project:
-        return None
-    for sig, wait in ((signal.SIGTERM, KILL_GRACE_SEC), (signal.SIGKILL, 2)):
-        try:
-            os.killpg(pid, sig)
-        except ProcessLookupError:
-            return f"ended orphaned session {pid} from the previous run"
-        except PermissionError:
-            return f"session {pid} from the previous run could not be stopped (permission denied)"
-        deadline = time.time() + wait
-        while time.time() < deadline:
-            if _gone(pid):
-                return f"ended orphaned session {pid} from the previous run"
-            time.sleep(0.1)
-    return f"orphaned session {pid} from the previous run did not exit"
 
 
 def session_tier(state: dict, task: dict | None) -> int:
@@ -228,7 +176,8 @@ def _explicit_effort(chosen: dict, unit: list[dict]) -> dict:
     """A task may ask for a stronger effort than its tier's (`effort: xhigh` on the PLAN line): the only way xhigh/max
     ever runs. Honoured for Claude and Codex, never lowers the effort, recorded in the route's `why`."""
     top = _asked_effort(unit)
-    effective = bt_agents.apply_explicit_effort(chosen.get("agent"), chosen.get("model"), chosen.get("effort"), top)
+    effective = bt_agents.apply_explicit_effort(chosen.get("agent"), chosen.get("model"), chosen.get("effort"), top,
+                                              chosen.get("kind"))
     if top is None or effective == chosen.get("effort"):
         return chosen
     return {**chosen, "effort": top, "why": f"{chosen.get('why', '')}; explicit task effort {top}".lstrip("; ")}
@@ -276,8 +225,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
             raise ValueError('INVALID_EXECUTION_POLICY')
         env['BITACORA_EXECUTION_POLICY'] = 'restricted-v1'
     argv, stdin_text, shell = _argv(project, state, workdir, prompt, prompt_file, label, agent_cmd, model, effort)
-    timeout = tier_.session_timeout_min(state["limits"], int(route.get("tier") or 0)) * 60 * \
-        min(max(len(unit), 1), rs.MILESTONE_TIMEOUT_FACTOR)
+    timeout = tier_.session_timeout_min(state["limits"], int(route.get("tier") or 0)) * 60
     grace = grace_seconds()
     poll = min(5.0, max(0.2, grace / 2))
     head_before = _git_head(workdir)
@@ -335,6 +283,7 @@ def run_session(project: str, rdir: Path, state: dict, task: dict | None, n: int
     return {"timeout_min": timeout / 60, "rc": proc.returncode, "timed_out": timed_out, "stopped": stopped, "early_exit": early, "text": text,
             "seconds": int(time.time() - start), "model": model, "effort": effort, "agent": state["agent"],
             "profile": state.get("profile"), "kind": route.get("kind"), "tier": route.get("tier"),
+            "role": route.get("role"), "complexity": "L" if any(t.get("complexity") == "L" for t in unit) else None,
             "tasks": [t["id"] for t in unit], "why": route.get("why"), "decision": route.get("decision"),
             "change_size": _change_size(workdir, head_before),
             "contract": _contract_shadow(state["agent"], text, proc.returncode, timed_out, stopped)}

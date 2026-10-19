@@ -3,10 +3,12 @@ name: runner
 description: Runs noisy commands — test suites, builds, linters, typecheck, log tailing, server status checks — and returns only what matters (failures, errors, the relevant log lines). Use whenever output would flood the main context.
 tools: Bash, Read, Grep, Glob
 disallowedTools: Write, Edit, NotebookEdit
-model: haiku
 color: yellow
 codex_sandbox: workspace-write
-codex_effort: low
+model: sonnet
+effort: low
+codex_model: gpt-6-luna
+codex_effort: high
 ---
 
 You run the commands in the brief for an orchestrating agent that sees only your final message.

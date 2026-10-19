@@ -69,15 +69,19 @@ class QualityPolicy:
     max_concurrent: int = 2
     max_pending_requests: int = 128
     max_checks: int = MAX_CHECKS
-    max_command_seconds: int = 120
-    max_total_seconds: int = 300
-    max_cpu_seconds: int = 300
+    max_command_seconds: int = 1500
+    max_total_seconds: int = 3600
+    max_cpu_seconds: int = 3600
     max_output_bytes: int = 262_144
     max_snapshot_bytes: int = 536_870_912
     max_snapshot_files: int = 20_000
     max_workspace_bytes: int = 1_073_741_824
     max_tmp_bytes: int = 134_217_728
-    max_address_space_bytes: int = 2_147_483_648
+    max_address_space_bytes: int = 0  # 0 = unlimited: V8 and Chromium reserve far more address space than they use
+    max_data_bytes: int = 12_884_901_888  # RLIMIT_DATA: what a check may really allocate (reservations do not count)
+    max_open_files: int = 1024
+    max_processes: int = 512
+    toolchain: bool = True  # mount the operator's Node install, Playwright browsers and the attempt's node_modules
     environment: tuple[tuple[str, str], ...] = ()
     secret_values: tuple[str, ...] = ()
     require_independent_review: bool = False
@@ -115,7 +119,9 @@ def _validate_positive_limits(policy: QualityPolicy) -> None:
         "max_snapshot_files",
         "max_workspace_bytes",
         "max_tmp_bytes",
-        "max_address_space_bytes",
+        "max_data_bytes",
+        "max_open_files",
+        "max_processes",
     )
     for name in names:
         value = getattr(policy, name)
@@ -124,6 +130,9 @@ def _validate_positive_limits(policy: QualityPolicy) -> None:
 
 
 def _validate_policy_bounds(policy: QualityPolicy) -> None:
+    value = policy.max_address_space_bytes
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise ValueError("max_address_space_bytes must be zero (unlimited) or positive")
     if (
         policy.max_concurrent > 4
         or policy.max_pending_requests > 4096
@@ -148,6 +157,8 @@ def _validate_policy_controls(policy: QualityPolicy) -> None:
         raise TypeError("environment and secret values must be immutable tuples")
     if not isinstance(policy.require_independent_review, bool):
         raise TypeError("review policy must be boolean")
+    if not isinstance(policy.toolchain, bool):
+        raise TypeError("toolchain flag must be boolean")
 
 
 def _validate_policy_secrets(policy: QualityPolicy) -> None:

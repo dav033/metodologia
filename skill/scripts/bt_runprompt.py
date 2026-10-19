@@ -57,8 +57,8 @@ def _team(project: str) -> list[str]:
         out += ["", bt_agents.brief(project),
                 f"Delegate one bounded piece of work to another agent (any provider, whatever you are running on): "
                 f"`{_cli(project)} delegate start \"<task>\" --kind implement|test|docs|audit|research "
-                f"[--tier 0|1|2] [--profile ID --model M --effort E] --verify \"<cmd>\"`. Without --profile the router "
-                f"picks the account by quota and measured results. It returns a compact checked result, not a "
+                f"[--role explorer|runner|researcher|implementer|reviewer|antagonist|planner] [--complexity L] [--profile ID --model M --effort E] --verify \"<cmd>\"`. Without --profile the router "
+                f"picks the approved role configuration and account by provider-family quota. It returns a compact checked result, not a "
                 f"transcript. Full rules: `{_cli(project)} context`."]
     except Exception:
         pass
@@ -276,49 +276,4 @@ def agent_argv(state: dict, workdir: Path, prompt: str, model: str | None = None
                 "-C", str(workdir), *args, "-"], prompt
     exe = shutil.which("claude") or "claude"
     return [exe, "-p", *args, "--dangerously-skip-permissions", "--output-format", "stream-json", "--verbose",
-            prompt], None
-
-
-def marathon_block() -> str:
-    """SessionStart context for a marathon session (env BITACORA_RUN + BITACORA_TASK), '' otherwise."""
-    req, task_id = os.environ.get("BITACORA_RUN"), os.environ.get("BITACORA_TASK")
-    project = os.environ.get("BITACORA_PROJECT")
-    if not (req and task_id and project):
-        return ""
-    try:
-        rdir = find_req(ROOT / slugify(project, 60), req)
-        state = rs.load(rdir) or {}
-        ids = [i for i in task_id.split(",") if i]
-        task = rs.get_task(state, ids[0]) if ids else None
-    except (SystemExit, Exception):
-        return ""
-    if task_id != FINAL_TASK and (not ids or any(rs.get_task(state, tid) is None for tid in ids)):
-        return (f"WARNING: supervised task '{task_id}' is absent from {req}/RUN.json. "
-                "Read the live run state and reconcile the task assignment before continuing; do not run final review.")
-    cli = f'"{PYTHON}" "{SCRIPT.as_posix()}" --project {project}'
-    if task is not None and len(ids) > 1:
-        lines = ["### Current marathon milestone (supervised run — re-read this after any compaction)",
-                 f"- {req} / milestone **{task.get('milestone')}**: tasks {', '.join(ids)}, in that order"]
-        for tid in ids:
-            t = rs.get_task(state, tid) or {}
-            mark = "verdict given" if t.get("claimed_done") or t.get("status") in ("done", "blocked") else "pending"
-            lines.append(f"  - {tid} — {t.get('title', '')} · verify: {t.get('verify') or '(none)'} · {mark}")
-        lines.append(f"Rule: work ONLY on these tasks; give each its verdict when finished (commit first): `{cli} task "
-                     f"done {req} <task> --evidence \"...\"` or `task fail {req} <task> --reason \"...\"`. The session "
-                     "ends shortly after the last verdict.")
-        return "\n".join(lines)
-    if task_id == FINAL_TASK:
-        return (f"### Current marathon task\n{req} FINAL session: fresh-eyes review, run the plan's Verification, write "
-                f"`{(rdir / 'REPORT.md').as_posix()}`. No other work.")
-    lines = [f"### Current marathon task (supervised run — re-read this after any compaction)",
-             f"- {req} / **{task['id']}** — {task['title']}",
-             f"- repo: {task['repo'] or '(workspace root)'} · verify: {task['verify'] or '(none)'} · "
-             f"after: {', '.join(task['after']) or '-'}"]
-    if task.get("last_error"):
-        lines.append(f"- last error: {task['last_error'][:400]}")
-    lines += [f"- note: {_safe(n)}" for n in task.get("notes", [])]
-    lines.append(f"Rule: work ONLY on this task; as the LAST command (after the day log and commits, nothing left in the "
-                 f"background) run `{cli} task done {req} {task['id']} --evidence \"...\"` or `task fail ... --reason "
-                 f"\"...\"`; a hard architecture problem or no way forward: `task escalate {req} {task['id']} "
-                 f"--to top|standard --reason \"...\"`, then stop.")
-    return "\n".join(lines)
+            "--max-turns", "45", prompt], None

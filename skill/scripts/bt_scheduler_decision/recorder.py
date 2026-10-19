@@ -80,7 +80,7 @@ CREATE INDEX IF NOT EXISTS decision_records_task_latest
 def _idempotency_key_for_validated(validated: ValidatedRequest) -> str:
     """Hash validated decision sources while excluding request wall-clock time."""
     item = validated.request
-    return sha256_json({
+    identity = {
         "contract_version": API_VERSION,
         "plan_id": item.plan_id,
         "revision": item.revision,
@@ -92,7 +92,12 @@ def _idempotency_key_for_validated(validated: ValidatedRequest) -> str:
         },
         "policy_version": item.policy_version,
         "checkpoint_revision": item.checkpoint_revision,
-    })
+    }
+    # Preserve historical initial/planning keys; retries receive independent
+    # single-use M3 references without changing quota facts or request time.
+    if item.dispatch_generation:
+        identity["dispatch_generation"] = item.dispatch_generation
+    return sha256_json(identity)
 
 
 def idempotency_key(request: object) -> str:

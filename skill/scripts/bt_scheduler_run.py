@@ -14,6 +14,7 @@ from pathlib import Path
 
 import bt_core
 import bt_notify
+import bt_run_stores
 import bt_scheduler_adapter as adapter
 import bt_scheduler_executor_adapter as executor_runtime
 import bt_scheduler_m4_wiring as m4_runtime
@@ -29,21 +30,50 @@ class RuntimeErrorCode(RuntimeError):
         self.code = code
 
 
+def _run_config():
+    """Operating limits of a run. A run without a human needs retries: three attempts per task unless configured."""
+    import bt_config
+
+    def number(key: str, default: int) -> int:
+        value = bt_config.get(key, default)
+        return value if isinstance(value, int) and not isinstance(value, bool) and value >= 1 else default
+
+    scopes = bt_config.get("scheduler.exclusive_scopes", [])
+    scopes = tuple(s for s in scopes if isinstance(s, str) and s) if isinstance(scopes, list) else ()
+    return adapter.core.Config(max_attempts=number("scheduler.max_attempts", 3),
+                               max_parallel_tasks=number("scheduler.max_parallel_tasks", 3), exclusive_scopes=scopes)
+
+
+def _executor_config():
+    """Wall-clock limit of one agent process, from `scheduler.attempt_timeout_minutes` (the executor default is 30 min)."""
+    import bt_config
+
+    minutes = bt_config.get("scheduler.attempt_timeout_minutes", 120)
+    minutes = minutes if isinstance(minutes, int) and not isinstance(minutes, bool) and minutes >= 1 else 120
+    parallel = bt_config.get("scheduler.max_parallel_tasks", 3)
+    parallel = parallel if isinstance(parallel, int) and not isinstance(parallel, bool) and parallel >= 1 else 3
+    # M1 decides how many run; the executor's own ceiling must not be lower, or the extra orders are refused
+    return executor_runtime.m3.Config(timeout_seconds=float(minutes * 60), max_running=max(parallel, 2))
+
+
 def _wire(project: str, rdir: Path):
     import bt_scheduler_executor_wiring as composition
     import bt_workspace
 
     run_id = _runtime_binding(rdir, resume=adapter.authority(rdir) == adapter.AUTHORITY)
     db_path = adapter.run_db_path(rdir)
-    state_root = db_path.parent
-    ledger = state_root / f"{db_path.stem}-{run_id}-m2.sqlite3"
+    ledger = bt_run_stores.m2_ledger(db_path, run_id)
     stores = _required_module_stores(db_path, run_id)
+    import bt_plan_adapter
     assignment = adapter.DecisionAssignmentPort(project, ledger, laya_root=bt_core.ROOT / ".state" / "laya")
+    if hasattr(assignment, "classification_overlay"):      # M2 decides with the classification in force (amendments)
+        assignment.classification_overlay = lambda: bt_plan_adapter.effective_overrides(rdir)
     wiring = None
     try:
         wiring = composition.wire(
             rdir, project=project, assignment=assignment, m2_ledger=ledger,
             repos=bt_workspace.repos(bt_core.ROOT, project, False), autostart=True,
+            config=_run_config(), executor_config=_executor_config(),
             integrate_predecessors=True,
             monitor_store_path=stores["m4"], recovery_store_path=stores["m5"],
             quality_store_path=stores["m6"],
@@ -90,18 +120,14 @@ def _wire(project: str, rdir: Path):
 def _required_module_stores(db_path: Path, run_id: str) -> dict[str, Path]:
     if not re.fullmatch(r"[0-9a-f]{32}", run_id):
         raise RuntimeErrorCode("RUNTIME_BINDING_INVALID", "Scheduler runtime identity is invalid")
-    root = db_path.parent / f"{db_path.stem}-{run_id}-modules"
+    root = bt_run_stores.module_root(db_path, run_id)
     try:
         root.mkdir(mode=0o700, parents=True, exist_ok=True)
         info = root.lstat()
         if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() \
                 or stat.S_IMODE(info.st_mode) != 0o700:
             raise OSError("module store directory must be owned by this user with mode 0700")
-        stores = {
-            "m4": root / "m4-monitor.sqlite3",
-            "m5": root / "m5-recovery.sqlite3",
-            "m6": root / "m6-quality.sqlite3",
-        }
+        stores = bt_run_stores.module_stores(db_path, run_id)
         for path in stores.values():
             try:
                 file_info = path.lstat()
@@ -135,7 +161,7 @@ def _runtime_binding(rdir: Path, *, resume: bool) -> str:
     """Keep a run-scoped local M2 ledger namespace without opening a second M1 core."""
     plan = adapter.approved_plan(rdir)
     db = adapter.run_db_path(rdir)
-    marker = db.with_name(db.stem + "-runtime.json")
+    marker = bt_run_stores.runtime_marker(db)
     if resume:
         try:
             data = json.loads(marker.read_text(encoding="utf-8"))
@@ -156,6 +182,23 @@ def _runtime_binding(rdir: Path, *, resume: bool) -> str:
                    encoding="utf-8")
     os.replace(tmp, marker)
     return identity
+
+
+def rebind_runtime(rdir: Path) -> None:
+    """After a rebase the run keeps its runtime id (M2 ledger and module stores) but follows the new plan revision."""
+    plan = adapter.approved_plan(rdir)
+    marker = bt_run_stores.runtime_marker(adapter.run_db_path(rdir))
+    try:
+        data = json.loads(marker.read_text(encoding="utf-8"))
+        identity = data["runtime_id"]
+        if not isinstance(identity, str) or not re.fullmatch(r"[0-9a-f]{32}", identity):
+            raise ValueError("runtime_id")
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise RuntimeErrorCode("RUNTIME_BINDING_MISSING", "the Scheduler run has no valid runtime binding") from exc
+    tmp = marker.with_suffix(".tmp")
+    tmp.write_text(json.dumps({"runtime_id": identity, "plan_id": plan.plan_id, "revision": plan.revision,
+                               "sha256": plan.sha256}, sort_keys=True) + "\n", encoding="utf-8")
+    os.replace(tmp, marker)
 
 
 def _install_autostart(project: str, req: str) -> None:

@@ -18,6 +18,8 @@ import bt_core  # noqa: E402
 import bt_events  # noqa: E402
 import bt_lock  # noqa: E402
 import bt_profiles  # noqa: E402
+import bt_subscriptions  # noqa: E402
+from bt_subscription_sources import UsageError  # noqa: E402
 
 
 class AgentTests(unittest.TestCase):
@@ -36,8 +38,14 @@ class AgentTests(unittest.TestCase):
                                          (bt_events, "STATE", self.state),
                                          (bt_profiles, "STATE", self.state),
                                          (bt_profiles, "ROOT", self.root),
+                                         (bt_subscriptions, "STATE", self.state),
                                          (bt_core, "STATE", self.state)):
             p = patch.object(target, attribute, value)
+            p.start()
+            self.addCleanup(p.stop)
+        # Routing refreshes subscription usage. Unit tests never read real credentials or call provider services.
+        for reader in ("read_claude", "read_codex"):
+            p = patch.object(bt_subscriptions, reader, side_effect=UsageError("auth_unavailable"))
             p.start()
             self.addCleanup(p.stop)
         (self.root / "work-project").mkdir()
@@ -64,7 +72,7 @@ class ModelSelectionTests(AgentTests):
         self.assertEqual(bt_agents.infer_kind("run tests", "unknown"), "test")
 
     def test_start_tier_architecture_and_audit(self):
-        self.assertEqual(bt_agents.start_tier(" ARCHITECTURE ", "docs"), 2)
+        self.assertEqual(bt_agents.start_tier(" ARCHITECTURE ", "docs"), 0)
         self.assertEqual(bt_agents.start_tier("standard", "audit"), 1)
         self.assertEqual(bt_agents.start_tier(None, "implement"), 0)
 
@@ -210,7 +218,8 @@ class PoolAndRouteTests(AgentTests):
                          ("claude", "sonnet", "medium", "fixed (no pool)"))
         with self._all_clis():
             pooled = bt_agents.route("personal-project", {"pool": ["codex-named", "claude"]}, 0)
-        self.assertEqual(pooled["profile"], "codex-named")
+        self.assertEqual((pooled["profile"], pooled["agent"], pooled["model"], pooled["effort"]),
+                         ("claude", "claude", "sonnet", "medium"))
 
     def test_route_raises_no_route_when_every_account_cools(self):
         with self._all_clis(), patch.object(bt_agents.time, "time", return_value=1_800_000_000.0):

@@ -15,6 +15,8 @@ import re
 import sys
 from pathlib import Path
 
+import bt_role_policy
+
 from bt_resources import resource_root  # noqa: E402
 
 SRC = resource_root() / "agents"
@@ -95,6 +97,10 @@ def configured_agent_dirs(provider: str, default: Path) -> list[Path]:
 
 
 def generated_claude(meta: dict[str, str], lines: list[str], body: str) -> str:
+    choice = bt_role_policy.native_option(meta.get("name"), "claude")
+    if choice:
+        lines = [line for line in lines if not line.startswith(("model:", "effort:"))]
+        lines += [f"model: {choice[0]}", f"effort: {choice[1]}"]
     frontmatter = "\n".join(line for line in lines if not line.startswith("codex_"))
     return f"---\n{frontmatter}\n---\n<!-- {MARKER} -->\n\n{body}"
 
@@ -106,7 +112,11 @@ def generated_codex(meta: dict[str, str], body: str) -> str:
               f"description = {toml_str(meta['description'])}"]
     if meta.get("codex_sandbox"):
         values.append(f"sandbox_mode = {toml_str(meta['codex_sandbox'])}")
-    if meta.get("codex_effort"):
+    choice = bt_role_policy.native_option(meta.get("name"), "codex")
+    if choice:
+        values.append(f"model = {toml_str(choice[0])}")
+        values.append(f"model_reasoning_effort = {toml_str(choice[1])}")
+    elif meta.get("codex_effort"):
         values.append(f"model_reasoning_effort = {toml_str(meta['codex_effort'])}")
     values.append(f"developer_instructions = '''\n{body}'''")
     return "\n".join(values) + "\n"

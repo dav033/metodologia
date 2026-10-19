@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 from .batch_quota import (
     BatchQuotaAssessment,
@@ -342,9 +342,12 @@ def _batch_fingerprint(prepared: _PreparedBatch) -> tuple[str, str]:
     fingerprint_rows = []
     for task_id in sorted(prepared.requests_by_task):
         try:
+            request = prepared.requests_by_task[task_id].request
+            request_identity = {field.name: getattr(request, field.name) for field in fields(request)
+                                if field.name != "dispatch_generation" or request.dispatch_generation != 0}
             fingerprint_rows.append({
                 "task_id": task_id,
-                "request_sha256": sha256_json(prepared.requests_by_task[task_id].request),
+                "request_sha256": sha256_json(request_identity),
                 "route_evidence": prepared.evidence_by_task.get(task_id, {}),
                 "preserve_baseline": prepared.preserve_baseline_by_task.get(task_id, False),
                 "quota_evidence": prepared.quota_evidence_by_task.get(task_id, {}),

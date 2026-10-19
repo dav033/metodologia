@@ -131,6 +131,7 @@ class MonitorStore:
         connection.row_factory = sqlite3.Row
         connection.execute(f"PRAGMA busy_timeout={self.busy_timeout_ms if timeout_ms is None else timeout_ms}")
         connection.execute("PRAGMA foreign_keys=ON")
+        connection.execute("PRAGMA journal_size_limit=67108864")  # a checkpointed WAL shrinks back; it counts toward the store cap
         return connection
 
     @contextmanager

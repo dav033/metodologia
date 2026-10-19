@@ -13,6 +13,15 @@ from bt_scheduler_executor import model as m
 
 
 class Types(unittest.TestCase):
+    def test_handoff_mode_defaults_to_snapshot_and_rejects_unknown_values(self):
+        self.assertEqual(ex.Config().validate().handoff_mode, "snapshot")
+        self.assertEqual(ex.Config(1).max_running, 1)
+        self.assertEqual(ex.Config(handoff_mode="patch").validate().handoff_mode, "patch")
+        for mode in ("", "commit", None, True):
+            with self.subTest(mode=mode), self.assertRaises(ex.ExecutorError) as caught:
+                ex.Config(handoff_mode=mode).validate()
+            self.assertEqual(caught.exception.code, "CONFIG_INVALID")
+
     def test_a_start_request_round_trips_through_json(self):
         req = support.order(3, "ok", timeout=12.5)
         again = ex.StartRequest.from_dict(json.loads(json.dumps(req.to_dict())))

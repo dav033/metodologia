@@ -227,4 +227,61 @@ def activity(path: str | Path, *, limit: int = 50, execution_id: str | None = No
         connection.close()
 
 
-__all__ = ["MAX_ACTIVITY_EVENTS", "activity", "events", "incidents", "metrics", "status"]
+
+
+MAX_SUMMARY_EVENTS = 50_000
+
+
+_TOKEN_METRICS = ("input_tokens", "output_tokens", "total_tokens")
+
+
+def attempt_summaries(path: str | Path, *, since_rowid: int = 0) -> dict[str, object]:
+    """Per-attempt totals over the normalized stream: provider/profile/model as observed, last received time, event
+    count and provider-reported token totals (``None`` when no usage was reported, never 0). Read-only and
+    bounded; ``since_rowid`` lets a caller fold only new rows into totals it already holds (``cursor`` is the
+    last rowid read)."""
+    if type(since_rowid) is not int or since_rowid < 0:
+        raise ValueError("since_rowid must be a non-negative integer")
+    connection = _connect(path)
+    try:
+        rows = connection.execute("SELECT rowid, body FROM normalized_events WHERE rowid > ? ORDER BY rowid LIMIT ?",
+                                  (since_rowid, MAX_SUMMARY_EVENTS + 1)).fetchall()
+    finally:
+        connection.close()
+    truncated = len(rows) > MAX_SUMMARY_EVENTS
+    rows = rows[:MAX_SUMMARY_EVENTS]
+    attempts: dict[str, dict[str, object]] = {}
+    for row in rows:
+        try:
+            body = json.loads(row["body"])
+        except ValueError:
+            continue
+        attempt_id = body.get("attempt_id") if isinstance(body, dict) else None
+        if not isinstance(attempt_id, str) or not attempt_id:
+            continue
+        item = attempts.setdefault(attempt_id, {
+            "attempt_id": attempt_id, "task_id": body.get("task_id"), "run_id": body.get("run_id"),
+            "provider": None, "profile_id": None, "model": None, "first_received_at": body.get("received_at"),
+            "last_received_at": None, "events": 0, "tokens_total": None, "token_samples": 0,
+            "tokens_by_metric": {}})
+        item["events"] = int(item["events"]) + 1
+        for name in ("provider", "profile_id", "model"):
+            if body.get(name):
+                item[name] = body[name]
+        if isinstance(body.get("received_at"), str):
+            item["last_received_at"] = body["received_at"]
+        payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
+        value = payload.get("value")
+        name = payload.get("metric_name")
+        if body.get("event_type") == "usage_reported" and name in _TOKEN_METRICS \
+                and type(value) in (int, float) and value >= 0:
+            by_metric = item["tokens_by_metric"]
+            by_metric[name] = int(by_metric.get(name, 0)) + int(value)
+            item["token_samples"] = int(item["token_samples"]) + 1
+            if name == "total_tokens":
+                item["tokens_total"] = int(item["tokens_total"] or 0) + int(value)
+    return {"attempts": attempts, "cursor": int(rows[-1]["rowid"]) if rows else since_rowid, "truncated": truncated}
+
+
+__all__ = ["MAX_ACTIVITY_EVENTS", "MAX_SUMMARY_EVENTS", "activity", "attempt_summaries", "events", "incidents",
+           "metrics", "status"]

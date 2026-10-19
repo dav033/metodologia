@@ -52,6 +52,26 @@ def run_git(
     return result
 
 
+def read_git_blob(repo: Path, oid: str, maximum: int) -> bytes:
+    """Raw bytes of one blob (no filters, no attributes), refusing anything above `maximum`."""
+    size = run_git(repo, "cat-file", "-s", oid).stdout.strip()
+    if not size.isdigit() or int(size) > max(0, maximum):
+        raise QualityError("SNAPSHOT_INVALID", "snapshot blob exceeds its byte cap")
+    try:
+        result = subprocess.run(
+            ["git", "-c", "core.hooksPath=/dev/null", "-c", "gc.auto=0", "cat-file", "blob", oid],
+            cwd=repo, env=git_environment(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            timeout=GIT_TIMEOUT_SECONDS, check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise QualityError(
+            "SNAPSHOT_INVALID", f"git could not read a snapshot blob ({type(error).__name__})"
+        ) from None
+    if result.returncode or len(result.stdout) != int(size):
+        raise QualityError("SNAPSHOT_INVALID", "git could not read a snapshot blob")
+    return result.stdout
+
+
 def start_git_stream(
     repo: Path, command: list[str], description: str
 ) -> subprocess.Popen[bytes]:

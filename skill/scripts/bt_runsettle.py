@@ -10,7 +10,8 @@ import bt_runprompt as rp
 import bt_runstate as rs
 import bt_runtask as rt
 import bt_runtier as tier_
-from bt_runutil import backoff_override, notify, say
+import bt_routing_policy
+from bt_runutil import notify, say
 
 LIMIT_RE = re.compile(r"usage limit|rate[ _]limit|\b429\b|quota|limit reached|try again at|"
                       r"hit your (\w+ ){0,2}limit|(session|weekly|daily|hourly|opus|sonnet) limit|"
@@ -205,27 +206,6 @@ def run_verify(cmd: str, cwd: Path) -> tuple[bool, str]:
 
 # ---------------------------------------------------------------- outcomes
 
-def enter_wait(rdir: Path, project: str, req: str, epoch: int, notified: bool) -> bool:
-    def fn(s):
-        step = s.get("wait_step", 0)
-        minutes = min(30 * 2 ** step, 240)
-        override = backoff_override()
-        remaining = epoch - time.time() if epoch else 0
-        if remaining > 0:  # a known reset: wait for it, but wake at least every 12 h (a wrong parse can't lock a run)
-            until = dt.datetime.now() + dt.timedelta(seconds=min(remaining + 60, 12 * 3600))
-        else:
-            until = dt.datetime.now() + dt.timedelta(minutes=minutes)
-        if override is not None:
-            until = dt.datetime.now() + dt.timedelta(seconds=override)
-        s.update(status="waiting", waiting_until=until.isoformat(timespec="seconds"), wait_step=step + 1)
-    state = rs.update(rdir, fn)
-    msg = f"usage/rate limit; waiting until {state['waiting_until']}"
-    say(state, msg)
-    if not notified:
-        notify(f"{project} {req}: marathon waiting", msg)
-    return True
-
-
 IDLE_ATTEMPTS_MAX = 2  # consecutive failed attempts that leave the working tree exactly as the previous one left it
 
 
@@ -245,11 +225,12 @@ def _fail_attempt(task: dict, err: str, max_attempts: int, change: dict | None =
                 error_hashes=(task["error_hashes"] + [h])[-10:])
     if task["attempts"] >= max_attempts:
         return f"{task['attempts']} failed attempts"
-    if repeated and tier >= tier_.TOP:
+    ceiling = bt_routing_policy.MAX_KIND_TIER.get(task.get("kind"), tier_.TOP)
+    if repeated and tier >= ceiling:
         return "same error twice, the second time at the top model tier"
     if task.get("idle_attempts", 0) >= IDLE_ATTEMPTS_MAX:
         return f"no progress: {task['idle_attempts']} consecutive failed attempts left the working tree unchanged"
-    task["tier"] = min(tier + 1, tier_.TOP)
+    task["tier"] = min(tier + 1, ceiling)
     return None
 
 

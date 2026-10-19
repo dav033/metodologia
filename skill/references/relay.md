@@ -1,9 +1,9 @@
 # Quota relay (interactive sessions)
 
 When an interactive session's own 5 h window is nearly spent, the agent writes a handoff and stops, and the best
-other account starts in the SAME terminal pane with the handoff as context. Marathon and delegated sessions are
+other account starts in the SAME terminal pane with the handoff as context. Scheduler and delegated sessions are
 never touched (any of `BITACORA_RUN/TASK/SESSION/DELEGATION` in the environment makes the hook a no-op); the
-supervisor already handles limits there.
+scheduler (or delegation) already handles limits there.
 
 ## How it works
 

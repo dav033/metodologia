@@ -16,7 +16,7 @@ from bt_scheduler_monitor.contracts import (
     NormalizedEvent,
     ProcessIdentity,
 )
-from bt_scheduler_monitor.detectors import DetectorContext, detect_events
+from bt_scheduler_monitor.detectors import STDERR_TEXT, DetectorContext, detect_events
 from bt_scheduler_monitor.metrics import read_metric_snapshots as _read_metric_snapshots
 from bt_scheduler_monitor.providers import (
     CollectorOutput,
@@ -24,7 +24,7 @@ from bt_scheduler_monitor.providers import (
     ProviderGap,
     ProviderRecord,
 )
-from bt_scheduler_monitor.queries import activity, events, incidents, metrics, status
+from bt_scheduler_monitor.queries import activity, attempt_summaries, events, incidents, metrics, status
 from bt_scheduler_monitor.recovery import (
     RecoveryError,
     export_archive,
@@ -96,6 +96,11 @@ def deliver_incident_outbox(store: MonitorStore, scheduler: Any, claim_token: st
     return IncidentDeliveryReport("complete", len(claimed), applied, duplicate, pending)
 
 
+def attempt_usage(path: str | Path, *, since_rowid: int = 0) -> dict[str, object]:
+    """Read-only per-attempt activity and provider-reported tokens from an M4 store (see M4 `attempt_summaries`)."""
+    return attempt_summaries(path, since_rowid=since_rowid)
+
+
 def read_metric_snapshots(path: str | Path, *, limit: int = 100) -> tuple[MetricSample, ...]:
     """Expose bounded M4 metric history to M2 without granting a write or refresh path."""
     return _read_metric_snapshots(path, limit=limit)
@@ -160,6 +165,7 @@ __all__ = [
     "create_stream_adapter",
     "deliver_incident_outbox",
     "detect_events",
+    "STDERR_TEXT",
     "export_archive",
     "operator_query",
     "persist_frame_event",

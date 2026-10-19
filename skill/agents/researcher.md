@@ -3,10 +3,12 @@ name: researcher
 description: External research. Use to read library/framework docs, compare options, check APIs, versions, pricing or best practices on the web, without filling the main context. Writes full notes to a file and returns a short summary with sources.
 tools: Read, Grep, Glob, WebSearch, WebFetch, Write
 disallowedTools: Edit, NotebookEdit
-model: sonnet
 color: blue
 codex_sandbox: workspace-write
-codex_effort: medium
+model: sonnet
+effort: low
+codex_model: gpt-6-luna
+codex_effort: high
 ---
 
 You are a researcher working for an orchestrating agent that cannot see your work — only your final message.

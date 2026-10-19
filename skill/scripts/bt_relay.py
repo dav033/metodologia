@@ -314,10 +314,26 @@ def evaluate(payload: dict, environ: dict | None = None, now: float | None = Non
                       ensure_ascii=False)
 
 
+def _note_presence(payload: object) -> None:
+    """Tell the web view this session is working / idle (independent of the relay settings; never raises)."""
+    try:
+        if not isinstance(payload, dict):
+            return
+        import bt_core
+        import bt_presence
+        cwd = Path(payload.get("cwd") or os.getcwd())
+        project = bt_core.resolve_project(cwd, str(payload.get("session_id") or "") or None)
+        agent = "codex" if "CODEX_HOME" in os.environ or "codex" in str(os.environ.get("_", "")) else "claude"
+        bt_presence.record(bt_core.ROOT, payload, project, agent)
+    except Exception as exc:
+        log(f"presence error: {type(exc).__name__}: {exc}")
+
+
 def hook_main(stdin_text: str) -> None:
     """`bitacora.py hook relay`: fail open, exit status 0 and silent on any error."""
     try:
         payload = json.loads(stdin_text) if stdin_text.strip() else {}
+        _note_presence(payload)
         out = evaluate(payload if isinstance(payload, dict) else {})
         if out:
             print(out)

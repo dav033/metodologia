@@ -168,6 +168,20 @@ class PlatformTests(unittest.TestCase):
         self.assertTrue(spawn.call_args.kwargs["start_new_session"])
         self.assertNotIn("creationflags", spawn.call_args.kwargs)
 
+    def test_web_server_with_its_systemd_unit_is_restarted_there_not_spawned_loose(self):
+        with patch.object(bt_server, "_unit_enabled", return_value=True), \
+                patch.object(bt_server, "is_running", return_value=False), \
+                patch.object(bt_server.subprocess, "run") as run, patch.object(bt_server.subprocess, "Popen") as spawn:
+            bt_server.ensure_server(bt_server.DEFAULT_PORT)
+        run.assert_called_once()
+        self.assertEqual(run.call_args.args[0], ["systemctl", "--user", "restart", bt_server.WEB_UNIT])
+        spawn.assert_not_called()
+        with patch.object(bt_server, "_unit_enabled", return_value=True), \
+                patch.object(bt_server, "is_running", return_value=True), patch.object(bt_server, "_stale", return_value=False), \
+                patch.object(bt_server.subprocess, "run") as run:
+            bt_server.ensure_server(bt_server.DEFAULT_PORT)
+        run.assert_not_called()                                              # current code: leave the unit alone
+
     def test_stale_web_server_can_be_stopped_on_posix_without_taskkill(self):
         state = self.root / "state"
         state.mkdir()
