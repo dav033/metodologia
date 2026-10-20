@@ -112,6 +112,38 @@ class PredecessorIntegrator:
             stack.extend(plan.task(current).after)
         return [tid for tid in plan.ids() if tid in seen]
 
+    def rebase(self, task_id: str, snapshot: str, previous_base: str | None = None) -> str | None:
+        """A task's own earlier result carried onto the base it would start from today: its new base (the redone
+        prerequisites) plus what the earlier result added, as one commit that has both as parents. None when the two
+        overlap (the caller then starts on the new base and shows the earlier result as a reference). Objects only, like
+        every other merge here; the commit is kept alive under `refs/m3/integration/<run>/<task>-carried`. What the earlier
+        result added is measured from the base it was built on (`previous_base`; by default the snapshot's first parent)."""
+        bound = self._bound
+        if bound is None or not SHA.fullmatch(snapshot or ""):
+            return None
+        path = bound["repo_of"](self._role(task_id))
+        if not path:
+            return None
+        repo, base = Path(path), self.base_ref(task_id)
+        if _git(repo, "cat-file", "-e", f"{snapshot}^{{commit}}", check=False).returncode:
+            return None
+        resolved = _git(repo, "rev-parse", "--verify", f"{base}^{{commit}}", check=False)
+        if resolved.returncode:
+            return None
+        base = resolved.stdout.strip()
+        if base == snapshot or _git(repo, "merge-base", "--is-ancestor", base, snapshot, check=False).returncode == 0:
+            return snapshot                                   # the earlier result already builds on the new base
+        origin = previous_base if SHA.fullmatch(previous_base or "") else f"{snapshot}^1"
+        done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={origin}", base,
+                    snapshot, check=False)
+        if done.returncode:
+            return None
+        tree = done.stdout.splitlines()[0].strip()
+        carried = _git(repo, "commit-tree", "--no-gpg-sign", tree, "-p", base, "-p", snapshot, "-m",
+                       f"m3 carried result of {task_id} onto its new base").stdout.strip()
+        _git(repo, "update-ref", f"{self.ref_prefix}/{bound['identity']}/{self._ref_leaf(task_id)}-carried", carried)
+        return carried
+
     # ------------------------------------------------------------------------------------------------ internals
     @staticmethod
     def _ref_leaf(task_id: str) -> str:
@@ -125,7 +157,33 @@ class PredecessorIntegrator:
     def _role(self, task_id: str) -> str:
         return self._bound["plan"].task(task_id).repository or self._bound["default"]
 
-    def _integrate(self, task_id: str) -> str:
+    def would_conflict(self, task_id: str, attempt_id: str, snapshot: str) -> str:
+        """Would accepting `attempt_id` (snapshot `snapshot`) for `task_id` leave the run unable to combine its work? The
+        tasks after it that are about to start are integrated as if it were accepted (objects only: no ref, no memo). ''
+        when everything still merges, else the clash (`T6+T10 vs T13 for T14: files`). Checked when the result is verified,
+        so the task that caused a clash is the one sent back, not a bystander blocked later when it tries to start."""
+        bound = self._bound
+        if bound is None or not SHA.fullmatch(snapshot or ""):
+            return ""
+        accepted = dict(bound["accepted"]())
+        accepted[task_id] = attempt_id
+        real = bound["snapshot_of"]
+        overlay = lambda attempt: snapshot if attempt == attempt_id else real(attempt)      # noqa: E731
+        role = self._role(task_id)
+        for later in bound["plan"].ids():
+            if later == task_id or self._role(later) != role or task_id not in self.ancestors(later):
+                continue
+            if any(parent not in accepted for parent in self.ancestors(later)):
+                continue                                    # not about to start: some prerequisite is still open
+            try:
+                self._integrate(later, accepted, overlay, write_ref=False)
+            except IntegrationError as error:
+                pair = error.detail.split(" for ")[0]
+                if error.code == "INTEGRATION_CONFLICT" and task_id in re.split(r"\+| vs ", pair):
+                    return error.detail             # a clash the candidate takes part in; older ones are not its doing
+        return ""
+
+    def _integrate(self, task_id: str, accepted_map=None, snapshot_of=None, *, write_ref: bool = True) -> str:
         bound = self._bound
         role = self._role(task_id)
         same_repo = [t for t in self.ancestors(task_id) if self._role(t) == role]
@@ -136,24 +194,26 @@ class PredecessorIntegrator:
             raise IntegrationError("INTEGRATION_REPOSITORY", f"repository {role!r} is not registered")
         repo = Path(path)
         commits: list[tuple[str, str]] = []
-        accepted = bound["accepted"]()
+        accepted = accepted_map if accepted_map is not None else bound["accepted"]()
+        snapshot_of = snapshot_of or bound["snapshot_of"]
         for tid in same_repo:
             attempt = accepted.get(tid)
             if not attempt:
                 raise IntegrationError("PREDECESSOR_NOT_ACCEPTED", f"{tid} is a prerequisite of {task_id} but is not accepted")
-            sha = bound["snapshot_of"](attempt)
+            sha = snapshot_of(attempt)
             if not sha or not SHA.fullmatch(sha):
                 raise IntegrationError("PREDECESSOR_HANDOFF_MISSING",
                                        f"{tid} ({attempt}) was accepted but left no snapshot to build on")
             if _git(repo, "cat-file", "-e", f"{sha}^{{commit}}", check=False).returncode:
                 raise IntegrationError("PREDECESSOR_HANDOFF_MISSING", f"{tid}: snapshot {sha[:12]} is not in {repo.name}")
             commits.append((tid, sha))
-        merged = self._merge(repo, task_id, commits)
-        ref = f"{self.ref_prefix}/{bound['identity']}/{self._ref_leaf(task_id)}"
-        _git(repo, "update-ref", ref, merged)
+        merged = self._merge(repo, task_id, commits, same_repo, snapshot_of)
+        if write_ref:
+            ref = f"{self.ref_prefix}/{bound['identity']}/{self._ref_leaf(task_id)}"
+            _git(repo, "update-ref", ref, merged)
         return merged
 
-    def _merge(self, repo: Path, task_id: str, commits: list[tuple[str, str]]) -> str:
+    def _merge(self, repo: Path, task_id: str, commits: list[tuple[str, str]], owners=(), snapshot_of=None) -> str:
         def contains(ancestor: str, descendant: str) -> bool:
             return _git(repo, "merge-base", "--is-ancestor", ancestor, descendant, check=False).returncode == 0
 
@@ -170,7 +230,7 @@ class PredecessorIntegrator:
                 continue
             done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", current, sha, check=False)
             if done.returncode == 1:
-                done = self._merge_over_earlier_result(repo, contains, current, sha, members, tid) or done
+                done = self._merge_over_earlier_result(repo, contains, current, sha, owners, snapshot_of) or done
             if done.returncode == 1:
                 files = [line for line in done.stdout.splitlines()[1:] if line.strip()][:6]
                 raise IntegrationError("INTEGRATION_CONFLICT",       # the core keeps ~200 chars: who clashes comes first
@@ -184,17 +244,19 @@ class PredecessorIntegrator:
             members.append(tid)
         return current
 
-    def _merge_over_earlier_result(self, repo: Path, contains, current: str, sha: str, members: list[str], tid: str):
-        """A clash can be a redone task meeting a dependent built on the result it replaced: both then changed the same
-        lines of that earlier result. Merging over the earlier result as base keeps the fix and the dependent's own work
-        (a real overlap still conflicts). Returns the clean merge-tree outcome, or None."""
+    def _merge_over_earlier_result(self, repo: Path, contains, current: str, sha: str, owners, snapshot_of):
+        """A clash can be a redone task meeting work built on the result it replaced: both then changed the same lines of
+        that earlier result. Any prerequisite of the task being integrated may be the redone one, so each earlier result
+        of each of them is tried as the merge base, when one side was built on it. Merging over it keeps the fix and
+        the other side's own work (a real overlap still conflicts). Returns the clean merge-tree outcome, or None."""
         earlier_of = self._bound.get("earlier_of")
         if earlier_of is None:
             return None
-        for owner, other in [(m, sha) for m in members] + [(tid, current)]:
+        resolve = snapshot_of or self._bound["snapshot_of"]
+        for owner in owners:
             for attempt in earlier_of(owner):
-                prior = self._bound["snapshot_of"](attempt)
-                if not prior or not SHA.fullmatch(prior) or not contains(prior, other):
+                prior = resolve(attempt)
+                if not prior or not SHA.fullmatch(prior) or not (contains(prior, current) or contains(prior, sha)):
                     continue
                 done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={prior}",
                             current, sha, check=False)

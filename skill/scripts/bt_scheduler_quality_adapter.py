@@ -49,6 +49,7 @@ class QualityVerificationPort:
         audit_policy: bt_audit_gate.Policy | None = None,
         read_ledger: Callable[[VerifyRequest, str], bytes | None] | None = None,
         read_changes: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
+        integration_check: Callable[[str, str, str], str] | None = None,
     ):
         self.core = core
         self.rework_notes = rework_notes
@@ -56,6 +57,7 @@ class QualityVerificationPort:
         self._resolver = snapshot_resolver or SnapshotResolver(policy)
         self._read_ledger = read_ledger or self._ledger_from_snapshot
         self._read_changes = read_changes or self._changes_from_snapshot
+        self.integration_check = integration_check        # (task, attempt, snapshot) -> '' or why it cannot be combined
         self.executor = executor
         self.store = store
         self.policy = policy
@@ -346,6 +348,18 @@ class QualityVerificationPort:
                     ids.append(later)
         return tuple(spec.id for spec in plan.tasks if spec.id in ids), False
 
+    def _integration_problem(self, order: VerifyRequest) -> str:
+        """Why the verified result cannot be combined with the accepted work around it ('' when it can). A check that
+        cannot run (no snapshot yet) is not a verdict: it returns ''."""
+        if self.integration_check is None:
+            return ""
+        try:
+            source = self._snapshot_source(order)
+            return self.integration_check(order.task_id, order.attempt_id, source.snapshot_sha) if source else ""
+        except Exception as error:  # noqa: BLE001 - an outage is not a reason to reject work
+            LOGGER.warning("integration check skipped (%s)", type(error).__name__)
+            return ""
+
     def _write_rework_notes(self, gate: bt_audit_gate.Gate, order: VerifyRequest) -> None:
         if self.rework_notes is None:
             return
@@ -391,6 +405,15 @@ class QualityVerificationPort:
                 )
                 return "pending"
             gate = self._audit_gate(order) if accepted else None
+            clash = self._integration_problem(order) if accepted and (gate is None or gate.ok) else ""
+            if clash:
+                accepted = False
+                evidence = f"integration gate: {clash} | M6 evidence: {evidence}"[:2000]
+                if self.rework_notes is not None:
+                    try:
+                        self.rework_notes(order.task_id, _integration_note(clash))
+                    except OSError as error:
+                        LOGGER.warning("integration note not written for %s (%s)", order.task_id, type(error).__name__)
             if gate is not None and not gate.ok:
                 accepted = False
                 evidence = f"{gate.summary()} | M6 evidence: {evidence}"[:2000]
@@ -462,6 +485,13 @@ def _read_snapshot_inputs(
     except Exception as error:  # noqa: BLE001
         LOGGER.warning("M6 attempt description unavailable (%s)", type(error).__name__)
         return None, None
+
+
+def _integration_note(clash: str) -> str:
+    return ("Your result passed its checks but cannot be combined with work that was already accepted: "
+            f"{clash}. Tasks that come after it, or were built on an earlier result of this one, would collide with it. "
+            "Redo it as a small change on top of the result you started from: keep every file and function it already "
+            "has, edit only what the task and the audit notes require, and do not rewrite or delete working code.")
 
 
 def _captured_handoff(

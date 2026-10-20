@@ -156,7 +156,15 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   starts to the last attempt that left work; a task with no prerequisites continues from its earlier result even
   when the plan was revised since or the repository head moved forward; and `scheduler-op REQ continue-from T3
   att-0042` directs the next start of one task to continue from a given accepted result. An owner note for a task
-  goes in `RUN.notes/<task>.md`. Tasks whose prerequisites are
+  goes in `RUN.notes/<task>.md`.
+- an **integration gate** runs when a result is verified (`gates.integration_check`, default on): the integrator
+  dry-runs (objects only) the integration of every task after it that is about to start, as if the result were
+  accepted. If the result would clash with accepted work, the verdict becomes a rejection (`integration gate: T6+T10
+  vs T13 for T14: files`) and the task gets a note to redo it as a small change; M5 retries it. The task that
+  causes a clash is sent back at once, not a bystander blocked later when it tries to start; a clash the
+  candidate takes no part in is not blamed on it. A task sent back also continues from its earlier result carried
+  onto the redone prerequisites (`PredecessorIntegrator.rebase`) instead of being rewritten, and the merge
+  fallback tries the earlier result of every prerequisite as merge base. Tasks whose prerequisites are
   still completed become `ready` at once; the scheduler redoes them, and the audit runs again at the end. Nothing is
   completed by the rework: each redone task needs a new independent verdict;
 - the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was

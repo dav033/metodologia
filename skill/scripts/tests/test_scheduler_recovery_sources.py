@@ -88,6 +88,20 @@ class RetryAcrossRevisions(unittest.TestCase):
         self.assertIn("oldsnap", note)
         self.assertIn("start from their new result", note)
 
+    def test_sent_back_work_is_carried_onto_a_changed_base_when_it_can_be_and_only_referenced_when_it_cannot(self):
+        source = self._source("REQ-1:r2:T1:att-0001", old_state="accepted")
+        source._handoff = lambda _task: "oldsnap"
+        source._previous_base = lambda _task: "basesha"
+        source.fallback = lambda _task: "newbase"
+        source.integrator = SimpleNamespace(rebase=lambda task, snap, base=None: "carriedcommit")
+        self.assertEqual(source.base_ref("T1"), "carriedcommit")
+        note = source.notes(SimpleNamespace(task_id="T1", base_ref="carriedcommit"))
+        self.assertIn("oldsnap", note)
+        self.assertIn("add only the changes the audit notes", note)
+        source.integrator = SimpleNamespace(rebase=lambda task, snap, base=None: None)       # overlap: start on the new base
+        self.assertEqual(source.base_ref("T1"), "newbase")
+        self.assertIn("overlaps", source.notes(SimpleNamespace(task_id="T1", base_ref="newbase")))
+
     def test_a_failed_retry_continues_whatever_the_base(self):
         source = self._source("REQ-1:r2:T1:att-0001", old_state="failed")
         source._handoff = lambda _task: "oldsnap"

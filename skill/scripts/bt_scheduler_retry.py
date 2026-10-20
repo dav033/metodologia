@@ -65,11 +65,12 @@ def _earlier_attempt(ctx, rec):
     return None
 
 class RetryContinuation:
-    def __init__(self, scheduler, executor, repo_of, fallback, *, default_repository="", snapshot_of=None, run_dir=None):
+    def __init__(self, scheduler, executor, repo_of, fallback, *, default_repository="", snapshot_of=None, run_dir=None, integrator=None):
         self.scheduler, self.executor, self.repo_of = scheduler, executor, repo_of
         self.fallback, self.default_repository = fallback, default_repository
         self.snapshot_of = snapshot_of          # attempt id -> snapshot sha, also for attempts of earlier plan revisions
         self.run_dir = Path(run_dir) if run_dir else None
+        self.integrator = integrator            # carries a result onto a changed base (PredecessorIntegrator.rebase)
 
     def _snapshot_verified(self, row, sha):
         if not isinstance(sha, str) or SHA.fullmatch(sha) is None:
@@ -223,47 +224,55 @@ class RetryContinuation:
         except (OSError, ValueError, KeyError, TypeError):
             return None
 
-    def _continue_from(self, task_id):
-        """The snapshot a retry builds on. A failed or rejected attempt is always continued. Work an audit sent back is
-        continued only when its base is still the one the redone prerequisites give today: otherwise it would diverge
-        from them and conflict when the integrator combines the chain, so the redo starts on the new base and the old
-        result stays available as a reference (see `notes`). The owner can direct the choice."""
+    def _carry(self, task_id, snapshot, previous_base=None):
+        """`snapshot` carried onto this task's base of today, or None when the two overlap or nothing can carry it."""
+        rebase = getattr(self.integrator, "rebase", None)
+        return rebase(task_id, snapshot, previous_base) if callable(rebase) else None
+
+    def _plan(self, task_id):
+        """(base to start from, kind, the earlier result). kind: `directed` (the owner chose the result), `continue` (the
+        earlier result as it is), `carried` (the earlier result moved onto the redone prerequisites), or `fresh` with the
+        earlier result, if any, only as a reference. A result an audit sent back is always kept: the redo is the delta that
+        answers the findings, not a rewrite that its dependents would clash with."""
         directed = self._directed(task_id)
         if directed is not None:
-            return directed
+            return (self._carry(task_id, directed) or directed), "directed", directed
         snapshot = self._handoff(task_id)
         if snapshot is None:
-            return self._earlier_revision_result(task_id)
-        if not self._reworked(task_id):
-            return snapshot
-        return snapshot if self._same_base(task_id, self._previous_base(task_id)) else None
+            earlier = self._earlier_revision_result(task_id)
+            return (earlier, "continue", earlier) if earlier else (None, "fresh", None)
+        if not self._reworked(task_id) or self._same_base(task_id, self._previous_base(task_id)):
+            return snapshot, "continue", snapshot
+        carried = self._carry(task_id, snapshot, self._previous_base(task_id))
+        return (carried, "carried", snapshot) if carried else (None, "fresh", snapshot)
+
+    def _continue_from(self, task_id):
+        return self._plan(task_id)[0]
 
     def base_ref(self, task_id):
-        snapshot = self._continue_from(task_id)
-        if snapshot is not None:
-            return snapshot
+        base = self._continue_from(task_id)
+        if base is not None:
+            return base
         return self.fallback(task_id) if callable(self.fallback) else self.fallback
 
     def notes(self, request):
-        snapshot = self._continue_from(request.task_id)
-        if snapshot is None:
-            try:
-                earlier = self._handoff(request.task_id) if self._reworked(request.task_id) else None
-            except integration.IntegrationError:
-                earlier = None      # a reference only: a missing one must not stop the redo
-            if earlier is None:
+        base, kind, snapshot = self._plan(request.task_id)
+        if base is None:
+            if snapshot is None or not self._reworked(request.task_id):
                 return ""
-            return ("An independent audit sent this task's earlier work back, and the prerequisites it builds on were "
-                    f"redone since, so you start from their new result. The earlier result is kept read-only as snapshot "
-                    f"{earlier} (inspect it with `git show {earlier}`): reuse what is still correct, do not copy it blindly.")
-        if request.base_ref != snapshot:
+            return ("An independent audit sent this task's earlier work back, and it overlaps the redone prerequisites it "
+                    f"builds on, so you start from their new result. The earlier result is kept read-only as snapshot "
+                    f"{snapshot} (inspect it with `git show {snapshot}`): reuse what is still correct and keep your "
+                    "change small, because the tasks after this one were built on that result.")
+        if request.base_ref != base:
             raise integration.IntegrationError("PREDECESSOR_HANDOFF_MISSING", "retry base does not match its snapshot")
-        directed = self._directed(request.task_id) == snapshot
-        if directed or self._handoff(request.task_id) is None:      # the owner's choice, or a result of an earlier revision
-            return (f"Continue the preserved files of this task's accepted result, snapshot {snapshot}"
-                    f"{' (chosen by the owner)' if directed else ''}. The tasks that come after it were built on that "
-                    "result, so keep everything it contains, including files outside this task's own paths, and add only "
-                    "the changes the audit notes above ask for. Recheck the complete frozen acceptance and verification "
+        if kind in ("directed", "carried") or (kind == "continue" and (self._handoff(request.task_id) is None)):
+            where = "chosen by the owner" if kind == "directed" else \
+                "moved onto the prerequisites that were redone since" if kind == "carried" else "accepted earlier"
+            return (f"Your tree already contains this task's earlier accepted result ({snapshot}, {where}). The tasks "
+                    "that come after it were built on that result, so keep everything it contains, including files "
+                    "outside this task's own paths, and add only the changes the audit notes above ask for. Do not "
+                    "rewrite or delete working code. Recheck the complete frozen acceptance and verification "
                     "instructions. No private conversation or agent reasoning is transferred.")
         if self._reworked(request.task_id):
             return (f"Continue the preserved files from this task's previous attempt, snapshot {snapshot}. "

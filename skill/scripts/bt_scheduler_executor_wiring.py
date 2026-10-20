@@ -122,6 +122,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         raise
     port.executor = executor
     base_notes = None
+    integrate = None
     try:
         if integrate_predecessors:
             integrate = api.integrator.PredecessorIntegrator(fallback=base_ref)
@@ -135,7 +136,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             continuation = RetryContinuation(scheduler, executor, repo_of, port.base_ref,
                                              default_repository=default_repository,
                                              snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
-                                             run_dir=rdir)
+                                             run_dir=rdir, integrator=integrate)
             wiring.recovery = RecoveryAdapter(
                 recovery_store_path, scheduler=scheduler, run_id=api.run_identity(scheduler),
                 describe=continuation.describe, policy=recovery_policy)
@@ -167,7 +168,10 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 scheduler, executor, wiring.verification_store, quality_runtime_policy, repository_for_order,
                 attempts_root=executor.attempts_dir,
                 rework_notes=lambda task_id, text: bt_scheduler_decisions.write_audit_notes(rdir, task_id, text),
-                audit_policy=bt_audit_gate.policy_from(bt_config.get))
+                audit_policy=bt_audit_gate.policy_from(bt_config.get),
+                integration_check=(integrate.would_conflict
+                                   if integrate is not None and bt_config.get("gates.integration_check", True) is True
+                                   else None))
             scheduler.ports.verification = wiring.verification_runtime
             wiring.verification_runtime.start()
         sink.bind(scheduler)

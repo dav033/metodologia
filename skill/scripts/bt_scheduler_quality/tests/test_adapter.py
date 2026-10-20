@@ -99,6 +99,7 @@ class M6M1AdapterTests(unittest.TestCase):
         schema_version="1.0.0",
         read_ledger=None,
         read_changes=None,
+        integration_check=None,
         rework_notes=None,
         audit_policy=None,
     ):
@@ -137,6 +138,7 @@ class M6M1AdapterTests(unittest.TestCase):
             runner=runner or ScriptedRunner(),
             read_ledger=read_ledger,
             read_changes=read_changes,
+            integration_check=integration_check,
             rework_notes=rework_notes,
             audit_policy=audit_policy,
         )
@@ -306,6 +308,37 @@ class M6M1AdapterTests(unittest.TestCase):
         states = {t: v["state"] for t, v in core.snapshot().tasks.items()}
         self.assertEqual([states[t] for t in ("T2", "T3", "T4")], ["pending"] * 3)
         self.assertEqual(set(notes), {"T1", "T2", "T3", "T4"})
+
+    def test_a_result_that_cannot_be_combined_with_accepted_work_is_rejected_with_the_clash_and_a_note(self):
+        notes, asked = [], []
+
+        def check(task_id, attempt_id, snapshot):
+            asked.append((task_id, len(snapshot)))
+            return "T6+T10 vs T13 for T14: remote/gateway/app.py" if len(asked) == 1 else ""
+        task = _task("T1", "python3 build.py")
+        task.update(kind="implement")
+        task["verification"][0]["category"] = "functional"
+        root, core, _, executor, _, _ = self._system(
+            [task], max_attempts=2, schema_version="1.2.0", integration_check=check,
+            rework_notes=lambda task_id, text: notes.append((task_id, text)))
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T1"
+                                              and e.detail.get("to") == "rejected" for e in core.audit_log())))
+        self.assertEqual(asked[0][0], "T1")
+        self.assertEqual([task_id for task_id, _ in notes], ["T1"])
+        self.assertIn("T6+T10 vs T13 for T14", notes[0][1])
+        self.assertIn("small change", notes[0][1])
+
+    def test_a_result_that_combines_cleanly_is_accepted(self):
+        task = _task("T1", "python3 build.py")
+        task.update(kind="implement")
+        task["verification"][0]["category"] = "functional"
+        root, core, _, executor, _, _ = self._system([task], max_attempts=2, schema_version="1.2.0",
+                                                     integration_check=lambda *args: "")
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T1"]["state"] == "completed"))
 
     def test_an_audit_with_a_missing_ledger_is_rejected_without_reopening_anything(self):
         notes = []
