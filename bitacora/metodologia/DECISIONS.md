@@ -747,3 +747,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Alternatives:** call a cheap model inside the verdict path — rejected: it would block verdict delivery for minutes and hide the second opinion from `/flow`; pin the cross-check to a provider in the plan — rejected: the planner never chooses routes (M2 does; route pins are not wired yet, F11).
 - **Consequences:** + two independent ledgers, visible and retried like any task. − "cheap" depends on M2's routing and on classifying the cross-check honestly; plans approved before today need `--cross-check` (or the policy off) to launch/freeze a new revision.
 - **Sources:** Claude Code subagent docs (code.claude.com/docs/en/sub-agents), Anthropic "Building effective agents", obra/superpowers `writing-plans`, Codex effort guidance (high for planning, xhigh only for high-stakes).
+
+## D-081 — Role policy stays the router; escalated audits read at high; the learning router keeps its own tests
+
+- **Date:** 2026-10-19 · **Status:** Accepted (owner: "si" to the recommendation) · **Refines:** D-070, D-080
+- **Context:** 12 inherited tests assumed the older risk/exploration router while `bt_role_policy` ("risk does not change the options") routes every kind with an owner role.
+- **Decision:** the role policy remains the router. One exception: an audit the run escalated (tier 2: high risk or architecture level) is read by the strongest reviewer of each provider at high (`gpt-6.1-sol` high, `opus` high) — `bt_role_policy.escalated_audit`, applied in `bt_agents.route`, `bt_role_routing.candidates` and `bt_delegate`, and NOT when the caller pinned a role explicitly. The exploration/effort-evidence tests now exercise the learning router with the role lookup switched off (`LearningRouter`), since that router still exists for kinds without a role.
+- **Not decided here:** two M2 semantics still disagree with their tests — the full-DAG batch ranks by baseline/deterministic order instead of quota pressure, and the offline benchmark expects contextual == deterministic (P-129 narrowed to these 3 tests).
+- **Source:** [day log](2026-10/W4/2026-10-19.md)
