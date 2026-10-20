@@ -8,9 +8,10 @@ type Attempt = { id: string; state?: string; updatedAt?: string; failure?: strin
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: Attempt; tasks?: Task[] };
 type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: Attempt; history?: Attempt[] };
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
-type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptop?: { online: boolean; checkedAt?: string } };
+type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptopStatus?: string; };
 type Session = { authenticated: boolean };
 type FlowEvent = { id: string; cursor: string; run: string; seq: string; ord: number; task: string; attempt: string; from: string; to: string; kind: string; summary: string; at_epoch: number };
+type CommandRecord = { id: string; command: string; target: string; submittedAt: string; origin: string; result: string };
 type FailureReview = { attemptId: string; cause: string; verification: { command: string | null; output: string; checks: { command: string; exitCode: number | null; output: string }[] }; diff: { stat: string | null; files: string[] }; logTail: string };
 type FlowCore = { groupRows(events: FlowEvent[]): { ev: FlowEvent; n: number; first: number; last: number }[]; taskState(state: string): string };
 declare global { interface Window { FlowCore?: FlowCore } }
@@ -26,8 +27,9 @@ function parseFlowEvent(value: unknown): FlowEvent | null {
   const event = record(value);
   const target = record(event?.target);
   const data = record(event?.data);
-  if (!event || event.schemaVersion !== 1 || !target || !data || !text(event.id) || !text(event.cursor) || !text(event.type) || !text(target.run) || !text(event.occurredAt)) return null;
-  const [project, req] = target.run.split("/", 2);
+  if (!event || event.schemaVersion !== 1 || !target || !data || !text(event.id) || !text(event.cursor) || !text(event.type) || !text(target.project) || !text(target.req) || !text(event.occurredAt)) return null;
+  const project = target.project;
+  const req = target.req;
   if (!project || !req) return null;
   const task = text(field(target, "taskId", "task")) ? String(field(target, "taskId", "task")) : "";
   const attempt = text(field(target, "attemptId", "attempt")) ? String(field(target, "attemptId", "attempt")) : "";
@@ -99,10 +101,9 @@ function parseSnapshot(value: unknown): Snapshot {
       acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
       tasks: Array.isArray(plan.tasks) ? plan.tasks.map(parseTask) : [] };
   });
-  const laptop = record(raw.laptop);
   const cursor = raw.cursor;
-  return { schemaVersion: 1, generatedAt: String(generatedAt), cursor: String(cursor), runs, plans,
-    laptop: laptop && typeof laptop.online === "boolean" ? { online: laptop.online, checkedAt: text(field(laptop, "checkedAt", "checked_at")) ? String(field(laptop, "checkedAt", "checked_at")) : undefined } : undefined };
+  return { schemaVersion: 1, generatedAt: String(generatedAt), cursor: text(cursor) ? cursor : "", runs, plans,
+    laptopStatus: text(raw.laptopStatus) ? raw.laptopStatus : undefined };
 }
 
 function prettyTime(value?: string): string {
@@ -146,8 +147,9 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [working, setWorking] = useState("");
   const [reason, setReason] = useState("");
-  const [confirmation, setConfirmation] = useState("");
   const [typedReq, setTypedReq] = useState("");
+  const [commands, setCommands] = useState<CommandRecord[]>([]);
+  const [historyError, setHistoryError] = useState("");
 
   const load = useCallback(async () => {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
@@ -161,6 +163,22 @@ export default function HomePage() {
     const response = await fetch("/api/remote/v1/snapshot", { cache: "no-store" });
     if (!response.ok) throw new Error(`No se pudo cargar el estado (${response.status}).`);
     setSnapshot(parseSnapshot(await response.json()));
+    const historyResponse = await fetch("/api/remote/v1/commands?after=&limit=100", { cache: "no-store" });
+    if (historyResponse.ok) {
+      const history: unknown = await historyResponse.json();
+      const historyRecord = record(history);
+      if (historyRecord && Array.isArray(historyRecord.commands)) {
+        setHistoryError("");
+        setCommands(historyRecord.commands.flatMap((item): CommandRecord[] => {
+        const row = record(item);
+        if (!row || !text(row.command) || !text(row.target) || !text(row.origin)) return [];
+        const id = field(row, "id", "idempotency_key");
+        const submittedAt = field(row, "submittedAt", "received_at");
+        const result = field(row, "result", "status");
+        return text(id) && text(submittedAt) && text(result) ? [{ id, command: row.command, target: row.target, submittedAt, origin: row.origin, result }] : [];
+        }));
+      } else setHistoryError("La respuesta del historial de comandos no es válida.");
+    } else setHistoryError(`El historial de comandos no está disponible (${historyResponse.status}).`);
   }, []);
 
   useEffect(() => {
@@ -169,39 +187,46 @@ export default function HomePage() {
 
   useEffect(() => {
     if (session?.authenticated !== true) return;
-    let cursor = snapshot?.cursor ?? "";
-    let stopped = false;
-    const poll = async () => {
+    const source = new EventSource("/api/remote/v1/events");
+    source.addEventListener("flow", (message) => {
       try {
-        const response = await fetch(`/api/remote/v1/events?after=${encodeURIComponent(cursor)}&limit=200`, { cache: "no-store" });
-        if (!response.ok) throw new Error(`No se pudo leer la actividad (${response.status}).`);
-        const payload = record(await response.json());
-        if (!payload || !Array.isArray(payload.events) || !text(payload.nextCursor)) throw new Error("La respuesta de actividad es inválida.");
-        const events = payload.events.map(parseFlowEvent);
-        if (events.some((event) => !event)) throw new Error("Evento remoto inválido.");
-        cursor = payload.nextCursor;
-        if (!stopped && events.length) {
-          setFeed((current) => [...current, ...events.filter((event): event is FlowEvent => Boolean(event))]
-            .filter((event, index, all) => all.findIndex((candidate) => candidate.id === event.id) === index)
-            .sort((a, b) => a.ord - b.ord).slice(-500));
-          void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
-        }
-      } catch (cause) { if (!stopped) setError(cause instanceof Error ? cause.message : "No se pudo leer la actividad remota."); }
-    };
-    void poll();
-    const timer = window.setInterval(() => { void poll(); }, 3000);
-    return () => { stopped = true; window.clearInterval(timer); };
-  }, [session?.authenticated, snapshot?.cursor, load]);
+        const event = parseFlowEvent(JSON.parse((message as MessageEvent<string>).data) as unknown);
+        if (!event) throw new Error("Evento remoto inválido.");
+        setFeed((current) => [...current, event].filter((item, index, all) => all.findIndex((candidate) => candidate.id === item.id) === index).sort((a, b) => a.ord - b.ord).slice(-500));
+        if (event.kind === "state_change") void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+      } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo leer la actividad remota."); }
+    });
+    source.addEventListener("reset", () => { source.close(); void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel.")); });
+    source.onerror = () => setError("No se pudo leer la actividad remota.");
+    return () => source.close();
+  }, [session?.authenticated, load]);
 
   async function sendCommand(event: FormEvent<HTMLFormElement>, command: Record<string, unknown>, key: string) {
     event.preventDefault();
     if (!snapshot) return;
     setWorking(key); setError("");
     try {
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(command) });
-      if (!response.ok) throw new Error(`El gateway rechazó el comando (${response.status}).`);
+      let payload = command;
+      const commandType = command.type;
+      if (["revise", "approve", "launch", "cancel-plan", "delete-plan"].includes(String(commandType))) {
+        const confirmationValue = record(command.confirmation);
+        const target = record(command.target);
+        if (!confirmationValue || !text(confirmationValue.typedReq) || !target) throw new Error("Escribe el id de requerimiento para confirmar.");
+        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ target, typedReq: confirmationValue.typedReq }) });
+        const challenge: unknown = await challengeResponse.json();
+        const challengeRecord = record(challenge);
+        if (!challengeResponse.ok || !challengeRecord || !text(challengeRecord.challengeId)) throw new Error(text(challengeRecord?.message) ? challengeRecord.message : "No se pudo confirmar el requerimiento.");
+        payload = { ...command, confirmation: { challengeId: challengeRecord.challengeId, typedReq: confirmationValue.typedReq } };
+      }
+      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      const result: unknown = await response.json();
+      const resultRecord = record(result);
+      if (!response.ok) {
+        if (resultRecord?.code === "STALE_PRECONDITION") throw new Error("El estado cambió. Actualiza el panel antes de volver a intentarlo.");
+        throw new Error(text(resultRecord?.message) ? resultRecord.message : `El gateway rechazó el comando (${response.status}).`);
+      }
       await load();
-      setReason(""); setConfirmation(""); setTypedReq("");
+      setReason(""); setTypedReq("");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo enviar el comando."); }
     finally { setWorking(""); }
   }
@@ -223,8 +248,11 @@ export default function HomePage() {
     if (type === "cancel-attempt") params.attempt = target.attemptId;
     if (type === "reopen") params.task = target.taskId;
     const command = (event: FormEvent<HTMLFormElement>) => sendCommand(event, {
-      idempotency_key: `web-${crypto.randomUUID()}`, command: type, target: `${target.project}/${target.req}`,
-      origin: "web", precondition: { state, ...(revision === undefined ? {} : { revision }) }, params,
+      schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type, target,
+      precondition: { state, ...(revision === undefined ? {} : { revision }) },
+      ...(text(params.reason) ? { reason: params.reason } : {}),
+      ...(type === "cancel-attempt" ? { reason: params.reason } : {}),
+      ...(type === "cancel-plan" || type === "delete-plan" ? { confirmation: params.confirmation } : {}),
     }, key);
     return command;
   }
@@ -267,7 +295,7 @@ export default function HomePage() {
   </article>;
 
   return <main className="dashboard shell">
-    <header className="topbar"><Link className="brand" href="/" aria-label="Flow Remote, inicio"><span className="brand-mark">F</span><span>flow<span className="brand-muted">/remote</span></span></Link><div className="header-meta"><span className="environment">{snapshot?.laptop?.online === false ? "LAPTOP SIN CONEXIÓN" : "EN VIVO"}</span><a className="logout" href="/api/auth/logout">Salir</a></div></header>
+    <header className="topbar"><Link className="brand" href="/" aria-label="Flow Remote, inicio"><span className="brand-mark">F</span><span>flow<span className="brand-muted">/remote</span></span></Link><div className="header-meta"><span className="environment">{snapshot?.laptopStatus === "offline" ? "LAPTOP SIN CONEXIÓN" : "EN VIVO"}</span><a className="logout" href="/api/auth/logout">Salir</a></div></header>
     <section className="runs" aria-labelledby="runs-title"><div className="section-heading"><div><p className="eyebrow">CONTROL PLANE · V1</p><h1 id="runs-title">Ejecuciones</h1></div><span className="run-count">{snapshot?.runs.length ?? 0} activas</span></div>
       {error && <p className="error" role="alert">{error}</p>}
       {!snapshot ? <p className="empty">Cargando estado…</p> : snapshot.runs.length === 0 ? <p className="empty">No hay ejecuciones.</p> : <div className="run-list">{snapshot.runs.map((run) => <article className="run-card" key={`${run.project}-${run.req}`}>
@@ -297,10 +325,11 @@ export default function HomePage() {
       return <article className="run-card" key={`${plan.project}-${plan.req}-${plan.id ?? "plan"}`}><div className="run-top"><div><p className="eyebrow">{plan.project}</p><h3>{plan.req} · Plan</h3></div><span className="state">{plan.state}</span></div>
         <p className="last-seen">Última actividad · {prettyTime(plan.updatedAt)}</p>
         {[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].length > 0 && <details><summary>Criterios de aceptación</summary><ul>{[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
-        <div className="actions"><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><label>Confirmación <input required aria-label="Id del reto de confirmación" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Id del reto" /></label><label>Escribe {plan.req} <input required value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><button disabled={!!working}>Cancelar plan</button></form>
-          <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button className="danger" disabled={!!working}>Eliminar plan</button></form></div>
+        <div className="actions"><label>Escribe {plan.req} para confirmar <input required aria-label={`Escribe ${plan.req} para confirmar`} value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { typedReq } })}><button disabled={!!working || typedReq !== plan.req}>Cancelar plan</button></form>
+          <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`, { confirmation: { typedReq } })}><button className="danger" disabled={!!working || typedReq !== plan.req}>Eliminar plan</button></form></div>
       </article>;
     })}</div></section>}
+    <section className="runs history" aria-labelledby="history-title"><div className="section-heading"><div><p className="eyebrow">TRAZABILIDAD</p><h2 id="history-title">Historial de comandos</h2></div></div>{historyError ? <p className="error" role="status">{historyError}</p> : commands.length ? <ol className="command-history">{commands.map((command) => <li key={command.id}><strong>{command.command}</strong><span>{command.target}</span><time>{prettyTime(command.submittedAt)}</time><span>Origen · {command.origin}</span><span>Resultado · {command.result}</span></li>)}</ol> : <p className="empty">No hay comandos registrados.</p>}</section>
     <footer className="footer"><span>FLOW REMOTE</span><span>Actualizado · {prettyTime(snapshot?.generatedAt)}</span></footer>
   </main>;
 }

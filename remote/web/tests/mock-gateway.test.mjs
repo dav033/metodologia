@@ -35,11 +35,13 @@ test("mock gateway returns the v1 snapshot and session contracts consumed by the
   assert.deepEqual(body.runs.map((run) => run.req_id), ["REQ-027", "REQ-018"]);
   assert.equal(body.runs[0].last_sign_of_life, "2026-10-19T11:59:45Z");
   assert.equal(body.plans[0].acceptance_criteria[0], "Owner reviews and approves the plan");
-  const events = await fetch(`${origin}/api/remote/v1/events?after=&limit=100`);
-  const eventBody = await events.json();
-  assert.equal(eventBody.events[0].target.run, "lotm/REQ-027");
-  assert.equal(eventBody.events[0].target.task, "T15a");
-  assert.equal(eventBody.nextCursor, "mock-event-cursor-2");
+  const events = await fetch(`${origin}/api/remote/v1/events`);
+  const eventBody = await events.text();
+  assert.match(events.headers.get("content-type") ?? "", /text\/event-stream/);
+  assert.match(eventBody, /event: flow/);
+  assert.match(eventBody, /"project":"lotm","req":"REQ-027","taskId":"T15a"/);
+  const history = await fetch(`${origin}/api/remote/v1/commands?after=&limit=100`);
+  assert.equal((await history.json()).commands[0].origin, "telegram");
 
   const review = await fetch(`${origin}/api/remote/v1/attempts/att-failed-02/review`);
   const reviewBody = await review.json();
@@ -51,8 +53,8 @@ test("mock gateway returns the v1 snapshot and session contracts consumed by the
 test("mock gateway accepts versioned, idempotent control commands", async () => {
   const response = await fetch(`${origin}/api/remote/v1/commands`, {
     method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ idempotency_key: "test-idempotency-key", command: "cancel-attempt", target: "lotm/REQ-027", origin: "web", precondition: { state: "running" }, params: { attempt: "att-0008" } }),
+    body: JSON.stringify({ schemaVersion: 1, idempotencyKey: "test-idempotency-key", type: "cancel-attempt", target: { kind: "attempt", project: "lotm", req: "REQ-027", attemptId: "att-0008" }, precondition: { state: "running" }, reason: "Stalled" }),
   });
-  assert.equal(response.status, 200);
-  assert.equal((await response.json()).idempotency_key, "test-idempotency-key");
+  assert.equal(response.status, 202);
+  assert.equal((await response.json()).idempotencyKey, "test-idempotency-key");
 });

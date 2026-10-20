@@ -99,10 +99,10 @@ test("real panel entrypoint renders API contract runs, failure reviews and contr
     for (let attempt = 0; attempt < 80; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "({text: document.body.innerText, width: document.documentElement.scrollWidth, viewport: window.innerWidth})", returnByValue: true });
       browserState = evaluated.result?.value;
-      if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan") && browserState?.text?.includes("Intento att-0008")) break;
+      if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan") && browserState?.text?.includes("Intento att-0008") && browserState?.text?.includes("Origen · telegram")) break;
       await delay(250);
     }
-    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
+    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan", "Historial de comandos", "Origen · telegram", "Resultado · accepted"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
     for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("×2"); attempt += 1) {
@@ -138,10 +138,10 @@ test("real panel entrypoint renders API contract runs, failure reviews and contr
     await fill(".cancel-form input", "Stop the stalled attempt");
     await click(".cancel-form button");
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 1; attempt += 1) await delay(100);
-    assert.equal(gateway.commands[0]?.command, "cancel-attempt");
-    assert.equal(gateway.commands[0]?.params.reason, "Stop the stalled attempt");
-    assert.equal(gateway.commands[0]?.params.attempt, "att-0008");
-    assert.equal(gateway.commands[0]?.target, "lotm/REQ-027");
+    assert.equal(gateway.commands[0]?.type, "cancel-attempt");
+    assert.equal(gateway.commands[0]?.reason, "Stop the stalled attempt");
+    assert.equal(gateway.commands[0]?.target.attemptId, "att-0008");
+    assert.equal(gateway.commands[0]?.target.project, "lotm");
     for (let attempt = 0; attempt < 40; attempt += 1) {
       const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].some((button) => button.innerText === 'Reabrir' && !button.disabled)", returnByValue: true });
       if (ready.result?.value) break;
@@ -149,8 +149,20 @@ test("real panel entrypoint renders API contract runs, failure reviews and contr
     }
     await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Reabrir')?.click()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
-    assert.equal(gateway.commands[1]?.command, "reopen");
-    assert.equal(gateway.commands[1]?.params.task, "T2");
+    assert.equal(gateway.commands[1]?.type, "reopen");
+    assert.equal(gateway.commands[1]?.target.taskId, "T2");
+    let stale;
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      stale = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText.includes('El estado cambió')", returnByValue: true });
+      if (stale.result?.value) break;
+      await delay(100);
+    }
+    assert.equal(stale?.result?.value, true, "stale preconditions should explain that the state changed");
+    await fill('[aria-label="Escribe REQ-027 para confirmar"]', "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Cancelar plan')?.click()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
+    assert.equal(gateway.challenges[0]?.typedReq, "REQ-027", "destructive confirmation should issue a server challenge only after typing the REQ id");
+    assert.equal(gateway.commands[2]?.confirmation?.challengeId, "challenge-token-0123456789");
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);

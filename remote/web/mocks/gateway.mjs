@@ -24,15 +24,24 @@ export async function createMockGatewayServer() {
       response.end(snapshot);
       return;
     }
-    if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events?")) {
-      const after = new URL(request.url, "http://gateway.local").searchParams.get("after") ?? "";
-      const all = [
-        { id: "mock-event-1", cursor: "mock-event-cursor-1", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:01Z", target: { run: "lotm/REQ-027", task: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-1" },
-        { id: "mock-event-2", cursor: "mock-event-cursor-2", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:02Z", target: { run: "lotm/REQ-027", task: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-2" },
+    if (request.method === "GET" && request.url === "/api/remote/v1/commands?after=&limit=100") {
+      send(200, { commands: [{ id: "cmd-previous", command: "pause", target: "lotm/REQ-027", submittedAt: "2026-10-19T11:58:00Z", origin: "telegram", result: "accepted" }], nextCursor: "1" });
+      return;
+    }
+    if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events")) {
+      response.writeHead(200, { "cache-control": "no-store", "content-type": "text/event-stream; charset=utf-8" });
+      const events = [
+        { id: "mock-event-1", cursor: "1", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:01Z", target: { kind: "run", project: "lotm", req: "REQ-027", taskId: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-1" },
+        { id: "mock-event-2", cursor: "2", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:02Z", target: { kind: "run", project: "lotm", req: "REQ-027", taskId: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-2" },
       ];
-      const start = Math.max(0, all.findIndex((event) => event.cursor === after) + 1);
-      const events = after === "mock-event-cursor-2" ? [] : all.slice(start);
-      send(200, { events, nextCursor: events.at(-1)?.cursor ?? (after || "mock-cursor-v1"), hasMore: false });
+      for (const event of events) response.write(`id: ${event.cursor}\nevent: flow\ndata: ${JSON.stringify(event)}\n\n`);
+      response.end();
+      return;
+    }
+    if (request.method === "POST" && request.url === "/api/remote/v1/challenges") {
+      let body = "";
+      request.on("data", (chunk) => { body += chunk; });
+      request.on("end", () => { server.challenges.push(JSON.parse(body)); send(201, { challengeId: "challenge-token-0123456789", target: "lotm/REQ-027", expiresIn: 120 }); });
       return;
     }
     const reviewMatch = request.method === "GET" && request.url?.match(/^\/api\/remote\/v1\/attempts\/([^/]+)\/review$/);
@@ -48,12 +57,13 @@ export async function createMockGatewayServer() {
       request.on("end", () => {
         try {
           const command = JSON.parse(body);
-          if (typeof command.idempotency_key !== "string" || typeof command.command !== "string" || typeof command.target !== "string" || command.origin !== "web") {
+          if (typeof command.idempotencyKey !== "string" || typeof command.type !== "string" || !command.target || typeof command.target.project !== "string") {
             send(400, { code: "INVALID_COMMAND", message: "Comando inválido" });
             return;
           }
           server.commands.push(command);
-          send(200, { status: "OK", code: null, replayed: false, idempotency_key: command.idempotency_key });
+          if (command.type === "reopen") { send(409, { code: "STALE_PRECONDITION", message: "El estado cambió." }); return; }
+          send(202, { commandId: `cmd-${server.commands.length}`, status: "accepted", idempotencyKey: command.idempotencyKey });
         } catch {
           send(400, { code: "INVALID_COMMAND", message: "JSON inválido" });
         }
@@ -63,6 +73,7 @@ export async function createMockGatewayServer() {
     send(404, { code: "NOT_FOUND", message: "Ruta desconocida" });
   });
   server.commands = [];
+  server.challenges = [];
   return server;
 }
 
