@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { QuotasPanel, RoutesPanel, type RouteOption } from "./recovery-panels";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string; roundId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
@@ -343,6 +344,27 @@ export default function HomePage() {
     };
   }
 
+  function retryTask(event: FormEvent<HTMLFormElement>, task: Task, run: Run, route: RouteOption) {
+    const values = new FormData(event.currentTarget);
+    void sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "retry",
+      target: { kind: "task", project: run.project, req: run.req, taskId: task.id },
+      precondition: { state: task.state, ...(task.revision === undefined ? {} : { revision: task.revision }) },
+      route: { route_id: route.routeId, provider: route.provider, model: route.model, account: route.profile },
+      reason: String(values.get("reason") ?? "").trim() }, `${run.req}-${task.id}-retry`);
+  }
+
+  function editBriefForm(task: Task, run: Run, plan: Plan | undefined) {
+    return (event: FormEvent<HTMLFormElement>) => {
+      const values = new FormData(event.currentTarget);
+      const typedReq = String(values.get("typedReq") ?? "");
+      void sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "edit-brief",
+        target: { kind: "run", project: run.project, req: run.req, taskId: task.id },
+        precondition: { state: run.state, ...(plan?.revision === undefined ? {} : { revision: plan.revision }) },
+        task: task.id, field: "objective", value: String(values.get("brief") ?? "").trim(),
+        confirmation: { typedReq } }, `${run.req}-${task.id}-edit-brief`);
+    };
+  }
+
   if (session === null) {
     return <main className="shell"><header className="topbar"><Link className="brand" href="/" aria-label="Flow Remote, inicio"><span className="brand-mark">F</span><span>flow<span className="brand-muted">/remote</span></span></Link></header><p className="empty" aria-live="polite">Comprobando sesión…</p></main>;
   }
@@ -362,6 +384,14 @@ export default function HomePage() {
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
     {task.state === "failed" && task.activeAttempt && <FailureReviewPanel attemptId={task.activeAttempt.id} />}
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
+    {(task.state === "failed" || task.state === "blocked") && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
+      onRetry={(event, route) => retryTask(event, task, run, route)} />}
+    {(task.state === "failed" || task.state === "blocked") && <form className="recovery-form" onSubmit={editBriefForm(task, run, snapshot?.plans.find((plan) => plan.project === run.project && plan.req === run.req))}>
+      <h4>Editar brief de {task.id}</h4><p className="last-seen">Creará la revisión {(snapshot?.plans.find((plan) => plan.project === run.project && plan.req === run.req)?.revision ?? 0) + 1}.</p>
+      <label>Brief de la tarea<textarea name="brief" required maxLength={4000} defaultValue={task.title ?? ""} /></label>
+      <label>Escribe {run.req} para confirmar<input name="typedReq" required autoCapitalize="characters" aria-label={`Escribe ${run.req} para confirmar la edición del brief`} /></label>
+      <button disabled={!!working}>Crear revisión y actualizar tarea</button>
+    </form>}
     <div className="actions">
       {task.state === "blocked" || task.state === "failed" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
       {task.activeAttempt && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, taskId: task.id, attemptId: task.activeAttempt.id }, task.activeAttempt.state ?? task.state, task.revision, `${run.req}-${task.id}-cancel`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
@@ -394,6 +424,7 @@ export default function HomePage() {
         })()}</section>
       </article>)}</div>}
     </section>
+    <QuotasPanel />
     {!!snapshot?.plans.length && <section className="runs plans" aria-labelledby="plans-title"><div className="section-heading"><div><p className="eyebrow">REVISIÓN</p><h2 id="plans-title">Planes</h2></div></div><div className="run-list">{snapshot.plans.map((plan) => {
       const target: Target = { kind: "plan", project: plan.project, req: plan.req };
       return <article className="run-card" key={`${plan.project}-${plan.req}-${plan.id ?? "plan"}`}><div className="run-top"><div><p className="eyebrow">{plan.project}</p><h3>{plan.req} · Plan</h3></div><span className="state">{plan.state}</span></div>

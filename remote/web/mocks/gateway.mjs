@@ -24,6 +24,20 @@ export async function createMockGatewayServer() {
       response.end(server.snapshot);
       return;
     }
+    if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/routes?")) {
+      send(200, { routes: [
+        { route_id: "route-unavailable", provider: "claude", model: "sonnet", profile: "work", available: false },
+        { route_id: "route-codex-work", provider: "codex", model: "gpt-6.1-sol", profile: "codex-work", available: true, quota_status: "available" },
+      ] });
+      return;
+    }
+    if (request.method === "GET" && request.url === "/api/remote/v1/quotas") {
+      send(200, { checkedAt: "2026-10-19T12:00:00Z", accounts: [
+        { profile: "codex-work", provider: "codex", status: "ok", observed_at: 1792411200,
+          windows: { five_hour: { used_percent: 27, resets_at: 1792414800, window_minutes: 300 }, seven_day: { used_percent: 64, resets_at: 1792936800, window_minutes: 10080 } } },
+      ] });
+      return;
+    }
     if (request.method === "GET" && request.url === "/api/remote/v1/attempts/att-review-1/review") {
       response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
       response.end(attemptReview);

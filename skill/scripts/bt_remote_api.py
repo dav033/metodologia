@@ -294,7 +294,11 @@ def route_get(handler) -> None:
         if path == f"{PREFIX}/challenges":
             return _problem(handler, 503, "CHALLENGES_UNAVAILABLE", "Los desafíos aún no están disponibles.")
         if path == f"{PREFIX}/quotas":
-            return _problem(handler, 503, "QUOTAS_UNAVAILABLE", "Las cuotas aún no están disponibles.")
+            import bt_quota_live
+            import bt_remote_events as remote_events
+            checked_at = dt.datetime.now(dt.UTC).isoformat()
+            accounts = bt_quota_live.read_all_live()
+            return _json(handler, remote_events.redact({"accounts": accounts, "checkedAt": checked_at}))
         if path == f"{PREFIX}/events":
             import bt_live_api as live
             import bt_remote_events as remote_events

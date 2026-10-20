@@ -142,6 +142,19 @@ details ul { margin: 10px 0 0; padding-left: 20px; line-height: 1.6; overflow-wr
 .plans { border-top: 1px solid rgb(205 214 244 / 8%); }
 .cancel-form { flex: 1 1 280px; }
 .cancel-form label { flex: 1 1 140px; }
+.recovery-form, .quota-card { display: grid; min-width: 0; gap: 10px; margin-top: 14px; border: 1px solid rgb(203 166 247 / 18%); border-radius: 10px; background: rgb(49 50 68 / 26%); padding: 14px; }
+.recovery-form h4 { margin: 0; color: var(--ctp-text); font-size: 13px; }
+.recovery-form label { display: grid; min-width: 0; gap: 6px; color: var(--ctp-subtext0); font-size: 11px; }
+.recovery-form select, .recovery-form input, .recovery-form textarea { width: 100%; min-height: 42px; border: 1px solid var(--ctp-surface1); border-radius: 8px; background: var(--ctp-mantle); color: var(--ctp-text); padding: 9px; font: inherit; font-size: 13px; }
+.recovery-form textarea { min-height: 82px; resize: vertical; }
+.recovery-form button { min-height: 44px; border: 1px solid rgb(203 166 247 / 35%); border-radius: 9px; background: rgb(203 166 247 / 12%); color: var(--ctp-text); padding: 0 14px; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+.recovery-form button:disabled { cursor: wait; opacity: .55; }
+.quota-list { display: grid; gap: 10px; }
+.quota-card { margin-top: 0; }
+.quota-card ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.quota-card li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; border-top: 1px solid rgb(205 214 244 / 8%); padding-top: 8px; color: var(--ctp-subtext1); font-size: 12px; }
+.quota-card li strong { color: var(--ctp-lavender); }
+.quotas .section-heading { align-items: end; }
 .sign-in { gap: 12px; }
 button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid var(--ctp-lavender); outline-offset: 3px; }
 
