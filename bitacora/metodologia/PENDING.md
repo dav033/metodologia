@@ -7,7 +7,7 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
-- P-133 · Telemetry follow-ups: (a) feed the audit-gate ledgers into the defects log (`bt_quality`) so `metrics` shows findings per audited task for Scheduler runs; (b) record Claude tool-result outcomes (needs a `tool_finished` payload with a result flag and the tool name carried from `tool_use`); (c) check the first Codex attempt of REQ-027 (T15f) really runs in `--json` and shows tool events in /flow · urgency: med · complexity: M · added 2026-10-19 · D-085
+- P-134 · REQ-028 interview and plan: per-run integration branch + remediation tasks for blocking audit findings (the structural fix behind D-087..D-089); until then the planner warns when a chain of dependent tasks shares files · urgency: high · complexity: L · added 2026-10-20 · D-089
 - P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/start`, and put `TELEGRAM_BOT_TOKEN` in `~/.config/flow/secrets.env` (template exists, mode 600, empty); the OAuth App is created by the agent in its Firefox unless GitHub asks for 2FA/sudo mode · urgency: high · complexity: S · added 2026-10-19 · D-082
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin = GitHub, 778 bitácora files already on `origin/main`), so a push is the backup; BUT the repo is PUBLIC (checked 2026-10-14 with `gh`) while these notes called it private: owner decision 2026-10-14: no push for now; SUPERSEDED 2026-10-19: owner said push everything to main and keep the repo public (pushed de0576f) · urgency: high · complexity: M · added 2026-10-13 · user: "tenemos un problema" (GitHub review)
   - Context: since remote commit `4cfd74f` the bitácora lives outside the repo (D-007). Its legacy history reached GitHub with `a67371f`. The silent push failure no longer applies, because nothing pushes the live copy.
@@ -54,10 +54,10 @@ month summary._
   Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`.
   Move items between sections as they change; closed items keep 14 days in "Recently closed", then go to the
   month summary._
-- P-129 · [closed 2026-10-19: the tests follow the real contract (baseline order kept for non-docs), D-084] M2 semantics vs 3 tests · urgency: low · complexity: M · added 2026-10-19 · owner question after D-080
-- P-131 · [closed 2026-10-20: forward remediation built, `gates.rework_scope=named` by default, D-087] Root-task audit finding reset the whole plan · urgency: med · complexity: L · added 2026-10-19 · REQ-027 audit round 2
 - P-124 · [closed 2026-10-19: executed by SUPERRR in an isolated root, 2/2 tasks accepted with real Claude; repeat on a real plan whenever wanted] Owner-run bounded real-provider check of /now, /flow and /go (two trivial tasks, one account, low effort) · urgency: med · complexity: M · added 2026-10-19 · SUPERRR T8.3
+- P-133 · Telemetry follow-ups: (a) feed the audit-gate ledgers into the defects log (`bt_quality`) so `metrics` shows findings per audited task for Scheduler runs; (b) record Claude tool-result outcomes (needs a `tool_finished` payload with a result flag and the tool name carried from `tool_use`); (c) check the first Codex attempt of REQ-027 (T15f) really runs in `--json` and shows tool events in /flow · urgency: med · complexity: M · added 2026-10-19 · D-085
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T5–T8 remain; resume only on explicit request · urgency: med · complexity: L · added 2026-10-14 · owner pause; requirements/REQ-008-fresh-milestone-orchestration-and-bounde/REPORT.md
+- P-131 · [closed 2026-10-20: forward remediation built, `gates.rework_scope=named` by default, D-087] Root-task audit finding reset the whole plan · urgency: med · complexity: L · added 2026-10-19 · REQ-027 audit round 2
 - P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · urgency: low · complexity: S · added 2026-10-08 · research
 - P-006 · Marathon: pass the claude prompt via stdin instead of argv (cmd-shim 8191-char / newline risk) · urgency: low · complexity: S · added 2026-10-09 · marathon review
 - P-007 · Marathon: `run --accept-plan` to adopt deliberate edits to frozen repo/after/verify fields · urgency: low · complexity: S · added 2026-10-09 · marathon review
@@ -81,6 +81,7 @@ month summary._
 - P-039 · Align the existing M4 monitor package with local Ruff 0.16.7 rules · urgency: low · complexity: M · added 2026-10-15 · REQ-018 broad lint audit
   - The broad `ruff check` reported 83 style findings, all within the pre-existing `bt_scheduler_monitor/` package; the focused lint on REQ-018 integration files passes. No M4 package code was changed for this follow-up.
 - P-123 · Authenticate `--proposed-by owner` for amendments that lower a classification (out-of-band confirmation) · urgency: low · complexity: M · added 2026-10-19 · SUPERRR proposal 3
+- P-129 · [closed 2026-10-19: the tests follow the real contract (baseline order kept for non-docs), D-084] M2 semantics vs 3 tests · urgency: low · complexity: M · added 2026-10-19 · owner question after D-080
 - P-020 · Scheduler (future): consume PLAN.json (`bt_plan_contract.load` / `bt_plan_revisions.load_revision`), calibrate `estimated_minutes` against real durations, own concurrency · urgency: low · complexity: L · added 2026-10-14 · REQ-009 proposal
   - 2026-10-14 owner ruling: M1 must never touch agents, sessions or the methodology flow; being inert until the future modules plug into its ports is intended, not a defect. Do not wire M1 into `launch`/supervisor ahead of those modules.
   - 2026-10-14 REQ-011 delivered M1 of the Scheduler (`bt_scheduler_core`, D-022): modules M2 (decision), M3 (executor), M4 (monitor), M5 (recovery) remain, as implementations of the core's ports (`requirements/REQ-011-*/REPORT.md`).

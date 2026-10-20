@@ -1,10 +1,10 @@
 # Index — metodologia
 
-_Generated 2026-10-19 15:08 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-20 10:07 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
-**Last activity:** 2026-10-19
+**Last activity:** 2026-10-20
 
 ## Workspace
 
@@ -41,10 +41,11 @@ _Generated 2026-10-19 15:08 by `bitacora.py index`. Do not edit by hand._
 | [REQ-025](requirements/REQ-025-m2-quota-aware-provider-and-account-rout/SPEC.md) | M2 quota-aware provider and account routing | `in-progress` | — |  |
 | [REQ-026](requirements/REQ-026-demo-illustrative-plan-with-every-plan-f/SPEC.md) | DEMO — Illustrative plan with every plan feature (test only) | `in-progress` | [in-progress](requirements/REQ-026-demo-illustrative-plan-with-every-plan-f/PLAN.md) |  |
 | [REQ-027](requirements/REQ-027-remote-flow-control-vercel-frontend-advi/SPEC.md) | Remote flow control: Vercel frontend, AdvIn API, local or VPS execution | `planned` | [launched](requirements/REQ-027-remote-flow-control-vercel-frontend-advi/PLAN.md) |  |
+| [REQ-028](requirements/REQ-028-per-run-integration-branch-and-remediati/SPEC.md) | Per-run integration branch and remediation tasks: audit findings stop cascading rebuilds | `clarifying` | — |  |
 
 ## Top pending (urgency, then complexity)
 
-- P-128 · Push bitácora commit `570a223` (local only): decide whether to drop the 188 PNG screenshot · high/S
+- P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/st · high/S
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
 - P-118 · Enforce owner no-commit/no-push policy in bitacora CLI and native session hooks · high/M
@@ -54,11 +55,11 @@ _Generated 2026-10-19 15:08 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
-- D-076 — Live Scheduler observability, evolving plans and a flow map (SUPERRR)
-- D-075 — Verified patch-chain transfer and generation-bound retry references for the live product run
-- D-074 — Opt-in patch handoff for no-commit M3 execution
-- D-073 — Planner responsibility and calibration review
-- D-072 — Separate Implementer availability fallback from complexity
+- D-089 — A task redone over changed code resolves a merge in progress instead of rebuilding from nothing
+- D-088 — An integration gate at acceptance: the task that causes a clash is the one sent back
+- D-087 — Forward remediation: an audit rejection redoes the named tasks and the tests over them, not the whole downstream
+- D-086 — Audits are read-only; REQ-027 plan r7 sequences the cross-check after the primary audit
+- D-085 — Telemetry that teaches: Codex in `--json`, a quiet monitor, and Scheduler attempts in the attempt log
 
 ## Artifacts
 
@@ -75,6 +76,6 @@ _Generated 2026-10-19 15:08 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W4](2026-10/W4/WEEK.md): [19](2026-10/W4/2026-10-19.md)
+  - [W4](2026-10/W4/WEEK.md): [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [17](2026-10/W3/2026-10-17.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
   - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)
