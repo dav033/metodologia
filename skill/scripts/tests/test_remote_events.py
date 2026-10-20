@@ -81,6 +81,29 @@ class RemoteEventsTests(unittest.TestCase):
             bt_remote_api.route_get(handler)
         self.assertNotIn("secret", handler.body)
 
+    def test_real_get_route_projects_flow_bus_attempt_events_without_remote_type(self):
+        row = {"v": 1, "seq": "m1:17", "ord": "0000000000000001.000000:m1:0000000017",
+               "at": "2026-10-19T12:00:00.000+00:00", "run": "demo/REQ-001", "task": "T1",
+               "attempt": "attempt-1", "from": "M3", "to": "M1", "kind": "state_change",
+               "summary": "attempt-1: running → failed", "data": {"state": "failed", "audit": "attempt_transition"}}
+
+        def get_events():
+            handler = Handler()
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                    patch("bt_live_api.flow_events", return_value=([row], [], {})), \
+                    patch.object(bt_remote_api, "_plans", return_value=[]):
+                bt_remote_api.route_get(handler)
+            self.assertEqual(handler.status, 200)
+            return json.loads(handler.body)["events"]
+
+        first = get_events()
+        replay = get_events()
+        self.assertEqual(len(first), 1)
+        self.assertEqual(first[0]["type"], "attempt.failed")
+        self.assertEqual(first[0]["target"], {"run": "demo/REQ-001", "task": "T1"})
+        self.assertEqual(first[0]["data"], row["data"])
+        self.assertEqual([event["id"] for event in first], [event["id"] for event in replay])
+
 
 if __name__ == "__main__":
     unittest.main()
