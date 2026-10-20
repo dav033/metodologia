@@ -62,7 +62,7 @@ async function cdp(socket, method, params = {}) {
   return response;
 }
 
-test("real panel entrypoint renders every contract run and its controls at 360 px", { timeout: 60_000 }, async () => {
+test("real panel entrypoint renders every contract run and refreshes live snapshots at 360 px", { timeout: 90_000 }, async () => {
   let gateway;
   let next;
   let browser;
@@ -121,6 +121,12 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
       }
       assert.fail(`open panel did not refresh its snapshot to show ${expected} within 7 seconds`);
     };
+    await delay(1200);
+    const readsBeforePoll = gateway.snapshotReads.length;
+    for (let attempt = 0; attempt < 60 && gateway.snapshotReads.length === readsBeforePoll; attempt += 1) await delay(100);
+    assert.ok(gateway.snapshotReads.length > readsBeforePoll, "open panel should poll the gateway snapshot every five seconds without an SSE event");
+    const pollGap = gateway.snapshotReads.at(-1) - gateway.snapshotReads.at(-2);
+    assert.ok(pollGap >= 2500 && pollGap <= 5500, `expected a five-second snapshot poll, observed ${pollGap} ms`);
     const updateSnapshot = (update) => {
       const nextSnapshot = JSON.parse(gateway.snapshot);
       update(nextSnapshot);
