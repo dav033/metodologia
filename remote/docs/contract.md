@@ -35,8 +35,10 @@ The schema covers all families from REQ-027 R5 and recovery R13: `pause`, `resum
 `edit-brief`, and `note`. Each requires `schemaVersion: 1`, a unique `idempotencyKey`, a target, and a precondition.
 `revise`, `approve`, `launch`, `cancel-plan`, `delete-plan`, and `edit-brief` require a confirmation challenge; the
 gateway issues the challenge after the user types the target REQ id. `edit-brief` creates and freezes an
-owner-approved revision, then invokes destructive `revise`, so it must carry the same one-use challenge and the
-matching typed REQ id through that entire operation. A repeated key with a different body returns
+owner-approved revision, then invokes destructive `revise`, so `confirmation.typedReq` MUST exactly equal
+`target.req` and the same one-use challenge must remain bound to that target through the entire operation. The
+command dispatcher MUST validate this cross-field equality before either freezing the revision or invoking `revise`.
+A repeated key with a different body returns
 `IDEMPOTENCY_CONFLICT`.
 
 ## Event families

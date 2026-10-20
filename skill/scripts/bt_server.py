@@ -5,7 +5,6 @@ from the same origin, so no other web page can approve a plan and launch an agen
 """
 from __future__ import annotations
 
-import json
 import mimetypes
 import secrets
 import signal
@@ -366,28 +365,8 @@ class RemoteHandler(Handler):
         return self.send("Not found", 404, "text/plain")
 
     def remote_api_post(self):
-        """Reject an unsafe edit-brief before any future command dispatcher can freeze and revise a plan."""
-        if urlparse(self.path).path == "/api/remote/v1/commands":
-            try:
-                length = int(self.headers.get("Content-Length", "0"))
-                if length <= 0 or length > 256 * 1024:
-                    return self._remote_problem(400, "INVALID_COMMAND", "Invalid command body")
-                command = json.loads(self.rfile.read(length))
-            except ValueError:
-                return self._remote_problem(400, "INVALID_COMMAND", "Invalid command body")
-            if isinstance(command, dict) and command.get("type") == "edit-brief":
-                target = command.get("target")
-                confirmation = command.get("confirmation")
-                if not isinstance(confirmation, dict):
-                    return self._remote_problem(409, "CONFIRMATION_REQUIRED", "Type the target REQ id to confirm")
-                req = target.get("req") if isinstance(target, dict) else None
-                if not req or confirmation.get("typedReq") != req:
-                    return self._remote_problem(409, "CONFIRMATION_REQUIRED", "Type the target REQ id to confirm")
+        """Reserved for the versioned remote API implementation; never fall through to panel controls."""
         return self.send("Not found", 404, "text/plain")
-
-    def _remote_problem(self, status: int, code: str, message: str):
-        body = json.dumps({"code": code, "message": message}, separators=(",", ":"))
-        return self.send(body, status, "application/problem+json; charset=utf-8")
 
 
 def url(port: int = DEFAULT_PORT) -> str:
