@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 4/6 · tareas 35/43 · generado: 2026-10-20T14:50:53-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 3/6 · tareas 32/43 · generado: 2026-10-20T15:50:51-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -43,28 +43,28 @@ created: 2026-10-19
 | T14a | Telegram delivery with retries, backoff and history | media | completada | gpt-6-luna | codex-2 | 4 |
 | T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | gpt-6-luna | codex-luis | 5 |
 
-**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 7/7
+**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 6/7
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T15 | Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway | media | completada | gpt-6-luna | codex-2 | 13 |
-| T15a | Login screen and runs list | baja | completada | gpt-6-luna | codex-luis | 3 |
+| T15 | Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway | media | completada | gpt-6-luna | codex-1 | 14 |
+| T15a | Login screen and runs list | baja | bloqueada | gpt-6-luna | codex-1 | 6 |
 | T15b | Run view: activity strip, tasks and feed on flow-core.js | media | completada | gpt-6-luna | codex-luis | 6 |
 | T15c | Failure review screen | baja | completada | gpt-6-luna | codex-luis | 6 |
 | T15d | Control sheet with typed confirmations and command history | media | completada | gpt-6-luna | codex-luis | 6 |
 | T15e | Plans, question rounds and decision requests screens | media | completada | gpt-6-luna | codex-2 | 7 |
 | T15f | Recovery forms and live quotas | media | completada | gpt-6-luna | codex-luis | 9 |
 
-**M5 — Go-live kit and audit** · dificultad alta · 8/11
+**M5 — Go-live kit and audit** · dificultad alta · 6/11
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | gpt-6-luna | codex-2 | 6 |
-| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | completada | gpt-6-luna | codex-2 | 9 |
-| T18 | Independent security and spec audit by another provider | alta | bloqueada | gpt-6.1-sol | codex-luis | 11 |
+| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | pendiente | gpt-6-luna | codex-2 | 9 |
+| T18 | Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-luis | 11 |
 | T18b | Cross-check audit of T18: Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-1 | 3 |
 | T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | gemini-3.8-flash-low | antigravity | 2 |
-| T18.1 | Remediate T18 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-luis | 5 |
+| T18.1 | Remediate T18 findings F1, F2, F3, F4 | media | pendiente | gpt-6-luna | codex-luis | 5 |
 | T18.2 | Remediate T18 findings F5, F6, F7, F8 | alta | completada | gpt-6-luna | codex-luis | 2 |
 | T18.3 | Remediate T18 findings F9, F10 | alta | completada | gpt-6-luna | codex-luis | 2 |
 | T18.4 | Remediate T18 findings F19 | alta | completada | sonnet | claude-work | 1 |

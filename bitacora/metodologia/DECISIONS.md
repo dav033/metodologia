@@ -910,3 +910,19 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Decision:** every retry compares the base it starts from today with the previous attempt's base (integration commits are deterministic, so an unchanged base is an exact match). When the base is unchanged, the retry continues from the snapshot. When it changed, the snapshot is carried onto the new base (`carry`: a merge over the previous base, with conflict markers to resolve when the two overlap). When the snapshot cannot be carried, the retry starts on the new base with the old snapshot as read-only reference. When the previous base is unknown, the old behaviour stays. The prompt note says the prerequisites were redone and their work must be kept.
 - **Consequences:** + a retried task, especially an audit, sees the fixes it is waiting for. − a failed attempt that overlaps the redone prerequisites now resolves conflict markers instead of silently dropping their changes.
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027
+
+## D-101 — Fingerprint central decisions without treating them as evidence payload
+- **Date:** 2026-10-20 · **Status:** Accepted
+- **Context:** REQ-029 requirements-v1 could not validate because the canonical `DECISIONS.md` is 181,964 bytes, while explicitly supplied evidence is intentionally limited to 65,536 bytes.
+- **Decision:** Keep the full canonical `../../DECISIONS.md` authority fingerprint and drift detection, but compute its SHA-256 incrementally in bounded memory. It remains digest-only and is not loaded as review evidence; all supplied evidence and the persisted snapshot keep their existing limits.
+- **Alternatives:** Omit the canonical decisions fingerprint (weakens authority drift detection); raise the general source limit (expands evidence payload limits unnecessarily); truncate the file (misses changes).
+- **Consequences:** + large central decision logs remain verifiable without weakening evidence bounds / − full file is read on each fingerprint check.
+- **Source:** [day log](../../dev/2026-10/W4/2026-10-20.md) · REQ-029
+
+## D-102 — Ignore Scheduler-generated plan status in requirements fingerprints
+- **Date:** 2026-10-20 · **Status:** Accepted
+- **Context:** Starting a requirements-v1 Scheduler run refreshes the generated `bitacora:status` block in `PLAN.md`. The next requirements check treated ordinary task-state updates as authority drift and could block the following task.
+- **Decision:** Normalize only the exact marker-delimited generated status block before fingerprinting PLAN.md. Keep plan scope, task contracts, explicit evidence, and all other content fingerprinted; status-block edits cannot silently change approved requirements.
+- **Alternatives:** Re-record requirements after every task-status update (causes approval churn); exclude the whole PLAN.md status section (too broad); stop Scheduler status projection (loses useful read-model visibility).
+- **Consequences:** + Scheduler progress no longer revokes unchanged requirements approval / − correctness depends on the status block retaining its reserved exact markers.
+- **Source:** [day log](../../dev/2026-10/W4/2026-10-20.md) · REQ-029

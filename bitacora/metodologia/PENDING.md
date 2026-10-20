@@ -18,7 +18,6 @@ month summary._
   - Recurred during replan closeout: ae37a9c labelled session aa047071 end, origin/main update-by-push confirmed. Requested Planner hooks were disabled; global initiating process remains unattributed. Child-only mitigation is insufficient for the shared workspace; no rollback/config fix applied.
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remaining: Windows/macOS matrix (deferred by the owner), src/ move (deferred by D-014), commits (owner decision) · urgency: high · complexity: L · added 2026-10-13 · independent spec review
   - Context: see migracion/CONTINUE.md and the PLAN progress log. Committed locally 2026-10-14 (cdf9ea7, b3954d1, 89f2021); push is the owner's call.
-- P-135 · Share the live stream's per-client polling (`bt_live_api.flow_events`) like the plans stream (D-094); residual ~20 % panel CPU · urgency: low · complexity: S · added 2026-10-20 · D-094
 - P-003 · Visual review of the local web UI · urgency: med · complexity: S · added 2026-10-08 · session
 - P-109 · Pin exact accounts for the selected Sol/Sonnet REQ-024 reviewers · urgency: med · complexity: S · added 2026-10-16 · REQ-024 T17
   - Separate native Planner model pilot completed (9 calls): source-backed quality/first-draft/usage evidence is in `artifacts/planner-model-duel-20261017/REPORT.md`. This does not pin formal reviewer accounts, complete exact T17 isolation, change D-063 or select/configure a production Planner.
@@ -71,6 +70,7 @@ month summary._
 - P-126 · Split `bt_scheduler_adapter.py` (over 500 lines): move simulate/rebase/amendment notes to their own module · urgency: low · complexity: S · added 2026-10-19 · SUPERRR proposal 5
 - P-127 · Give M4's `usage_reported` event a scope field (per-turn vs cumulative) and respect it when summing per attempt (`attempt_summaries`) · urgency: low · complexity: S · added 2026-10-19 · SUPERRR review H1, proposal 8
 - P-130 · `~/bitacora/.state/explore.jsonl` holds 46 fake `personal-project` rows dated 2027 from old test runs; owner said NO to moving it (2026-10-19); revisit only if the exploration budget looks spent · urgency: low · complexity: S · added 2026-10-19 · found while fixing bt_explore hermeticity
+- P-135 · Share the live stream's per-client polling (`bt_live_api.flow_events`) like the plans stream (D-094); residual ~20 % panel CPU · urgency: low · complexity: S · added 2026-10-20 · D-094
 - P-004 · Concurrent edits to central files (PENDING/DECISIONS) from several sessions/machines · urgency: low · complexity: M · added 2026-10-08 · review
 - P-014 · Prune closed items older than 14 days into the month summary: the rule is written in the file header, but normalize never applies it, so Recently closed only grows · urgency: low · complexity: M · added 2026-10-13 · antagonist review of the pending fix
 - P-021 · Optional: show PLAN.json classification in the web UI plan review and `bitacora.py run` status; enrich REQ-013/015/016 only if the owner wants them in the contract · urgency: low · complexity: M · added 2026-10-14 · REQ-009 proposal
@@ -142,6 +142,7 @@ _None_
   - ✓ P-030 · M3 antagonist leftovers (A3 forged exit.json while agent alive, A5 repeated cwd sweep) · closed 2026-10-15 · always stop the live agent before settling, sweep on first pass only
 
 ## Notes
+- ✓ P-136 · closed 2026-10-20 · Owner approved REQ-029; plan frozen and Scheduler run started (T1 att-0001 active)
 - Resolved under D-072: owner requested fixing Implementer assignments; removed complexity preference inversion and priority override. Quota/availability fallback and other roles retained;115 tests and both simulation sets pass. No model-quality superiority claim.
 - ✓ P-027 · M3 route lookup for M2 `route:<id>` references · closed 2026-10-14 · adapter resolves only M2's persisted selected route; Plan→M1→M2 reference test passes
 - ✓ P-028 · Package all M2 runtime modules and `bt_scheduler_decision` data in the installed wheel · closed 2026-10-14 · package migration suite 13/13, including isolated M2 import

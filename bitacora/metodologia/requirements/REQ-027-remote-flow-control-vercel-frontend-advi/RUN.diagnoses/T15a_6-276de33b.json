@@ -1,0 +1,23 @@
+{
+ "request": "T15a:6",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T15a agotó sus intentos: sus cambios chocan con T15b en archivos de remote/web",
+ "origin": "Los intentos #1 a #3 pasaron la verificación, pero el gate de integración los devolvió: T6+T7+T15a chocan con T15b (para T15c) en remote/web/README.md, mocks/fixtures/snapshot.json, mocks/gateway.mjs y src/app/globals.css. El intento #4 fue rechazado al arrancar (\"start rejected: INTEGRAT\", texto cortado en la evidencia). La decisión previa rework_conflict se aplicó sin indicación, y la auditoría pide rehacerla encima del resultado de partida sin reescribir código existente.",
+ "steps": [
+  "Consulta el id de la decisión abierta: `python ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia scheduler-op REQ-027 decisions`.",
+  "Elige la opción retry_with_note con la indicación de la auditoría: `... scheduler-op REQ-027 decide <id> retry_with_note --reason \"T15a choca con T15b en remote/web; rehacer como cambio mínimo\"`.",
+  "En el siguiente intento parte del estado aceptado de T6, T7 y T15b: conserva todos los archivos y funciones existentes y cambia solo login y lista de runs.",
+  "Si vuelve a fallar con INTEGRAT, revisa `scheduler-op REQ-027 status` para ver el texto completo del rechazo antes de cambiar nada más."
+ ],
+ "option": "retry_with_note",
+ "note": "Redo T15a as a small change on top of the currently accepted state of T6, T7 and T15b. Keep every file and function already in remote/web (including README.md, mocks/fixtures/snapshot.json, mocks/gateway.mjs and src/app/globals.css) and do not rewrite or delete working code. Edit only what T15a requires: the login screen redirects to the gateway OAuth start, the runs list shows state and last sign of life, and there is no horizontal scroll at 360 px. Do not change T15b's files beyond what T15a's acceptance criteria strictly need.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T15:51:12",
+ "seconds": 15.7
+}

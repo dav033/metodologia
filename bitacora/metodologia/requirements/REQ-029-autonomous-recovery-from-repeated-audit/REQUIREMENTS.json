@@ -1,0 +1,26 @@
+{
+  "goal": "Prepare the methodology system to diagnose and automatically resolve recurring REQ-027 T18 audit failures without manually repairing those product defects.",
+  "scope": "Implement bounded requirements-v1 authority fingerprinting needed to review and execute the already validated REQ-029 plan; then present that plan for its single owner approval. REQ-027 T18 remains the acceptance case for system-generated recovery.",
+  "requirements": "Preserve all-owner approval, full source identity, fail-closed drift detection, bounded review evidence, existing audit and Scheduler authority, and the plan’s bounded recovery policy. Do not hand-fix T18 product findings.",
+  "limits": "No plan execution, REQ-027 repair, host activation, provider calls, push, merge, or deploy before plan approval. The central DECISIONS.md must remain fingerprinted but is digest-only, not review evidence.",
+  "acceptance": "requirements-gate check REQ-029 returns ready with SPEC.md and PLAN.md plus reviewed local evidence fingerprinted; changing canonical DECISIONS.md requires revalidation. Then PLAN.md is marked review and the owner receives the validated approach, phases, exclusions, verification, and review URL.",
+  "approval": "Owner explicitly approved execution of this plan in chat on 2026-10-20: “ejecuta el req 29”. This approval covers the validated REQ-029 architecture and bounded M3 conditional REQ-027 activation described in PLAN.md; it does not authorize work outside that plan.",
+  "evidence": [
+    "SPEC.md",
+    "PLAN.md",
+    "INVESTIGATION.md",
+    "EVIDENCE.json",
+    "INDEPENDENT-REVIEW.md"
+  ],
+  "unresolved": [],
+  "schema": 1,
+  "reviewed_at": "2026-10-20T20:38:56.854669+00:00",
+  "fingerprints": {
+    "../../DECISIONS.md": "d40f9ed1542baab23f222c17d08eec16a4d20b008f5e9a67637ae157e0b5c602",
+    "EVIDENCE.json": "de69afc4f0e84437f4d3030f703a16415b1088d4f50e09bed87b6b5a26d26b37",
+    "INDEPENDENT-REVIEW.md": "efc3097ea6bed487f662120348e2f28d4497a1a19a123abece2c812a17dc43c6",
+    "INVESTIGATION.md": "a54caab0428b25c07e80a72df0db87646931eb4c0cad4c542a0a85ce5c3f78a5",
+    "PLAN.md": "75a96373c9cf8b4e0fabe36faf9d99e5eb2dd9235575ce789f0ab89d4323f0de",
+    "SPEC.md": "60deb548e16305613a5fe31b9462812f95d6649d73b8938e0e61b6bc9061d0ce"
+  }
+}

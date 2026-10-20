@@ -553,6 +553,24 @@
       ]
     }
   ],
+  "verification_gap": {
+    "task": "T18.5",
+    "accepted_attempt": "att-0196",
+    "base_sha": "569a1485062992dae9f8a61f28ef43ad8179f56e",
+    "snapshot_sha": "255adcdb1bc0fb3814e0d448585551076183162c",
+    "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r9-e2d7030f-1792439172092/attempts/att-0196-46ea39c6c833c381/handoff/manifest.json",
+    "modified_web_path": "remote/web/src/app/page.tsx",
+    "introduced_predicate": "task.history.map(parseAttempt).filter((attempt): attempt is Attempt => !!attempt)",
+    "frozen_checks": [
+      "cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py",
+      "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+      "cd remote/gateway && python -m unittest discover -s tests -p test_commands.py",
+      "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py"
+    ],
+    "omitted_web_owner_check": "cd remote/web && npm run verify",
+    "later_audit_finding": "att-0202:F19",
+    "later_audit_errors": ["TS2677", "TS2322"]
+  },
   "remediation_rounds": [
     {
       "at": 1792512509.6655452,

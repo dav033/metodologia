@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0012:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "Verificador detenido: un check no corresponde a ningún criterio; los demás pasaron",
+ "origin": "El fallo es de mapeo del plan, no de código: CHECK_UNMAPPED significa que un check, probablemente `npm run asesor:test`, no tiene un criterio de aceptación con el mismo propósito. Según la evidencia, los 3 criterios pasaron y los checks salieron bien, y no hay fallos de intentos. El plan además repite tres veces el mismo comando `admin.test.ts`, lo que no rompe nada pero confunde el mapeo.",
+ "steps": [
+  "Confirma que `npx tsx --conditions=react-server --test scripts/test/asesor/admin.test.ts` cubre los 3 criterios: refresco cada 5 s, 403 para `user` y error con el último snapshot.",
+  "Si los cubre, pulsa «Aprobar a mano» con la razón «todos los criterios PASS; solo CHECK_UNMAPPED».",
+  "Para la próxima revisión del plan, da a `npm run asesor:test` el propósito de un criterio o quítalo, y elimina las líneas duplicadas de `admin.test.ts`. Eso es una revisión nueva: sube «revision» en PLAN.json y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T15:36:32",
+ "seconds": 14.7
+}

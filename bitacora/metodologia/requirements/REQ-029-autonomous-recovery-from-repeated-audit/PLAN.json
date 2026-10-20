@@ -1,0 +1,2488 @@
+{
+  "schema_version": "1.2.0",
+  "plan_id": "REQ-029",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Bounded evidence-driven recovery runtime",
+      "acceptance_criteria": [
+        "Real CLI integration generates scoped corrections after exhausted ordinary budgets, preserves counters and accepted work, verifies the integrated tree and passes two independent audits."
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Visual supervision and read-only rollout preview",
+      "acceptance_criteria": [
+        "Flow and plan supervision and offline REQ027 preview pass with two independent system audits; the tested accepted runtime is ready for conditionally authorized rollout."
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Conditionally activate and observe one REQ027 recovery",
+      "acceptance_criteria": [
+        "After accepted upgrade audits offline proof and fresh preview, the pinned tested runtime drives one authorized REQ027 recovery to independently verified resolution or a specific genuine blocker, with preserved budgets and independently reviewed receipts."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Define durable diagnostic cases and semantic progress",
+      "objective": "Extend isolated M5 with recovery-case/1, recovery-proposal/1 and recovery-progress/1 contracts and a durable append-only case/event store. Add transactionally migrated M5 SQLite schema 2, preserving all schema-1 decision rows and old retry/wait/block contracts. Store immutable occurrence identity as ledger digest plus local finding id; recurrence is a separate evidence-backed relation, never the F-number or prose signature. Represent persisted/fixed/new/regressed/uncertain and blocked prerequisite checks explicitly. Expose pure assess_progress(previous,current) and validated proposal parsing. The store deduplicates trigger identity and uses compare-and-set generation leases for transitions and application checkpoints; no process or scheduler imports. Define recovery-verification-map/1 linking actual repository-relative changed paths and source digests to owning plan tasks, required existing owner commands, symptom-specific checks and exact verdict identities; an uncovered path or check is explicit, not PASS.",
+      "repository": "skill",
+      "after": [],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 120 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Define durable diagnostic cases and semantic progress requires coordinating the named state and evidence contracts; decomposition isolates this boundary from the other tasks.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "file:skill/scripts/bt_scheduler_recovery/history.py",
+            "file:skill/scripts/bt_scheduler_recovery/tests/test_boundaries.py",
+            "file:skill/scripts/bt_attempt_history.py"
+          ]
+        },
+        "scope": {
+          "justification": "Define durable diagnostic cases and semantic progress changes only its declared files and their single responsibilities, with consumers reached through the declared interfaces.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "file:skill/scripts/bt_scheduler_recovery/history.py",
+            "file:skill/scripts/bt_scheduler_recovery/tests/test_boundaries.py",
+            "file:skill/scripts/bt_attempt_history.py"
+          ]
+        },
+        "duration": {
+          "justification": "Define durable diagnostic cases and semantic progress has a provisional 120 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "file:skill/scripts/bt_scheduler_recovery/history.py",
+            "file:skill/scripts/bt_scheduler_recovery/tests/test_boundaries.py",
+            "file:skill/scripts/bt_attempt_history.py"
+          ]
+        },
+        "risk": {
+          "justification": "Define durable diagnostic cases and semantic progress can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "file:skill/scripts/bt_scheduler_recovery/history.py",
+            "file:skill/scripts/bt_scheduler_recovery/tests/test_boundaries.py",
+            "file:skill/scripts/bt_attempt_history.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Define durable diagnostic cases and semantic progress shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "file:skill/scripts/bt_scheduler_recovery/history.py",
+            "file:skill/scripts/bt_scheduler_recovery/tests/test_boundaries.py",
+            "file:skill/scripts/bt_attempt_history.py",
+            "spec:SPEC.md#requirements"
+          ]
+        },
+        "confidence": {
+          "justification": "Define durable diagnostic cases and semantic progress is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/contracts.py",
+            "file:skill/scripts/bt_scheduler_recovery/history.py",
+            "file:skill/scripts/bt_scheduler_recovery/tests/test_boundaries.py",
+            "file:skill/scripts/bt_attempt_history.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/diagnostic_contracts.py",
+        "skill/scripts/bt_scheduler_recovery/diagnostic_store.py",
+        "skill/scripts/bt_scheduler_recovery/progress.py",
+        "skill/scripts/bt_scheduler_recovery/history.py",
+        "skill/scripts/bt_scheduler_recovery/__init__.py",
+        "skill/scripts/bt_scheduler_recovery/tests/test_diagnostic_cases.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "Case replay deduplicates triggers; renumbered semantic matches survive without merging unrelated findings; missing evidence stays unknown; schema-1 decisions survive migration and invalid proposal versions are rejected"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest bt_scheduler_recovery.tests.test_diagnostic_cases",
+          "purpose": "Case replay deduplicates triggers; renumbered semantic matches survive without merging unrelated findings; missing evidence stays unknown; schema-1 decisions survive migration and invalid proposal versions are rejected",
+          "category": "functional",
+          "created_by": "T1"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R6",
+        "R9",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Capture immutable full audit evidence and source identities",
+      "objective": "Create collect_recovery_evidence(rdir, audit, attempt) returning a plain recovery-evidence/1 mapping from official M1 attempts, frozen plan, M3 manifest/base/snapshot, complete validated snapshot ledger, M6 command results and remediation history. Capture evidence even when prerequisite verification FAIL prevents the audit gate evaluation; record not_run checks separately. Quality adapter publishes immutable validated audit observations before truncating UI summaries. Bounded snapshot reads reject traversal/symlinks, digest mismatch, missing sources and unverified integration lineage; retain complete validated summaries/evidence rather than MAX_TEXT excerpts. Attempt-history text remains readable, but its heuristic signature is explicitly non-authoritative for audit recurrence and its prompt uses structured observations when present. No direct import of isolated M5. Before accepting any recovery attempt, compare _changes_from_snapshot exact changed paths with its validated recovery-verification-map/1, inherited owner scopes and executed checks. Any changed path outside authorized scope rejects the attempt; an authorized but uncovered surface enters verification_replan/blocked under the same case. Do not trust a model claim that backend checks cover a web file. This guard precedes M1 PASS even when M6 exit codes are zero.",
+      "repository": "skill",
+      "after": [
+        "T1"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 100,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 100 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Capture immutable full audit evidence and source identities requires coordinating the named state and evidence contracts; decomposition isolates this boundary from the other tasks.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_attempt_history.py",
+            "file:skill/scripts/bt_remediation.py"
+          ]
+        },
+        "scope": {
+          "justification": "Capture immutable full audit evidence and source identities changes only its declared files and their single responsibilities, with consumers reached through the declared interfaces.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_attempt_history.py",
+            "file:skill/scripts/bt_remediation.py"
+          ]
+        },
+        "duration": {
+          "justification": "Capture immutable full audit evidence and source identities has a provisional 100 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_attempt_history.py",
+            "file:skill/scripts/bt_remediation.py"
+          ]
+        },
+        "risk": {
+          "justification": "Capture immutable full audit evidence and source identities can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_attempt_history.py",
+            "file:skill/scripts/bt_remediation.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Capture immutable full audit evidence and source identities shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_attempt_history.py",
+            "file:skill/scripts/bt_remediation.py",
+            "task:T1"
+          ]
+        },
+        "confidence": {
+          "justification": "Capture immutable full audit evidence and source identities is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_attempt_history.py",
+            "file:skill/scripts/bt_remediation.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_recovery_evidence.py",
+        "skill/scripts/bt_scheduler_quality_adapter.py",
+        "skill/scripts/bt_attempt_history.py",
+        "skill/scripts/tests/test_recovery_evidence.py",
+        "skill/scripts/tests/test_attempt_history.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "Historical snapshot ledgers and complete evidence remain distinct from current worktree data; wrong base, malformed or missing evidence block diagnosis and prerequisite build failure cannot become a failed downstream assertion; actual web or other changed surfaces without matching independent verification cannot be accepted"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_evidence.py",
+          "purpose": "Historical snapshot ledgers and complete evidence remain distinct from current worktree data; wrong base, malformed or missing evidence block diagnosis and prerequisite build failure cannot become a failed downstream assertion; actual web or other changed surfaces without matching independent verification cannot be accepted",
+          "category": "functional",
+          "created_by": "T2"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Add read-only structured diagnostic transport",
+      "objective": "Add diagnose_recovery(project,evidence,request_identity,route) as a separate mode using a verified authorized Planner-role route supplied by existing M2/caller role policy. Reuse only diagnostic subprocess transport and authorization mechanics, not diagnosis.* fixed card-advice profile/model defaults. Extend the existing Planner runtime with the constrained no-tools diagnostic invocation and caller-supplied deadline; persist route/authorization provenance as evidence. No fallback from actionable Planner diagnosis to owner-card advice JSON is allowed. Return untrusted JSON bytes plus transport outcome to the M5 adapter, which alone parses recovery-proposal/1. The prompt asks for causal history, integrated-tree check, evidence references, supported actions, ordered prerequisites, expected outcome and falsifiable checks; it offers no owner decision answer and never executes suggested commands. Read full retained evidence by bounded sections; when the bound cannot represent required history, return evidence_incomplete instead of silently truncating. One persisted diagnostic invocation per cycle; timeout, unavailable configuration or invalid JSON leaves an explicit blocker, without retrying the model automatically. Enforce an empty tool allowlist and isolated runtime configuration with MCP/app connectors absent, not merely a denylist or provider read-only flag. Use only prompt evidence and a private output directory; do not inherit a writable project, owner browser or connector session. Probe runtime capabilities before dispatch; if no-tools/MCP denial cannot be enforced, return unsupported_diagnostic_sandbox. Tests attempt a built-in write and MCP write and assert neither tool can be invoked.",
+      "repository": "skill",
+      "after": [
+        "T2"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 100,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 100 minutes including authorized route and no-tools negative tests; history is unknown and runtime-specific sandbox capability must be checked.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Causal Planner diagnosis crosses authorized route provenance and no-tools MCP isolation across existing runtimes; unsupported capability fails closed instead of weakening the sandbox.",
+          "evidence": [
+            "file:skill/scripts/bt_block_agent.py",
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_planner_runtime.py",
+            "file:skill/scripts/bt_role_routing.py"
+          ]
+        },
+        "scope": {
+          "justification": "Add read-only structured diagnostic transport changes only its declared files and their single responsibilities, with consumers reached through the declared interfaces.",
+          "evidence": [
+            "file:skill/scripts/bt_block_agent.py",
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_planner_runtime.py",
+            "file:skill/scripts/bt_role_routing.py"
+          ]
+        },
+        "duration": {
+          "justification": "Add read-only structured diagnostic transport has a provisional 75 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_block_agent.py",
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_planner_runtime.py",
+            "file:skill/scripts/bt_role_routing.py"
+          ]
+        },
+        "risk": {
+          "justification": "Add read-only structured diagnostic transport can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_block_agent.py",
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "spec:SPEC.md#constraints",
+            "file:skill/scripts/bt_planner_runtime.py",
+            "file:skill/scripts/bt_role_routing.py"
+          ]
+        },
+        "coupling": {
+          "justification": "Add read-only structured diagnostic transport shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_block_agent.py",
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "task:T2",
+            "file:skill/scripts/bt_planner_runtime.py",
+            "file:skill/scripts/bt_role_routing.py"
+          ]
+        },
+        "confidence": {
+          "justification": "Add read-only structured diagnostic transport is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_block_agent.py",
+            "file:skill/scripts/bt_profiles.py",
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_planner_runtime.py",
+            "file:skill/scripts/bt_role_routing.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_block_agent.py",
+        "skill/scripts/tests/test_recovery_diagnosis.py",
+        "skill/scripts/bt_planner_runtime.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "Diagnostic transport accepts only authorized read-only invocations and returns bounded structured output; timeout, malformed JSON, unauthorized profile and incomplete evidence are observable failures without writes to the target run and causal planning uses verified Planner-role routing rather than fixed card-advice settings"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_diagnosis.py",
+          "purpose": "Diagnostic transport accepts only authorized read-only invocations and returns bounded structured output; timeout, malformed JSON, unauthorized profile and incomplete evidence are observable failures without writes to the target run and causal planning uses verified Planner-role routing rather than fixed card-advice settings",
+          "category": "functional",
+          "created_by": "T3"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R4",
+        "R6",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M1",
+      "title": "Compile and apply constrained recovery revisions through M1",
+      "objective": "Implement compile_recovery_revision(plan,evidence,proposal) and apply_recovery_revision(...) at existing Planner/remediation and M1 boundaries. Compiler permits correct_tasks, repair_verification or refresh_integrated_audit only within named owner scopes, inherited requirements and current integration base; it rejects unsupported actions, unknown files/tasks/evidence, cycles, weakened criteria/gates and unsafe command syntax. Corrective implement tasks may author new regression checks in owned paths; new command verification must bind created_by and pass existing Planner/M6 validation, never execute during diagnosis. Generate a fresh integration command-running task after corrections and place both existing independent audit/cross-check scopes after it; add a missing cross-check only where owner policy requires one. M1 adds persisted recovery-authorization/1 with case/proposal/source/target hashes, explicit scoped task grants, one supplementary audit attempt per audit, and unique consumption keys. Recovery-specific rebase preserves every existing budget_base, waits and reworks, prior attempts and unrelated task state; unchanged accepted tasks remain accepted. Extend M1 state schema additively and retain schema-1/2 readers. Ordinary owner rebase retains its current semantics. Do not cancel unrelated live attempts to apply a recovery: wait for quiescence, recheck identities, freeze once, apply via M1, rebind runtime, mark committed. Recover crash windows before/after freeze/rebase by hashes and durable journal, without duplicate revisions, allowances or plan writes. Replace first-command-of-first-owner inference for recovery/remediation tasks with deterministic verification coverage: union all relevant command checks of every affected declared owner, add a symptom regression oracle, and map each owned code/test surface to its necessary checks in recovery-verification-map/1. Web changes inherit web typecheck/build verification in addition to backend checks when applicable. A missing independent oracle blocks compilation. Actual authorized edits that reveal an additional surface require deterministic verification replanning and rerun within the same case before acceptance; no grant, criterion or diagnostic-cycle reset follows replanning. repair_verification is additive only: preserve every frozen acceptance criterion and existing check, adding coverage/oracle or repairing a proven environment prerequisite; deletion/replacement/relaxation requires explicit owner permission. Each new symptom oracle must run red on the captured broken source with only its test overlay, fail for the intended reproduced symptom rather than setup/import/environment error, then run green on the corrected integrated tree through normal independent verification. Nonreproducible or unverifiable red/green provenance blocks closure.",
+      "repository": "skill",
+      "after": [
+        "T3"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 160,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 160 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Compile and apply constrained recovery revisions through M1 requires coordinating the named state and evidence contracts; decomposition isolates this boundary from the other tasks.",
+          "evidence": [
+            "file:skill/scripts/bt_remediation.py",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py",
+            "file:skill/scripts/bt_scheduler_core/model.py",
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "file:skill/scripts/bt_scheduler_core/reservation.py"
+          ]
+        },
+        "scope": {
+          "justification": "Compile and apply constrained recovery revisions through M1 changes only its declared files and their single responsibilities, with consumers reached through the declared interfaces.",
+          "evidence": [
+            "file:skill/scripts/bt_remediation.py",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py",
+            "file:skill/scripts/bt_scheduler_core/model.py",
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "file:skill/scripts/bt_scheduler_core/reservation.py"
+          ]
+        },
+        "duration": {
+          "justification": "Compile and apply constrained recovery revisions through M1 has a provisional 160 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_remediation.py",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py",
+            "file:skill/scripts/bt_scheduler_core/model.py",
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "file:skill/scripts/bt_scheduler_core/reservation.py"
+          ]
+        },
+        "risk": {
+          "justification": "Compile and apply constrained recovery revisions through M1 can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_remediation.py",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py",
+            "file:skill/scripts/bt_scheduler_core/model.py",
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "file:skill/scripts/bt_scheduler_core/reservation.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Compile and apply constrained recovery revisions through M1 shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_remediation.py",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py",
+            "file:skill/scripts/bt_scheduler_core/model.py",
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "file:skill/scripts/bt_scheduler_core/reservation.py",
+            "task:T2"
+          ]
+        },
+        "confidence": {
+          "justification": "Compile and apply constrained recovery revisions through M1 is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_remediation.py",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py",
+            "file:skill/scripts/bt_scheduler_core/model.py",
+            "file:skill/scripts/bt_scheduler_core/recovery.py",
+            "file:skill/scripts/bt_scheduler_core/reservation.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_recovery_apply.py",
+        "skill/scripts/bt_remediation.py",
+        "skill/scripts/bt_plan_adapter.py",
+        "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/bt_scheduler_core/diagnostic_recovery.py",
+        "skill/scripts/bt_scheduler_core/model.py",
+        "skill/scripts/bt_scheduler_core/rebase.py",
+        "skill/scripts/bt_scheduler_core/recovery.py",
+        "skill/scripts/bt_scheduler_core/reservation.py",
+        "skill/scripts/bt_scheduler_core/__init__.py",
+        "skill/scripts/bt_scheduler_core/tests/test_diagnostic_recovery.py",
+        "skill/scripts/tests/test_recovery_apply.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "Applying one validated correction revision preserves ordinary counters and unrelated accepted work; stale or unsafe proposals cause no mutation, one scoped supplemental re-audit grant is consumed once and interrupted application resumes without duplicate revisions; actual web or other changed surfaces without matching independent verification cannot be accepted"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_apply.py",
+          "purpose": "Applying one validated correction revision preserves ordinary counters and unrelated accepted work; stale or unsafe proposals cause no mutation, one scoped supplemental re-audit grant is consumed once and interrupted application resumes without duplicate revisions; actual web or other changed surfaces without matching independent verification cannot be accepted",
+          "category": "functional",
+          "created_by": "T4"
+        }
+      ],
+      "covers": [
+        "R4",
+        "R5",
+        "R6",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M1",
+      "title": "Wire bounded recovery into existing owner and watch lifecycle",
+      "objective": "Keep RecoveryAdapter the sole M5 importer. Add tick_diagnostic_recovery, recovery_status and preview_recovery methods returning plain versioned mappings; runtime/watcher call the adapter, not isolated M5. Create a case on exhaustion of ordinary remediation/named rework or two consecutive verified no-progress observations. Precedence: owner stop/hold or owner-only pending decision; stale identity/evidence outage; cycle already consumed; diagnose; validate/prepare; quiescent apply; execute; integration; independent audit/cross-check; assess progress. Existing ordinary remediation remains first path until exhausted unless confirmed unchanged-evidence loop triggers early diagnosis. Proposed policy is one diagnostic cycle per run/audit lineage, persisted across revisions and restarts, at most eight corrective implement tasks and one diagnosis invocation using current configured timeout; corrective tasks retain configured ordinary attempts and each independent audit gets at most one supplemental attempt. On failure or unresolved/regressed/new blocking findings after the cycle, record an exact blocker and escalate without another autonomous cycle. Strategy identity combines action DAG, owner paths, expected outcomes and checks with semantic evidence/source/check digests, not word choice. Never replay a failed identical strategy over unchanged evidence. Expose scheduler-op recovery-preview/recovery-status; preview reads live sources without writes, diagnosis calls or decision answers. Approval authorizes the bounded policy snapshot for newly launched runs automatically; existing runs default to preview except the one explicitly conditionally authorized REQ027 case. Preserve owner-only decisions; no per-failure activation question is added for new runs. Consume automatic technical recovery without answering legacy owner decisions; keep authentic permission/product questions open. Persist per-run activation through enable_diagnostic_recovery(run_identity,preview_digest,stop_generation,authorization_ref): accept a frozen approved policy snapshot or a specific owner control, reject stale preview, missing authorization or active stop; no preview command enables it. Route diagnostic planning through existing Planner-role M2/caller policy and authorization; persist the chosen route evidence and reject absent, stale or unauthorized routing without falling back to card diagnosis defaults.",
+      "repository": "skill",
+      "after": [
+        "T4"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 150,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 150 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Wire bounded recovery into existing owner and watch lifecycle requires coordinating the named state and evidence contracts; decomposition isolates this boundary from the other tasks.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_scheduler_executor_wiring.py",
+            "file:skill/scripts/bt_scheduler_run.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_decisions.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py",
+            "file:skill/scripts/bt_config.py"
+          ]
+        },
+        "scope": {
+          "justification": "Wire bounded recovery into existing owner and watch lifecycle changes only its declared files and their single responsibilities, with consumers reached through the declared interfaces.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_scheduler_executor_wiring.py",
+            "file:skill/scripts/bt_scheduler_run.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_decisions.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py",
+            "file:skill/scripts/bt_config.py"
+          ]
+        },
+        "duration": {
+          "justification": "Wire bounded recovery into existing owner and watch lifecycle has a provisional 150 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_scheduler_executor_wiring.py",
+            "file:skill/scripts/bt_scheduler_run.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_decisions.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py",
+            "file:skill/scripts/bt_config.py"
+          ]
+        },
+        "risk": {
+          "justification": "Wire bounded recovery into existing owner and watch lifecycle can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_scheduler_executor_wiring.py",
+            "file:skill/scripts/bt_scheduler_run.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_decisions.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py",
+            "file:skill/scripts/bt_config.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Wire bounded recovery into existing owner and watch lifecycle shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_scheduler_executor_wiring.py",
+            "file:skill/scripts/bt_scheduler_run.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_decisions.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py",
+            "file:skill/scripts/bt_config.py",
+            "task:T4"
+          ]
+        },
+        "confidence": {
+          "justification": "Wire bounded recovery into existing owner and watch lifecycle is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery_adapter.py",
+            "file:skill/scripts/bt_scheduler_executor_wiring.py",
+            "file:skill/scripts/bt_scheduler_run.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_decisions.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py",
+            "file:skill/scripts/bt_config.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery_adapter.py",
+        "skill/scripts/bt_scheduler_executor_wiring.py",
+        "skill/scripts/bt_scheduler_run.py",
+        "skill/scripts/bt_scheduler_watch.py",
+        "skill/scripts/bt_scheduler_ops.py",
+        "skill/scripts/bt_scheduler_decisions.py",
+        "skill/scripts/bt_cli_scheduler_ops.py",
+        "skill/scripts/bt_config.py",
+        "skill/scripts/tests/test_recovery_runtime.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "A stalled exhausted audit advances through one durable diagnostic cycle without manual notes; restart and duplicate triggers cannot add cycles, explicit stop or owner-only decisions prevent dispatch and unchanged strategy or failed re-audit escalates visibly"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_runtime.py",
+          "purpose": "A stalled exhausted audit advances through one durable diagnostic cycle without manual notes; restart and duplicate triggers cannot add cycles, explicit stop or owner-only decisions prevent dispatch and unchanged strategy or failed re-audit escalates visibly",
+          "category": "functional",
+          "created_by": "T5"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T5a",
+      "milestone_id": "M1",
+      "title": "Implement pinned runtime staging and conditional host activation",
+      "objective": "Implement prepare_recovery_runtime and activate_recovery_runtime in bt_recovery_rollout.py as a bounded host adapter: resolve the accepted upgrade integrated snapshot and M6/audit receipts, archive exactly that tree using existing safe snapshot extraction, stage a private runtime under .state/recovery-runtimes/<source-digest>, run isolated startup/import smoke and never install globally or sweep the local dirty tree. Activation checks approved authorization, target run/revision/evidence hashes, owner/watch lock and current stop generation; holds and quiesces only REQ027, backs up its stores/plan/runtime binding, stops the verified old watcher, then starts the new watcher with the staged absolute skill/scripts/bitacora.py path so its owner/executor children load the tested new code. Preserve old outcomes, counters, permissions and legacy decision history; technically superseded owner cards link the case but are not answered. Record runtime binding/provenance and host-recovery-rollout/1 receipts from official M1/M3/M6 records, including system-generated correction commits and resulting integrated audit snapshots. Crash adoption reuses the same activation/cycle. Safe rollback holds the target and disables further recovery while retaining the accepted runtime/evidence; do not restore pre-run backups, erase current authoritative outcomes or reset counters. An older binary is eligible only with explicit current-schema compatibility evidence and normal owner authorization.",
+      "repository": "skill",
+      "after": [
+        "T5"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 150 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Pinned host activation crosses accepted snapshots, process ownership and crash adoption, so this is a separate high complexity boundary.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "task:T5"
+          ]
+        },
+        "scope": {
+          "justification": "Pinned host activation owns only staging/activation adapter code and its behavioral tests, keeping watch integration separate.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "task:T5"
+          ]
+        },
+        "duration": {
+          "justification": "Pinned host activation has a provisional 120 minute implementation and local test allowance; no comparable duration history exists.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "task:T5"
+          ]
+        },
+        "risk": {
+          "justification": "Pinned host activation can resume a live wrong run or stale code, so source identity and stop/ownership fencing are mandatory.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "task:T5"
+          ]
+        },
+        "coupling": {
+          "justification": "Pinned host activation consumes recovery-case-v1 and authorization from T5 and is exercised by T6/T11 before T16 uses it.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "task:T5"
+          ]
+        },
+        "confidence": {
+          "justification": "Pinned host activation has inspected existing ownership and archive primitives, but new host integration must still be implemented.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "task:T5"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_recovery_rollout.py",
+        "skill/scripts/tests/test_recovery_rollout.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "A tested accepted snapshot stages without local-tree or global-install changes and activation preserves identity ownership stop guards budgets and one-cycle authorization across crash adoption"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_rollout.py",
+          "purpose": "A tested accepted snapshot stages without local-tree or global-install changes and activation preserves identity ownership stop guards budgets and one-cycle authorization across crash adoption",
+          "category": "functional",
+          "created_by": "T5a"
+        }
+      ],
+      "covers": [
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M1",
+      "title": "Author offline real CLI recovery integration harness",
+      "objective": "Author subprocess-based offline harness using temporary BITACORA_ROOT/config/home, disposable git repositories, fixture provider binaries and existing authorization/routing interfaces. Start shipped bitacora.py scheduler-watch and its scheduler-run child plus real executor/verifier processes; do not patch recovery, M1, revision application, integration or verification. Fixture binaries replace external paid agents only. Drive deterministic exhausted-audit evidence to system-generated correction tasks, new integration run and two read-only re-audits on the resulting snapshot, asserting correction really changes a failing behavior. Inject process loss at diagnostic lease and freeze/rebase checkpoints; demonstrate one application, stale/stop rejection, and explicit failed-cycle escalation. Copy sanitized factual EVIDENCE.json content into a versioned fixture with source hashes, not full transcripts or absolute personal paths. Add recovery_acceptance.py audit subcommand to validate audit-findings/1, known task ids, required evidence and zero open policy-blocking findings; it fails on malformed ledgers and is used by planned audit verifications. Add a mixed backend/web correction scenario where backend checks pass but a changed web type predicate fails its production typecheck; assert no corrective acceptance or finding closure until the affected web check passes. Add a path omitted from declared verification map and prove it triggers verification replanning/block, even when every planned command exits zero. Register all new top-level bt_recovery_* modules explicitly in root pyproject.toml py-modules. Extend the installed-wheel migration gate to import diagnostic modules and invoke recovery-status/preview outside the checkout; absent packaging/build tools is a blocker rather than a passing skip. This owns package metadata and installed harness authoring, not deployment. The acceptance helper also supports rollout-receipt verification from T11 tests via a generic schema argument; T11 owns its test module and calls production rollout validation rather than modifying this helper. Register the already required bt_attempt_history, bt_block_agent, bt_block_diagnosis and bt_page_diagnosis modules too: inspection found all four currently absent from explicit packaging, and they are required by the touched diagnostic/history path. Rollout acceptance helper owns the rollout subcommand: validate a required --receipt path against production host receipt validation, expected current source digests and captured independent records; missing, unsupported or inconsistent proof fails, never a file-existence pass.",
+      "repository": "skill",
+      "after": [
+        "T5a"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 140,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 140 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Author offline real CLI recovery integration harness requires coordinating the named state and evidence contracts; decomposition isolates this boundary from the other tasks.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/scheduler_executor_support.py",
+            "file:skill/scripts/tests/scheduler_chain_support.py",
+            "file:skill/scripts/tests/test_scheduler_m1_m6_e2e.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_core.py",
+            "file:pyproject.toml",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "scope": {
+          "justification": "Author offline real CLI recovery integration harness changes only its declared files and their single responsibilities, with consumers reached through the declared interfaces.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/scheduler_executor_support.py",
+            "file:skill/scripts/tests/scheduler_chain_support.py",
+            "file:skill/scripts/tests/test_scheduler_m1_m6_e2e.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_core.py",
+            "file:pyproject.toml",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "duration": {
+          "justification": "Author offline real CLI recovery integration harness has a provisional 140 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/scheduler_executor_support.py",
+            "file:skill/scripts/tests/scheduler_chain_support.py",
+            "file:skill/scripts/tests/test_scheduler_m1_m6_e2e.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_core.py",
+            "file:pyproject.toml",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "risk": {
+          "justification": "Author offline real CLI recovery integration harness can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/scheduler_executor_support.py",
+            "file:skill/scripts/tests/scheduler_chain_support.py",
+            "file:skill/scripts/tests/test_scheduler_m1_m6_e2e.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_core.py",
+            "spec:SPEC.md#constraints",
+            "file:pyproject.toml",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "coupling": {
+          "justification": "Author offline real CLI recovery integration harness shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/scheduler_executor_support.py",
+            "file:skill/scripts/tests/scheduler_chain_support.py",
+            "file:skill/scripts/tests/test_scheduler_m1_m6_e2e.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_core.py",
+            "task:T5",
+            "file:pyproject.toml",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "confidence": {
+          "justification": "Author offline real CLI recovery integration harness is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/scheduler_executor_support.py",
+            "file:skill/scripts/tests/scheduler_chain_support.py",
+            "file:skill/scripts/tests/test_scheduler_m1_m6_e2e.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_core.py",
+            "file:pyproject.toml",
+            "file:tests/migration/test_package_install.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/recovery_process_support.py",
+        "skill/scripts/tests/test_recovery_entrypoints.py",
+        "skill/scripts/tests/recovery_acceptance.py",
+        "skill/scripts/tests/fixtures/recovery_req027.json",
+        "pyproject.toml",
+        "tests/migration/test_package_install.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "The authored CLI harness observes a failing behavior become independently verified through system-generated corrections and re-audits, and interrupted, duplicate, stale, unsafe and no-progress variants fail closed using real runtime entry points; actual web or other changed surfaces without matching independent verification cannot be accepted"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py",
+          "purpose": "The authored CLI harness observes a failing behavior become independently verified through system-generated corrections and re-audits, and interrupted, duplicate, stale, unsafe and no-progress variants fail closed using real runtime entry points; actual web or other changed surfaces without matching independent verification cannot be accepted",
+          "category": "functional",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M1",
+      "title": "Run backend regression and entrypoint acceptance",
+      "objective": "Run established targeted module and methodology regression checks and the T6 process harness. Record exact commands, exit codes and failures in the checks report. This task creates no harness, repairs no code and does not decide product acceptance; failures return to their owning implement tasks.",
+      "repository": "skill",
+      "after": [
+        "T6"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 45 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Run backend regression and entrypoint acceptance follows the existing inspected entry-point and test conventions; the contract and failure decisions are fixed by its prerequisites, so high complexity is unnecessary.",
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_watch.py",
+            "file:skill/scripts/tests/test_remediation.py",
+            "file:skill/scripts/tests/test_attempt_history.py"
+          ]
+        },
+        "scope": {
+          "justification": "Run backend regression and entrypoint acceptance runs established commands and writes only its execution report; it authors no tests, fixtures, code, configuration or acceptance ruling.",
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_watch.py",
+            "file:skill/scripts/tests/test_remediation.py",
+            "file:skill/scripts/tests/test_attempt_history.py"
+          ]
+        },
+        "duration": {
+          "justification": "Run backend regression and entrypoint acceptance has a provisional 45 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_watch.py",
+            "file:skill/scripts/tests/test_remediation.py",
+            "file:skill/scripts/tests/test_attempt_history.py"
+          ]
+        },
+        "risk": {
+          "justification": "Run backend regression and entrypoint acceptance operates only on disposable fixtures and reports actual command failures without changing them or approving acceptance.",
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_watch.py",
+            "file:skill/scripts/tests/test_remediation.py",
+            "file:skill/scripts/tests/test_attempt_history.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Run backend regression and entrypoint acceptance shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_watch.py",
+            "file:skill/scripts/tests/test_remediation.py",
+            "file:skill/scripts/tests/test_attempt_history.py",
+            "task:T6"
+          ]
+        },
+        "confidence": {
+          "justification": "Run backend regression and entrypoint acceptance is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/tests/test_scheduler_watch.py",
+            "file:skill/scripts/tests/test_remediation.py",
+            "file:skill/scripts/tests/test_attempt_history.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-checks.md"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "Offline backend regression and real watcher-owner-executor-verifier correction flow complete with recorded exit codes and no unresolved test failure",
+        "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_recovery/tests completes with exit zero and its actual output is recorded",
+        "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests completes with exit zero and its actual output is recorded",
+        "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_quality/tests completes with exit zero and its actual output is recorded",
+        "The regression command cd skill/scripts && python3 -m unittest discover -s tests completes with exit zero and its actual output is recorded",
+        "Installed wheel imports every recovery module and the shipped preview entrypoint runs outside the source checkout without missing modules or passing skips"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py",
+          "purpose": "Offline backend regression and real watcher-owner-executor-verifier correction flow complete with recorded exit codes and no unresolved test failure",
+          "category": "integration",
+          "created_by": "T6"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_recovery/tests",
+          "purpose": "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_recovery/tests completes with exit zero and its actual output is recorded",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests",
+          "purpose": "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests completes with exit zero and its actual output is recorded",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_quality/tests",
+          "purpose": "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_quality/tests completes with exit zero and its actual output is recorded",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests",
+          "purpose": "The regression command cd skill/scripts && python3 -m unittest discover -s tests completes with exit zero and its actual output is recorded",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "python3 -m unittest discover -s tests/migration -p test_package_install.py",
+          "purpose": "Installed wheel imports every recovery module and the shipped preview entrypoint runs outside the source checkout without missing modules or passing skips",
+          "category": "integration",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M1",
+      "title": "Audit backend recovery authority and evidence",
+      "objective": "Read-only independent review of T1-T7 evidence identity, M1 budget preservation, stale/stop fencing, transport isolation, atomic revision recovery and true entrypoint integration. Inspect the integrated tree and verification evidence; reproduce the decisive failure cases. Write only the declared report and one audit-findings/1 ledger. Each open critical/high finding names the implementing plan task to redo; never patch source, waive risk, or accept another auditor's unverified conclusions. Independent cross-check repeats its own assessment of the complete scope.",
+      "repository": "skill",
+      "after": [
+        "T7"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 90 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Audit backend recovery authority and evidence must challenge evidence, permissions, state compatibility and real-entrypoint results across the complete milestone boundary.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "scope": {
+          "justification": "Audit backend recovery authority and evidence reviews the integrated result and writes only its report and one findings ledger, naming the task responsible for each defect.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "duration": {
+          "justification": "Audit backend recovery authority and evidence has a provisional 90 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "risk": {
+          "justification": "Audit backend recovery authority and evidence can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Audit backend recovery authority and evidence shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "task:T7"
+          ]
+        },
+        "confidence": {
+          "justification": "Audit backend recovery authority and evidence is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.md",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "The audit ledger is valid, names responsible plan tasks and contains no open critical or high finding on the independently checked integrated result"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7",
+          "purpose": "The audit ledger is valid, names responsible plan tasks and contains no open critical or high finding on the independently checked integrated result",
+          "category": "product",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "audit"
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M1",
+      "title": "Cross-check backend recovery independently",
+      "objective": "Read-only independent review of the same T1-T7 scope, independently including migration/rollback and falsely green integrations. Inspect the integrated tree and verification evidence; reproduce the decisive failure cases. Write only the declared report and one audit-findings/1 ledger. Each open critical/high finding names the implementing plan task to redo; never patch source, waive risk, or accept another auditor's unverified conclusions. Independent cross-check repeats its own assessment of the complete scope.",
+      "repository": "skill",
+      "after": [
+        "T8"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 90 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Cross-check backend recovery independently must challenge evidence, permissions, state compatibility and real-entrypoint results across the complete milestone boundary.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "scope": {
+          "justification": "Cross-check backend recovery independently reviews the integrated result and writes only its report and one findings ledger, naming the task responsible for each defect.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "duration": {
+          "justification": "Cross-check backend recovery independently has a provisional 90 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "risk": {
+          "justification": "Cross-check backend recovery independently can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Cross-check backend recovery independently shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "task:T8"
+          ]
+        },
+        "confidence": {
+          "justification": "Cross-check backend recovery independently is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-crosscheck.md",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-crosscheck.findings.json"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "The audit ledger is valid, names responsible plan tasks and contains no open critical or high finding on the independently checked integrated result"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-m1-crosscheck.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8",
+          "purpose": "The audit ledger is valid, names responsible plan tasks and contains no open critical or high finding on the independently checked integrated result",
+          "category": "product",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "audit"
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M2",
+      "title": "Show and control recovery from flow and plan views",
+      "objective": "Consume recovery-status/1 through the existing adapter read-only API and expose diagnosing, preparing_corrections, executing, reauditing, resolved, blocked and stopped with case/source identities, evidence links, expected/observed outcomes, counters, and exact blocker. Flow events extend existing M1/M5 feed and resume cursors; M4 stays observational. Both plan and /flow views show a stop control that uses the existing authenticated same-origin/token control path and persists stop generation before dispatch/application can proceed. Surface a targeted permission/product question only when its validated blocker requires it; technical corrections require no RUN.notes editor or CLI. Preserve legacy decision cards and read-only records; escape all diagnostic and evidence text. Existing Catppuccin tokens and Spanish labels remain the visual vocabulary. Show the approved automatic policy for future new runs and the conditional REQ027 rollout authorization; do not require a second owner click for that scoped activation. Other existing runs may opt in through an authenticated control bound to run identity, current preview digest and stop generation; opening a view alone never enables those runs.",
+      "repository": "skill",
+      "after": [
+        "T9"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 115,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 115 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Show and control recovery from flow and plan views requires coordinating the named state and evidence contracts; decomposition isolates this boundary from the other tasks.",
+          "evidence": [
+            "file:skill/scripts/bt_flow_bus.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_page_flow.py",
+            "file:skill/scripts/bt_page_plans.py",
+            "file:skill/scripts/bt_page_run.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py"
+          ]
+        },
+        "scope": {
+          "justification": "Show and control recovery from flow and plan views changes only its declared files and their single responsibilities, with consumers reached through the declared interfaces.",
+          "evidence": [
+            "file:skill/scripts/bt_flow_bus.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_page_flow.py",
+            "file:skill/scripts/bt_page_plans.py",
+            "file:skill/scripts/bt_page_run.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py"
+          ]
+        },
+        "duration": {
+          "justification": "Show and control recovery from flow and plan views has a provisional 115 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_flow_bus.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_page_flow.py",
+            "file:skill/scripts/bt_page_plans.py",
+            "file:skill/scripts/bt_page_run.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py"
+          ]
+        },
+        "risk": {
+          "justification": "Show and control recovery from flow and plan views can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_flow_bus.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_page_flow.py",
+            "file:skill/scripts/bt_page_plans.py",
+            "file:skill/scripts/bt_page_run.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Show and control recovery from flow and plan views shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_flow_bus.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_page_flow.py",
+            "file:skill/scripts/bt_page_plans.py",
+            "file:skill/scripts/bt_page_run.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "task:T9"
+          ]
+        },
+        "confidence": {
+          "justification": "Show and control recovery from flow and plan views is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_flow_bus.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_page_flow.py",
+            "file:skill/scripts/bt_page_plans.py",
+            "file:skill/scripts/bt_page_run.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_flow_bus.py",
+        "skill/scripts/bt_live_api.py",
+        "skill/scripts/bt_planstatus.py",
+        "skill/scripts/bt_page_flow.py",
+        "skill/scripts/bt_page_plans.py",
+        "skill/scripts/bt_page_run.py",
+        "skill/scripts/bt_server.py",
+        "skill/assets/flow-core.js",
+        "skill/assets/flow-decisions.js",
+        "skill/assets/flow.css",
+        "skill/scripts/tests/test_recovery_views.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "Flow and plan views display truthful recovery states and evidence, retain legacy decisions and reject stale or unauthorized controls while a valid stop fences subsequent diagnosis application and corrective dispatch"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_views.py",
+          "purpose": "Flow and plan views display truthful recovery states and evidence, retain legacy decisions and reject stale or unauthorized controls while a valid stop fences subsequent diagnosis application and corrective dispatch",
+          "category": "functional",
+          "created_by": "T10"
+        }
+      ],
+      "covers": [
+        "R6",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T11",
+      "milestone_id": "M2",
+      "title": "Author visual integration and historical recovery preview checks",
+      "objective": "Author tests starting actual bitacora.py web server and scheduler-watch/owner/executor subprocesses together with external-agent fixture binaries from T6. Drive /flow and plan HTTP/API state updates through diagnosis, generated corrections and real independent re-audit; validate JS rendering and stop behavior with the repository existing Node DOM fixture convention, and assert server-side effects through real HTTP controls. Replay the sanitized REQ027 fixture: eleven attempts, two ordinary rounds, Caddy fixed, E2E persistent, build and OAuth defects new; changed finding count alone proves nothing and missing run checks remain not_run. recovery-preview returns hashes, lineage, uncertain matches, proposed prerequisite strategy and blockers without a proposal pretending to be an agent diagnosis. Provision disposable official stores from the REQ027 fixture and invoke the shipped recovery-preview CLI as a subprocess, comparing pre/post state, revisions, notes, decisions, ledgers and process identities. Live REQ027 read-only preview is a separate rollout receipt outside M6. Preview never invokes a diagnostic model. Do not activate or repair REQ027. Historical replay also records that att-0196/T18.5 changed web page.tsx while carrying backend-only checks and introduced the type predicate later reported as F19; preview must identify this verification coverage gap without patching product code. Author offline host-recovery-rollout/1 receipt validation and integration: bind approved upgrade tree, staged code digests/absolute child argv, authorization, target pre/post stores/plan refs, unchanged ordinary counters, generated correction attempts and independent integrated re-audit verdicts. Reject fabricated or incomplete provenance, stale runtime hash, unproven owner takeover, hand-written product changes, owner-only decision answers and outcome-only claims. Fixture rollout tests start staged shipped entrypoints rather than accepting import-only success. Extend recovery_acceptance.py through T6-owned initial generic receipt support contract so no other task edits that file.",
+      "repository": "skill",
+      "after": [
+        "T10"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 125,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 125 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Author visual integration and historical recovery preview checks requires coordinating the named state and evidence contracts; decomposition isolates this boundary from the other tasks.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_block_agent.py"
+          ]
+        },
+        "scope": {
+          "justification": "Author visual integration and historical recovery preview checks changes only its declared files and their single responsibilities, with consumers reached through the declared interfaces.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_block_agent.py"
+          ]
+        },
+        "duration": {
+          "justification": "Author visual integration and historical recovery preview checks has a provisional 125 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_block_agent.py"
+          ]
+        },
+        "risk": {
+          "justification": "Author visual integration and historical recovery preview checks can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_block_agent.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Author visual integration and historical recovery preview checks shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_block_agent.py",
+            "task:T10"
+          ]
+        },
+        "confidence": {
+          "justification": "Author visual integration and historical recovery preview checks is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_live_api.py",
+            "file:skill/scripts/bt_block_agent.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_recovery_supervision_e2e.py",
+        "skill/scripts/tests/test_recovery_req027_preview.py",
+        "skill/scripts/tests/recovery_preview_support.py",
+        "skill/scripts/tests/test_recovery_rollout_receipt.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "Real server and runtime integration exposes autonomous correction and re-audit with a working stop, while REQ027 preview recognizes fixed versus persistent versus new findings and leaves all source run artifacts and processes unchanged",
+        "REQ027 replay classifies fixed persistent new and not_run outcomes and proves preview leaves source state unchanged"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_supervision_e2e.py",
+          "purpose": "Real server and runtime integration exposes autonomous correction and re-audit with a working stop, while REQ027 preview recognizes fixed versus persistent versus new findings and leaves all source run artifacts and processes unchanged",
+          "category": "functional",
+          "created_by": "T11"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_req027_preview.py",
+          "purpose": "REQ027 replay classifies fixed persistent new and not_run outcomes and proves preview leaves source state unchanged",
+          "category": "regression",
+          "created_by": "T11"
+        }
+      ],
+      "covers": [
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T12",
+      "milestone_id": "M2",
+      "title": "Document approved recovery boundary and rollout rollback",
+      "objective": "Document architectural rationale and version/migration contracts, initial preview mode for existing runs, proposed one-cycle/eight-correction-task policy, exact blockers and unchanged ordinary budgets. Provide migration backup/read compatibility and rollback procedure: stop recovery, preserve journal/evidence and accepted snapshots, disable diagnostic recovery on the same tested schema-capable runtime by default, and never downgrade or restore a migrated store or reset counters. Switching to an older binary is forbidden unless explicit capability evidence proves it can read the current schemas without loss, followed by the normal owner workflow. Include read-only REQ027 preview command and hash-based mutation checks, plus conditional REQ027 activation already authorized by this plan approval after final system audits and fresh preview; no second approval gate. Other existing runs need separate authorization. This documentation task does not activate it. Record new reviews directory purpose and ADR substance in this rollout document for owner review, with normal execution workflow responsible for publishing the canonical decision outside this task's owned scope. Document future-run automatic policy snapshots and the exact staged accepted-snapshot watcher command/binding, no global installation, host receipt checks, quiescence/backup/adoption, and rollback constraints. Rollback preserves the current authoritative databases and counters; a historical backup is for evidence/safety, never an automatic restore. No older-runtime rollback is inferred from a version number.",
+      "repository": "skill",
+      "after": [
+        "T11"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 40 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Document approved recovery boundary and rollout rollback follows the existing inspected entry-point and test conventions; the contract and failure decisions are fixed by its prerequisites, so high complexity is unnecessary.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/README.md",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py"
+          ]
+        },
+        "scope": {
+          "justification": "Document approved recovery boundary and rollout rollback changes only its declared files and their single responsibilities, with consumers reached through the declared interfaces.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/README.md",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py"
+          ]
+        },
+        "duration": {
+          "justification": "Document approved recovery boundary and rollout rollback has a provisional 40 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/README.md",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py"
+          ]
+        },
+        "risk": {
+          "justification": "Document approved recovery boundary and rollout rollback records the implemented policy and rollback steps; it neither changes runtime configuration nor activates recovery.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/README.md",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Document approved recovery boundary and rollout rollback shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/README.md",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py",
+            "task:T11"
+          ]
+        },
+        "confidence": {
+          "justification": "Document approved recovery boundary and rollout rollback is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_recovery/README.md",
+            "file:skill/scripts/bt_plan_adapter.py",
+            "file:skill/scripts/bt_scheduler_core/rebase.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/README.md",
+        "skill/references/modules.md",
+        "skill/references/plan-contract.md",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout.md"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "Documentation states the versioned contracts, bounded policy, evidence-based preview, explicit activation gate and reversible rollout without budget reset or source-run mutation"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s skill/scripts/bt_scheduler_recovery/reviews/req029-rollout.md",
+          "purpose": "Documentation states the versioned contracts, bounded policy, evidence-based preview, explicit activation gate and reversible rollout without budget reset or source-run mutation",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "docs"
+    },
+    {
+      "id": "T13",
+      "milestone_id": "M2",
+      "title": "Run full recovery supervision and preview acceptance",
+      "objective": "Execute T11 real server/watch integration and historical replay, existing module/methodology suites, and disposable official-store CLI preview acceptance. Write checks report and sanitized fixture preview artifact only. Compare before/after fixture-store hashes, revisions, notes, decisions and process identities; unavailable or mutated evidence is a blocker. No shell credentials, real .state or owner environment is required. Live REQ027 read-only preview is separate rollout evidence produced outside the M6 sandbox using the documented command, never a frozen acceptance dependency. Report failures to implementing owners without fixing code, approving findings or activating recovery.",
+      "repository": "skill",
+      "after": [
+        "T12"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 50,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 50 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Run full recovery supervision and preview acceptance follows the existing inspected entry-point and test conventions; the contract and failure decisions are fixed by its prerequisites, so high complexity is unnecessary.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py"
+          ]
+        },
+        "scope": {
+          "justification": "Run full recovery supervision and preview acceptance runs established commands and writes only its execution report; it authors no tests, fixtures, code, configuration or acceptance ruling.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py"
+          ]
+        },
+        "duration": {
+          "justification": "Run full recovery supervision and preview acceptance has a provisional 50 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py"
+          ]
+        },
+        "risk": {
+          "justification": "Run full recovery supervision and preview acceptance operates only on disposable fixtures and reports actual command failures without changing them or approving acceptance.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Run full recovery supervision and preview acceptance shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py",
+            "task:T12"
+          ]
+        },
+        "confidence": {
+          "justification": "Run full recovery supervision and preview acceptance is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "file:skill/scripts/tests/test_scheduler_run_controls.py",
+            "file:skill/scripts/bt_cli_scheduler_ops.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-final-checks.md",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-req027-preview.json"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "Real server and scheduler entrypoints demonstrate autonomous corrections independent re-audit and stop; offline REQ027 CLI preview proves semantic history and no writes",
+        "Disposable official-store CLI preview reproduces REQ027 evidence semantics without source writes or a paid diagnostic invocation",
+        "The regression command cd skill/scripts && python3 -m unittest discover -s tests completes with exit zero and its actual output is recorded",
+        "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_recovery/tests completes with exit zero and its actual output is recorded",
+        "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests completes with exit zero and its actual output is recorded",
+        "The regression command cd skill/scripts && python3 -m unittest discover -s bt_planner/tests completes with exit zero and its actual output is recorded",
+        "Installed wheel imports every recovery module and the shipped preview entrypoint runs outside the source checkout without missing modules or passing skips"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_supervision_e2e.py",
+          "purpose": "Real server and scheduler entrypoints demonstrate autonomous corrections independent re-audit and stop; offline REQ027 CLI preview proves semantic history and no writes",
+          "category": "integration",
+          "created_by": "T11"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_req027_preview.py",
+          "purpose": "Disposable official-store CLI preview reproduces REQ027 evidence semantics without source writes or a paid diagnostic invocation",
+          "category": "product",
+          "created_by": "T11"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests",
+          "purpose": "The regression command cd skill/scripts && python3 -m unittest discover -s tests completes with exit zero and its actual output is recorded",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_recovery/tests",
+          "purpose": "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_recovery/tests completes with exit zero and its actual output is recorded",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests",
+          "purpose": "The regression command cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests completes with exit zero and its actual output is recorded",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests",
+          "purpose": "The regression command cd skill/scripts && python3 -m unittest discover -s bt_planner/tests completes with exit zero and its actual output is recorded",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "python3 -m unittest discover -s tests/migration -p test_package_install.py",
+          "purpose": "Installed wheel imports every recovery module and the shipped preview entrypoint runs outside the source checkout without missing modules or passing skips",
+          "category": "integration",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T14",
+      "milestone_id": "M2",
+      "title": "Audit complete autonomous recovery and rollout",
+      "objective": "Read-only independent review of all R1-R10 contracts, real integrated flow, visual stop, historical REQ027 preview and absence of active-run changes. Inspect the integrated tree and verification evidence; reproduce the decisive failure cases. Write only the declared report and one audit-findings/1 ledger. Each open critical/high finding names the implementing plan task to redo; never patch source, waive risk, or accept another auditor's unverified conclusions. Independent cross-check repeats its own assessment of the complete scope.",
+      "repository": "skill",
+      "after": [
+        "T13"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 90 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Audit complete autonomous recovery and rollout must challenge evidence, permissions, state compatibility and real-entrypoint results across the complete milestone boundary.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "scope": {
+          "justification": "Audit complete autonomous recovery and rollout reviews the integrated result and writes only its report and one findings ledger, naming the task responsible for each defect.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "duration": {
+          "justification": "Audit complete autonomous recovery and rollout has a provisional 90 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "risk": {
+          "justification": "Audit complete autonomous recovery and rollout can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Audit complete autonomous recovery and rollout shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "task:T13"
+          ]
+        },
+        "confidence": {
+          "justification": "Audit complete autonomous recovery and rollout is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-final-audit.md",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-final-audit.findings.json"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "The audit ledger is valid, names responsible plan tasks and contains no open critical or high finding on the independently checked integrated result"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-final-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13",
+          "purpose": "The audit ledger is valid, names responsible plan tasks and contains no open critical or high finding on the independently checked integrated result",
+          "category": "product",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "audit"
+    },
+    {
+      "id": "T15",
+      "milestone_id": "M2",
+      "title": "Cross-check final acceptance independently",
+      "objective": "Read-only independent review of the full feature independently, especially adversarial evidence identity, supplemental budgets, restart races and UI versus authority. Inspect the integrated tree and verification evidence; reproduce the decisive failure cases. Write only the declared report and one audit-findings/1 ledger. Each open critical/high finding names the implementing plan task to redo; never patch source, waive risk, or accept another auditor's unverified conclusions. Independent cross-check repeats its own assessment of the complete scope.",
+      "repository": "skill",
+      "after": [
+        "T14"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 90 minutes including focused checks; history queried for implement/test/audit returned unknown metrics, with no comparable sample counts or calibrated duration.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Cross-check final acceptance independently must challenge evidence, permissions, state compatibility and real-entrypoint results across the complete milestone boundary.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "scope": {
+          "justification": "Cross-check final acceptance independently reviews the integrated result and writes only its report and one findings ledger, naming the task responsible for each defect.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "duration": {
+          "justification": "Cross-check final acceptance independently has a provisional 90 minute allowance for implementation and focused verification; inspected boundaries support sizing but comparable duration history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        },
+        "risk": {
+          "justification": "Cross-check final acceptance independently can misclassify evidence or authorize an incorrect recovery outcome; its fail-closed checks protect existing accepted work.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "coupling": {
+          "justification": "Cross-check final acceptance independently shares recovery-case-v1 and approved plan identity with its ordered producers and consumers.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py",
+            "task:T14"
+          ]
+        },
+        "confidence": {
+          "justification": "Cross-check final acceptance independently is grounded in inspected files; new recovery behavior and integration harness still require implementation, so estimates remain medium confidence.",
+          "evidence": [
+            "file:skill/scripts/bt_audit_gate.py",
+            "file:skill/scripts/bt_scheduler_quality_adapter.py",
+            "file:skill/scripts/tests/test_flow_e2e.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-final-crosscheck.md",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-final-crosscheck.findings.json"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "The audit ledger is valid, names responsible plan tasks and contains no open critical or high finding on the independently checked integrated result"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-final-crosscheck.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T14",
+          "purpose": "The audit ledger is valid, names responsible plan tasks and contains no open critical or high finding on the independently checked integrated result",
+          "category": "product",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "audit"
+    },
+    {
+      "id": "T16",
+      "milestone_id": "M3",
+      "title": "Activate the tested runtime and observe bounded REQ027 recovery",
+      "objective": "Operational implementation, conditionally authorized by approval of this plan. Run only after T14/T15 official accepted audit evidence and T13 offline proof. Use T5a prepare_recovery_runtime to stage exactly the accepted tested M2 integrated snapshot, not the dirty coordinator tree or a global install. Generate fresh read-only REQ027 preview; verify same target owner/revision/hash, permitted technical cause, no new owner-only question and no active user stop. Quiesce and back up the target with hash-bound receipts, switch only its watcher/runtime binding to the staged absolute entrypoint, then activate exactly one case using the frozen conditional authorization. Observe existing system executors generate corrective source/test changes, integration and independent audit/cross-check. Never hand-patch REQ027 or add RUN.notes. Persist and resume observation/adoption after task-process loss without a new activation or budget reset. Report resolved only from resulting integrated independent evidence; otherwise record exact remaining technical/permission/evidence blocker and stop further automatic cycles. Preserve receipts with official source records/digests, runtime provenance, original/final ordinary counters, corrective commits and independent verdicts. The command verification runs offline against the captured receipt; host rollout actions execute in the authorized task before its sandbox verification.",
+      "repository": "skill",
+      "after": [
+        "T15"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional allowance; comparable duration and quality samples remain unknown. An actual unresolved target failure is reported, never declared fixed.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Activate the tested runtime and observe bounded REQ027 recovery coordinates accepted runtime provenance, authoritative run identity and reversible host ownership; the verification harness is provided by T11.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "scope": {
+          "justification": "Activate the tested runtime and observe bounded REQ027 recovery is restricted to one conditional REQ027 case and its declared receipt or review artifacts.",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "task:T15"
+          ]
+        },
+        "duration": {
+          "justification": "Activate the tested runtime and observe bounded REQ027 recovery uses a provisional 180 minute observation and verification allowance; recovery remains durable across executor interruption and comparable history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "risk": {
+          "justification": "Activate the tested runtime and observe bounded REQ027 recovery can resume the wrong runtime or run unless snapshot authorization, stop generation and ownership guards are verified.",
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "coupling": {
+          "justification": "Activate the tested runtime and observe bounded REQ027 recovery consumes the accepted recovery-case-v1 implementation and conditional rollout authorization after independent system audits.",
+          "evidence": [
+            "task:T15",
+            "task:T5",
+            "task:T11"
+          ]
+        },
+        "confidence": {
+          "justification": "Activate the tested runtime and observe bounded REQ027 recovery has inspected host ownership and safe snapshot boundaries but live outcome remains unknown until the approved activation.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-live-rollout.json",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-live-rollout.md"
+      ],
+      "shared_resources": [
+        "recovery-case-v1",
+        "REQ027-conditional-rollout"
+      ],
+      "acceptance_criteria": [
+        "A provenance-bound rollout receipt shows the tested staged runtime performed exactly one authorized system recovery with preserved ordinary counters and either independent integrated resolution or a specific genuine blocker"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/tests/recovery_acceptance.py rollout --receipt skill/scripts/bt_scheduler_recovery/reviews/req029-live-rollout.json",
+          "purpose": "A provenance-bound rollout receipt shows the tested staged runtime performed exactly one authorized system recovery with preserved ordinary counters and either independent integrated resolution or a specific genuine blocker",
+          "category": "product",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T17",
+      "milestone_id": "M3",
+      "title": "Verify rollout receipts and staged runtime integration",
+      "objective": "Run the T11 established receipt validation plus staged-runtime fixture integration against the integrated T16 receipt artifact. The test starts shipped staged server/watch/owner entrypoints in a disposable root and independently checks receipt source hashes/identities and outcome rules. Do not access private live .state in M6, mutate the target, repair failures or approve acceptance. Record command results and any unsupported/missing proof for the implementing owner.",
+      "repository": "skill",
+      "after": [
+        "T16"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional allowance; comparable duration and quality samples remain unknown. An actual unresolved target failure is reported, never declared fixed.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Verify rollout receipts and staged runtime integration coordinates accepted runtime provenance, authoritative run identity and reversible host ownership; the verification harness is provided by T11.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "scope": {
+          "justification": "Verify rollout receipts and staged runtime integration runs established offline checks and writes only its command report; it authors or repairs no runtime code or tests.",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "task:T15"
+          ]
+        },
+        "duration": {
+          "justification": "Verify rollout receipts and staged runtime integration uses a provisional 40 minute observation and verification allowance; recovery remains durable across executor interruption and comparable history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "risk": {
+          "justification": "Verify rollout receipts and staged runtime integration can resume the wrong runtime or run unless snapshot authorization, stop generation and ownership guards are verified.",
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "coupling": {
+          "justification": "Verify rollout receipts and staged runtime integration consumes the accepted recovery-case-v1 implementation and conditional rollout authorization after independent system audits.",
+          "evidence": [
+            "task:T16",
+            "task:T5",
+            "task:T11"
+          ]
+        },
+        "confidence": {
+          "justification": "Verify rollout receipts and staged runtime integration has inspected host ownership and safe snapshot boundaries but live outcome remains unknown until the approved activation.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-checks.md"
+      ],
+      "shared_resources": [
+        "recovery-case-v1",
+        "REQ027-conditional-rollout"
+      ],
+      "acceptance_criteria": [
+        "Offline receipt verification and real staged-runtime fixture integration reject wrong runtime counters stale evidence or fabricated success and accept only a verified resolved or genuinely blocked bounded outcome",
+        "Captured live rollout receipt matches accepted runtime source digests official records authorization unchanged ordinary counters and independently supported outcome"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_rollout_receipt.py",
+          "purpose": "Offline receipt verification and real staged-runtime fixture integration reject wrong runtime counters stale evidence or fabricated success and accept only a verified resolved or genuinely blocked bounded outcome",
+          "category": "integration",
+          "created_by": "T11"
+        },
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/tests/recovery_acceptance.py rollout --receipt skill/scripts/bt_scheduler_recovery/reviews/req029-live-rollout.json",
+          "purpose": "Captured live rollout receipt matches accepted runtime source digests official records authorization unchanged ordinary counters and independently supported outcome",
+          "category": "product",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T18",
+      "milestone_id": "M3",
+      "title": "Audit conditional rollout and real outcome",
+      "objective": "Independent read-only review of the staged-runtime rollout and official captured evidence, complete R1-R10 outcome and true blocker versus fabricated success. Check approved upgrade snapshot, no dirty-tree/global-install sweep, backup/ownership/stop guards, budgets, one-cycle authorization, system-generated corrections and independent integrated checks. Confirm no human product patches or owner-only decisions were answered. A genuine correctly reported target blocker is an allowed system outcome; unsupported claims or missing provenance are audit findings naming responsible plan tasks. Write only report and one audit-findings/1 ledger; do not repair source or target state.",
+      "repository": "skill",
+      "after": [
+        "T17"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional allowance; comparable duration and quality samples remain unknown. An actual unresolved target failure is reported, never declared fixed.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Audit conditional rollout and real outcome coordinates accepted runtime provenance, authoritative run identity and reversible host ownership; the verification harness is provided by T11.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "scope": {
+          "justification": "Audit conditional rollout and real outcome is restricted to one conditional REQ027 case and its declared receipt or review artifacts.",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "task:T15"
+          ]
+        },
+        "duration": {
+          "justification": "Audit conditional rollout and real outcome uses a provisional 75 minute observation and verification allowance; recovery remains durable across executor interruption and comparable history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "risk": {
+          "justification": "Audit conditional rollout and real outcome can resume the wrong runtime or run unless snapshot authorization, stop generation and ownership guards are verified.",
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "coupling": {
+          "justification": "Audit conditional rollout and real outcome consumes the accepted recovery-case-v1 implementation and conditional rollout authorization after independent system audits.",
+          "evidence": [
+            "task:T17",
+            "task:T5",
+            "task:T11"
+          ]
+        },
+        "confidence": {
+          "justification": "Audit conditional rollout and real outcome has inspected host ownership and safe snapshot boundaries but live outcome remains unknown until the approved activation.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-audit.md",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-audit.findings.json"
+      ],
+      "shared_resources": [
+        "recovery-case-v1",
+        "REQ027-conditional-rollout"
+      ],
+      "acceptance_criteria": [
+        "The independent rollout audit ledger has no open critical or high finding and accepts the proven recovery outcome or exact genuine blocker without claiming unsupported target completion"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17",
+          "purpose": "The independent rollout audit ledger has no open critical or high finding and accepts the proven recovery outcome or exact genuine blocker without claiming unsupported target completion",
+          "category": "product",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "audit"
+    },
+    {
+      "id": "T19",
+      "milestone_id": "M3",
+      "title": "Cross-check conditional rollout independently",
+      "objective": "Independent read-only review of the staged-runtime rollout and official captured evidence, complete R1-R10 outcome and true blocker versus fabricated success. Check approved upgrade snapshot, no dirty-tree/global-install sweep, backup/ownership/stop guards, budgets, one-cycle authorization, system-generated corrections and independent integrated checks. Confirm no human product patches or owner-only decisions were answered. A genuine correctly reported target blocker is an allowed system outcome; unsupported claims or missing provenance are audit findings naming responsible plan tasks. Write only report and one audit-findings/1 ledger; do not repair source or target state.",
+      "repository": "skill",
+      "after": [
+        "T18"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional allowance; comparable duration and quality samples remain unknown. An actual unresolved target failure is reported, never declared fixed.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Cross-check conditional rollout independently coordinates accepted runtime provenance, authoritative run identity and reversible host ownership; the verification harness is provided by T11.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "scope": {
+          "justification": "Cross-check conditional rollout independently is restricted to one conditional REQ027 case and its declared receipt or review artifacts.",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "task:T15"
+          ]
+        },
+        "duration": {
+          "justification": "Cross-check conditional rollout independently uses a provisional 75 minute observation and verification allowance; recovery remains durable across executor interruption and comparable history is unavailable.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "risk": {
+          "justification": "Cross-check conditional rollout independently can resume the wrong runtime or run unless snapshot authorization, stop generation and ownership guards are verified.",
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        },
+        "coupling": {
+          "justification": "Cross-check conditional rollout independently consumes the accepted recovery-case-v1 implementation and conditional rollout authorization after independent system audits.",
+          "evidence": [
+            "task:T18",
+            "task:T5",
+            "task:T11"
+          ]
+        },
+        "confidence": {
+          "justification": "Cross-check conditional rollout independently has inspected host ownership and safe snapshot boundaries but live outcome remains unknown until the approved activation.",
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_watch.py",
+            "file:skill/scripts/bt_scheduler_quality/snapshot_archive.py",
+            "file:tests/migration/test_package_install.py"
+          ]
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-crosscheck.md",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-crosscheck.findings.json"
+      ],
+      "shared_resources": [
+        "recovery-case-v1",
+        "REQ027-conditional-rollout"
+      ],
+      "acceptance_criteria": [
+        "The independent rollout audit ledger has no open critical or high finding and accepts the proven recovery outcome or exact genuine blocker without claiming unsupported target completion"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-crosscheck.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18",
+          "purpose": "The independent rollout audit ledger has no open critical or high finding and accepts the proven recovery outcome or exact genuine blocker without claiming unsupported target completion",
+          "category": "product",
+          "created_by": "T6"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10"
+      ],
+      "kind": "audit"
+    }
+  ],
+  "requirements": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R10"
+  ],
+  "interfaces": [
+    {
+      "id": "IF-1",
+      "title": "Diagnostic domain contracts /1",
+      "owner": "M5 diagnostic contracts",
+      "producer_task": "T1",
+      "consumer_tasks": [
+        "T2",
+        "T3",
+        "T4",
+        "T5"
+      ],
+      "integration_task": "T7",
+      "inputs": [
+        "run/plan/attempt/source identities and complete validated findings"
+      ],
+      "outputs": [
+        "recovery-case/1; recovery-proposal/1; recovery-progress/1"
+      ],
+      "invariants": [
+        "Only recurrence links may cross ledgers; occurrence id is ledger digest plus local id",
+        "M5 stores advice, not operational M1 task state"
+      ],
+      "integration_criteria": [
+        "Different findings with equal count or IDs remain distinct; renumbering does not erase a supported recurrence"
+      ]
+    },
+    {
+      "id": "IF-2",
+      "title": "Immutable evidence bundle /1",
+      "owner": "methodology evidence collector",
+      "producer_task": "T2",
+      "consumer_tasks": [
+        "T3",
+        "T4",
+        "T5",
+        "T6"
+      ],
+      "integration_task": "T7",
+      "inputs": [
+        "official M1/M3/M6 records, snapshot ledger bytes, plan and remediation history"
+      ],
+      "outputs": [
+        "collect_recovery_evidence(rdir,audit,attempt) -> recovery-evidence/1 plain mapping",
+        "recovery-verification-map/1 with actual diff to owner/check provenance"
+      ],
+      "invariants": [
+        "All historical source reads are hash-bound; missing/blocked evidence is never success",
+        "Full validated semantic fields survive UI clipping and redaction",
+        "Actual changed paths require complete affected-surface verification before M1 acceptance"
+      ],
+      "integration_criteria": [
+        "REQ027 replay distinguishes Caddy fixed, E2E persistent, build/OAuth new and build-blocked checks not_run"
+      ]
+    },
+    {
+      "id": "IF-3",
+      "title": "Untrusted diagnostic transport /1",
+      "owner": "configured diagnostic transport",
+      "producer_task": "T3",
+      "consumer_tasks": [
+        "T5",
+        "T6"
+      ],
+      "integration_task": "T7",
+      "inputs": [
+        "verified authorized Planner-role route from existing M2/caller role policy, caller deadline and complete immutable evidence"
+      ],
+      "outputs": [
+        "diagnose_recovery(project,evidence,request_identity,route) -> raw JSON and transport/route provenance"
+      ],
+      "invariants": [
+        "Adapter validates every response before action; output never authorizes tools or shell",
+        "One deadline-bounded invocation per persisted cycle",
+        "No fixed card-advice routing fallback; tool allowlist is empty and MCP/app connectors are disabled"
+      ],
+      "integration_criteria": [
+        "Unsafe/malformed/time-out proposals create blockers and no revision or owner-decision answer"
+      ]
+    },
+    {
+      "id": "IF-4",
+      "title": "Constrained revision and M1 authorization /1",
+      "owner": "Planner adapter and M1",
+      "producer_task": "T4",
+      "consumer_tasks": [
+        "T5",
+        "T6"
+      ],
+      "integration_task": "T7",
+      "inputs": [
+        "validated proposal, source plan/tree hashes, stop generation and policy"
+      ],
+      "outputs": [
+        "compile_recovery_revision(plan,evidence,proposal) -> plan or typed refusal",
+        "apply_recovery_revision(...) -> recovery-authorization/1 and idempotent application receipt"
+      ],
+      "invariants": [
+        "M1 owns state and consumes grants once; ordinary counters never reset in recovery",
+        "Correction -> integration -> independent audit and cross-check DAG is mandatory",
+        "Repair is additive and preserves frozen criteria/checks; symptom oracle must reproduce red on captured broken base and green on corrected integrated tree"
+      ],
+      "integration_criteria": [
+        "Crash before/after freeze/rebase yields one revision and grant; stale inputs cannot mutate state",
+        "A correction touching web code cannot pass with backend-only checks; new uncovered actual paths block or replan verification"
+      ]
+    },
+    {
+      "id": "IF-5",
+      "title": "Recovery supervision read model /1",
+      "owner": "existing M5 adapter and runtime",
+      "producer_task": "T5",
+      "consumer_tasks": [
+        "T6",
+        "T10",
+        "T11",
+        "T12"
+      ],
+      "integration_task": "T13",
+      "inputs": [
+        "durable case events and authoritative M1 application/verification outcomes"
+      ],
+      "outputs": [
+        "recovery_status -> recovery-status/1; preview_recovery -> recovery-preview/1",
+        "scheduler-op recovery-status and recovery-preview CLI"
+      ],
+      "invariants": [
+        "M4 and views are observational; resolved requires independent integrated verification",
+        "Preview has no persistent writes, diagnosis invocation or decision answer"
+      ],
+      "integration_criteria": [
+        "Real UI states match durable case transitions and stop control fences dispatch/application"
+      ]
+    },
+    {
+      "id": "IF-6",
+      "title": "Conditional staged runtime rollout and receipt /1",
+      "owner": "existing host runtime adapter and M1 authority",
+      "producer_task": "T5a",
+      "consumer_tasks": [
+        "T11",
+        "T12",
+        "T16"
+      ],
+      "integration_task": "T17",
+      "inputs": [
+        "frozen approved recovery policy and explicit conditional REQ027 authorization",
+        "accepted tested upgrade integrated snapshot and independent system audits",
+        "fresh target preview, owner/stop generation, backup and authoritative source records",
+        "persisted automatic-policy and conditional authorization supplied by T5"
+      ],
+      "outputs": [
+        "prepare_recovery_runtime/activate_recovery_runtime with pinned absolute staged entrypoint",
+        "host-recovery-rollout/1 receipt carrying provenance, counters, generated correction and integrated audit evidence"
+      ],
+      "invariants": [
+        "No second human gate for already approved conditional REQ027 activation; other existing runs remain preview",
+        "Newly launched runs record approved automatic policy once, not one owner question per technical failure",
+        "Runtime code is loaded from the tested accepted snapshot, never the unrelated local dirty tree",
+        "Frozen verification reads captured receipts and disposable stores, never private live .state",
+        "Default rollback disables recovery on the same schema-capable tested runtime; no authoritative DB restore or budget reset"
+      ],
+      "integration_criteria": [
+        "T17 starts staged shipped entrypoints and rejects wrong-runtime, stale, budget-reset or unsupported outcome receipts",
+        "Real target source/test changes come only from authorized system executors and retain independent integrated proof"
+      ]
+    }
+  ]
+}

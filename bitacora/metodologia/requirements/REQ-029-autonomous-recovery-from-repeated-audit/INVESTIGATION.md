@@ -17,6 +17,8 @@ assert a != b, 'Different audit finding sets collapse into the same repeat signa
 
 Observed: both signatures `a08812ca9aec`; `AssertionError`, exit 1. This is one defect; retaining numeric IDs alone would still fail when an auditor renumbers a real recurring defect.
 
+Second red-capable reproduction uses official round-two F2 from `bt_remediation.history(rdir)[1]['findings']`, current approved task definitions and `bt_remediation._command_for(finding, tasks)`. Owners are T4a and T15c. The function selects `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py`; T15c's required check is `cd remote/web && npm run verify`. Asserting that the selected check covers that web owner raises `AssertionError: Web finding owner verification is omitted by first-owner selection`, exit 1. This runs the actual selection function without changing product code or executing paid providers.
+
 ## Verified facts
 
 1. M1 records eleven T18 attempts: seven rejected, two cancelled, two accepted and subsequently reopened. The owner-observed count is accurate, but these are not eleven identical failed audits. `EVIDENCE.json` captures these official records, ten handoff base/snapshot identities and nine historical finding sets read with `git show <snapshot>:remote/docs/audit.findings.json`.

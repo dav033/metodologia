@@ -1,0 +1,23 @@
+{
+ "request": "T15a:4",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T15a no arranca: T3 y T15 cambiaron los mismos contratos y no se pueden combinar",
+ "origin": "T15 se construyó sobre un resultado anterior de T3, que después se rehízo. T3 y T15 cambiaron las mismas líneas en remote/contract/command.schema.json, remote/contract/event.schema.json, remote/docs/architecture.md y remote/docs/contract.md. Al intentar arrancar, el sistema devolvió «start rejected: INTEGRATION_CONFLICT: T3 vs T15 for T15a». Los intentos #1 a #3 se aceptaron y luego se devolvieron; el #4 falló en el arranque. El código identity_unverified es solo la última protección que saltó, no la causa.",
+ "steps": [
+  "Pulsa «Rehacer T15 sobre el trabajo actual» (opción rework_conflict). Solo rehace T15.",
+  "Por terminal: `scheduler-op REQ-027 rework T15 --only --reason \"conflicto con T3\"`.",
+  "Espera a que T15 se acepte. T15a arrancará sola sobre la base combinada de T3 y T15.",
+  "Si vuelve a aparecer INTEGRATION_CONFLICT, revisa los cuatro archivos del conflicto antes de volver a lanzar."
+ ],
+ "option": "rework_conflict",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T15:37:03",
+ "seconds": 12.9
+}

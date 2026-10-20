@@ -2,22 +2,22 @@
  "attention": [
   {
    "kind": "blocked_task",
-   "reason": "rework_limit",
-   "task_id": "T18"
+   "reason": "m5:attempts_exhausted",
+   "task_id": "T15a"
   }
  ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-20T19:50:53+00:00",
+ "heartbeat_at": "2026-10-20T20:50:52+00:00",
  "plan_ref": {
   "plan_id": "REQ-027",
   "revision": 9,
   "sha256": "e2d7030f678abcca2c1e3f0cee1cba62f85fd471c1274c6171e7ad26f257510c"
  },
- "projected_at": "2026-10-20T19:50:53+00:00",
+ "projected_at": "2026-10-20T20:50:52+00:00",
  "projection": true,
  "req": "REQ-027",
  "scheduler_status": "blocked",
- "sessions": 201,
+ "sessions": 205,
  "status": "blocked",
  "tasks": [
   {
@@ -602,60 +602,60 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
    "after": [
     "T3"
    ],
-   "attempts": 13,
+   "attempts": 14,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "",
-   "executor": "route:m2:v1:5de8f5c37619c6a245925e2d8d3a40d6504d061b12f9b04f48bc57a6d9544af8:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "evidence": "m6://result/2c548fc030c4a44542257df93e80f7b2dd7a344b6040c4284c73b1538e9e32ac",
+   "executor": "route:m2:v1:7e9220a0f664f874dc41be35b0eab77b52478f50f1af1739d39516b9ef2ba15d:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
    "id": "T15",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1792496378.3980856",
+   "quota_observed_at": "1792527979.8675945",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "0.0",
-   "quota_valid_until": "1792503578.3980856",
+   "quota_used_percent": "23.0",
+   "quota_valid_until": "1792535179.8675945",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
    "scheduler_state": "completed",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
    "status": "done",
    "title": "Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway",
    "unreachable": false
   },
   {
-   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
+   "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
    "after": [
     "T15"
    ],
-   "attempts": 3,
+   "attempts": 6,
    "complexity": "low",
    "effort": "high",
-   "evidence": "m6://result/3a27a7a80ba545320ddb613d1dde990babbbe25d1a3416dc8a0d7ee713ec3e22",
-   "executor": "route:m2:v1:b35b8713f4cdffd1ac4acecfed1f594cd362281299d028b29e01633c54982a3a:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "evidence": "integration gate: T6+T7+T15a vs T15b for T15c: remote/web/README.md, remote/web/mocks/fixtures/snapshot.json, remote/web/mocks/gateway.mjs, remote/web/src/app/globals.css, remote/web/src/a | M6 evidence: m6://result/27e84fc22a2eec1c4de291e5d3bd7af156bc820eaaf78cc56b771f13c0f4aa92",
+   "executor": "route:m2:v1:250586d0c6130e908f9353d75e3f388dd45f8d3ad5e2df287a24ddda9d67ebef:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
    "id": "T15a",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-luis",
+   "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1792462576.687164",
+   "quota_observed_at": "1792529214.8947477",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "39.0",
-   "quota_valid_until": "1792469776.687164",
+   "quota_used_percent": "29.0",
+   "quota_valid_until": "1792536414.8947477",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "done",
+   "scheduler_state": "blocked",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
+   "status": "blocked",
    "title": "Login screen and runs list",
    "unreachable": false
   },
@@ -861,11 +861,11 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;duration_measured;estimated_duration;history_sparse;task_unambiguous;tokens_measured",
-   "status": "done",
+   "status": "todo",
    "title": "Offline end-to-end: real laptop API, gateway and built web wired locally on loopback",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -893,11 +893,11 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "blocked",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "blocked",
+   "status": "todo",
    "title": "Independent security and spec audit by another provider",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1127,11 +1127,11 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "todo",
    "title": "Remediate T18 findings F1, F2, F3, F4",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
