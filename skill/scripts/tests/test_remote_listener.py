@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import http.client
+import json
 import os
 import socket
 import subprocess
@@ -59,6 +60,30 @@ class RemoteListenerTests(unittest.TestCase):
                 response.read()
                 connection.close()
                 self.assertEqual(response.status, 404, "POST /plans must not reach local plan controls")
+
+                # Exercise the production CLI and HTTP command entry point: an edit-brief that could
+                # freeze an owner-approved revision and invoke revise must carry the typed REQ challenge.
+                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+                command = {"schemaVersion": 1, "idempotencyKey": "edit-brief-test-0001", "type": "edit-brief",
+                           "target": {"kind": "task", "project": "demo", "req": "REQ-027", "taskId": "T3"},
+                           "precondition": {"state": "failed", "revision": 1}, "brief": "Updated brief"}
+                connection.request("POST", "/api/remote/v1/commands", body=json.dumps(command),
+                                   headers={"Content-Type": "application/json"})
+                response = connection.getresponse()
+                payload = json.loads(response.read())
+                connection.close()
+                self.assertEqual(response.status, 409)
+                self.assertEqual(payload["code"], "CONFIRMATION_REQUIRED")
+
+                command["confirmation"] = {"challengeId": "challenge-0123456789", "typedReq": "REQ-026"}
+                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+                connection.request("POST", "/api/remote/v1/commands", body=json.dumps(command),
+                                   headers={"Content-Type": "application/json"})
+                response = connection.getresponse()
+                payload = json.loads(response.read())
+                connection.close()
+                self.assertEqual(response.status, 409)
+                self.assertEqual(payload["code"], "CONFIRMATION_REQUIRED")
             finally:
                 process.terminate()
                 try:

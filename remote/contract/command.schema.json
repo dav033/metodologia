@@ -79,7 +79,7 @@
     "answerRound": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["answer"], "properties": { "type": { "const": "answer-round" }, "answer": { "type": "object", "minProperties": 1, "maxProperties": 50 } } }] },
     "cancelPlan": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "cancel-plan" } } }] },
     "deletePlan": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "delete-plan" } } }] },
-    "editBrief": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["brief"], "properties": { "type": { "const": "edit-brief" }, "brief": { "$ref": "#/$defs/brief" } } }] },
+    "editBrief": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["brief", "confirmation"], "properties": { "type": { "const": "edit-brief" }, "brief": { "$ref": "#/$defs/brief" } } }] },
     "note": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["note"], "properties": { "type": { "const": "note" }, "note": { "type": "string", "minLength": 1, "maxLength": 4000 } } }] }
   }
 }
