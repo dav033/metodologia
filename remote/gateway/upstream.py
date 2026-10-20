@@ -90,3 +90,33 @@ class LaptopClient:
         if status >= 400:
             raise UpstreamResponseError(status, payload)
         return status, payload
+
+    def issue_challenge(self, challenge: dict[str, str]) -> tuple[int, dict[str, Any]]:
+        body = json.dumps(challenge).encode("utf-8")
+        request = Request(
+            self._origin + "/api/remote/v1/challenges",
+            data=body,
+            headers={
+                "Authorization": f"Bearer {self._key}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=self._timeout) as response:
+                status = response.status
+                payload = json.loads(response.read(65536).decode("utf-8"))
+        except HTTPError as exc:
+            try:
+                payload = json.loads(exc.read(65536).decode("utf-8"))
+            except (UnicodeError, json.JSONDecodeError) as parse_error:
+                raise UpstreamError("laptop API returned an invalid challenge response") from parse_error
+            status = exc.code
+        except (TimeoutError, URLError, OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise UpstreamError("laptop challenge request failed") from exc
+        if not isinstance(payload, dict):
+            raise UpstreamError("laptop API returned a non-object challenge response")
+        if status >= 400:
+            raise UpstreamResponseError(status, payload)
+        return status, payload

@@ -144,6 +144,11 @@ class SessionStore:
                 return None
             return str(row[0])
 
+    def delete_session(self, token: str) -> None:
+        """Revoke an opaque browser session without storing or logging its raw token."""
+        with self._connect() as db:
+            db.execute("DELETE FROM sessions WHERE token_hash = ?", (_digest(token, self.secret),))
+
 
 def _request_json(url: str, *, method: str = "GET", data: dict[str, str] | None = None,
                   headers: dict[str, str] | None = None) -> dict[str, Any]:

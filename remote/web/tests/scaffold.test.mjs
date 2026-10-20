@@ -37,6 +37,12 @@ test("PWA manifest and same-origin API rewrite are configured", async () => {
   assert.match(config, /destination:\s*`\$\{gatewayOrigin\}\/api\/:path\*`/);
 });
 
+test("displayed sign-in and logout links use the gateway's supported auth routes", async () => {
+  const page = await read("src/app/page.tsx");
+  assert.match(page, /href="\/api\/auth\/github"/);
+  assert.match(page, /href="\/api\/auth\/logout"/);
+});
+
 test("Tailwind CSS 4 is configured through PostCSS", async () => {
   const packageJson = JSON.parse(await read("package.json"));
   const postcssConfig = await read("postcss.config.mjs");

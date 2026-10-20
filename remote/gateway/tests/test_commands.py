@@ -18,6 +18,7 @@ from upstream import UpstreamTimeout
 class FakeLaptop:
     def __init__(self) -> None:
         self.command_calls: list[dict[str, object]] = []
+        self.challenge_calls: list[dict[str, str]] = []
         self.command_error: Exception | None = None
 
     def health(self):
@@ -33,7 +34,11 @@ class FakeLaptop:
         self.command_calls.append(command)
         if self.command_error:
             raise self.command_error
-        return 202, {"commandId": "command-1", "status": "accepted", "idempotencyKey": command["idempotencyKey"]}
+        return 202, {"commandId": "command-1", "status": "accepted", "idempotencyKey": command["idempotency_key"]}
+
+    def issue_challenge(self, challenge):
+        self.challenge_calls.append(challenge)
+        return 201, {"challengeId": "laptop-challenge-0001", **challenge, "expiresIn": 120}
 
 
 class CommandRelayTests(unittest.TestCase):
@@ -75,8 +80,8 @@ class CommandRelayTests(unittest.TestCase):
         self.runtime.outbox._db.close()
         self.temp_dir.cleanup()
 
-    def post(self, command: dict[str, object]):
-        self.connection.request("POST", "/api/remote/v1/commands", json.dumps(command), self.headers)
+    def post(self, command: dict[str, object], path: str = "/api/remote/v1/commands"):
+        self.connection.request("POST", path, json.dumps(command), self.headers)
         response = self.connection.getresponse()
         body = response.read()
         return response.status, response.getheader("Content-Type"), json.loads(body)
@@ -107,7 +112,70 @@ class CommandRelayTests(unittest.TestCase):
 
         self.assertEqual(status, 202)
         self.assertEqual(body["status"], "accepted")
-        self.assertEqual(self.laptop.command_calls, [command])
+        self.assertEqual(self.laptop.command_calls, [{
+            "idempotency_key": "command-key-000001",
+            "command": "approve",
+            "target": "demo/REQ-027",
+            "origin": "remote-web",
+            "params": {
+                "precondition": {"state": "running"},
+                "confirmation": {"challengeId": "challenge-token-1234", "typedReq": "REQ-027"},
+                "target": command["target"],
+            },
+        }])
+
+    def test_public_command_is_translated_to_laptop_ledger_envelope(self) -> None:
+        command = self.command()
+
+        status, _content_type, body = self.post(command)
+
+        self.assertEqual(status, 202)
+        self.assertEqual(body["idempotencyKey"], "command-key-000001")
+        self.assertEqual(self.laptop.command_calls, [{
+            "idempotency_key": "command-key-000001",
+            "command": "pause",
+            "target": "demo/REQ-027",
+            "origin": "remote-web",
+            "params": {"precondition": {"state": "running"}, "target": command["target"]},
+        }])
+
+    def test_authenticated_challenge_request_is_relayed_to_laptop(self) -> None:
+        value = {"target": "demo/REQ-027", "typedReq": "REQ-027"}
+
+        status, _content_type, body = self.post(value, "/api/remote/v1/challenges")
+
+        self.assertEqual(status, 201)
+        self.assertEqual(body["challengeId"], "laptop-challenge-0001")
+        self.assertEqual(self.laptop.challenge_calls, [value])
+        self.assertEqual(self.laptop.command_calls, [])
+
+    def test_challenge_request_requires_authenticated_session(self) -> None:
+        headers = {key: value for key, value in self.headers.items() if key != "Cookie"}
+        self.connection.request("POST", "/api/remote/v1/challenges", json.dumps({
+            "target": "demo/REQ-027", "typedReq": "REQ-027",
+        }), headers)
+        response = self.connection.getresponse()
+        self.assertEqual(response.status, 401)
+        response.read()
+        self.assertEqual(self.laptop.challenge_calls, [])
+
+    def test_github_signin_and_logout_routes_used_by_panel_exist(self) -> None:
+        self.connection.request("GET", "/api/auth/github")
+        login = self.connection.getresponse()
+        self.assertEqual(login.status, 302)
+        self.assertIn("github.com/login/oauth/authorize", login.getheader("Location", ""))
+        login.read()
+
+        self.connection.request("GET", "/api/auth/logout", headers={"Cookie": f"flow_session={self.session}"})
+        logout = self.connection.getresponse()
+        self.assertEqual(logout.status, 302)
+        self.assertIn("flow_session=", logout.getheader("Set-Cookie", ""))
+        logout.read()
+
+        self.connection.request("GET", "/api/auth/session", headers={"Cookie": f"flow_session={self.session}"})
+        session = self.connection.getresponse()
+        self.assertEqual(session.status, 401)
+        session.read()
 
     def test_offline_laptop_refuses_command_without_queueing(self) -> None:
         for _ in range(3):

@@ -51,3 +51,31 @@ def validate_command(value: object) -> dict[str, Any]:
         if typed_req != target["req"]:
             raise CommandValidationError("CONFIRMATION_REQUIRED", "Confirmation must name the target request", 409)
     return command
+
+
+def to_laptop_command(command: dict[str, Any]) -> dict[str, Any]:
+    """Translate the public v1 command into the laptop ledger's normalized envelope."""
+    target = command["target"]
+    params = {key: value for key, value in command.items()
+              if key not in {"schemaVersion", "idempotencyKey", "type", "target"}}
+    # Keep target qualifiers (task, attempt, round) available to the laptop dispatcher.
+    params["target"] = target
+    return {
+        "idempotency_key": command["idempotencyKey"],
+        "command": command["type"],
+        "target": f"{target['project']}/{target['req']}",
+        "origin": "remote-web",
+        "params": params,
+    }
+
+
+def validate_challenge(value: object) -> dict[str, str]:
+    if not isinstance(value, dict):
+        raise CommandValidationError("INVALID_CHALLENGE", "Challenge must be a JSON object")
+    target = value.get("target")
+    typed_req = value.get("typedReq")
+    if (not isinstance(target, str) or len(target) > 512 or target.count("/") != 1
+            or not isinstance(typed_req, str) or not REQ_ID.fullmatch(typed_req)
+            or target.rsplit("/", 1)[-1] != typed_req or not target.split("/", 1)[0]):
+        raise CommandValidationError("INVALID_CHALLENGE", "Challenge target and typed request are invalid")
+    return {"target": target, "typedReq": typed_req}

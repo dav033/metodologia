@@ -186,6 +186,8 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     gateway.snapshot = originalSnapshot;
     await waitForText("Intento att-0008");
     const initialPanel = await waitForText("Rondas abiertas");
+    const logoutHref = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.logout')?.getAttribute('href')", returnByValue: true });
+    assert.equal(logoutHref.result?.value, "/api/auth/logout", "the displayed logout link must resolve to the gateway logout route");
     assert.ok(initialPanel.includes("Seguridad"), "open rounds should show their available answers");
     assert.ok(initialPanel.includes("Pausa el scheduler hasta que lo reanudes."), "decision options should show their consequences");
     const fill = async (selector, value) => cdp(socket, "Runtime.evaluate", {
@@ -202,6 +204,7 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     assert.equal(gateway.commands[0]?.type, "cancel-attempt");
     assert.equal(gateway.commands[0]?.reason, "Stop the stalled attempt");
     assert.equal(gateway.commands[0]?.target.attemptId, "att-0008");
+    assert.equal(gateway.commandHeaders[0], "1", "web command requests must carry the gateway's CSRF marker");
     for (let attempt = 0; attempt < 40; attempt += 1) {
       const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·'))?.querySelector('button')?.disabled === false", returnByValue: true });
       if (ready.result?.value) break;
@@ -220,6 +223,8 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
     assert.equal(gateway.challenges[0]?.target, "lotm/REQ-027");
     assert.equal(gateway.challenges[0]?.typedReq, "REQ-027");
+    assert.equal(gateway.challengeHeaders[0], "1", "web challenge requests must carry the gateway's CSRF marker");
+    assert.equal(gateway.commandHeaders[2], "1", "confirmed web commands must carry the gateway's CSRF marker");
     assert.equal(gateway.commands[2]?.type, "approve");
     assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
     assert.equal(gateway.commands[2]?.confirmation?.challengeId, "mock-server-challenge-0001");

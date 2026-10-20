@@ -60,6 +60,7 @@ export async function createMockGatewayServer() {
       return;
     }
     if (request.method === "POST" && request.url === "/api/remote/v1/challenges") {
+      server.challengeHeaders.push(request.headers["x-flow-request"] ?? null);
       let body = "";
       request.on("data", (chunk) => { body += chunk; });
       request.on("end", () => {
@@ -76,6 +77,7 @@ export async function createMockGatewayServer() {
       return;
     }
     if (request.method === "POST" && request.url === "/api/remote/v1/commands") {
+      server.commandHeaders.push(request.headers["x-flow-request"] ?? null);
       let body = "";
       request.on("data", (chunk) => { body += chunk; });
       request.on("end", () => {
@@ -99,7 +101,9 @@ export async function createMockGatewayServer() {
   server.snapshot = snapshot;
   server.commands = [];
   server.challenges = [];
+  server.challengeHeaders = [];
   server.commandResponses = [];
+  server.commandHeaders = [];
   server.eventStreams = new Set();
   server.publishEvent = (event) => {
     for (const response of server.eventStreams) {

@@ -33,6 +33,7 @@ class StreamRuntime(Protocol):
     stream: SnapshotEventStream
 
     def submit_command(self, value: object) -> tuple[int, dict[str, Any]]: ...
+    def issue_challenge(self, value: object) -> tuple[int, dict[str, Any]]: ...
 
 
 def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
@@ -63,12 +64,21 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
 
         def do_GET(self) -> None:
             route = urlsplit(self.path)
-            if route.path == "/api/auth/login":
+            if route.path in {"/api/auth/login", "/api/auth/github"}:
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
                     ("Location", service.authorization_url(state)),
                     ("Set-Cookie", f"{STATE_COOKIE}={state}; Path=/api/auth/callback; Max-Age=600; HttpOnly; Secure; SameSite=Lax"),
+                ))
+                return
+            if route.path == "/api/auth/logout":
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if token:
+                    service.store.delete_session(token)
+                self._send(302, headers=(
+                    ("Location", service.config.frontend_origin + "/"),
+                    ("Set-Cookie", f"{SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"),
                 ))
                 return
             if route.path == "/api/auth/callback":
@@ -136,6 +146,27 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 self._json(403, {"error": "forbidden"})
                 return
             route = urlsplit(self.path)
+            if route.path == "/api/remote/v1/challenges":
+                if runtime is None:
+                    self._json(404, {"error": "not found"})
+                    return
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                body_ok, value = self._read_json_body("challenge")
+                if not body_ok:
+                    return
+                try:
+                    status, result = runtime.issue_challenge(value)
+                except CommandValidationError as exc:
+                    self._problem(exc.status, exc.code, str(exc))
+                    return
+                except CommandRelayError as exc:
+                    self._problem(exc.status, exc.code, str(exc))
+                    return
+                self._json(status, result)
+                return
             if route.path == "/api/remote/v1/commands":
                 client_key = self.client_address[0]
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
@@ -148,21 +179,8 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 if not token or service.store.get_session(token) is None:
                     self._json(401, {"error": "unauthorized"})
                     return
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-                    self._problem(400, "INVALID_COMMAND", "Content-Length is invalid")
-                    return
-                if length <= 0:
-                    self._problem(400, "INVALID_COMMAND", "Command body is required")
-                    return
-                if length > 65536:
-                    self._problem(413, "BODY_TOO_LARGE", "Command body is too large")
-                    return
-                try:
-                    value = json.loads(self.rfile.read(length).decode("utf-8"))
-                except (UnicodeError, json.JSONDecodeError):
-                    self._problem(400, "INVALID_COMMAND", "Command body must be valid JSON")
+                body_ok, value = self._read_json_body("command")
+                if not body_ok:
                     return
                 try:
                     status, result = runtime.submit_command(value)
@@ -176,9 +194,28 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 return
             self._json(404, {"error": "not found"})
 
+        def _read_json_body(self, kind: str) -> tuple[bool, object | None]:
+            code = "INVALID_CHALLENGE" if kind == "challenge" else "INVALID_COMMAND"
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                self._problem(400, code, "Content-Length is invalid")
+                return False, None
+            if length <= 0:
+                self._problem(400, code, f"{kind.capitalize()} body is required")
+                return False, None
+            if length > 65536:
+                self._problem(413, "BODY_TOO_LARGE", f"{kind.capitalize()} body is too large")
+                return False, None
+            try:
+                return True, json.loads(self.rfile.read(length).decode("utf-8"))
+            except (UnicodeError, json.JSONDecodeError):
+                self._problem(400, code, f"{kind.capitalize()} body must be valid JSON")
+                return False, None
+
         def _problem(self, status: int, code: str, message: str, *, idempotency_key: str | None = None) -> None:
             body: dict[str, object] = {"code": code, "message": message}
-            if idempotency_key is not None:
+            if idempotency_key:
                 body["idempotencyKey"] = idempotency_key
             self._send(status, json.dumps(body).encode("utf-8"), content_type="application/problem+json; charset=utf-8")
 
