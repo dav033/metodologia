@@ -1,24 +1,18 @@
 {
- "attention": [
-  {
-   "kind": "blocked_task",
-   "reason": "m5:attempts_exhausted",
-   "task_id": "T10"
-  }
- ],
+ "attention": [],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-20T13:38:26+00:00",
+ "heartbeat_at": "2026-10-20T14:04:39+00:00",
  "plan_ref": {
   "plan_id": "REQ-027",
   "revision": 7,
   "sha256": "17522cd6ebedff79ca9fefa0550e06518996f2067cee9d3071f0f83e68cc675a"
  },
- "projected_at": "2026-10-20T13:38:26+00:00",
+ "projected_at": "2026-10-20T14:04:39+00:00",
  "projection": true,
  "req": "REQ-027",
- "scheduler_status": "blocked",
- "sessions": 143,
- "status": "blocked",
+ "scheduler_status": "running",
+ "sessions": 157,
+ "status": "running",
  "tasks": [
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -367,31 +361,31 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3"
    ],
-   "attempts": 11,
+   "attempts": 12,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "integration gate: T4+T5b+T10 vs T12 for T13: remote/gateway/app.py | M6 evidence: m6://result/616adfc510fbe2bb639defb616aa36a26337851681d75ced7caaa693cd46c3ac",
-   "executor": "route:m2:v1:cb8497a14cb3310a2fac4bef5d7c5205be9cd0ffba73f96bdd909223a9f05ef2:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "evidence": "m6://result/2f9446420c64303942c07d6b33df9b9975bfcaedcdf74ffcd2bec6baeba3f432",
+   "executor": "route:m2:v1:76dffdc8e9c415d57a3fca709fbae1f24cc0ca7f56c7de45098598fd8d8741c5:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
    "id": "T10",
    "milestone": "M3",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1792502571.321062",
+   "quota_observed_at": "1792504013.3083587",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "1.0",
-   "quota_valid_until": "1792509771.321062",
+   "quota_used_percent": "2.0",
+   "quota_valid_until": "1792511213.3083587",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "blocked",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "blocked",
+   "scheduler_state": "completed",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
+   "status": "done",
    "title": "Gateway skeleton: config, upstream client and liveness state",
    "unreachable": false
   },
@@ -459,26 +453,26 @@
     "T11a",
     "T4a"
    ],
-   "attempts": 6,
+   "attempts": 9,
    "complexity": "high",
    "effort": "high",
-   "evidence": "m6://result/9bea98d25c3ce48d440379d8b4a8206c723b0eb71e880ba2fdb474dd63ccd85e",
-   "executor": "route:m2:v1:5e78016d40983282c9e7b1ac2e9e7145ea3cbffa8890ad2809b2124e27565901:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "evidence": "m6://result/b1b66ac030d087e6feca297a460cfaf89c1408b0fc7dbdd644b965ff1fbb213b",
+   "executor": "route:m2:v1:a370209ebda7208a6c87c979b02bd10f50e2a61595abb9c308cee363571980c1:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T12",
    "milestone": "M3",
    "model": "gpt-6-luna",
    "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1792463567.260414",
+   "quota_observed_at": "1792504014.8338864",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "52.0",
-   "quota_valid_until": "1792470767.260414",
+   "quota_used_percent": "2.0",
+   "quota_valid_until": "1792511214.8338864",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
    "scheduler_state": "completed",
-   "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
    "status": "done",
    "title": "Snapshot cache and SSE fan-out with Last-Event-ID",
    "unreachable": false
@@ -489,26 +483,26 @@
     "T12",
     "T5b"
    ],
-   "attempts": 3,
+   "attempts": 6,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/b267c2974fb982bc94f15b42acd840a617cc9269d939c0d1089c8ca44a02f2e6",
-   "executor": "route:m2:v1:a2691136d449e2ab6a3e989e3c359668eddfdf60d19161035255d6251dae70ba:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "evidence": "m6://result/f6161be8d3f84d73ccd591d348419b045e295f2235ef9c45160e27cd0b198e6a",
+   "executor": "route:m2:v1:ecb220217bd920929e911b2bbb3928e1d80c6f3a25cac6f49413851dba4c7f36:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T13",
    "milestone": "M3",
    "model": "gpt-6-luna",
    "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1792463567.260414",
+   "quota_observed_at": "1792504014.8338864",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "52.0",
-   "quota_valid_until": "1792470767.260414",
+   "quota_used_percent": "2.0",
+   "quota_valid_until": "1792511214.8338864",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
    "scheduler_state": "completed",
-   "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
    "status": "done",
    "title": "Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME",
    "unreachable": false
@@ -519,56 +513,56 @@
     "T13",
     "T6"
    ],
-   "attempts": 6,
+   "attempts": 9,
    "complexity": "high",
    "effort": "high",
-   "evidence": "",
-   "executor": "route:m2:v1:c5b255decb1017bc10012807d8cb0f515536fe84a0a685a57595c259f3214488:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "evidence": "m6://result/3629df4093fceb4de7bb1beaa9d3a0286f26b635bd3936c8095323351ba52bb3",
+   "executor": "route:m2:v1:cfd365f350a6085501ecdbfb31da1677fe193f02f3b2ad6fc27c54eb9d36fa5a:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T14",
    "milestone": "M3",
    "model": "gpt-6-luna",
    "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1792502571.321062",
+   "quota_observed_at": "1792504953.8091352",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "1.0",
-   "quota_valid_until": "1792509771.321062",
-   "repo": "skill",
-   "route_reason": "",
-   "route_status": "assigned",
-   "scheduler_state": "pending",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
-   "title": "Deterministic notification rules with dedupe keys",
-   "unreachable": true
-  },
-  {
-   "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
-   "after": [
-    "T14"
-   ],
-   "attempts": 3,
-   "complexity": "medium",
-   "effort": "medium",
-   "evidence": "m6://result/bfe06de8dc81fcd47aed0fc17ee5deffdfb676e028f87c4c7456e68c94f34a42",
-   "executor": "route:m2:v1:e8c7d9cbb64139e602741b0b6ca94d6a3a82a3120f474bd06fe65c955e59adc4:3383f811755faae1b38cc9f06c478622dd7d019ca25271c7166fbb4cb4117d75",
-   "id": "T14a",
-   "milestone": "M3",
-   "model": "sonnet",
-   "profile": "claude-work",
-   "provider": "claude",
-   "quota_observed_at": "1792463564.0588999",
-   "quota_reason": "",
-   "quota_state": "fresh",
-   "quota_used_percent": "47.0",
-   "quota_valid_until": "1792470764.0588999",
+   "quota_used_percent": "3.0",
+   "quota_valid_until": "1792512153.8091352",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
    "scheduler_state": "completed",
-   "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
    "status": "done",
+   "title": "Deterministic notification rules with dedupe keys",
+   "unreachable": false
+  },
+  {
+   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "after": [
+    "T14"
+   ],
+   "attempts": 4,
+   "complexity": "medium",
+   "effort": "high",
+   "evidence": "",
+   "executor": "route:m2:v1:0804fcb49b45e5235c1f450585fbe9aebcc0e2880df8a127d5ca21aa4025a87e:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "id": "T14a",
+   "milestone": "M3",
+   "model": "gpt-6-luna",
+   "profile": "codex-2",
+   "provider": "codex",
+   "quota_observed_at": "1792504953.8091352",
+   "quota_reason": "",
+   "quota_state": "fresh",
+   "quota_used_percent": "3.0",
+   "quota_valid_until": "1792512153.8091352",
+   "repo": "skill",
+   "route_reason": "",
+   "route_status": "assigned",
+   "scheduler_state": "active",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
+   "status": "in_progress",
    "title": "Telegram delivery with retries, backoff and history",
    "unreachable": false
   },
@@ -689,32 +683,32 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T15b",
     "T7"
    ],
-   "attempts": 3,
+   "attempts": 5,
    "complexity": "low",
    "effort": "high",
-   "evidence": "m6://result/c7505b57c437af4bb437edd755bf71372f9601abe60a92fe49b06a777379530e",
-   "executor": "route:m2:v1:f769adfb53bd820f6d5c859fe4db1a32f9e1674b394d357a80cb5be77bd8271f:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
+   "evidence": "",
+   "executor": "route:m2:v1:1a92bc1c372c5e7f2214f7b40326907772f4bdbf72564680019075b24c51d4d9:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
    "id": "T15c",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-1",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1792463565.1157036",
+   "quota_observed_at": "1792504953.1024506",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "52.0",
-   "quota_valid_until": "1792470765.1157036",
+   "quota_used_percent": "3.0",
+   "quota_valid_until": "1792512153.1024506",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
-   "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "done",
+   "scheduler_state": "active",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
+   "status": "in_progress",
    "title": "Failure review screen",
    "unreachable": false
   },
@@ -778,34 +772,34 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T15e",
     "T8a"
    ],
-   "attempts": 5,
+   "attempts": 6,
    "complexity": "medium",
    "effort": "high",
    "evidence": "",
-   "executor": "route:m2:v1:392ef4d454506a93e014b16c5d6ad9956a739437e7fb47ba3b11a87781e38f95:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "executor": "route:m2:v1:f831cf1e2b78b9de271768883954df96e3c4b3d05f4dda050b9ee1d9d73ba2c0:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
    "id": "T15f",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1792502571.321062",
+   "quota_observed_at": "1792504013.3083587",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "1.0",
-   "quota_valid_until": "1792509771.321062",
+   "quota_used_percent": "2.0",
+   "quota_valid_until": "1792511213.3083587",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
    "scheduler_state": "pending",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
    "status": "todo",
    "title": "Recovery forms and live quotas",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -865,7 +859,7 @@
    "selection_reason": "baseline_route;duration_measured;estimated_duration;history_no_verified_samples;task_unambiguous",
    "status": "todo",
    "title": "Offline end-to-end: real laptop API, gateway and built web wired locally on loopback",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -924,7 +918,7 @@
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
    "status": "todo",
    "title": "Cross-check audit of T18: Independent security and spec audit by another provider",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -954,7 +948,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Documentation: remote README, references and TOOLS entries to copy at go-live",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:fc491a4a265ed4debd1757631add7ef4b831614383543594cc84d90bee68c10c",
@@ -983,7 +977,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the AdvIn production environment: service user, directories, units and Caddy block",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1012,7 +1006,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the Vercel project and deploy the frontend to production",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1041,7 +1035,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the identity and messaging prerequisites and place the secrets",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:fc491a4a265ed4debd1757631add7ef4b831614383543594cc84d90bee68c10c",
@@ -1070,7 +1064,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Release the gateway and the Telegram bot to AdvIn and switch them on",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1099,7 +1093,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Live smoke test of the production environment and handover",
-   "unreachable": true
+   "unreachable": false
   }
  ]
 }
