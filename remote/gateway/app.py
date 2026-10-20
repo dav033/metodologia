@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import logging
 import time
+from datetime import datetime, timezone
 from typing import Any
 
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from notifications import NotificationOutbox, TelegramSender, notification_for_event
+from stream import SnapshotEventStream
 from upstream import LaptopClient, UpstreamError
 
 logger = logging.getLogger(__name__)
@@ -29,6 +31,7 @@ class GatewayRuntime:
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
         self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
+        self.stream = SnapshotEventStream()
 
     def poll_once(self) -> None:
         try:
@@ -74,6 +77,7 @@ class GatewayRuntime:
             isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
             for run in runs
         )
+        self.stream.update_snapshot(snapshot, datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
         self.has_cached_active_run = has_active_run
         self.outbox.set_state_value("laptop_has_cached_active_run", int(has_active_run))
 
@@ -87,9 +91,9 @@ class GatewayRuntime:
         if not isinstance(events, list):
             logger.warning("Laptop event feed response was invalid")
             return
-        for event in events:
-            if not isinstance(event, dict):
-                continue
+        valid_events = [event for event in events if isinstance(event, dict)]
+        self.stream.publish(valid_events)
+        for event in valid_events:
             notification = notification_for_event(event)
             if notification:
                 self.outbox.enqueue(*notification)

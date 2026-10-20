@@ -5,6 +5,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+from typing import Protocol
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
@@ -18,6 +19,7 @@ from auth import (
     cookie_values,
 )
 from security import RateLimiter, origin_matches
+from stream import SnapshotEventStream, encode_sse
 
 logger = logging.getLogger(__name__)
 RATE_WINDOW_SECONDS = 60
@@ -25,7 +27,11 @@ LOGIN_FAILURE_LIMIT = 5
 COMMAND_REQUEST_LIMIT = 30
 
 
-def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
+class StreamRuntime(Protocol):
+    stream: SnapshotEventStream
+
+
+def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
     rate_limiter = RateLimiter()
 
     class GatewayHandler(BaseHTTPRequestHandler):
@@ -77,7 +83,49 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
                     return
                 self._json(200, {"login": login})
                 return
+            if route.path in {"/api/remote/v1/snapshot", "/api/remote/v1/events"} and runtime is not None:
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                if route.path == "/api/remote/v1/snapshot":
+                    snapshot = runtime.stream.snapshot()
+                    if snapshot is None:
+                        self._json(503, {"error": "snapshot unavailable"})
+                    else:
+                        self._json(200, snapshot)
+                    return
+                self._stream_events()
+                return
             self._json(404, {"error": "not found"})
+
+        def _stream_events(self) -> None:
+            if runtime is None:
+                self._json(404, {"error": "not found"})
+                return
+            try:
+                last_id = runtime.stream.parse_last_event_id(self.headers.get("Last-Event-ID"))
+            except ValueError:
+                self._json(400, {"error": "invalid Last-Event-ID"})
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache, no-transform")
+            self.send_header("X-Accel-Buffering", "no")
+            self.end_headers()
+            try:
+                while True:
+                    events = runtime.stream.wait_after(last_id, timeout=15)
+                    if not events:
+                        self.wfile.write(b": keep-alive\n\n")
+                        self.wfile.flush()
+                        continue
+                    for event_id, event in events:
+                        self.wfile.write(encode_sse(event_id, event))
+                        self.wfile.flush()
+                        last_id = event_id
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                return
 
         def do_POST(self) -> None:
             if not self._valid_state_changing_request():
@@ -130,8 +178,9 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
     return GatewayHandler
 
 
-def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None) -> ThreadingHTTPServer:
+def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None,
+                  runtime: StreamRuntime | None = None) -> ThreadingHTTPServer:
     service = OAuthService(config, store=SessionStore(config.database_path, config.session_secret))
-    return ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service))
+    return ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service, runtime))
 
 
