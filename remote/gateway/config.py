@@ -23,6 +23,7 @@ class GatewayConfig:
     bind_port: int = 8790
     request_timeout: float = 5.0
     probe_interval: float = 5.0
+    frontend_origin: str = ""
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "GatewayConfig":
@@ -59,4 +60,5 @@ class GatewayConfig:
             bind_port=port,
             request_timeout=timeout,
             probe_interval=interval,
+            frontend_origin=values.get("FLOW_FRONTEND_ORIGIN", "").strip().rstrip("/"),
         )

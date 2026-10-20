@@ -11,7 +11,7 @@ from typing import Any
 
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
-from notifications import NotificationOutbox, TelegramSender, notification_for_event
+from notifications import NotificationOutbox, TelegramSender, notification_for_event, review_url
 from upstream import LaptopClient, UpstreamError
 
 logger = logging.getLogger(__name__)
@@ -223,7 +223,8 @@ class GatewayRuntime:
         ):
             return
         key = f"liveness:laptop:offline:{self.offline_generation}"
-        self.outbox.enqueue(key, "El portátil lleva más de 15 minutos desconectado mientras hay una ejecución activa.")
+        self.outbox.enqueue(key, "El portátil lleva más de 15 minutos desconectado mientras hay una ejecución activa.",
+                            review_url(self.config.frontend_origin))
         self.outbox.set_state_value("laptop_outage_alerted", self.offline_generation)
         self.offline_alerted_generation = self.offline_generation
 
@@ -262,7 +263,7 @@ class GatewayRuntime:
                 self._stream_sequence += 1
                 self._stream_events.append((self._stream_sequence, browser_event))
                 self._stream_condition.notify_all()
-            notification = notification_for_event(event)
+            notification = notification_for_event(event, self.config.frontend_origin)
             if notification:
                 self.outbox.enqueue(*notification)
         next_cursor = result.get("nextCursor")

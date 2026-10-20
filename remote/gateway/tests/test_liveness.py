@@ -101,7 +101,7 @@ class LivenessTests(unittest.TestCase):
                 "GATEWAY_BIND": "127.0.0.1",
                 "GATEWAY_PORT": str(free_port()),
             }, clear=True), patch("app.LaptopClient", return_value=laptop), \
-                    patch("app.TelegramSender", return_value=sent.append), \
+                    patch("app.TelegramSender", return_value=lambda message, url=None: sent.append(message)), \
                     patch("app.OFFLINE_ALERT_DELAY_SECONDS", 0), \
                     patch.object(GatewayRuntime, "run_forever", one_production_cycle):
                 self.assertEqual(main(), 0)
@@ -112,7 +112,7 @@ class LivenessTests(unittest.TestCase):
             self.assertTrue(any("más de 15 minutos" in message for message in sent))
             self.assertTrue(any("Una tarea falló" in message for message in sent))
 
-            restarted = create_runtime(config, laptop=laptop, sender=sent.append)
+            restarted = create_runtime(config, laptop=laptop, sender=lambda message, url=None: sent.append(message))
             laptop.feed = [{
                 "schemaVersion": 1,
                 "id": "event-1",

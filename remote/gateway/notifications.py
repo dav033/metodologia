@@ -8,6 +8,7 @@ import threading
 import time
 from pathlib import Path
 from typing import Any, Callable, Mapping
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 
@@ -37,16 +38,20 @@ class NotificationOutbox:
             status TEXT NOT NULL DEFAULT 'pending',
             attempts INTEGER NOT NULL DEFAULT 0,
             next_attempt REAL NOT NULL DEFAULT 0,
-            last_error TEXT
+            last_error TEXT,
+            url TEXT
         )""")
+        columns = {row[1] for row in self._db.execute("PRAGMA table_info(telegram_outbox)")}
+        if "url" not in columns:
+            self._db.execute("ALTER TABLE telegram_outbox ADD COLUMN url TEXT")
         self._db.execute("CREATE TABLE IF NOT EXISTS gateway_state (key TEXT PRIMARY KEY, value INTEGER NOT NULL)")
         self._db.commit()
 
-    def enqueue(self, dedupe_key: str, message: str) -> bool:
+    def enqueue(self, dedupe_key: str, message: str, url: str | None = None) -> bool:
         with self._lock:
             cursor = self._db.execute(
-                "INSERT OR IGNORE INTO telegram_outbox(dedupe_key, message) VALUES (?, ?)",
-                (dedupe_key, message),
+                "INSERT OR IGNORE INTO telegram_outbox(dedupe_key, message, url) VALUES (?, ?, ?)",
+                (dedupe_key, message, url),
             )
             self._db.commit()
             return cursor.rowcount == 1
@@ -78,13 +83,13 @@ class NotificationOutbox:
         current = time.time() if now is None else now
         with self._lock:
             rows = self._db.execute(
-                "SELECT dedupe_key, message, attempts FROM telegram_outbox "
+                "SELECT dedupe_key, message, attempts, url FROM telegram_outbox "
                 "WHERE status = 'pending' AND next_attempt <= ? ORDER BY rowid LIMIT 20", (current,)
             ).fetchall()
         delivered = 0
-        for key, message, attempts in rows:
+        for key, message, attempts, url in rows:
             try:
-                send(message)
+                send(message, url=url) if url else send(message)
             except Exception as exc:  # Delivery errors are persisted for retry; do not expose response data.
                 next_attempt = current + min(3600, 5 * (2 ** min(attempts, 10)))
                 status = "dropped" if attempts >= 10 else "pending"
@@ -112,8 +117,11 @@ class TelegramSender:
         self._chat_id = chat_id
         self._timeout = timeout
 
-    def __call__(self, message: str) -> None:
-        payload = json.dumps({"chat_id": self._chat_id, "text": message}).encode("utf-8")
+    def __call__(self, message: str, url: str | None = None) -> None:
+        body: dict[str, Any] = {"chat_id": self._chat_id, "text": message}
+        if url:
+            body["reply_markup"] = {"inline_keyboard": [[{"text": "Revisar", "url": url}]]}
+        payload = json.dumps(body).encode("utf-8")
         request = Request(self._url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
         with urlopen(request, timeout=self._timeout) as response:
             result = json.loads(response.read().decode("utf-8"))
@@ -121,8 +129,20 @@ class TelegramSender:
             raise RuntimeError("Telegram rejected the message")
 
 
-def notification_for_event(event: Mapping[str, Any]) -> tuple[str, str] | None:
-    """Return the stable dedupe key and rendered message for a notifying feed event."""
+def review_url(frontend_origin: str, req_target: Mapping[str, Any] | None = None) -> str | None:
+    """Link to the run in the web frontend (or its root when no run is known)."""
+    if not frontend_origin:
+        return None
+    base = frontend_origin.rstrip("/")
+    if isinstance(req_target, Mapping):
+        project, req = req_target.get("project"), req_target.get("req")
+        if isinstance(project, str) and project and isinstance(req, str) and req:
+            return f"{base}/runs/{quote(project, safe='')}/{quote(req, safe='')}"
+    return base
+
+
+def notification_for_event(event: Mapping[str, Any], frontend_origin: str = "") -> tuple[str, str, str | None] | None:
+    """Return the stable dedupe key, rendered message and review link for a notifying feed event."""
     event_type = event.get("type")
     dedupe_key = event.get("dedupeKey")
     event_id = event.get("id")
@@ -132,4 +152,4 @@ def notification_for_event(event: Mapping[str, Any]) -> tuple[str, str] | None:
     target = event.get("target")
     req = target.get("req") if isinstance(target, dict) else None
     details = f"\n{req}" if isinstance(req, str) and req else ""
-    return f"event:{dedupe_key}", _EVENT_MESSAGES[event_type] + details
+    return f"event:{dedupe_key}", _EVENT_MESSAGES[event_type] + details, review_url(frontend_origin, target)
