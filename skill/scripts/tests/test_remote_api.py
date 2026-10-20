@@ -16,12 +16,8 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parents[1]
 REPO = SCRIPTS.parents[1]
 sys.path.insert(0, str(SCRIPTS))
-<<<<<<< 255adcdb1bc0fb3814e0d448585551076183162c
 sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
-||||||| 21ed855e0526bd6f970e6e6d9769919c0dcbf0b3
-=======
 sys.path.insert(0, str(REPO / "tests" / "migration"))
->>>>>>> 0ba9b657011be079d160ed12134f1130cf08a4e9
 import bt_remote_api
 import installed_wheel
 KEY = "test-gateway-key-0123456789"
