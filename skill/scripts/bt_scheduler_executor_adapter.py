@@ -464,6 +464,16 @@ def _accepted_attempts(scheduler) -> dict[str, str]:
             if view.get("state") == "completed" and view.get("attempt")}
 
 
+def _earlier_attempts(scheduler, task_id: str) -> list[str]:
+    """Attempts of the task whose accepted result was later sent back (newest first): the results a redo replaced."""
+    def read(ctx):
+        rec = ctx.state.tasks[task_id]
+        current = next((a for a in reversed(rec.attempts) if ctx.state.attempts[a].state == "accepted"), None) \
+            if rec.state == "completed" else None
+        return [a for a in reversed(rec.attempts) if ctx.state.attempts[a].state == "accepted" and a != current]
+    return scheduler.read(read)
+
+
 def _snapshot_sha(executor, attempt_id: str) -> str | None:
     """The snapshot commit the executor preserved for that attempt (None when the handoff failed or is absent).
 

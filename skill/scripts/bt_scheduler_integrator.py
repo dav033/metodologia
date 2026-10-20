@@ -78,11 +78,16 @@ class PredecessorIntegrator:
         self._memo: dict[str, str] = {}
 
     def bind(self, *, plan, accepted: Callable[[], Mapping[str, str]], snapshot_of: Callable[[str], str | None],
-             repo_of: Callable[[str], Path | str | None], default_repository: str, identity: str) -> None:
+             repo_of: Callable[[str], Path | str | None], default_repository: str, identity: str,
+             earlier_of: Callable[[str], list[str]] | None = None) -> None:
         """`accepted()` -> {task_id: accepted attempt id} (read once per call); `snapshot_of(attempt_id)` -> its snapshot commit sha
-        (None when the handoff has none; the sha of an EMPTY handoff is the base itself and merges as a no-op)."""
+        (None when the handoff has none; the sha of an EMPTY handoff is the base itself and merges as a no-op).
+        `earlier_of(task_id)` -> the attempts whose accepted results an audit sent back, newest first: when a redone task
+        clashes with a dependent that was built on its earlier result, that result is the merge base that tells the fix
+        from the dependent's own work."""
         self._bound = {"plan": plan, "accepted": accepted, "snapshot_of": snapshot_of, "repo_of": repo_of,
-                       "default": default_repository, "identity": SAFE.sub("-", identity) or "run"}
+                       "default": default_repository, "identity": SAFE.sub("-", identity) or "run",
+                       "earlier_of": earlier_of}
 
     # ------------------------------------------------------------------------------------------------ public
     def base_ref(self, task_id: str) -> str:
@@ -156,13 +161,16 @@ class PredecessorIntegrator:
         seen: set[str] = set()
         commits = [(t, c) for t, c in maximal if not (c in seen or seen.add(c))]      # drop what another snapshot already holds
         current_task, current = commits[0]
+        members = [current_task]                           # the tasks whose work `current` holds
         for tid, sha in commits[1:]:
             if sha == current or contains(sha, current):
                 continue                                    # already part of what we have
             if contains(current, sha):
-                current_task, current = tid, sha            # the new one builds on the old: just move forward
+                current_task, current, members = tid, sha, [tid]   # the new one builds on the old: just move forward
                 continue
             done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", current, sha, check=False)
+            if done.returncode == 1:
+                done = self._merge_over_earlier_result(repo, contains, current, sha, members, tid) or done
             if done.returncode == 1:
                 files = [line for line in done.stdout.splitlines()[1:] if line.strip()][:6]
                 raise IntegrationError("INTEGRATION_CONFLICT",       # the core keeps ~200 chars: who clashes comes first
@@ -173,4 +181,23 @@ class PredecessorIntegrator:
             current = _git(repo, "commit-tree", "--no-gpg-sign", tree, "-p", current, "-p", sha, "-m",
                            f"m3 integration of {current_task} + {tid} for {task_id}").stdout.strip()
             current_task = f"{current_task}+{tid}"
+            members.append(tid)
         return current
+
+    def _merge_over_earlier_result(self, repo: Path, contains, current: str, sha: str, members: list[str], tid: str):
+        """A clash can be a redone task meeting a dependent built on the result it replaced: both then changed the same
+        lines of that earlier result. Merging over the earlier result as base keeps the fix and the dependent's own work
+        (a real overlap still conflicts). Returns the clean merge-tree outcome, or None."""
+        earlier_of = self._bound.get("earlier_of")
+        if earlier_of is None:
+            return None
+        for owner, other in [(m, sha) for m in members] + [(tid, current)]:
+            for attempt in earlier_of(owner):
+                prior = self._bound["snapshot_of"](attempt)
+                if not prior or not SHA.fullmatch(prior) or not contains(prior, other):
+                    continue
+                done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={prior}",
+                            current, sha, check=False)
+                if done.returncode == 0:
+                    return done
+        return None

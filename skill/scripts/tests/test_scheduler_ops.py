@@ -71,6 +71,24 @@ class OpsTests(unittest.TestCase):
         self.sch.withdraw_rework.assert_called_once_with(("T2",), ops.OPERATOR, "keep it")
         self.assertTrue(any("T2" in line for line in lines))
 
+    def test_continue_from_directs_the_next_start_of_one_task_and_checks_the_attempt(self):
+        import json
+        import tempfile
+        from types import SimpleNamespace
+        ctx = SimpleNamespace(state=SimpleNamespace(
+            tasks={"T3": SimpleNamespace(state="pending", attempts=["att-1", "att-2"])},
+            attempts={"att-1": SimpleNamespace(state="accepted"), "att-2": SimpleNamespace(state="accepted")}))
+        sch = SimpleNamespace(read=lambda fn: fn(ctx))
+        with tempfile.TemporaryDirectory() as tmp:
+            line = ops.direct_continuation(Path(tmp), sch, "T3", "att-1")
+            self.assertIn("att-1", line)
+            self.assertEqual(json.loads((Path(tmp) / "RUN.continue.json").read_text()),
+                             {"T3": {"attempt": "att-1", "attempts": 2}})
+            with self.assertRaises(ops.core.SchedulerError):
+                ops.direct_continuation(Path(tmp), sch, "T3", "att-9")        # not an attempt of the task
+            with self.assertRaises(ops.core.SchedulerError):
+                ops.direct_continuation(Path(tmp), sch, "T3", "")
+
     def test_rework_only_does_not_cascade(self):
         self.sch.rework.return_value = ("T1",)
         ops.apply("p", "REQ-001", self.rdir, "rework", "T1", "just this one", only=True)

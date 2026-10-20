@@ -149,7 +149,14 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   `scheduler-op REQ withdraw-rework T4,T5` takes a rework back for tasks that have redone nothing since (every attempt
   after the accepted one ended without a result): they return to `completed` on the verdict they already had, so no
   work is lost and no verdict is invented (audit `rework_withdrawn`); anything redone or never accepted is refused and
-  nothing changes. Tasks whose prerequisites are
+  nothing changes.
+  A redo meets its dependents through the integrator: when a redone task clashes with a dependent that was built on
+  the result it replaced, the two are merged over that earlier result as base (`merge-tree --merge-base`), which keeps
+  the fix and the dependent's work; a real overlap still conflicts. A retry looks past cancelled attempts and refused
+  starts to the last attempt that left work; a task with no prerequisites continues from its earlier result even
+  when the plan was revised since or the repository head moved forward; and `scheduler-op REQ continue-from T3
+  att-0042` directs the next start of one task to continue from a given accepted result. An owner note for a task
+  goes in `RUN.notes/<task>.md`. Tasks whose prerequisites are
   still completed become `ready` at once; the scheduler redoes them, and the audit runs again at the end. Nothing is
   completed by the rework: each redone task needs a new independent verdict;
 - the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was

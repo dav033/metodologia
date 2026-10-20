@@ -128,11 +128,14 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             integrate.bind(plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
                            identity=api.run_identity(scheduler),
                            accepted=lambda: api._accepted_attempts(scheduler),
-                           snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt))
+                           snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
+                           earlier_of=lambda task: api._earlier_attempts(scheduler, task))
             port.base_ref = integrate.base_ref
         if recovery_store_path is not None:
             continuation = RetryContinuation(scheduler, executor, repo_of, port.base_ref,
-                                             default_repository=default_repository)
+                                             default_repository=default_repository,
+                                             snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
+                                             run_dir=rdir)
             wiring.recovery = RecoveryAdapter(
                 recovery_store_path, scheduler=scheduler, run_id=api.run_identity(scheduler),
                 describe=continuation.describe, policy=recovery_policy)

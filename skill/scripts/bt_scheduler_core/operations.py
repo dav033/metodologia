@@ -66,7 +66,9 @@ def reopen(ctx: Ctx, task_id: str, by: str, reason: str = "") -> None:
     if rec.state != T.BLOCKED.value or ctx.state.cancel_requested:
         raise SchedulerError("NOT_ALLOWED", f"only a blocked task of a live run can be reopened ({task_id} is {rec.state})")
     rec.budget_base, rec.reason, rec.hold_until, rec.waits = len(rec.attempts), "", 0.0, 0
-    set_task(ctx, task_id, T.READY, by=by, reason=reason, decision="reopen")
+    waiting = [a for a in ctx.plan.ancestors(task_id) if ctx.state.tasks[a].state != T.COMPLETED.value]
+    # a task whose prerequisites are being redone waits for them like any other pending task
+    set_task(ctx, task_id, T.PENDING if waiting else T.READY, by=by, reason=reason, decision="reopen")
 
 
 def rework_scope(ctx: Ctx, task_ids: tuple[str, ...], cascade: bool = True) -> tuple[str, ...]:

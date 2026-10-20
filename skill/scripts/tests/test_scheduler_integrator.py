@@ -56,12 +56,13 @@ class Unit(unittest.TestCase):
         self.head = git(self.app, "rev-parse", "HEAD")
         self.accepted: dict[str, str] = {}
         self.snaps: dict[str, str | None] = {}
+        self.earlier: dict[str, list[str]] = {}
 
     def bound(self, spec, default="app"):
         integrator = integ.PredecessorIntegrator()
         integrator.bind(plan=FakePlan(spec), accepted=lambda: dict(self.accepted), snapshot_of=lambda a: self.snaps.get(a),
                         repo_of=lambda role: {"app": self.app, "docs": self.docs}.get(role), default_repository=default,
-                        identity="r1-abc-1")
+                        identity="r1-abc-1", earlier_of=lambda tid: list(self.earlier.get(tid, ())))
         return integrator
 
     def accept(self, tid, sha):
@@ -109,6 +110,41 @@ class Unit(unittest.TestCase):
             i.base_ref("T4")
         self.assertEqual(caught.exception.code, "INTEGRATION_CONFLICT")
         self.assertIn("README.md", caught.exception.detail)
+
+    def redone_task_and_a_dependent(self):
+        """T1 was accepted (v1), T2 was built on it, an audit sent T1 back and its redo (v2) started from the repository
+        again: v2 and T2 both changed line 1 of the file v1 introduced, and T2 also changed line 20."""
+        lines = [f"line{n}" for n in range(1, 21)]
+        v1 = snapshot(self.app, self.head, {"f.txt": "\n".join(["t1 first draft", *lines[1:]]) + "\n"})
+        t2 = snapshot(self.app, v1, {"f.txt": "\n".join(["t1 first draft", *lines[1:-1], "t2 own work"]) + "\n"})
+        v2 = snapshot(self.app, self.head, {"f.txt": "\n".join(["t1 audited fix", *lines[1:]]) + "\n"})
+        self.accept("T1", v2)
+        self.accept("T2", t2)
+        self.snaps["att-T1-v1"] = v1
+        return {"T1": ([], "app"), "T2": (["T1"], "app"), "T3": (["T1", "T2"], "app")}
+
+    def test_a_redone_task_that_clashes_with_its_dependent_merges_over_the_result_it_replaced(self):
+        spec = self.redone_task_and_a_dependent()
+        with self.assertRaises(integ.IntegrationError) as caught:                 # without the history it is a clash
+            self.bound(spec).base_ref("T3")
+        self.assertEqual(caught.exception.code, "INTEGRATION_CONFLICT")
+        self.earlier["T1"] = ["att-T1-v1"]
+        merged = self.bound(spec).base_ref("T3")
+        text = git(self.app, "show", f"{merged}:f.txt")
+        self.assertIn("t1 audited fix", text)                                      # the redo's fix
+        self.assertIn("t2 own work", text)                                         # the dependent's work
+        self.assertNotIn("t1 first draft", text)
+
+    def test_a_real_overlap_with_the_earlier_result_as_base_still_conflicts(self):
+        spec = self.redone_task_and_a_dependent()
+        clash = snapshot(self.app, self.snaps["att-T1-v1"], {"f.txt": "t2 rewrote the same line\n"})
+        self.accept("T2", clash)
+        v2 = snapshot(self.app, self.head, {"f.txt": "t1 audited fix\n"})
+        self.accept("T1", v2)
+        self.earlier["T1"] = ["att-T1-v1"]
+        with self.assertRaises(integ.IntegrationError) as caught:
+            self.bound(spec).base_ref("T3")
+        self.assertEqual(caught.exception.code, "INTEGRATION_CONFLICT")
 
     def test_an_accepted_predecessor_without_a_snapshot_blocks_instead_of_running_on_a_stale_tree(self):
         self.accept("T1", None)

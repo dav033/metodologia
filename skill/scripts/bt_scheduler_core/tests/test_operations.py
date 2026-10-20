@@ -260,6 +260,15 @@ class Rework(unittest.TestCase):
             h.core.withdraw_rework(("T2", "T9"), "operator", "T9 never reworked")
         self.assertEqual(self.states(h)["T2"], "pending")                # all or nothing
 
+    def test_a_task_sent_back_while_a_prerequisite_is_being_redone_waits_for_it(self):
+        h = self.chain()
+        h.finish_and_accept("T3")
+        h.core.rework(("T1",), "operator", "audit", cascade=False)      # T1 pending/ready, T2 and T3 keep their results
+        h.core.step()                                                    # T1 starts again
+        self.assertEqual(self.states(h)["T3"], "completed")
+        h.core.rework(("T3",), "operator", "again", cascade=False)       # T3 back to pending with T1 still being redone
+        self.assertEqual(self.states(h)["T3"], "pending")
+
     def test_independent_branches_are_left_alone(self):
         h = self.chain()
         h.finish_and_accept("T9")

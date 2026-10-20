@@ -204,8 +204,35 @@ def ensure_watch(project: str, req: str, rdir: Path) -> bool:
     return True
 
 
+def direct_continuation(rdir: Path, sch, task_id: str, attempt_id: str) -> str:
+    """Tell the next attempt of `task_id` to continue from the accepted result of `attempt_id` (RUN.continue.json). It
+    applies to that one start only; the choice is written to the run's audit trail."""
+    if not attempt_id:
+        raise core.SchedulerError("NOT_ALLOWED", "continue-from needs the accepted attempt to continue from")
+
+    def check(ctx):
+        rec = ctx.state.tasks.get(task_id)
+        att = ctx.state.attempts.get(attempt_id)
+        if rec is None or att is None or attempt_id not in rec.attempts or att.state != "accepted":
+            raise core.SchedulerError("NOT_ALLOWED", f"{attempt_id} is not an accepted attempt of {task_id}")
+        if rec.state in ("active",):
+            raise core.SchedulerError("NOT_ALLOWED", f"{task_id} is running: direct its next attempt before it starts")
+        return len(rec.attempts)
+    count = sch.read(check)
+    path = Path(rdir) / "RUN.continue.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    data[task_id] = {"attempt": attempt_id, "attempts": count}
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    os.replace(tmp, path)
+    return f"{task_id}: its next attempt continues from the accepted result of {attempt_id}"
+
+
 def apply(project: str, req: str, rdir: Path, action: str, target: str = "", reason: str = "",
-          keep_held: bool = False, only: bool = False) -> list[str]:
+          keep_held: bool = False, only: bool = False, option: str = "") -> list[str]:
     """Run one operator move; the owner is stopped first and the watchdog restarts it afterwards."""
     lines: list[str] = []
     why = reason or f"operator {action}"
@@ -223,6 +250,8 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
                 tasks = tuple(item.strip() for item in target.split(",") if item.strip())
                 moved = sch.rework(tasks, OPERATOR, why, cascade=not only)
                 lines.append(f"sent back for rework: {', '.join(moved) or 'nothing (already pending)'}")
+            elif action == "continue-from":
+                lines.append(direct_continuation(rdir, sch, target, option))
             elif action == "withdraw-rework":
                 tasks = tuple(item.strip() for item in target.split(",") if item.strip())
                 restored = sch.withdraw_rework(tasks, OPERATOR, why)
