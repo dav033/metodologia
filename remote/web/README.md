@@ -14,8 +14,8 @@ npm run mock
 
 In a second terminal, run `npm run dev`. The `/api/:path*` rewrite targets the mock gateway at
 `http://127.0.0.1:8790` by default. Set `FLOW_GATEWAY_ORIGIN` to the gateway origin for a deployed environment.
-The mock serves `GET /api/state` from `mocks/fixtures/snapshot.json` and returns `404` for other routes; it is local
-development data and is not included in production code paths.
+The mock implements the browser session, v1 snapshot, event cursor and command endpoints used by the panel. Its
+fixture is local development data and is not included in production code paths.
 
 For GitHub OAuth, configure the gateway's `GITHUB_CALLBACK_URL` to the **public frontend origin** at
 `/api/auth/callback` (for example, `https://flow.example.com/api/auth/callback`). The browser must start login and
