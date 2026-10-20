@@ -5,6 +5,8 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
+import secrets
 import sqlite3
 import threading
 from contextlib import contextmanager
@@ -13,6 +15,7 @@ from typing import Any, Callable
 
 COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision",
             "approve", "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
+CHALLENGED = frozenset(("revise", "approve", "launch", "cancel-plan", "delete-plan"))
 ORIGINS = ("web", "telegram")
 PRECONDITION_FIELDS = ("state", "revision", "updatedAt")   # what a precondition may pin on the target
 _LOCK = threading.Lock()
@@ -20,6 +23,8 @@ _SCHEMA = """CREATE TABLE IF NOT EXISTS commands (
     idempotency_key TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, command TEXT NOT NULL, target TEXT NOT NULL,
     origin TEXT NOT NULL, params TEXT NOT NULL, precondition TEXT NOT NULL,
     status TEXT NOT NULL, code TEXT, outcome TEXT, received_at TEXT NOT NULL, finished_at TEXT)"""
+_CHALLENGE_SCHEMA = """CREATE TABLE IF NOT EXISTS challenges (
+    challenge_hash TEXT PRIMARY KEY, target TEXT NOT NULL, expires_at REAL NOT NULL, used_at TEXT)"""
 
 Handler = Callable[[str, dict], Any]            # (target, params) -> JSON-able result; raises on failure
 StateReader = Callable[[str], "dict | None"]    # target -> {"state", "revision", "updatedAt"} or None if absent
@@ -48,16 +53,34 @@ def target_state(target: str) -> dict | None:
     import bt_plans_api
 
     try:
-        project, req, _ = _run_target(target)
+        project, req, rdir = _run_target(target)
         status = bt_plans_api.status_of(bt_core.ROOT, project, req)
     except (ValueError, bt_plans_api.PlanError, OSError):
         return None
     run = status["run"]
-    if not isinstance(run, dict) or run.get("authority") != "scheduler":
+    if not isinstance(run, dict):
         return None
-    # The precondition pins the revision the live run uses, not the newest plan a user may have edited.
+    # Plan commands pin the current plan revision; run commands pin the revision used by the live run.
+    plan = status.get("plan") or {}
     revision = (run.get("plan_ref") or {}).get("revision")
-    return {"state": run.get("status"), "revision": revision, "updatedAt": run.get("updated_at")}
+    if run.get("authority") == "scheduler":
+        return {"state": run.get("status"), "revision": revision if revision is not None else plan.get("revision"),
+                "updatedAt": run.get("updated_at"), "plan_state": plan.get("status"),
+                "plan_revision": plan.get("revision"), "plan_updatedAt": _plan_updated_at(rdir)}
+    try:
+        updated_at = dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
+            timespec="microseconds")
+    except OSError:
+        updated_at = None
+    return {"state": plan.get("status"), "revision": plan.get("revision"), "updatedAt": updated_at}
+
+
+def _plan_updated_at(rdir: Path) -> str | None:
+    try:
+        return dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
+            timespec="microseconds")
+    except OSError:
+        return None
 
 
 def dispatch_run_command(command: str, target: str, params: dict) -> Any:
@@ -109,8 +132,43 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
 
 def dispatch_handlers() -> dict[str, Handler]:
     """Build handlers for commands owned by the Scheduler run surface."""
-    return {command: (lambda target, params, action=command: dispatch_run_command(action, target, params))
-            for command in ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision")}
+    handlers = {command: (lambda target, params, action=command: dispatch_run_command(action, target, params))
+                for command in ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision")}
+    handlers.update({command: (lambda target, params, action=command: dispatch_plan_command(action, target, params))
+                     for command in ("approve", "launch", "answer-round", "cancel-plan", "delete-plan")})
+    return handlers
+
+
+def dispatch_plan_command(command: str, target: str, params: dict) -> Any:
+    """Apply a plan or round command through the existing plan and round APIs."""
+    project, req, rdir = _run_target(target)
+    import bt_plans_api as plans
+    import bt_rounds
+    import bt_core
+
+    reason = params.get("reason", "")
+    if not isinstance(reason, str):
+        raise ValueError("reason debe ser texto.")
+    if command in {"approve", "launch"}:
+        return {"message": plans.run_plan(bt_core.ROOT, project, req, command, by="remote")}
+    if command == "cancel-plan":
+        return {"message": plans.cancel_plan(bt_core.ROOT, project, req, params["typed_req"], by="remote")}
+    if command == "delete-plan":
+        return {"message": plans.delete_plan(bt_core.ROOT, project, req, params["typed_req"], by="remote",
+                                                reason=reason)}
+    if command == "answer-round":
+        round_number, answers = params.get("round"), params.get("answers")
+        if not isinstance(round_number, int) or isinstance(round_number, bool) or round_number < 1:
+            raise ValueError("answer-round requiere params.round.")
+        if not isinstance(answers, dict) or not answers:
+            raise ValueError("answer-round requiere params.answers.")
+        f = rdir / "rounds" / f"round-{round_number:02d}.json"
+        data = bt_rounds.load(f)
+        if data.get("status") != "open" or data.get("round") != round_number:
+            raise ValueError("La ronda ya no está abierta.")
+        return {"round": round_number, "status": "answered",
+                "answers": bt_rounds.answer_round(f, answers, "remote")["answers"]}
+    raise ValueError(f"Comando no implementado por el despachador de planes: {command}.")
 
 
 def _now() -> str:
@@ -119,7 +177,7 @@ def _now() -> str:
 
 def fingerprint(req: dict) -> str:
     """Digest of everything that changes the effect: a reused key with other content must not replay."""
-    body = {k: req[k] for k in ("command", "target", "params", "precondition")}
+    body = {k: v for k, v in req.items() if k != "idempotency_key"}
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
 
 
@@ -141,6 +199,17 @@ def validate(req: Any) -> str | None:
         return "precondition debe fijar state, revision y/o updatedAt del objetivo."
     if not isinstance(req.get("params", {}), dict):
         return "params debe ser un objeto."
+    if set(req) - {"idempotency_key", "command", "target", "origin", "params", "precondition", "confirmation"}:
+        return "El comando contiene campos no reconocidos."
+    if req["command"] in CHALLENGED:
+        confirmation = req.get("confirmation")
+        if not isinstance(confirmation, dict) or set(confirmation) not in (
+                {"challenge_id", "typed_req"}, {"challengeId", "typedReq"}) \
+                or not isinstance(confirmation.get("challenge_id", confirmation.get("challengeId")), str) \
+                or not isinstance(confirmation.get("typed_req", confirmation.get("typedReq")), str):
+            return "El comando requiere un desafío de confirmación válido."
+    elif "confirmation" in req:
+        return "Este comando no admite desafíos de confirmación."
     return None
 
 
@@ -150,6 +219,7 @@ class Ledger:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._db() as db:
             db.execute(_SCHEMA)
+            db.execute(_CHALLENGE_SCHEMA)
 
     @contextmanager
     def _db(self):
@@ -168,6 +238,20 @@ class Ledger:
         with self._db() as db:
             return [dict(r) for r in db.execute("SELECT * FROM commands ORDER BY received_at, rowid")]
 
+    def issue_challenge(self, target: str, typed_req: str, now: float | None = None) -> dict:
+        """Issue a one-use target-bound challenge after the caller types the target REQ id."""
+        match = re.fullmatch(r"[^/]+/(REQ-\d+)", target)
+        if not match or not isinstance(typed_req, str) or typed_req.strip().upper() != match.group(1):
+            raise ValueError("Escribe el id REQ del objetivo para confirmar.")
+        challenge_id = secrets.token_urlsafe(32)
+        challenge_hash = hashlib.sha256(challenge_id.encode()).hexdigest()
+        issued_at = dt.datetime.now(dt.timezone.utc).timestamp() if now is None else now
+        with self._db() as db:
+            db.execute("DELETE FROM challenges WHERE expires_at<? OR used_at IS NOT NULL", (issued_at,))
+            db.execute("INSERT INTO challenges (challenge_hash,target,expires_at,used_at) VALUES (?,?,?,NULL)",
+                       (challenge_hash, target, issued_at + 120))
+        return {"challengeId": challenge_id, "target": target, "expiresIn": 120}
+
     @staticmethod
     def _result(row: sqlite3.Row, replay: bool) -> dict:
         res = {"status": row["status"], "code": row["code"], "replayed": replay,
@@ -182,14 +266,17 @@ class Ledger:
         OK is written only after the effect returned. A row left PENDING (crash mid-effect) replays as
         UNKNOWN_OUTCOME and is never executed again.
         """
-        problem = validate(req)
-        if problem:
-            return {"status": "REJECTED", "code": "INVALID_COMMAND", "message": problem, "stored": False}
+        if not isinstance(req, dict):
+            return {"status": "REJECTED", "code": "INVALID_COMMAND", "message": validate(req), "stored": False}
         req = {**req, "params": req.get("params") or {}}
-        if req["command"] not in handlers:
-            return {"status": "REJECTED", "code": "COMMAND_NOT_IMPLEMENTED", "stored": False,
-                    "message": "El comando aún no tiene ejecutor."}
-        fp, key = fingerprint(req), req["idempotency_key"]
+        key = req.get("idempotency_key")
+        if not isinstance(key, str) or not 8 <= len(key) <= 120:
+            return {"status": "REJECTED", "code": "INVALID_COMMAND", "message": validate(req), "stored": False}
+        try:
+            fp = fingerprint(req)
+        except (TypeError, ValueError):
+            return {"status": "REJECTED", "code": "INVALID_COMMAND", "message": "El comando no es JSON válido.",
+                    "stored": False}
         with _LOCK:
             with self._db() as db:
                 row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
@@ -201,28 +288,77 @@ class Ledger:
                         return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "replayed": True,
                                 "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
                     return self._result(row, True)
+        problem = validate(req)
+        if problem:
+            code = "CONFIRMATION_REQUIRED" if req.get("command") in CHALLENGED else "INVALID_COMMAND"
+            return {"status": "REJECTED", "code": code, "message": problem, "stored": False}
+        if req["command"] not in handlers:
+            return {"status": "REJECTED", "code": "COMMAND_NOT_IMPLEMENTED", "stored": False,
+                    "message": "El comando aún no tiene ejecutor."}
+        fp, key = fingerprint(req), req["idempotency_key"]
+        with _LOCK:
+            # Existing keys replay before challenge validation: retrying a timed-out request remains safe.
+            with self._db() as db:
+                row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
+                if row is not None:
+                    if row["fingerprint"] != fp:
+                        return {"status": "REJECTED", "code": "IDEMPOTENCY_CONFLICT", "stored": False,
+                                "message": "La clave ya se usó con un contenido distinto."}
+                    if row["status"] == "PENDING":
+                        return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "replayed": True,
+                                "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
+                    return self._result(row, True)
+            try:
+                current = state_of(req["target"])
+            except Exception as exc:
+                return {"status": "FAILED", "code": "STATE_UNAVAILABLE", "stored": False,
+                        "message": str(exc)[:300]}
+            if req["command"] in {"approve", "launch", "cancel-plan", "delete-plan"} and current:
+                current = {**current, "state": current.get("plan_state", current.get("state")),
+                           "revision": current.get("plan_revision", current.get("revision")),
+                           "updatedAt": current.get("plan_updatedAt", current.get("updatedAt"))}
+            if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
+                return {"status": "REJECTED", "code": "STALE_PRECONDITION", "stored": False,
+                        "message": "La precondición del objetivo ya no se cumple."}
+            with self._db() as db:
+                db.execute("BEGIN IMMEDIATE")
+                row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
+                if row is not None:
+                    if row["fingerprint"] != fp:
+                        return {"status": "REJECTED", "code": "IDEMPOTENCY_CONFLICT", "stored": False,
+                                "message": "La clave ya se usó con un contenido distinto."}
+                    return self._result(row, True) if row["status"] != "PENDING" else {
+                        "status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "replayed": True,
+                        "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
+                if req["command"] in CHALLENGED:
+                    challenge = req["confirmation"]
+                    challenge_id = challenge.get("challenge_id", challenge.get("challengeId"))
+                    typed_req = challenge.get("typed_req", challenge.get("typedReq", "")).strip().upper()
+                    expected = req["target"].rsplit("/", 1)[-1].upper()
+                    challenge_hash = hashlib.sha256(challenge_id.encode()).hexdigest()
+                    record = db.execute("SELECT * FROM challenges WHERE challenge_hash=?", (challenge_hash,)).fetchone()
+                    now = dt.datetime.now(dt.timezone.utc).timestamp()
+                    if (typed_req != expected or not record or record["target"] != req["target"]
+                            or record["used_at"] is not None or record["expires_at"] < now):
+                        return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False,
+                                "message": "El desafío falta, venció, ya se usó o no corresponde al objetivo."}
+                    db.execute("UPDATE challenges SET used_at=? WHERE challenge_hash=? AND used_at IS NULL",
+                               (_now(), challenge_hash))
                 db.execute("INSERT INTO commands VALUES (?,?,?,?,?,?,?,'PENDING',NULL,NULL,?,NULL)",
                            (key, fp, req["command"], req["target"], req["origin"],
                             json.dumps(req["params"], sort_keys=True), json.dumps(req["precondition"], sort_keys=True),
                             _now()))
-            status, code, outcome = self._apply(req, handlers, state_of)
+            effective = dict(req["params"])
+            if req["command"] in CHALLENGED:
+                effective["typed_req"] = req["confirmation"].get(
+                    "typed_req", req["confirmation"].get("typedReq"))
+            try:
+                outcome = handlers[req["command"]](req["target"], effective)
+                status, code = "OK", None
+            except Exception as exc:
+                outcome, status, code = {"error": str(exc)[:300]}, "FAILED", "EFFECT_FAILED"
             with self._db() as db:
                 db.execute("UPDATE commands SET status=?, code=?, outcome=?, finished_at=? WHERE idempotency_key=?",
                            (status, code, json.dumps(outcome, ensure_ascii=False), _now(), key))
                 row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
             return self._result(row, False)
-
-    @staticmethod
-    def _apply(req: dict, handlers: dict[str, Handler], state_of: StateReader) -> tuple[str, str | None, Any]:
-        try:
-            current = state_of(req["target"])
-        except Exception as exc:
-            return "FAILED", "STATE_UNAVAILABLE", {"error": str(exc)[:300]}
-        if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
-            return "REJECTED", "STALE_PRECONDITION", {"expected": req["precondition"],
-                                                       "actual": {k: (current or {}).get(k) for k in PRECONDITION_FIELDS}}
-        try:
-            result = handlers[req["command"]](req["target"], req["params"])
-        except Exception as exc:
-            return "FAILED", "EFFECT_FAILED", {"error": str(exc)[:300]}
-        return "OK", None, result

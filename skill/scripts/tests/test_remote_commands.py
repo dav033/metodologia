@@ -26,8 +26,8 @@ def req(**over):
 
 
 class FakeHandler:
-    def __init__(self, body: bytes):
-        self.path = "/api/remote/v1/commands"
+    def __init__(self, body: bytes, path="/api/remote/v1/commands"):
+        self.path = path
         self.headers = {"Authorization": f"Bearer {KEY}", "Content-Length": str(len(body))}
         self.rfile = io.BytesIO(body)
         self.sent = None
@@ -117,13 +117,16 @@ class EntryPointTests(LedgerBase):
     def route_ledger(self):
         return rc.Ledger(Path(self.temp.name) / ".state" / "remote" / "commands.db")
 
-    def post(self, body):
-        h = FakeHandler(json.dumps(body).encode() if not isinstance(body, bytes) else body)
+    def post(self, body, path="/api/remote/v1/commands"):
+        h = FakeHandler(json.dumps(body).encode() if not isinstance(body, bytes) else body, path)
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
                 patch.dict(bt_remote_api.HANDLERS, self.handlers, clear=True), \
                 patch.object(bt_remote_api, "_target_state", lambda t: self.state):
             bt_remote_api.route_post(h)
         return h.sent
+
+    def challenge(self, target="demo/REQ-001", typed_req="REQ-001"):
+        return self.post({"target": target, "typedReq": typed_req}, "/api/remote/v1/challenges")
 
     def test_route_post_stores_once_and_replays(self):
         a, b = self.post(req()), self.post(req())
@@ -146,9 +149,66 @@ class EntryPointTests(LedgerBase):
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
-        status, body = self.post(req(command="approve"))
+        status, body = self.post(req(command="edit-brief"))
         self.assertEqual((status, body["code"]), (501, "COMMAND_NOT_IMPLEMENTED"))
         self.assertEqual(self.route_ledger().rows(), [])
+
+    def test_real_entrypoint_refuses_launch_without_valid_challenge(self):
+        status, body = self.post(req(command="launch"))
+        self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
+        self.assertEqual(self.calls, [])
+        self.assertEqual(self.route_ledger().rows(), [])
+
+    def test_approve_launches_once_and_replay_does_not_launch_again(self):
+        import bt_plans_api
+
+        issued_status, issued = self.challenge()
+        self.assertEqual(issued_status, 201)
+        self.assertEqual(issued["expiresIn"], 120)
+        request = req(command="approve", confirmation={"challengeId": issued["challengeId"],
+                                                        "typedReq": "REQ-001"})
+        calls = []
+        with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.object(bt_plans_api, "run_plan", side_effect=lambda *a, **kw: calls.append((a, kw)) or "launched"):
+            first, replay = self.post(request), self.post(request)
+        self.assertEqual((first[0], first[1]["status"], replay[0], replay[1]["replayed"]),
+                         (200, "OK", 200, True))
+        self.assertEqual((len(calls), len(self.route_ledger().rows())), (1, 1))
+
+    def test_challenge_cannot_be_reused_with_another_idempotency_key(self):
+        _, issued = self.challenge()
+        self.handlers["approve"] = self._pause
+        request = req(command="approve", confirmation={"challengeId": issued["challengeId"],
+                                                        "typedReq": "REQ-001"})
+        self.assertEqual(self.post(request)[1]["status"], "OK")
+        status, body = self.post({**request, "idempotency_key": "key-00000002"})
+        self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
+        self.assertEqual(len(self.calls), 1)
+
+    def test_f4_interrupted_effect_through_real_entrypoint_replays_unknown(self):
+        class Crash(BaseException):
+            pass
+        self.handlers["pause"] = lambda *_: (_ for _ in ()).throw(Crash())
+        with self.assertRaises(Crash):
+            self.post(req())
+        status, body = self.post(req())
+        self.assertEqual((status, body["code"]), (409, "UNKNOWN_OUTCOME"))
+        self.assertEqual(self.route_ledger().rows()[0]["status"], "PENDING")
+
+    def test_answer_round_reaches_round_file_through_real_entrypoint(self):
+        import bt_rounds
+
+        rdir = Path(self.temp.name) / "requirements" / "REQ-001-demo"
+        round_file = rdir / "rounds" / "round-02.json"
+        round_file.parent.mkdir(parents=True)
+        round_file.write_text(json.dumps({"round": 2, "status": "open", "questions": [{"id": "q1"}],
+                                          "answers": {}}), encoding="utf-8")
+        request = req(command="answer-round", params={"round": 2, "answers": {"q1": {"text": "Keep scope"}}})
+        with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)):
+            status, body = self.post(request)
+        saved = bt_rounds.load(round_file)
+        self.assertEqual((status, body["status"], saved["status"], saved["answers"], saved["answered_via"]),
+                         (200, "OK", "answered", {"q1": {"text": "Keep scope"}}, "remote"))
 
     def test_route_post_cancel_attempt_dispatches_through_scheduler_operator(self):
         request = req(command="cancel-attempt", params={"attempt": "att-001", "reason": "owner request"})
@@ -180,6 +240,24 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((status, body["status"]), (200, "OK"))
         self.assertEqual(calls[0][4], "att-001")
         status_reader.assert_called_once()
+
+    def test_route_post_rejects_stale_plan_revision(self):
+        import bt_plans_api
+
+        status_model = {"run": {"authority": "scheduler", "status": "running", "updated_at": "t1",
+                                "plan_ref": {"revision": 3}},
+                        "plan": {"revision": 4, "status": "review"}}
+        challenge = self.route_ledger().issue_challenge("demo/REQ-001", "REQ-001")
+        request = req(command="approve", precondition={"state": "review", "revision": 3},
+                      confirmation={"challengeId": challenge["challengeId"], "typedReq": "REQ-001"})
+        h = FakeHandler(json.dumps(request).encode())
+        with patch.object(bt_plans_api, "status_of", return_value=status_model), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, {}, clear=True):
+            bt_remote_api.route_post(h)
+        self.assertEqual((h.sent[0], h.sent[1]["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.route_ledger().rows(), [])
 
     def test_route_post_decision_answer_uses_scheduler_decisions_api(self):
         import bt_scheduler_decisions as decisions

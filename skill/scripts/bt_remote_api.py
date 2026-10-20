@@ -134,7 +134,8 @@ def route_get(handler) -> None:
 
 HANDLERS: dict = {}     # additional command handlers supplied by later dispatch layers
 _COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501, "STALE_PRECONDITION": 409,
-                   "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409, "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503}
+                   "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409, "EFFECT_FAILED": 500,
+                   "STATE_UNAVAILABLE": 503, "CONFIRMATION_REQUIRED": 409}
 
 
 def _target_state(target: str) -> dict | None:
@@ -169,5 +170,25 @@ def route_post(handler) -> None:
             return _problem(handler, 413, "BODY_TOO_LARGE", "La solicitud excede el tamaño permitido.")
         return _submit_command(handler, length)
     if path == f"{PREFIX}/challenges":
-        return _problem(handler, 503, "CHALLENGES_UNAVAILABLE", "Los desafíos aún no están disponibles.")
+        try:
+            length = int(handler.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = -1
+        if length < 0:
+            return _problem(handler, 400, "INVALID_CHALLENGE", "Longitud de solicitud no válida.")
+        if length > MAX_BODY:
+            return _problem(handler, 413, "BODY_TOO_LARGE", "La solicitud excede el tamaño permitido.")
+        try:
+            body = json.loads(handler.rfile.read(length) or b"null")
+        except (ValueError, OSError):
+            return _problem(handler, 400, "INVALID_CHALLENGE", "El cuerpo debe ser JSON válido.")
+        if not isinstance(body, dict) or set(body) not in ({"target", "typed_req"}, {"target", "typedReq"}) \
+                or not isinstance(body.get("target"), str):
+            return _problem(handler, 400, "INVALID_CHALLENGE", "Se requieren target y typedReq.")
+        import bt_remote_commands as commands
+        try:
+            challenge = commands.Ledger().issue_challenge(body["target"], body.get("typed_req", body.get("typedReq")))
+        except ValueError as exc:
+            return _problem(handler, 400, "INVALID_CHALLENGE", str(exc))
+        return _json(handler, challenge, 201)
     return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
