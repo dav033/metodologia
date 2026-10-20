@@ -8,7 +8,7 @@ from app import GatewayRuntime, create_runtime
 from config import ConfigurationError, GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from main import main
-from upstream import UpstreamError
+from upstream import LaptopClient, UpstreamError
 
 
 class FakeLaptop:
@@ -58,6 +58,23 @@ class LivenessTests(unittest.TestCase):
             with self.assertRaises(ConfigurationError):
                 GatewayConfig.from_env()
             self.assertEqual(main(), 2)
+
+    def test_upstream_client_uses_configured_timeout(self):
+        config = GatewayConfig.from_env({
+            "LAPTOP_ORIGIN": "http://127.0.0.1:18765",
+            "FLOW_GATEWAY_KEY": "test-key",
+            "TELEGRAM_BOT_TOKEN": "test-token",
+            "TELEGRAM_CHAT_ID": "test-chat",
+            "GATEWAY_DATABASE": "/tmp/gateway.sqlite",
+            "UPSTREAM_TIMEOUT": "2.5",
+        })
+        client = LaptopClient(config.laptop_origin, config.gateway_key, config.request_timeout)
+        with patch("upstream.urlopen") as urlopen:
+            urlopen.return_value.__enter__.return_value.read.return_value = b'{"status":"ok"}'
+
+            self.assertEqual(client.health(), {"status": "ok"})
+            urlopen.assert_called_once()
+            self.assertEqual(urlopen.call_args.kwargs["timeout"], 2.5)
 
     def test_production_composition_persists_liveness_and_event_delivery(self):
         with tempfile.TemporaryDirectory() as directory:
