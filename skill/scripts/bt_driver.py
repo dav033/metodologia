@@ -101,10 +101,12 @@ class Driver:
     # -- invocation -----------------------------------------------------------------------------------------
     def invocation(self, prompt: str, workdir: Path, model: str | None = None, effort: str | None = None,
                    timeout_sec: int | None = None, env_remove: tuple[str, ...] = (),
-                   env_set: tuple[tuple[str, str], ...] = (), structured: bool = False) -> Invocation:
+                   env_set: tuple[tuple[str, str], ...] = (), structured: bool = False,
+                   max_turns: int | None = None) -> Invocation:
         state = {"agent": self.provider,
                  "limits": {"session_timeout_min": timeout_sec / 60} if timeout_sec else {}}
-        argv, stdin = bt_runprompt.agent_argv(state, Path(workdir), prompt, model, effort, structured=structured)
+        argv, stdin = bt_runprompt.agent_argv(state, Path(workdir), prompt, model, effort, structured=structured,
+                                           max_turns=max_turns)
         if self.executable:
             argv[0] = self.executable
         return Invocation(self.provider, tuple(argv), stdin, str(workdir), env_remove, env_set)

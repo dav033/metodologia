@@ -15,6 +15,34 @@ from bt_scheduler_executor import model as m
 from support import World, order, wait_for
 
 
+class OutOfTurns(unittest.TestCase):
+    RESULT = ('{"type":"result","subtype":"error_max_turns","is_error":true,"num_turns":46,"terminal_reason":"max_turns",'
+              '"errors":["Reached maximum number of turns (45)"]}')
+
+    def test_using_every_turn_is_an_unfinished_attempt_not_an_agent_error(self):
+        self.assertTrue(classify.ran_out_of_turns('{"type":"assistant"}\n' + self.RESULT + "\n"))
+        self.assertTrue(classify.ran_out_of_turns(
+            '{"type":"result","subtype":"error_during_execution","terminal_reason":"max_turns"}'))
+
+    def test_the_outcome_names_it_incomplete_so_recovery_retries_from_the_snapshot(self):
+        class Failed:
+            def classify(self, route, raw, returncode, **kw):
+                return ex.Classification("failed")
+        out = classify.outcome(Failed(), None, self.RESULT, {"reason": "exited", "returncode": 1},
+                               cancel_requested=False, state_before=m.RUNNING, totals=(len(self.RESULT), 0))
+        self.assertEqual((out["final"], out["cause"]), (m.FAILED, m.INCOMPLETE))
+        plain = classify.outcome(Failed(), None, "boom", {"reason": "exited", "returncode": 1},
+                                 cancel_requested=False, state_before=m.RUNNING, totals=(4, 0))
+        self.assertEqual(plain["cause"], m.AGENT_ERROR)
+
+    def test_other_endings_and_text_that_only_mentions_it_are_not(self):
+        self.assertFalse(classify.ran_out_of_turns('{"type":"result","subtype":"success","is_error":false}'))
+        self.assertFalse(classify.ran_out_of_turns('{"type":"result","subtype":"error_during_execution"}'))
+        self.assertFalse(classify.ran_out_of_turns("I will not stop at error_max_turns, the agent said"))
+        self.assertFalse(classify.ran_out_of_turns('{"type":"assistant","text":"error_max_turns"}\n{"type":"result",'))
+        self.assertFalse(classify.ran_out_of_turns(""))
+
+
 class Causes(unittest.TestCase):
     def run_one(self, scenario, **kw):
         w = kw.pop("world", None) or World(self)

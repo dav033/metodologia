@@ -260,11 +260,12 @@ def session_prompt(project: str, rdir: Path, state: dict, task: dict | None, ses
 
 
 def agent_argv(state: dict, workdir: Path, prompt: str, model: str | None = None,
-               effort: str | None = None, *, structured: bool = False) -> tuple[list[str], str | None]:
+               effort: str | None = None, *, structured: bool = False,
+               max_turns: int | None = None) -> tuple[list[str], str | None]:
     """(argv, stdin_text) for a session at the given model/effort (default: tier 0). Claude takes the prompt as the
     last argument and streams JSON events (one per line, live in the session log); Codex reads it from stdin ('-').
     `structured` asks Codex for its JSONL event stream (`--json`) too, which the scheduler's monitor needs for tool
-    activity and token usage; the other providers stream JSON already."""
+    activity and token usage; the other providers stream JSON already. `max_turns` is Claude's turn cap (default 45)."""
     if model is None and effort is None:
         model, effort = tier_.model_for(state, 0)
     args = tier_.model_args(state.get("agent"), model, effort)
@@ -278,4 +279,4 @@ def agent_argv(state: dict, workdir: Path, prompt: str, model: str | None = None
                 *(("--json",) if structured else ()), "-C", str(workdir), *args, "-"], prompt
     exe = shutil.which("claude") or "claude"
     return [exe, "-p", *args, "--dangerously-skip-permissions", "--output-format", "stream-json", "--verbose",
-            "--max-turns", "45", prompt], None
+            "--max-turns", str(max_turns or 45), prompt], None

@@ -1,6 +1,7 @@
 """Turn the end of a process into a cause class. Facts only: nothing here retries, switches provider or accepts work."""
 from __future__ import annotations
 
+import json
 import re
 from typing import Any
 
@@ -22,6 +23,20 @@ TAIL_BYTES = 8192
 def looks_like_connection_loss(raw: str) -> bool:
     tail = raw[-TAIL_BYTES:]
     return any(p.search(tail) for p in CONNECTION_PATTERNS)
+
+
+def ran_out_of_turns(raw: str) -> bool:
+    """The agent stopped because it used every turn it was given (its closing `result` event says so), not because it
+    crashed: the work done so far is on disk, so this is an unfinished attempt, not an agent error."""
+    for line in reversed(raw[-TAIL_BYTES:].splitlines()):
+        if line.startswith("{") and '"type":"result"' in line[:60]:
+            try:
+                event = json.loads(line)
+            except ValueError:
+                return False
+            return isinstance(event, dict) and (event.get("subtype") == "error_max_turns"
+                                                or event.get("terminal_reason") == "max_turns")
+    return False
 
 
 def outcome(driver: AgentDriver, route: m.Route, raw: str, exit_info: dict[str, Any], *,
@@ -65,6 +80,8 @@ def outcome(driver: AgentDriver, route: m.Route, raw: str, exit_info: dict[str, 
         return done(m.FAILED, m.INCOMPLETE, "exited cleanly without the provider's end-of-turn evidence")
     if isinstance(rc, int) and rc < 0:
         return done(m.FAILED, m.KILLED, f"terminated by {signal_name(rc)}")
+    if isinstance(rc, int) and rc != 0 and ran_out_of_turns(raw):
+        return done(m.FAILED, m.INCOMPLETE, "the agent used all its turns before it finished")
     if isinstance(rc, int) and rc != 0 and looks_like_connection_loss(raw):
         return done(m.FAILED, m.CONNECTION)
     return done(m.FAILED, m.AGENT_ERROR, base["detail"] or (f"exit code {rc}" if rc else "provider reported an error"))

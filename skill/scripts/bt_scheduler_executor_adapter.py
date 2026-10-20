@@ -84,6 +84,14 @@ def _policy(call: Callable[[], Any]) -> Any:
         raise m3.ExecutorError("POLICY_DENIED", str(refusal.code or refusal)[:300]) from None
 
 
+def _max_turns() -> int:
+    """Turns one Claude attempt may use (`scheduler.max_turns`)."""
+    import bt_config
+
+    value = bt_config.get("scheduler.max_turns", 120)
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 1 else 120
+
+
 def _quota_deadline_is_fresh(value: object, now: float) -> bool:
     if not isinstance(value, (int, float)) or isinstance(value, bool):
         return False
@@ -259,7 +267,8 @@ class MethodologyDriver:
             if wanted and wanted != bt_profiles.DEFAULT_BIN.get(provider):
                 executable = shutil.which(wanted) or wanted
         invocation = bt_driver.driver_for(provider, executable).invocation(
-            prompt, Path(workspace.path), route.model, route.effort or None, int(timeout_seconds), structured=True)
+            prompt, Path(workspace.path), route.model, route.effort or None, int(timeout_seconds), structured=True,
+            max_turns=_max_turns())
         current = dict(os.environ)
         removed = tuple(k for k in current if k not in env)
         added = tuple((k, v) for k, v in env.items() if current.get(k) != v)

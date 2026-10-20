@@ -37,6 +37,12 @@ class CodexLaunch(unittest.TestCase):
             structured = bt_runprompt.agent_argv({"agent": agent}, Path("/w"), "p", "opus", "high", structured=True)[0]
             self.assertEqual(plain, structured)
 
+    def test_the_claude_turn_cap_is_a_parameter_with_the_legacy_default(self):
+        def cap(**kw):
+            argv = bt_runprompt.agent_argv({"agent": "claude"}, Path("/w"), "p", "opus", "high", **kw)[0]
+            return argv[argv.index("--max-turns") + 1]
+        self.assertEqual((cap(), cap(max_turns=120)), ("45", "120"))
+
     def test_the_driver_passes_it_through_the_invocation(self):
         invocation = bt_driver.driver_for("codex").invocation("p", Path("/w"), "gpt-6-luna", "high", structured=True)
         self.assertIn("--json", invocation.argv)
