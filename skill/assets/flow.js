@@ -572,7 +572,8 @@
       var g = JSON.parse(m.data), before = digests[g.seq];
       digests[g.seq] = g;
       if (S.mode !== 'live' || g.run !== S.run) return;
-      if (before && g.stream > before.stream) flash({ run: g.run, task: g.task, attempt: g.attempt, from: 'M3', to: 'M4', kind: 'digest', data: {} });
+      // the provider's raw stream is folded away unless «Mostrar detalle» is on, so it must not animate the map either
+      if (S.detail && before && g.stream > before.stream) flash({ run: g.run, task: g.task, attempt: g.attempt, from: 'M3', to: 'M4', kind: 'digest', data: {} });
       soon();                                           // the sign of life moves the "última señal" clock
     });
   }
