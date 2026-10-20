@@ -1,7 +1,8 @@
 import os
-from pathlib import Path
+import socket
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from app import GatewayRuntime, create_runtime
@@ -9,6 +10,12 @@ from config import ConfigurationError, GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from main import main
 from upstream import UpstreamError
+
+
+def free_port():
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
 
 
 class FakeLaptop:
@@ -87,6 +94,12 @@ class LivenessTests(unittest.TestCase):
                 "TELEGRAM_BOT_TOKEN": "test-token",
                 "TELEGRAM_CHAT_ID": "test-chat",
                 "GATEWAY_DATABASE": str(config.database_path),
+                "GITHUB_CLIENT_ID": "test-client-id",
+                "GITHUB_CLIENT_SECRET": "test-client-secret",
+                "SESSION_SECRET": "test-session-secret-with-more-than-32-bytes",
+                "FLOW_FRONTEND_ORIGIN": "https://flow.example.test",
+                "GATEWAY_BIND": "127.0.0.1",
+                "GATEWAY_PORT": str(free_port()),
             }, clear=True), patch("app.LaptopClient", return_value=laptop), \
                     patch("app.TelegramSender", return_value=sent.append), \
                     patch("app.OFFLINE_ALERT_DELAY_SECONDS", 0), \
