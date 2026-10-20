@@ -138,6 +138,27 @@ class CommandRelayTests(unittest.TestCase):
             "params": {"target": command["target"]},
         }])
 
+    def test_web_answer_decision_and_round_are_translated_to_laptop_dialect(self) -> None:
+        decision = {**self.command("answer-decision"), "idempotencyKey": "command-key-000002",
+                    "target": {"kind": "run", "project": "demo", "req": "REQ-027", "taskId": "T1"},
+                    "precondition": {"state": "open"}, "requestId": "T1:1", "option": "retry", "reason": ""}
+        status, _content_type, _body = self.post(decision)
+        self.assertEqual(status, 202)
+        params = self.laptop.command_calls[-1]["params"]
+        self.assertEqual(self.laptop.command_calls[-1]["command"], "answer-decision")
+        self.assertEqual((params["request_id"], params["option"], params["task"]), ("T1:1", "retry", "T1"))
+        self.assertNotIn("requestId", params)
+
+        answer = {"q1": {"choice": "a", "note": ""}}
+        round_command = {**self.command("answer-round"), "idempotencyKey": "command-key-000003",
+                         "target": {"kind": "round", "project": "demo", "req": "REQ-027", "roundId": "round-01"},
+                         "precondition": {"state": "open"}, "round": 1, "answer": answer}
+        status, _content_type, _body = self.post(round_command)
+        self.assertEqual(status, 202)
+        params = self.laptop.command_calls[-1]["params"]
+        self.assertEqual((params["round"], params["answers"]), (1, answer))
+        self.assertNotIn("answer", params)
+
     def test_authenticated_challenge_request_is_relayed_to_laptop(self) -> None:
         value = {"target": "demo/REQ-027", "typedReq": "REQ-027"}
 

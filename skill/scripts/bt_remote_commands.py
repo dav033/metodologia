@@ -86,6 +86,8 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
 
     try:
         project, req, rdir = _run_target(target)
+        if command in {"answer-round", "answer-decision"}:
+            return _answerable_state(rdir, command, params or {})
         status = bt_plans_api.status_of(bt_core.ROOT, project, req)
     except (ValueError, bt_plans_api.PlanError, OSError):
         return None
@@ -111,6 +113,28 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
     except OSError:
         updated_at = None
     return {"state": plan.get("status"), "revision": plan.get("revision"), "updatedAt": updated_at}
+
+
+def _answerable_state(rdir: Path, command: str, params: dict) -> dict | None:
+    """State of the open round / decision request an answer targets (None when it is absent or already resolved)."""
+    if command == "answer-round":
+        import bt_rounds
+        number = params.get("round")
+        if not isinstance(number, int) or isinstance(number, bool) or number < 1:
+            return None
+        try:
+            data = bt_rounds.load(rdir / "rounds" / f"round-{number:02d}.json")
+        except (OSError, ValueError):
+            return None
+        if not isinstance(data, dict) or data.get("round") != number:
+            return None
+        return {"state": data.get("status"), "revision": data.get("revision"), "updatedAt": data.get("updated_at")}
+    request_id = params.get("request_id")
+    if not isinstance(request_id, str) or not request_id:
+        return None
+    import bt_scheduler_decisions as decisions
+    request = next((r for r in decisions.open_requests(rdir) if r.get("id") == request_id), None)
+    return {"state": "open", "revision": request.get("revision"), "updatedAt": request.get("created_at")} if request else None
 
 
 def _plan_updated_at(rdir: Path) -> str | None:

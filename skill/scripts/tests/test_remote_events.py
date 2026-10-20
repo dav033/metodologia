@@ -201,6 +201,40 @@ class RemoteEventsTests(unittest.TestCase):
         events = self.get_events([], plans=plans)
         self.assertEqual([event["type"] for event in events], ["plan.waiting"])
 
+    def test_resolved_ephemeral_event_cursor_does_not_wedge_the_feed(self):
+        plans = [{"project": "demo", "req_id": "REQ-001", "decisions": [{"id": "d1", "title": "Choose"}]}]
+        runs = [{"run": "demo/REQ-001", "active": False, "status": "completed", "updated_at": "2026-10-19T12:00:00Z",
+                 "tasks": []}]
+        first = self.get_events(runs, plans=plans)
+        decision = next(event for event in first if event["type"] == "plan.waiting")
+        later = [event for event in first if event["occurredAt"] > decision["occurredAt"]] or first
+        cursor = decision["cursor"]
+
+        def after_resolution():
+            handler = Handler()
+            handler.path = f"/api/remote/v1/events?after={cursor}"
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                    patch("bt_live_api.flow_events", return_value=([], [], {})), \
+                    patch("bt_remote_views.max_attempts", return_value=3), \
+                    patch("bt_remote_views.cached_quota_rows", return_value=[]), \
+                    patch.object(bt_remote_api, "_runs", return_value=runs), \
+                    patch.object(bt_remote_api, "_plans", return_value=[]):
+                bt_remote_api.route_get(handler)
+            return handler
+
+        handler = after_resolution()
+        self.assertEqual(handler.status, 200, handler.body)
+        payload = json.loads(handler.body)
+        self.assertEqual([event["type"] for event in payload["events"]], ["run.finished"])
+        self.assertTrue(payload["nextCursor"])
+        self.assertNotEqual(payload["nextCursor"], cursor)
+        self.assertTrue(later)
+        bad = Handler()
+        bad.path = "/api/remote/v1/events?after=nonsense"
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}):
+            bt_remote_api.route_get(bad)
+        self.assertEqual(bad.status, 400)
+
 
 if __name__ == "__main__":
     unittest.main()

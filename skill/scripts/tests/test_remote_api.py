@@ -52,6 +52,21 @@ class MobileDialectTests(unittest.TestCase):
                          "options": [{"id": "retry", "label": "Reintentar", "consequence": "Gasta un intento."}],
                          "recommended": "retry", "unskippable": False}
 
+    def test_snapshot_keeps_failed_attempt_reviewable_without_marking_it_active(self):
+        runs = [{"run": "demo/REQ-001", "status": "running", "tasks": [
+            {"id": "T1", "state": "rejected", "attempt": {"id": "att-9", "state": "failed", "live": False,
+                                                          "ended_at": "2026-10-20T10:00:00Z"}},
+            {"id": "T2", "state": "running", "attempt": {"id": "att-10", "state": "running", "live": True}}]}]
+        with patch.object(bt_remote_api, "_runs", return_value=runs), \
+                patch.object(bt_remote_api, "_shared_now_items", return_value=[]):
+            rows = bt_remote_api._snapshot_runs()
+        failed, running = rows[0]["tasks"]
+        self.assertIsNone(failed["activeAttempt"])
+        self.assertEqual(failed["reviewAttempt"]["id"], "att-9")
+        self.assertEqual(running["activeAttempt"]["id"], "att-10")
+        self.assertIsNone(running["reviewAttempt"])
+        self.assertEqual(rows[0]["activeAttempt"]["id"], "att-10")
+
     def snapshot(self):
         status = {"project": "demo", "req_id": "REQ-001", "title": "Thing",
                   "plan": {"plan_id": "p1", "revision": 2, "status": "approved"},

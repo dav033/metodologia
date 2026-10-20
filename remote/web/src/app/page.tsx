@@ -7,7 +7,7 @@ import { postRemoteMutation } from "../lib/remote-api";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string; roundId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
-type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string } };
+type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string }; reviewAttempt?: { id: string; state?: string; updatedAt?: string } };
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type RoundQuestion = { id: string; text: string; type: "choice" | "open"; options?: { key: string; label: string }[]; recommended?: string; why?: string; suggested?: string };
 type Round = { project: string; req: string; round: number; id?: string; title?: string; intro?: string; coverage?: string; status: string; revision?: number; questions: RoundQuestion[] };
@@ -110,7 +110,8 @@ function parseSnapshot(value: unknown): Snapshot {
       revision: typeof task.revision === "number" ? task.revision : undefined,
       updatedAt: text(updatedAt) ? updatedAt : undefined,
       acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
-      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")) };
+      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")),
+      reviewAttempt: parseAttempt(field(task, "reviewAttempt", "review_attempt")) };
   };
   const runs = raw.runs.map((item): Run => {
     const run = record(item);
@@ -251,6 +252,12 @@ export default function HomePage() {
     if (!parsedSession.authenticated) return;
     await Promise.all([refreshSnapshot(), refreshQuotas(), refreshHistory()]);
   }, [refreshSnapshot, refreshQuotas, refreshHistory]);
+
+  useEffect(() => {
+    if (!snapshot) return;
+    const target = window.location.hash.startsWith("#attempt-") ? document.getElementById(decodeURIComponent(window.location.hash.slice(1))) : null;
+    target?.scrollIntoView({ block: "center" });
+  }, [snapshot === null]);
 
   useEffect(() => {
     void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Error al cargar el panel."));
@@ -411,10 +418,10 @@ export default function HomePage() {
     </main>;
   }
 
-  const renderTask = (task: Task, run: Run) => <article className="task-card" key={`${run.req}-${task.id}`}>
+  const renderTask = (task: Task, run: Run) => <article className="task-card" key={`${run.req}-${task.id}`} id={(task.reviewAttempt ?? task.activeAttempt) ? `attempt-${(task.reviewAttempt ?? task.activeAttempt)!.id}` : undefined}>
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
-    {task.state === "failed" && task.activeAttempt && <FailureReviewPanel attemptId={task.activeAttempt.id} />}
+    {["failed", "rejected"].includes(task.state) && (task.reviewAttempt ?? task.activeAttempt) && <FailureReviewPanel attemptId={(task.reviewAttempt ?? task.activeAttempt)!.id} />}
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     <div className="actions">
       {task.state === "blocked" || task.state === "failed" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}

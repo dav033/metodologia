@@ -7,7 +7,7 @@ from typing import Any
 
 COMMAND_TYPES = frozenset({
     "pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve",
-    "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note",
+    "launch", "answer-round", "answer-decision", "cancel-plan", "delete-plan", "edit-brief", "note",
 })
 CONFIRMATION_REQUIRED_TYPES = frozenset({
     "revise", "approve", "launch", "cancel-plan", "delete-plan",
@@ -58,6 +58,11 @@ def to_laptop_command(command: dict[str, Any], origin: str = "web") -> dict[str,
     target = command["target"]
     params = {key: value for key, value in command.items()
               if key not in {"schemaVersion", "idempotencyKey", "type", "target", "precondition", "confirmation"}}
+    # The public dialect is camelCase and sends one `answer`; the laptop ledger reads `request_id` and `answers`.
+    if "requestId" in params:
+        params["request_id"] = params.pop("requestId")
+    if command["type"] == "answer-round" and "answer" in params:
+        params["answers"] = params.pop("answer")
     # Keep target qualifiers (task, attempt, round) available to the laptop dispatcher.
     params["target"] = target
     for param, qualifier in (("task", "taskId"), ("attempt", "attemptId")):

@@ -337,8 +337,8 @@ def route_get(handler) -> None:
             events.extend(remote_events.decision_events(plans))
             events.extend(remote_events.derived_events(
                 runs, views.rounds_of(plans), views.quota_accounts(views.cached_quota_rows()), dt.datetime.now(dt.UTC)))
-            if after and all(event["cursor"] != after for event in events):
-                return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
+            # A well-formed cursor that is no longer present names an ephemeral event (an open decision or round)
+            # that was resolved: replay from the start (consumers dedupe by dedupeKey) instead of wedging the feed.
             page, cursor, has_more = remote_events.page(events, after, limit)
             return _json(handler, remote_events.redact({"events": page, "nextCursor": cursor, "hasMore": has_more}))
         match = re.fullmatch(re.escape(PREFIX) + r"/attempts/([^/]+)/review", path)

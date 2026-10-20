@@ -209,6 +209,46 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((status, body["status"], saved["status"], saved["answers"], saved["answered_via"]),
                          (200, "OK", "answered", {"q1": {"text": "Keep scope"}}, "remote"))
 
+    def test_round_and_decision_answers_read_the_open_item_not_the_run_state(self):
+        import bt_plans_api
+
+        def post(body):  # real `_target_state`: only the handlers table is isolated
+            h = FakeHandler(json.dumps(body).encode())
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                    patch.dict(bt_remote_api.HANDLERS, {}, clear=True):
+                bt_remote_api.route_post(h)
+            return h.sent
+
+        rdir = Path(self.temp.name) / "requirements" / "REQ-001-demo"
+        round_file = rdir / "rounds" / "round-01.json"
+        round_file.parent.mkdir(parents=True)
+        round_file.write_text(json.dumps({"round": 1, "status": "open", "questions": [{"id": "q1"}], "answers": {}}),
+                              encoding="utf-8")
+        waiting = {"run": {"authority": "scheduler", "status": "waiting", "updated_at": "t1",
+                           "plan_ref": {"revision": 3}}, "plan": {"revision": 3, "status": "approved"}}
+        request = req(command="answer-round", params={"round": 1, "answers": {"q1": {"text": "x"}}},
+                      precondition={"state": "open"})
+        with patch.object(bt_plans_api, "status_of", return_value=waiting), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)):
+            status, body = post(request)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+
+        decision = {"id": "T1:1", "task": "T1", "options": [{"id": "retry"}]}
+        calls = []
+        request = req(idempotency_key="key-00000002", command="answer-decision",
+                      params={"request_id": "T1:1", "option": "retry"}, precondition={"state": "open"})
+        with patch.object(bt_plans_api, "status_of", return_value=waiting), \
+                patch("bt_scheduler_decisions.open_requests", return_value=[decision]), \
+                patch("bt_scheduler_decisions.answer", side_effect=lambda *a, **kw: calls.append(a) or ["ok"]), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)):
+            status, body = post(request)
+            self.assertEqual((status, body["status"], calls[0][3:5]), (200, "OK", ("T1:1", "retry")))
+        stale = {**request, "idempotency_key": "key-00000003"}
+        with patch("bt_scheduler_decisions.open_requests", return_value=[]), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)):
+            status, body = post(stale)
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+
     def test_route_post_cancel_attempt_dispatches_through_scheduler_operator(self):
         request = req(command="cancel-attempt", params={"attempt": "att-001", "reason": "owner request"})
         calls = []

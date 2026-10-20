@@ -34,7 +34,10 @@ def _active_attempt(attempt: dict | None) -> dict | None:
 def task_view(task: dict) -> dict:
     attempt = task.get("attempt") if isinstance(task.get("attempt"), dict) else None
     live = attempt if attempt and (attempt.get("live") or task.get("state") in {"running", "verifying"}) else None
-    return {**task, "state": task.get("state") or "pending", "activeAttempt": _active_attempt(live),
+    state = task.get("state") or "pending"
+    # A failed/rejected task keeps its last attempt addressable for the failure review, without making it "active".
+    review = _active_attempt(attempt) if live is None and state in {"failed", "rejected"} else None
+    return {**task, "state": state, "activeAttempt": _active_attempt(live), "reviewAttempt": review,
             "updatedAt": (attempt or {}).get("last_activity_at") or (attempt or {}).get("ended_at"),
             "acceptanceCriteria": task.get("acceptanceCriteria") or task.get("acceptance_criteria") or []}
 
