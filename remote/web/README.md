@@ -14,8 +14,8 @@ npm run mock
 
 In a second terminal, run `npm run dev`. The `/api/:path*` rewrite targets the mock gateway at
 `http://127.0.0.1:8790` by default. Set `FLOW_GATEWAY_ORIGIN` to the gateway origin for a deployed environment.
-The mock serves `GET /api/state` from `mocks/fixtures/snapshot.json` and returns `404` for other routes; it is local
-development data and is not included in production code paths.
+The mock exposes the GitHub OAuth start route, an authenticated session, and the v1 snapshot at
+`GET /api/remote/v1/snapshot`. It is local development data and is not included in production code paths.
 
 ## Verification
 

@@ -1,25 +1,27 @@
 {
-  "snapshot": {
-    "generated_at": "2026-10-19T12:00:00Z",
-    "etag": "mock-snapshot-v1",
-    "runs": [
-      {
-        "project": "lotm",
-        "req": "REQ-027",
-        "status": "running",
-        "active_module": "M3 · Executor",
-        "active_task": "T15 · Web scaffold",
-        "active_attempt": "att-0008",
-        "last_seen": "2026-10-19T11:59:45Z",
-        "agent_now": "Construyendo el panel remoto"
-      }
-    ],
-    "plans": [],
-    "rounds": [],
-    "decisions": []
-  },
-  "laptop": {
-    "online": true,
-    "since": null
-  }
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-19T12:00:00Z",
+  "cursor": "mock-cursor-v1",
+  "runs": [
+    {
+      "project": "lotm",
+      "req_id": "REQ-027",
+      "status": "running",
+      "active_task": { "id": "T15a", "title": "Login screen and runs list" },
+      "attempt": { "id": "att-0008", "state": "running", "last_activity_at": "2026-10-19T11:59:45Z" },
+      "last_sign_of_life": "2026-10-19T11:59:45Z"
+    },
+    {
+      "project": "pictures",
+      "req_id": "REQ-018",
+      "status": "paused",
+      "active_task": null,
+      "attempt": null,
+      "last_sign_of_life": "2026-10-19T11:50:00Z"
+    }
+  ],
+  "plans": [],
+  "rounds": [],
+  "decisionRequests": [],
+  "laptop": { "online": true, "checkedAt": "2026-10-19T11:59:50Z" }
 }
