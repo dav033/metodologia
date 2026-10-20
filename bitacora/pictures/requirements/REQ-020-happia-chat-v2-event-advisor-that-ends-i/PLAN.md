@@ -1,6 +1,6 @@
 ---
 req: REQ-020
-status: review
+status: approved
 created: 2026-10-20
 ---
 # Plan — Happia chat v2 event advisor that ends in a brief
@@ -260,3 +260,4 @@ Deterministic validation: the project plan-json check was run after enrichment a
 ## Progress log
 - 2026-10-20 Plan drafted after rounds 1–2; Supabase pooler connection verified (prior planning record, not rerun in classification).
 - 2026-10-20 Contract classification added against inspected local code; approved scope and existing status/revision preserved. No approval, freeze, handoff, launch or implementation performed.
+- 2026-10-20 12:14 plan APPROVED (terminal)
