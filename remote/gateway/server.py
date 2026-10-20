@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 RATE_WINDOW_SECONDS = 60
 LOGIN_FAILURE_LIMIT = 5
 COMMAND_REQUEST_LIMIT = 30
+LOGIN_START_LIMIT = 5
 
 
 class StreamRuntime(Protocol):
@@ -67,6 +68,9 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
         def do_GET(self) -> None:
             route = urlsplit(self.path)
             if route.path in {"/api/auth/login", "/api/auth/github"}:
+                if not rate_limiter.acquire("login-start", self.client_address[0], LOGIN_START_LIMIT, RATE_WINDOW_SECONDS):
+                    self._rate_limited()
+                    return
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
@@ -183,16 +187,16 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 self._json(status, result)
                 return
             if route.path == "/api/remote/v1/commands":
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-                    self._rate_limited()
-                    return
                 if runtime is None:
                     self._json(404, {"error": "not found"})
                     return
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
+                login = service.store.get_session(token) if token else None
+                if login is None:
                     self._json(401, {"error": "unauthorized"})
+                    return
+                if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+                    self._rate_limited()
                     return
                 body_ok, value = self._read_json_body("command")
                 if not body_ok:

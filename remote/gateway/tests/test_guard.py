@@ -8,23 +8,23 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlencode
 
-from auth import OAuthConfig
+from auth import SESSION_COOKIE, OAuthConfig, SessionStore
 from server import create_server
 
 
 class RequestGuardTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.server = create_server(
+        self._config = (
             OAuthConfig(
                 client_id="test-client",
                 client_secret="test-secret",
                 session_secret="test-session-secret-with-more-than-32-bytes",
                 frontend_origin="https://flow.example.test",
                 database_path=str(Path(self.temp_dir.name) / "gateway.sqlite"),
-            ),
-            ("127.0.0.1", 0),
+            )
         )
+        self.server = create_server(self._config, ("127.0.0.1", 0))
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port)
@@ -61,11 +61,45 @@ class RequestGuardTests(unittest.TestCase):
             statuses.append(status)
         self.assertEqual(statuses, [400, 400, 400, 400, 400, 429])
 
-    def test_command_rate_limit_rejects_the_thirty_first_request(self) -> None:
+    def _runtime(self):
+        class Runtime:
+            def submit_command(self, value):
+                return 202, {"ok": True}
+
+            def is_read_route(self, path):
+                return False
+
+        return Runtime()
+
+    def _restart_with_runtime(self) -> None:
+        self.connection.close()
+        self.server.shutdown()
+        self.server.server_close()
+        self.server = create_server(self._config, ("127.0.0.1", 0), self._runtime())
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port)
+
+    def test_anonymous_commands_do_not_consume_the_owner_quota(self) -> None:
+        self._restart_with_runtime()
+        store = SessionStore(self._config.database_path, self._config.session_secret)
+        cookie = {"Cookie": f"{SESSION_COOKIE}={store.create_session('owner')}"}
         headers = {"Origin": "https://flow.example.test", "X-Flow-Request": "1"}
+        anonymous = [self.request("POST", "/api/remote/v1/commands", headers)[0] for _ in range(31)]
+        self.assertEqual(anonymous, [401] * 31)
+        self.assertNotEqual(self.request("POST", "/api/remote/v1/commands", {**headers, **cookie})[0], 429)
+
+    def test_command_rate_limit_rejects_the_thirty_first_authenticated_request(self) -> None:
+        self._restart_with_runtime()
+        store = SessionStore(self._config.database_path, self._config.session_secret)
+        headers = {"Origin": "https://flow.example.test", "X-Flow-Request": "1",
+                   "Cookie": f"{SESSION_COOKIE}={store.create_session('owner')}"}
         statuses = [self.request("POST", "/api/remote/v1/commands", headers)[0] for _ in range(31)]
-        self.assertEqual(statuses[:30], [404] * 30)
+        self.assertNotIn(429, statuses[:30])
         self.assertEqual(statuses[30], 429)
+
+    def test_sixth_oauth_start_in_a_minute_is_throttled(self) -> None:
+        statuses = [self.request("GET", "/api/auth/login")[0] for _ in range(6)]
+        self.assertEqual(statuses, [302] * 5 + [429])
 
 
 if __name__ == "__main__":

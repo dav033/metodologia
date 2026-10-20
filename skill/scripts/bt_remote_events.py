@@ -7,7 +7,7 @@ import json
 import re
 from typing import Any
 
-_SECRET_NAMES = r"(?:FLOW_GATEWAY_KEY|TELEGRAM_BOT_TOKEN|GITHUB_CLIENT_SECRET)"
+_SECRET_NAMES = r"(?:FLOW_GATEWAY_KEY|TELEGRAM_BOT_TOKEN|GITHUB_CLIENT_SECRET|SESSION_SECRET)"
 _ASSIGNMENT = re.compile(
     rf"(?i)\b({_SECRET_NAMES})\s*(?:=|:)\s*(?:\"[^\"\r\n]*\"|'[^'\r\n]*'|[^\s,;]+)"
 )

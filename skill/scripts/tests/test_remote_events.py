@@ -82,6 +82,24 @@ class RemoteEventsTests(unittest.TestCase):
             bt_remote_api.route_get(handler)
         self.assertNotIn("secret", handler.body)
 
+    def test_session_secret_is_redacted_from_snapshot_and_events(self):
+        handler = Handler()
+        row = {"remote_type": "attempt.failed", "id": "a1", "at": "2026-10-19T12:00:00Z",
+               "run": "demo/REQ-001", "failure": "SESSION_SECRET=zz9plural"}
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_live_api.flow_events", return_value=([row], [], {})), \
+                patch.object(bt_remote_api, "_runs", return_value=[]), \
+                patch.object(bt_remote_api, "_plans", return_value=[]):
+            bt_remote_api.route_get(handler)
+        self.assertNotIn("zz9plural", handler.body)
+        handler.path = "/api/remote/v1/snapshot"
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch.object(bt_remote_api, "_snapshot_runs",
+                             return_value=[{"failure": "SESSION_SECRET: zz9plural", "SESSION_SECRET": "zz9plural"}]), \
+                patch.object(bt_remote_api, "_plans", return_value=[]):
+            bt_remote_api.route_get(handler)
+        self.assertNotIn("zz9plural", handler.body)
+
     def test_real_get_route_projects_flow_bus_attempt_events_without_remote_type(self):
         row = {"v": 1, "seq": "m1:17", "ord": "0000000000000001.000000:m1:0000000017",
                "at": "2026-10-19T12:00:00.000+00:00", "run": "demo/REQ-001", "task": "T1",
