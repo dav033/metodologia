@@ -1,24 +1,18 @@
 {
- "attention": [
-  {
-   "kind": "blocked_task",
-   "reason": "m5:attempts_exhausted",
-   "task_id": "T18.1"
-  }
- ],
+ "attention": [],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-20T16:22:17+00:00",
+ "heartbeat_at": "2026-10-20T16:38:23+00:00",
  "plan_ref": {
   "plan_id": "REQ-027",
   "revision": 8,
   "sha256": "f5437aa5d22616a91b15978aad546ac8282fdf703aae30068b5360638c75e7e2"
  },
- "projected_at": "2026-10-20T16:22:17+00:00",
+ "projected_at": "2026-10-20T16:38:23+00:00",
  "projection": true,
  "req": "REQ-027",
- "scheduler_status": "blocked",
- "sessions": 175,
- "status": "blocked",
+ "scheduler_status": "running",
+ "sessions": 176,
+ "status": "running",
  "tasks": [
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -896,7 +890,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Independent security and spec audit by another provider",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
@@ -926,7 +920,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Cross-check audit of T18: Independent security and spec audit by another provider",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:db655fd0c084acbe5eac49a5f7ef3d4e6de52c4d8d8dda226de8d9f23f0aca42",
@@ -956,7 +950,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Documentation: remote README, references and TOOLS entries to copy at go-live",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -985,7 +979,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the AdvIn production environment: service user, directories, units and Caddy block",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
@@ -1014,7 +1008,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the Vercel project and deploy the frontend to production",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
@@ -1043,7 +1037,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the identity and messaging prerequisites and place the secrets",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -1072,7 +1066,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Release the gateway and the Telegram bot to AdvIn and switch them on",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
@@ -1101,34 +1095,34 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Live smoke test of the production environment and handover",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
    "after": [
     "T17"
    ],
-   "attempts": 3,
+   "attempts": 4,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/4f5ad8367c901ab0cbb12e38d188cda950eeaf94c2909155407b6a00ec88e340",
-   "executor": "route:m2:v1:389f633761e5103b6015dbc3d8e202aa40076b0f18f929c2f1d84d827f7b81cf:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
+   "evidence": "",
+   "executor": "route:m2:v1:dc2b5c8cd18441dfc2122e1bc21666fb257370dc9c1cdaf7be113723ecd18f9e:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
    "id": "T18.1",
    "milestone": "M5",
    "model": "gpt-6-luna",
    "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1792512749.721555",
+   "quota_observed_at": "1792513863.7518005",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "12.0",
-   "quota_valid_until": "1792519949.721555",
+   "quota_used_percent": "13.0",
+   "quota_valid_until": "1792521063.7518005",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "blocked",
+   "scheduler_state": "active",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "blocked",
+   "status": "in_progress",
    "title": "Remediate T18 findings F1, F2, F3, F4",
    "unreachable": false
   },
@@ -1160,7 +1154,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T18 findings F5, F6, F7, F8",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -1190,7 +1184,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T18 findings F9, F10",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
