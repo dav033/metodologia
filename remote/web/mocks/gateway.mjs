@@ -5,9 +5,11 @@ import { dirname, join } from "node:path";
 
 const directory = dirname(fileURLToPath(import.meta.url));
 const snapshotPath = join(directory, "fixtures", "snapshot.json");
+const attemptReviewPath = join(directory, "fixtures", "attempt-review.json");
 
 export async function createMockGatewayServer() {
   const snapshot = await readFile(snapshotPath, "utf8");
+  const attemptReview = await readFile(attemptReviewPath, "utf8");
   const server = createServer((request, response) => {
     const send = (status, body) => {
       response.writeHead(status, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
@@ -20,6 +22,11 @@ export async function createMockGatewayServer() {
     if (request.method === "GET" && request.url === "/api/remote/v1/snapshot") {
       response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
       response.end(server.snapshot);
+      return;
+    }
+    if (request.method === "GET" && request.url === "/api/remote/v1/attempts/att-review-1/review") {
+      response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
+      response.end(attemptReview);
       return;
     }
     if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events?")) {

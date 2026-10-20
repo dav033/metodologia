@@ -9,6 +9,13 @@ type Task = { id: string; title?: string; state: string; revision?: number; upda
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptop?: { online: boolean; checkedAt?: string } };
 type Session = { authenticated: boolean };
+type FailureReview = {
+  attemptId: string;
+  cause: string;
+  verification: { command: string | null; output: string };
+  diff: { stat: string | null; files: string[] };
+  logTail: string;
+};
 type FlowEvent = { id: string; cursor: string; run: string; seq: string; ord: number; task: string; attempt: string; from: string; to: string; kind: string; summary: string; at_epoch: number };
 type FlowCore = { groupRows(events: FlowEvent[]): { ev: FlowEvent; n: number; first: number; last: number }[]; taskState(state: string): string };
 declare global { interface Window { FlowCore?: FlowCore } }
@@ -19,6 +26,57 @@ function record(value: unknown): Record<string, unknown> | null {
 
 function text(value: unknown): value is string { return typeof value === "string"; }
 function field(source: Record<string, unknown>, camel: string, snake: string): unknown { return source[camel] ?? source[snake]; }
+
+function safeReviewText(value: string): string {
+  return value.replace(/\b(FLOW_GATEWAY_KEY|TELEGRAM_BOT_TOKEN|GITHUB_CLIENT_SECRET)\s*(?:=|:)\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/gi, "$1=[REDACTED]");
+}
+
+function parseFailureReview(value: unknown): FailureReview {
+  const review = record(value);
+  const verification = record(review?.verification);
+  const diff = record(review?.diff);
+  if (!review || !text(review.attemptId) || !text(review.cause) || !verification || !diff || !text(review.logTail)) {
+    throw new Error("El detalle del intento no cumple el contrato v1.");
+  }
+  const files = Array.isArray(diff.files) ? diff.files.filter(text).map(safeReviewText) : [];
+  return {
+    attemptId: safeReviewText(review.attemptId),
+    cause: safeReviewText(review.cause),
+    verification: {
+      command: text(verification.command) ? safeReviewText(verification.command) : null,
+      output: text(verification.output) ? safeReviewText(verification.output) : "",
+    },
+    diff: { stat: text(diff.stat) ? safeReviewText(diff.stat) : null, files },
+    logTail: safeReviewText(review.logTail),
+  };
+}
+
+function FailureReviewPanel({ attemptId }: { attemptId: string }) {
+  const [review, setReview] = useState<FailureReview | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("No se pudo cargar la revisión del intento.");
+        return parseFailureReview(await response.json() as unknown);
+      })
+      .then((result) => { if (active) setReview(result); })
+      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "No se pudo cargar la revisión del intento."); });
+    return () => { active = false; };
+  }, [attemptId]);
+
+  if (error) return <p className="error" role="alert">{error}</p>;
+  if (!review) return <p className="empty">Cargando revisión del intento…</p>;
+  return <section className="failure-review" aria-label={`Revisión del intento ${review.attemptId}`}>
+    <h4>Revisión del intento {review.attemptId}</h4>
+    <div className="failure-section"><h5>Causa</h5><p>{review.cause}</p></div>
+    <div className="failure-section"><h5>Verificación</h5>{review.verification.command && <p className="review-command">{review.verification.command}</p>}<pre className="review-scroll">{review.verification.output || "Sin salida de verificación."}</pre></div>
+    <div className="failure-section"><h5>Diff stat</h5><p>{review.diff.stat ?? "Sin diff disponible."}</p>{review.diff.files.length > 0 && <ul>{review.diff.files.map((file, index) => <li key={`${file}-${index}`}>{file}</li>)}</ul>}</div>
+    <div className="failure-section"><h5>Log del agente</h5><pre className="review-scroll">{review.logTail || "Sin log disponible."}</pre></div>
+  </section>;
+}
 
 function parseFlowEvent(value: unknown): FlowEvent | null {
   const event = record(value);
@@ -201,6 +259,7 @@ export default function HomePage() {
   const renderTask = (task: Task, run: Run) => <article className="task-card" key={`${run.req}-${task.id}`}>
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
+    {task.state === "failed" && task.activeAttempt && <FailureReviewPanel attemptId={task.activeAttempt.id} />}
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     <div className="actions">
       {task.state === "blocked" || task.state === "failed" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}

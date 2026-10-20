@@ -11,7 +11,10 @@
       "updatedAt": "2026-10-19T11:59:45Z",
       "lastSeenAt": "2026-10-19T11:59:45Z",
       "activeAttempt": { "id": "att-0008", "state": "running", "updatedAt": "2026-10-19T11:59:45Z" },
-      "tasks": [{ "id": "T15a", "title": "Login screen and runs list", "state": "running", "revision": 1, "acceptanceCriteria": ["Shows state and last sign of life", "No horizontal scroll at 360 px"], "activeAttempt": { "id": "att-0008", "state": "running", "updatedAt": "2026-10-19T11:59:45Z" } }]
+      "tasks": [
+        { "id": "T15a", "title": "Login screen and runs list", "state": "running", "revision": 1, "acceptanceCriteria": ["Shows state and last sign of life", "No horizontal scroll at 360 px"], "activeAttempt": { "id": "att-0008", "state": "running", "updatedAt": "2026-10-19T11:59:45Z" } },
+        { "id": "T15c", "title": "Failure review screen", "state": "failed", "revision": 1, "updatedAt": "2026-10-19T11:58:45Z", "activeAttempt": { "id": "att-review-1", "state": "failed", "updatedAt": "2026-10-19T11:58:45Z" } }
+      ]
     },
     {
       "project": "pictures",

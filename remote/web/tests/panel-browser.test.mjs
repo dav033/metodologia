@@ -105,6 +105,23 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
+    for (const expected of ["Revisión del intento att-review-1", "Causa", "verification_rejected", "Verificación", "npm run verify", "Diff stat", "2 files changed", "Log del agente", "line 80: checking the browser panel"]) {
+      const reviewText = await (async () => {
+        for (let attempt = 0; attempt < 70; attempt += 1) {
+          const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
+          if (evaluated.result?.value?.includes(expected)) return evaluated.result.value;
+          await delay(100);
+        }
+        assert.fail(`failure review did not render ${expected}`);
+      })();
+      assert.ok(reviewText.includes(expected));
+    }
+    const reviewSecurity = await cdp(socket, "Runtime.evaluate", { expression: `({text: document.body.innerText, log: (() => { const boxes = document.querySelectorAll('.review-scroll'); const box = boxes[boxes.length - 1]; return {overflowY: getComputedStyle(box).overflowY, scrollHeight: box.scrollHeight, clientHeight: box.clientHeight}; })()})`, returnByValue: true });
+    assert.ok(reviewSecurity.result?.value?.log.scrollHeight > reviewSecurity.result?.value?.log.clientHeight, "long logs should scroll inside the log box");
+    assert.equal(reviewSecurity.result?.value?.log.overflowY, "auto");
+    for (const secret of ["fixture-gateway-secret", "fixture-telegram-secret", "fixture-github-secret"]) {
+      assert.ok(!reviewSecurity.result?.value?.text.includes(secret), `review must redact ${secret}`);
+    }
     for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("×2"); attempt += 1) {
       await delay(100);
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
@@ -166,11 +183,11 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     assert.equal(gateway.commands[0]?.reason, "Stop the stalled attempt");
     assert.equal(gateway.commands[0]?.target.attemptId, "att-0008");
     for (let attempt = 0; attempt < 40; attempt += 1) {
-      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].some((button) => button.innerText === 'Reabrir' && !button.disabled)", returnByValue: true });
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·'))?.querySelector('button')?.disabled === false", returnByValue: true });
       if (ready.result?.value) break;
       await delay(100);
     }
-    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Reabrir')?.click()", returnByValue: true });
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·'))?.querySelector('button')?.click()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
     assert.equal(gateway.commands[1]?.type, "reopen");
     assert.equal(gateway.commands[1]?.target.taskId, "T2");

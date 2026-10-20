@@ -94,6 +94,15 @@ h1 span { color: var(--ctp-lavender); }
 .row-heading strong { min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
 .task-card .state { font-size: 10px; }
 .task-card .last-seen { margin-top: 6px; font-size: 12px; }
+.failure-review { display: grid; gap: 12px; min-width: 0; margin-top: 16px; border: 1px solid rgb(243 139 168 / 22%); border-radius: 10px; background: rgb(243 139 168 / 4%); padding: 14px; }
+.failure-review h4, .failure-section h5 { margin: 0; color: var(--ctp-text); }
+.failure-review h4 { font-size: 13px; }
+.failure-section { display: grid; gap: 7px; min-width: 0; }
+.failure-section h5 { color: var(--ctp-lavender); font-size: 12px; }
+.failure-section p, .failure-section ul { margin: 0; overflow-wrap: anywhere; color: var(--ctp-subtext1); font-size: 12px; line-height: 1.55; }
+.failure-section ul { padding-left: 18px; }
+.review-command, .review-scroll { min-width: 0; border: 1px solid var(--ctp-surface1); border-radius: 7px; background: var(--ctp-crust); padding: 10px; font-family: var(--font-code); font-size: 11px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-scroll { max-height: 180px; margin: 0; overflow: auto; overscroll-behavior: contain; }
 .activity-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 15px; border: 1px solid rgb(203 166 247 / 20%); border-radius: 10px; background: rgb(203 166 247 / 6%); padding: 10px 12px; color: var(--ctp-subtext1); font-size: 12px; }
 .activity-module, .feed-route { color: var(--ctp-mauve); font-family: var(--font-code); font-size: 11px; }
 .activity-module { border: 1px solid rgb(203 166 247 / 30%); border-radius: 999px; padding: 3px 8px; }
