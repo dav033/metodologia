@@ -193,6 +193,15 @@ class GatewayRuntime:
             return 503, {"code": "UNKNOWN_OUTCOME", "message": "No se pudo confirmar el resultado del comando.",
                          "idempotencyKey": payload.get("idempotencyKey")}
 
+    def relay_ledger_command(self, ledger_payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        """Send an already ledger-shaped command (e.g. from the Telegram bot) to the laptop."""
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            return 410, {"code": "LAPTOP_OFFLINE"}
+        try:
+            return self.laptop.command(ledger_payload)
+        except UpstreamError:
+            return 503, {"code": "UNKNOWN_OUTCOME"}
+
     def relay_challenge(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         if self.liveness.status is LaptopStatus.OFFLINE:
             return 410, {"code": "LAPTOP_OFFLINE", "message": "El portátil está desconectado."}
