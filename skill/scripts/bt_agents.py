@@ -116,9 +116,11 @@ def _config(key: str, default):
 def pool_for(project: str, requested: list[str] | None = None) -> list[str]:
     """Profile ids that may run `project`, one per account, in preference order. `requested` (run --pool a,b or the
     routing.pool setting) restricts and orders them; unknown ids are refused. Work-only profiles are dropped for
-    projects not marked work; a named profile wins over the generic one of the same account; a profile whose CLI or
-    account directory is missing is skipped."""
+    projects not marked work; the accounts of the profiles in the project's `exclude_profiles` are dropped; a named profile wins over
+    the generic one of the same account; a profile whose CLI or account directory is missing is skipped."""
     profiles = bt_profiles.load()
+    excluded = {_pool_account_identity(pid, profiles[pid])
+                for pid in bt_profiles.excluded_profiles(project) if pid in profiles}  # aliases share the account
     wanted = [p for p in (requested or []) if p]
     for pid in wanted:
         if pid not in profiles:
@@ -133,6 +135,8 @@ def pool_for(project: str, requested: list[str] | None = None) -> list[str]:
         if identity in seen:
             continue
         if spec.get("work_only") and not bt_profiles.is_work_project(project):
+            continue
+        if identity in excluded:
             continue
         if not shutil.which(spec.get("bin") or spec["provider"]):
             continue

@@ -37,7 +37,9 @@ Provider-native installed roles pin the approved configuration for their host pr
 | `gemini-3.8-flash-high` | Antigravity CLI | never automatic | avoid: timed out (900 s) twice on a task that low solved |
 
 Accounts are **profiles** (`bitacora.py profiles list|doctor`): a provider plus the variable that selects its account
-(`CLAUDE_CONFIG_DIR`, `CODEX_HOME`). Only `work_only` profiles are gated (projects with `"work": true`). The table and
+(`CLAUDE_CONFIG_DIR`, `CODEX_HOME`). Only `work_only` profiles are gated (projects with `"work": true`). A project
+can keep accounts out with `"exclude_profiles": ["claude-personal"]` in its `project.json`; every route (scheduler,
+delegate, quota preflight) honours it. The table and
 the ladder live in `scripts/bt_agents.py` (`MODELS`, `LADDER`): edit them there when a provider ships a model.
 `bitacora.py agents` shows models, ladder, accounts and which ones are waiting for a usage-limit reset.
 

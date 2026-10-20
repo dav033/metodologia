@@ -179,6 +179,17 @@ def is_work_project(project: str) -> bool:
     return isinstance(data, dict) and data.get("work") is True
 
 
+def excluded_profiles(project: str) -> set[str]:
+    """Profiles the project never runs on (`"exclude_profiles": [...]` in project.json), e.g. a personal account kept
+    out of a work project."""
+    try:
+        data = json.loads((ROOT / project / "project.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return set()
+    value = data.get("exclude_profiles") if isinstance(data, dict) else None
+    return {p for p in value if isinstance(p, str)} if isinstance(value, list) else set()
+
+
 def set_work(project: str, value: bool) -> Path:
     path = ROOT / project / "project.json"
     try:

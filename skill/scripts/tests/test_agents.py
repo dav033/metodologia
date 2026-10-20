@@ -172,6 +172,16 @@ class PoolAndRouteTests(AgentTests):
             self.assertNotIn("claude-work", bt_agents.pool_for("personal-project", ["claude-work"]))
             self.assertEqual(bt_agents.pool_for("work-project", ["claude-work"]), ["claude-work"])
 
+    def test_pool_drops_profiles_excluded_by_the_project(self):
+        (self.root / "work-project" / "project.json").write_text('{"work": true, "exclude_profiles": ["claude"]}')
+        with self._all_clis():
+            self.assertEqual(bt_agents.pool_for("work-project", ["claude", "codex-named"]), ["codex-named"])
+            self.assertNotIn("claude", bt_agents.pool_for("work-project"))
+            self.assertIn("claude", bt_agents.pool_for("personal-project", ["claude"]))
+        bt_profiles.add("claude-alias", "claude", {})  # same account as the generic profile: excluded too
+        with self._all_clis():
+            self.assertEqual(bt_agents.pool_for("work-project", ["claude-alias", "codex-named"]), ["codex-named"])
+
     def test_pool_drops_generic_duplicate_when_named_profile_covers_account(self):
         bt_profiles.add("claude-alias", "claude", {})
         with self._all_clis():
