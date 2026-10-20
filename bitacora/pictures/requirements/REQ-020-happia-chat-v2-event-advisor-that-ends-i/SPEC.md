@@ -1,6 +1,6 @@
 ---
 id: REQ-020
-status: clarifying
+status: planned
 created: 2026-10-20
 track: deep
 ---
@@ -48,10 +48,11 @@ Candidate capabilities (from the client doc, minus the removed blocks):
 - Brief: customer approves or corrects a summary; one-page brief with photos, likes/dislikes, venue, priorities,
   budget and requests; vendor version without name, contact and budget.
 
-- Admin profile (round 1): a new "admin" user profile whose only difference is that it can monitor conversations
-  (and see the briefs). Conversations are stored in Postgres on **Supabase**.
-- Access: the customer side stays behind the current Pictures password (`APP_PASSWORD`) until launch; the customer
-  resumes only on the same device (browser storage) for now.
+- Access (rounds 1–2): own authentication, two accounts only — a general account `user` and an `admin` account, each
+  with its own password. `admin` can do everything `user` can plus read-only monitoring of conversations and briefs.
+  No Supabase Auth, no public sign-up. The rest of Pictures keeps `APP_PASSWORD`.
+- Storage: **Supabase used only as managed Postgres** (project `byepzsrbjgvrmsmfuzhj`, us-east-2, transaction pooler);
+  conversations, messages, photos (bytea) and briefs live there. The customer resumes on the same device only.
 - Milestone M1 = Halloween test (Thu 29 Oct): a text conversation that ends in a brief; photos, voice and ideas after.
 
 ## Out of scope
@@ -66,10 +67,44 @@ Candidate capabilities (from the client doc, minus the removed blocks):
   launch; voice replies; growth dashboard (Pilot 1B).
 
 ## Requirements
-_To be written after the interview rounds (EARS)._
+- R1. When someone opens `/asesor` without a valid advisor session, the system shall show the advisor login and accept
+  only the `user` or `admin` credentials; passwords are stored hashed and the session cookie is signed.
+- R2. When a conversation starts, the system shall show a short privacy notice and a "versión de prueba" notice before
+  the first question, and shall greet warmly asking what is being celebrated and for whom.
+- R3. While a conversation is open, the system shall collect, in free conversation (never a form): event type and for
+  whom, date and time, city and exact address, venue type, guest count and contact name/phone; plus, when given,
+  budget, organiser priority (impress / personalise / simple / best price), brand or vendor requests and notes. It
+  shall support birthdays, corporate and school events.
+- R4. While a conversation is open, the system shall show progress toward a complete brief, computed from the required
+  fields of R3.
+- R5. When the customer leaves and returns on the same device, the system shall restore the conversation where it was.
+- R6. Every customer and advisor message, photo and brief state shall be persisted in Supabase Postgres.
+- R7. When the customer sends a photo (camera or gallery; inspiration or venue), the system shall describe what it sees
+  (first look), ask the customer to confirm, and ask what they like and dislike about it; the photo goes to the brief as
+  received.
+- R8. When the customer sends a voice note, the system shall transcribe it and treat it as the customer's text; the
+  advisor always answers in text.
+- R9. If the customer does not know what they want, the system shall offer directions from a curated group of 10–15
+  decorations (with photo) and themed items Happia sells.
+- R10. When a standard Happia package or service fits, the system shall offer it first, with its estimated price from
+  the Happia catalogue (read at most once a day, with a fallback list when the API fails), and only offer what Happia
+  vendors can do.
+- R11. When the required fields are complete, the system shall show the customer a summary to approve or correct; on
+  approval it shall store a one-page brief (photos, likes/dislikes, venue, priorities, budget, requests, proposed
+  package) and a vendor version without the customer's name, contact or budget.
+- R12. While logged in as `admin`, the user shall see the list of conversations (in progress and finished) with
+  progress, status and last advisor question, refreshed every few seconds, and open any conversation's transcript,
+  photos and brief (read-only). The `user` account shall not reach these views or APIs.
+- R13. If the AI provider fails or times out, the system shall show a retry message without losing the conversation.
+- R14. The `/happie` UI, webhook and `happie.v1`/`happie.v2` contracts shall remain byte-for-byte unchanged in behaviour.
 
 ## Edge cases & errors
-_Pending interview._
+- Customer corrects a field after the summary → summary regenerated, approval required again.
+- Customer refuses to give contact/address → brief cannot be approved; advisor explains why it is needed (vendors).
+- Invalid or oversize photo/audio → friendly error (reuse 6 MB photo / 60 s audio limits).
+- Off-topic or abusive messages → the advisor redirects politely; prompt injection cannot change role or reveal data.
+- Happia API down → fallback list; Supabase down → clear error, no silent loss.
+- Two tabs on the same conversation → last write wins per message; no duplicates (idempotent message ids).
 
 ## Constraints
 - Lives in the Pictures repo (Next 16 app, Python ai-api on the VPS, Neon Postgres, S3 Garage on the VPS), deployed to
@@ -79,7 +114,10 @@ _Pending interview._
   themed items and carts depend on William's platform session.
 
 ## Priorities & phases
-_Pending interview._
+- M1 (Must, Halloween Thu 29 Oct): R1–R6, R11, R12, R13, R14 — text conversation → approved brief, admin watching.
+- M2 (Must, ~6 Nov): R7, R8 — photos with first look and likes/dislikes, venue photo, voice notes.
+- M3 (Must, ~19 Nov): R9, R10 — directions, themed items, standard package first with catalogue price.
+- M4: hardening and end-to-end acceptance before the 23 Nov rehearsal.
 
 ## Timeline & dependencies
 - Client calendar: work starts Sun 25 Oct; Halloween test Thu 29 Oct (first text conversation ending in a brief);
@@ -104,23 +142,37 @@ _Pending interview._
 - Note: the local checkout `~/dev/pictures` is on an old branch (`feat/req-014-…`); work must start from origin/main.
 
 ## Assumptions
-_Pending interview._
+- A1. Model: Gemini (`gemini-3.6-flash`, the production chat model) through `@sempertex/agente-core`; locally the
+  existing provider registry (Claude CLI) may be used. Photos go inline to the model for the first look (no blueprint).
+- A2. Code from `origin/main` on a new branch/worktree `feat/req-020-asesor-happia`; deploy to Vercel
+  (`demo-decoracion`) and the VPS as today, after the green gate (owner authorised production pushes/deploys).
+- A3. Separate migrations folder and runner for the Supabase database (never mixed with Neon `schema_migrations`).
+- A4. Initial directions: 12 decorations picked from `biblioteca-sempertex/decoraciones.json`, in an editable config
+  file Diana can revise later. Fallback price list: a JSON file seeded from the last good catalogue read.
+- A5. Account passwords are generated, stored as hashes in Postgres (seed script) and handed to the owner locally.
+- A6. Catalogue price = existing estimate (subtotal COP before VAT/commission, with the existing notice).
 
 ## Coverage
 | Topic | State |
 |---|---|
 | Goal & problem | Clear |
 | Users / actors | Clear |
-| Scope | Partial |
+| Scope | Clear |
 | Out of scope | Clear |
-| Flows & behavior | Partial |
-| Edge cases | Missing |
-| Acceptance criteria | Missing |
-| Constraints | Partial |
-| Priorities & phases | Missing |
-| Timeline | Partial |
+| Flows & behavior | Clear |
+| Edge cases | Clear |
+| Acceptance criteria | Clear (R1–R14 + plan verification) |
+| Constraints | Clear |
+| Priorities & phases | Clear |
+| Timeline | Clear |
 
 ## Clarifications
+### Round 2 — 2026-10-20
+- Q: Supabase project → A: owner's project `byepzsrbjgvrmsmfuzhj`; Supabase only as an easy Postgres (no Auth, no
+  Storage). Verified: transaction pooler works (Postgres 17.11); direct host is IPv6-only.
+- Q: Admin login → A: own solution; two accounts, `user` (general) and `admin`, different passwords.
+- Q: Monitoring → A: (default) read-only.
+- Q: Photos/voice/deploy defaults → A: yes, but photos in Postgres instead of Supabase Storage.
 ### Round 1 — 2026-10-20
 - Q: Route/name → A: "Asesor Happia", `/asesor`.
 - Q: Access without the safety block → A: behind the current `APP_PASSWORD`.
