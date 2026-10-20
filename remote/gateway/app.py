@@ -110,6 +110,18 @@ class GatewayRuntime:
     def _poll_events(self) -> None:
         try:
             result = self.laptop.events(self.event_cursor)
+        except UpstreamResponseError as exc:
+            if exc.status == 400 and exc.payload.get("code") == "INVALID_CURSOR" and self.event_cursor:
+                # Planning events can vanish after resolution; restart from retained events once.
+                self.event_cursor = ""
+                try:
+                    result = self.laptop.events("")
+                except UpstreamError:
+                    logger.warning("Laptop event feed unavailable after cursor reset")
+                    return
+            else:
+                logger.warning("Laptop event feed unavailable")
+                return
         except UpstreamError:
             logger.warning("Laptop event feed unavailable")
             return
@@ -138,6 +150,10 @@ class GatewayRuntime:
             key: value for key, value in command.items()
             if key not in {"schemaVersion", "idempotencyKey", "type", "target", "precondition", "confirmation"}
         }
+        if command["type"] == "answer-decision" and "requestId" in params:
+            params["request_id"] = params.pop("requestId")
+        if command["type"] == "answer-round" and "answer" in params:
+            params["answers"] = params.pop("answer")
         if target.get("taskId"):
             params.setdefault("task", target["taskId"])
         if target.get("attemptId"):

@@ -6,7 +6,8 @@ import { QuotasPanel, RoutesPanel, type RouteOption } from "./recovery-panels";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string; roundId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
-type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string } };
+type Attempt = { id: string; state?: string; updatedAt?: string };
+type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: Attempt; history?: Attempt[] };
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type RoundQuestion = { id: string; text: string; type: "choice" | "open"; options?: { key: string; label: string }[]; recommended?: string; why?: string; suggested?: string };
 type Round = { project: string; req: string; round: number; id?: string; title?: string; intro?: string; coverage?: string; status: string; revision?: number; questions: RoundQuestion[] };
@@ -75,9 +76,14 @@ function FailureReviewPanel({ attemptId }: { attemptId: string }) {
     return () => { active = false; };
   }, [attemptId]);
 
+  useEffect(() => {
+    const target = `#attempt-${encodeURIComponent(attemptId)}`;
+    if (window.location.hash === target) document.getElementById(target.slice(1))?.scrollIntoView({ block: "start" });
+  }, [attemptId, review]);
+
   if (error) return <p className="error" role="alert">{error}</p>;
   if (!review) return <p className="empty">Cargando revisión del intento…</p>;
-  return <section className="failure-review" aria-label={`Revisión del intento ${review.attemptId}`}>
+  return <section id={`attempt-${encodeURIComponent(review.attemptId)}`} className="failure-review" aria-label={`Revisión del intento ${review.attemptId}`}>
     <h4>Revisión del intento {review.attemptId}</h4>
     <section className="failure-section"><h5>Causa</h5><p>{review.cause}</p></section>
     <section className="failure-section"><h5>Verificación</h5>{review.verification.command && <p className="review-command">{review.verification.command}</p>}<pre className="review-scroll">{review.verification.output || "Sin salida de verificación."}</pre></section>
@@ -129,11 +135,12 @@ function parseSnapshot(value: unknown): Snapshot {
     if (!task || !text(task.id) || !text(task.state)) throw new Error("El snapshot contiene una tarea inválida.");
     const criteria = field(task, "acceptanceCriteria", "acceptance_criteria");
     const updatedAt = field(task, "updatedAt", "updated_at");
+    const history = Array.isArray(task.history) ? task.history.map(parseAttempt).filter((attempt): attempt is Attempt => !!attempt) : [];
     return { id: task.id, title: text(task.title) ? task.title : undefined, state: task.state,
       revision: typeof task.revision === "number" ? task.revision : undefined,
       updatedAt: text(updatedAt) ? updatedAt : undefined,
       acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
-      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")) };
+      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")), history };
   };
   const runs = raw.runs.map((item): Run => {
     const run = record(item);
@@ -343,7 +350,7 @@ export default function HomePage() {
       void sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "answer-round",
         target: { kind: "round", project: round.project, req: round.req, roundId: round.id ?? String(round.round) },
         precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
-        round: round.round, answer }, `${round.req}-round-${round.round}`);
+        round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
     };
   }
 
@@ -399,7 +406,8 @@ export default function HomePage() {
   const renderTask = (task: Task, run: Run) => <article className="task-card" key={`${run.req}-${task.id}`}>
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
-    {task.state === "failed" && task.activeAttempt && <FailureReviewPanel attemptId={task.activeAttempt.id} />}
+    {task.state === "failed" && (task.activeAttempt ?? task.history?.at(-1)) &&
+      <FailureReviewPanel attemptId={(task.activeAttempt ?? task.history?.at(-1))!.id} />}
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     {(task.state === "failed" || task.state === "blocked") && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
       onRetry={(event, route) => retryTask(event, task, run, route)} />}
