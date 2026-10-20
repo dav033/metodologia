@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/6 · tareas 32/43 · generado: 2026-10-20T12:58:39-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/6 · tareas 35/43 · generado: 2026-10-20T14:13:59-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -55,21 +55,21 @@ created: 2026-10-19
 | T15e | Plans, question rounds and decision requests screens | media | completada | gpt-6-luna | codex-2 | 7 |
 | T15f | Recovery forms and live quotas | media | completada | gpt-6-luna | codex-luis | 9 |
 
-**M5 — Go-live kit and audit** · dificultad alta · 5/11
+**M5 — Go-live kit and audit** · dificultad alta · 8/11
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | gpt-6-luna | codex-luis | 5 |
-| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | en curso | gpt-6-luna | codex-luis | 8 |
-| T18 | Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-2 | 8 |
+| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | gpt-6-luna | codex-2 | 6 |
+| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | completada | gpt-6-luna | codex-2 | 9 |
+| T18 | Independent security and spec audit by another provider | alta | en curso | gpt-6.1-sol | codex-2 | 10 |
 | T18b | Cross-check audit of T18: Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-1 | 3 |
 | T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | gemini-3.8-flash-low | antigravity | 2 |
-| T18.1 | Remediate T18 findings F1, F2, F3, F4 | media | pendiente | gpt-6-luna | codex-1 | 4 |
-| T18.2 | Remediate T18 findings F5, F6, F7, F8 | alta | pendiente | sonnet | claude-work | 1 |
-| T18.3 | Remediate T18 findings F9, F10 | alta | completada | sonnet | claude-work | 1 |
+| T18.1 | Remediate T18 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-luis | 5 |
+| T18.2 | Remediate T18 findings F5, F6, F7, F8 | alta | completada | gpt-6-luna | codex-luis | 2 |
+| T18.3 | Remediate T18 findings F9, F10 | alta | completada | gpt-6-luna | codex-luis | 2 |
 | T18.4 | Remediate T18 findings F19 | alta | completada | sonnet | claude-work | 1 |
-| T18.5 | Remediate T18 findings F1, F2, F3, F4 | alta | completada | sonnet | claude-work | 2 |
-| T18.6 | Remediate T18 findings F14 | media | completada | gpt-6-luna | codex-2 | 1 |
+| T18.5 | Remediate T18 findings F1, F2, F3, F4 | alta | completada | gpt-6-luna | codex-luis | 3 |
+| T18.6 | Remediate T18 findings F14 | media | completada | gpt-6-luna | codex-1 | 2 |
 
 **M6 — Production environment** · dificultad alta · 0/5
 

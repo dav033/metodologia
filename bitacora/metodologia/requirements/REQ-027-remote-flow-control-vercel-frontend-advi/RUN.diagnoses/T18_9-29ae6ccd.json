@@ -1,0 +1,23 @@
+{
+ "request": "T18:9",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría de T18 deja 2 hallazgos altos abiertos (F1 y F2) tras varias vueltas",
+ "origin": "Las rondas anteriores bajaron el número de hallazgos bloqueantes de 11 a 5 y luego a 2, así que el trabajo avanza, pero los dos últimos son de severidad alta y siguen abiertos en m6://result/c4d12b360ae5487bf6893e131560114721a77a599d9ac81d831535986b75fdda. El sistema bloquea T18 por rework_limit porque una de sus dependencias (T17, T18.3, T18.4 o T18.6) ya agotó gates.max_reworks y no se reabre sola; la evidencia no dice cuál. El contenido de F1 y F2 tampoco aparece en la evidencia.",
+ "steps": [
+  "Abre los hallazgos F1 y F2 en m6://result/c4d12b360ae5487bf6893e131560114721a77a599d9ac81d831535986b75fdda y corrige los que sean válidos; los rechazados deben quedar con su motivo en remote/docs/audit.md.",
+  "Ejecuta `bitacora.py --project metodologia scheduler-op REQ-027 status` para ver qué dependencia agotó gates.max_reworks.",
+  "Elige la opción retry_with_note con la nota de abajo: `bitacora.py --project metodologia scheduler-op REQ-027 decide <id> retry_with_note --reason \"…\"`.",
+  "Si la auditoría vuelve a dar los mismos F1 y F2, elige stop y revisa esos dos hallazgos a mano."
+ ],
+ "option": "retry_with_note",
+ "note": "The last independent audit (m6 result c4d12b360ae5487bf6893e131560114721a77a599d9ac81d831535986b75fdda) left 2 blocking high findings, F1 and F2, after earlier rounds reduced them from 11 to 5 to 2. Fix F1 and F2 first and verify each against the current tree. Make sure remote/docs/audit.md is non-empty and gives a verdict per finding: confirmed high findings fixed, rejected findings with the reason. Keep changes to the prerequisite tasks limited to what F1 and F2 require.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T14:07:22",
+ "seconds": 19.2
+}

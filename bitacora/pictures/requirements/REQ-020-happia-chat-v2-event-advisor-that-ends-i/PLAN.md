@@ -6,15 +6,15 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/4 · tareas 1/17 · generado: 2026-10-20T12:54:38-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/4 · tareas 2/17 · generado: 2026-10-20T14:07:03-05:00
 
-**M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 1/7
+**M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 2/7
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T1 | Worktree from origin/main; Supabase pool (`src/lib/asesor/db.ts`), migrations folder `scripts/migrations-asesor/` + runner (`npm run asesor:migrate`), schema: accounts, conversations, messages, attachments, briefs; `npm run asesor:test` script wired into the gate | alta | completada | gpt-6-luna | codex-luis | 7 |
-| T2 | Own auth: scrypt-hashed accounts `user`/`admin`, seed script with generated passwords, `/asesor/login`, signed session cookie, proxy matcher exclusion for `/asesor` + `/api/asesor`, role guard helpers | alta | en curso | gpt-6-luna | codex-luis | 1 |
-| T3 | Advisor agent: `EventBrief` schema (R3 fields, event kinds incl. corporate/school), system prompt, tools (save fields, propose summary, approve), progress calculator, streaming route `/api/asesor/conversar` persisting every turn, retry on provider failure; deterministic tests with a fake `ChatPort` | alta | pendiente | — | — | 0 |
+| T2 | Own auth: scrypt-hashed accounts `user`/`admin`, seed script with generated passwords, `/asesor/login`, signed session cookie, proxy matcher exclusion for `/asesor` + `/api/asesor`, role guard helpers | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T3 | Advisor agent: `EventBrief` schema (R3 fields, event kinds incl. corporate/school), system prompt, tools (save fields, propose summary, approve), progress calculator, streaming route `/api/asesor/conversar` persisting every turn, retry on provider failure; deterministic tests with a fake `ChatPort` | alta | en curso | gpt-6-luna | codex-2 | 1 |
 | T4 | Chat UI `/asesor`: guiado components, privacy + test-version notices, progress bar, resume by conversation id in localStorage (transcript reloaded from the server) | alta | pendiente | — | — | 0 |
 | T5 | Brief: summary to approve/correct, stored full brief + vendor version without name/contact/budget, printable one-page view | alta | pendiente | — | — | 0 |
 | T6 | Admin monitor `/asesor/admin`: conversation list (status, progress, last question, 5 s refresh) and read-only detail (transcript, brief); `user` gets 403 | media | pendiente | — | — | 0 |

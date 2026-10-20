@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0008:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "El verificador no pudo casar los checks de T2 con sus criterios de aceptación.",
+ "origin": "El fallo viene del plan de REQ-020, no del código ni del entorno: el error es CHECK_UNMAPPED, “A verification check does not map exactly to an acceptance criterion”. El comando `npx tsx --conditions=react-server --test scripts/test/asesor/auth.test.ts` aparece tres veces en las verificaciones de T2, y los criterios de proxy, redirecciones y 403 no tienen un check propio que los cubra. Las fallas de intento están vacías, así que no hay evidencia de que el código haya fallado. La guía basada en reglas habla de un entorno, pero la evidencia no lo respalda; reintentar sin tocar el plan repetiría el mismo error.",
+ "steps": [
+  "Abre el PLAN.json de REQ-020 (`/home/david/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/`) y, en T2, deja un check por criterio: quita los duplicados del comando de auth.test.ts y añade los que falten para redirecciones, APIs 403 y exclusiones del proxy.",
+  "Sube \"revision\" en 1 y ejecuta `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json freeze REQ-020`.",
+  "Elige la opción `revise` con `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures scheduler-op REQ-020 decide <id> revise --reason \"...\"`; la opción no aparece en la lista ofrecida, así que confírmala con `scheduler-op REQ-020 decisions` antes de decidir."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T13:10:25",
+ "seconds": 17.3
+}
