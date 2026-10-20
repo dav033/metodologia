@@ -64,6 +64,34 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(self.watch().run(), 0)
         self.assertEqual(self.spawned, [True])
 
+    def test_an_audits_remediation_request_is_applied_and_the_owner_runs_again(self):
+        import bt_remediation
+
+        (self.rdir / bt_remediation.REQUEST).write_text("{}", encoding="utf-8")
+        calls = []
+
+        def apply(project, req, rdir, action, **kwargs):
+            calls.append(action)
+            (self.rdir / bt_remediation.REQUEST).unlink()
+            return ["plan r8"]
+        self.codes[:] = [0]
+        with patch.object(ops, "apply", apply):
+            self.assertEqual(self.watch().run(max_loops=3), 0)
+        self.assertEqual(calls, ["remediate"])
+        self.assertEqual(self.spawned, [True])                      # applied first, then the owner started on the new plan
+
+    def test_a_remediation_that_fails_is_dropped_instead_of_looping(self):
+        import bt_remediation
+
+        (self.rdir / bt_remediation.REQUEST).write_text("{}", encoding="utf-8")
+
+        def broken(*args, **kwargs):
+            raise RuntimeError("no")
+        self.codes[:] = [0]
+        with patch.object(ops, "apply", broken):
+            self.watch().run(max_loops=3)
+        self.assertFalse(bt_remediation.requested(self.rdir))
+
     def test_crash_is_restarted_with_growing_backoff(self):
         self.codes = [3, -signal.SIGBUS, 0]
         self.assertEqual(self.watch().run(), 0)

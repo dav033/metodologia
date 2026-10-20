@@ -53,6 +53,7 @@ class QualityVerificationPort:
         integration_check: Callable[[str, str, str], str] | None = None,
         integration_retries: int = 0,
         unresolved_check: Callable[[str, str], tuple[str, ...]] | None = None,
+        remediate: Callable[[str, str, list[dict]], bool] | None = None,
     ):
         self.core = core
         self.rework_notes = rework_notes
@@ -64,6 +65,7 @@ class QualityVerificationPort:
         self.integration_check = integration_check        # (task, attempt, snapshot) -> '' or why it cannot be combined
         self.integration_retries = integration_retries    # clash rejections of one task before the dependents give way
         self.unresolved_check = unresolved_check          # (task, snapshot) -> files still holding merge conflict markers
+        self.remediate = remediate                        # (audit, attempt, findings) -> True when they became remediation tasks
         self.executor = executor
         self.store = store
         self.policy = policy
@@ -512,11 +514,20 @@ class QualityVerificationPort:
                     evidence = f"integration gate: {clash} | M6 evidence: {evidence}"[:2000]
                     self._write_note((order.task_id,), _unresolved_note(clash) if clash.startswith(UNRESOLVED)
                                      else _integration_note(clash))
+            remediating = False
+            if gate is not None and gate.blocking and not gate.problems and self.remediate is not None:
+                try:
+                    remediating = bool(self.remediate(order.task_id, order.attempt_id, list(gate.blocking)))
+                except Exception as error:  # noqa: BLE001 - when it cannot, the named tasks are sent back as before
+                    LOGGER.warning("remediation not requested (%s)", type(error).__name__)
             if gate is not None and not gate.ok:
                 accepted = False
-                evidence = f"{gate.summary()} | M6 evidence: {evidence}"[:2000]
+                tail = " | the findings become remediation tasks; this audit runs again after them" if remediating else ""
+                evidence = f"{gate.summary()}{tail} | M6 evidence: {evidence}"[:2000]
             else:
                 gate = None
+            if accepted:
+                self._write_note((order.task_id,), "")       # accepted: the notes of earlier rounds no longer apply
             identity = verdict_id(order, delivery["result_hash"], resolution_id=resolution_id)
             if gate is not None:  # a rejection by the gate is a different verdict from the PASS M6 reached
                 material = f"{identity}\0audit-gate\0{gate.digest()}".encode()
@@ -532,7 +543,7 @@ class QualityVerificationPort:
                 evidence,
                 order.token,
             )
-            if gate is not None and gate.rework:
+            if gate is not None and gate.rework and not remediating:
                 ids, cascade = self._rework_plan(gate, order)
                 if not self.core.rework_problem(ids, (order.task_id,), cascade):
                     self._write_rework_notes(gate, order)

@@ -240,6 +240,16 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
         lines.append(f"owner stopped: {stop_owner(project, req)} process(es)")
         if action == "stop":
             return lines
+        if action == "remediate":
+            import bt_remediation
+            built = bt_remediation.apply(rdir)
+            if built is None:
+                return [*lines, "nothing to remediate (no request, or its tasks cannot be built: the named tasks are "
+                                "sent back by the next rejection)"]
+            lines.append(f"remediation of {built['audit']} round {built['round']}: plan r{built['revision']} adds "
+                         f"{', '.join(built['tasks'])}")
+            action = "revise"
+            why = f"{why}: {built['audit']} findings remediated by {', '.join(built['tasks'])}"
         with _opened(rdir) as sch:
             if action == "cancel-attempt":
                 lines += cancel_attempts(project, req, rdir, sch, [target], why)

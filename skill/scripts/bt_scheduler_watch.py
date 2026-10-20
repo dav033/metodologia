@@ -90,6 +90,8 @@ class Watch:
             if ops.owner_pids(self.project, self.req):
                 self._wait_owner_gone()
                 continue
+            if self._remediate():
+                continue
             if self.free_bytes() < MIN_FREE_BYTES:
                 if not self.low_disk_notified:
                     self.low_disk_notified = True
@@ -103,6 +105,8 @@ class Watch:
             self.log(f"owner started (pid {owner.pid})")
             code = self._wait(owner)
             if code == 0:
+                if self._remediate():
+                    continue
                 if self._wait_for_decisions():
                     continue
                 self.log("owner finished: the run is terminal or stalled")
@@ -123,6 +127,22 @@ class Watch:
             self.sleep(self.backoff)
             self.backoff = min(BACKOFF_CAP, self.backoff * 2)
         return 0
+
+    def _remediate(self) -> bool:
+        """An audit asked for remediation tasks (REQ-028): put them in the plan, rebase the run onto it, and run again."""
+        import bt_remediation
+
+        if not bt_remediation.requested(self.rdir):
+            return False
+        self.log("an audit's findings become remediation tasks: new plan revision")
+        try:
+            for line in ops.apply(self.project, self.req, self.rdir, "remediate",
+                                  reason="audit findings become remediation tasks"):
+                self.log(line)
+        except Exception as error:  # noqa: BLE001 - a failed move must not loop: drop the request, the gate falls back
+            self.log(f"remediation failed ({type(error).__name__}: {error}); request dropped")
+            bt_remediation.clear_request(self.rdir)
+        return True
 
     def _pending(self) -> int:
         import bt_scheduler_decisions

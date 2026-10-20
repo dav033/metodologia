@@ -14,6 +14,9 @@ from pathlib import Path
 import bt_planner as planner
 from bt_plan_adapter_evidence import verify_command
 from bt_planner import cli as planner_cli
+from bt_planner import contract as planner_contract
+from bt_planner import quality as planner_quality
+from bt_planner import revisions as planner_revisions
 
 # What the methodology calls an approved plan; the module itself only has a default for these words.
 APPROVED_STATES = ("approved", "launched", "done", "merged")
@@ -379,3 +382,26 @@ def revisions(rdir: Path) -> list[dict]:
         return planner.list_revisions(rdir)
     except (planner.PlanContractError, OSError, ValueError):
         return []
+
+
+# ---- what plan growth at run time (bt_remediation) needs from the planner: the module is imported only here
+def latest_plan(rdir: Path) -> dict | None:
+    """The latest frozen revision of the requirement's plan, or None when nothing was frozen."""
+    last = planner_revisions.latest(rdir)
+    return planner_revisions.load_revision(rdir, last["revision"]) if last else None
+
+
+def plan_errors(plan: dict) -> list[str]:
+    """The contract errors of a plan ([] when it is valid)."""
+    return list(planner_contract.validate(plan).errors)
+
+
+def freeze_revision(rdir: Path, plan: dict, source: str) -> dict:
+    """Freeze `plan` as the next revision and write it as the working PLAN.json."""
+    frozen = planner_revisions.freeze(rdir, plan, source)
+    (Path(rdir) / planner.PLAN_JSON).write_text(planner_contract.dumps(plan), encoding="utf-8")
+    return frozen
+
+
+def paths_overlap(a: str, b: str) -> bool:
+    return planner_quality.paths_overlap(a, b)

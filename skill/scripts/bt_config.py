@@ -40,6 +40,10 @@ DEFAULTS: dict = {
               # depends on them keeps its result and is merged with the fix); "downstream" = also everything that
               # depends on them (a finding on a root task then redoes the whole plan)
               "rework_scope": "named",
+              # a blocking audit finding becomes a remediation task on the integrated tree (the audit then runs again)
+              # instead of sending the tasks it names back; after `remediation_rounds` rounds of one audit the named
+              # tasks are sent back as before
+              "audit_remediation": True, "remediation_rounds": 2,
               # an audit that sends back more tasks than this at once found a defect of the plan or the integration,
               # not of each builder: the attempt log records those tasks as redone, not as failed (bt_attempt_log)
               "attribute_max_tasks": 3},   # a plan with an audit also needs an independent cross-check audit

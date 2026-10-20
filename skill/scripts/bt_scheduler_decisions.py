@@ -47,7 +47,7 @@ REASONS = {
     "wait_limit": ("Ya esperó el máximo de veces a que se renueve algo.", False, "retry"),
     "wait_window_exceeded": ("La espera necesaria supera la ventana permitida.", False, "retry"),
     "elapsed_limit": ("Pasó demasiado tiempo desde el primer fallo.", False, "retry"),
-    "rework_limit": ("La auditoría volvió a pedir rehacer trabajo ya devuelto el máximo de veces permitido (gates.max_reworks).", False, "retry_with_note"),
+    "rework_limit": ("La auditoría rechazó esta tarea otra vez, pero alguna de las tareas que señala ya fue devuelta el máximo de veces permitido (gates.max_reworks) y el sistema no las reabre solo. Lo normal es que los hallazgos se conviertan en tareas de remediación sin preguntarte; esto aparece cuando una auditoría ya agotó sus rondas (gates.remediation_rounds) o sus hallazgos no se pudieron convertir. Reintentar sirve para que la auditoría mire de nuevo el árbol actual; con una indicación puedes decirle qué priorizar.", False, "retry_with_note"),
     "manual_cancel": ("Alguien canceló el intento.", False, "retry"),
     "stale_or_cancelled": ("El intento quedó cancelado u obsoleto.", False, "retry"),
     # integrity anomalies: the evidence itself cannot be trusted, so a person looks first
@@ -85,6 +85,9 @@ def audit_notes_path(rdir: Path, task: str) -> Path:
 def write_audit_notes(rdir: Path, task: str, text: str) -> None:
     """What the independent audit found wrong with a task, written by the system when it sends the task back."""
     path = audit_notes_path(rdir, task)
+    if not text.strip():                                # the task passed: what it was told no longer applies
+        path.unlink(missing_ok=True)
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text.strip() + "\n", encoding="utf-8")
 

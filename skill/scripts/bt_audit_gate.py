@@ -55,6 +55,8 @@ class Policy:
     ledger_required: bool = True                      # an audit without a declared ledger: reject (True) or skip
     read_only: bool = True                            # an audit may change only the files it declares (report, ledger)
     rework_scope: str = "named"                       # what a rejection sends back: "named" (+ the checks over it) | "downstream"
+    remediate: bool = True                            # blocking findings become new tasks on the integrated tree (REQ-028)
+    remediation_rounds: int = 2                       # rounds one audit gets before the named tasks are sent back instead
 
 
 def policy_from(get) -> Policy:
@@ -64,15 +66,19 @@ def policy_from(get) -> Policy:
     required = get("gates.audit_ledger_required", True)
     read_only = get("gates.audit_read_only", True)
     scope = get("gates.rework_scope", "named")
+    remediate = get("gates.audit_remediation", True)
+    rounds = get("gates.remediation_rounds", 2)
     return Policy(tuple(severities) if ok else BLOCKING_SEVERITIES, required if isinstance(required, bool) else True,
-                  read_only if isinstance(read_only, bool) else True, scope if scope in REWORK_SCOPES else "named")
+                  read_only if isinstance(read_only, bool) else True, scope if scope in REWORK_SCOPES else "named",
+                  remediate if isinstance(remediate, bool) else True,
+                  rounds if isinstance(rounds, int) and not isinstance(rounds, bool) and rounds >= 0 else 2)
 
 
 @dataclass(frozen=True)
 class Gate:
     ok: bool
     problems: tuple[str, ...]      # the ledger is unusable (nothing can be sent back; the auditor must fix it)
-    blocking: tuple[dict, ...]     # open critical/high findings: {id, severity, summary, tasks}
+    blocking: tuple[dict, ...]     # open critical/high findings: {id, severity, summary, tasks, evidence}
     rework: tuple[str, ...]        # plan tasks named by blocking findings, in first-seen order
 
     def summary(self) -> str:
@@ -169,7 +175,8 @@ def evaluate(raw: bytes | str | None, plan_task_ids, audit_task_id: str, policy:
         if item["severity"] in policy.blocking and item["status"] == "open":
             tasks = [t.strip() for t in item.get("tasks", []) if t.strip() in known and t.strip() != audit_task_id]
             blocking.append({"id": _text(item["id"]), "severity": item["severity"],
-                             "summary": _text(item["summary"])[:MAX_TEXT], "tasks": tasks})
+                             "summary": _text(item["summary"])[:MAX_TEXT], "tasks": tasks,
+                             "evidence": _text(item.get("evidence"))[:MAX_TEXT]})
             rework += [t for t in tasks if t not in rework]
     return Gate(not blocking, (), tuple(blocking), tuple(rework))
 

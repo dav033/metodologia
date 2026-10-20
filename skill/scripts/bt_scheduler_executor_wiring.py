@@ -149,6 +149,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         if quality_store_path is not None:
             import bt_audit_gate
             import bt_config
+            import bt_remediation
             import bt_scheduler_decisions
             from bt_scheduler_quality.store import QualityStore
             from bt_scheduler_quality_adapter import QualityVerificationPort
@@ -175,6 +176,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                                    if integrate is not None and bt_config.get("gates.integration_check", True) is True
                                    else None),
                 unresolved_check=getattr(integrate, "unresolved", None),
+                remediate=bt_remediation.hook(rdir, bt_audit_gate.policy_from(bt_config.get)),
                 integration_retries=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0)(
                     bt_config.get("gates.integration_retries", 0)))
             scheduler.ports.verification = wiring.verification_runtime

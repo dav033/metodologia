@@ -14,6 +14,7 @@ from pathlib import Path
 
 import bt_core
 import bt_attempt_log
+import bt_remediation
 import bt_notify
 import bt_run_stores
 import bt_scheduler_adapter as adapter
@@ -316,6 +317,10 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                     adapter.write_projection(rdir, scheduler)
                     bt_attempt_log.sync(project, req, rdir)
                     last_heartbeat = now
+                if bt_remediation.requested(rdir):
+                    # an audit's findings become new plan tasks: the watcher applies them with this owner stopped
+                    adapter.write_projection(rdir, scheduler)
+                    return 0
                 _notify_terminal(rdir, req, snap.status, run_id, _notification_generation(scheduler))
                 terminal_run = snap.status in {"completed", "cancelled"} or adapter.is_stalled(scheduler, snap)
                 if terminal_run and not m4_runtime.has_pending_streams(wiring) \

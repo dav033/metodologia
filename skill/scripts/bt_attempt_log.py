@@ -202,8 +202,10 @@ def sync(project: str, req: str, rdir: Path, now: str | None = None) -> int:
         doc = facts_.core_document(m1)
         stamp = now or dt.datetime.now().astimezone().isoformat(timespec="seconds")
         written, known = 0, bt_events.known_event_ids()
-        for row in rows(project, req, plan_tasks, doc, facts_.attempt_facts(rdir), stamp,
-                        rework_events(m1), _max_named()):
+        import bt_remediation
+
+        reworks = sorted([*rework_events(m1), *bt_remediation.events(rdir)], key=lambda event: event["at"])
+        for row in rows(project, req, plan_tasks, doc, facts_.attempt_facts(rdir), stamp, reworks, _max_named()):
             if bt_events.append_row(row, known) is not None:
                 written += 1
         return written

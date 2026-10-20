@@ -6,7 +6,7 @@ import json
 
 import bt_scheduler_adapter as adapter
 
-ACTIONS = ("status", "decisions", "decide", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "revise")
+ACTIONS = ("status", "decisions", "decide", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "revise", "remediate")
 
 
 def register(subparsers) -> None:

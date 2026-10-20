@@ -102,6 +102,7 @@ class M6M1AdapterTests(unittest.TestCase):
         read_changes=None,
         integration_check=None,
         unresolved_check=None,
+        remediate=None,
         rework_notes=None,
         verify_notes=None,
         audit_policy=None,
@@ -143,6 +144,7 @@ class M6M1AdapterTests(unittest.TestCase):
             read_changes=read_changes,
             integration_check=integration_check,
             unresolved_check=unresolved_check,
+            remediate=remediate,
             rework_notes=rework_notes,
             verify_notes=verify_notes,
             audit_policy=audit_policy,
@@ -189,7 +191,7 @@ class M6M1AdapterTests(unittest.TestCase):
         return attempts
 
     # ---- audit gate: the ledger decides, and the system sends the named work back -------------------------------
-    def _audit_system(self, ledger, notes, *, declare_ledger=True, policy=None, changes=()):
+    def _audit_system(self, ledger, notes, *, declare_ledger=True, policy=None, changes=(), remediate=None):
         implement = _task("T1", "python3 build.py")
         implement.update(kind="implement")
         implement["verification"][0]["category"] = "functional"
@@ -203,8 +205,9 @@ class M6M1AdapterTests(unittest.TestCase):
             schema_version="1.2.0",
             read_ledger=ledger,
             read_changes=lambda order: tuple(changes),
-            rework_notes=lambda task_id, text: notes.append((task_id, text)),
+            rework_notes=lambda task_id, text: text and notes.append((task_id, text)),
             audit_policy=policy,
+            remediate=remediate,
         )
         root, core, _, executor, _, _ = system
         self._start_attempts(core, executor, root, ("T1",))
@@ -227,6 +230,29 @@ class M6M1AdapterTests(unittest.TestCase):
             _wait_for(lambda: core.snapshot().tasks["T2"]["state"] == "completed")
         )
         self.assertEqual(notes, [])
+
+    def test_blocking_findings_that_become_remediation_tasks_reject_the_audit_without_reopening_anything(self):
+        finding = {"id": "F1", "severity": "high", "status": "open", "summary": "the gateway never listens",
+                   "tasks": ["T1"], "evidence": "curl -> refused"}
+        asked, notes = [], []
+
+        def remediate(audit, attempt, findings):
+            asked.append((audit, [f["id"] for f in findings], findings[0]["evidence"]))
+            return True
+        core = self._audit_system(lambda order, path: self._ledger(finding), notes, remediate=remediate)
+        self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T2"
+                                              and e.detail.get("to") == "rejected" for e in core.audit_log())))
+        self.assertEqual(asked, [("T2", ["F1"], "curl -> refused")])
+        self.assertEqual(core.snapshot().tasks["T1"]["state"], "completed")
+        self.assertNotIn("rework_requested", [e.kind for e in core.audit_log()])
+        self.assertEqual(notes, [])
+
+    def test_when_remediation_is_not_possible_the_named_tasks_are_sent_back_as_before(self):
+        finding = {"id": "F1", "severity": "critical", "status": "open", "summary": "the gateway never listens",
+                   "tasks": ["T1"]}
+        core = self._audit_system(lambda order, path: self._ledger(finding), [], remediate=lambda *args: False)
+        self.assertTrue(_wait_for(lambda: "rework_requested" in [e.kind for e in core.audit_log()]))
+        self.assertNotEqual(core.snapshot().tasks["T1"]["state"], "completed")
 
     def test_an_open_critical_finding_rejects_the_audit_and_the_system_reopens_the_named_task(self):
         notes = []
@@ -286,7 +312,7 @@ class M6M1AdapterTests(unittest.TestCase):
         finding = {"id": "F1", "severity": "high", "status": "open", "summary": "root is wrong", "tasks": finding_tasks}
         system = self._system(tasks, max_attempts=2, schema_version="1.2.0",
                               read_ledger=lambda order, path: self._ledger(finding), read_changes=lambda order: (),
-                              rework_notes=lambda task_id, text: notes.append(task_id), audit_policy=policy)
+                              rework_notes=lambda task_id, text: text and notes.append(task_id), audit_policy=policy)
         root, core, _, executor, _, _ = system
         for tid in ("T1", "T2", "T3"):
             self._start_attempts(core, executor, root, (tid,))
@@ -325,7 +351,7 @@ class M6M1AdapterTests(unittest.TestCase):
         task["verification"][0]["category"] = "functional"
         root, core, _, executor, _, _ = self._system(
             [task], max_attempts=2, schema_version="1.2.0", integration_check=check,
-            rework_notes=lambda task_id, text: notes.append((task_id, text)))
+            rework_notes=lambda task_id, text: text and notes.append((task_id, text)))
         self._start_attempts(core, executor, root, ("T1",))
         core.step()
         self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T1"
@@ -343,7 +369,7 @@ class M6M1AdapterTests(unittest.TestCase):
             return task
         system = self._system([spec("T3"), spec("T1")], max_attempts=2, schema_version="1.2.0",
                               integration_check=lambda *args: "T1+T9 vs T3 for T4: remote/gateway/app.py",
-                              rework_notes=lambda task_id, text: notes.append((task_id, text)))
+                              rework_notes=lambda task_id, text: text and notes.append((task_id, text)))
         root, core, _, executor, _, adapter = system
         adapter._prior_clashes = lambda task_id: prior_clashes
         adapter.integration_retries = 2
@@ -401,7 +427,7 @@ class M6M1AdapterTests(unittest.TestCase):
         notes = []
         root, core, _, executor, _, _ = self._system(
             [task], max_attempts=2, schema_version="1.2.0", unresolved_check=lambda task_id, snapshot: ("a.py", "b.py"),
-            rework_notes=lambda task_id, text: notes.append((task_id, text)))
+            rework_notes=lambda task_id, text: text and notes.append((task_id, text)))
         self._start_attempts(core, executor, root, ("T1",))
         core.step()
         self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T1"
@@ -433,6 +459,18 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertIn("python3 build.py", text)
         self.assertIn("EROFS: read-only file system", text)
         self.assertIn("node_modules", text)
+
+    def test_an_accepted_task_clears_the_notes_of_earlier_rounds(self):
+        task = _task("T1", "python3 build.py")
+        task.update(kind="implement")
+        task["verification"][0]["category"] = "functional"
+        calls = []
+        root, core, _, executor, _, _ = self._system([task], max_attempts=2, schema_version="1.2.0",
+                                                     rework_notes=lambda task_id, text: calls.append((task_id, text)))
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T1"]["state"] == "completed"))
+        self.assertEqual(calls, [("T1", "")])
 
     def test_a_result_that_combines_cleanly_is_accepted(self):
         task = _task("T1", "python3 build.py")
