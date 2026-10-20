@@ -274,6 +274,8 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     assert.deepEqual(gateway.commands[8]?.precondition, { state: "approved", revision: 6 }, "brief edit should target the displayed owner-approved revision");
     assert.equal(gateway.commands[8]?.confirmation?.typedReq, "REQ-018");
     assert.equal(gateway.commands[8]?.confirmation?.challengeId, "mock-server-challenge-0001");
+    assert.ok(gateway.commandHeaders.every((header) => header === "1"), "every web command mutation must carry the gateway's CSRF marker");
+    assert.ok(gateway.challengeHeaders.every((header) => header === "1"), "every web challenge mutation must carry the gateway's CSRF marker");
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);
