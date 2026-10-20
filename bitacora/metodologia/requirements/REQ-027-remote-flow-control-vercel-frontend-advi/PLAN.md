@@ -6,62 +6,63 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/5 · tareas 29/31 · generado: 2026-10-19T19:09:45-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 2/5 · tareas 21/32 · generado: 2026-10-19T20:07:33-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T2 | Research where a per-task route pin enters M2 routing and the executor | media | completada | sonnet | claude-work | 3 |
-| T3 | Remote API contract, command and event schemas, and the architecture note | extrema | completada | sonnet | claude-work | 1 |
+| T3 | Remote API contract, command and event schemas, and the architecture note | extrema | completada | gpt-6-luna | codex-luis | 3 |
 
-**M2 — Laptop: remote API, ledger and feed** · dificultad alta · 10/10
+**M2 — Laptop: remote API, ledger and feed** · dificultad alta · 7/10
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T4 | Remote API skeleton behind the gateway key, with health | media | completada | gpt-6-luna | codex-luis | 1 |
-| T4a | Snapshot endpoint over the shared live caches | media | completada | sonnet | claude-work | 1 |
-| T5 | Command ledger store: idempotency keys, preconditions and audit rows | alta | completada | sonnet | claude-work | 1 |
-| T5a | Ledger dispatch for run moves and decision answers | media | completada | gpt-6-luna | codex-luis | 1 |
-| T5b | Ledger dispatch for plans and rounds with the confirmation challenge | media | completada | sonnet | claude-work | 1 |
-| T6 | Event feed with stable ids and a cursor, including decision requests | alta | completada | sonnet | claude-work | 1 |
-| T7 | Failure review read model per attempt | media | completada | gpt-6-luna | codex-luis | 1 |
-| T8 | Retry pinned to a route, model or account | alta | completada | sonnet | claude-personal | 1 |
-| T8a | Brief or criteria edit as an owner-approved plan revision | alta | completada | sonnet | claude-personal | 1 |
-| T9 | One owner of port 8765 and reloads that keep the listening socket | media | completada | gpt-6-luna | codex-luis | 1 |
+| T4 | Remote API skeleton behind the gateway key, with health | media | completada | gpt-6-luna | codex-luis | 2 |
+| T4a | Snapshot endpoint over the shared live caches | media | completada | gpt-6-luna | codex-luis | 2 |
+| T5 | Command ledger store: idempotency keys, preconditions and audit rows | alta | completada | sonnet | claude-work | 2 |
+| T5a | Ledger dispatch for run moves and decision answers | media | completada | gpt-6-luna | codex-luis | 2 |
+| T5b | Ledger dispatch for plans and rounds with the confirmation challenge | media | completada | gpt-6-luna | codex-luis | 2 |
+| T6 | Event feed with stable ids and a cursor, including decision requests | alta | completada | sonnet | claude-work | 2 |
+| T7 | Failure review read model per attempt | media | completada | gpt-6-luna | codex-luis | 2 |
+| T8 | Retry pinned to a route, model or account | alta | en curso | sonnet | claude-work | 2 |
+| T8a | Brief or criteria edit as an owner-approved plan revision | alta | pendiente | sonnet | claude-personal | 1 |
+| T9 | One owner of port 8765 and reloads that keep the listening socket | media | pendiente | gpt-6-luna | codex-luis | 1 |
 
 **M3 — Gateway (tested against a fake laptop)** · dificultad alta · 8/8
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T10 | Gateway skeleton: config, upstream client and liveness state | media | completada | gpt-6-luna | codex-luis | 1 |
-| T11 | GitHub OAuth for dav033 and server-side sessions | media | completada | sonnet | claude-work | 1 |
-| T11a | CSRF header, Origin check, rate limits and request log | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T12 | Snapshot cache and SSE fan-out with Last-Event-ID | alta | completada | sonnet | claude-work | 1 |
-| T13 | Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME | media | completada | gpt-6-luna | codex-luis | 1 |
-| T14 | Deterministic notification rules with dedupe keys | alta | completada | sonnet | claude-personal | 1 |
-| T14a | Telegram delivery with retries, backoff and history | media | completada | gpt-6-luna | codex-luis | 1 |
-| T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | gpt-6-luna | codex-luis | 1 |
+| T10 | Gateway skeleton: config, upstream client and liveness state | media | completada | gpt-6-luna | codex-luis | 2 |
+| T11 | GitHub OAuth for dav033 and server-side sessions | media | completada | gpt-6-luna | codex-luis | 2 |
+| T11a | CSRF header, Origin check, rate limits and request log | baja | completada | gpt-6-luna | codex-luis | 2 |
+| T12 | Snapshot cache and SSE fan-out with Last-Event-ID | alta | completada | sonnet | claude-work | 2 |
+| T13 | Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME | media | completada | gpt-6-luna | codex-luis | 2 |
+| T14 | Deterministic notification rules with dedupe keys | alta | completada | sonnet | claude-work | 2 |
+| T14a | Telegram delivery with retries, backoff and history | media | completada | gpt-6-luna | codex-luis | 2 |
+| T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | gpt-6-luna | codex-luis | 2 |
 
-**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 7/7
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T15 | Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway | media | completada | gpt-6-luna | codex-luis | 6 |
-| T15a | Login screen and runs list | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T15b | Run view: activity strip, tasks and feed on flow-core.js | media | completada | gpt-6-luna | codex-luis | 1 |
-| T15c | Failure review screen | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T15d | Control sheet with typed confirmations and command history | media | completada | gpt-6-luna | codex-luis | 1 |
-| T15e | Plans, question rounds and decision requests screens | media | completada | gpt-6-luna | codex-luis | 1 |
-| T15f | Recovery forms and live quotas | media | completada | gpt-6-luna | codex-luis | 1 |
-
-**M5 — Go-live kit and audit** · dificultad alta · 2/4
+**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 4/7
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | gpt-6-luna | codex-luis | 1 |
-| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | completada | sonnet | claude-work | 1 |
-| T18 | Independent security and spec audit by another provider | alta | en curso | sonnet | claude-work | 2 |
+| T15 | Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway | media | completada | gpt-6-luna | codex-luis | 7 |
+| T15a | Login screen and runs list | baja | completada | gpt-6-luna | codex-luis | 2 |
+| T15b | Run view: activity strip, tasks and feed on flow-core.js | media | completada | gpt-6-luna | codex-luis | 2 |
+| T15c | Failure review screen | baja | completada | gpt-6-luna | codex-luis | 2 |
+| T15d | Control sheet with typed confirmations and command history | media | verificando | gpt-6-luna | codex-luis | 2 |
+| T15e | Plans, question rounds and decision requests screens | media | pendiente | gpt-6-luna | codex-luis | 1 |
+| T15f | Recovery forms and live quotas | media | pendiente | gpt-6-luna | codex-luis | 1 |
+
+**M5 — Go-live kit and audit** · dificultad alta · 0/5
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | pendiente | gpt-6-luna | codex-luis | 1 |
+| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | pendiente | sonnet | claude-work | 1 |
+| T18 | Independent security and spec audit by another provider | alta | pendiente | sonnet | claude-work | 2 |
+| T18b | Cross-check audit of T18: Independent security and spec audit by another provider | alta | pendiente | — | — | 0 |
 | T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | gemini-3.8-flash-low | antigravity | 1 |
 <!-- bitacora:status:end -->
 
@@ -152,7 +153,8 @@ while offline (rejected by the owner).
 - [ ] T16 — Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook · repo: skill · files: remote/deploy/**, remote/docs/runbook.md · after: T14b, T15f, T9 · verify: `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` · covers: R16, R3 · kind: implement
 - [ ] T17 — Offline end-to-end: real laptop API, gateway and built web wired locally on loopback · repo: skill · files: remote/e2e/** · after: T16 · verify: `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` · covers: R1, R4, R5, R6, R7, R10, R11, R12, R18 · kind: test
 - [ ] T18 — Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit.md, remote/docs/audit.findings.json · after: T17 · verify: `test -s remote/docs/audit.md` · covers: R1, R2, R3, R16, R17 · kind: audit
-- [ ] T19 — Documentation: remote README, references and TOOLS entries to copy at go-live · repo: skill · files: remote/README.md, remote/docs/tools-entries.md · after: T18 · verify: `test -s remote/docs/tools-entries.md` · covers: R16, R18 · kind: docs
+- [ ] T18b — Cross-check audit of T18: Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit-crosscheck.md, remote/docs/audit-crosscheck.findings.json · after: T17 · verify: `test -s remote/docs/audit-crosscheck.md` · covers: R1, R2, R3, R16, R17 · kind: audit
+- [ ] T19 — Documentation: remote README, references and TOOLS entries to copy at go-live · repo: skill · files: remote/README.md, remote/docs/tools-entries.md · after: T18, T18b · verify: `test -s remote/docs/tools-entries.md` · covers: R16, R18 · kind: docs
 
 ## Go-live with the owner (after the run; not scheduler tasks)
 One stop, together, in this order; each step has its rollback in `remote/docs/runbook.md`:

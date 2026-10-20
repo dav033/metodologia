@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-027",
-  "revision": 4,
+  "revision": 5,
   "spec_ref": "SPEC.md",
   "milestones": [
     {
@@ -2833,13 +2833,107 @@
       "kind": "audit"
     },
     {
+      "id": "T18b",
+      "milestone_id": "M5",
+      "title": "Cross-check audit of T18: Independent security and spec audit by another provider",
+      "objective": "An independent second audit of the scope of T18. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger.",
+      "repository": "skill",
+      "after": [
+        "T17"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Cross-check of T18: a bounded independent pass over the same scope; Independent audits find defects tests miss",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Review spans auth, relay and the laptop boundary"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "An audit report and small fixes"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-024"
+          ],
+          "justification": "One audit pass plus fixes"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A missed hole exposes agent control"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T17"
+          ],
+          "justification": "Runs after the loopback check"
+        },
+        "confidence": {
+          "evidence": [
+            "precedent:REQ-024"
+          ],
+          "justification": "LG-001 says audits by another provider pay off"
+        }
+      },
+      "expected_paths": [
+        "remote/docs/audit-crosscheck.md",
+        "remote/docs/audit-crosscheck.findings.json"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Audit lists findings with verdicts",
+        "Confirmed high findings are fixed",
+        "Rejected findings state why"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s remote/docs/audit-crosscheck.md",
+          "purpose": "Audit lists findings with verdicts",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/audit-crosscheck.md",
+          "purpose": "Confirmed high findings are fixed",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/audit-crosscheck.md",
+          "purpose": "Rejected findings state why",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R16",
+        "R17"
+      ],
+      "kind": "audit"
+    },
+    {
       "id": "T19",
       "milestone_id": "M5",
       "title": "Documentation: remote README, references and TOOLS entries to copy at go-live",
       "objective": "A remote README and ready-to-copy TOOLS entries let any session operate gateway, bot and web after go-live",
       "repository": "skill",
       "after": [
-        "T18"
+        "T18",
+        "T18b"
       ],
       "complexity": "low",
       "scope": "small_change",

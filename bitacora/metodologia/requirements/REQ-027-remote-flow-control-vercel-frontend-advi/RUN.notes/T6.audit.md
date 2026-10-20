@@ -1,0 +1,2 @@
+The independent audit T18 rejected the accepted result of this task. Fix these confirmed findings and prove each one with a test that exercises the real entry point, not only the module in isolation:
+- F2 (high): Laptop remote API routes only health, snapshot and attempt-review; commands, challenges, events, history, runs, plans and quotas are not served and the review path differs from the contract
