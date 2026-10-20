@@ -1,22 +1,23 @@
 # Independent security and specification audit — T18
 
-Audited tree: `dcfc5a591004a1848951b345a3c5b3fd5531fe44` (HEAD at the start of this retry).
+Audited tree: `13d914a6c446b3d350a2d2b0883bd9470d165905` (HEAD and preserved snapshot at the start of this retry).
 Auditor: Codex / OpenAI. Date: 2026-10-20. Provider diversity must be established by the scheduler's assignment metadata; commit authors do not establish it.
 
-**Disposition: rework required.** This review confirms 17 findings: two high, fourteen medium and one low. All remain `open` in `audit.findings.json`. No risk has been accepted and no finding is claimed fixed. The audit changes only this report and the ledger. In accordance with the task's read-only rule, the high findings are recorded for rework, not repaired here. The nonempty-report checks do not establish that the implementation meets the specification.
+**Disposition: rework required.** This review confirms 18 findings: two high, fifteen medium and one low. All remain `open` in `audit.findings.json`. No risk has been accepted and no finding is claimed fixed. The audit changes only this report and the ledger. In accordance with the task's read-only rule, the high findings are recorded for rework, not repaired here. The nonempty-report checks do not establish that the implementation meets the specification.
 
 ## Retry provenance and acceptance boundary
 
-This retry started at the exact preserved snapshot named in the task. `git status --short` and `git diff --stat`
-were empty. `git diff 0ba9b657 HEAD --name-only` listed only these two audit artifacts: the implementation in this
-worktree has no later dependency remediation relative to the previous report's audited tree. This is evidence
-about the supplied tree, not a claim about other branches or attempts; no other worktree was inspected.
+This retry started at the exact preserved snapshot named in the task, with `git status --short` and
+`git diff --stat` empty. `git diff dcfc5a59 HEAD --name-only` and `git diff 0ba9b657 HEAD --name-only` each list
+only these two audit artifacts. The supplied implementation therefore has no dependency remediation relative to
+the previous report's audited tree. The instruction that a dependency was redone is not evidence that its fix is
+present here; no other branch, worktree or private attempt state was inspected.
 
-The SPEC, approved PLAN, classified T18 acceptance/commands and the task's stricter read-only ledger instructions
-were reread. Existing useful findings/probes are preserved, but each verdict below was checked again against the
-current source and fresh runs. No earlier test result is used as a current passing result. Task attribution is
-narrowed for F7 (T15f's advertised standalone note) and F10 (T6's missing approval event); neither adjacent routing
-nor gateway notification dispatch is independently defective for those findings.
+The complete SPEC, PLAN.md (including global constraints and integration verification), every PLAN.json task's
+objective/acceptance/verification, and the current task's stricter read-only ledger instructions were reread.
+The previous output is unaccepted: useful probes and findings are retained only after fresh execution and source
+review. F1–F17 are reconfirmed. F17 now also records event-schema incompatibilities, and F18 records independently
+observed browser-test isolation/cleanup defects. No earlier test result is counted as a current pass.
 
 The three artifact-existence commands pass. The substantive criterion **"Confirmed high findings are fixed" is
 not met**: F1/T16 and F2/T17 remain open. The read-only audit must return these tasks for correction. Provider
@@ -26,28 +27,34 @@ diversity and final task acceptance remain for the independent scheduler/checker
 
 Reviewed REQ-027 `SPEC.md`, approved `PLAN.md`/`PLAN.json`, the API contracts, laptop remote listener/commands/events/read models, gateway authentication/relay/cache/notifications/bot, web interactions, deployment kit and local end-to-end harness. Compared production call paths across components, ran existing checks, and exercised additional cases with synthetic data. Other auditors' findings were not used as coverage or substituted for this review.
 
-No production host, real OAuth provider, real Telegram chat, credential file or other worktree was accessed. Tests use their own fixtures; the integration harness's incomplete isolation is discussed in F2. For this retry its unittest command ran with `BITACORA_ROOT` pointing at a new empty temporary directory inside this worktree, preventing reads of the owner's live bitácora. No live deployment, hosted Vercel rewrite or real Docker/Caddy connectivity was tested. Python here is 3.14; the target is 3.12. Dependency installation completed with `cd remote/web && npm ci --offline` (320 packages; lockfile unchanged). Its cached advisory output is not a current vulnerability assessment.
+No production host, real OAuth provider, real Telegram chat, credential file or other worktree was accessed. Tests use their own fixtures; the integration harness's incomplete isolation is discussed in F2. All laptop/gateway/platform/page test subprocesses and reproduction probes ran with `BITACORA_ROOT` pointing at a new empty temporary directory inside this worktree, preventing reads of the owner's live bitácora. No live deployment, hosted Vercel rewrite or real Docker/Caddy connectivity was tested. Python here is 3.14.7 and Node is 24.21.0; the gateway target is Python 3.12. Dependency installation completed with `cd remote/web && npm ci --offline` (320 packages; lockfile unchanged). Its cached advisory output is not a current vulnerability assessment.
 
 ## Executed checks
 
 | Command (from repository root) | Observed result |
 |---|---|
-| `cd remote/gateway && python -m unittest discover -s tests -p 'test_*.py'` | Exit 0; 42 tests. Resource warnings about unclosed SQLite connections. |
-| `cd skill/scripts && python -m unittest discover -s tests -p 'test_remote_*.py'` | Exit 0; 55 tests. Resource warnings about unclosed SQLite connections. |
-| `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py` | Exit 0; 23 tests. |
-| `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` | Exit 0; 12 tests, one skipped: Caddy binary unavailable. Browser OAuth test ran. |
-| `cd remote/web && npm run verify` | Exit 0; lint/typecheck, nine tests including Chromium tests, production build. Two React hook warnings at `src/app/page.tsx:260`. |
-| `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` (temporary `BITACORA_ROOT`; runner below) | Exit 1; one test failed after 35.751 s at line 294: `AssertionError: forced failure did not reach the fake Telegram before its deadline`. See F2. |
-| Report probes A, B and C below | Each exit 0; reproduced the stated defects using synthetic data, loopback HTTP and temporary databases. A probe exit 0 is reproduction evidence, not a product pass. |
+| `cd remote/gateway && python -m unittest discover -s tests -p 'test_*.py'` | Exit 0; 42 tests in 14.310 s. Resource warning about an unclosed SQLite connection. |
+| `cd skill/scripts && python -m unittest discover -s tests -p 'test_remote_*.py'` | Exit 0; 55 tests in 8.730 s. Resource warnings about unclosed SQLite connections. |
+| `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py` | Exit 0; 23 tests in 1.999 s. |
+| `cd skill/scripts && python -m unittest discover -s tests -p 'test_page*.py'` | Exit 0; 43 tests in 11.420 s, including local plans/flow pages. |
+| `cd remote/web && npm run verify` | Exit 1; lint/typecheck passed with two hook warnings at `page.tsx:260`. Browser test timed out at 60 s: eight passed, one cancelled; build stage was not reached. See F18. |
+| `cd remote/web && node --test --test-concurrency=1 tests/*.test.mjs` | Exit 0; nine tests in 23.862 s, including real Chromium OAuth and 360 px panel scenarios. Diagnostic serialization only; the tracked verify command remains unchanged. |
+| `cd remote/web && npm run build` | Exit 0; production build, same two hook warnings. |
+| `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` | Exit 0; 12 tests in 6.363 s, one skipped: Caddy binary unavailable. Browser OAuth test ran. |
+| `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` (temporary `BITACORA_ROOT`; runner below) | Exit 1; one test failed in 36.867 s at line 294: `AssertionError: forced failure did not reach the fake Telegram before its deadline`. Offline assertions later in that test were not reached. See F2. |
+| Report probes A–D below | Each exit 0; reproduced the stated defects using synthetic data, loopback HTTP and temporary databases. A probe exit 0 is reproduction evidence, not a product pass. |
+| `python -m json.tool remote/contract/command.schema.json` | Exit 0; JSON syntax only, not wire compatibility (F17). |
 | `test -s remote/docs/audit.md` | Exit 0 for each of the task's three identical acceptance commands. |
 
-The first kit run had two skips because dependency installation was still in progress; after installation it was
-rerun with 12 tests and only the Caddy skip. An initial E2E run overlapped that kit's Chromium test, which starts
-`next dev` in the same web directory: the E2E build failed with `PageNotFoundError: Cannot find module for page:
-/_document` (zero tests). This audit execution interfered through shared `.next` output; the sequential rerun
-produced the one-test failure above and is the basis for F2. No source was changed between runs. Real `caddy validate`
-was not executed because Caddy is unavailable. The entire legacy suite, Python 3.12 and live production checks were
-not run. No gateway import-error invocation occurred during this retry.
+The web, kit and integration invocations were sequential; no separate audit command ran another Next.js server
+concurrently with them. The default web test runner itself launches two browser test files concurrently against
+one `.next` directory. After its panel timeout, cleanup stalled waiting for its own Next.js child to close; the
+auditor sent SIGTERM to that child only, allowing the command to finish with exit 1 (test duration 97.816 s).
+The subsequent serial run passed without source changes. It does not turn the original verify command into a pass.
+The E2E command's build and standalone browser teardown completed; its forced-notification assertion failed.
+
+Real `caddy validate`, Docker/container networking, Python 3.12, the entire legacy suite and live production checks
+were not run. Caddy is not installed. No runtime authentication bypass or production credential exposure is claimed.
 
 The E2E command was run from `remote/e2e` using this environment-isolation wrapper (it installs nothing when the
 already installed dependencies are present):
@@ -70,7 +77,7 @@ PY
 
 Tasks: **T16**. Requirements: R1, R3, R4; approved PLAN §Approach.
 
-The plan explicitly places Caddy in the existing Docker container and the host gateway at `172.20.0.1:8790`. `remote/deploy/Caddyfile:12` instead proxies `127.0.0.1:8790`, and `remote/gateway/config.py`/`auth.py` default the gateway bind to host loopback. The env example lists an optional blank `GATEWAY_BIND` override, but gives no bridge address; the runbook supplies neither the bridge-bind setup nor container host networking. Overriding the gateway bind alone would still leave the Caddy upstream wrong. In the approved topology that Caddy upstream is the container itself, so login and every API request fail. The kit test even asserts this incorrect upstream.
+The plan explicitly places Caddy in the existing Docker container and the host gateway at `172.20.0.1:8790`. `remote/deploy/Caddyfile:11` instead proxies `127.0.0.1:8790`, and `remote/gateway/config.py`/`auth.py` default the gateway bind to host loopback. The env example lists an optional blank `GATEWAY_BIND` override, but gives no bridge address; the runbook supplies neither the bridge-bind setup nor container host networking. Overriding the gateway bind alone would still leave the Caddy upstream wrong. In the approved topology that Caddy upstream is the container itself, so login and every API request fail. The kit test even asserts this incorrect upstream.
 
 Evidence: source inspection against `PLAN.md:74`; `rg -n 'reverse_proxy|bind_host|GATEWAY_BIND' remote/deploy/Caddyfile remote/gateway/config.py remote/gateway/auth.py remote/deploy/gateway.env.example`. No live Docker inspection is claimed. **Required correction:** make the gateway bind, Caddy upstream and runbook consistent with the approved container-to-host topology; preserve a private gateway listener. Exercise the actual network boundary rather than asserting a configuration string.
 
@@ -80,7 +87,7 @@ Tasks: **T17**. Requirements: R10, R11; T17 acceptance.
 
 The T17 unittest command, with an isolated empty bitácora root, fails at `_wait_for_telegram(1, timeout=5)`. The fixture patches `_snapshot_runs` and `_plans`, but not `_runs`, which the real `/events` handler separately reads for retry context. Its synthetic `demo/REQ-001/T1` failure therefore does not have a matching authoritative exhausted-retry task in a clean fixture tree; `bt_remote_events.from_flow(row, {})` returns `None`. The harness itself also fails to provide an isolated bitácora root for this production read. Existing web tests send commands to a mock and do not close this coverage gap. The harness contains no real-ledger cancel-attempt or stale-precondition scenario, although PLAN §Verification explicitly requires both; passing mock web submissions would not establish either.
 
-Evidence: executed command/result above; `remote/e2e/tests/test_local_e2e.py:146`, `skill/scripts/bt_remote_api.py:331`, and probe B below. With empty context, the real production-shaped failure is suppressed; with explicit exhausted-task context, it becomes `attempt.failed`. The isolated sequential run did not emit the previous attempt's upstream timeout/BrokenPipe diagnostics. **Required correction:** isolate all read models, seed real retry context for the synthetic task, and exercise the required real-ledger command/stale scenarios; rerun the complete integration command, retaining the once-only Telegram assertion. Do not disable retry suppression to make the fixture pass.
+Evidence: executed command/result above; `remote/e2e/tests/test_local_e2e.py:146`, `skill/scripts/bt_remote_api.py:331`, and probe B below. With empty context, the real production-shaped failure is suppressed; with explicit exhausted-task context, it becomes `attempt.failed`. **Required correction:** isolate all read models, seed real retry context for the synthetic task, and exercise the required real-ledger command/stale scenarios; rerun the complete integration command, retaining the once-only Telegram assertion. Do not disable retry suppression to make the fixture pass.
 
 ### F3 — Medium / open — First-time go-live instructions cannot bootstrap the services
 
@@ -182,11 +189,46 @@ Tasks: **T15d**. Requirement: R6; suspended-mid-command edge case.
 
 Every form submission generates a new `web-${crypto.randomUUID()}`. `sendCommand` reports an error then drops the command envelope; it does not retain/display the original key or offer a same-key retry when `UNKNOWN_OUTCOME` occurs. A second tap becomes a different ledger operation, so the backend's correct same-key protection cannot protect that retry. This is a client recovery gap, not a demonstrated duplicate effect in production. Evidence: `page.tsx:295`, `:331`, `:356`, `:380`, `:401`; `rg -n 'UNKNOWN_OUTCOME|idempotencyKey|randomUUID' remote/web/src/app/page.tsx`. **Required correction:** retain uncertain submissions and reconcile/retry the identical envelope/key, including confirmation, before offering a new operation.
 
-### F17 — Low / open — The published command schema is not the implemented laptop wire contract
+### F17 — Low / open — Published schemas disagree with the implemented wire contracts
 
-Tasks: **T3**. Requirement: R5; versioned contract.
+Tasks: **T3**. Requirements: R3, R5, R10; versioned contract.
 
-`docs/contract.md` calls the schema the laptop command body, but it defines the gateway camelCase envelope while the laptop accepts snake_case (`idempotency_key`, `command`, string target). The schema permits 128-character keys while laptop validation stops at 120. It also omits `answer-decision` and the `round` selector that the working translated answer path requires. `unevaluatedProperties: false` makes the latter additional fields invalid. Evidence: `remote/contract/command.schema.json`, `remote/gateway/commands.py:to_laptop_command`, `skill/scripts/bt_remote_commands.py:validate`, `:dispatch_plan_command`. **Required correction:** document the two wire dialects explicitly and align schemas/limits with the adapter and actual command families.
+`docs/contract.md` calls the command schema the laptop body, but it defines the gateway camelCase envelope while
+the laptop accepts snake_case (`idempotency_key`, `command`, string target). It permits 128-character keys while
+laptop validation stops at 120, omits `answer-decision`, and disallows the `round` selector required by the working
+translated answer path. `unevaluatedProperties: false` makes the latter additional field invalid.
+
+The event schema also excludes production `task.progress`/`task.completed` events. Its target references the command
+target schema, which requires `kind`, `project`, `req`: production flow events omit `kind`, and derived `run.finished`
+events use `{run: 'demo/REQ-001'}`. These valid production payloads therefore violate explicit enum/required clauses.
+This is a contract/documentation finding; no schema validator is claimed to run in the production relay.
+
+Evidence: probes C/D, `remote/contract/{command,event}.schema.json`, `remote/docs/contract.md`,
+`commands.to_laptop_command`, `bt_remote_commands.validate`/`dispatch_plan_command`, and event producer inspection.
+**Required correction:** document the two command dialects and align both schemas/limits with actual producers,
+adapters and all command/event families; validate representative producer output, not only JSON syntax.
+
+### F18 — Medium / open — The advertised web verification shares browser build output and stalls on timeout
+
+Tasks: **T15**. T15 acceptance: `npm run verify` builds offline. Supporting paths: the browser tests added by later UI tasks.
+
+`npm test` invokes `node --test tests/*.test.mjs`, which runs test files concurrently. Both `oauth-browser.test.mjs`
+and `panel-browser.test.mjs` spawn `next dev` with `cwd: root`, different mock gateway origins and no separate output
+directory. They compete over the same `.next` artifacts/configuration. In this audit's unmodified tree,
+`npm run verify` cancelled the panel test after 60000 ms, leaving eight passes and one cancellation. Cleanup also
+waited for `once(next, 'close')` without a bound; the auditor had to terminate that invocation's Next.js server child
+before the command returned exit 1. Its production build stage never ran.
+
+A diagnostic `node --test --test-concurrency=1 tests/*.test.mjs` passed all nine tests in 23.862 s, and a separate
+`npm run build` passed. This confirms the shipped verification is unreliable and the shared-output isolation
+is defective; it does not prove that the artifact race alone caused this particular timeout, or that the panel
+itself is broken in normal use. No other audit Next.js invocation overlapped either run.
+
+Evidence: the command results above, `remote/web/package.json` test script,
+`remote/web/tests/oauth-browser.test.mjs:112`/`:115`/`:155`, and
+`remote/web/tests/panel-browser.test.mjs:79`/`:80`/`:286`.
+**Required correction:** serialize these tests or isolate their Next.js output/configuration; bound cleanup of
+server children, then rerun the actual `npm run verify` command. This read-only audit changes no test or script.
 
 ## Additional reproduction probes
 
@@ -380,6 +422,36 @@ login; SSE deque `maxlen: None`; gateway accepts a 121-character key that the la
 `idempotency_key debe ser texto de 8 a 120 caracteres.`; schema has no `answer-decision`; gateway bind defaults to
 `127.0.0.1`. Inspection of `NotificationOutbox` also confirms no outbox/history pruning method or deletion query.
 
+### Probe D — event producer/schema boundary
+
+Run from the repository root. This checks the schema's explicit enum and required-field clauses directly; it is
+not presented as a full JSON Schema validator.
+
+```bash
+python - <<'PY'
+import datetime as dt, json, os, sys, tempfile
+from pathlib import Path
+sys.path.insert(0, 'skill/scripts')
+with tempfile.TemporaryDirectory(prefix='.audit-contract-', dir='.') as tmp:
+    os.environ['BITACORA_ROOT'] = str(Path(tmp).resolve())
+    import bt_remote_events as events
+    schema = json.loads(Path('remote/contract/event.schema.json').read_text())
+    commands = json.loads(Path('remote/contract/command.schema.json').read_text())
+    required = commands['$defs']['target']['required']
+    event = events.project_event('task.progress', 'synthetic', '2026-10-20T12:00:00Z',
+                                 {'project': 'demo', 'req': 'REQ-001'}, {'summary': 'synthetic'})
+    print('progress type allowed:', event['type'] in schema['properties']['type']['enum'])
+    print('progress missing required target fields:', [k for k in required if k not in event['target']])
+    event = events.derived_events([{'run': 'demo/REQ-001', 'state': 'finished',
+                                    'updated_at': '2026-10-20T12:00:00Z'}], [], [], dt.datetime.now(dt.UTC))[0]
+    print('derived target:', event['target'])
+    print('derived missing required target fields:', [k for k in required if k not in event['target']])
+PY
+```
+
+Observed (exit 0): progress type is not allowed; progress target lacks `kind`; derived `run.finished` target is
+`{'run': 'demo/REQ-001'}`, lacking `kind`, `project`, `req`. Producer/schema incompatibility is recorded in F17.
+
 ## Investigated candidates rejected as findings
 
 These are rejected hypotheses, not accepted risks; they are deliberately excluded from the confirmed-findings ledger.
@@ -394,6 +466,6 @@ These are rejected hypotheses, not accepted risks; they are deliberately exclude
 
 ## Coverage and remaining work
 
-R1/R3 authentication and listener isolation have direct passing tests; F1/F3 block the intended deployment. R2/R17 have F4/F5. R4/R7 have F11/F13/F15 and client recovery F16. R5/R6/R8 have passing ledger/challenge tests but F6–F9/F16/F17 at component boundaries. R9/R16 have F14. R10–R12 have passing isolated notification/bot tests but F2/F6/F10/F12. R13 has F7/F8. R14 has a passing 360 px Chromium scenario, local fonts and manifest checks; this does not establish every touch target or hosted install behavior. R15 has passing read/relay tests, with unbounded history in F12.
+R1/R3 authentication and listener isolation have direct passing tests; F1/F3 block the intended deployment. R2/R17 have F4/F5. R4/R7 have F11/F13/F15 and client recovery F16. R5/R6/R8 have passing ledger/challenge tests but F6–F9/F16/F17 at component boundaries. R9/R16 have F14. R10–R12 have passing isolated notification/bot tests but F2/F6/F10/F12. R13 has F7/F8. R14 has a passing serialized 360 px Chromium scenario, local fonts and manifest checks, while F18 affects the default verification; this does not establish every touch target or hosted install behavior. R15 has passing read/relay tests, with unbounded history in F12.
 
 The scheduler should return F1 to T16 and F2 to T17 for rework, then request an independent audit again. Medium/low findings remain recorded and unresolved; only the owner can accept them. Recheck fixes against the actual cross-component envelopes, not only mocks. The required report/ledger files are delivered; product readiness, high-finding closure and the independent acceptance decision remain outstanding.

@@ -9,7 +9,7 @@
       "tasks": [
         "T16"
       ],
-      "evidence": "Current-tree inspection: PLAN.md Approach specifies Docker Caddy -> 172.20.0.1:8790; remote/deploy/Caddyfile:12 still proxies 127.0.0.1:8790. Probe C confirms GatewayConfig default bind 127.0.0.1. Kit suite exits 0 but asserts the loopback upstream; no actual Docker boundary tested."
+      "evidence": "Current-tree inspection: PLAN.md Approach specifies Docker Caddy -> 172.20.0.1:8790; remote/deploy/Caddyfile:11 still proxies 127.0.0.1:8790. Probe C confirms GatewayConfig default bind 127.0.0.1. Kit suite exits 0 but asserts the loopback upstream; no actual Docker boundary tested."
     },
     {
       "id": "F2",
@@ -19,7 +19,7 @@
       "tasks": [
         "T17"
       ],
-      "evidence": "T17 unittest command with temporary empty BITACORA_ROOT, run sequentially after web/kit checks: exit 1; Ran 1 test in 35.751s; line 294, forced failure did not reach the fake Telegram before its deadline. Probe B: production-shaped failure with empty retry context returns None, exhausted-task context emits attempt.failed. Harness also omits required ledger cancel/stale scenarios."
+      "evidence": "T17 unittest command with temporary empty BITACORA_ROOT, run sequentially after web/kit checks: exit 1; Ran 1 test in 36.867s; line 294, forced failure did not reach the fake Telegram before its deadline. Probe B: production-shaped failure with empty retry context returns None, exhausted-task context emits attempt.failed. Harness also omits required ledger cancel/stale scenarios."
     },
     {
       "id": "F3",
@@ -171,11 +171,21 @@
       "id": "F17",
       "severity": "low",
       "status": "open",
-      "summary": "Published command schema describes the gateway envelope as the laptop body, disagrees on key length, and omits answer-decision and the required round selector.",
+      "summary": "Published command/laptop wire dialects and key limits disagree; command families/round selector are incomplete, and production event types/targets violate the event schema.",
       "tasks": [
         "T3"
       ],
-      "evidence": "Current docs/contract.md describes gateway schema as laptop body; actual laptop takes snake_case. Probe C exits 0: 121-char key is accepted by gateway and rejected by laptop; answer-decision absent from schema. answerRound schema still disallows the required round selector."
+      "evidence": "Current source recheck of contract.md and both schemas; probes C/D exit 0. Gateway accepts a 121-character key that the laptop rejects; answer-decision absent and required round selector disallowed. Event enum excludes task.progress/task.completed; event target requires kind/project/req but flow targets omit kind and derived run.finished uses only run. JSON syntax command exits 0 and does not validate these payloads."
+    },
+    {
+      "id": "F18",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Default web verify runs browser tests concurrently against shared Next.js output/configuration; panel test cancels at 60s and child shutdown stalls, while serial browser tests and separate build pass.",
+      "tasks": [
+        "T15"
+      ],
+      "evidence": "cd remote/web && npm run verify: exit 1 after panel test timed out at 60000ms; 8 passed, 1 cancelled, build not reached; auditor terminated only its stuck Next.js server child to finish cleanup. node --test --test-concurrency=1 tests/*.test.mjs: exit 0, 9 passed in 23.862s. npm run build: exit 0. Both browser test sources spawn next dev with cwd root and shared .next. Shared-output race is confirmed structurally; exclusive cause of this timeout is not established."
     }
   ]
 }
