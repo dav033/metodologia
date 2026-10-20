@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 
 from app import create_runtime
 from config import GatewayConfig
+from stream import SnapshotEventStream
 from upstream import UpstreamError
 
 
@@ -84,6 +86,24 @@ class SnapshotStreamTests(unittest.TestCase):
         self.assertEqual(first_client, second_client)
         self.assertEqual(self.laptop.snapshot_calls, 1)
         self.assertEqual(self.laptop.event_calls, 1)
+
+    def test_reconnect_wait_receives_events_published_after_it_starts(self) -> None:
+        stream = SnapshotEventStream()
+        waiting = threading.Event()
+        received = []
+
+        def reconnect() -> None:
+            waiting.set()
+            received.extend(stream.wait_after(0, timeout=1))
+
+        client = threading.Thread(target=reconnect)
+        client.start()
+        self.assertTrue(waiting.wait(timeout=1))
+        stream.publish([{"id": "event-a", "type": "run.finished"}])
+        client.join(timeout=1)
+
+        self.assertFalse(client.is_alive())
+        self.assertEqual(received, [(1, {"id": "event-a", "type": "run.finished"})])
 
 
 if __name__ == "__main__":
