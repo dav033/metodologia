@@ -177,10 +177,28 @@ class PlatformTests(unittest.TestCase):
         self.assertEqual(run.call_args.args[0], ["systemctl", "--user", "restart", bt_server.WEB_UNIT])
         spawn.assert_not_called()
         with patch.object(bt_server, "_unit_enabled", return_value=True), \
-                patch.object(bt_server, "is_running", return_value=True), patch.object(bt_server, "_stale", return_value=False), \
+                patch.object(bt_server, "is_running", return_value=True), patch.object(bt_server, "_needs_refresh", return_value=False), \
                 patch.object(bt_server.subprocess, "run") as run:
             bt_server.ensure_server(bt_server.DEFAULT_PORT)
         run.assert_not_called()                                              # current code: leave the unit alone
+
+    def test_stale_systemd_web_server_reloads_in_place_and_keeps_its_listener(self):
+        # A systemd reload leaves the active service process and its listening socket in place.
+        with patch.object(bt_server, "_unit_enabled", return_value=True), \
+                patch.object(bt_server, "is_running", return_value=True), patch.object(bt_server, "_needs_refresh", return_value=True), \
+                patch.object(bt_server, "_stale") as stop_stale, \
+                patch.object(bt_server.subprocess, "run") as run, patch.object(bt_server.subprocess, "Popen") as spawn:
+            bt_server.ensure_server(bt_server.DEFAULT_PORT)
+        run.assert_called_once_with(["systemctl", "--user", "reload", bt_server.WEB_UNIT],
+                                    capture_output=True, timeout=30)
+        stop_stale.assert_not_called()
+        spawn.assert_not_called()
+
+    def test_enabled_runtime_web_unit_counts_as_systemd_owner(self):
+        result = subprocess.CompletedProcess([], 0, stdout="enabled-runtime\n", stderr="")
+        with patch.object(bt_server, "platform", return_value="linux"), \
+                patch.object(bt_server.subprocess, "run", return_value=result):
+            self.assertTrue(bt_server._unit_enabled())
 
     def test_stale_web_server_can_be_stopped_on_posix_without_taskkill(self):
         state = self.root / "state"

@@ -405,14 +405,25 @@ def serve_remote(port: int = REMOTE_PORT) -> None:
     httpd.serve_forever()
 
 
-def _stale(port: int) -> bool:
-    """A running server on our port that runs old code or serves another bitácora."""
+def _needs_refresh(port: int) -> bool:
+    """Whether the recorded server on this port runs old code or serves another bitácora."""
     try:
         info = json.loads((STATE / "server.json").read_text(encoding="utf-8"))
     except Exception:
         return True
     if info.get("port") != port or info.get("version") == code_version() and info.get("root") == str(ROOT):
         return False
+    return True
+
+
+def _stale(port: int) -> bool:
+    """Stop a recorded server on our port that runs old code or serves another bitácora."""
+    if not _needs_refresh(port):
+        return False
+    try:
+        info = json.loads((STATE / "server.json").read_text(encoding="utf-8"))
+    except Exception:
+        return True
     pid = info.get("pid")
     if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 1 or pid == os.getpid():
         return False
@@ -441,14 +452,23 @@ def _unit_enabled() -> bool:
         out = subprocess.run(["systemctl", "--user", "is-enabled", WEB_UNIT], capture_output=True, text=True, timeout=5)
     except (OSError, subprocess.SubprocessError):
         return False
-    return out.stdout.strip() == "enabled"
+    return out.stdout.strip() in {"enabled", "enabled-runtime"}
 
 
 def ensure_server(port: int = DEFAULT_PORT) -> str:
     """Start the server detached in the background if it isn't running (or restart it if its code is stale)."""
     if port == DEFAULT_PORT and _unit_enabled():
-        # systemd owns the panel: (re)start it there; a loose copy would hold the port and leave the unit failing
-        if not is_running(port) or _stale(port):
+        # systemd owns the panel: never start a loose copy while its unit is enabled.
+        # Reload a live unit in place so its listening socket stays open; restart only
+        # when there is no listener to reload.
+        running = is_running(port)
+        stale = _needs_refresh(port) if running else False
+        if running and stale:
+            try:
+                subprocess.run(["systemctl", "--user", "reload", WEB_UNIT], capture_output=True, timeout=30)
+            except (OSError, subprocess.SubprocessError):
+                pass
+        elif not running:
             try:
                 subprocess.run(["systemctl", "--user", "restart", WEB_UNIT], capture_output=True, timeout=30)
             except (OSError, subprocess.SubprocessError):
