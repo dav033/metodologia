@@ -16,11 +16,15 @@ class FakeLaptop:
         self.healthy = True
         self.health_results = []
         self.feed = []
+        self.snapshot_calls = 0
+        self.snapshot_unavailable = False
 
     def health(self):
         healthy = self.health_results.pop(0) if self.health_results else self.healthy
         if not healthy:
+            self.snapshot_unavailable = True
             raise UpstreamError("offline")
+        self.snapshot_unavailable = False
         return {"status": "ok"}
 
     def events(self, after):
@@ -29,6 +33,9 @@ class FakeLaptop:
         return result
 
     def snapshot(self):
+        self.snapshot_calls += 1
+        if self.snapshot_unavailable:
+            raise UpstreamError("offline")
         return {"runs": [{"status": "running"}]}
 
 
@@ -56,7 +63,7 @@ class LivenessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             laptop = FakeLaptop()
             sent = []
-            laptop.health_results = [False, False, False, True]
+            laptop.health_results = [True, False, False, False, True]
             config = GatewayConfig(
                 laptop_origin="http://127.0.0.1:18765",
                 gateway_key="test-key",
@@ -78,7 +85,7 @@ class LivenessTests(unittest.TestCase):
 
             def one_production_cycle(runtime):
                 built.append(runtime)
-                for _ in range(4):
+                for _ in range(5):
                     runtime.poll_once()
 
             with patch.dict(os.environ, {
@@ -112,6 +119,39 @@ class LivenessTests(unittest.TestCase):
             }]
             restarted.poll_once()
             self.assertEqual(len(sent), 2)
+
+    def test_production_entrypoint_alerts_from_cached_active_run_when_laptop_is_offline(self):
+        with tempfile.TemporaryDirectory() as directory:
+            laptop = FakeLaptop()
+            laptop.health_results = [True, False, False, False]
+            sent = []
+            config = GatewayConfig(
+                laptop_origin="http://127.0.0.1:18765",
+                gateway_key="test-key",
+                telegram_bot_token="test-token",
+                telegram_chat_id="test-chat",
+                database_path=Path(directory) / "gateway.sqlite",
+            )
+
+            def four_production_cycles(runtime):
+                for _ in range(4):
+                    runtime.poll_once()
+
+            env = {
+                "LAPTOP_ORIGIN": config.laptop_origin,
+                "FLOW_GATEWAY_KEY": config.gateway_key,
+                "TELEGRAM_BOT_TOKEN": config.telegram_bot_token,
+                "TELEGRAM_CHAT_ID": config.telegram_chat_id,
+                "GATEWAY_DATABASE": str(config.database_path),
+            }
+            with patch.dict(os.environ, env, clear=True), patch("app.LaptopClient", return_value=laptop), \
+                    patch("app.TelegramSender", return_value=sent.append), \
+                    patch("app.OFFLINE_ALERT_DELAY_SECONDS", 0), \
+                    patch.object(GatewayRuntime, "run_forever", four_production_cycles):
+                self.assertEqual(main(), 0)
+
+            self.assertEqual(laptop.snapshot_calls, 1)
+            self.assertTrue(any("más de 15 minutos" in message for message in sent))
 
 
 if __name__ == "__main__":

@@ -28,6 +28,7 @@ class GatewayRuntime:
         self.event_cursor = ""
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
+        self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
 
     def poll_once(self) -> None:
         try:
@@ -40,6 +41,7 @@ class GatewayRuntime:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
         else:
             self.liveness.record_success()
+            self._refresh_active_run_cache()
             self._poll_events()
         if self.liveness.status is LaptopStatus.OFFLINE:
             self._notify_long_offline_with_active_run()
@@ -51,20 +53,29 @@ class GatewayRuntime:
             return
         if self.offline_generation <= self.offline_alerted_generation:
             return
-        try:
-            snapshot = self.laptop.snapshot()
-        except UpstreamError:
-            return
-        runs = snapshot.get("runs")
-        if not isinstance(runs, list) or not any(
-            isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
-            for run in runs
-        ):
+        if not self.has_cached_active_run:
             return
         key = f"liveness:laptop:offline:{self.offline_generation}"
         self.outbox.enqueue(key, "El portátil lleva más de 15 minutos desconectado mientras hay una ejecución activa.")
         self.outbox.set_state_value("laptop_outage_alerted", self.offline_generation)
         self.offline_alerted_generation = self.offline_generation
+
+    def _refresh_active_run_cache(self) -> None:
+        try:
+            snapshot = self.laptop.snapshot()
+        except UpstreamError:
+            logger.warning("Laptop snapshot unavailable; retaining cached active-run state")
+            return
+        runs = snapshot.get("runs")
+        if not isinstance(runs, list):
+            logger.warning("Laptop snapshot response was invalid; retaining cached active-run state")
+            return
+        has_active_run = any(
+            isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
+            for run in runs
+        )
+        self.has_cached_active_run = has_active_run
+        self.outbox.set_state_value("laptop_has_cached_active_run", int(has_active_run))
 
     def _poll_events(self) -> None:
         try:
