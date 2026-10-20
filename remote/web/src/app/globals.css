@@ -111,6 +111,11 @@ h1 span { color: var(--ctp-lavender); }
 .feed ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .feed li { display: grid; grid-template-columns: minmax(70px, auto) minmax(0, 1fr); gap: 4px 12px; border: 1px solid rgb(205 214 244 / 8%); border-radius: 9px; background: rgb(49 50 68 / 30%); padding: 10px; font-size: 12px; overflow-wrap: anywhere; }
 .feed li time { grid-column: 2; color: var(--ctp-overlay1); font-size: 10px; }
+.command-history { border-top: 1px solid rgb(205 214 244 / 8%); }
+.command-history ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.command-history li { display: grid; gap: 5px; border: 1px solid rgb(205 214 244 / 8%); border-radius: 9px; background: rgb(49 50 68 / 30%); padding: 12px; color: var(--ctp-subtext1); font-size: 12px; overflow-wrap: anywhere; }
+.command-history li strong { color: var(--ctp-lavender); }
+.command-history li time { color: var(--ctp-overlay1); font-size: 10px; }
 details { margin-top: 12px; color: var(--ctp-subtext1); font-size: 13px; }
 summary { width: fit-content; cursor: pointer; color: var(--ctp-lavender); }
 details ul { margin: 10px 0 0; padding-left: 20px; line-height: 1.6; overflow-wrap: anywhere; }

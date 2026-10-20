@@ -9,6 +9,7 @@ type Task = { id: string; title?: string; state: string; revision?: number; upda
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptop?: { online: boolean; checkedAt?: string } };
 type Session = { authenticated: boolean };
+type CommandHistoryItem = { id: string; at: string; origin: string; result: string };
 type FailureReview = {
   attemptId: string;
   cause: string;
@@ -166,8 +167,7 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [working, setWorking] = useState("");
   const [reason, setReason] = useState("");
-  const [confirmation, setConfirmation] = useState("");
-  const [typedReq, setTypedReq] = useState("");
+  const [commandHistory, setCommandHistory] = useState<CommandHistoryItem[]>([]);
 
   const refreshSnapshot = useCallback(async () => {
     const response = await fetch("/api/remote/v1/snapshot", { cache: "no-store" });
@@ -225,20 +225,42 @@ export default function HomePage() {
     event.preventDefault();
     if (!snapshot) return;
     setWorking(key); setError("");
+    const target = record(command.target);
+    const origin = `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""} · ${text(command.type) ? command.type : "comando"}`;
+    const addHistory = (result: string) => setCommandHistory((current) => [{ id: crypto.randomUUID(), at: new Date().toISOString(), origin, result }, ...current].slice(0, 20));
     try {
       const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(command) });
-      if (!response.ok) throw new Error(`El gateway rechazó el comando (${response.status}).`);
+      const responseBody: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const problem = record(responseBody);
+        const code = text(problem?.code) ? problem.code : "";
+        const message = code === "STALE_PRECONDITION" ? "el estado cambió; actualiza el panel antes de volver a intentarlo." : text(problem?.message) ? problem.message : `El gateway rechazó el comando (${response.status}).`;
+        addHistory(`Rechazado · ${message}`);
+        throw new Error(message);
+      }
+      const result = record(responseBody);
+      addHistory(text(result?.status) ? result.status : "Aceptado");
       await load();
-      setReason(""); setConfirmation(""); setTypedReq("");
+      setReason("");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo enviar el comando."); }
     finally { setWorking(""); }
   }
 
   function commandForm(type: string, target: Target, state: string, revision: number | undefined, key: string, extra?: Record<string, unknown>) {
-    const command = (event: FormEvent<HTMLFormElement>) => sendCommand(event, {
-      schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type, target,
-      precondition: { state, ...(revision === undefined ? {} : { revision }) }, ...extra,
-    }, key);
+    const command = (event: FormEvent<HTMLFormElement>) => {
+      const confirmationRequired = ["revise", "approve", "launch", "cancel-plan", "delete-plan"].includes(type);
+      const formData = new FormData(event.currentTarget);
+      const confirmationValue = confirmationRequired ? {
+        challengeId: crypto.randomUUID(),
+        typedReq: String(formData.get("typedReq") ?? ""),
+      } : undefined;
+      return sendCommand(event, {
+        schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type, target,
+        precondition: { state, ...(revision === undefined ? {} : { revision }) },
+        ...extra,
+        ...(confirmationValue ? { confirmation: confirmationValue } : {}),
+      }, key);
+    };
     return command;
   }
 
@@ -298,10 +320,13 @@ export default function HomePage() {
       return <article className="run-card" key={`${plan.project}-${plan.req}-${plan.id ?? "plan"}`}><div className="run-top"><div><p className="eyebrow">{plan.project}</p><h3>{plan.req} · Plan</h3></div><span className="state">{plan.state}</span></div>
         <p className="last-seen">Última actividad · {prettyTime(plan.updatedAt)}</p>
         {[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].length > 0 && <details><summary>Criterios de aceptación</summary><ul>{[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
-        <div className="actions"><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><label>Confirmación <input required aria-label="Id del reto de confirmación" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Id del reto" /></label><label>Escribe {plan.req} <input required value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><button disabled={!!working}>Cancelar plan</button></form>
-          <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button className="danger" disabled={!!working}>Eliminar plan</button></form></div>
+        <div className="actions"><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`)}><label>Escribe {plan.req} para confirmar <input required name="typedReq" pattern={plan.req} aria-label={`Escribe ${plan.req} para confirmar la cancelación`} /></label><button disabled={!!working}>Cancelar plan</button></form>
+          <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`)}><label>Escribe {plan.req} para confirmar <input required name="typedReq" pattern={plan.req} aria-label={`Escribe ${plan.req} para confirmar la eliminación`} /></label><button className="danger" disabled={!!working}>Eliminar plan</button></form></div>
       </article>;
     })}</div></section>}
+    <section className="runs command-history" aria-labelledby="command-history-title"><div className="section-heading"><div><p className="eyebrow">CONTROL</p><h2 id="command-history-title">Historial de comandos</h2></div></div>
+      {commandHistory.length ? <ol>{commandHistory.map((item) => <li key={item.id}><span><strong>Origen</strong> · {item.origin}</span><span><strong>Resultado</strong> · {item.result}</span><time dateTime={item.at}>{prettyTime(item.at)}</time></li>)}</ol> : <p className="empty">Todavía no se han enviado comandos en esta sesión.</p>}
+    </section>
     <footer className="footer"><span>FLOW REMOTE</span><span>Actualizado · {prettyTime(snapshot?.generatedAt)}</span></footer>
   </main>;
 }

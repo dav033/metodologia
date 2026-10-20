@@ -193,6 +193,17 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
     assert.equal(gateway.commands[1]?.type, "reopen");
     assert.equal(gateway.commands[1]?.target.taskId, "T2");
+    assert.ok(browserState?.text?.includes("Escribe REQ-027 para confirmar"), "destructive plan action should ask for the REQ id");
+    gateway.commandResponses.push({ status: 409, body: { code: "STALE_PRECONDITION", message: "precondition changed" } });
+    await fill('.plans .actions form input[name="typedReq"]', "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.plans .actions form')?.requestSubmit()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[2]?.type, "cancel-plan");
+    assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
+    assert.ok(gateway.commands[2]?.confirmation?.challengeId?.length >= 16);
+    const historyText = await waitForText("el estado cambió");
+    assert.ok(historyText.includes("Origen · lotm/REQ-027 · cancel-plan"), "history should list command origin");
+    assert.ok(historyText.includes("Resultado · Rechazado · el estado cambió"), "history should list command result");
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);

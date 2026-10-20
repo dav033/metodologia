@@ -60,7 +60,8 @@ export async function createMockGatewayServer() {
             return;
           }
           server.commands.push(command);
-          send(202, { commandId: "mock-command-v1", status: "accepted", idempotencyKey: command.idempotencyKey });
+          const nextResponse = server.commandResponses.shift();
+          send(nextResponse?.status ?? 202, nextResponse?.body ?? { commandId: "mock-command-v1", status: "accepted", idempotencyKey: command.idempotencyKey });
         } catch {
           send(400, { code: "INVALID_COMMAND", message: "JSON inválido" });
         }
@@ -71,6 +72,7 @@ export async function createMockGatewayServer() {
   });
   server.snapshot = snapshot;
   server.commands = [];
+  server.commandResponses = [];
   return server;
 }
 
