@@ -5,7 +5,9 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime, timezone
+import re
 from typing import Any
+from urllib.parse import urlencode
 
 from config import GatewayConfig
 from commands import to_laptop_command, validate_command
@@ -16,6 +18,13 @@ from upstream import LaptopClient, UpstreamError, UpstreamResponseError, Upstrea
 
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
+READ_PREFIX = "/api/remote/v1"
+CACHED_READS = frozenset({"/quotas", "/history", "/commands"})
+_REVIEW_ROUTE = re.compile(r"^/attempts/[A-Za-z0-9._:-]{1,120}/review$")
+_READ_ERROR_CODES = frozenset({
+    "ATTEMPT_NOT_FOUND", "INVALID_ID", "INVALID_ROUTE_QUERY", "ROUTES_UNAVAILABLE", "INVALID_LIMIT",
+    "QUOTAS_UNAVAILABLE", "REVIEW_UNAVAILABLE", "INVALID_CURSOR",
+})
 ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
 
 
@@ -41,6 +50,7 @@ class GatewayRuntime:
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
         self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
         self.stream = SnapshotEventStream()
+        self._read_cache: dict[str, tuple[str, dict[str, Any]]] = {}
 
     def poll_once(self) -> None:
         try:
@@ -122,20 +132,20 @@ class GatewayRuntime:
         valid_events = [event for event in events if isinstance(event, dict)]
         self.stream.publish(valid_events)
         for event in valid_events:
-            notification = notification_for_event(event)
+            notification = notification_for_event(event, self.config.frontend_origin)
             if notification:
                 self.outbox.enqueue(*notification)
         next_cursor = result.get("nextCursor")
         if isinstance(next_cursor, str):
             self.event_cursor = next_cursor
 
-    def submit_command(self, value: object) -> tuple[int, dict[str, Any]]:
+    def submit_command(self, value: object, origin: str = "web") -> tuple[int, dict[str, Any]]:
         command = validate_command(value)
         key = command["idempotencyKey"]
         if self.liveness.status is LaptopStatus.OFFLINE:
             raise CommandRelayError(410, "LAPTOP_OFFLINE", "Laptop is offline; command was not queued", key)
         try:
-            return self.laptop.command(to_laptop_command(command))
+            return self.laptop.command(to_laptop_command(command, origin))
         except UpstreamResponseError as exc:
             code = exc.payload.get("code")
             safe_codes = {
@@ -161,6 +171,50 @@ class GatewayRuntime:
             raise CommandRelayError(exc.status, safe_code, "Laptop rejected the confirmation challenge", None) from exc
         except (UpstreamTimeout, UpstreamError) as exc:
             raise CommandRelayError(503, "CHALLENGE_UNAVAILABLE", "Could not issue a confirmation challenge", None) from exc
+
+    @staticmethod
+    def is_read_route(path: str) -> bool:
+        if not path.startswith(READ_PREFIX):
+            return False
+        route = path[len(READ_PREFIX):]
+        return route in CACHED_READS or route == "/routes" or bool(_REVIEW_ROUTE.fullmatch(route))
+
+    def read_remote(self, path: str, query: dict[str, str]) -> tuple[int, dict[str, Any]]:
+        """Relay one validated read (review, quotas, history, commands, routes) to the laptop.
+
+        Quotas and command history fall back to the last good answer, stamped `cachedAt`, while the laptop is offline."""
+        route = path[len(READ_PREFIX):]
+        allowed: dict[str, str] = {}
+        if route == "/routes":
+            target, task = query.get("target", ""), query.get("task", "")
+            if not re.fullmatch(r"[A-Za-z0-9_-]+/REQ-[0-9]+", target) or not re.fullmatch(r"T[0-9A-Za-z_-]{1,79}", task):
+                raise CommandRelayError(400, "INVALID_ROUTE_QUERY", "Se requieren target y task válidos.", None)
+            allowed = {"target": target, "task": task}
+        elif route in CACHED_READS and "limit" in query:
+            if not query["limit"].isdigit() or not 1 <= int(query["limit"]) <= 1000:
+                raise CommandRelayError(400, "INVALID_LIMIT", "El límite debe estar entre 1 y 1000.", None)
+            allowed = {"limit": query["limit"]}
+        upstream = READ_PREFIX + route + ("?" + urlencode(allowed) if allowed else "")
+        cached = self._read_cache.get(upstream) if route in CACHED_READS else None
+
+        def stale(message: str) -> tuple[int, dict[str, Any]]:
+            if cached is not None:
+                return 200, {**cached[1], "cachedAt": cached[0]}
+            raise CommandRelayError(503, "LAPTOP_OFFLINE", message, None)
+
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            return stale("Laptop is offline")
+        try:
+            status, payload = self.laptop.read(upstream)
+        except UpstreamError:
+            return stale("Laptop is unavailable")
+        if status >= 400:
+            code = payload.get("code")
+            safe = code if isinstance(code, str) and code in _READ_ERROR_CODES else "UPSTREAM_ERROR"
+            raise CommandRelayError(status if status in {400, 404, 503} else 502, safe, "Laptop could not serve the read", None)
+        if route in CACHED_READS:
+            self._read_cache[upstream] = (datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), payload)
+        return status, payload
 
     def run_forever(self) -> None:
         while True:

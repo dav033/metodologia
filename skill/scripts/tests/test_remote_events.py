@@ -64,6 +64,7 @@ class RemoteEventsTests(unittest.TestCase):
         handler = Handler()
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
                 patch("bt_live_api.flow_events", return_value=([row], [], {})), \
+                patch.object(bt_remote_api, "_runs", return_value=[]), \
                 patch.object(bt_remote_api, "_plans", return_value=[{"project": "demo", "req_id": "REQ-001",
                                                                        "decisions": [decision]}]):
             bt_remote_api.route_get(handler)
@@ -87,10 +88,13 @@ class RemoteEventsTests(unittest.TestCase):
                "attempt": "attempt-1", "from": "M3", "to": "M1", "kind": "state_change",
                "summary": "attempt-1: running → failed", "data": {"state": "failed", "audit": "attempt_transition"}}
 
+        RUNS = [{"run": "demo/REQ-001", "tasks": [{"id": "T1", "state": "rejected", "attempts": 3}]}]
+
         def get_events():
             handler = Handler()
             with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
                     patch("bt_live_api.flow_events", return_value=([row], [], {})), \
+                    patch.object(bt_remote_api, "_runs", return_value=RUNS), \
                     patch.object(bt_remote_api, "_plans", return_value=[]):
                 bt_remote_api.route_get(handler)
             self.assertEqual(handler.status, 200)
@@ -104,6 +108,80 @@ class RemoteEventsTests(unittest.TestCase):
         self.assertEqual(first[0]["data"]["state"], row["data"]["state"])
         self.assertEqual(first[0]["data"]["summary"], row["summary"])
         self.assertEqual([event["id"] for event in first], [event["id"] for event in replay])
+
+    def get_events(self, runs, plans=(), rows=(), quotas=()):
+        handler = Handler()
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_live_api.flow_events", return_value=(list(rows), [], {})), \
+                patch("bt_remote_views.max_attempts", return_value=3), \
+                patch("bt_remote_views.cached_quota_rows", return_value=list(quotas)), \
+                patch.object(bt_remote_api, "_runs", return_value=runs), \
+                patch.object(bt_remote_api, "_plans", return_value=list(plans)):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200, handler.body)
+        return json.loads(handler.body)["events"]
+
+    def failed_row(self):
+        return {"seq": "m1:9", "ord": "0000000000000009.000000:m1:0000000009", "at": "2026-10-19T12:00:00.000+00:00",
+                "run": "demo/REQ-001", "task": "T1", "attempt": "attempt-1", "kind": "state_change",
+                "summary": "attempt-1: running → failed", "data": {"state": "failed", "audit": "attempt_transition"}}
+
+    def test_failed_attempt_notifies_only_after_retries_are_exhausted_with_retry_facts(self):
+        def runs(state, attempts):
+            return [{"run": "demo/REQ-001", "active": True, "status": "running",
+                     "tasks": [{"id": "T1", "state": state, "attempts": attempts}]}]
+
+        self.assertEqual(self.get_events(runs("rejected", 1), rows=[self.failed_row()]), [])
+        self.assertEqual(self.get_events(runs("running", 2), rows=[self.failed_row()]), [])
+        events = self.get_events(runs("rejected", 3), rows=[self.failed_row()])
+        self.assertEqual([event["type"] for event in events], ["attempt.failed"])
+        self.assertEqual(events[0]["data"]["retries"], {"attempts": 3, "maxAttempts": 3, "remaining": 0})
+        blocked = self.get_events(runs("blocked", 1), rows=[self.failed_row()])
+        self.assertEqual([event["type"] for event in blocked], ["attempt.blocked"])
+
+    def test_state_derived_producers_emit_stable_events_for_every_specified_condition(self):
+        runs = [
+            {"run": "demo/REQ-001", "active": False, "status": "completed", "updated_at": "2026-10-19T12:00:00Z", "tasks": []},
+            {"run": "demo/REQ-002", "active": True, "status": "running", "updated_at": "2026-10-19T12:00:00Z", "tasks": [
+                {"id": "T1", "state": "running", "attempts": 1,
+                 "attempt": {"id": "att-stuck", "live": True, "last_activity_at": "2000-01-01T00:00:00Z"}},
+                {"id": "T2", "state": "running", "attempts": 1,
+                 "attempt": {"id": "att-fresh", "live": True,
+                             "last_activity_at": "2999-01-01T00:00:00Z"}}]},
+        ]
+        rounds_plan = [{"project": "demo", "req_id": "REQ-003", "decisions": [], "rounds": [
+            {"project": "demo", "req": "REQ-003", "id": "round-01", "round": 1, "title": "Scope",
+             "created_at": "2026-10-19T11:00:00Z"}]}]
+        quotas = [{"profile": "claude", "provider": "claude", "status": "ok", "observed_at": 1.0,
+                   "windows": {"five_hour": {"used_percent": 100, "resets_at": 4102444800}}},
+                  {"profile": "codex", "provider": "codex", "status": "ok", "observed_at": 1.0,
+                   "windows": {"seven_day": {"used_percent": 100, "resets_at": 4102444800}}}]
+        first = self.get_events(runs, plans=rounds_plan, quotas=quotas)
+        replay = self.get_events(runs, plans=rounds_plan, quotas=quotas)
+        self.assertEqual({event["type"] for event in first},
+                         {"run.finished", "attempt.stalled", "round.waiting", "quota.exhausted"})
+        self.assertEqual([event["id"] for event in first], [event["id"] for event in replay])
+        stalled = next(event for event in first if event["type"] == "attempt.stalled")
+        self.assertEqual(stalled["target"]["attemptId"], "att-stuck")
+        partial = [{**quotas[0]}, {**quotas[1], "windows": {"seven_day": {"used_percent": 10, "resets_at": 4102444800}}}]
+        self.assertNotIn("quota.exhausted", {event["type"] for event in self.get_events([], quotas=partial)})
+
+    def test_production_plan_rows_carry_decisions_that_become_plan_waiting_events(self):
+        import tempfile
+        from pathlib import Path
+        import bt_remote_views
+        with tempfile.TemporaryDirectory() as temp:
+            rdir = Path(temp) / "demo" / "requirements" / "REQ-001-thing"
+            rdir.mkdir(parents=True)
+            (rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Thing\n\n## M1 — First\n- [ ] **T1** Build\n",
+                                          encoding="utf-8")
+            request = {"id": "T1:1", "task": "T1", "title": "T1 bloqueada", "what": "x", "evidence": [],
+                       "options": [{"id": "retry", "label": "Reintentar", "consequence": "Gasta un intento."}]}
+            with patch("bt_scheduler_decisions.open_requests", return_value=[request]):
+                plans = bt_remote_views.plans_view(Path(temp))
+        self.assertEqual([d["id"] for d in plans[0]["decisions"]], ["T1:1"])
+        events = self.get_events([], plans=plans)
+        self.assertEqual([event["type"] for event in events], ["plan.waiting"])
 
 
 if __name__ == "__main__":

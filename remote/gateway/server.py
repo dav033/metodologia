@@ -34,6 +34,8 @@ class StreamRuntime(Protocol):
 
     def submit_command(self, value: object) -> tuple[int, dict[str, Any]]: ...
     def issue_challenge(self, value: object) -> tuple[int, dict[str, Any]]: ...
+    def is_read_route(self, path: str) -> bool: ...
+    def read_remote(self, path: str, query: dict[str, str]) -> tuple[int, dict[str, Any]]: ...
 
 
 def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
@@ -110,6 +112,19 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                         self._json(200, snapshot)
                     return
                 self._stream_events()
+                return
+            if runtime is not None and runtime.is_read_route(route.path):
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                query = {key: values[0] for key, values in parse_qs(route.query).items()}
+                try:
+                    status, payload = runtime.read_remote(route.path, query)
+                except CommandRelayError as exc:
+                    self._problem(exc.status, exc.code, str(exc))
+                    return
+                self._json(status, payload)
                 return
             self._json(404, {"error": "not found"})
 

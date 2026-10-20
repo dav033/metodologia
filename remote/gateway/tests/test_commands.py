@@ -116,12 +116,10 @@ class CommandRelayTests(unittest.TestCase):
             "idempotency_key": "command-key-000001",
             "command": "approve",
             "target": "demo/REQ-027",
-            "origin": "remote-web",
-            "params": {
-                "precondition": {"state": "running"},
-                "confirmation": {"challengeId": "challenge-token-1234", "typedReq": "REQ-027"},
-                "target": command["target"],
-            },
+            "origin": "web",
+            "precondition": {"state": "running"},
+            "confirmation": {"challengeId": "challenge-token-1234", "typedReq": "REQ-027"},
+            "params": {"target": command["target"]},
         }])
 
     def test_public_command_is_translated_to_laptop_ledger_envelope(self) -> None:
@@ -135,8 +133,9 @@ class CommandRelayTests(unittest.TestCase):
             "idempotency_key": "command-key-000001",
             "command": "pause",
             "target": "demo/REQ-027",
-            "origin": "remote-web",
-            "params": {"precondition": {"state": "running"}, "target": command["target"]},
+            "origin": "web",
+            "precondition": {"state": "running"},
+            "params": {"target": command["target"]},
         }])
 
     def test_authenticated_challenge_request_is_relayed_to_laptop(self) -> None:

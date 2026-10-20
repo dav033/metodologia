@@ -33,6 +33,10 @@ export async function createMockGatewayServer() {
       ] });
       return;
     }
+    if (request.method === "GET" && request.url === "/api/remote/v1/history") {
+      send(200, { commands: [], nextCursor: "" });
+      return;
+    }
     if (request.method === "GET" && request.url === "/api/remote/v1/attempts/att-review-1/review") {
       response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
       response.end(attemptReview);

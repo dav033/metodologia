@@ -25,6 +25,73 @@ def free_port() -> int:
         return probe.getsockname()[1]
 
 
+class Handler:
+    path = "/api/remote/v1/snapshot"
+    headers = {"Authorization": "Bearer test-key"}
+
+    def send(self, body, status, content_type):
+        self.body, self.status, self.content_type = body, status, content_type
+
+
+class MobileDialectTests(unittest.TestCase):
+    """The production projections must carry every key the mobile `parseSnapshot` requires, plus round/decision detail."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.rdir = self.root / "demo" / "requirements" / "REQ-001-thing"
+        (self.rdir / "rounds").mkdir(parents=True)
+        (self.rdir / "PLAN.md").write_text(
+            "---\nstatus: approved\n---\n# Thing\n\n## M1 — First\n- [ ] **T1** Build it\n", encoding="utf-8")
+        (self.rdir / "rounds" / "round-01.json").write_text(json.dumps({
+            "round": 1, "title": "Scope", "status": "open", "answers": {},
+            "questions": [{"id": "q1", "text": "Which?", "type": "choice", "options": [{"key": "a", "label": "A"}]}]}),
+            encoding="utf-8")
+        self.decision = {"id": "T1:1", "task": "T1", "title": "T1 bloqueada", "what": "Bloqueada.", "evidence": [],
+                         "options": [{"id": "retry", "label": "Reintentar", "consequence": "Gasta un intento."}],
+                         "recommended": "retry", "unskippable": False}
+
+    def snapshot(self):
+        status = {"project": "demo", "req_id": "REQ-001", "title": "Thing",
+                  "plan": {"plan_id": "p1", "revision": 2, "status": "approved"},
+                  "run": {"status": "running", "active": True, "updated_at": "2026-10-20T10:00:00Z"},
+                  "summary": {"tasks_total": 1, "tasks_done": 0, "difficulty": "low"},
+                  "milestones": [{"id": "M1", "tasks": [{
+                      "id": "T1", "title": "Build it", "milestone_id": "M1", "state": "running", "attempts": 1,
+                      "attempt": {"id": "att-1", "state": "running", "live": True, "last_activity_at": "2026-10-20T10:00:00Z"},
+                      "history": []}]}]}
+        handler = Handler()
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_core.ROOT", self.root), \
+                patch("bt_live_api.runs_in_scope", return_value=[("demo", self.rdir)]), \
+                patch("bt_planstatus.plan_status", return_value=status), \
+                patch("bt_scheduler_decisions.open_requests", return_value=[self.decision]), \
+                patch.object(bt_remote_api, "_shared_now_items", return_value=[]):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200, handler.body)
+        return json.loads(handler.body)
+
+    def test_snapshot_runs_use_the_mobile_dialect(self):
+        run = self.snapshot()["runs"][0]
+        self.assertEqual((run["project"], run["req"], run["state"]), ("demo", "REQ-001", "running"))
+        self.assertEqual(run["activeAttempt"]["id"], "att-1")
+        task = run["tasks"][0]
+        self.assertEqual((task["id"], task["state"], task["activeAttempt"]["id"]), ("T1", "running", "att-1"))
+
+    def test_snapshot_plans_carry_state_tasks_decisions_and_rounds(self):
+        snapshot = self.snapshot()
+        plan = snapshot["plans"][0]
+        self.assertEqual((plan["project"], plan["req"], plan["state"], plan["revision"]), ("demo", "REQ-001", "approved", 2))
+        self.assertEqual([task["id"] for task in plan["tasks"]], ["T1"])
+        self.assertEqual(snapshot["rounds"][0]["questions"][0]["options"], [{"key": "a", "label": "A"}])
+        self.assertEqual((snapshot["rounds"][0]["project"], snapshot["rounds"][0]["req"], snapshot["rounds"][0]["round"]),
+                         ("demo", "REQ-001", 1))
+        decision = snapshot["decisionRequests"][0]
+        self.assertEqual((decision["project"], decision["req"], decision["id"]), ("demo", "REQ-001", "T1:1"))
+        self.assertEqual(decision["options"][0]["consequence"], "Gasta un intento.")
+
+
 class RemoteApiTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -32,7 +99,7 @@ class RemoteApiTests(unittest.TestCase):
         self.process = subprocess.Popen(
             [sys.executable, str(SCRIPTS / "bitacora.py"), "serve-remote", "--port", str(self.port)],
             cwd=SCRIPTS,
-            env={**os.environ, "BITACORA_ROOT": self.temp.name, "FLOW_GATEWAY_KEY": KEY},
+            env={**os.environ, "BITACORA_ROOT": self.temp.name, "HOME": self.temp.name, "FLOW_GATEWAY_KEY": KEY},
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -86,20 +153,29 @@ class RemoteApiTests(unittest.TestCase):
         routes = (
             ("GET", "/api/remote/v1/snapshot", 200),
             ("GET", "/api/remote/v1/events", 200),
-            ("GET", "/api/remote/v1/attempts/attempt-1/review", 503),
-            ("GET", "/api/remote/v1/quotas", 503),
-            ("GET", "/api/remote/v1/commands", 503),
+            ("GET", "/api/remote/v1/attempts/attempt-1/review", 404),
+            ("GET", "/api/remote/v1/quotas", 200),
+            ("GET", "/api/remote/v1/commands", 200),
             ("POST", "/api/remote/v1/commands", 400),
             ("GET", "/api/remote/v1/runs", 200),
             ("GET", "/api/remote/v1/plans", 200),
-            ("GET", "/api/remote/v1/history", 503),
+            ("GET", "/api/remote/v1/history", 200),
             ("GET", "/api/remote/v1/challenges", 503),
-            ("POST", "/api/remote/v1/challenges", 503),
+            ("POST", "/api/remote/v1/challenges", 400),
         )
         for method, path, expected_status in routes:
             with self.subTest(method=method, path=path):
                 status, _, body = self.request(method, path, body="{}" if method == "POST" else None)
                 self.assertEqual(status, expected_status, body.decode("utf-8"))
+
+    def test_quotas_and_history_are_real_read_models_not_placeholders(self):
+        status, _, body = self.request("GET", "/api/remote/v1/quotas")
+        self.assertEqual(status, 200)
+        quotas = json.loads(body)
+        self.assertIsInstance(quotas["accounts"], list)
+        self.assertTrue(quotas["checkedAt"])
+        status, _, body = self.request("GET", "/api/remote/v1/history")
+        self.assertEqual((status, json.loads(body)["commands"]), (200, []))
 
     def test_snapshot_includes_live_task_and_latest_sign_of_life_from_shared_now_frame(self):
         runs = [{"run": "demo/REQ-001", "updated_at": "2026-10-19T10:00:00Z", "tasks": [

@@ -53,20 +53,27 @@ def validate_command(value: object) -> dict[str, Any]:
     return command
 
 
-def to_laptop_command(command: dict[str, Any]) -> dict[str, Any]:
-    """Translate the public v1 command into the laptop ledger's normalized envelope."""
+def to_laptop_command(command: dict[str, Any], origin: str = "web") -> dict[str, Any]:
+    """Translate the public v1 command into the laptop ledger's envelope (`bt_remote_commands.validate`)."""
     target = command["target"]
     params = {key: value for key, value in command.items()
-              if key not in {"schemaVersion", "idempotencyKey", "type", "target"}}
+              if key not in {"schemaVersion", "idempotencyKey", "type", "target", "precondition", "confirmation"}}
     # Keep target qualifiers (task, attempt, round) available to the laptop dispatcher.
     params["target"] = target
-    return {
+    for param, qualifier in (("task", "taskId"), ("attempt", "attemptId")):
+        if isinstance(target.get(qualifier), str):
+            params.setdefault(param, target[qualifier])
+    envelope = {
         "idempotency_key": command["idempotencyKey"],
         "command": command["type"],
         "target": f"{target['project']}/{target['req']}",
-        "origin": "remote-web",
+        "origin": origin,
+        "precondition": command["precondition"],
         "params": params,
     }
+    if "confirmation" in command:
+        envelope["confirmation"] = command["confirmation"]
+    return envelope
 
 
 def validate_challenge(value: object) -> dict[str, str]:

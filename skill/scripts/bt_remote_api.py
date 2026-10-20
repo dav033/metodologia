@@ -12,6 +12,8 @@ import stat
 import subprocess
 from urllib.parse import parse_qs, urlparse
 
+from bt_remote_events import redact
+
 PREFIX = "/api/remote/v1"
 MAX_BODY = 256 * 1024
 _ATTEMPT_ID = re.compile(r"^[A-Za-z0-9._:-]{1,120}$")
@@ -48,6 +50,11 @@ def _runs() -> list[dict]:
     return live.run_summaries(None, "global")
 
 
+def _run_rows() -> list[dict]:
+    import bt_remote_views as views
+    return [views.run_view(run) for run in _runs()]
+
+
 def _shared_now_items() -> list[dict]:
     """Read live attempts from the same cached now frame used by the local SSE clients."""
     import bt_live_api as live
@@ -79,13 +86,14 @@ def _snapshot_runs() -> list[dict]:
         run["active_task"] = ({"id": active_task.get("id"), "title": active_task.get("title")}
                               if active_task else None)
         run["last_sign_of_life"] = max(last_activity, default=run.get("updated_at"))
-    return runs
+    import bt_remote_views as views
+    return [views.run_view(run) for run in runs]
 
 
 def _plans() -> list[dict]:
-    import bt_plans_api as plans
+    import bt_remote_views as views
     from bt_core import ROOT
-    return plans.plans_payload(ROOT)
+    return views.plans_view(ROOT)
 
 
 def _read_review_file(path, limit: int = _REVIEW_FILE_MAX) -> bytes | None:
@@ -270,11 +278,14 @@ def route_get(handler) -> None:
                                "checkedAt": dt.datetime.now(dt.UTC).isoformat()})
     try:
         if path == f"{PREFIX}/snapshot":
-            from bt_remote_events import redact
-            return _json(handler, redact({"schemaVersion": 1, "runs": _snapshot_runs(), "plans": _plans(),
-                                   "generatedAt": dt.datetime.now(dt.UTC).isoformat(), "cursor": ""}))
+            import bt_remote_views as views
+            runs, plans = _snapshot_runs(), _plans()
+            return _json(handler, redact({"schemaVersion": 1, "runs": runs, "plans": plans,
+                                          "rounds": views.rounds_of(plans), "decisionRequests": views.decisions_of(plans),
+                                          "availableRoutes": views.available_routes(runs),
+                                          "generatedAt": dt.datetime.now(dt.UTC).isoformat(), "cursor": ""}))
         if path == f"{PREFIX}/runs":
-            return _json(handler, {"runs": _runs()})
+            return _json(handler, {"runs": _run_rows()})
         if path == f"{PREFIX}/routes":
             target, task = query.get("target", ""), query.get("task", "")
             if not target or not re.fullmatch(r"[A-Za-z0-9_-]+/REQ-[0-9]+", target) or \
@@ -289,12 +300,22 @@ def route_get(handler) -> None:
                 return _problem(handler, 404, "ROUTES_UNAVAILABLE", str(exc))
         if path == f"{PREFIX}/plans":
             return _json(handler, {"plans": _plans()})
-        if path == f"{PREFIX}/history":
-            return _problem(handler, 503, "HISTORY_UNAVAILABLE", "El registro de comandos aún no está disponible.")
+        if path in (f"{PREFIX}/history", f"{PREFIX}/commands"):
+            import bt_remote_commands as commands
+            import bt_remote_views as views
+            try:
+                limit = min(1000, max(1, int(query.get("limit", "200"))))
+            except ValueError:
+                return _problem(handler, 400, "INVALID_LIMIT", "El límite debe estar entre 1 y 1000.")
+            return _json(handler, views.history_payload(commands.Ledger().rows(), limit))
         if path == f"{PREFIX}/challenges":
             return _problem(handler, 503, "CHALLENGES_UNAVAILABLE", "Los desafíos aún no están disponibles.")
         if path == f"{PREFIX}/quotas":
-            return _problem(handler, 503, "QUOTAS_UNAVAILABLE", "Las cuotas aún no están disponibles.")
+            import bt_remote_views as views
+            try:
+                return _json(handler, redact(views.quotas_payload()))
+            except Exception:  # noqa: BLE001 - quota sources fail on their own; never leak their errors
+                return _problem(handler, 503, "QUOTAS_UNAVAILABLE", "Las cuotas no están disponibles.")
         if path == f"{PREFIX}/events":
             import bt_live_api as live
             import bt_remote_events as remote_events
@@ -308,15 +329,18 @@ def route_get(handler) -> None:
             after = query.get("after", "")
             if after and not re.fullmatch(r"evt_[a-f0-9]{64}", after):
                 return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
+            import bt_remote_views as views
             rows, _, _ = live.flow_events(None, "global", limit=5000)
-            events = [event for row in rows if (event := remote_events.from_flow(row)) is not None]
-            events.extend(remote_events.decision_events(_plans()))
+            runs, plans = _runs(), _plans()
+            context = remote_events.retry_context(runs, views.max_attempts())
+            events = [event for row in rows if (event := remote_events.from_flow(row, context)) is not None]
+            events.extend(remote_events.decision_events(plans))
+            events.extend(remote_events.derived_events(
+                runs, views.rounds_of(plans), views.quota_accounts(views.cached_quota_rows()), dt.datetime.now(dt.UTC)))
             if after and all(event["cursor"] != after for event in events):
                 return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
             page, cursor, has_more = remote_events.page(events, after, limit)
             return _json(handler, remote_events.redact({"events": page, "nextCursor": cursor, "hasMore": has_more}))
-        if path == f"{PREFIX}/commands":
-            return _problem(handler, 503, "COMMANDS_UNAVAILABLE", "El registro de comandos aún no está disponible.")
         match = re.fullmatch(re.escape(PREFIX) + r"/attempts/([^/]+)/review", path)
         if match:
             if not _ATTEMPT_ID.fullmatch(match.group(1)):

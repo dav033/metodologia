@@ -226,6 +226,20 @@ export default function HomePage() {
     }));
   }, []);
 
+  const refreshHistory = useCallback(async () => {
+    const response = await fetch("/api/remote/v1/history", { cache: "no-store" });
+    if (!response.ok) throw new Error(`No se pudo cargar el historial (${response.status}).`);
+    const raw = record(await response.json() as unknown);
+    if (!raw || !Array.isArray(raw.commands)) throw new Error("La respuesta del historial no cumple el contrato v1.");
+    setCommandHistory(raw.commands.flatMap((item) => {
+      const entry = record(item);
+      if (!entry || !text(entry.id) || !text(entry.at)) return [];
+      const label = [entry.command, entry.target].filter(text).join(" ");
+      const result = text(entry.result) ? entry.result : "Sin resultado";
+      return [{ id: entry.id, at: entry.at, origin: text(entry.origin) ? entry.origin : "web", result: label ? `${label} · ${result}` : result }];
+    }));
+  }, []);
+
   const load = useCallback(async () => {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
     if (sessionResponse.status === 401) { setSession({ authenticated: false }); return; }
@@ -235,8 +249,8 @@ export default function HomePage() {
     if (!parsedSession || typeof parsedSession.authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
     setSession({ authenticated: parsedSession.authenticated });
     if (!parsedSession.authenticated) return;
-    await Promise.all([refreshSnapshot(), refreshQuotas()]);
-  }, [refreshSnapshot, refreshQuotas]);
+    await Promise.all([refreshSnapshot(), refreshQuotas(), refreshHistory()]);
+  }, [refreshSnapshot, refreshQuotas, refreshHistory]);
 
   useEffect(() => {
     void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Error al cargar el panel."));
@@ -247,9 +261,10 @@ export default function HomePage() {
     const timer = window.setInterval(() => {
       void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
       void refreshQuotas().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudieron actualizar las cuotas."));
+      void refreshHistory().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el historial."));
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [session?.authenticated, refreshSnapshot, refreshQuotas]);
+  }, [session?.authenticated, refreshSnapshot, refreshQuotas, refreshHistory]);
 
   useEffect(() => {
     const authenticated = session?.authenticated;
@@ -475,7 +490,7 @@ export default function HomePage() {
       </form>)}</div>
     </article>)}</div></section>}
     <section className="runs command-history" aria-labelledby="command-history-title"><div className="section-heading"><div><p className="eyebrow">CONTROL</p><h2 id="command-history-title">Historial de comandos</h2></div></div>
-      {commandHistory.length ? <ol>{commandHistory.map((item) => <li key={item.id}><span><strong>Origen</strong> · {item.origin}</span><span><strong>Resultado</strong> · {item.result}</span><time dateTime={item.at}>{prettyTime(item.at)}</time></li>)}</ol> : <p className="empty">Todavía no se han enviado comandos en esta sesión.</p>}
+      {commandHistory.length ? <ol>{commandHistory.map((item) => <li key={item.id}><span><strong>Origen</strong> · {item.origin}</span><span><strong>Resultado</strong> · {item.result}</span><time dateTime={item.at}>{prettyTime(item.at)}</time></li>)}</ol> : <p className="empty">Todavía no hay comandos registrados.</p>}
     </section>
     <footer className="footer"><span>FLOW REMOTE</span><span>Actualizado · {prettyTime(snapshot?.generatedAt)}</span></footer>
   </main>;

@@ -46,6 +46,25 @@ class LaptopClient:
             raise UpstreamError("laptop API returned a non-object response")
         return payload
 
+    def read(self, path: str) -> tuple[int, dict[str, Any]]:
+        """GET a read-model path, keeping the laptop's HTTP status so callers can map 404/400 faithfully."""
+        request = Request(self._origin + path, headers={"Authorization": f"Bearer {self._key}",
+                                                        "Accept": "application/json"}, method="GET")
+        try:
+            with urlopen(request, timeout=self._timeout) as response:
+                status, raw = response.status, response.read(1 << 20)
+        except HTTPError as exc:
+            status, raw = exc.code, exc.read(65536)
+        except (URLError, TimeoutError, OSError) as exc:
+            raise UpstreamError("laptop API request failed") from exc
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+        except (UnicodeError, json.JSONDecodeError) as exc:
+            raise UpstreamError("laptop API returned an invalid response") from exc
+        if not isinstance(payload, dict):
+            raise UpstreamError("laptop API returned a non-object response")
+        return status, payload
+
     def health(self) -> dict[str, Any]:
         return self.get_json("/api/remote/v1/health")
 

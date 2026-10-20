@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import http.client
+import json
 import tempfile
 import threading
 import unittest
 from pathlib import Path
 
 from app import create_runtime
+from auth import OAuthConfig, SessionStore
 from config import GatewayConfig
+from server import create_server
 from stream import SnapshotEventStream
 from upstream import UpstreamError
 
@@ -16,6 +20,7 @@ class FakeLaptop:
         self.online = True
         self.snapshot_calls = 0
         self.event_calls = 0
+        self.read_paths: list[str] = []
 
     def health(self):
         if not self.online:
@@ -25,6 +30,14 @@ class FakeLaptop:
     def snapshot(self):
         self.snapshot_calls += 1
         return {"runs": [], "generatedAt": "2026-10-20T12:00:00Z", "cursor": "upstream-1"}
+
+    def read(self, path):
+        self.read_paths.append(path)
+        if not self.online:
+            raise UpstreamError("offline")
+        if "/attempts/missing/review" in path:
+            return 404, {"code": "ATTEMPT_NOT_FOUND", "message": "secret /home/path detail"}
+        return 200, {"path": path.split("?")[0], "accounts": [], "commands": [], "routes": [], "attemptId": "att-1"}
 
     def events(self, after):
         self.event_calls += 1
@@ -104,6 +117,65 @@ class SnapshotStreamTests(unittest.TestCase):
 
         self.assertFalse(client.is_alive())
         self.assertEqual(received, [(1, {"id": "event-a", "type": "run.finished"})])
+
+
+class ReadRelayTests(unittest.TestCase):
+    """Review, quotas, history/commands and routes reach the browser through the authenticated gateway."""
+
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        database = Path(self.temp_dir.name) / "gateway.sqlite"
+        oauth = OAuthConfig(client_id="id", client_secret="secret",
+                            session_secret="test-session-secret-with-more-than-32-bytes",
+                            frontend_origin="https://flow.example.test", database_path=str(database))
+        self.cookie = f"flow_session={SessionStore(str(database), oauth.session_secret).create_session('dav033')}"
+        self.laptop = FakeLaptop()
+        config = GatewayConfig(laptop_origin="http://127.0.0.1:18765", gateway_key="k", telegram_bot_token="t",
+                               telegram_chat_id="c", database_path=database)
+        self.runtime = create_runtime(config, laptop=self.laptop, sender=lambda message: None)
+        self.addCleanup(self.runtime.outbox._db.close)
+        self.server = create_server(oauth, ("127.0.0.1", 0), runtime=self.runtime)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.addCleanup(self.server.server_close)
+        self.addCleanup(self.server.shutdown)
+
+    def get(self, path: str, cookie: str | None = None):
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+        connection.request("GET", path, headers={"Cookie": cookie if cookie is not None else self.cookie})
+        response = connection.getresponse()
+        body = json.loads(response.read())
+        connection.close()
+        return response.status, body
+
+    def test_read_routes_require_a_session_and_relay_validated_queries(self) -> None:
+        for path in ("/api/remote/v1/quotas", "/api/remote/v1/history", "/api/remote/v1/commands",
+                     "/api/remote/v1/attempts/att-1/review",
+                     "/api/remote/v1/routes?target=demo/REQ-027&task=T3"):
+            with self.subTest(path=path):
+                self.assertEqual(self.get(path, cookie="")[0], 401)
+                status, body = self.get(path)
+                self.assertEqual(status, 200, body)
+        self.assertEqual(self.laptop.read_paths[-1], "/api/remote/v1/routes?target=demo%2FREQ-027&task=T3")
+        self.assertEqual(self.get("/api/remote/v1/routes?target=bad&task=T3")[1]["code"], "INVALID_ROUTE_QUERY")
+        self.assertEqual(self.get("/api/remote/v1/history?limit=0")[1]["code"], "INVALID_LIMIT")
+        self.assertEqual(len(self.laptop.read_paths), 5)
+
+    def test_laptop_errors_are_mapped_without_leaking_details(self) -> None:
+        status, body = self.get("/api/remote/v1/attempts/missing/review")
+        self.assertEqual((status, body["code"]), (404, "ATTEMPT_NOT_FOUND"))
+        self.assertNotIn("/home", json.dumps(body))
+
+    def test_offline_laptop_serves_cached_quotas_and_refuses_uncached_reads(self) -> None:
+        self.assertEqual(self.get("/api/remote/v1/quotas")[0], 200)
+        self.laptop.online = False
+        for _ in range(3):
+            self.runtime.liveness.record_failure()
+        status, body = self.get("/api/remote/v1/quotas")
+        self.assertEqual(status, 200)
+        self.assertTrue(body["cachedAt"].endswith("Z"))
+        status, body = self.get("/api/remote/v1/attempts/att-1/review")
+        self.assertEqual((status, body["code"]), (503, "LAPTOP_OFFLINE"))
 
 
 if __name__ == "__main__":
