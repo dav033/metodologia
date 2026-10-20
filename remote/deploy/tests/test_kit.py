@@ -35,6 +35,10 @@ class DeploymentKitTests(unittest.TestCase):
         result = subprocess.run([str(DEPLOY / "deploy.sh"), "--check"], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("172.20.0.1:8790", result.stdout)
+        self.assertIn("Environment=GATEWAY_BIND=172.20.0.1", (DEPLOY / "bitacora-gateway.service").read_text())
+        env_example = (DEPLOY / "gateway.env.example").read_text()
+        self.assertIn("GATEWAY_BIND=", env_example)
+        self.assertIn("set GATEWAY_BIND to 172.20.0.1", env_example)
         result = subprocess.run([str(DEPLOY / "rollback.sh"), "--check"], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
 
@@ -48,7 +52,7 @@ class DeploymentKitTests(unittest.TestCase):
         lines = (DEPLOY / "gateway.env.example").read_text().splitlines()
         found = {line.split("=", 1)[0] for line in lines if line and not line.startswith("#")}
         self.assertEqual(found, expected)
-        self.assertTrue(all(re.fullmatch(r"[A-Z][A-Z0-9_]*=", line) for line in lines if line))
+        self.assertTrue(all(re.fullmatch(r"[A-Z][A-Z0-9_]*=", line) for line in lines if line and not line.startswith("#")))
 
     def test_runbook_gives_rollback_for_each_step(self):
         text = (ROOT / "remote/docs/runbook.md").read_text()
