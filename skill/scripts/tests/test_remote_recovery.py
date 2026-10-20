@@ -105,6 +105,86 @@ class RemoteRecoveryTests(unittest.TestCase):
                                                           "profile": "work", "available": True}]}))
         options.assert_called_once_with("demo", self.rdir, "T1")
 
+    def test_edit_brief_requires_owner_challenge_before_freeze_or_revise(self):
+        effects = []
+        request = {"idempotency_key": "key-edit-brief-01", "command": "edit-brief",
+                   "target": "demo/REQ-001", "origin": "telegram",
+                   "params": {"task": "T1", "field": "objective", "value": "Updated objective"},
+                   "precondition": {"state": "running", "revision": 3}}
+
+        def edit_brief(target, params):
+            effects.append((target, params["typed_req"]))
+            return {"revision": 4, "rebased": True}
+
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, {"edit-brief": edit_brief}, clear=True), \
+                patch.object(bt_remote_api, "_target_state", return_value={"state": "running", "revision": 3}):
+            missing = Handler(request)
+            bt_remote_api.route_post(missing)
+            self.assertEqual((missing.sent[0], missing.sent[1]["code"]), (409, "CONFIRMATION_REQUIRED"))
+            self.assertEqual(effects, [])
+            ledger = commands.Ledger(Path(self.temp.name) / ".state" / "remote" / "commands.db")
+            self.assertEqual(ledger.rows(), [])
+
+            challenge = ledger.issue_challenge("demo/REQ-001", "REQ-001")
+            mismatched = Handler({**request, "idempotency_key": "key-edit-brief-bad",
+                                  "confirmation": {"challengeId": challenge["challengeId"],
+                                                   "typedReq": "REQ-002"}})
+            bt_remote_api.route_post(mismatched)
+            self.assertEqual((mismatched.sent[0], mismatched.sent[1]["code"]),
+                             (409, "CONFIRMATION_REQUIRED"))
+            self.assertEqual(effects, [])
+            self.assertEqual(ledger.rows(), [])
+
+            confirmed = {**request, "idempotency_key": "key-edit-brief-02",
+                         "confirmation": {"challengeId": challenge["challengeId"], "typedReq": "REQ-001"}}
+            accepted = Handler(confirmed)
+            bt_remote_api.route_post(accepted)
+
+        self.assertEqual((accepted.sent[0], accepted.sent[1]["status"], accepted.sent[1]["outcome"]["revision"]),
+                         (200, "OK", 4))
+        self.assertEqual(effects, [("demo/REQ-001", "REQ-001")])
+
+    def test_owner_edit_freezes_next_revision_before_rebasing_run(self):
+        from bt_planner import contract as plan_contract, revisions, sync
+        from bt_planner.tests.support import PLAN_MD, classify
+
+        rdir = Path(self.temp.name) / "demo" / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True)
+        (rdir / "SPEC.md").write_text("# Spec\n## Requirements\n- R1. Demo\n", encoding="utf-8")
+        (rdir / "PLAN.md").write_text(PLAN_MD.format(status="approved"), encoding="utf-8")
+        plan = classify(sync.skeleton(rdir, plan_id="REQ-001"))
+        (rdir / "PLAN.json").write_text(plan_contract.dumps(plan), encoding="utf-8")
+        sync.approve_freeze(rdir, "REQ-001", ("approved",))
+        original_objective = plan["tasks"][0]["objective"]
+
+        challenge_handler = Handler({"target": "demo/REQ-001", "typedReq": "REQ-001"},
+                                    "/api/remote/v1/challenges")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(commands, "_run_target", return_value=("demo", "REQ-001", rdir)), \
+                patch.object(bt_remote_api, "_target_state", return_value={"state": "running", "revision": 1}), \
+                patch.object(ops, "apply", side_effect=lambda project, req, path, action, target, reason: [
+                    self.assertEqual((project, req, path, action), ("demo", "REQ-001", rdir, "revise")),
+                    self.assertEqual(revisions.latest(rdir)["revision"], 2), "rebased"]), \
+                patch.object(ops, "resume", return_value="watchdog started"):
+            bt_remote_api.route_post(challenge_handler)
+            request = {"idempotency_key": "key-edit-brief-real", "command": "edit-brief",
+                       "target": "demo/REQ-001", "origin": "telegram",
+                       "params": {"task": "T1", "field": "objective", "value": "A revised task brief"},
+                       "precondition": {"state": "running", "revision": 1},
+                       "confirmation": {"challengeId": challenge_handler.sent[1]["challengeId"],
+                                        "typedReq": "REQ-001"}}
+            command_handler = Handler(request)
+            bt_remote_api.route_post(command_handler)
+
+        frozen = revisions.load_revision(rdir, 2)
+        manifest_entry = revisions.latest(rdir)
+        self.assertEqual((command_handler.sent[0], command_handler.sent[1]["status"],
+                          command_handler.sent[1]["outcome"]["revision"]), (200, "OK", 2))
+        self.assertEqual(frozen["tasks"][0]["objective"], "A revised task brief")
+        self.assertNotEqual(frozen["tasks"][0]["objective"], original_objective)
+        self.assertEqual(manifest_entry["source"], "approval")
+
 
 if __name__ == "__main__":
     unittest.main()
