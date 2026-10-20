@@ -1,0 +1,124 @@
+{
+  "schema": "audit-findings/1",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "status": "open",
+      "summary": "Deployment kit proxies container loopback and binds gateway to host loopback, contradicting the approved Docker Caddy-to-host 172.20.0.1:8790 topology; all public API access fails.",
+      "tasks": ["T16"]
+    },
+    {
+      "id": "F2",
+      "severity": "high",
+      "status": "open",
+      "summary": "Required local E2E command exits 1: forced failure never reaches fake Telegram. Harness does not isolate/seed the separate authoritative retry-context read used by production events.",
+      "tasks": ["T17"]
+    },
+    {
+      "id": "F3",
+      "severity": "medium",
+      "status": "open",
+      "summary": "First-install runbook restarts the gateway before installing its unit and starts a tunnel without instructions to start/configure the laptop remote API listener.",
+      "tasks": ["T16"]
+    },
+    {
+      "id": "F4",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Gateway request logger mistakes the full HTTP request line for status and logs OAuth code/state query values.",
+      "tasks": ["T11a"]
+    },
+    {
+      "id": "F5",
+      "severity": "medium",
+      "status": "open",
+      "summary": "GET logout mutates sessions without Origin/header checks; POST guard accepts arbitrary nonempty X-Flow-Request values instead of requiring 1.",
+      "tasks": ["T11a", "T15a"]
+    },
+    {
+      "id": "F6",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Telegram task retry pins run state, while the real laptop compares task state, causing valid failed-task retries to be rejected as stale.",
+      "tasks": ["T14b"]
+    },
+    {
+      "id": "F7",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Advertised note command is accepted by the web/gateway but has no laptop dispatcher and returns COMMAND_NOT_IMPLEMENTED.",
+      "tasks": ["T8", "T15f"]
+    },
+    {
+      "id": "F8",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Phone brief editor omits the required task, offers no criteria edit, hides editing on launched plans, and uses plan-state preconditions against an active run-state reader.",
+      "tasks": ["T15f", "T8a"]
+    },
+    {
+      "id": "F9",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Run-level reopen form sends no task although the laptop reopen dispatcher requires params.task, so Reabrir ejecucion fails.",
+      "tasks": ["T15d"]
+    },
+    {
+      "id": "F10",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Ordinary plans waiting for approval emit no plan.waiting event unless they also have a scheduler decision request.",
+      "tasks": ["T6", "T14"]
+    },
+    {
+      "id": "F11",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Gateway restart loses offline snapshots/read caches and resets SSE sequence IDs, suppressing new events behind an old Last-Event-ID without resynchronization.",
+      "tasks": ["T12"]
+    },
+    {
+      "id": "F12",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Gateway SSE history, notification outbox/history and abandoned expired sessions grow without bounded retention or the promised 90-day history pruning.",
+      "tasks": ["T11", "T12", "T14a"]
+    },
+    {
+      "id": "F13",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Failed probes overwrite snapshot cachedAt, there is no stable offlineSince, and the web omits the required outage-start time.",
+      "tasks": ["T12", "T15b"]
+    },
+    {
+      "id": "F14",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Laptop remote failure-review redaction recognizes only four credential names; synthetic provider API key assignments and bearer authorization text reach the control plane unchanged.",
+      "tasks": ["T7", "T6"]
+    },
+    {
+      "id": "F15",
+      "severity": "medium",
+      "status": "open",
+      "summary": "T9 socket-preserving reload is absent: stale server is terminated/restarted and serve creates a new listening socket.",
+      "tasks": ["T9"]
+    },
+    {
+      "id": "F16",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Web discards unknown-outcome command envelopes and generates a new idempotency key on each retry, with no same-key reconciliation/retry path.",
+      "tasks": ["T15d"]
+    },
+    {
+      "id": "F17",
+      "severity": "low",
+      "status": "open",
+      "summary": "Published command schema describes the gateway envelope as the laptop body, disagrees on key length, and omits answer-decision and the required round selector.",
+      "tasks": ["T3"]
+    }
+  ]
+}
