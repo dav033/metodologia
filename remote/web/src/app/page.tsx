@@ -12,6 +12,9 @@ type Round = { project: string; req: string; round: number; id?: string; title?:
 type DecisionOption = { id: string; label: string; consequence: string };
 type DecisionRequest = { id: string; project: string; req: string; task?: string; title: string; what: string; evidence?: string[]; options: DecisionOption[]; recommended?: string; unskippable?: boolean; state?: string; revision?: number };
 type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; rounds?: Round[]; decisionRequests?: DecisionRequest[]; decisions?: DecisionRequest[]; laptop?: { online: boolean; checkedAt?: string } };
+type QuotaWindow = { name: string; remaining?: number; limit?: number; resetsAt?: string; resetAt?: string };
+type QuotaAccount = { id: string; windows: QuotaWindow[]; checkedAt?: string; source?: string };
+type AvailableRoute = { id: string; label?: string };
 type Session = { authenticated: boolean };
 type CommandHistoryItem = { id: string; at: string; origin: string; result: string };
 type FailureReview = {
@@ -210,11 +213,40 @@ export default function HomePage() {
   const [working, setWorking] = useState("");
   const [reason, setReason] = useState("");
   const [commandHistory, setCommandHistory] = useState<CommandHistoryItem[]>([]);
+  const [quotas, setQuotas] = useState<QuotaAccount[]>([]);
+  const [availableRoutes, setAvailableRoutes] = useState<AvailableRoute[]>([]);
 
   const refreshSnapshot = useCallback(async () => {
     const response = await fetch("/api/remote/v1/snapshot", { cache: "no-store" });
     if (!response.ok) throw new Error(`No se pudo cargar el estado (${response.status}).`);
-    setSnapshot(parseSnapshot(await response.json()));
+    const value: unknown = await response.json();
+    setSnapshot(parseSnapshot(value));
+    const raw = record(value);
+    const routes = raw && Array.isArray(raw.availableRoutes) ? raw.availableRoutes : raw && Array.isArray(raw.available_routes) ? raw.available_routes : [];
+    setAvailableRoutes(routes.flatMap((item) => {
+      const route = record(item);
+      return route && text(route.id) ? [{ id: route.id, label: text(route.label) ? route.label : route.id }] : [];
+    }));
+  }, []);
+
+  const refreshQuotas = useCallback(async () => {
+    const response = await fetch("/api/remote/v1/quotas", { cache: "no-store" });
+    if (!response.ok) throw new Error(`No se pudieron cargar las cuotas (${response.status}).`);
+    const value: unknown = await response.json();
+    const raw = record(value);
+    if (!raw || !Array.isArray(raw.accounts)) throw new Error("La respuesta de cuotas no cumple el contrato v1.");
+    setQuotas(raw.accounts.flatMap((item) => {
+      const account = record(item);
+      if (!account || !text(account.id)) return [];
+      const windows = Array.isArray(account.windows) ? account.windows.flatMap((item) => {
+        const window = record(item);
+        if (!window || !text(window.name)) return [];
+        return [{ name: window.name, remaining: typeof window.remaining === "number" ? window.remaining : undefined,
+          limit: typeof window.limit === "number" ? window.limit : undefined,
+          resetsAt: text(window.resetsAt) ? window.resetsAt : text(window.resetAt) ? window.resetAt : undefined }];
+      }) : [];
+      return [{ id: account.id, windows, checkedAt: text(account.checkedAt) ? account.checkedAt : undefined, source: text(account.source) ? account.source : undefined }];
+    }));
   }, []);
 
   const load = useCallback(async () => {
@@ -226,8 +258,8 @@ export default function HomePage() {
     if (!parsedSession || typeof parsedSession.authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
     setSession({ authenticated: parsedSession.authenticated });
     if (!parsedSession.authenticated) return;
-    await refreshSnapshot();
-  }, [refreshSnapshot]);
+    await Promise.all([refreshSnapshot(), refreshQuotas()]);
+  }, [refreshSnapshot, refreshQuotas]);
 
   useEffect(() => {
     void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Error al cargar el panel."));
@@ -237,9 +269,10 @@ export default function HomePage() {
     if (session?.authenticated !== true) return;
     const timer = window.setInterval(() => {
       void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+      void refreshQuotas().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudieron actualizar las cuotas."));
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [session?.authenticated, refreshSnapshot]);
+  }, [session?.authenticated, refreshSnapshot, refreshQuotas]);
 
   const snapshotCursor = useRef(snapshot?.cursor);
   snapshotCursor.current = snapshot?.cursor;
@@ -299,7 +332,7 @@ export default function HomePage() {
 
   function commandForm(type: string, target: Target, state: string, revision: number | undefined, key: string, extra?: Record<string, unknown>) {
     const command = (event: FormEvent<HTMLFormElement>) => {
-      const confirmationRequired = ["revise", "approve", "launch", "cancel-plan", "delete-plan"].includes(type);
+      const confirmationRequired = ["revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"].includes(type);
       const formData = new FormData(event.currentTarget);
       const confirmationValue = confirmationRequired ? { typedReq: String(formData.get("typedReq") ?? "") } : undefined;
       return sendCommand(event, {
@@ -343,6 +376,36 @@ export default function HomePage() {
     };
   }
 
+  function retryForm(run: Run, task: Task) {
+    return (event: FormEvent<HTMLFormElement>) => {
+      const route = String(new FormData(event.currentTarget).get("route") ?? "");
+      void sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "retry",
+        target: { kind: "task", project: run.project, req: run.req, taskId: task.id },
+        precondition: { state: task.state, ...(task.revision === undefined ? {} : { revision: task.revision }) },
+        ...(route ? { route } : {}) }, `${run.req}-${task.id}-retry`);
+    };
+  }
+
+  function noteForm(run: Run) {
+    return (event: FormEvent<HTMLFormElement>) => {
+      const note = String(new FormData(event.currentTarget).get("note") ?? "").trim();
+      void sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "note",
+        target: { kind: "run", project: run.project, req: run.req },
+        precondition: { state: run.state, ...(run.revision === undefined ? {} : { revision: run.revision }) }, note }, `${run.req}-note`);
+    };
+  }
+
+  function editBriefForm(plan: Plan, target: Target) {
+    return (event: FormEvent<HTMLFormElement>) => {
+      const values = new FormData(event.currentTarget);
+      const brief = String(values.get("brief") ?? "").trim();
+      const typedReq = String(values.get("typedReq") ?? "");
+      void sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "edit-brief", target,
+        precondition: { state: plan.state, ...(plan.revision === undefined ? {} : { revision: plan.revision }) }, brief,
+        confirmation: { typedReq } }, `${plan.req}-edit-brief`);
+    };
+  }
+
   if (session === null) {
     return <main className="shell"><header className="topbar"><Link className="brand" href="/" aria-label="Flow Remote, inicio"><span className="brand-mark">F</span><span>flow<span className="brand-muted">/remote</span></span></Link></header><p className="empty" aria-live="polite">Comprobando sesión…</p></main>;
   }
@@ -364,6 +427,10 @@ export default function HomePage() {
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     <div className="actions">
       {task.state === "blocked" || task.state === "failed" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
+      {["blocked", "failed", "rejected"].includes(task.state) && <form className="retry-form" onSubmit={retryForm(run, task)}>
+        {availableRoutes.length > 0 && <label>Ruta disponible <select name="route" defaultValue={availableRoutes[0].id} aria-label={`Ruta para reintentar ${task.id}`}>{availableRoutes.map((route) => <option key={route.id} value={route.id}>{route.label}</option>)}</select></label>}
+        <button disabled={!!working}>Reintentar</button>
+      </form>}
       {task.activeAttempt && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, taskId: task.id, attemptId: task.activeAttempt.id }, task.activeAttempt.state ?? task.state, task.revision, `${run.req}-${task.id}-cancel`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
     </div>
   </article>;
@@ -386,6 +453,7 @@ export default function HomePage() {
           {run.state === "paused" ? <form onSubmit={commandForm("resume", { kind: "run", project: run.project, req: run.req }, run.state, run.revision, `${run.req}-resume`)}><button disabled={!!working}>Reanudar</button></form> : null}
           {["failed", "blocked", "cancelled", "finished"].includes(run.state) ? <form onSubmit={commandForm("reopen", { kind: "run", project: run.project, req: run.req }, run.state, run.revision, `${run.req}-reopen`)}><button disabled={!!working}>Reabrir ejecución</button></form> : null}
           {run.activeAttempt && !run.tasks?.some((task) => task.activeAttempt?.id === run.activeAttempt?.id) && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, attemptId: run.activeAttempt.id }, run.activeAttempt.state ?? run.state, run.revision, `${run.req}-cancel-attempt`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
+          <form className="note-form" onSubmit={noteForm(run)}><label>Dejar una nota <textarea name="note" required maxLength={4000} /></label><button disabled={!!working}>Guardar nota</button></form>
         </div>
         {!!run.tasks?.length && <div className="task-list"><h3>Tareas</h3>{run.tasks.map((task) => renderTask(task, run))}</div>}
         <section className="feed" aria-label={`Feed ${run.req}`}><h3>Actividad reciente</h3>{(() => {
@@ -404,8 +472,14 @@ export default function HomePage() {
           {plan.state === "approved" ? <form onSubmit={commandForm("launch", target, plan.state, plan.revision, `${plan.req}-launch`)}><label>Escribe {plan.req} para ejecutar <input required name="typedReq" pattern={plan.req} autoCapitalize="characters" aria-label={`Escribe ${plan.req} para confirmar la ejecución`} /></label><button disabled={!!working}>Ejecutar plan</button></form> : null}
           <form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`)}><label>Escribe {plan.req} para confirmar <input required name="typedReq" pattern={plan.req} aria-label={`Escribe ${plan.req} para confirmar la cancelación`} /></label><button disabled={!!working}>Cancelar plan</button></form>
           <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`)}><label>Escribe {plan.req} para confirmar <input required name="typedReq" pattern={plan.req} aria-label={`Escribe ${plan.req} para confirmar la eliminación`} /></label><button className="danger" disabled={!!working}>Eliminar plan</button></form></div>
+        {plan.state === "approved" && <form className="edit-brief-form" onSubmit={editBriefForm(plan, target)}><p>La edición creará la revisión {plan.revision === undefined ? "siguiente" : plan.revision + 1}.</p><label>Nuevo brief <textarea name="brief" required minLength={1} maxLength={20000} /></label><label>Escribe {plan.req} para confirmar la edición <input name="typedReq" required pattern={plan.req} aria-label={`Escribe ${plan.req} para confirmar la edición del brief`} /></label><button disabled={!!working}>Editar brief</button></form>}
       </article>;
     })}</div></section>}
+    <section className="runs plans quotas" aria-labelledby="quotas-title"><div className="section-heading"><div><p className="eyebrow">CUENTAS</p><h2 id="quotas-title">Cuotas en vivo</h2></div></div>
+      {quotas.length ? <div className="run-list">{quotas.map((account) => <article className="run-card quota-card" key={account.id}><div className="run-top"><h3>{account.id}</h3>{account.checkedAt && <span className="last-seen">Actualizado · {prettyTime(account.checkedAt)}</span>}</div>
+        {account.windows.length ? <ul className="quota-windows">{account.windows.map((quotaWindow) => <li key={quotaWindow.name}><strong>{quotaWindow.name}</strong><span>{quotaWindow.remaining === undefined ? "Disponible sin dato" : `${quotaWindow.remaining}${quotaWindow.limit === undefined ? " restantes" : ` / ${quotaWindow.limit}`}`}</span>{quotaWindow.resetsAt && <time dateTime={quotaWindow.resetsAt}>Reinicia · {prettyTime(quotaWindow.resetsAt)}</time>}</li>)}</ul> : <p className="empty">Sin ventanas de cuota.</p>}
+      </article>)}</div> : <p className="empty">No hay cuotas disponibles.</p>}
+    </section>
     {!!snapshot?.rounds?.length && <section className="runs plans" aria-labelledby="rounds-title"><div className="section-heading"><div><p className="eyebrow">PREGUNTAS</p><h2 id="rounds-title">Rondas abiertas</h2></div></div><div className="run-list">{snapshot.rounds.filter((round) => round.status === "open").map((round) => <article className="run-card" key={`${round.project}-${round.req}-${round.round}`}>
       <div className="run-top"><div><p className="eyebrow">{round.project}</p><h3>{round.req} · {round.title || `Ronda ${round.round}`}</h3></div><span className="state">Ronda {round.round}</span></div>
       {round.intro && <p className="last-seen">{round.intro}</p>}{round.coverage && <p className="last-seen">Cobertura · {round.coverage}</p>}

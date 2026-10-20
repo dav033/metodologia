@@ -88,6 +88,18 @@ h1 span { color: var(--ctp-lavender); }
 .actions button.danger { border-color: rgb(243 139 168 / 35%); background: rgb(243 139 168 / 9%); color: var(--ctp-red); }
 .actions label { display: grid; min-width: min(100%, 180px); gap: 5px; color: var(--ctp-subtext0); font-size: 11px; }
 .actions input { width: 100%; min-height: 40px; min-width: 0; border: 1px solid var(--ctp-surface1); border-radius: 8px; background: var(--ctp-mantle); color: var(--ctp-text); padding: 7px 10px; font: inherit; font-size: 13px; }
+.actions select, .edit-brief-form input, .edit-brief-form textarea, .note-form textarea { width: 100%; min-height: 40px; min-width: 0; border: 1px solid var(--ctp-surface1); border-radius: 8px; background: var(--ctp-mantle); color: var(--ctp-text); padding: 8px 10px; font: inherit; font-size: 13px; }
+.actions select { max-width: 240px; }
+.note-form textarea, .edit-brief-form textarea { min-height: 84px; resize: vertical; }
+.note-form, .retry-form { flex: 1 1 220px; }
+.note-form label, .edit-brief-form label { flex: 1 1 180px; }
+.edit-brief-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin-top: 14px; border-top: 1px solid rgb(205 214 244 / 8%); padding-top: 14px; }
+.edit-brief-form p { flex-basis: 100%; margin: 0; color: var(--ctp-green); font-size: 12px; }
+.edit-brief-form button { min-height: 40px; border: 1px solid rgb(203 166 247 / 35%); border-radius: 9px; background: rgb(203 166 247 / 12%); color: var(--ctp-text); padding: 0 14px; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+.quota-windows { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+.quota-windows li { display: grid; grid-template-columns: minmax(80px, 1fr) auto; gap: 4px 12px; border-top: 1px solid rgb(205 214 244 / 8%); padding-top: 9px; color: var(--ctp-subtext1); font-size: 12px; }
+.quota-windows time { grid-column: 1 / -1; color: var(--ctp-overlay1); font-size: 10px; }
+.quota-windows strong { color: var(--ctp-lavender); }
 .answer-form, .decision-options { display: grid; gap: 14px; margin-top: 18px; }
 .answer-form > button, .decision-option button { min-height: 40px; border: 1px solid rgb(203 166 247 / 35%); border-radius: 9px; background: rgb(203 166 247 / 12%); color: var(--ctp-text); padding: 0 14px; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
 .question, .decision-option { min-width: 0; margin: 0; border: 1px solid rgb(205 214 244 / 10%); border-radius: 10px; background: rgb(49 50 68 / 28%); padding: 14px; }

@@ -27,8 +27,10 @@
     }
   ],
   "plans": [
-    { "id": "plan-027", "project": "lotm", "req": "REQ-027", "state": "awaiting-review", "revision": 2, "updatedAt": "2026-10-19T11:45:00Z", "acceptanceCriteria": ["Owner reviews and approves the plan"] }
+    { "id": "plan-027", "project": "lotm", "req": "REQ-027", "state": "awaiting-review", "revision": 2, "updatedAt": "2026-10-19T11:45:00Z", "acceptanceCriteria": ["Owner reviews and approves the plan"] },
+    { "id": "plan-018", "project": "pictures", "req": "REQ-018", "state": "approved", "revision": 6, "updatedAt": "2026-10-19T11:40:00Z", "acceptanceCriteria": ["Existing approved brief"] }
   ],
+  "availableRoutes": [{ "id": "direct:claude/sonnet", "label": "Claude Sonnet" }, { "id": "direct:codex/fast", "label": "Codex Fast" }],
   "rounds": [
     { "project": "lotm", "req": "REQ-027", "round": 2, "id": "round-02", "title": "Scope", "intro": "Confirma el alcance pendiente.", "status": "open", "revision": 1,
       "questions": [
@@ -45,6 +47,6 @@
       ]
     }
   ],
-  "quotas": [],
+  "quotas": [{ "id": "claude-primary", "windows": [{ "name": "5h", "remaining": 34, "limit": 100, "resetsAt": "2026-10-19T17:00:00Z" }, { "name": "7d", "remaining": 412, "limit": 1000, "resetsAt": "2026-10-25T12:00:00Z" }] }],
   "laptop": { "online": true, "checkedAt": "2026-10-19T11:59:50Z" }
 }

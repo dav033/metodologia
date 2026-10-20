@@ -24,6 +24,15 @@ export async function createMockGatewayServer() {
       response.end(server.snapshot);
       return;
     }
+    if (request.method === "GET" && request.url === "/api/remote/v1/quotas") {
+      send(200, { checkedAt: "2026-10-19T12:00:00Z", accounts: [
+        { id: "claude-primary", checkedAt: "2026-10-19T12:00:00Z", windows: [
+          { name: "5h", remaining: 34, limit: 100, resetsAt: "2026-10-19T17:00:00Z" },
+          { name: "7d", remaining: 412, limit: 1000, resetsAt: "2026-10-25T12:00:00Z" },
+        ] },
+      ] });
+      return;
+    }
     if (request.method === "GET" && request.url === "/api/remote/v1/attempts/att-review-1/review") {
       response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
       response.end(attemptReview);

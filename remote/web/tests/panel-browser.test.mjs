@@ -102,7 +102,7 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
       if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan") && browserState?.text?.includes("Intento att-0008")) break;
       await delay(250);
     }
-    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
+    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan", "Codex Fast", "La edición creará la revisión 7", "Cuotas en vivo", "claude-primary", "5h", "7d"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
     for (const expected of ["Revisión del intento att-review-1", "Causa", "verification_rejected", "Verificación", "npm run verify", "Diff stat", "2 files changed", "Log del agente", "line 80: checking the browser panel"]) {
@@ -233,6 +233,27 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     const historyText = await waitForText("el estado cambió");
     assert.ok(historyText.includes("Origen · lotm/REQ-027 · cancel-plan"), "history should list command origin");
     assert.ok(historyText.includes("Resultado · Rechazado · el estado cambió"), "history should list command result");
+    const retryRoute = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const select = document.querySelector('[aria-label=\"Ruta para reintentar T15c\"]'); select.value = 'direct:codex/fast'; select.dispatchEvent(new Event('change', {bubbles:true})); select.form.requestSubmit(); return true; })()", returnByValue: true });
+    assert.equal(retryRoute.result?.value, true);
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 7; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[6]?.type, "retry");
+    assert.equal(gateway.commands[6]?.route, "direct:codex/fast", "retry command should carry selected pinned route");
+    const noteSubmit = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const form = document.querySelector('.note-form'); const area = form.querySelector('textarea'); area.value = 'Review the recovery route'; area.dispatchEvent(new Event('input', {bubbles:true})); form.requestSubmit(); return true; })()", returnByValue: true });
+    assert.equal(noteSubmit.result?.value, true);
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 8; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[7]?.type, "note");
+    assert.equal(gateway.commands[7]?.note, "Review the recovery route");
+    const editBrief = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const form = document.querySelector('.edit-brief-form'); const area = form.querySelector('textarea[name=brief]'); area.value = 'Updated owner approved brief'; area.dispatchEvent(new Event('input', {bubbles:true})); const req = form.querySelector('input[name=typedReq]'); req.value = 'REQ-018'; req.dispatchEvent(new Event('input', {bubbles:true})); form.requestSubmit(); return true; })()", returnByValue: true });
+    assert.equal(editBrief.result?.value, true);
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 9; attempt += 1) await delay(100);
+    const editChallenge = gateway.challenges.find((challenge) => challenge.target === "pictures/REQ-018");
+    assert.equal(editChallenge?.target, "pictures/REQ-018", "brief edit should request a REQ-bound challenge first");
+    assert.equal(editChallenge?.typedReq, "REQ-018");
+    assert.equal(gateway.commands[8]?.type, "edit-brief");
+    assert.equal(gateway.commands[8]?.brief, "Updated owner approved brief");
+    assert.deepEqual(gateway.commands[8]?.precondition, { state: "approved", revision: 6 }, "brief edit should target the displayed owner-approved revision");
+    assert.equal(gateway.commands[8]?.confirmation?.typedReq, "REQ-018");
+    assert.equal(gateway.commands[8]?.confirmation?.challengeId, "mock-server-challenge-0001");
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);
