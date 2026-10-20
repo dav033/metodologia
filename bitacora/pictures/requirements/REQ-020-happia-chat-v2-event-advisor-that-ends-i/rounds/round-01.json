@@ -1,0 +1,90 @@
+{
+ "title": "Ronda 1 — ubicación, acceso, datos y entregables",
+ "intro": "Alcance acordado: sección nueva \"chat Happia v2\" dentro de Pictures, sin tocar /happie ni sus contratos, sin pantalla de Diana ni lanzamiento seguro por ahora.",
+ "coverage": "4/10",
+ "questions": [
+  {
+   "id": "q1",
+   "type": "open",
+   "text": "¿Qué ruta y nombre tiene la sección nueva?",
+   "suggested": "/asesor (\"Asesor Happia\"), aparte de /happie, para no confundirla con el contrato happie.v2.",
+   "why": "\"v2\" ya es el nombre del contrato del webhook; una ruta distinta evita mezclar ambos."
+  },
+  {
+   "id": "q2",
+   "type": "choice",
+   "text": "¿Cómo se accede mientras no haya bloque de seguridad?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Tras la contraseña actual de Pictures (APP_PASSWORD) hasta el lanzamiento; enlace público como interruptor apagado"
+    },
+    {
+     "key": "b",
+     "label": "Enlace público desde ya, con el tope global de gasto que ya existe"
+    },
+    {
+     "key": "c",
+     "label": "Enlace público sin límites"
+    }
+   ],
+   "recommended": "a",
+   "why": "Sin límites, cualquiera con el enlace gasta Gemini; a deja todo listo para abrir con un cambio de variable."
+  },
+  {
+   "id": "q3",
+   "type": "choice",
+   "text": "¿Dónde se guardan conversación, fotos y brief?",
+   "options": [
+    {
+     "key": "a",
+     "label": "En el servidor: tablas en Neon y fotos en el S3 del VPS; se retoma con un enlace"
+    },
+    {
+     "key": "b",
+     "label": "Solo en el navegador (sessionStorage); se retoma solo en el mismo celular"
+    }
+   ],
+   "recommended": "a",
+   "why": "La pantalla de Diana y las medidas vendrán después y necesitan los datos en el servidor; hacerlo ahora evita rehacerlo."
+  },
+  {
+   "id": "q4",
+   "type": "choice",
+   "text": "Sin pantalla de Diana, ¿qué produce el brief?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Resumen que el cliente aprueba + brief completo + versión para proveedores sin nombre, contacto ni presupuesto, guardados y visibles en una página interna con contraseña (sin envío)"
+    },
+    {
+     "key": "b",
+     "label": "Solo el resumen que aprueba el cliente"
+    }
+   ],
+   "recommended": "a",
+   "why": "Para la prueba de Halloween alguien tiene que ver el brief; y la futura pantalla de Diana solo tendrá que consumirlo."
+  },
+  {
+   "id": "q5",
+   "type": "choice",
+   "text": "¿Mantenemos el hito de Halloween (jue 29.10): conversación por texto que termina en un brief?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Sí: M1 = texto → brief para el 29.10; fotos, voz e ideas después"
+    },
+    {
+     "key": "b",
+     "label": "No, entregamos todo junto más adelante"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es el primer entregable visible para Happia y valida el agente antes de sumar fotos y voz."
+  }
+ ],
+ "round": 1,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-20T10:44:39"
+}

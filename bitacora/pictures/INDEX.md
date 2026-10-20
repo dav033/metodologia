@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-10-19 06:42 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-20 10:43 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-10-19
+**Last activity:** 2026-10-20
 
 ## Workspace
 
@@ -44,6 +44,7 @@ _Generated 2026-10-19 06:42 by `bitacora.py index`. Do not edit by hand._
 | [REQ-017](requirements/REQ-017-activity-aware-guided-chat-decoration-re/SPEC.md) | Activity-aware guided-chat decoration recommendations | `cancelled (2026-10-18, owner)` | [done](requirements/REQ-017-activity-aware-guided-chat-decoration-re/PLAN.md) | report ✓ · round open |
 | [REQ-018](requirements/REQ-018-category-based-recommendations-of-assemb/SPEC.md) | Category-based recommendations of assembled decorations | `cancelled (2026-10-18, owner)` | — |  |
 | [REQ-019](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/SPEC.md) | Taller 3D stuck viewer fix, mobile usability and React Bits UI polish | `in-progress` | [launched](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/PLAN.md) |  |
+| [REQ-020](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/SPEC.md) | Happia chat v2 event advisor that ends in a brief | `clarifying` | — |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -66,6 +67,6 @@ _Generated 2026-10-19 06:42 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W4](2026-10/W4/WEEK.md): [19](2026-10/W4/2026-10-19.md)
+  - [W4](2026-10/W4/WEEK.md): [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md)
   - [W2](2026-10/W2/WEEK.md): [11](2026-10/W2/2026-10-11.md), [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)
