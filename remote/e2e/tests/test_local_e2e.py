@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT / "skill" / "scripts"))
 sys.path.insert(0, str(ROOT / "remote" / "gateway"))
 
 import bt_live_api
+import bt_flow_bus
 import bt_server
 import notifications
 from app import create_runtime
@@ -100,6 +101,13 @@ class LocalRemoteEndToEndTests(unittest.TestCase):
         if build.returncode:
             raise RuntimeError(f"built web failed: {build.stdout[-3000:]}\n{build.stderr[-3000:]}")
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        browser = subprocess.run(["node", "--test", "tests/panel-browser.test.mjs"], cwd=WEB,
+                                 capture_output=True, text=True, timeout=180)
+        if browser.returncode:
+            raise RuntimeError(f"open-panel browser test failed: {browser.stdout[-3000:]}\n{browser.stderr[-3000:]}")
+
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self._cleanup)
@@ -128,12 +136,10 @@ class LocalRemoteEndToEndTests(unittest.TestCase):
         )
         self.runs = [{"project": "demo", "req": "REQ-001", "state": "running",
                       "tasks": [{"id": "T1", "state": "running"}], "updatedAt": "v1"}]
-        self.flow_rows = [{
-            "v": 1, "seq": "m1:1", "ord": "0000000000000001.000000:m1:0000000001",
-            "at": "2026-10-20T12:00:00.000+00:00", "run": "demo/REQ-001", "task": "T1",
-            "attempt": "attempt-1", "from": "M3", "to": "M1", "kind": "state_change",
-            "summary": "attempt-1: running", "data": {"state": "running", "audit": "attempt_transition"},
-        }]
+        self.flow_rows = bt_flow_bus.audit_events("demo/REQ-001", [{
+            "seq": 1, "at": 1792497600.0, "kind": "attempt_transition", "task_id": "T1",
+            "attempt_id": "attempt-1", "detail": json.dumps({"from": "dispatched", "to": "running", "source": "executor"}),
+        }], bt_flow_bus.Ctx(None, "demo/REQ-001"))
         self.patches = [
             patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "fixture-gateway-key"}),
             patch("bt_remote_api._snapshot_runs", side_effect=lambda: json.loads(json.dumps(self.runs))),
@@ -266,10 +272,10 @@ class LocalRemoteEndToEndTests(unittest.TestCase):
         self.assertEqual(foreign_status, 403)
         FakeGitHubHandler.login = "dav033"
 
-        failure = {**self.flow_rows[0], "seq": "m1:2", "ord": "0000000000000002.000000:m1:0000000002",
-                   "at": "2026-10-20T12:00:01.000+00:00",
-                   "kind": "state_change", "data": {"state": "failed", "audit": "attempt_transition"},
-                   "summary": "attempt-1: failed"}
+        failure = bt_flow_bus.audit_events("demo/REQ-001", [{
+            "seq": 2, "at": 1792497601.0, "kind": "attempt_transition", "task_id": "T1",
+            "attempt_id": "attempt-1", "detail": json.dumps({"from": "running", "to": "failed", "source": "executor"}),
+        }], bt_flow_bus.Ctx(None, "demo/REQ-001"))[0]
         original_urlopen = notifications.urlopen
 
         def route_telegram(request, timeout=5):
@@ -285,6 +291,8 @@ class LocalRemoteEndToEndTests(unittest.TestCase):
             time.sleep(0.3)
         self.assertEqual(len(FakeTelegramHandler.messages), 1)
         self.assertEqual(FakeTelegramHandler.messages[0]["chat_id"], "fixture-chat")
+        failed_event = self._wait_for_event("attempt.failed", timeout=5)
+        self.assertEqual(failed_event["target"]["taskId"], "T1")
 
         self.runs[0] = {**self.runs[0], "state": "finished", "tasks": [{"id": "T1", "state": "completed"}], "updatedAt": "v3"}
         completed = self._wait_snapshot(session_cookie, lambda value: value["runs"][0]["state"] == "finished", 5)
