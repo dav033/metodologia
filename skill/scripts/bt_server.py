@@ -23,6 +23,7 @@ from bt_vcs import commit
 
 ASSETS = SKILL_DIR / "assets"
 DEFAULT_PORT = int(os.environ.get("BITACORA_PORT", "8765"))
+REMOTE_PORT = int(os.environ.get("BITACORA_REMOTE_PORT", "8766"))
 SIMULATE_MAX_BYTES = 256 * 1024     # a demonstration, not a way to make the server grind on any plan
 SIMULATE_MAX_TASKS = 60
 
@@ -342,6 +343,32 @@ class Handler(BaseHTTPRequestHandler):
 
 # ---------------------------------------------------------------- lifecycle
 
+class RemoteHandler(Handler):
+    """Expose only the versioned machine API on the separately forwarded listener."""
+
+    def _remote_path_allowed(self) -> bool:
+        path = urlparse(self.path).path
+        return path == "/api/remote/v1" or path.startswith("/api/remote/v1/")
+
+    def do_GET(self):
+        if not self._remote_path_allowed():
+            return self.send("Not found", 404, "text/plain")
+        return self.remote_api_get()
+
+    def do_POST(self):
+        if not self._remote_path_allowed():
+            return self.send("Not found", 404, "text/plain")
+        return self.remote_api_post()
+
+    def remote_api_get(self):
+        """Reserved for the versioned remote API implementation; never fall through to panel routes."""
+        return self.send("Not found", 404, "text/plain")
+
+    def remote_api_post(self):
+        """Reserved for the versioned remote API implementation; never fall through to panel controls."""
+        return self.send("Not found", 404, "text/plain")
+
+
 def url(port: int = DEFAULT_PORT) -> str:
     return f"http://127.0.0.1:{port}"
 
@@ -366,6 +393,15 @@ def serve(port: int = DEFAULT_PORT) -> None:
     import bt_live_api
     bt_live_api.warm(ROOT)
     print(f"Bitácora at {url(port)}  (Ctrl+C to stop)")
+    httpd.serve_forever()
+
+
+def serve_remote(port: int = REMOTE_PORT) -> None:
+    """Serve the gateway-only API on loopback, without exposing the browser panel routes."""
+    httpd = ThreadingHTTPServer(("127.0.0.1", port), RemoteHandler)
+    import bt_live_api
+    bt_live_api.warm(ROOT)
+    print(f"Bitácora remote API at http://127.0.0.1:{port}  (Ctrl+C to stop)")
     httpd.serve_forever()
 
 

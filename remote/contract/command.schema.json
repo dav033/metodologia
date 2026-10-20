@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-remote.invalid/contract/v1/command.schema.json",
+  "title": "Bitácora remote command v1",
+  "description": "A command accepted by POST /api/remote/v1/commands. Every variant is idempotent and guarded by a target precondition.",
+  "oneOf": [
+    { "$ref": "#/$defs/pause" },
+    { "$ref": "#/$defs/resume" },
+    { "$ref": "#/$defs/cancelAttempt" },
+    { "$ref": "#/$defs/reopen" },
+    { "$ref": "#/$defs/retry" },
+    { "$ref": "#/$defs/revise" },
+    { "$ref": "#/$defs/approve" },
+    { "$ref": "#/$defs/launch" },
+    { "$ref": "#/$defs/answerRound" },
+    { "$ref": "#/$defs/cancelPlan" },
+    { "$ref": "#/$defs/deletePlan" },
+    { "$ref": "#/$defs/editBrief" },
+    { "$ref": "#/$defs/note" }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "common": {
+      "type": "object",
+      "required": ["schemaVersion", "idempotencyKey", "type", "target", "precondition"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "idempotencyKey": { "type": "string", "minLength": 16, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
+        "type": { "type": "string" },
+        "target": { "$ref": "#/$defs/target" },
+        "precondition": { "$ref": "#/$defs/precondition" },
+        "confirmation": { "$ref": "#/$defs/confirmation" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "required": ["kind", "project", "req"],
+      "properties": {
+        "kind": { "enum": ["run", "attempt", "task", "plan", "round"] },
+        "project": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "req": { "type": "string", "pattern": "^REQ-[0-9]{3,}$" },
+        "taskId": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "attemptId": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "roundId": { "type": "string", "minLength": 1, "maxLength": 120 }
+      },
+      "additionalProperties": false
+    },
+    "precondition": {
+      "type": "object",
+      "required": ["state"],
+      "properties": {
+        "state": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "revision": { "type": "integer", "minimum": 0 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "confirmation": {
+      "type": "object",
+      "required": ["challengeId", "typedReq"],
+      "properties": {
+        "challengeId": { "type": "string", "minLength": 16, "maxLength": 128 },
+        "typedReq": { "type": "string", "pattern": "^REQ-[0-9]{3,}$" }
+      },
+      "additionalProperties": false
+    },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "route": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "brief": { "type": "string", "minLength": 1, "maxLength": 20000 },
+    "base": { "$ref": "#/$defs/common" },
+    "pause": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "pause" } } }] },
+    "resume": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "resume" } } }] },
+    "cancelAttempt": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["reason"], "properties": { "type": { "const": "cancel-attempt" }, "reason": { "$ref": "#/$defs/reason" } } }] },
+    "reopen": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "reopen" } } }] },
+    "retry": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "retry" }, "route": { "$ref": "#/$defs/route" } } }] },
+    "revise": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "revise" } } }] },
+    "approve": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "approve" } } }] },
+    "launch": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "launch" } } }] },
+    "answerRound": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["answer"], "properties": { "type": { "const": "answer-round" }, "answer": { "type": "object", "minProperties": 1, "maxProperties": 50 } } }] },
+    "cancelPlan": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "cancel-plan" } } }] },
+    "deletePlan": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "delete-plan" } } }] },
+    "editBrief": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["brief"], "properties": { "type": { "const": "edit-brief" }, "brief": { "$ref": "#/$defs/brief" } } }] },
+    "note": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["note"], "properties": { "type": { "const": "note" }, "note": { "type": "string", "minLength": 1, "maxLength": 4000 } } }] }
+  }
+}
