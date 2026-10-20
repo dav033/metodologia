@@ -5,6 +5,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
@@ -25,7 +26,7 @@ LOGIN_FAILURE_LIMIT = 5
 COMMAND_REQUEST_LIMIT = 30
 
 
-def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
+def make_handler(service: OAuthService, runtime=None) -> type[BaseHTTPRequestHandler]:
     rate_limiter = RateLimiter()
 
     class GatewayHandler(BaseHTTPRequestHandler):
@@ -70,12 +71,38 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
                     rate_limiter.reset("login", client_key)
                 return
             if route.path == "/api/auth/session":
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                login = service.store.get_session(token) if token else None
+                login = self._session_login()
                 if login is None:
                     self._json(401, {"error": "unauthorized"})
                     return
                 self._json(200, {"login": login})
+                return
+            if route.path in {"/api/remote/v1/snapshot", "/api/remote/v1/runs", "/api/remote/v1/plans"}:
+                if self._session_login() is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                snapshot = runtime.cached_snapshot() if runtime is not None else None
+                if snapshot is None:
+                    self._json(503, {"error": "snapshot unavailable"})
+                    return
+                if route.path.endswith("/runs"):
+                    self._json(200, {"runs": snapshot.get("runs", []), "generatedAt": snapshot.get("generatedAt"),
+                                    "cachedAt": snapshot.get("cachedAt"), "laptopStatus": snapshot.get("laptopStatus")})
+                    return
+                if route.path.endswith("/plans"):
+                    self._json(200, {"plans": snapshot.get("plans", []), "generatedAt": snapshot.get("generatedAt"),
+                                    "cachedAt": snapshot.get("cachedAt"), "laptopStatus": snapshot.get("laptopStatus")})
+                    return
+                self._json(200, snapshot)
+                return
+            if route.path in {"/api/remote/v1/events", "/api/remote/v1/stream"}:
+                if self._session_login() is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                if runtime is None:
+                    self._json(503, {"error": "event stream unavailable"})
+                    return
+                self._stream(runtime)
                 return
             self._json(404, {"error": "not found"})
 
@@ -89,12 +116,91 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
                     return
+                if self._session_login() is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                if runtime is None:
+                    self._json(503, {"code": "UNKNOWN_OUTCOME", "message": "Command relay unavailable"})
+                    return
+                try:
+                    length = int(self.headers.get("Content-Length", "0"))
+                except ValueError:
+                    length = -1
+                if length < 0:
+                    self._json(400, {"error": "invalid request body"})
+                    return
+                if length > 256 * 1024:
+                    self._json(413, {"error": "request body too large"})
+                    return
+                try:
+                    command = json.loads(self.rfile.read(length))
+                except (UnicodeError, json.JSONDecodeError):
+                    self._json(400, {"error": "invalid request body"})
+                    return
+                if not isinstance(command, dict):
+                    self._json(400, {"error": "invalid request body"})
+                    return
+                status, result = runtime.relay_command(command)
+                self._json(status, result)
+                return
             self._json(404, {"error": "not found"})
 
         def _valid_state_changing_request(self) -> bool:
             request_marker = self.headers.get("X-Flow-Request", "").strip()
             origins = self.headers.get_all("Origin", [])
-            return bool(request_marker) and len(origins) == 1 and origin_matches(origins[0], service.config.frontend_origin)
+            return request_marker == "1" and len(origins) == 1 and origin_matches(origins[0], service.config.frontend_origin)
+
+        def _session_login(self) -> str | None:
+            token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+            return service.store.get_session(token) if token else None
+
+        def _stream(self, runtime) -> None:
+            last_event_id = self.headers.get("Last-Event-ID", "").strip()
+            if last_event_id and (not last_event_id.isdigit() or len(last_event_id) > 18):
+                self._json(400, {"error": "invalid Last-Event-ID"})
+                return
+            cursor = int(last_event_id) if last_event_id else runtime.stream_position()
+            replay, current, expired = runtime.events_after(cursor)
+            if expired or cursor > current:
+                self._json(409, {"error": "event cursor expired"})
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Accel-Buffering", "no")
+            self.send_header("Connection", "close")
+            self.end_headers()
+            self.close_connection = True
+            try:
+                self.wfile.write(b"retry: 2000\n: connected\n\n")
+                for sequence, event in replay:
+                    self._write_event(sequence, event)
+                    cursor = sequence
+                self.wfile.flush()
+                last_beat = time.monotonic()
+                while True:
+                    runtime.wait_for_events(cursor, 15.0)
+                    events, current, expired = runtime.events_after(cursor)
+                    if expired:
+                        self.wfile.write(f"id: {current}\nevent: reset\ndata: {{}}\n\n".encode("ascii"))
+                        self.wfile.flush()
+                        return
+                    for sequence, event in events:
+                        self._write_event(sequence, event)
+                        cursor = sequence
+                    if events:
+                        self.wfile.flush()
+                        last_beat = time.monotonic()
+                    elif time.monotonic() - last_beat >= 15:
+                        self.wfile.write(b": keepalive\n\n")
+                        self.wfile.flush()
+                        last_beat = time.monotonic()
+            except (BrokenPipeError, ConnectionResetError, OSError, ValueError):
+                return
+
+        def _write_event(self, sequence: int, event: dict[str, object]) -> None:
+            payload = json.dumps(event, ensure_ascii=False, separators=(",", ":"))
+            self.wfile.write(f"id: {sequence}\nevent: flow\ndata: {payload}\n\n".encode("utf-8"))
 
         def _rate_limited(self) -> None:
             self._json(429, {"error": "too many requests"}, headers=(("Retry-After", str(RATE_WINDOW_SECONDS)),))
@@ -130,8 +236,8 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
     return GatewayHandler
 
 
-def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None) -> ThreadingHTTPServer:
+def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None, runtime=None) -> ThreadingHTTPServer:
     service = OAuthService(config, store=SessionStore(config.database_path, config.session_secret))
-    return ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service))
+    return ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service, runtime))
 
 

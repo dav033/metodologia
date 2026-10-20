@@ -45,3 +45,29 @@ class LaptopClient:
         from urllib.parse import urlencode
 
         return self.get_json("/api/remote/v1/events?" + urlencode({"after": after, "limit": limit}))
+
+    def command(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        request = Request(self._origin + "/api/remote/v1/commands", data=body, headers={
+            "Authorization": f"Bearer {self._key}", "Accept": "application/json",
+            "Content-Type": "application/json",
+        }, method="POST")
+        try:
+            with urlopen(request, timeout=self._timeout) as response:
+                status = response.status
+                raw = response.read().decode("utf-8")
+        except HTTPError as exc:
+            status = exc.code
+            try:
+                raw = exc.read().decode("utf-8")
+            except (OSError, UnicodeError):
+                raw = ""
+        except (URLError, TimeoutError, OSError) as exc:
+            raise UpstreamError("laptop command request failed") from exc
+        try:
+            result = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise UpstreamError("laptop command response was invalid") from exc
+        if not isinstance(result, dict):
+            raise UpstreamError("laptop command response was not an object")
+        return status, result

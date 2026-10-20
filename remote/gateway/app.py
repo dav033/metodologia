@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import logging
 import time
+from collections import deque
+from datetime import datetime, timezone
+from threading import Condition
 from typing import Any
 
 from config import GatewayConfig
@@ -28,6 +31,13 @@ class GatewayRuntime:
         self.event_cursor = ""
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
+        self.snapshot_cache: dict[str, Any] | None = None
+        self.snapshot_cached_at: str | None = None
+        self._stream_condition = Condition()
+        self._stream_events: deque[tuple[int, dict[str, Any]]] = deque(maxlen=5000)
+        self._stream_sequence = 0
+        self._seen_upstream_events: deque[str] = deque(maxlen=10000)
+        self._seen_upstream_event_keys: set[str] = set()
 
     def poll_once(self) -> None:
         try:
@@ -40,10 +50,55 @@ class GatewayRuntime:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
         else:
             self.liveness.record_success()
+            self._poll_snapshot()
             self._poll_events()
         if self.liveness.status is LaptopStatus.OFFLINE:
             self._notify_long_offline_with_active_run()
         self.outbox.deliver_due(self.sender)
+
+    def _poll_snapshot(self) -> None:
+        try:
+            snapshot = self.laptop.snapshot()
+        except UpstreamError:
+            logger.warning("Laptop snapshot unavailable; retaining cached snapshot")
+            return
+        if not isinstance(snapshot, dict):
+            return
+        generated_at = snapshot.get("generatedAt")
+        with self._stream_condition:
+            self.snapshot_cache = dict(snapshot)
+            self.snapshot_cached_at = generated_at if isinstance(generated_at, str) else datetime.now(timezone.utc).isoformat()
+            self._stream_condition.notify_all()
+
+    def cached_snapshot(self) -> dict[str, Any] | None:
+        with self._stream_condition:
+            if self.snapshot_cache is None:
+                return None
+            return {**self.snapshot_cache, "laptopStatus": self.liveness.status.value,
+                    "cachedAt": self.snapshot_cached_at}
+
+    def stream_position(self) -> int:
+        with self._stream_condition:
+            return self._stream_sequence
+
+    def events_after(self, sequence: int) -> tuple[list[tuple[int, dict[str, Any]]], int, bool]:
+        with self._stream_condition:
+            expired = bool(self._stream_events and sequence < self._stream_events[0][0] - 1)
+            events = [] if expired else [(seq, event) for seq, event in self._stream_events if seq > sequence]
+            return events, self._stream_sequence, expired
+
+    def wait_for_events(self, sequence: int, timeout: float) -> None:
+        with self._stream_condition:
+            if self._stream_sequence <= sequence:
+                self._stream_condition.wait(timeout)
+
+    def relay_command(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            return 410, {"code": "LAPTOP_OFFLINE", "message": "El portátil está desconectado."}
+        try:
+            return self.laptop.command(payload)
+        except UpstreamError:
+            return 503, {"code": "UNKNOWN_OUTCOME", "message": "No se pudo confirmar el resultado del comando."}
 
     def _notify_long_offline_with_active_run(self) -> None:
         offline_since = self.liveness.offline_since
@@ -79,6 +134,25 @@ class GatewayRuntime:
         for event in events:
             if not isinstance(event, dict):
                 continue
+            stable_id = event.get("id") or event.get("cursor")
+            if stable_id:
+                upstream_key = str(stable_id)
+            elif event.get("ord"):
+                upstream_key = f"{event.get('run', '')}/{event['ord']}"
+            else:
+                upstream_key = ""
+            with self._stream_condition:
+                if upstream_key and upstream_key in self._seen_upstream_event_keys:
+                    continue
+                if upstream_key:
+                    if len(self._seen_upstream_events) == self._seen_upstream_events.maxlen:
+                        expired = self._seen_upstream_events.popleft()
+                        self._seen_upstream_event_keys.discard(expired)
+                    self._seen_upstream_events.append(upstream_key)
+                    self._seen_upstream_event_keys.add(upstream_key)
+                self._stream_sequence += 1
+                self._stream_events.append((self._stream_sequence, dict(event)))
+                self._stream_condition.notify_all()
             notification = notification_for_event(event)
             if notification:
                 self.outbox.enqueue(*notification)
