@@ -44,14 +44,20 @@ class RemoteListenerTests(unittest.TestCase):
                 else:
                     self.fail("serve-remote did not start listening")
 
-                for path in ("/", "/plans", "/p/metodologia/REQ-027", "/api/now", "/api/remote/v1evil",
-                             "/api/remote/v1/health"):
+                for path in ("/", "/plans", "/p/metodologia/REQ-027", "/api/now", "/api/remote/v1evil"):
                     connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
                     connection.request("GET", path)
                     response = connection.getresponse()
                     response.read()
                     connection.close()
                     self.assertEqual(response.status, 404, path)
+
+                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+                connection.request("GET", "/api/remote/v1/health")
+                response = connection.getresponse()
+                response.read()
+                connection.close()
+                self.assertEqual(response.status, 401, "remote API must authenticate before dispatch")
 
                 connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
                 connection.request("POST", "/plans/metodologia/REQ-027/launch", body="confirm=REQ-027")
