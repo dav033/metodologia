@@ -73,7 +73,7 @@
     "resume": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "resume" } } }] },
     "cancelAttempt": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["reason"], "properties": { "type": { "const": "cancel-attempt" }, "reason": { "$ref": "#/$defs/reason" } } }] },
     "reopen": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "reopen" } } }] },
-    "retry": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "retry" }, "route": { "$ref": "#/$defs/route" } } }] },
+    "retry": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "retry" }, "route": { "$ref": "#/$defs/route" }, "reason": { "$ref": "#/$defs/reason" } } }] },
     "revise": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "revise" } } }] },
     "approve": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "approve" } } }] },
     "launch": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "launch" } } }] },
@@ -81,7 +81,7 @@
     "answerDecision": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["requestId", "option"], "properties": { "type": { "const": "answer-decision" }, "requestId": { "type": "string", "minLength": 1, "maxLength": 200 }, "option": { "type": "string", "minLength": 1, "maxLength": 80 }, "reason": { "$ref": "#/$defs/reason" } } }] },
     "cancelPlan": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "cancel-plan" } } }] },
     "deletePlan": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "delete-plan" } } }] },
-    "editBrief": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["brief"], "properties": { "type": { "const": "edit-brief" }, "brief": { "$ref": "#/$defs/brief" } } }] },
+    "editBrief": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["brief"], "properties": { "type": { "const": "edit-brief" }, "brief": { "$ref": "#/$defs/brief" }, "acceptanceCriteria": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "type": "string", "minLength": 1, "maxLength": 2000 } } } }] },
     "note": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["note"], "properties": { "type": { "const": "note" }, "note": { "type": "string", "minLength": 1, "maxLength": 4000 } } }] }
   }
 }

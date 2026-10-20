@@ -98,6 +98,32 @@ class RemoteRecoveryTests(unittest.TestCase):
         ledger = commands.Ledger(self.rdir / ".state" / "remote" / "commands.db")
         self.assertEqual(ledger.rows()[0]["status"], "FAILED")
 
+    def test_note_command_lands_in_the_file_the_next_prompt_reads(self):
+        body = {"idempotency_key": "key-00000003", "command": "note", "target": "demo/REQ-001", "origin": "web",
+                "params": {"task": "T1", "note": "Prefer the shared helper"}, "precondition": {"state": "running"}}
+        handler = Handler(body)
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(commands, "_run_target", return_value=("demo", "REQ-001", self.rdir)), \
+                patch.object(ops, "bound_plan", return_value=SimpleNamespace(
+                    task=lambda task_id: SimpleNamespace(id=task_id))), \
+                patch.object(bt_remote_api, "_target_state", return_value={"state": "running"}):
+            bt_remote_api.route_post(handler)
+        self.assertEqual(handler.sent[0], 200)
+        self.assertIn("Prefer the shared helper", decisions.operator_notes(self.rdir, "T1"))
+
+    def test_quotas_endpoint_lists_every_window_of_each_account(self):
+        rows = [{"profile": "work", "provider": "claude", "status": "ok", "observed_at": 1760000000.0,
+                 "windows": {"five_hour": {"used_percent": 40, "resets_at": 1760003600},
+                             "seven_day": {"used_percent": 10, "resets_at": 1760600000}}}]
+        handler = Handler({}, "/api/remote/v1/quotas")
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY}), \
+                patch("bt_quota_live.read_all_live", return_value=rows):
+            bt_remote_api.route_get(handler)
+        status, body = handler.sent
+        self.assertEqual(status, 200)
+        windows = body["accounts"][0]["windows"]
+        self.assertEqual([(w["window"], w["usedPercent"]) for w in windows], [("five_hour", 40), ("seven_day", 10)])
+
     def test_routes_endpoint_uses_run_target_and_task(self):
         handler = Handler({}, "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1")
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY}), \

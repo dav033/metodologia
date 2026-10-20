@@ -2,13 +2,16 @@
 // (`reqId`, `lastSignOfLife`, `planStatus`…). Snake-case spellings are still read so a cached payload keeps working.
 
 export type Attempt = { id: string; state?: string; updatedAt?: string; failure?: string };
-export type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: Attempt; history?: Attempt[] };
+export type Task = { id: string; title?: string; objective?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: Attempt; history?: Attempt[] };
 export type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: Attempt; tasks?: Task[] };
 export type DecisionOption = { id: string; label: string; consequence: string };
 export type Decision = { id: string; task: string; title: string; what: string; reason: string; evidence: string[]; options: DecisionOption[]; recommended?: string; unskippable: boolean };
 export type RoundQuestion = { id: string; text: string; type: "choice" | "open"; options: { key: string; label: string }[]; recommended?: string; why?: string; suggested?: string };
 export type Round = { round: number; title: string; intro: string; questions: RoundQuestion[] };
-export type Plan = { commandState?: string; project: string; req: string; title?: string; state: string; runState?: string; active: boolean; progress?: { done: number; total: number }; updatedAt?: string; decisions: Decision[]; rounds: Round[] };
+export type Plan = { commandState?: string; planCommandState?: string; planRevision?: number; project: string; req: string; title?: string; state: string; runState?: string; active: boolean; progress?: { done: number; total: number }; updatedAt?: string; decisions: Decision[]; rounds: Round[] };
+export type RouteOption = { id: string; provider: string; model: string; account: string; available: boolean; quotaStatus?: string };
+export type QuotaWindow = { window: string; usedPercent: number; resetsAt?: string };
+export type QuotaAccount = { account: string; provider: string; status: string; observedAt?: string; windows: QuotaWindow[] };
 export type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptopStatus?: string };
 
 export function record(value: unknown): Record<string, unknown> | null {
@@ -29,7 +32,7 @@ function parseAttempt(value: unknown): Attempt | undefined {
 function parseTask(item: unknown): Task {
   const task = record(item);
   if (!task || !text(task.id) || !text(task.state)) throw new Error("El snapshot contiene una tarea inválida.");
-  return { id: task.id, title: optional(task.title), state: task.state, revision: typeof task.revision === "number" ? task.revision : undefined,
+  return { id: task.id, title: optional(task.title), objective: optional(task.objective), state: task.state, revision: typeof task.revision === "number" ? task.revision : undefined,
     updatedAt: optional(field(task, "updatedAt", "updated_at")), acceptanceCriteria: strings(field(task, "acceptanceCriteria", "acceptance_criteria")),
     activeAttempt: parseAttempt(task.attempt) ?? parseAttempt(field(task, "activeAttempt", "active_attempt")),
     history: Array.isArray(task.history) ? task.history.map(parseAttempt).filter((attempt): attempt is Attempt => Boolean(attempt)) : [] };
@@ -84,6 +87,8 @@ function parsePlan(item: unknown): Plan {
   return { project: plan.project, req, title: optional(plan.title), state, runState: optional(field(plan, "runStatus", "run_status")), active: plan.active === true,
     progress: progress && typeof progress.done === "number" && typeof progress.total === "number" ? { done: progress.done, total: progress.total } : undefined,
     updatedAt: optional(field(plan, "updatedAt", "updated_at")), commandState: optional(field(plan, "commandState", "command_state")),
+    planCommandState: optional(field(plan, "planCommandState", "plan_command_state")),
+    planRevision: typeof field(plan, "planRevision", "plan_revision") === "number" ? field(plan, "planRevision", "plan_revision") as number : undefined,
     decisions: Array.isArray(plan.decisions) ? plan.decisions.map(parseDecision).filter((value): value is Decision => value !== null) : [],
     rounds: Array.isArray(plan.rounds) ? plan.rounds.map(parseRound).filter((value): value is Round => value !== null) : [] };
 }
@@ -95,4 +100,34 @@ export function parseSnapshot(value: unknown): Snapshot {
     throw new Error("La respuesta del gateway no cumple el contrato de snapshot v1.");
   }
   return { schemaVersion: 1, generatedAt, cursor: raw.cursor, runs: raw.runs.map(parseRun), plans: raw.plans.map(parsePlan), laptopStatus: optional(raw.laptopStatus) };
+}
+
+/** `GET /routes`: the laptop lists each candidate route of a task with `available` (snake-case keys, read both ways). */
+export function parseRoutes(value: unknown): RouteOption[] {
+  const raw = record(value);
+  if (!raw || !Array.isArray(raw.routes)) throw new Error("La respuesta de rutas no es válida.");
+  return raw.routes.flatMap((item): RouteOption[] => {
+    const route = record(item);
+    const provider = route && route.provider;
+    const model = route && route.model;
+    if (!route || !text(provider) || !text(model)) return [];
+    const account = optional(route.account) ?? optional(route.profile) ?? "";
+    const id = optional(field(route, "routeId", "route_id")) ?? `${provider}/${model}${account ? `@${account}` : ""}`;
+    return [{ id, provider, model, account, available: route.available === true, quotaStatus: optional(field(route, "quotaStatus", "quota_status")) }];
+  });
+}
+
+/** `GET /quotas`: one entry per account with every window it reports. */
+export function parseQuotas(value: unknown): QuotaAccount[] {
+  const raw = record(value);
+  if (!raw || !Array.isArray(raw.accounts)) throw new Error("La respuesta de cuotas no es válida.");
+  return raw.accounts.flatMap((item): QuotaAccount[] => {
+    const account = record(item);
+    if (!account || !text(account.account)) return [];
+    const windows = Array.isArray(account.windows) ? account.windows.flatMap((entry): QuotaWindow[] => {
+      const window = record(entry);
+      return window && text(window.window) && typeof window.usedPercent === "number" ? [{ window: window.window, usedPercent: window.usedPercent, resetsAt: optional(window.resetsAt) }] : [];
+    }) : [];
+    return [{ account: account.account, provider: optional(account.provider) ?? "", status: optional(account.status) ?? "", observedAt: optional(account.observedAt), windows }];
+  });
 }

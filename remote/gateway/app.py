@@ -47,7 +47,7 @@ def _laptop_command(payload: dict[str, Any]) -> dict[str, Any]:
     params: dict[str, Any] = {}
     if command == "cancel-attempt" and isinstance(target.get("attemptId"), str):
         params["attempt"] = target["attemptId"]
-    if command in {"reopen", "retry"} and isinstance(target.get("taskId"), str):
+    if command in {"reopen", "retry", "note", "edit-brief"} and isinstance(target.get("taskId"), str):
         params["task"] = target["taskId"]
     if command == "retry" and isinstance(payload.get("route"), str):
         params["route"] = payload["route"]
@@ -62,8 +62,13 @@ def _laptop_command(payload: dict[str, Any]) -> dict[str, Any]:
         params["option"] = payload.get("option")
     if command in {"cancel-plan", "delete-plan"} and isinstance(payload.get("confirmation"), dict):
         params["typed_req"] = payload["confirmation"].get("typedReq")
-    if command in {"edit-brief", "note"}:
-        params["brief" if command == "edit-brief" else "note"] = payload.get("brief" if command == "edit-brief" else "note")
+    if command == "edit-brief":
+        # The laptop edits a task's `objective` and optionally its `acceptance_criteria`.
+        params["objective"] = payload.get("brief")
+        if "acceptanceCriteria" in payload:
+            params["acceptance_criteria"] = payload["acceptanceCriteria"]
+    if command == "note":
+        params["note"] = payload.get("note")
     if "reason" in payload:
         params["reason"] = payload["reason"]
     precondition = payload.get("precondition")

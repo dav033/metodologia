@@ -29,7 +29,7 @@
       "lastSignOfLife": "2026-10-19T11:50:00Z",
       "activeTask": null,
       "summary": { "tasksTotal": 1, "tasksDone": 0 },
-      "tasks": [{ "id": "T2", "title": "Recover stalled work", "state": "blocked", "attempts": 2, "attempt": null, "history": [{ "id": "att-failed-02", "state": "failed", "failure": "verification_failed" }] }]
+      "tasks": [{ "id": "T2", "title": "Recover stalled work", "state": "blocked", "objective": "Recover the stalled work", "acceptanceCriteria": ["It resumes", "It reports"], "attempts": 2, "attempt": null, "history": [{ "id": "att-failed-02", "state": "failed", "failure": "verification_failed" }] }]
     }
   ],
   "plans": [
@@ -44,7 +44,7 @@
     },
     {
       "project": "pictures", "reqId": "REQ-018", "title": "Recover stalled work", "planStatus": "launched", "runStatus": "paused", "active": true,
-      "progress": { "done": 0, "total": 1 }, "difficulty": "medium", "updatedAt": "2026-10-19T11:55:00Z", "asks": 1, "commandState": "paused",
+      "progress": { "done": 0, "total": 1 }, "difficulty": "medium", "updatedAt": "2026-10-19T11:55:00Z", "asks": 1, "commandState": "paused", "planCommandState": "launched", "planRevision": 3,
       "decisions": [{ "id": "T2:2", "source": "task", "task": "T2", "attempt": "att-failed-02", "title": "T2 bloqueada: attempts_exhausted",
         "what": "Se agotaron los intentos y ninguno pasó la verificación.", "reason": "m5:attempts_exhausted", "evidence": ["intentos: 2", "último fallo: verification_failed"],
         "options": [

@@ -190,6 +190,40 @@ test("real panel entrypoint renders API contract runs, failure reviews and contr
     await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('[aria-label=\"Decisión T2:2\"] button')].find((button) => button.innerText === 'Reintentar')?.click()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 6; attempt += 1) await delay(100);
     assert.deepEqual([gateway.commands[5]?.type, gateway.commands[5]?.requestId, gateway.commands[5]?.option, gateway.commands[5]?.precondition, gateway.commands[5]?.target.kind], ["answer-decision", "T2:2", "retry", { state: "paused" }, "run"]);
+
+    // Recovery forms (T15f): quotas, pinned retry from the real routes list, note and brief edit with its revision.
+    const pageText = (await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true })).result?.value;
+    for (const expected of ["Cuotas", "work", "personal", "5 horas", "7 días", "40 % usado", "95 % usado", "renueva"]) assert.ok(pageText.includes(expected), `quotas should show ${expected}`);
+    const recovery = '[aria-label="Recuperación T2"]';
+    await click(`${recovery} [aria-label="Reintento T2"] > button`);
+    let routeOptions = [];
+    for (let attempt = 0; attempt < 40 && routeOptions.length < 3; attempt += 1) {
+      routeOptions = (await cdp(socket, "Runtime.evaluate", { expression: `[...document.querySelectorAll('${recovery} select option')].map((option) => ({ text: option.textContent, disabled: option.disabled, value: option.value }))`, returnByValue: true })).result?.value ?? [];
+      await delay(100);
+    }
+    assert.deepEqual(routeOptions.map((option) => [option.value, option.disabled]), [["", false], ["codex/gpt-5@work", false], ["claude/haiku@personal", true]]);
+    assert.ok(routeOptions[2].text.includes("no disponible"));
+    await cdp(socket, "Runtime.evaluate", { expression: `(() => { const select = document.querySelector('${recovery} select'); const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set; setter.call(select, 'codex/gpt-5@work'); select.dispatchEvent(new Event('change', { bubbles: true })); })()`, returnByValue: true });
+    await fill(`${recovery} [aria-label="Indicación para T2"]`, "Start from the failing test");
+    await click(`${recovery} [aria-label="Reintento T2"] > button:last-of-type`);
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 7; attempt += 1) await delay(100);
+    assert.deepEqual([gateway.commands[6]?.type, gateway.commands[6]?.target, gateway.commands[6]?.route, gateway.commands[6]?.reason, gateway.commands[6]?.precondition],
+      ["retry", { kind: "task", project: "pictures", req: "REQ-018", taskId: "T2" }, "codex/gpt-5@work", "Start from the failing test", { state: "paused" }]);
+    await fill(`${recovery} [aria-label="Nota para T2"]`, "Prefer the shared helper");
+    const waitEnabled = async (selector) => { for (let attempt = 0; attempt < 40; attempt += 1) { if ((await cdp(socket, "Runtime.evaluate", { expression: `document.querySelector(${JSON.stringify(selector)})?.disabled === false`, returnByValue: true })).result?.value) return; await delay(100); } };
+    await waitEnabled(`${recovery} [aria-label="Nota T2"] button`);
+    await click(`${recovery} [aria-label="Nota T2"] button`);
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 8; attempt += 1) await delay(100);
+    assert.deepEqual([gateway.commands[7]?.type, gateway.commands[7]?.note, gateway.commands[7]?.target.taskId], ["note", "Prefer the shared helper", "T2"]);
+    const briefText = (await cdp(socket, "Runtime.evaluate", { expression: `document.querySelector('${recovery} form').textContent`, returnByValue: true })).result?.value;
+    assert.ok(briefText.includes("Creará la revisión r4"), "the brief form shows the revision it will create");
+    await fill(`${recovery} [aria-label="Objetivo de T2"]`, "Recover it, then report");
+    await fill(`${recovery} [aria-label="Criterios de T2"]`, "It resumes\nIt reports\nIt is logged");
+    await waitEnabled(`${recovery} form button`);
+    await click(`${recovery} form button`);
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 9; attempt += 1) await delay(100);
+    assert.deepEqual([gateway.commands[8]?.type, gateway.commands[8]?.brief, gateway.commands[8]?.acceptanceCriteria, gateway.commands[8]?.precondition, gateway.commands[8]?.target],
+      ["edit-brief", "Recover it, then report", ["It resumes", "It reports", "It is logged"], { state: "launched", revision: 3 }, { kind: "task", project: "pictures", req: "REQ-018", taskId: "T2" }]);
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);

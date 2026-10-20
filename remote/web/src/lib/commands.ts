@@ -22,3 +22,21 @@ export function answerDecisionCommand(plan: Plan, decision: Decision, option: st
   return { ...base("answer-decision", { kind: "run", project: plan.project, req: plan.req }, plan.commandState ?? plan.runState ?? plan.state, key),
     requestId: decision.id, option, ...(reason.trim() ? { reason: reason.trim() } : {}) };
 }
+
+const taskTarget = (plan: { project: string; req: string }, taskId: string) => ({ kind: "task", project: plan.project, req: plan.req, taskId });
+
+/** Retry a task; a `route` pins the route chosen from `GET /routes`, `reason` goes into the next attempt's prompt. */
+export function retryCommand(run: { project: string; req: string; state: string }, taskId: string, route: string | undefined, reason: string, key: string): Command {
+  return { ...base("retry", taskTarget(run, taskId), run.state, key), ...(route ? { route } : {}), ...(reason.trim() ? { reason: reason.trim() } : {}) };
+}
+
+export function noteCommand(run: { project: string; req: string; state: string }, taskId: string, note: string, key: string): Command {
+  return { ...base("note", taskTarget(run, taskId), run.state, key), note: note.trim() };
+}
+
+/** Edit a task's brief: pinned to the plan's state and revision N; the laptop freezes revision N+1. */
+export function editBriefCommand(plan: Plan, taskId: string, brief: string, criteria: string[], key: string): Command {
+  const command = base("edit-brief", taskTarget(plan, taskId), plan.planCommandState ?? plan.state, key);
+  return { ...command, precondition: { ...(command.precondition as object), ...(plan.planRevision === undefined ? {} : { revision: plan.planRevision }) },
+    brief: brief.trim(), ...(criteria.length ? { acceptanceCriteria: criteria } : {}) };
+}

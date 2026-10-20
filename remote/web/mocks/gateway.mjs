@@ -38,6 +38,23 @@ export async function createMockGatewayServer() {
       response.end();
       return;
     }
+    if (request.method === "GET" && request.url === "/api/remote/v1/quotas") {
+      send(200, { checkedAt: "2026-10-19T12:00:00Z", accounts: [
+        { account: "work", provider: "claude", status: "ok", observedAt: "2026-10-19T11:59:00Z", windows: [{ window: "five_hour", usedPercent: 40, resetsAt: "2026-10-19T15:00:00Z" }, { window: "seven_day", usedPercent: 12, resetsAt: "2026-10-25T15:00:00Z" }] },
+        { account: "personal", provider: "codex", status: "ok", observedAt: "2026-10-19T11:59:00Z", windows: [{ window: "five_hour", usedPercent: 95, resetsAt: "2026-10-19T14:00:00Z" }] },
+      ] });
+      return;
+    }
+    // The laptop spells route keys in snake case; the gateway relays them untouched.
+    if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/routes?")) {
+      const query = new URL(request.url, "http://mock").searchParams;
+      if (query.get("target") !== "pictures/REQ-018" || query.get("task") !== "T2") { send(400, { code: "INVALID_ROUTE_QUERY", message: "Se requieren target y task válidos." }); return; }
+      send(200, { routes: [
+        { route_id: "codex/gpt-5@work", provider: "codex", model: "gpt-5", profile: "work", account: "work", available: true, quota_status: "ok" },
+        { route_id: "claude/haiku@personal", provider: "claude", model: "haiku", profile: "personal", account: "personal", available: false, quota_status: "exhausted" },
+      ] });
+      return;
+    }
     // Like the real gateway, refuse state-changing requests that lack the CSRF marker.
     if (request.method === "POST" && request.headers["x-flow-request"] !== "1") { send(403, { error: "forbidden" }); return; }
     if (request.method === "POST" && request.url === "/api/remote/v1/challenges") {

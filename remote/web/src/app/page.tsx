@@ -3,7 +3,8 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { PlansPanel } from "./plans-panel";
-import { field, parseSnapshot, record, text, type Run, type Snapshot, type Task } from "../lib/snapshot";
+import { QuotasPanel, TaskRecovery } from "./recovery-panel";
+import { field, parseQuotas, parseSnapshot, record, text, type QuotaAccount, type Run, type Snapshot, type Task } from "../lib/snapshot";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string };
 type Session = { authenticated: boolean };
@@ -88,6 +89,8 @@ export default function HomePage() {
   const [reason, setReason] = useState("");
     const [commands, setCommands] = useState<CommandRecord[]>([]);
   const [historyError, setHistoryError] = useState("");
+  const [quotas, setQuotas] = useState<QuotaAccount[]>([]);
+  const [quotaError, setQuotaError] = useState("");
 
   const load = useCallback(async () => {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
@@ -99,6 +102,11 @@ export default function HomePage() {
     const response = await fetch("/api/remote/v1/snapshot", { cache: "no-store" });
     if (!response.ok) throw new Error(`No se pudo cargar el estado (${response.status}).`);
     setSnapshot(parseSnapshot(await response.json()));
+    try {
+      const quotaResponse = await fetch("/api/remote/v1/quotas", { cache: "no-store" });
+      if (!quotaResponse.ok) throw new Error(`Las cuotas no están disponibles (${quotaResponse.status}).`);
+      setQuotas(parseQuotas(await quotaResponse.json())); setQuotaError("");
+    } catch (cause) { setQuotas([]); setQuotaError(cause instanceof Error ? cause.message : "Las cuotas no están disponibles."); }
     const historyResponse = await fetch("/api/remote/v1/commands?after=&limit=100", { cache: "no-store" });
     if (historyResponse.ok) {
       const history: unknown = await historyResponse.json();
@@ -211,9 +219,10 @@ export default function HomePage() {
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     <div className="actions">
-      {task.state === "blocked" || task.state === "failed" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
-      {task.activeAttempt && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, taskId: task.id, attemptId: task.activeAttempt.id }, task.activeAttempt.state ?? task.state, task.revision, `${run.req}-${task.id}-cancel`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
+      {task.state === "blocked" || task.state === "failed" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, run.state, run.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
+      {task.activeAttempt && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, taskId: task.id, attemptId: task.activeAttempt.id }, run.state, run.revision, `${run.req}-${task.id}-cancel`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
     </div>
+    {(task.state === "blocked" || task.state === "failed" || task.activeAttempt) && <TaskRecovery run={run} task={task} plan={snapshot?.plans.find((plan) => plan.project === run.project && plan.req === run.req)} working={working} send={sendCommand} />}
     {task.history?.filter((attempt) => ["failed", "rejected"].includes(attempt.state ?? "") || attempt.failure).map((attempt) => <section className="failure-review" key={attempt.id} aria-label={`Revisión del intento ${attempt.id}`}>
       <button className="review-trigger" onClick={() => void loadFailureReview(attempt.id)}>Revisar intento fallido · {attempt.id}</button>
       {reviewErrors[attempt.id] && <p className="error" role="alert">{reviewErrors[attempt.id]}</p>}
@@ -245,8 +254,7 @@ export default function HomePage() {
         <div className="actions">
           {run.state === "running" ? <form onSubmit={commandForm("pause", { kind: "run", project: run.project, req: run.req }, run.state, run.revision, `${run.req}-pause`)}><button disabled={!!working}>Pausar</button></form> : null}
           {run.state === "paused" ? <form onSubmit={commandForm("resume", { kind: "run", project: run.project, req: run.req }, run.state, run.revision, `${run.req}-resume`)}><button disabled={!!working}>Reanudar</button></form> : null}
-          {["failed", "blocked", "cancelled", "finished"].includes(run.state) ? <form onSubmit={commandForm("reopen", { kind: "run", project: run.project, req: run.req }, run.state, run.revision, `${run.req}-reopen`)}><button disabled={!!working}>Reabrir ejecución</button></form> : null}
-          {run.activeAttempt && !run.tasks?.some((task) => task.activeAttempt?.id === run.activeAttempt?.id) && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, attemptId: run.activeAttempt.id }, run.activeAttempt.state ?? run.state, run.revision, `${run.req}-cancel-attempt`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
+          {run.activeAttempt && !run.tasks?.some((task) => task.activeAttempt?.id === run.activeAttempt?.id) && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, attemptId: run.activeAttempt.id }, run.state, run.revision, `${run.req}-cancel-attempt`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
         </div>
         {!!run.tasks?.length && <div className="task-list"><h3>Tareas</h3>{run.tasks.map((task) => renderTask(task, run))}</div>}
         <section className="feed" aria-label={`Feed ${run.req}`}><h3>Actividad reciente</h3>{(() => {
@@ -256,6 +264,7 @@ export default function HomePage() {
       </article>)}</div>}
     </section>
     {snapshot && <PlansPanel plans={snapshot.plans} working={working} send={sendCommand} prettyTime={prettyTime} />}
+    <QuotasPanel accounts={quotas} error={quotaError} prettyTime={prettyTime} />
     <section className="runs history" aria-labelledby="history-title"><div className="section-heading"><div><p className="eyebrow">TRAZABILIDAD</p><h2 id="history-title">Historial de comandos</h2></div></div>{historyError ? <p className="error" role="status">{historyError}</p> : commands.length ? <ol className="command-history">{commands.map((command) => <li key={command.id}><strong>{command.command}</strong><span>{command.target}</span><time>{prettyTime(command.submittedAt)}</time><span>Origen · {command.origin}</span><span>Resultado · {command.result}</span></li>)}</ol> : <p className="empty">No hay comandos registrados.</p>}</section>
     <footer className="footer"><span>FLOW REMOTE</span><span>Actualizado · {prettyTime(snapshot?.generatedAt)}</span></footer>
   </main>;

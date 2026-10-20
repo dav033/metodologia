@@ -20,6 +20,7 @@ class FakeLaptop:
         self.command_payloads: list[dict] = []
         self.challenge_payloads: list[dict] = []
         self.raise_command_timeout = False
+        self.get_paths: list[str] = []
 
     def health(self):
         if self.health_failures:
@@ -29,6 +30,10 @@ class FakeLaptop:
 
     def snapshot(self):
         return {"runs": [], "plans": [], "generatedAt": "2026-10-19T12:00:00Z"}
+
+    def get_json(self, path):
+        self.get_paths.append(path)
+        return {"routes": [], "accounts": []}
 
     def events(self, after):
         return {"events": [], "nextCursor": after}
@@ -107,6 +112,37 @@ class CommandEntryPointTests(unittest.TestCase):
         status, result = self.post("/api/remote/v1/commands", command)
         self.assertEqual((status, result["status"], result["idempotencyKey"]), (202, "OK", "command-key-000001"))
         self.assertEqual(self.laptop.command_payloads[-1]["confirmation"], command["confirmation"])
+
+    def test_recovery_commands_are_translated_to_what_the_laptop_handlers_read(self):
+        brief = {"schemaVersion": 1, "idempotencyKey": "command-key-000002", "type": "edit-brief",
+                 "target": {"kind": "task", "project": "demo", "req": "REQ-027", "taskId": "T2"},
+                 "precondition": {"state": "launched", "revision": 3}, "brief": "New objective",
+                 "acceptanceCriteria": ["It works"]}
+        note = {"schemaVersion": 1, "idempotencyKey": "command-key-000003", "type": "note",
+                "target": {"kind": "task", "project": "demo", "req": "REQ-027", "taskId": "T2"},
+                "precondition": {"state": "paused"}, "note": "Use the shared helper"}
+        retry = {"schemaVersion": 1, "idempotencyKey": "command-key-000004", "type": "retry",
+                 "target": {"kind": "task", "project": "demo", "req": "REQ-027", "taskId": "T2"},
+                 "precondition": {"state": "paused"}, "route": "claude/haiku"}
+        for command in (brief, note, retry):
+            self.assertEqual(self.post("/api/remote/v1/commands", command)[0], 202)
+        self.assertEqual([item["params"] for item in self.laptop.command_payloads], [
+            {"task": "T2", "objective": "New objective", "acceptance_criteria": ["It works"]},
+            {"task": "T2", "note": "Use the shared helper"},
+            {"task": "T2", "route": "claude/haiku"}])
+
+    def get(self, path: str):
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+        connection.request("GET", path, headers={"Cookie": self.cookie})
+        response = connection.getresponse()
+        result = response.status, json.loads(response.read())
+        connection.close()
+        return result
+
+    def test_routes_and_quotas_are_relayed_to_the_signed_in_browser(self):
+        self.assertEqual(self.get("/api/remote/v1/quotas")[0], 200)
+        self.assertEqual(self.get("/api/remote/v1/routes?target=demo/REQ-027&task=T2")[0], 200)
+        self.assertEqual(self.laptop.get_paths, ["/api/remote/v1/quotas", "/api/remote/v1/routes?target=demo/REQ-027&task=T2"])
 
     def test_offline_laptop_returns_laptop_offline_at_gateway_http_entrypoint(self):
         self.laptop.health_failures = 3
