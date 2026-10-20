@@ -5,7 +5,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
-from typing import Protocol
+from typing import Any, Protocol
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
@@ -18,6 +18,8 @@ from auth import (
     SessionStore,
     cookie_values,
 )
+from app import CommandRelayError
+from commands import CommandValidationError
 from security import RateLimiter, origin_matches
 from stream import SnapshotEventStream, encode_sse
 
@@ -29,6 +31,8 @@ COMMAND_REQUEST_LIMIT = 30
 
 class StreamRuntime(Protocol):
     stream: SnapshotEventStream
+
+    def submit_command(self, value: object) -> tuple[int, dict[str, Any]]: ...
 
 
 def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
@@ -137,7 +141,46 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
                     return
+                if runtime is None:
+                    self._json(404, {"error": "not found"})
+                    return
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                try:
+                    length = int(self.headers.get("Content-Length", "0"))
+                except ValueError:
+                    self._problem(400, "INVALID_COMMAND", "Content-Length is invalid")
+                    return
+                if length <= 0:
+                    self._problem(400, "INVALID_COMMAND", "Command body is required")
+                    return
+                if length > 65536:
+                    self._problem(413, "BODY_TOO_LARGE", "Command body is too large")
+                    return
+                try:
+                    value = json.loads(self.rfile.read(length).decode("utf-8"))
+                except (UnicodeError, json.JSONDecodeError):
+                    self._problem(400, "INVALID_COMMAND", "Command body must be valid JSON")
+                    return
+                try:
+                    status, result = runtime.submit_command(value)
+                except CommandValidationError as exc:
+                    self._problem(exc.status, exc.code, str(exc))
+                    return
+                except CommandRelayError as exc:
+                    self._problem(exc.status, exc.code, str(exc), idempotency_key=exc.idempotency_key)
+                    return
+                self._json(status, result)
+                return
             self._json(404, {"error": "not found"})
+
+        def _problem(self, status: int, code: str, message: str, *, idempotency_key: str | None = None) -> None:
+            body: dict[str, object] = {"code": code, "message": message}
+            if idempotency_key is not None:
+                body["idempotencyKey"] = idempotency_key
+            self._send(status, json.dumps(body).encode("utf-8"), content_type="application/problem+json; charset=utf-8")
 
         def _valid_state_changing_request(self) -> bool:
             request_marker = self.headers.get("X-Flow-Request", "").strip()

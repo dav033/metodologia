@@ -8,14 +8,23 @@ from datetime import datetime, timezone
 from typing import Any
 
 from config import GatewayConfig
+from commands import validate_command
 from liveness import LaptopStatus, LivenessMonitor
 from notifications import NotificationOutbox, TelegramSender, notification_for_event
 from stream import SnapshotEventStream
-from upstream import LaptopClient, UpstreamError
+from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
 
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
 ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
+
+
+class CommandRelayError(RuntimeError):
+    def __init__(self, status: int, code: str, message: str, idempotency_key: str):
+        super().__init__(message)
+        self.status = status
+        self.code = code
+        self.idempotency_key = idempotency_key
 
 
 class GatewayRuntime:
@@ -100,6 +109,24 @@ class GatewayRuntime:
         next_cursor = result.get("nextCursor")
         if isinstance(next_cursor, str):
             self.event_cursor = next_cursor
+
+    def submit_command(self, value: object) -> tuple[int, dict[str, Any]]:
+        command = validate_command(value)
+        key = command["idempotencyKey"]
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            raise CommandRelayError(410, "LAPTOP_OFFLINE", "Laptop is offline; command was not queued", key)
+        try:
+            return self.laptop.command(command)
+        except UpstreamResponseError as exc:
+            code = exc.payload.get("code")
+            safe_codes = {
+                "INVALID_COMMAND", "STALE_PRECONDITION", "IDEMPOTENCY_CONFLICT", "CONFIRMATION_REQUIRED",
+                "CONFIRMATION_EXPIRED", "LAPTOP_OFFLINE", "BODY_TOO_LARGE", "COMMAND_NOT_APPLICABLE",
+            }
+            safe_code = code if isinstance(code, str) and code in safe_codes else "COMMAND_REJECTED"
+            raise CommandRelayError(exc.status, safe_code, "Laptop rejected the command", key) from exc
+        except (UpstreamTimeout, UpstreamError) as exc:
+            raise CommandRelayError(503, "UNKNOWN_OUTCOME", "Command outcome is unknown; retry with the same idempotency key", key) from exc
 
     def run_forever(self) -> None:
         while True:
