@@ -125,16 +125,41 @@ class RetryContinuation:
             raise integration.IntegrationError("PREDECESSOR_HANDOFF_MISSING", "retry snapshot is missing or unsettled")
         return facts["handoff"]["snapshot_sha"]
 
-    def base_ref(self, task_id):
+    def _previous_base(self, task_id):
+        """The base commit the previous attempt of this task started from (from the executor ledger), or None."""
+        prior = self._previous(task_id)
+        row = self.executor.ledger.get(prior["attempt_id"]) if prior else None
+        return (row or {}).get("base_sha")
+
+    def _continue_from(self, task_id):
+        """The snapshot a retry builds on. A failed or rejected attempt is always continued. Work an audit sent back is
+        continued only when its base is still the one the redone prerequisites give today: otherwise it would diverge
+        from them and conflict when the integrator combines the chain, so the redo starts on the new base and the old
+        result stays available as a reference (see `notes`)."""
         snapshot = self._handoff(task_id)
+        if snapshot is None or not self._reworked(task_id):
+            return snapshot
+        base = self.fallback(task_id) if callable(self.fallback) else self.fallback
+        return snapshot if base == self._previous_base(task_id) else None
+
+    def base_ref(self, task_id):
+        snapshot = self._continue_from(task_id)
         if snapshot is not None:
             return snapshot
         return self.fallback(task_id) if callable(self.fallback) else self.fallback
 
     def notes(self, request):
-        snapshot = self._handoff(request.task_id)
+        snapshot = self._continue_from(request.task_id)
         if snapshot is None:
-            return ""
+            try:
+                earlier = self._handoff(request.task_id) if self._reworked(request.task_id) else None
+            except integration.IntegrationError:
+                earlier = None      # a reference only: a missing one must not stop the redo
+            if earlier is None:
+                return ""
+            return ("An independent audit sent this task's earlier work back, and the prerequisites it builds on were "
+                    f"redone since, so you start from their new result. The earlier result is kept read-only as snapshot "
+                    f"{earlier} (inspect it with `git show {earlier}`): reuse what is still correct, do not copy it blindly.")
         if request.base_ref != snapshot:
             raise integration.IntegrationError("PREDECESSOR_HANDOFF_MISSING", "retry base does not match its snapshot")
         if self._reworked(request.task_id):

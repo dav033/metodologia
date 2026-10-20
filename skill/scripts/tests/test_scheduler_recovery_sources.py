@@ -56,6 +56,25 @@ class RetryAcrossRevisions(unittest.TestCase):
                 self.assertEqual(source._previous("T1")["attempt_id"], "att-0001")
                 self.assertTrue(source._reworked("T1"))
 
+    def test_sent_back_work_continues_only_on_an_unchanged_base(self):
+        """A redone prerequisite changes the base: continuing from the old snapshot would conflict when combined."""
+        source = self._source("REQ-1:r2:T1:att-0001", old_state="accepted")
+        source._handoff = lambda _task: "oldsnap"
+        source._previous_base = lambda _task: "basesha"
+        source.fallback = lambda _task: "basesha"
+        self.assertEqual(source.base_ref("T1"), "oldsnap")               # same base: build on the previous result
+        source.fallback = lambda _task: "newbase"
+        self.assertEqual(source.base_ref("T1"), "newbase")               # prerequisites changed: start on the new base
+        note = source.notes(SimpleNamespace(task_id="T1", base_ref="newbase"))
+        self.assertIn("oldsnap", note)
+        self.assertIn("start from their new result", note)
+
+    def test_a_failed_retry_continues_whatever_the_base(self):
+        source = self._source("REQ-1:r2:T1:att-0001", old_state="failed")
+        source._handoff = lambda _task: "oldsnap"
+        source.fallback = lambda _task: "newbase"
+        self.assertEqual(source.base_ref("T1"), "oldsnap")
+
     def test_a_failed_attempt_is_not_a_rework_and_an_operator_cancel_still_blocks(self):
         from bt_scheduler_integrator import IntegrationError
 
