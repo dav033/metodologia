@@ -82,6 +82,7 @@ class QualityPolicy:
     max_open_files: int = 1024
     max_processes: int = 512
     toolchain: bool = True  # mount the operator's Node install, Playwright browsers and the attempt's node_modules
+    provision_dependencies: bool = True  # an attempt with no node_modules gets the lockfile's, installed offline
     environment: tuple[tuple[str, str], ...] = ()
     secret_values: tuple[str, ...] = ()
     require_independent_review: bool = False

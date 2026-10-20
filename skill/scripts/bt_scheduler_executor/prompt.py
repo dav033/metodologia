@@ -23,7 +23,9 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
                      "have yet is yours to create, and every command must pass on your final files. Installed dependencies "
                      "(`node_modules`) are mounted read-only: a check or test that runs `npm install`/`npm ci` or writes "
                      "inside `node_modules` fails there, so a test must use what is installed and write build output "
-                     "elsewhere. Run each one yourself before you finish and say which you could not run.")
+                     "elsewhere. If the project has a lockfile, install it in your worktree first (for npm: "
+                     "`npm ci --offline`) so you can run the checks. Run each one yourself before you finish and say "
+                     "which you could not run.")
     if brief.expected_paths:
         parts.append(f"\n## Expected paths (guidance, not a limit)\n{bullets(brief.expected_paths)}")
     if brief.notes:

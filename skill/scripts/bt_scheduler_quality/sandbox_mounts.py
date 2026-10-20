@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .policy import QualityPolicy
+from .sandbox_provision import provision
 
 WORKSPACE = "/workspace"
 NODE_OPTIONS = "--max-old-space-size=6144"  # tsc and next build need more than Node's default heap
@@ -97,8 +98,13 @@ def attempt_mounts(
                 repository / relative if repository is not None else None,
                 snapshot_root / relative if snapshot_root is not None else None,
             )
+            provisioned = False
+            if source is None and policy.provision_dependencies and snapshot_root is not None \
+                    and name == "node_modules":
+                source = provision(snapshot_root / relative)
+                provisioned = source is not None
             if source is not None and (
-                _under(source, worktree) or (repository is not None and _under(source, repository))
+                provisioned or _under(source, worktree) or (repository is not None and _under(source, repository))
             ):
                 target = Path(WORKSPACE) / relative / name
                 mounts.append(Mount(str(source), str(target)))
@@ -120,9 +126,18 @@ def _package_roots(snapshot_root: Path | None) -> tuple[Path, ...]:
     return tuple(roots)
 
 
+def _complete(tree: Path, snapshot_root: Path | None, name: str) -> bool:
+    """A tree npm installed from a lockfile ends with its hidden lockfile; one without it is an install that stopped
+    half-way (no network, an error) and would fail every check on a different missing package."""
+    lock = LOCKFILES.get(name)
+    if snapshot_root is None or lock is None or not (snapshot_root / lock).is_file():
+        return True
+    return (tree / ".package-lock.json").is_file()
+
+
 def _dependency_source(name: str, worktree: Path, repository: Path | None, snapshot_root: Path | None) -> Path | None:
     own = worktree / name
-    if own.is_dir() and not own.is_symlink() and _under(own, worktree):
+    if own.is_dir() and not own.is_symlink() and _under(own, worktree) and _complete(own, snapshot_root, name):
         return own.resolve(strict=True)
     lock = LOCKFILES.get(name)
     if repository is None or snapshot_root is None or lock is None:

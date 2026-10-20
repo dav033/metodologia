@@ -459,6 +459,24 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertIn("python3 build.py", text)
         self.assertIn("EROFS: read-only file system", text)
         self.assertIn("node_modules", text)
+        self.assertNotIn("npm ci --offline", text)
+
+    def test_a_missing_module_tells_the_agent_to_install_its_dependencies(self):
+        class Missing(ScriptedRunner):
+            def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
+                return CommandOutcome("fail", 2, 2, b"", b"Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'x'\n", None, True)
+
+        notes = []
+        task = _task("T1", "python3 build.py")
+        task.update(kind="implement")
+        task["verification"][0]["category"] = "functional"
+        root, core, _, executor, _, _ = self._system([task], max_attempts=2, runner=Missing(),
+                                                     verify_notes=lambda task_id, text: notes.append(text))
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: bool(notes)))
+        self.assertIn("npm ci --offline", notes[0])
+        self.assertIn("do not edit configuration", notes[0])
 
     def test_an_accepted_task_clears_the_notes_of_earlier_rounds(self):
         task = _task("T1", "python3 build.py")
