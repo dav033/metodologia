@@ -49,6 +49,18 @@ class Verdicts(unittest.TestCase):
         self.assertEqual(by[("T2", 2)], ("stopped", "reset_by_rework"))     # redone because T1 was, nobody's fault
         self.assertEqual(by[("T1", 3)], ("verified", "verified"))           # the redo survived
 
+    def test_a_finding_that_sent_back_many_tasks_at_once_is_not_charged_to_each_builder(self):
+        facts = {"T1": [attempt("att-0001", 1, "accepted")], "T2": [attempt("att-0002", 1, "accepted")]}
+        wide = {"at": 2e9, "by": "audit-gate", "named": {"T1", "T2", "T3", "T4"}, "tasks": {"T1", "T2"}}
+        states = {"T1": "pending", "T2": "pending", "T3": "completed"}
+        by_default = rows(states, facts, [wide])                                  # the default limit is 3; this names 4
+        self.assertEqual(({r["outcome"] for r in by_default}, {r["result"] for r in by_default}),
+                         ({"systemic_audit_finding"}, {"stopped"}))
+        specific = {**wide, "named": {"T1"}}                                      # one task named: it is that builder's
+        self.assertEqual({r["outcome"] for r in rows(states, facts, [specific])} - {"reset_by_rework"}, {"audit_rejected"})
+        allowed = log.rows("proj", "REQ-9", PLAN, doc(states), facts, "2026-10-19T12:00:00-05:00", [wide], max_named=4)
+        self.assertEqual({r["outcome"] for r in allowed}, {"audit_rejected"})
+
     def test_rejections_infrastructure_and_the_audit_that_found_problems(self):
         facts = {"T2": [attempt("att-0004", 1, "rejected", "m6://result/abc"),
                         attempt("att-0005", 2, "failed", "start rejected: INTEGRATION_CONFLICT"),

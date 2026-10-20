@@ -8,6 +8,9 @@ What an attempt is worth is decided here, from the plan:
   - rejected by its verifier ................ `verify_failed`
   - accepted and named by an audit's finding  `verify_failed`, outcome `audit_rejected` (the independent audit proved
                                                the accepted result wrong: the strongest quality signal there is)
+  - ... but the audit named more tasks than .. `stopped`, outcome `systemic_audit_finding`: a defect that wide belongs to
+    `gates.attribute_max_tasks` at once         the plan or the integration, and charging every builder for it would
+                                               teach the router that a sound model is a bad one
   - accepted and reset with no finding on it . `stopped` (redone because something upstream was, or by the owner)
   - accepted and every audit over it passed .. `verified` (survived the audit; with no audit over it, at once)
   - accepted, an audit over it still pending . not written yet (it is not judged until the audit speaks)
@@ -55,14 +58,21 @@ def audits_over(tasks: dict[str, dict]) -> dict[str, set[str]]:
     return {tid: {audit for audit in audits if tid in ancestors[audit]} for tid in tasks}
 
 
-def overturn_of(task_id: str, ended_at: float | None, reworks: list[dict]) -> str | None:
-    """How a later rework treated an accepted result: `audit` (a finding of the audit gate named this task) or `reset`
-    (it was sent back with no finding on it); None when no rework followed it. `reworks`: M1's `rework_requested`."""
+DEFAULT_ATTRIBUTE_MAX = 3
+
+
+def overturn_of(task_id: str, ended_at: float | None, reworks: list[dict], max_named: int = DEFAULT_ATTRIBUTE_MAX
+                ) -> str | None:
+    """How a later rework treated an accepted result: `audit` (a finding of the audit gate named this task), `systemic`
+    (it named it, but together with more than `max_named` tasks) or `reset` (sent back with no finding on it); None when
+    no rework followed it. `reworks`: M1's `rework_requested` rows."""
     for event in reworks:
         if ended_at is not None and event["at"] <= ended_at:
             continue
         if task_id in event["tasks"]:
-            return "audit" if event["by"] == "audit-gate" and task_id in event["named"] else "reset"
+            if event["by"] != "audit-gate" or task_id not in event["named"]:
+                return "reset"
+            return "audit" if len(event["named"]) <= max_named else "systemic"
     return None
 
 
@@ -71,7 +81,8 @@ def judge(attempt: dict, overturn: str | None, task_done: bool, audits_passed: b
     state, failure = attempt.get("state"), attempt.get("failure") or ""
     if state == "accepted":
         if overturn:
-            return ("verify_failed", "audit_rejected") if overturn == "audit" else ("stopped", "reset_by_rework")
+            return {"audit": ("verify_failed", "audit_rejected"), "systemic": ("stopped", "systemic_audit_finding"),
+                    "reset": ("stopped", "reset_by_rework")}[overturn]
         return ("verified", "verified") if task_done and audits_passed else None
     if state == "rejected":
         if kind == "audit" and failure.startswith(AUDIT_GATE):
@@ -106,7 +117,7 @@ def event_id(project: str, req: str, run_id: str, attempt_id: str, result: str) 
 
 
 def rows(project: str, req: str, plan_tasks: dict[str, dict], doc: dict, facts: dict[str, list[dict]],
-         now: str, reworks: list[dict] | None = None) -> list[dict]:
+         now: str, reworks: list[dict] | None = None, max_named: int = DEFAULT_ATTRIBUTE_MAX) -> list[dict]:
     """Every judged attempt of a run as an attempt-log row. Pure: the caller supplies the plan, M1's document, the
     attempt facts and the timestamp."""
     run_id = hashlib.sha1(f"{doc.get('plan_id')}|{doc.get('created_at')}".encode()).hexdigest()[:12]
@@ -119,7 +130,7 @@ def rows(project: str, req: str, plan_tasks: dict[str, dict], doc: dict, facts: 
         audits_passed = all(task_states.get(audit) == "completed" for audit in over.get(task_id, ()))
         for index, attempt in enumerate(attempts):
             ended = facts_._epoch(attempt.get("ended_at"))
-            verdict = judge(attempt, overturn_of(task_id, ended, reworks or []),
+            verdict = judge(attempt, overturn_of(task_id, ended, reworks or [], max_named),
                             task_states.get(task_id) == "completed", audits_passed, kind)
             if verdict is None:
                 continue
@@ -171,6 +182,13 @@ def rework_events(db: Path) -> list[dict]:
     return out
 
 
+def _max_named() -> int:
+    import bt_config
+
+    value = bt_config.get("gates.attribute_max_tasks", DEFAULT_ATTRIBUTE_MAX)
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 1 else DEFAULT_ATTRIBUTE_MAX
+
+
 def sync(project: str, req: str, rdir: Path, now: str | None = None) -> int:
     """Append the judged attempts of the run in `rdir` that the log does not hold yet; how many were written."""
     import datetime as dt
@@ -185,7 +203,7 @@ def sync(project: str, req: str, rdir: Path, now: str | None = None) -> int:
         stamp = now or dt.datetime.now().astimezone().isoformat(timespec="seconds")
         written, known = 0, bt_events.known_event_ids()
         for row in rows(project, req, plan_tasks, doc, facts_.attempt_facts(rdir), stamp,
-                        rework_events(m1)):
+                        rework_events(m1), _max_named()):
             if bt_events.append_row(row, known) is not None:
                 written += 1
         return written

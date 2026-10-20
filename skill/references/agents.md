@@ -297,7 +297,7 @@ shows token/cost coverage rather than turning unknown measurements into zero.
 tagged `source: scheduler`). An attempt is judged by what the plan says, not by its own session: *rejected by its
 verifier* → `verify_failed`; *accepted and named by a finding of the audit gate* → `verify_failed` with outcome
 `audit_rejected` (the independent audit proved the accepted result wrong: the strongest quality signal there is);
-*accepted and every audit over it passed* → `verified`; an accepted attempt with an audit still pending is not written
+*named by a finding that sent back more than `gates.attribute_max_tasks` tasks at once* → `stopped/systemic_audit_finding` (a defect that wide belongs to the plan or the integration, and charging every builder for it would teach the router that a sound model is a bad one); *accepted and every audit over it passed* → `verified`; an accepted attempt with an audit still pending is not written
 yet. Work that was only redone because something upstream was, a start the executor refused, a killed shim and a
 cancellation are `stopped` (unjudged: nobody's quality). An audit attempt the gate rejected is `stopped` too: it did its
 job by finding problems in other tasks. `metrics --by outcome` separates these classes.
