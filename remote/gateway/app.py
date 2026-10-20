@@ -17,6 +17,91 @@ from upstream import LaptopClient, UpstreamError
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
 ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
+SUPPORTED_COMMANDS = frozenset({"pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve",
+                                "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note"})
+
+
+def _camel_key(value: str) -> str:
+    parts = value.split("_")
+    return parts[0] + "".join(part[:1].upper() + part[1:] for part in parts[1:])
+
+
+def _camelize(value: Any) -> Any:
+    if isinstance(value, list):
+        return [_camelize(item) for item in value]
+    if isinstance(value, dict):
+        return {_camel_key(key) if isinstance(key, str) else key: _camelize(item)
+                for key, item in value.items()}
+    return value
+
+
+def _laptop_command(payload: dict[str, Any]) -> dict[str, Any]:
+    """Translate the browser v1 command shape to the laptop ledger's accepted request shape."""
+    command = payload.get("type")
+    target = payload.get("target")
+    if command not in SUPPORTED_COMMANDS or not isinstance(target, dict):
+        return {}
+    project, req = target.get("project"), target.get("req")
+    if not isinstance(project, str) or not isinstance(req, str):
+        return {}
+    params: dict[str, Any] = {}
+    if command == "cancel-attempt" and isinstance(target.get("attemptId"), str):
+        params["attempt"] = target["attemptId"]
+    if command in {"reopen", "retry"} and isinstance(target.get("taskId"), str):
+        params["task"] = target["taskId"]
+    if command == "retry" and isinstance(payload.get("route"), str):
+        params["route"] = payload["route"]
+    if command == "answer-round":
+        round_id = target.get("roundId", "")
+        digits = "".join(character for character in round_id if character.isdigit()) if isinstance(round_id, str) else ""
+        if digits:
+            params["round"] = int(digits)
+        params["answers"] = payload.get("answer")
+    if command in {"edit-brief", "note"}:
+        params["brief" if command == "edit-brief" else "note"] = payload.get("brief" if command == "edit-brief" else "note")
+    if "reason" in payload:
+        params["reason"] = payload["reason"]
+    precondition = payload.get("precondition")
+    confirmation = payload.get("confirmation")
+    request: dict[str, Any] = {
+        "idempotency_key": payload.get("idempotencyKey"),
+        "command": command,
+        "target": f"{project}/{req}",
+        "origin": "web",
+        "params": params,
+        "precondition": precondition,
+    }
+    if isinstance(confirmation, dict):
+        request["confirmation"] = {"challengeId": confirmation.get("challengeId"),
+                                   "typedReq": confirmation.get("typedReq")}
+    return request
+
+
+def _browser_event(event: dict[str, Any]) -> dict[str, Any] | None:
+    """Shape laptop event rows as the documented stable browser event contract."""
+    event_type = event.get("type", event.get("kind"))
+    if event_type not in {"attempt.failed", "attempt.blocked", "run.finished", "round.waiting", "plan.waiting",
+                          "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated"}:
+        return None
+    if all(key in event for key in ("schemaVersion", "id", "cursor", "occurredAt", "target", "data", "dedupeKey")):
+        return _camelize(event)
+    run = event.get("run", "")
+    project, separator, req = run.partition("/") if isinstance(run, str) else ("", "", "")
+    if not separator:
+        return None
+    occurred_at = event.get("occurredAt", event.get("occurred_at"))
+    identifier = event.get("id") or f"{run}/{event.get('ord', event.get('cursor', ''))}"
+    cursor = event.get("cursor", event.get("ord", identifier))
+    excluded = {"id", "cursor", "ord", "type", "kind", "occurredAt", "occurred_at", "run", "task", "attempt"}
+    target = {"kind": "run", "project": project, "req": req}
+    if isinstance(event.get("task"), str):
+        target["taskId"] = event["task"]
+    if isinstance(event.get("attempt"), str):
+        target["attemptId"] = event["attempt"]
+    return {"schemaVersion": 1, "id": str(identifier), "cursor": str(cursor), "type": event_type,
+            "occurredAt": occurred_at, "target": target,
+            "data": _camelize({key: value for key, value in event.items() if key not in excluded}),
+            "dedupeKey": str(event.get("dedupeKey", identifier))}
 
 
 class GatewayRuntime:
@@ -66,7 +151,7 @@ class GatewayRuntime:
             return
         generated_at = snapshot.get("generatedAt")
         with self._stream_condition:
-            self.snapshot_cache = dict(snapshot)
+            self.snapshot_cache = _camelize(snapshot)
             self.snapshot_cached_at = generated_at if isinstance(generated_at, str) else datetime.now(timezone.utc).isoformat()
             self._stream_condition.notify_all()
 
@@ -94,11 +179,32 @@ class GatewayRuntime:
 
     def relay_command(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         if self.liveness.status is LaptopStatus.OFFLINE:
-            return 410, {"code": "LAPTOP_OFFLINE", "message": "El portátil está desconectado."}
+            return 410, {"code": "LAPTOP_OFFLINE", "message": "El portátil está desconectado.",
+                         "idempotencyKey": payload.get("idempotencyKey")}
+        ledger_payload = _laptop_command(payload)
+        if not ledger_payload or not ledger_payload.get("idempotency_key"):
+            return 400, {"code": "INVALID_COMMAND", "message": "El comando remoto no es válido."}
         try:
-            return self.laptop.command(payload)
+            status, result = self.laptop.command(ledger_payload)
+            if "idempotency_key" in result:
+                result = {**result, "idempotencyKey": result.pop("idempotency_key")}
+            return status, result
         except UpstreamError:
-            return 503, {"code": "UNKNOWN_OUTCOME", "message": "No se pudo confirmar el resultado del comando."}
+            return 503, {"code": "UNKNOWN_OUTCOME", "message": "No se pudo confirmar el resultado del comando.",
+                         "idempotencyKey": payload.get("idempotencyKey")}
+
+    def relay_challenge(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            return 410, {"code": "LAPTOP_OFFLINE", "message": "El portátil está desconectado."}
+        target = payload.get("target")
+        if not isinstance(target, dict) or not isinstance(target.get("project"), str) \
+                or not isinstance(target.get("req"), str) or not isinstance(payload.get("typedReq"), str):
+            return 400, {"code": "INVALID_CHALLENGE", "message": "El desafío de confirmación no es válido."}
+        try:
+            return self.laptop.challenge({"target": f"{target['project']}/{target['req']}",
+                                          "typedReq": payload["typedReq"]})
+        except UpstreamError:
+            return 503, {"code": "UNKNOWN_OUTCOME", "message": "No se pudo confirmar el desafío."}
 
     def _notify_long_offline_with_active_run(self) -> None:
         offline_since = self.liveness.offline_since
@@ -134,6 +240,9 @@ class GatewayRuntime:
         for event in events:
             if not isinstance(event, dict):
                 continue
+            browser_event = _browser_event(event)
+            if browser_event is None:
+                continue
             stable_id = event.get("id") or event.get("cursor")
             if stable_id:
                 upstream_key = str(stable_id)
@@ -151,7 +260,7 @@ class GatewayRuntime:
                     self._seen_upstream_events.append(upstream_key)
                     self._seen_upstream_event_keys.add(upstream_key)
                 self._stream_sequence += 1
-                self._stream_events.append((self._stream_sequence, dict(event)))
+                self._stream_events.append((self._stream_sequence, browser_event))
                 self._stream_condition.notify_all()
             notification = notification_for_event(event)
             if notification:

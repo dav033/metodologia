@@ -64,7 +64,7 @@ class RequestGuardTests(unittest.TestCase):
     def test_command_rate_limit_rejects_the_thirty_first_request(self) -> None:
         headers = {"Origin": "https://flow.example.test", "X-Flow-Request": "1"}
         statuses = [self.request("POST", "/api/remote/v1/commands", headers)[0] for _ in range(31)]
-        self.assertEqual(statuses[:30], [404] * 30)
+        self.assertEqual(statuses[:30], [401] * 30)
         self.assertEqual(statuses[30], 429)
 
 

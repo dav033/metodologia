@@ -111,7 +111,7 @@ def make_handler(service: OAuthService, runtime=None) -> type[BaseHTTPRequestHan
                 self._json(403, {"error": "forbidden"})
                 return
             route = urlsplit(self.path)
-            if route.path == "/api/remote/v1/commands":
+            if route.path in {"/api/remote/v1/commands", "/api/remote/v1/challenges"}:
                 client_key = self.client_address[0]
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
@@ -140,7 +140,10 @@ def make_handler(service: OAuthService, runtime=None) -> type[BaseHTTPRequestHan
                 if not isinstance(command, dict):
                     self._json(400, {"error": "invalid request body"})
                     return
-                status, result = runtime.relay_command(command)
+                if route.path.endswith("/challenges"):
+                    status, result = runtime.relay_challenge(command)
+                else:
+                    status, result = runtime.relay_command(command)
                 self._json(status, result)
                 return
             self._json(404, {"error": "not found"})

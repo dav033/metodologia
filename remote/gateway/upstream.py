@@ -47,8 +47,14 @@ class LaptopClient:
         return self.get_json("/api/remote/v1/events?" + urlencode({"after": after, "limit": limit}))
 
     def command(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        return self.post_json("/api/remote/v1/commands", payload)
+
+    def challenge(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        return self.post_json("/api/remote/v1/challenges", payload)
+
+    def post_json(self, path: str, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        request = Request(self._origin + "/api/remote/v1/commands", data=body, headers={
+        request = Request(self._origin + path, data=body, headers={
             "Authorization": f"Bearer {self._key}", "Accept": "application/json",
             "Content-Type": "application/json",
         }, method="POST")

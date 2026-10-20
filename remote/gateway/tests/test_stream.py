@@ -30,7 +30,9 @@ class FakeLaptop:
 
     def snapshot(self):
         self.snapshot_calls += 1
-        return {"schemaVersion": 1, "runs": [{"run": "demo/REQ-001", "tasks": []}],
+        return {"schemaVersion": 1, "runs": [{"run": "demo/REQ-001", "tasks": [],
+                                               "active_task": {"id": "T1", "title": "Run task"},
+                                               "last_sign_of_life": "2026-10-19T11:59:00Z"}],
                 "plans": [{"req": "REQ-002", "status": "review"}],
                 "generatedAt": "2026-10-19T12:00:00Z", "cursor": "c-1"}
 
@@ -41,7 +43,7 @@ class FakeLaptop:
 
     def command(self, payload):
         self.commands.append(payload)
-        return 202, {"commandId": "cmd-1", "status": "accepted", "idempotencyKey": payload["idempotencyKey"]}
+        return 202, {"commandId": "cmd-1", "status": "accepted", "idempotency_key": payload["idempotency_key"]}
 
 
 class StreamEntryPointTests(unittest.TestCase):
@@ -117,8 +119,13 @@ class StreamEntryPointTests(unittest.TestCase):
         replay = self.read_event("0")
         self.assertIn("id: 1\n", replay)
         self.assertIn("event: flow\n", replay)
-        self.assertIn('"ord":"7"', replay)
+        self.assertIn('"cursor":"7"', replay)
+        self.assertIn('"type":"attempt.failed"', replay)
         self.assertIn('"text":"verification failed"', replay)
+        event_json = json.loads(next(line[6:] for line in replay.splitlines() if line.startswith("data: ")))
+        self.assertEqual(event_json["schemaVersion"], 1)
+        self.assertEqual(event_json["target"], {"kind": "run", "project": "demo", "req": "REQ-001", "taskId": "T1"})
+        self.assertEqual(event_json["data"]["text"], "verification failed")
         self.assertEqual(self.laptop.events_calls, 1)
 
     def test_offline_snapshot_keeps_laptop_generated_time_and_routes_match_laptop_shape(self):
@@ -132,6 +139,8 @@ class StreamEntryPointTests(unittest.TestCase):
         self.assertEqual(snapshot["generatedAt"], "2026-10-19T12:00:00Z")
         self.assertEqual(snapshot["laptopStatus"], "offline")
         self.assertEqual(snapshot["runs"][0]["run"], "demo/REQ-001")
+        self.assertEqual(snapshot["runs"][0]["activeTask"], {"id": "T1", "title": "Run task"})
+        self.assertEqual(snapshot["runs"][0]["lastSignOfLife"], "2026-10-19T11:59:00Z")
 
         status, runs = self.request_json("/api/remote/v1/runs")
         self.assertEqual(status, 200)
@@ -151,13 +160,15 @@ class StreamEntryPointTests(unittest.TestCase):
         self.assertEqual(self.laptop.events_calls, 1)
 
     def test_panel_command_route_relays_the_laptop_command_shape(self):
-        command = {"schemaVersion": 1, "idempotencyKey": "client-key-1", "command": "pause",
+        command = {"schemaVersion": 1, "idempotencyKey": "client-key-1", "type": "pause",
                    "target": {"kind": "run", "project": "demo", "req": "REQ-001"},
-                   "precondition": {"status": "running"}}
+                   "precondition": {"state": "running"}}
         status, result = self.request_command(command)
         self.assertEqual(status, 202)
         self.assertEqual(result["commandId"], "cmd-1")
-        self.assertEqual(self.laptop.commands, [command])
+        self.assertEqual(self.laptop.commands, [{"idempotency_key": "client-key-1", "command": "pause",
+                                                 "target": "demo/REQ-001", "origin": "web", "params": {},
+                                                 "precondition": {"state": "running"}}])
 
 
 if __name__ == "__main__":
