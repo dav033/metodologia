@@ -83,6 +83,8 @@ class QualityPolicy:
     max_processes: int = 512
     toolchain: bool = True  # mount the operator's Node install, Playwright browsers and the attempt's node_modules
     provision_dependencies: bool = True  # an attempt with no node_modules gets the lockfile's, installed offline
+    network: bool = True  # checks share the host network (live services, a database); False = no network at all
+    allow_production_actions: bool = True  # checks may run deploy/migrate-style commands; False = operator review
     environment: tuple[tuple[str, str], ...] = ()
     secret_values: tuple[str, ...] = ()
     require_independent_review: bool = False
@@ -160,6 +162,8 @@ def _validate_policy_controls(policy: QualityPolicy) -> None:
         raise TypeError("review policy must be boolean")
     if not isinstance(policy.toolchain, bool):
         raise TypeError("toolchain flag must be boolean")
+    if not isinstance(policy.network, bool) or not isinstance(policy.allow_production_actions, bool):
+        raise TypeError("network and production-action flags must be boolean")
 
 
 def _validate_policy_secrets(policy: QualityPolicy) -> None:
@@ -242,22 +246,22 @@ def compile_verification(
             "CHECK_UNSUPPORTED", "verification command contains a configured secret"
         )
     return tuple(
-        _compile_item(item, index, root)
+        _compile_item(item, index, root, policy.allow_production_actions)
         for index, item in enumerate(order.verification, start=1)
     )
 
 
-def _compile_item(item: VerificationSpec, index: int, root: Path) -> CheckSpec:
+def _compile_item(item: VerificationSpec, index: int, root: Path, production_allowed: bool = False) -> CheckSpec:
     check_id = f"CHECK-{index:03d}"
     if item.kind == "manual":
         return CheckSpec(
             check_id, "manual", item.value, (), ".", item.purpose, item.expected
         )
-    argv, cwd = _parse_command(item.value, root)
+    argv, cwd = _parse_command(item.value, root, production_allowed)
     return CheckSpec(check_id, "command", item.value, argv, cwd, item.purpose)
 
 
-def _parse_command(command: str, root: Path) -> tuple[tuple[str, ...], str]:
+def _parse_command(command: str, root: Path, production_allowed: bool = False) -> tuple[tuple[str, ...], str]:
     if any(char in FORBIDDEN_COMMAND_CHARS for char in command):
         raise QualityError("CHECK_UNSUPPORTED", "command contains shell syntax")
     try:
@@ -293,7 +297,7 @@ def _parse_command(command: str, root: Path) -> tuple[tuple[str, ...], str]:
         or len(tokens) > 256
     ):
         raise QualityError("CHECK_UNSUPPORTED", "command exceeds argument bounds")
-    if _requires_operator_review(tokens):
+    if not production_allowed and _requires_operator_review(tokens):
         raise QualityError(
             "CHECK_PRODUCTION_ACTION",
             "verification requests a deployment or migration action",

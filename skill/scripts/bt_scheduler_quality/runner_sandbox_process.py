@@ -242,6 +242,19 @@ def _mount_arguments(policy: QualityPolicy, mounts: tuple[Mount, ...]) -> list[s
     return arguments
 
 
+NETWORK_ETC = ("/etc/resolv.conf", "/etc/hosts", "/etc/nsswitch.conf", "/etc/ssl", "/etc/ca-certificates")
+
+
+def _network_arguments(policy: QualityPolicy) -> list[str]:
+    """With `policy.network` the check shares the host network and sees what name resolution and TLS need."""
+    if not policy.network:
+        return []
+    arguments = ["--share-net"]
+    for path in NETWORK_ETC:
+        arguments += ["--ro-bind-try", path, path]
+    return arguments
+
+
 def _sandbox_command(
     policy: QualityPolicy,
     source_fd: int,
@@ -252,6 +265,7 @@ def _sandbox_command(
     return [
         policy.bubblewrap_binary,
         "--unshare-all",
+        *_network_arguments(policy),
         "--die-with-parent",
         "--new-session",
         "--clearenv",

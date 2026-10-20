@@ -29,6 +29,12 @@ DEFAULTS: dict = {
     # these severities left open reject it and send the tasks they name back (at most `max_reworks` times per task, then
     # the owner decides); with `audit_ledger_required` off, an audit that declares no ledger (a plan written before the
     # gate) is accepted on M6's verdict alone and the skip is recorded in the run's audit trail.
+    # verifier: what the independent checks (M6) may do. They run in a sandbox on the host network by default (live
+    # services, a database); `network` off makes them offline. `allow_production_actions` lets a check run
+    # deploy/migrate-style commands; off, they need operator review.
+    # `env_file`: a dotenv file kept outside the repositories whose variables the checks receive (a database URL, an API
+    # key); the sandbox otherwise starts with an empty environment. Values are redacted from every output.
+    "verifier": {"network": True, "allow_production_actions": True, "env_file": ""},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
               # a verified result that could not be combined with the accepted work around it (the tasks about to start

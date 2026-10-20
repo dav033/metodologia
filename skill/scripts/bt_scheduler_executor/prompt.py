@@ -18,8 +18,8 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
     parts.append(f"\n## Acceptance criteria\n{bullets(brief.acceptance_criteria or request.acceptance_criteria)}")
     if brief.verification:
         parts.append(f"\n## How the work will be checked (by someone else)\n{bullets(brief.verification)}\n\n"
-                     "The checks run from a clean copy of your final worktree: tracked and untracked files, nothing git-ignored, "
-                     "no network, no running server. A script or test that these commands name and the repository does not "
+                     "The checks run from a clean copy of your final worktree: tracked and untracked files, nothing git-ignored "
+                     "(so no `.env` and none of your shell's variables), with network access but no running server of yours. A script or test that these commands name and the repository does not "
                      "have yet is yours to create, and every command must pass on your final files. Installed dependencies "
                      "(`node_modules`) are mounted read-only: a check or test that runs `npm install`/`npm ci` or writes "
                      "inside `node_modules` fails there, so a test must use what is installed and write build output "

@@ -60,7 +60,7 @@ class SandboxRunner:
                     raise QualityError(
                         "CHECK_MANUAL", "manual verification requires an operator"
                     )
-                parsed_argv, parsed_cwd = _parse_command(check.command, root)
+                parsed_argv, parsed_cwd = _parse_command(check.command, root, self.policy.allow_production_actions)
                 if parsed_argv != check.argv or parsed_cwd != check.cwd:
                     raise QualityError(
                         "CHECK_UNSUPPORTED",

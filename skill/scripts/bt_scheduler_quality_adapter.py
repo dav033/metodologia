@@ -448,8 +448,8 @@ class QualityVerificationPort:
                    "check yourself; do not edit configuration to avoid the import.\n\n"
                    if re.search(r"MODULE_NOT_FOUND|Cannot find (?:module|package)|No module named|ModuleNotFoundError", text)
                    else "")
-        return (missing + "The independent verification of your previous attempt failed. The checks run in a sandbox: no network, "
-                "`node_modules` mounted read-only, a clean copy of your final files. Fix the cause shown here before "
+        return (missing + "The independent verification of your previous attempt failed. The checks run in a sandbox: "
+                "`node_modules` mounted read-only, a clean copy of your final files, none of your environment variables. Fix the cause shown here before "
                 "anything else:\n\n" + "\n\n".join(blocks))
 
     def _write_verify_note(self, order: VerifyRequest, result) -> None:

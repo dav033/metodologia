@@ -13,6 +13,22 @@ from bt_scheduler_quality.sandbox_mounts import attempt_mounts
 
 
 class SandboxRunnerTests(unittest.TestCase):
+    def test_a_check_shares_the_host_network_when_the_policy_allows_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "probe.py").write_text(
+                "import os, socket, sys\n"
+                "names = {name for _, name in socket.if_nameindex()}\n"
+                "sys.exit(0 if names - {'lo'} and os.path.exists('/etc/resolv.conf') else 6)\n",
+                encoding="utf-8",
+            )
+            shared = SandboxRunner(QualityPolicy()).run(_check("probe.py"), root)
+            offline = SandboxRunner(QualityPolicy(network=False)).run(_check("probe.py"), root)
+
+        self.assertEqual((shared.status, shared.exit_code), ("pass", 0))
+        self.assertNotIn("net", {name for name, _ in shared.namespace_ids})
+        self.assertEqual((offline.status, offline.exit_code), ("fail", 6))        # only the loopback inside
+
     def test_runs_in_a_real_sandbox_without_host_home_or_network(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -28,7 +44,7 @@ class SandboxRunnerTests(unittest.TestCase):
                 encoding="utf-8",
             )
             check = _check("probe.py")
-            policy = QualityPolicy(environment=(("M6_APPROVED", "yes"),))
+            policy = QualityPolicy(environment=(("M6_APPROVED", "yes"),), network=False)
 
             result = SandboxRunner(policy).run(check, root)
 
@@ -188,6 +204,7 @@ class SandboxRunnerTests(unittest.TestCase):
             (snap / "package-lock.json").write_text('{"v":2}', encoding="utf-8")
             changed = attempt_mounts(policy, worktree, repo, snap)
             (worktree / "node_modules").mkdir()
+            (worktree / "node_modules" / ".package-lock.json").write_text("{}", encoding="utf-8")   # a finished install
             own = attempt_mounts(policy, worktree, repo, snap)
 
         self.assertEqual([m.source for m in shared], [str((repo / "node_modules").resolve())])

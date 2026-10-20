@@ -183,6 +183,7 @@ py-modules = [
   "bt_subscriptions",
   "bt_trace",
   "bt_vcs",
+  "bt_verifier_env",
   "bt_views",
   "bt_watch",
   "bt_workspace",

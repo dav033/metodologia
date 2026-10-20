@@ -94,7 +94,16 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
     if quality_path is not None:
         from bt_scheduler_quality.policy import QualityPolicy
 
-        quality_runtime_policy = QualityPolicy(**dict(quality_policy or {}))
+        import bt_config
+
+        configured = {key: bt_config.get(f"verifier.{key}", True) for key in ("network", "allow_production_actions")}
+        import bt_verifier_env
+
+        environment, secrets = bt_verifier_env.load(bt_config.get("verifier.env_file", ""))
+        quality_runtime_policy = QualityPolicy(**{**{k: v for k, v in configured.items() if isinstance(v, bool)},
+                                                  **({"environment": environment, "secret_values": secrets}
+                                                     if environment else {}),
+                                                  **dict(quality_policy or {})})
     if m2_ledger is not None and m2_lookup is None:
         m2_lookup = api.m2_ledger_lookup(m2_ledger)
     port = api.CoreExecutionPort(None, api.sched.approved_plan(rdir), project=project, base_ref=base_ref,

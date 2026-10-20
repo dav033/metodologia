@@ -206,6 +206,17 @@ class QualityEngineTests(unittest.TestCase):
         self.assertIn("CHECK_UNSUPPORTED", {item["code"] for item in result["issues"]})
         self.assertEqual(runner.calls, [])
 
+    def test_deploy_style_commands_run_by_default_and_wait_for_review_when_the_policy_says_so(self):
+        from bt_scheduler_quality.contracts import QualityError
+        from bt_scheduler_quality.policy import _parse_command
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.assertEqual(_parse_command("npm run asesor:migrate", root, QualityPolicy().allow_production_actions)[0][:2],
+                             ("npm", "run"))
+            with self.assertRaises(QualityError):
+                _parse_command("npm run asesor:migrate", root, False)
+
     def test_production_deployment_or_migration_stays_for_operator_review(self):
         for command in ("npm run deploy:production", "alembic upgrade head"):
             with (
@@ -218,7 +229,7 @@ class QualityEngineTests(unittest.TestCase):
                 runner = ScriptedRunner()
                 with QualityStore(":memory:") as store:
                     result = QualityEngine(
-                        QualityPolicy(), store, runner=runner
+                        QualityPolicy(allow_production_actions=False), store, runner=runner
                     ).verify(self.raw, source)
 
             self.assertEqual(result["status"], "NEEDS_REVIEW")

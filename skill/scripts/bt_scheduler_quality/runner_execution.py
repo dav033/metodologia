@@ -181,7 +181,7 @@ class SandboxExecution:
             info_value = json.loads(state.info_buffer.decode("utf-8"))
         except (UnicodeDecodeError, ValueError):
             return
-        namespaces = _validate_namespaces(info_value)
+        namespaces = _validate_namespaces(info_value, self.policy.network)
         if not namespaces:
             state.sandbox_failed = True
             _terminate(session.process)
@@ -315,11 +315,13 @@ class SandboxExecution:
         )
 
 
-def _validate_namespaces(value: object) -> tuple[tuple[str, int], ...]:
+def _validate_namespaces(value: object, shared_network: bool = False) -> tuple[tuple[str, int], ...]:
     if not isinstance(value, dict):
         return ()
     found: list[tuple[str, int]] = []
     for name, field_name in NAMESPACE_FIELDS.items():
+        if name == "net" and shared_network:
+            continue                       # the policy lets checks use the host network: nothing to prove here
         namespace_id = value.get(field_name)
         if not isinstance(namespace_id, int) or isinstance(namespace_id, bool):
             return ()

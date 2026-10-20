@@ -206,6 +206,13 @@ package stores private durable evidence, runs commands in the required bubblewra
 verdicts through M1. `NEEDS_REVIEW` creates a durable review item and leaves M1 in `VERIFYING`; an Ack means admission,
 not acceptance. The M6 package imports no methodology module.
 
+- Sandbox policy (config `verifier.*`, D-095): checks share the host network by default (`QualityPolicy.network`, so live
+  services and a database are reachable; name resolution and TLS files are mounted read-only) and may run deploy/migrate-style
+  commands (`allow_production_actions`); either off restores the old offline / operator-review behaviour. The sandbox starts with an
+  empty environment: `verifier.env_file` names a dotenv file outside the repositories whose variables the checks receive
+  (`bt_verifier_env`; secret-looking values are registered for redaction). A check is one program per verification: shell
+  syntax (`&&`, `|`, `;`) is rejected, only a leading `cd <dir> &&` is allowed; the plan check warns about it.
+
 - Adapter: `skill/scripts/bt_scheduler_quality_adapter.py` reaches M1 and M3 public types only through
   `bt_scheduler_adapter` and `bt_scheduler_executor_adapter`. It admits work to M6, validates the exact approved plan
   and M3 handoff, and delivers the versioned verdict through M1's existing port.
