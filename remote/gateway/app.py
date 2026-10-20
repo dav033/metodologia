@@ -27,6 +27,13 @@ class CommandRelayError(RuntimeError):
         self.idempotency_key = idempotency_key
 
 
+class ChallengeRelayError(RuntimeError):
+    def __init__(self, status: int, code: str, message: str):
+        super().__init__(message)
+        self.status = status
+        self.code = code
+
+
 class GatewayRuntime:
     def __init__(self, config: GatewayConfig, laptop: Any | None = None, sender: Any | None = None):
         self.config = config
@@ -122,7 +129,49 @@ class GatewayRuntime:
 
     def submit_command(self, value: object) -> tuple[int, dict[str, Any]]:
         command = validate_command(value)
-        return self._relay_command(command)
+        return self._relay_command(self._web_command(command))
+
+    @staticmethod
+    def _web_command(command: dict[str, Any]) -> dict[str, Any]:
+        target = command["target"]
+        params = {
+            key: value for key, value in command.items()
+            if key not in {"schemaVersion", "idempotencyKey", "type", "target", "precondition", "confirmation"}
+        }
+        if target.get("taskId"):
+            params.setdefault("task", target["taskId"])
+        if target.get("attemptId"):
+            params.setdefault("attempt", target["attemptId"])
+        confirmation = command.get("confirmation")
+        ledger_command: dict[str, Any] = {
+            "idempotency_key": command["idempotencyKey"],
+            "command": command["type"],
+            "target": f"{target['project']}/{target['req']}",
+            "origin": "web",
+            "params": params,
+            "precondition": command["precondition"],
+        }
+        if isinstance(confirmation, dict):
+            ledger_command["confirmation"] = {
+                "challenge_id": confirmation.get("challengeId"),
+                "typed_req": confirmation.get("typedReq"),
+            }
+            if command["type"] == "edit-brief":
+                ledger_command["params"]["typed_req"] = confirmation.get("typedReq")
+        return ledger_command
+
+    def issue_challenge(self, value: object) -> tuple[int, dict[str, Any]]:
+        if (not isinstance(value, dict) or set(value) != {"target", "typedReq"}
+                or not isinstance(value.get("target"), str) or not isinstance(value.get("typedReq"), str)):
+            raise CommandValidationError("INVALID_CHALLENGE", "Challenge target and typedReq are required")
+        try:
+            return self.laptop.issue_challenge({"target": value["target"], "typedReq": value["typedReq"]})
+        except UpstreamResponseError as exc:
+            code = exc.payload.get("code")
+            safe_code = code if isinstance(code, str) and code in {"INVALID_CHALLENGE", "CHALLENGES_UNAVAILABLE"} else "CHALLENGE_REJECTED"
+            raise ChallengeRelayError(exc.status, safe_code, "Laptop rejected the challenge") from exc
+        except (UpstreamTimeout, UpstreamError) as exc:
+            raise ChallengeRelayError(503, "UNKNOWN_OUTCOME", "Challenge outcome is unknown") from exc
 
     def submit_telegram_command(self, value: object) -> tuple[int, dict[str, Any]]:
         command = validate_command(value)

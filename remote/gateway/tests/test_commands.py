@@ -18,6 +18,7 @@ from upstream import UpstreamTimeout
 class FakeLaptop:
     def __init__(self) -> None:
         self.command_calls: list[dict[str, object]] = []
+        self.challenge_calls: list[dict[str, object]] = []
         self.command_error: Exception | None = None
 
     def health(self):
@@ -33,7 +34,11 @@ class FakeLaptop:
         self.command_calls.append(command)
         if self.command_error:
             raise self.command_error
-        return 202, {"commandId": "command-1", "status": "accepted", "idempotencyKey": command["idempotencyKey"]}
+        return 202, {"commandId": "command-1", "status": "accepted", "idempotencyKey": command["idempotency_key"]}
+
+    def issue_challenge(self, challenge):
+        self.challenge_calls.append(challenge)
+        return 201, {"challengeId": "challenge-token-1234", "target": challenge["target"], "expiresIn": 120}
 
 
 class CommandRelayTests(unittest.TestCase):
@@ -81,6 +86,37 @@ class CommandRelayTests(unittest.TestCase):
         body = response.read()
         return response.status, response.getheader("Content-Type"), json.loads(body)
 
+    def get(self, path: str):
+        self.connection.request("GET", path, headers=self.headers)
+        response = self.connection.getresponse()
+        body = response.read()
+        return response.status, dict(response.getheaders()), body
+
+    def test_displayed_sign_in_and_logout_routes_work_at_http_entrypoint(self) -> None:
+        status, headers, _body = self.get("/api/auth/github")
+        self.assertEqual(status, 302)
+        self.assertIn("github.com/login/oauth/authorize", headers["Location"])
+
+        status, headers, _body = self.get("/api/auth/logout")
+        self.assertEqual(status, 302)
+        self.assertIn("flow_session=;", headers["Set-Cookie"])
+        self.assertIsNone(self.oauth_store_login())
+
+    def oauth_store_login(self):
+        from auth import SessionStore
+        return SessionStore(self.oauth.database_path, self.oauth.session_secret).get_session(self.session)
+
+    def test_authenticated_challenge_request_reaches_laptop_ledger(self) -> None:
+        self.connection.request(
+            "POST", "/api/remote/v1/challenges", json.dumps({"target": "demo/REQ-027", "typedReq": "REQ-027"}), self.headers
+        )
+        response = self.connection.getresponse()
+        body = json.loads(response.read())
+
+        self.assertEqual(response.status, 201)
+        self.assertEqual(body["challengeId"], "challenge-token-1234")
+        self.assertEqual(self.laptop.challenge_calls, [{"target": "demo/REQ-027", "typedReq": "REQ-027"}])
+
     @staticmethod
     def command(command_type: str = "pause") -> dict[str, object]:
         return {
@@ -107,7 +143,29 @@ class CommandRelayTests(unittest.TestCase):
 
         self.assertEqual(status, 202)
         self.assertEqual(body["status"], "accepted")
-        self.assertEqual(self.laptop.command_calls, [command])
+        self.assertEqual(self.laptop.command_calls, [{
+            "idempotency_key": "command-key-000001",
+            "command": "approve",
+            "target": "demo/REQ-027",
+            "origin": "web",
+            "params": {},
+            "precondition": {"state": "running"},
+            "confirmation": {"challenge_id": "challenge-token-1234", "typed_req": "REQ-027"},
+        }])
+
+    def test_public_command_is_adapted_to_ledger_contract(self) -> None:
+        status, _content_type, body = self.post(self.command())
+
+        self.assertEqual(status, 202)
+        self.assertEqual(body["status"], "accepted")
+        self.assertEqual(self.laptop.command_calls, [{
+            "idempotency_key": "command-key-000001",
+            "command": "pause",
+            "target": "demo/REQ-027",
+            "origin": "web",
+            "params": {},
+            "precondition": {"state": "running"},
+        }])
 
     def test_offline_laptop_refuses_command_without_queueing(self) -> None:
         for _ in range(3):

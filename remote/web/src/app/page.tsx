@@ -30,6 +30,8 @@ function record(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 
+const mutationHeaders = { "content-type": "application/json", "X-Flow-Request": "1" };
+
 function text(value: unknown): value is string { return typeof value === "string"; }
 function field(source: Record<string, unknown>, camel: string, snake: string): unknown { return source[camel] ?? source[snake]; }
 
@@ -274,14 +276,14 @@ export default function HomePage() {
     try {
       const confirmation = record(command.confirmation);
       if (confirmation && text(confirmation.typedReq)) {
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json" },
+        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: mutationHeaders,
           body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmation.typedReq }) });
         const challengeBody: unknown = await challengeResponse.json().catch(() => null);
         const challenge = record(challengeBody);
         if (!challengeResponse.ok || !text(challenge?.challengeId)) throw new Error(text(record(challengeBody)?.message) ? String(record(challengeBody)?.message) : "No se pudo obtener la confirmación del gateway.");
         command.confirmation = { challengeId: challenge.challengeId, typedReq: confirmation.typedReq };
       }
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(command) });
+      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: mutationHeaders, body: JSON.stringify(command) });
       const responseBody: unknown = await response.json().catch(() => null);
       if (!response.ok) {
         const problem = record(responseBody);
