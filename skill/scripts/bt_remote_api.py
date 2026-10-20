@@ -132,6 +132,25 @@ def route_get(handler) -> None:
     return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
 
 
+HANDLERS: dict = {}     # command -> handler(target, params); filled by the dispatch layer (T5a/T5b)
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501, "STALE_PRECONDITION": 409,
+                   "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409, "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503}
+
+
+def _target_state(target: str) -> dict | None:
+    return None     # replaced by the dispatch layer; an unreadable target never satisfies a precondition
+
+
+def _submit_command(handler, length: int) -> None:
+    import bt_remote_commands as commands
+    try:
+        request = json.loads(handler.rfile.read(length) or b"null")
+    except (ValueError, OSError):
+        return _problem(handler, 400, "INVALID_COMMAND", "El cuerpo debe ser JSON válido.")
+    result = commands.Ledger().submit(request, HANDLERS, _target_state)
+    _json(handler, result, _COMMAND_STATUS.get(result.get("code") or result["status"], 200))
+
+
 def route_post(handler) -> None:
     if not _authorized(handler):
         return _problem(handler, 401, "UNAUTHORIZED", "Se requiere la clave del gateway.")
@@ -145,7 +164,7 @@ def route_post(handler) -> None:
             return _problem(handler, 400, "INVALID_COMMAND", "Longitud de solicitud no válida.")
         if length > MAX_BODY:
             return _problem(handler, 413, "BODY_TOO_LARGE", "La solicitud excede el tamaño permitido.")
-        return _problem(handler, 503, "COMMANDS_UNAVAILABLE", "El registro de comandos aún no está disponible.")
+        return _submit_command(handler, length)
     if path == f"{PREFIX}/challenges":
         return _problem(handler, 503, "CHALLENGES_UNAVAILABLE", "Los desafíos aún no están disponibles.")
     return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")

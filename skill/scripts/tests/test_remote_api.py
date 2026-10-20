@@ -89,7 +89,7 @@ class RemoteApiTests(unittest.TestCase):
             ("GET", "/api/remote/v1/attempts/attempt-1/review", 503),
             ("GET", "/api/remote/v1/quotas", 503),
             ("GET", "/api/remote/v1/commands", 503),
-            ("POST", "/api/remote/v1/commands", 503),
+            ("POST", "/api/remote/v1/commands", 400),
             ("GET", "/api/remote/v1/runs", 200),
             ("GET", "/api/remote/v1/plans", 200),
             ("GET", "/api/remote/v1/history", 503),
