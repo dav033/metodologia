@@ -1,0 +1,149 @@
+{
+  "schema": "forensic-conflict-observation/1",
+  "captured_at": "2026-10-20T21:21:57.957516+00:00",
+  "req": "REQ-027",
+  "revision": 9,
+  "decision": "T15a:8",
+  "max_reworks": 2,
+  "task_chain": [
+    {
+      "id": "T3",
+      "after": [
+        "T2"
+      ],
+      "expected_paths": [
+        "remote/docs/contract.md",
+        "remote/docs/architecture.md",
+        "remote/contract/**"
+      ]
+    },
+    {
+      "id": "T15",
+      "after": [
+        "T3"
+      ],
+      "expected_paths": [
+        "remote/web/**"
+      ]
+    },
+    {
+      "id": "T15a",
+      "after": [
+        "T15"
+      ],
+      "expected_paths": [
+        "remote/web/**"
+      ]
+    },
+    {
+      "id": "T15b",
+      "after": [
+        "T15a"
+      ],
+      "expected_paths": [
+        "remote/web/**"
+      ]
+    },
+    {
+      "id": "T15c",
+      "after": [
+        "T15b",
+        "T7"
+      ],
+      "expected_paths": [
+        "remote/web/**"
+      ]
+    }
+  ],
+  "reworks": {
+    "T6": 3,
+    "T7": 0,
+    "T15a": 1,
+    "T15b": 2
+  },
+  "attempts": [
+    {
+      "attempt": "att-0130",
+      "task": "T3",
+      "state": "accepted",
+      "source_manifest": "bitacora/.state/executor/metodologia-REQ-027-r7-17522cd6-1792439172092/attempts/att-0130-7566aace6ede8836/handoff/manifest.json",
+      "manifest_sha256": "e658e63f1d0ee5ff188c6c8330f13ff46287b170283e904d6864615e4e970829",
+      "base_sha": "cd42bd381ddbae74aac9b8fabb0870133e612a58",
+      "snapshot_sha": "5f5eb8992add64332e737bbead83ebc36b78dee0",
+      "changed_paths": [
+        "remote/contract/command.schema.json",
+        "remote/docs/contract.md",
+        "skill/scripts/bt_server.py",
+        "skill/scripts/tests/test_remote_listener.py"
+      ],
+      "outside_declared_web": null
+    },
+    {
+      "attempt": "att-0142",
+      "task": "T15b",
+      "state": "accepted",
+      "source_manifest": "bitacora/.state/executor/metodologia-REQ-027-r7-17522cd6-1792439172092/attempts/att-0142-e3672dbcad582706/handoff/manifest.json",
+      "manifest_sha256": "6288a3d9e064590c2dc81a62031753466282fb1e12035903d4c5c57d8cbb4aa6",
+      "base_sha": "f5e5a89a07a162083be78f98413f6e5c2d747593",
+      "snapshot_sha": "9f5ab702d6c0786579e3ac8c87e75857c08f4cb5",
+      "changed_paths": [
+        "remote/web/mocks/gateway.mjs",
+        "remote/web/src/app/page.tsx",
+        "remote/web/tests/panel-browser.test.mjs"
+      ],
+      "outside_declared_web": []
+    },
+    {
+      "attempt": "att-0204",
+      "task": "T15",
+      "state": "accepted",
+      "source_manifest": "bitacora/.state/executor/metodologia-REQ-027-r9-e2d7030f-1792439172092/attempts/att-0204-bfc872a4a37a8894/handoff/manifest.json",
+      "manifest_sha256": "275ebd04b5c0d6dbf2bfd5a1ee1decbee07b3876c82f7cc38332aae496960de0",
+      "base_sha": "5f5eb8992add64332e737bbead83ebc36b78dee0",
+      "snapshot_sha": "ee9651bd70c4d00752a406be434d107634ef0e67",
+      "changed_paths": [
+        "remote/web/.env.example",
+        "remote/web/.gitignore",
+        "remote/web/README.md",
+        "remote/web/eslint.config.mjs",
+        "remote/web/mocks/fixtures/snapshot.json",
+        "remote/web/mocks/gateway.mjs",
+        "remote/web/next-env.d.ts",
+        "remote/web/next.config.ts",
+        "remote/web/package-lock.json",
+        "remote/web/package.json",
+        "remote/web/postcss.config.mjs",
+        "remote/web/public/apple-icon.svg",
+        "remote/web/public/fonts/JetBrainsMono-400-latin.woff2",
+        "remote/web/public/fonts/Manrope-400-latin.woff2",
+        "remote/web/public/icon.svg",
+        "remote/web/public/manifest.webmanifest",
+        "remote/web/src/app/globals.css",
+        "remote/web/src/app/layout.tsx",
+        "remote/web/src/app/page.tsx",
+        "remote/web/tests/mock-gateway.test.mjs",
+        "remote/web/tests/scaffold.test.mjs",
+        "remote/web/tsconfig.json"
+      ],
+      "outside_declared_web": []
+    },
+    {
+      "attempt": "att-0208",
+      "task": "T15a",
+      "state": "rejected",
+      "source_manifest": "bitacora/.state/executor/metodologia-REQ-027-r9-e2d7030f-1792439172092/attempts/att-0208-911a6344be4e13b3/handoff/manifest.json",
+      "manifest_sha256": "bd23bcccf87d08c8bec86cbf2ef89d73bb16a9469053fdcebcc5a25792ee592b",
+      "base_sha": "2042712ff0a27bacca9a644c9855f61da268b47e",
+      "snapshot_sha": "4b65b6ed88bdfdafe5ec4ff6a0cd6f70083a44c2",
+      "changed_paths": [
+        "remote/web/tests/login-runs-browser.test.mjs"
+      ],
+      "outside_declared_web": []
+    }
+  ],
+  "current_T15_is_ancestor_of_T15b_base": false,
+  "limitations": [
+    "M3 source manifests were hashed and git base-to-snapshot diffs read; this capture is forensic context, not independent behavioral acceptance.",
+    "Current integration gate clips the complete conflict list; no completeness claim for the abbreviated error."
+  ]
+}

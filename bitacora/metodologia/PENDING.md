@@ -8,6 +8,7 @@ month summary._
 
 ## Open
 - P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/start`, and put `TELEGRAM_BOT_TOKEN` in `~/.config/flow/secrets.env` (template exists, mode 600, empty); the OAuth App is created by the agent in its Firefox unless GitHub asks for 2FA/sudo mode · urgency: high · complexity: S · added 2026-10-19 · D-082
+- ✓ P-137 · closed 2026-10-20 · Owner approved reviewed REQ-029 r2; frozen/rebased, T1–T3 preserved and T3a running. D-103.
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin = GitHub, 778 bitácora files already on `origin/main`), so a push is the backup; BUT the repo is PUBLIC (checked 2026-10-14 with `gh`) while these notes called it private: owner decision 2026-10-14: no push for now; SUPERSEDED 2026-10-19: owner said push everything to main and keep the repo public (pushed de0576f) · urgency: high · complexity: M · added 2026-10-13 · user: "tenemos un problema" (GitHub review)
   - Context: since remote commit `4cfd74f` the bitácora lives outside the repo (D-007). Its legacy history reached GitHub with `a67371f`. The silent push failure no longer applies, because nothing pushes the live copy.
   - Options: (1) a private remote for `~/bitacora` with `push_async` plus a push-failure log (`.state/push.log`, warning at SessionStart), the approved fix; (2) local git plus a scheduled backup; (3) no sync, single machine. The session-end commit creates a local git repo in `~/bitacora` (`ensure_repo`).

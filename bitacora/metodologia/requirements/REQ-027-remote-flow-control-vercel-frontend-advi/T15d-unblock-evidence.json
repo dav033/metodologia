@@ -1,0 +1,21 @@
+{
+  "candidate_task": "T15d",
+  "candidate_attempt": "att-0216",
+  "method": "PredecessorIntegrator.would_conflict against bound revision 9, real captured executor snapshots and accepted M1 task map; only in-memory removal of conflicting accepted downstream results; no source, index or worktree edits",
+  "before_initial_rework": "T15d vs T15f for T15f",
+  "after_initial_rework": [
+    "T15d vs T18.2 for T18.2",
+    "T15d vs T18.3 for T18.3",
+    "T15d vs T18.5 for T18.5",
+    "T15d vs T18.6 for T18.6"
+  ],
+  "after_all_identified_reworks": "NO CONFLICT",
+  "applied_rework": [
+    "T15f",
+    "T18.2",
+    "T18.3",
+    "T18.5",
+    "T18.6"
+  ],
+  "limitation": "This proves the known prior snapshot no longer hits the observed stale downstream integration obstacle. The new candidate and all rebuilt tasks still require independent verification; it is not a guarantee against other failures."
+}

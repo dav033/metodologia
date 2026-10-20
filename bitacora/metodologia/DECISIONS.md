@@ -926,3 +926,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Alternatives:** Re-record requirements after every task-status update (causes approval churn); exclude the whole PLAN.md status section (too broad); stop Scheduler status projection (loses useful read-model visibility).
 - **Consequences:** + Scheduler progress no longer revokes unchanged requirements approval / − correctness depends on the status block retaining its reserved exact markers.
 - **Source:** [day log](../../dev/2026-10/W4/2026-10-20.md) · REQ-029
+
+## D-103 — Approve structural recovery r2 and temporarily unblock REQ-027
+- **Date:** 2026-10-20 · **Status:** Accepted
+- **Context:** Existing ordered REQ-027 lineage repeatedly rejects T15a against stale accepted T15b after ordinary rework exhaustion. Owner approved the independently reviewed REQ-029 r2 amendment and explicitly requested T15a unblocked concurrently with Pictures REQ-020.
+- **Decision:** Execute the reviewed 24-task r2 through Scheduler, preserving accepted T1–T3. Automatic future structural recovery requires full evidence, scoped convergence, preserved counters, both-side proof and independent audit. Separately authorize one supported owner-operated T15b-only rework and reopen T15a now; this interim owner intervention is not proof of automatic recovery. Keep REQ-020 running. No relay or continuous coordinator log monitoring.
+- **Alternatives:** Unchanged T15a retry retains the stale conflict; waiting for the complete upgrade delays current work.
+- **Consequences:** + Current tasks can progress while the system upgrade runs / − owner-operated rework grants a fresh ordinary budget for T15b; the future automated path must preserve exhausted counters.
+- **Rollback:** Stop/hold via Scheduler; preserve frozen revisions, snapshots and audit history. No product-code rollback or deletion is authorized by this ruling.
+- **Source:** Owner chat approval and unblock request; conflict-amendment/REVIEW.md and DELTA.md.

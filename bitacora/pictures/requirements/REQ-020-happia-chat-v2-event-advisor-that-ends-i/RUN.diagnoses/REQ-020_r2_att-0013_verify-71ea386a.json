@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0013:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T7 necesita revisión humana: sus criterios solo tienen comprobación manual.",
+ "origin": "El verificador no puede dar veredicto porque los criterios de T7 dependen de dos comprobaciones que solo puede hacer una persona: la ejecución en vivo con Gemini y Supabase usando .env.local, y la prueba del asesor desplegado en un teléfono. Además avisa de que una comprobación no corresponde exactamente a un criterio (CHECK_UNMAPPED), sin indicar cuál. La evidencia no muestra fallos de intento ni errores de código.",
+ "steps": [
+  "Ejecuta `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` con .env.local y guarda la evidencia redactada, sin datos de clientes.",
+  "En un teléfono, usa el asesor desplegado y anota permiso, teclado, recarga y lo visible en el brief y en el panel de admin.",
+  "Si la ejecución en vivo y la prueba en el teléfono salen bien, pulsa «Aprobar a mano» citando esa evidencia; si algo falla, pulsa «Rechazar» y di qué falló."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T16:48:46",
+ "seconds": 14.8
+}

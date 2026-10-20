@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/4 · tareas 6/17 · generado: 2026-10-20T15:53:11-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/4 · tareas 6/17 · generado: 2026-10-20T16:31:57-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 6/7
 
@@ -18,7 +18,7 @@ created: 2026-10-20
 | T4 | Chat UI `/asesor`: guiado components, privacy + test-version notices, progress bar, resume by conversation id in localStorage (transcript reloaded from the server) | alta | completada | gpt-6-luna | codex-luis | 1 |
 | T5 | Brief: summary to approve/correct, stored full brief + vendor version without name/contact/budget, printable one-page view | alta | completada | gpt-6-luna | codex-luis | 1 |
 | T6 | Admin monitor `/asesor/admin`: conversation list (status, progress, last question, 5 s refresh) and read-only detail (transcript, brief); `user` gets 403 | media | completada | gpt-6-luna | codex-1 | 1 |
-| T7 | M1 acceptance: e2e script (login → conversation → approved brief → visible to admin), one real Gemini conversation, `/happie` regression (`npm run happie:test-webhook`), env vars on Vercel + VPS, deploy | alta | en curso | gpt-6-luna | codex-2 | 1 |
+| T7 | M1 acceptance: e2e script (login → conversation → approved brief → visible to admin), one real Gemini conversation, `/happie` regression (`npm run happie:test-webhook`), env vars on Vercel + VPS, deploy | alta | verificando | gpt-6-luna | codex-2 | 1 |
 
 **M2 — Photos and voice notes (~Fri 6 Nov)** · dificultad alta · 0/3
 

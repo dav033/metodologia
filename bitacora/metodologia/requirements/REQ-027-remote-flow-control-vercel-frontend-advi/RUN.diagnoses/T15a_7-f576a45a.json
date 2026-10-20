@@ -1,0 +1,23 @@
+{
+ "request": "T15a:7",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T15a choca con trabajo ya aceptado en remote/web y el run se detuvo por repetirlo.",
+ "origin": "Los cuatro intentos de T15a terminaron en el mismo rechazo al iniciar: \"INTEGRATION_CONFLICT: T3 vs T15 for T15a: remote/\". El problema es de integración, no de tests ni de compilación: los archivos que T15a toca en remote/web se solapan con lo ya aceptado de T3, T15 y T15b. La auditoría describe el mismo tipo de choque, pero nombra T15c en su texto, así que ese detalle hay que revisarlo antes de cambiar nada.",
+ "steps": [
+  "Lee el rechazo completo: `python ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia scheduler-op REQ-027 status`.",
+  "Consulta el id de la decisión abierta: `python ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia scheduler-op REQ-027 decisions`.",
+  "Decide `retry_with_note` con la indicación de abajo: `python ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia scheduler-op REQ-027 decide <id> retry_with_note --reason \"T15a choca con T15b en remote/web; rehacer como cambio mínimo\"`.",
+  "Si vuelve a fallar con INTEGRATION_CONFLICT, no cambies nada más hasta leer el texto completo de `status`."
+ ],
+ "option": "retry_with_note",
+ "note": "Rebuild T15a as a minimal change on top of the accepted state of T6, T7 and T15b in remote/web. Keep every existing file and function (README.md, mocks/fixtures/snapshot.json, mocks/gateway.mjs, src/app/globals.css, and the rest). Change only the login screen (redirect to the gateway OAuth start) and the runs list (state and last sign of life, no horizontal scroll at 360 px). Do not rewrite or delete working code. Before editing, reconcile with the accepted T3, T15 and T15b files so no conflict remains.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T16:00:18",
+ "seconds": 14.7
+}

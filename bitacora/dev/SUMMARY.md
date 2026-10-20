@@ -7,11 +7,11 @@ _What this project is and who it is for._
 Last confirmed with owner: YYYY-MM-DD (set only after the owner confirms; otherwise write `not yet confirmed`).
 
 ## Current state
-REQ-027 r9 is under the repaired Scheduler; T18 is blocked on owner decision T18:11 after findings F2, F19 and F20. REQ-020 r2 has T5 att-0011 running. `/flow` intentionally folds M4 provider detail and informational incidents into per-attempt digests (D-085); REQ-027 currently has 5,703 provider events and 966 info incidents folded, with two medium connection errors visible.
+REQ-029 r2 approved/frozen and running T3a att-0005 with accepted T1–T3 retained. REQ-027 r9 progressed through T15a/T15b; owner-requested T15d repair applied via T15d:7 rework_conflict, rebuilding stale T15c before T15d. No open decisions/blocked tasks at inspection; watchdog active. P-137 closed. Pictures REQ-020 continues separately; last inspected T7 att-0013 verifying. No relay or continuous monitoring requested.
 
 ## Active focus
-- REQ-029 is approved and running on `feat/req-029-autonomous-recovery` (Scheduler r1, T1 att-0001 in independent verification). Its requirements gate now ignores only the generated plan-status block (D-102) and stays ready as task state changes. REQ-027 T18:11 is closed and T15a is active; it remains the acceptance case, not a manual product repair.
-- Pictures REQ-020: monitor T5 att-0011 and downstream work; T4 is no longer the live attempt.
+- REQ-029: execute approved r2 through Scheduler, preserve T1–T3 and cancelled T4 evidence; no manual REQ-027 product fixes.
+- Pictures REQ-020: independent Scheduler run continues; last inspected T7 att-0013 verifying with its own verifier decision.
 - 2026-10-18 Relay C2 marathon retirement completed: obsolete tests removed, shared coverage retained, remaining launch/orchestration tests migrated, and three Scheduler-only launch regressions fixed. Targeted tests passed (207 cases plus quality_metrics 24); migration package/entrypoint/inventory 45 passed. Compile/imports/CLI/wheel/sdist passed. Collection retains pre-existing relay_run 52 -> 48 failure; scoped lint retains 12 pre-existing F401 findings, no new findings. C3 documentation/overall removal reconciliation remains under P-001; P-002 unchanged. Owner's dirty/staged tree preserved; no commits or full-suite rerun.
 
 - Local plans server is now enabled at user login via `bitacora-web.service`; active and HTTP 200 at http://127.0.0.1:8765/plans. See TOOLS.md for status/log/restart commands.

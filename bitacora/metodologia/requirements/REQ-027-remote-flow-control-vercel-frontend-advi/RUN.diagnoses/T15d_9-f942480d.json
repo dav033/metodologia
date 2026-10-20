@@ -1,0 +1,22 @@
+{
+ "request": "T15d:9",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T15d choca con T15f (ya aceptado) en los mismos archivos; no se puede integrar",
+ "origin": "El fallo es de integración, no de un error de verificación. El gate de integración detectó que T15d toca los mismos archivos que T15f ya aceptado (remote/web/mocks/fixtures/snapshot.json, remote/web/mocks/gateway.mjs, remote/web/src/app/globals.css, remote/web/src/app/page.tsx) y que los archivos de T18 en remote/gateway/. La auditoría indica que el resultado pasó sus checks, pero el intento de origen es anterior a T15f, así que su base está desactualizada. La decisión del dueño T15d:7 apunta a la misma causa: T15c (att-0159) es anterior al reemplazo de T15b (att-0210).",
+ "steps": [
+  "Confirma que T15c se reconstruyó sobre T15b att-0210 y que T15f está aceptado; si no, hazlo primero, porque reintentar sobre la base vieja repetirá el conflicto.",
+  "Ejecuta `bitacora.py --project metodologia scheduler-op REQ-027 decisions` para obtener el id de la decisión y luego `decide <id> retry_with_note --reason \"rebase sobre resultados aceptados\"`, con la indicación de la columna de la derecha.",
+  "Si el siguiente intento vuelve a fallar con INTEGRATION_CONFLICT, el conflicto ya no es de código: revisa el plan (T15d frente a T15f y T18) con `plan-json` y pasa el run a una revisión nueva."
+ ],
+ "option": "retry_with_note",
+ "note": "Rebase T15d onto the current accepted results of its prerequisites (T15c rebuilt on T15b att-0210, T13, and the accepted T15f). Keep every file and function already present in remote/web/mocks/fixtures/snapshot.json, remote/web/mocks/gateway.mjs, remote/web/src/app/globals.css, remote/web/src/app/page.tsx and the remote/web tests; do not rewrite or delete working code. Do not modify remote/gateway/ or remote/contract/ unless an acceptance criterion requires it. Add only: (1) a typed-confirmation step that asks to type the REQ id for destructive actions, (2) the 'el estado cambió' message for a stale precondition, (3) a command history listing origin and result. Keep edits small and run `cd remote/web && npm run verify`.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T17:26:43",
+ "seconds": 27.2
+}

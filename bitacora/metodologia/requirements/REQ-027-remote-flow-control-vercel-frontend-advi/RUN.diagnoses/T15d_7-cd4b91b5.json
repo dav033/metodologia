@@ -1,0 +1,22 @@
+{
+ "request": "T15d:7",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T15d no arranca: T15c quedó desfasada tras rehacer T15b y chocan los mismos archivos",
+ "origin": "El arranque de T15d fue rechazado con INTEGRATION_CONFLICT: T13+T15b vs T15c, en remote/web/mocks/fixtures/snapshot.json, remote/web/mocks/gateway.mjs, remote/web/src/app/globals.css y remote/web/src/app/page.tsx. T15c se construyó sobre una versión anterior de T13 y T15b, que después se rehizo, así que su trabajo ya no encaja con la base actual. identity_unverified es solo el guardia que saltó; la causa es ese conflicto. El intento #4 también falló en la puerta de integración con T18 (remote/contract/command.sc), y conviene vigilarlo.",
+ "steps": [
+  "Pulsa «Rehacer T15c sobre el trabajo actual» (opción rework_conflict). Por terminal: `bitacora.py --project metodologia scheduler-op REQ-027 rework T15c --only --reason \"conflicto con T13 y T15b\"`.",
+  "Espera a que T15c se acepte; T15d arrancará sola sobre la base combinada.",
+  "Si T15d vuelve a fallar en la puerta de integración con T18 por remote/contract/command.sc, revisa ese archivo antes de reintentar."
+ ],
+ "option": "rework_conflict",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T17:00:18",
+ "seconds": 14.8
+}

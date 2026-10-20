@@ -1,24 +1,18 @@
 {
- "attention": [
-  {
-   "kind": "blocked_task",
-   "reason": "m5:attempts_exhausted",
-   "task_id": "T15a"
-  }
- ],
+ "attention": [],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-20T20:50:52+00:00",
+ "heartbeat_at": "2026-10-20T23:48:28+00:00",
  "plan_ref": {
   "plan_id": "REQ-027",
   "revision": 9,
   "sha256": "e2d7030f678abcca2c1e3f0cee1cba62f85fd471c1274c6171e7ad26f257510c"
  },
- "projected_at": "2026-10-20T20:50:52+00:00",
+ "projected_at": "2026-10-20T23:48:28+00:00",
  "projection": true,
  "req": "REQ-027",
- "scheduler_status": "blocked",
- "sessions": 205,
- "status": "blocked",
+ "scheduler_status": "running",
+ "sessions": 218,
+ "status": "running",
  "tasks": [
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -631,54 +625,54 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
+   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
    "after": [
     "T15"
    ],
-   "attempts": 6,
+   "attempts": 9,
    "complexity": "low",
    "effort": "high",
-   "evidence": "integration gate: T6+T7+T15a vs T15b for T15c: remote/web/README.md, remote/web/mocks/fixtures/snapshot.json, remote/web/mocks/gateway.mjs, remote/web/src/app/globals.css, remote/web/src/a | M6 evidence: m6://result/27e84fc22a2eec1c4de291e5d3bd7af156bc820eaaf78cc56b771f13c0f4aa92",
-   "executor": "route:m2:v1:250586d0c6130e908f9353d75e3f388dd45f8d3ad5e2df287a24ddda9d67ebef:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
+   "evidence": "m6://result/286cd9b047f048019b7e535fd03ce3bb576c1a408762abe5ca2aea03d90468f1",
+   "executor": "route:m2:v1:1a411733ed1066b217f3fed66f9d1059ff4d41177eee76ca2272b1212e19df07:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T15a",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-1",
+   "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1792529214.8947477",
+   "quota_observed_at": "1792532981.81996",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "29.0",
-   "quota_valid_until": "1792536414.8947477",
+   "quota_used_percent": "34.0",
+   "quota_valid_until": "1792540181.81996",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "blocked",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "blocked",
+   "status": "done",
    "title": "Login screen and runs list",
    "unreachable": false
   },
   {
-   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
+   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
    "after": [
     "T15a"
    ],
-   "attempts": 6,
+   "attempts": 7,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/cb42e1678216910bab1db81a912250bcf93bcda1bddbc08b54a79efc22f7d1e8",
-   "executor": "route:m2:v1:a2d0f0d7aa41a6829ac3cb1f43005e1930da39a81c38d257f010ec3e66ec1886:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "evidence": "m6://result/503cc6c98f75663102da623a29452ce05fae1008f70fab6d70fe25f874e6aa7a",
+   "executor": "route:m2:v1:96ea4c0763a441737d13d83b1958fa2f3e4a3b05688829c942e26b0c211a1b7a:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T15b",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-luis",
+   "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1792502570.0388987",
+   "quota_observed_at": "1792532981.81996",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "1.0",
-   "quota_valid_until": "1792509770.0388987",
+   "quota_used_percent": "34.0",
+   "quota_valid_until": "1792540181.81996",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
@@ -689,26 +683,26 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
+   "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
    "after": [
     "T15b",
     "T7"
    ],
-   "attempts": 6,
+   "attempts": 9,
    "complexity": "low",
    "effort": "high",
-   "evidence": "m6://result/199c35323c7a9afce4e0ed636ef9370f9b8c3d5abd823515f8a52e5561cf05f1",
-   "executor": "route:m2:v1:8ed878431560da67f4ddd7c8af70b98b66ef484831025712eb8b39b05684abb0:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "evidence": "m6://result/c0bd8effaa91bcca703aec003b8f472f142730ad56efad3ba75e7df16d7f8c6a",
+   "executor": "route:m2:v1:ab9aef0f568a7cc997728f27f2902ddc8be22462bd478a913ea8c88531c1fb2c:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
    "id": "T15c",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-luis",
+   "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1792504953.1024506",
+   "quota_observed_at": "1792534066.8287823",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "3.0",
-   "quota_valid_until": "1792512153.1024506",
+   "quota_used_percent": "15.0",
+   "quota_valid_until": "1792541266.8287823",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
@@ -724,21 +718,21 @@
     "T15c",
     "T13"
    ],
-   "attempts": 6,
+   "attempts": 10,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/a567fbf970fde1301a5e4ab09196aba78c28cefa92f566ddef839b0302f6157c",
-   "executor": "route:m2:v1:910be215172445c055fb03f2c4f2a3ca5298bb554cae27b9a0ed9504a34e4191:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "evidence": "m6://result/0d574aeae361bee77032c6233c40fb070946721ef1f8cf79ae6a6db54d0bd2fb",
+   "executor": "route:m2:v1:d3b48fdb47149e7c1f678064ba3198627b18eac8b75a1d2ee7e34bee0f9b237b:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
    "id": "T15d",
    "milestone": "M4",
    "model": "gpt-6-luna",
    "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1792507083.4290292",
+   "quota_observed_at": "1792539353.6034396",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "4.0",
-   "quota_valid_until": "1792514283.4290292",
+   "quota_used_percent": "18.0",
+   "quota_valid_until": "1792546553.6034396",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
@@ -753,21 +747,21 @@
    "after": [
     "T15d"
    ],
-   "attempts": 7,
+   "attempts": 8,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/33f90cc6ed08fd5e1bc4eff0e9824bd018c85442c0abc8a9bfc3e8a448780e7b",
-   "executor": "route:m2:v1:05dfb44e5bf6da93ddd8dc9fca89fdeabafda4c887ae7a9e8e0947e9e36d239c:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "evidence": "m6://result/6b8939a9b95328b2ea55610f249936bbbaa42fa68042fa33937fbe8ad252f187",
+   "executor": "route:m2:v1:90ff22a836dc95571cd35144effd70ce4214540a9302095b63a79383dcb050e6:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T15e",
    "milestone": "M4",
    "model": "gpt-6-luna",
    "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1792507084.217122",
+   "quota_observed_at": "1792539354.3848426",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "3.0",
-   "quota_valid_until": "1792514284.217122",
+   "quota_used_percent": "9.0",
+   "quota_valid_until": "1792546554.3848426",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
@@ -778,32 +772,32 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
+   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
    "after": [
     "T15e",
     "T8a"
    ],
-   "attempts": 9,
+   "attempts": 10,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/608e7c408c9f6c7cb68a25a610b60e2b1182bed71c8a37364da79497647c8a1a",
-   "executor": "route:m2:v1:554ff217101dbeb4dca30a2f74d750df940f4086272491d96ea79d9f84bab467:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "evidence": "",
+   "executor": "route:m2:v1:7df129a538b44520472772e707dee1ee4ebb00a245f489548d1fb901100be617:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T15f",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-luis",
+   "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1792517857.6494176",
+   "quota_observed_at": "1792539354.3848426",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "3.0",
-   "quota_valid_until": "1792525057.6494176",
+   "quota_used_percent": "9.0",
+   "quota_valid_until": "1792546554.3848426",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "active",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "in_progress",
    "title": "Recovery forms and live quotas",
    "unreachable": false
   },
@@ -865,7 +859,7 @@
    "selection_reason": "baseline_route;duration_measured;estimated_duration;history_sparse;task_unambiguous;tokens_measured",
    "status": "todo",
    "title": "Offline end-to-end: real laptop API, gateway and built web wired locally on loopback",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -897,7 +891,7 @@
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
    "status": "todo",
    "title": "Independent security and spec audit by another provider",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -927,7 +921,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Cross-check audit of T18: Independent security and spec audit by another provider",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:db655fd0c084acbe5eac49a5f7ef3d4e6de52c4d8d8dda226de8d9f23f0aca42",
@@ -957,7 +951,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Documentation: remote README, references and TOOLS entries to copy at go-live",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -986,7 +980,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the AdvIn production environment: service user, directories, units and Caddy block",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1015,7 +1009,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the Vercel project and deploy the frontend to production",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1044,7 +1038,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the identity and messaging prerequisites and place the secrets",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -1073,7 +1067,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Release the gateway and the Telegram bot to AdvIn and switch them on",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1102,7 +1096,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Live smoke test of the production environment and handover",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1131,7 +1125,7 @@
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
    "status": "todo",
    "title": "Remediate T18 findings F1, F2, F3, F4",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1157,9 +1151,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "todo",
    "title": "Remediate T18 findings F5, F6, F7, F8",
    "unreachable": false
   },
@@ -1187,9 +1181,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "todo",
    "title": "Remediate T18 findings F9, F10",
    "unreachable": false
   },
@@ -1247,9 +1241,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "todo",
    "title": "Remediate T18 findings F1, F2, F3, F4",
    "unreachable": false
   },
@@ -1279,9 +1273,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "todo",
    "title": "Remediate T18 findings F14",
    "unreachable": false
   }

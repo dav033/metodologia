@@ -1,0 +1,23 @@
+{
+ "request": "T15a:8",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T15a choca con T15b y T3 por los mismos archivos; reintentar no lo resuelve",
+ "origin": "El arranque de T15a fue rechazado con INTEGRATION_CONFLICT (T3 vs T15 para T15a, sobre remote/contract/command.schema.json y event.schema.json). La auditoría dijo además que T15a no combina con T15b en remote/web/README.md, mocks/fixtures/snapshot.json, mocks/gateway.mjs y src/app/globals.css. Las notas de reintento T15a:6 y T15a:7 pidieron la misma reconstrucción mínima y el choque volvió, así que es un conflicto de alcance entre tareas del plan y no un error de código como sugiere la guía por reglas.",
+ "steps": [
+  "Pulsa stop ahora: consulta el id con `python ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia scheduler-op REQ-027 decisions` y luego `scheduler-op REQ-027 decide <id> stop --reason \"T15a choca con T3, T15 y T15b por archivos compartidos\"`.",
+  "En PLAN.json de REQ-027, asigna cada archivo compartido (README.md, snapshot.json, gateway.mjs, globals.css y los schemas de remote/contract) a una sola tarea, o declara la dependencia de orden entre T15a, T15b, T3 y T15, y reduce el alcance de T15a a la pantalla de login y la lista de ejecuciones.",
+  "Sube \"revision\" en 1 y ejecuta `python ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia plan-json freeze REQ-027`.",
+  "Elige la opción revise de la decisión con `scheduler-op REQ-027 decide <id> revise --reason \"...\"` para que el run arranque desde la revisión nueva."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T16:06:24",
+ "seconds": 20.5
+}
