@@ -22,6 +22,10 @@ from bt_lock import central_lock
 CONTRACT = "requirements-v1"
 FIELDS = ("goal", "scope", "requirements", "limits", "acceptance", "approval")
 MAX_BYTES = 65536
+_PLAN_STATUS_BLOCK = re.compile(
+    r"(?m)^<!-- bitacora:status:begin -->[ \t]*\r?\n.*?^<!-- bitacora:status:end -->[ \t]*(?:\r?\n|$)",
+    re.DOTALL,
+)
 
 
 def _validate(data: object, stored: bool = False) -> dict:
@@ -71,6 +75,8 @@ def _source(rdir: Path, name: str) -> str:
             normalized = re.sub(r"^status:.*$", "status: <operational>", front[1], flags=re.MULTILINE)
             text = text[:front.start(1)] + normalized + text[front.end(1):]
     if canonical == (rdir / "PLAN.md").resolve():
+        # The Scheduler refreshes this generated read-model block as task states change.
+        text = _PLAN_STATUS_BLOCK.sub("", text)
         # Operational progress does not change approved scope or task contracts.
         text = re.sub(r"^## Progress log\s*\n(.*?)(?=^## |\Z)",
                       lambda match: "\n".join(line for line in match[1].splitlines()
@@ -82,10 +88,21 @@ def _source(rdir: Path, name: str) -> str:
 
 def _fingerprints(rdir: Path, names: list[str]) -> dict[str, str]:
     names = list(names)
-    if rdir.parent.name == "requirements" and (rdir.parent.parent / "DECISIONS.md").exists():
+    decisions = rdir.parent.parent / "DECISIONS.md"
+    if rdir.parent.name == "requirements" and decisions.exists():
         names.append("../../DECISIONS.md")
-    return {name: hashlib.sha256(_source(rdir, name).encode()).hexdigest()
-            for name in sorted({"SPEC.md", "PLAN.md", *names})}
+    result = {}
+    for name in sorted({"SPEC.md", "PLAN.md", *names}):
+        path = rdir / name
+        if name == "../../DECISIONS.md" and path.resolve() == decisions.resolve():
+            # Central decisions are authority inputs, not prompt evidence. Hash them
+            # incrementally so a large decision log stays bounded in memory.
+            with path.open("rb") as source:
+                digest = hashlib.file_digest(source, "sha256").hexdigest()
+        else:
+            digest = hashlib.sha256(_source(rdir, name).encode()).hexdigest()
+        result[name] = digest
+    return result
 
 
 def _contract(rdir: Path) -> str:

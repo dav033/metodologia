@@ -60,6 +60,42 @@ class OrchestrationContextTests(unittest.TestCase):
         self.assertNotIn("Commit on", prompt)
         self.assertIn("No commits", prompt)
 
+    def test_large_central_decisions_are_fingerprinted_without_loading_as_evidence(self):
+        root = self.rdir / "project"
+        requirement = root / "requirements" / "REQ-001-example"
+        requirement.mkdir(parents=True)
+        (root / "DECISIONS.md").write_text("decision\n" * 12000)
+        (requirement / "SPEC.md").write_text("Approved scope\n")
+        (requirement / "PLAN.md").write_text(
+            "---\nstatus: approved\nexecution_contract: requirements-v1\n---\nPlan\n"
+        )
+
+        snapshot = gate.record(requirement, self.review)
+
+        self.assertIn("../../DECISIONS.md", snapshot["fingerprints"])
+        self.assertEqual(gate.check(requirement)["status"], "ready")
+        (root / "DECISIONS.md").write_text("decision changed\n" * 12000)
+        self.assertEqual(gate.check(requirement)["status"], "needs_revalidation")
+
+    def test_scheduler_plan_status_block_is_operational_but_scope_edits_still_revalidate(self):
+        status_block = (
+            "<!-- bitacora:status:begin -->\n"
+            "Generated status: pending\n"
+            "<!-- bitacora:status:end -->\n"
+        )
+        plan = self.rdir / "PLAN.md"
+        plan.write_text(
+            "---\nstatus: approved\nexecution_contract: requirements-v1\n---\n"
+            "## Scope\nKeep approved behavior.\n\n" + status_block
+        )
+        gate.record(self.rdir, self.review)
+
+        plan.write_text(plan.read_text().replace("Generated status: pending", "Generated status: running"))
+        self.assertEqual(gate.check(self.rdir)["status"], "ready")
+
+        plan.write_text(plan.read_text().replace("Keep approved behavior.", "Change approved behavior."))
+        self.assertEqual(gate.check(self.rdir)["status"], "needs_revalidation")
+
     def test_oversized_mandatory_authority_fails_without_truncation(self):
         gate.record(self.rdir, {**self.review, "limits": "é" * 8000, "scope": "x" * 8000})
         with self.assertRaisesRegex(context.ContextError, "mandatory"):

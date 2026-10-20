@@ -26,11 +26,14 @@ source files and total persisted snapshot are bounded at 65536 bytes. Never incl
 full conversations; approval is a concise evidence reference, not a fabricated owner decision.
 
 `REQUIREMENTS.json` schema 1 persists these facts, `reviewed_at` and SHA-256 fingerprints;
-SPEC/PLAN are always included; canonical project `../../DECISIONS.md` is included when present.
+SPEC/PLAN are always included; canonical project `../../DECISIONS.md` is included when present. The
+canonical decisions file is fingerprinted as a digest-only authority input in bounded-memory streaming;
+it is not loaded as review evidence, while every explicitly supplied evidence source remains capped at
+65536 bytes.
 Additional authoritative files can be included as project-local evidence paths. PLAN/SPEC
 status, task checkboxes and PLAN's `## Progress
-log` prose are operational; scope/task headings and task lines remain fingerprinted. Keep new
-requirements outside Progress log. Missing/invalid evidence, unsupported versions, drift or
+log` prose and the generated `bitacora:status` block are operational; scope/task headings and
+task lines remain fingerprinted. Keep new requirements outside Progress log. Missing/invalid evidence, unsupported versions, drift or
 unresolved items fail closed. Removing the marker does not bypass an existing snapshot.
 An unrelated DECISIONS addition triggers a conservative reread: refresh the snapshot while
 retaining its approval reference if approved requirements are unchanged; do not ask again.
