@@ -127,6 +127,7 @@ As the owner, I want live account quotas and the history of every remote command
   AdvIn/laptop and in Vercel env vars; never in git or the bitácora.
 - R17. The gateway shall rate-limit sign-in attempts and commands per session, and log every request without secrets.
 - R18. The local panel at `127.0.0.1:8765` shall keep its current behavior and tests.
+- R19. The production environment shall exist and be verified: the gateway and the Telegram bot run as systemd services of a dedicated no-login user on AdvIn behind the existing Caddy and listen only on the Docker bridge; the frontend is deployed to a Vercel production project; the GitHub OAuth App and the Telegram bot are configured; a rollback has been rehearsed; and every other site behind the same Caddy answers exactly as before.
 
 ## Edge cases & errors
 - Laptop suspended mid-command: the gateway times out after 15 s and reports `UNKNOWN_OUTCOME` with the idempotency
@@ -149,7 +150,7 @@ As the owner, I want live account quotas and the history of every remote command
 - AdvIn: 8 cores, 15 GB RAM, disk 85 % used (24 GB free) on 2026-10-19.
 
 ## Priorities & phases
-Must: R1–R12, R14, R16–R18 (US-1..US-4). Should: R13 (US-5, US-6). Could: R15 (US-7).
+Must: R1–R12, R14, R16–R19 (US-1..US-4). Should: R13 (US-5, US-6). Could: R15 (US-7).
 MVP = read + control + alerts; extended recovery and quotas follow in the same plan.
 
 ## Timeline & dependencies

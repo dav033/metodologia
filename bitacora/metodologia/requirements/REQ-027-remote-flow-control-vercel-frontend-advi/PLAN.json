@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-027",
-  "revision": 5,
+  "revision": 6,
   "spec_ref": "SPEC.md",
   "milestones": [
     {
@@ -43,10 +43,26 @@
         "The go-live kit is complete with rollback steps",
         "The loopback end-to-end check and the independent audit pass"
       ]
+    },
+    {
+      "id": "M6",
+      "title": "Production environment",
+      "acceptance_criteria": [
+        "The AdvIn services, the Caddy block, the Vercel project, the OAuth App and the Telegram bot exist and work together",
+        "Every other site behind the AdvIn Caddy answers as before and a rollback has been rehearsed"
+      ]
     }
   ],
   "requirements": [
     "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
     "R10",
     "R11",
     "R12",
@@ -56,14 +72,7 @@
     "R16",
     "R17",
     "R18",
-    "R2",
-    "R3",
-    "R4",
-    "R5",
-    "R6",
-    "R7",
-    "R8",
-    "R9"
+    "R19"
   ],
   "tasks": [
     {
@@ -3015,6 +3024,526 @@
         "R18"
       ],
       "kind": "docs"
+    },
+    {
+      "id": "T20",
+      "milestone_id": "M6",
+      "title": "Create the AdvIn production environment: service user, directories, units and Caddy block",
+      "objective": "AdvIn gets a no-login service user `flow`, /opt/flow-gateway (releases, current), /var/lib/flow-gateway (SQLite) and /etc/flow-gateway/env (mode 600, skeleton without values), the gateway and bot systemd units installed and hardened (NoNewPrivileges, PrivateTmp, ProtectSystem=strict, bind only 172.20.0.1 on a free port you record), and the Caddy block for flow-api.185-147-157-25.sslip.io (reverse_proxy to 172.20.0.1:<port> with SSE flush) added to /opt/edge-proxy/Caddyfile and reloaded in the `caddy` container. Create `remote/deploy/verify_receipt.py` and its tests first; the units stay stopped until T23. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T19"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Files, a verifier and one reversible change on a shared host",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy container publishes 80/443"
+          ],
+          "justification": "Caddyfile edit and systemd units on a host shared with other production sites, plus a receipt verifier"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Scripts, a verifier with tests and one reversible host change"
+        },
+        "duration": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "A verifier, several scripts and one live rehearsal, longer than the offline kit of T16"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "The provisioning reloads the Caddy that serves maros, lotm and training: a mistake takes those sites down"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Every later production task needs the user, directories, units and Caddy block this task creates"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "Host services on 172.20.0.1 already sit behind this Caddy, so the pattern is proven"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/**",
+        "remote/docs/runbook.md"
+      ],
+      "shared_resources": [
+        "advin-host"
+      ],
+      "acceptance_criteria": [
+        "A pre-change snapshot of every existing Caddy host (status, TLS subject, first-byte time) is recorded",
+        "A no-login service user, release/state/env directories and both systemd units exist and pass systemd-analyze verify",
+        "The Caddyfile was backed up, validated, reloaded and every pre-existing host answers as in the snapshot",
+        "A rollback that restores the Caddyfile backup and removes the units was rehearsed and left AdvIn as before",
+        "The receipt verifier rejects failed checks, missing steps, secret-looking values and a git sha that is not an ancestor of HEAD"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py advin-provision --check snapshot-before",
+          "purpose": "A pre-change snapshot of every existing Caddy host (status, TLS subject, first-byte time) is recorded",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py advin-provision --check service-layout",
+          "purpose": "A no-login service user, release/state/env directories and both systemd units exist and pass systemd-analyze verify",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py advin-provision --check other-hosts-unchanged",
+          "purpose": "The Caddyfile was backed up, validated, reloaded and every pre-existing host answers as in the snapshot",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py advin-provision --check rollback-rehearsed",
+          "purpose": "A rollback that restores the Caddyfile backup and removes the units was rehearsed and left AdvIn as before",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python -m unittest discover -s tests -p test_receipts.py",
+          "purpose": "The receipt verifier rejects failed checks, missing steps, secret-looking values and a git sha that is not an ancestor of HEAD",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R16",
+        "R3",
+        "R19"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T21",
+      "milestone_id": "M6",
+      "title": "Create the Vercel project and deploy the frontend to production",
+      "objective": "Create the Vercel project `flow-remote` in team dav033s-projects (root directory remote/web, Next.js 15) with the CLI, set only the non-secret `GATEWAY_ORIGIN=https://flow-api.185-147-157-25.sslip.io`, deploy to production with `vercel --prod`, and record the *.vercel.app URL, deployment id and git sha. The gateway is not running yet, so the rewrite must reach AdvIn's Caddy (a 502 or a gateway answer carrying Caddy's server header), never the app's own 404. Do not commit `.vercel/`. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T20"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "One CLI project and one deploy; the rewrite check needs the live host",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:vercel whoami -> dav033"
+          ],
+          "justification": "One Vercel project and one deploy of an app that already builds"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "CLI calls and a receipt; no application code changes"
+        },
+        "duration": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Project creation, environment variable and one production build"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "A Vercel deploy is reversible and touches no other site, but it exposes the app publicly"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Needs the gateway host from T20 and gives T22 the URL for the OAuth homepage"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "vercel whoami works and the scope dav033s-projects is known"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/**"
+      ],
+      "shared_resources": [
+        "vercel-project"
+      ],
+      "acceptance_criteria": [
+        "The Vercel project flow-remote exists in dav033s-projects with root remote/web and nothing from .vercel is committed",
+        "Only non-secret environment variables are set; their names are recorded without values",
+        "A production deployment is Ready and its URL, deployment id and git sha are recorded",
+        "The deployed app's same-origin rewrite reaches the AdvIn Caddy and not an app 404"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py vercel-frontend --check project-linked",
+          "purpose": "The Vercel project flow-remote exists in dav033s-projects with root remote/web and nothing from .vercel is committed",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py vercel-frontend --check env-names",
+          "purpose": "Only non-secret environment variables are set; their names are recorded without values",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py vercel-frontend --check deployment-ready",
+          "purpose": "A production deployment is Ready and its URL, deployment id and git sha are recorded",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py vercel-frontend --check rewrite-reaches-caddy",
+          "purpose": "The deployed app's same-origin rewrite reaches the AdvIn Caddy and not an app 404",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R16",
+        "R19"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T22",
+      "milestone_id": "M6",
+      "title": "Create the identity and messaging prerequisites and place the secrets",
+      "objective": "Create the GitHub OAuth App `flow-remote` (homepage = the Vercel URL from T21, callback = the gateway host) in the agents' Firefox (BiDi on 127.0.0.1:9223, Xephyr) if a GitHub session is there. The Telegram bot is created by the owner in @BotFather: read TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from `~/.config/flow/secrets.env`, verify them with getMe/getChat and never create a bot yourself. Generate FLOW_GATEWAY_KEY (48 bytes) and SESSION_SECRET with `openssl rand` on the target, write /etc/flow-gateway/env on AdvIn and `~/.config/bitacora/remote.env` on the laptop (mode 600) and set the secret Vercel env vars via stdin. Never touch GitHub account settings other than that OAuth App. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T21"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Browser automation of one form plus secret placement; prerequisites only the owner can supply may stop it",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "Browser automation of one GitHub form plus secret placement across three stores"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "One OAuth App, two bot values read from the owner's file and generated keys"
+        },
+        "duration": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Form filling and key placement, with stops for anything only the owner can do"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "Secrets are involved: a leak into git, logs or argv is the failure to prevent"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "The OAuth callback and the Vercel URL must match what T21 and T23 use"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "The agents' Firefox keeps GitHub sessions but 2FA or sudo mode may interrupt"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/**"
+      ],
+      "shared_resources": [
+        "advin-host"
+      ],
+      "acceptance_criteria": [
+        "The GitHub OAuth App flow-remote exists with the Vercel URL as homepage and the gateway callback; its client id is recorded by name only",
+        "The Telegram bot token and the owner's chat id came from the owner's secrets file and were verified with getMe and getChat",
+        "FLOW_GATEWAY_KEY and SESSION_SECRET were generated on the target and never printed",
+        "Secrets exist only in mode-600 files on AdvIn and the laptop and in Vercel env, and a scan of the tree and the last 50 commits finds none"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py identity --check oauth-app",
+          "purpose": "The GitHub OAuth App flow-remote exists with the Vercel URL as homepage and the gateway callback; its client id is recorded by name only",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py identity --check telegram",
+          "purpose": "The Telegram bot token and the owner's chat id came from the owner's secrets file and were verified with getMe and getChat",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py identity --check generated-keys",
+          "purpose": "FLOW_GATEWAY_KEY and SESSION_SECRET were generated on the target and never printed",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py identity --check secrets-placement",
+          "purpose": "Secrets exist only in mode-600 files on AdvIn and the laptop and in Vercel env, and a scan of the tree and the last 50 commits finds none",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R16",
+        "R1",
+        "R19"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T23",
+      "milestone_id": "M6",
+      "title": "Release the gateway and the Telegram bot to AdvIn and switch them on",
+      "objective": "Build a release from the exact HEAD sha (git archive), upload it to /opt/flow-gateway/releases/<sha>, create a venv and install from the hash-locked requirements (no unpinned installs), migrate the SQLite database, switch `current` atomically, enable and start the gateway and bot units, and keep the previous release (for the first deploy rehearse with a copy). Replace the laptop's whole-panel reverse tunnel unit with the retargeted remote-only one (back up the old unit; the local panel and its tests stay unchanged, R18) so AdvIn can no longer reach anything but /api/remote/v1. Write `remote/deploy/smoke.py` for T24. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T22"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "A live release, a tunnel change on the laptop and a rehearsed rollback",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "A live release, a database migration, an atomic switch and a laptop tunnel retarget with rehearsed rollback"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Release scripts, a smoke script and changes on two machines"
+        },
+        "duration": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "The longest step: build, upload, install, migrate, switch and rehearse the rollback"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "It starts the gateway on the production host and replaces the tunnel that currently exposes the whole panel"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Uses the secrets of T22 and gives T24 a running service"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "Releases with a current symlink and a systemd unit are an established pattern on this host"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/**",
+        "remote/docs/runbook.md"
+      ],
+      "shared_resources": [
+        "advin-host"
+      ],
+      "acceptance_criteria": [
+        "A release for the exact HEAD sha is on AdvIn, dependencies come from the hash-locked file, the database is migrated, current switched atomically and both services are enabled and active",
+        "The gateway listens only on 172.20.0.1 and AdvIn's port 8765 now exposes only /api/remote/v1 of the laptop, not the whole panel",
+        "The public health URL answers 200 with the release sha, an unauthenticated API call answers 401 and the security headers are present",
+        "Rollback to the previous release and forward again were rehearsed with health 200 each time",
+        "Every pre-existing AdvIn host still answers as in the snapshot"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check release-active",
+          "purpose": "A release for the exact HEAD sha is on AdvIn, dependencies come from the hash-locked file, the database is migrated, current switched atomically and both services are enabled and active",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check listeners-and-tunnel",
+          "purpose": "The gateway listens only on 172.20.0.1 and AdvIn's port 8765 now exposes only /api/remote/v1 of the laptop, not the whole panel",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check public-health",
+          "purpose": "The public health URL answers 200 with the release sha, an unauthenticated API call answers 401 and the security headers are present",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check rollback-rehearsed",
+          "purpose": "Rollback to the previous release and forward again were rehearsed with health 200 each time",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check other-hosts-unchanged",
+          "purpose": "Every pre-existing AdvIn host still answers as in the snapshot",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R16",
+        "R17",
+        "R19"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T24",
+      "milestone_id": "M6",
+      "title": "Live smoke test of the production environment and handover",
+      "objective": "Run `remote/deploy/smoke.py --live` against the real Vercel URL and the gateway host and record every named check in the receipt `live-smoke`; send exactly one Telegram test message to the owner. Report the URLs, the release sha, how to roll back (`remote/docs/runbook.md`) and what remains manual. Do not change code in this task. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T23"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "A scripted live run plus one human confirmation",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy container publishes 80/443"
+          ],
+          "justification": "A scripted live run of known checks plus one human confirmation"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Running a smoke script and recording a receipt, no code changes"
+        },
+        "duration": {
+          "evidence": [
+            "task:T17"
+          ],
+          "justification": "Minutes of checks plus the owner's phone test"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "It sends one real Telegram message and probes the public sign-in, nothing destructive"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T17"
+          ],
+          "justification": "Depends on every previous M6 task being live"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "The checks mirror the loopback end-to-end of T17"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/receipts/**"
+      ],
+      "shared_resources": [
+        "advin-host"
+      ],
+      "acceptance_criteria": [
+        "Sign-in start redirects to github.com with the OAuth App's client id, a state and the gateway callback, and the cookies carry Secure, HttpOnly and SameSite=Strict",
+        "A callback with a bad state is refused, an unauthenticated API call is 401 and a state-changing call without X-Flow-Request is refused",
+        "Through the Vercel URL the page loads and the event stream connects and reconnects with Last-Event-ID",
+        "One Telegram test message was accepted by the Bot API for the owner's chat",
+        "David signs in with GitHub on his phone, sees the runs list at 360 px, and a foreign GitHub account is refused"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py live-smoke --check signin-start",
+          "purpose": "Sign-in start redirects to github.com with the OAuth App's client id, a state and the gateway callback, and the cookies carry Secure, HttpOnly and SameSite=Strict",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py live-smoke --check negative-paths",
+          "purpose": "A callback with a bad state is refused, an unauthenticated API call is 401 and a state-changing call without X-Flow-Request is refused",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py live-smoke --check sse",
+          "purpose": "Through the Vercel URL the page loads and the event stream connects and reconnects with Last-Event-ID",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py live-smoke --check telegram-delivery",
+          "purpose": "One Telegram test message was accepted by the Bot API for the owner's chat",
+          "category": "integration"
+        },
+        {
+          "type": "manual",
+          "value": "Open the Vercel URL on the phone, sign in as dav033, look at the runs list; try another GitHub account",
+          "purpose": "David signs in with GitHub on his phone, sees the runs list at 360 px, and a foreign GitHub account is refused",
+          "expected": "The owner confirms sign-in works, the list renders at 360 px and a foreign account is refused",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R10",
+        "R19"
+      ],
+      "kind": "test"
     }
   ]
 }

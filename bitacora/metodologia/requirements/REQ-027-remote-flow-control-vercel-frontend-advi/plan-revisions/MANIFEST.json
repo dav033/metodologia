@@ -35,6 +35,13 @@
    "frozen_at": "2026-10-19T19:39:53",
    "source": "approval",
    "plan_md_sha256": "d8430119aa6e14265841713d4763f506ec693b513d187f89f4cd0187160ea29c"
+  },
+  {
+   "revision": 6,
+   "sha256": "4c962fa9e3657f008c637c15da86f9b44b4fe3ef3fc72eada850e219e7b035e5",
+   "frozen_at": "2026-10-19T21:13:28",
+   "source": "approval",
+   "plan_md_sha256": "88ff2c525fc6d701b972382ce8639e5cce50bc3c83a9160355d1a35e7ee69ae7"
   }
  ]
 }

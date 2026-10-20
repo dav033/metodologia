@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 1/5 · tareas 6/32 · generado: 2026-10-19T21:08:17-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 3/6 · tareas 25/37 · generado: 2026-10-19T21:51:38-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -15,44 +15,44 @@ created: 2026-10-19
 | T2 | Research where a per-task route pin enters M2 routing and the executor | media | completada | sonnet | claude-work | 3 |
 | T3 | Remote API contract, command and event schemas, and the architecture note | extrema | completada | gpt-6-luna | codex-luis | 3 |
 
-**M2 — Laptop: remote API, ledger and feed** · dificultad alta · 3/10
+**M2 — Laptop: remote API, ledger and feed** · dificultad alta · 10/10
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T4 | Remote API skeleton behind the gateway key, with health | media | completada | gpt-6-luna | codex-luis | 2 |
 | T4a | Snapshot endpoint over the shared live caches | media | completada | gpt-6-luna | codex-luis | 2 |
 | T5 | Command ledger store: idempotency keys, preconditions and audit rows | alta | completada | sonnet | claude-work | 4 |
-| T5a | Ledger dispatch for run moves and decision answers | media | en curso | gpt-6-luna | codex-2 | 3 |
-| T5b | Ledger dispatch for plans and rounds with the confirmation challenge | media | pendiente | gpt-6-luna | codex-luis | 2 |
-| T6 | Event feed with stable ids and a cursor, including decision requests | alta | pendiente | sonnet | claude-work | 2 |
-| T7 | Failure review read model per attempt | media | pendiente | gpt-6-luna | codex-luis | 2 |
-| T8 | Retry pinned to a route, model or account | alta | pendiente | sonnet | claude-work | 2 |
-| T8a | Brief or criteria edit as an owner-approved plan revision | alta | pendiente | sonnet | claude-work | 2 |
-| T9 | One owner of port 8765 and reloads that keep the listening socket | media | pendiente | gpt-6-luna | codex-luis | 2 |
+| T5a | Ledger dispatch for run moves and decision answers | media | completada | gpt-6-luna | codex-luis | 4 |
+| T5b | Ledger dispatch for plans and rounds with the confirmation challenge | media | completada | gpt-6-luna | codex-luis | 4 |
+| T6 | Event feed with stable ids and a cursor, including decision requests | alta | completada | gpt-6-luna | codex-luis | 6 |
+| T7 | Failure review read model per attempt | media | completada | gpt-6-luna | codex-luis | 3 |
+| T8 | Retry pinned to a route, model or account | alta | completada | gpt-6-luna | codex-1 | 3 |
+| T8a | Brief or criteria edit as an owner-approved plan revision | alta | completada | sonnet | claude-work | 3 |
+| T9 | One owner of port 8765 and reloads that keep the listening socket | media | completada | gpt-6-luna | codex-2 | 3 |
 
-**M3 — Gateway (tested against a fake laptop)** · dificultad alta · 1/8
+**M3 — Gateway (tested against a fake laptop)** · dificultad alta · 8/8
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T10 | Gateway skeleton: config, upstream client and liveness state | media | completada | gpt-6-luna | codex-1 | 4 |
-| T11 | GitHub OAuth for dav033 and server-side sessions | media | en curso | gpt-6-luna | codex-2 | 3 |
-| T11a | CSRF header, Origin check, rate limits and request log | baja | pendiente | gpt-6-luna | codex-luis | 2 |
-| T12 | Snapshot cache and SSE fan-out with Last-Event-ID | alta | pendiente | sonnet | claude-work | 2 |
-| T13 | Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME | media | pendiente | gpt-6-luna | codex-luis | 2 |
-| T14 | Deterministic notification rules with dedupe keys | alta | pendiente | sonnet | claude-work | 2 |
-| T14a | Telegram delivery with retries, backoff and history | media | pendiente | gpt-6-luna | codex-luis | 2 |
-| T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | pendiente | gpt-6-luna | codex-luis | 2 |
+| T11 | GitHub OAuth for dav033 and server-side sessions | media | completada | gpt-6-luna | codex-luis | 4 |
+| T11a | CSRF header, Origin check, rate limits and request log | baja | completada | gpt-6-luna | codex-luis | 4 |
+| T12 | Snapshot cache and SSE fan-out with Last-Event-ID | alta | completada | gpt-6-luna | codex-2 | 6 |
+| T13 | Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME | media | completada | gpt-6-luna | codex-2 | 3 |
+| T14 | Deterministic notification rules with dedupe keys | alta | completada | sonnet | claude-work | 3 |
+| T14a | Telegram delivery with retries, backoff and history | media | completada | sonnet | claude-work | 3 |
+| T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | sonnet | claude-work | 3 |
 
-**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 0/7
+**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 5/7
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T15 | Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway | media | en curso | gpt-6-luna | codex-1 | 9 |
-| T15a | Login screen and runs list | baja | pendiente | gpt-6-luna | codex-luis | 2 |
-| T15b | Run view: activity strip, tasks and feed on flow-core.js | media | pendiente | gpt-6-luna | codex-luis | 2 |
-| T15c | Failure review screen | baja | pendiente | gpt-6-luna | codex-luis | 2 |
-| T15d | Control sheet with typed confirmations and command history | media | pendiente | gpt-6-luna | codex-luis | 2 |
-| T15e | Plans, question rounds and decision requests screens | media | pendiente | gpt-6-luna | codex-luis | 2 |
+| T15 | Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway | media | completada | gpt-6-luna | codex-luis | 12 |
+| T15a | Login screen and runs list | baja | completada | gpt-6-luna | codex-luis | 3 |
+| T15b | Run view: activity strip, tasks and feed on flow-core.js | media | completada | gpt-6-luna | codex-luis | 3 |
+| T15c | Failure review screen | baja | completada | gpt-6-luna | codex-1 | 3 |
+| T15d | Control sheet with typed confirmations and command history | media | completada | gpt-6-luna | codex-1 | 3 |
+| T15e | Plans, question rounds and decision requests screens | media | bloqueada | sonnet | claude-work | 3 |
 | T15f | Recovery forms and live quotas | media | pendiente | gpt-6-luna | codex-luis | 2 |
 
 **M5 — Go-live kit and audit** · dificultad alta · 0/5
@@ -64,6 +64,16 @@ created: 2026-10-19
 | T18 | Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-luis | 3 |
 | T18b | Cross-check audit of T18: Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-luis | 1 |
 | T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | gemini-3.8-flash-low | antigravity | 1 |
+
+**M6 — Production environment** · dificultad alta · 0/5
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T20 | Create the AdvIn production environment: service user, directories, units and Caddy block | alta | pendiente | — | — | 0 |
+| T21 | Create the Vercel project and deploy the frontend to production | media | pendiente | — | — | 0 |
+| T22 | Create the identity and messaging prerequisites and place the secrets | media | pendiente | — | — | 0 |
+| T23 | Release the gateway and the Telegram bot to AdvIn and switch them on | alta | pendiente | — | — | 0 |
+| T24 | Live smoke test of the production environment and handover | media | pendiente | — | — | 0 |
 <!-- bitacora:status:end -->
 
 ## Approach
@@ -91,7 +101,7 @@ while offline (rejected by the owner).
 ## Global constraints
 - Execution never leaves the laptop; AdvIn holds no Claude/Codex credentials (SPEC §Out of scope).
 - The local panel keeps its behavior and tests (R18); the laptop never listens beyond `127.0.0.1`.
-- Tasks never edit `bitacora/`, never merge to `main`, never deploy, never ssh to AdvIn: notes go to `remote/docs/`.
+- T1-T19 never edit `bitacora/`, never merge to `main`, never deploy, never ssh to AdvIn: notes go to `remote/docs/`. M6 (T20-T24) may ssh to AdvIn and deploy to Vercel, only as its criteria describe (owner decision 2026-10-19, D-078).
 - Secrets only in mode-600 env files and Vercel env vars, never in git or the bitácora (R16). Gitleaks stays on.
 - Every command: idempotency key + precondition; no queue while offline (R6, R7).
 - UI: Spanish copy, Catppuccin Mocha + mauve `#cba6f7`, JetBrainsMono (local font files), 360 px without horizontal
@@ -156,7 +166,15 @@ while offline (rejected by the owner).
 - [ ] T18b — Cross-check audit of T18: Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit-crosscheck.md, remote/docs/audit-crosscheck.findings.json · after: T17 · verify: `test -s remote/docs/audit-crosscheck.md` · covers: R1, R2, R3, R16, R17 · kind: audit
 - [ ] T19 — Documentation: remote README, references and TOOLS entries to copy at go-live · repo: skill · files: remote/README.md, remote/docs/tools-entries.md · after: T18, T18b · verify: `test -s remote/docs/tools-entries.md` · covers: R16, R18 · kind: docs
 
-## Go-live with the owner (after the run; not scheduler tasks)
+### M6 — Production environment
+- [ ] T20 — Create the AdvIn production environment: service user, directories, units and Caddy block · repo: skill · files: remote/deploy/**, remote/docs/runbook.md · after: T19 · verify: `cd remote/deploy && python verify_receipt.py advin-provision --check snapshot-before` · covers: R16, R3, R19 · kind: implement
+- [ ] T21 — Create the Vercel project and deploy the frontend to production · repo: skill · files: remote/deploy/** · after: T20 · verify: `cd remote/deploy && python verify_receipt.py vercel-frontend --check project-linked` · covers: R16, R19 · kind: implement
+- [ ] T22 — Create the identity and messaging prerequisites and place the secrets · repo: skill · files: remote/deploy/** · after: T21 · verify: `cd remote/deploy && python verify_receipt.py identity --check oauth-app` · covers: R16, R1, R19 · kind: implement
+- [ ] T23 — Release the gateway and the Telegram bot to AdvIn and switch them on · repo: skill · files: remote/deploy/**, remote/docs/runbook.md · after: T22 · verify: `cd remote/deploy && python verify_receipt.py gateway-release --check release-active` · covers: R3, R16, R17, R19 · kind: implement
+- [ ] T24 — Live smoke test of the production environment and handover · repo: skill · files: remote/deploy/receipts/** · after: T23 · verify: `cd remote/deploy && python verify_receipt.py live-smoke --check signin-start` · covers: R1, R2, R10, R19 · kind: test
+
+## Go-live with the owner (superseded by milestone M6 where noted)
+_Steps 2-5 are now tasks T20-T24; steps 1 and 6 (merge to `main`, copy the notes) stay with the owner._
 One stop, together, in this order; each step has its rollback in `remote/docs/runbook.md`:
 1. Review the diff of the run and merge it to `main` (owner's OK), restart `bitacora-web`, check `/flow` and `/plans`.
 2. Owner creates the Telegram bot (@BotFather) and sends `/start`; the GitHub OAuth App is created (agents' Firefox
