@@ -41,6 +41,7 @@ class GatewayRuntime:
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
         self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
         self.stream = SnapshotEventStream()
+        self.cached_snapshot: dict[str, Any] | None = None
 
     def poll_once(self) -> None:
         try:
@@ -51,6 +52,7 @@ class GatewayRuntime:
             transition = self.liveness.record_failure()
             if transition and transition.current is LaptopStatus.OFFLINE:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
+            self._publish_liveness()
         else:
             self.liveness.record_success()
             self._refresh_active_run_cache()
@@ -58,6 +60,13 @@ class GatewayRuntime:
         if self.liveness.status is LaptopStatus.OFFLINE:
             self._notify_long_offline_with_active_run()
         self.outbox.deliver_due(self.sender)
+
+    def _publish_liveness(self) -> None:
+        if self.cached_snapshot is None:
+            return
+        snapshot = dict(self.cached_snapshot)
+        snapshot["laptop"] = {"online": self.liveness.status is LaptopStatus.ONLINE}
+        self.stream.update_snapshot(snapshot, datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
     def _notify_long_offline_with_active_run(self) -> None:
         offline_since = self.liveness.offline_since
@@ -86,9 +95,10 @@ class GatewayRuntime:
             isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
             for run in runs
         )
-        self.stream.update_snapshot(snapshot, datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
         self.has_cached_active_run = has_active_run
         self.outbox.set_state_value("laptop_has_cached_active_run", int(has_active_run))
+        self.cached_snapshot = {**snapshot, "laptop": {"online": True}}
+        self.stream.update_snapshot(self.cached_snapshot, datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
     def _poll_events(self) -> None:
         try:
