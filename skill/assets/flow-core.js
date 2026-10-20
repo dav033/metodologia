@@ -70,8 +70,8 @@
       out.total += n;
       if (from === to) out.loops[from] = (out.loops[from] || 0) + n;
       else {
-        var e = out.edges[from + '>' + to] || (out.edges[from + '>' + to] = { count: 0, cats: {} });
-        e.count += n; e.cats[cat] = (e.cats[cat] || 0) + n;
+        var e = out.edges[from + '>' + to] || (out.edges[from + '>' + to] = { count: 0, cats: {}, last: 0 });
+        e.count += n; e.last = Math.max(e.last, at || 0); e.cats[cat] = (e.cats[cat] || 0) + n;
       }
       [from, to].forEach(function (id) {
         var node = out.nodes[id] || (out.nodes[id] = { count: 0, last: 0 });

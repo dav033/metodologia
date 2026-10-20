@@ -30,6 +30,7 @@
   // soft bands behind the nodes: what each part of the map is for
   var ZONES = [{ x: 14, y: 6, w: 214, h: 528, label: 'ENTRADA' }, { x: 300, y: 6, w: 566, h: 182, label: 'DECIDIR Y VIGILAR' },
     { x: 300, y: 196, w: 566, h: 186, label: 'DESPACHAR Y EJECUTAR' }, { x: 300, y: 392, w: 500, h: 142, label: 'VERIFICAR Y RECUPERAR' }];
+  var HOT_FOR = 60;   // seconds an edge keeps its dot after its last message
   var BASE_EDGES = [['agent', 'planner'], ['planner', 'M1'], ['owner', 'M1'], ['M2', 'M1'], ['M1', 'M2'], ['M1', 'M3'],
     ['M3', 'M1'], ['M3', 'M4'], ['M4', 'M1'], ['M1', 'M6'], ['M6', 'M1'], ['M5', 'M1']];
 
@@ -269,9 +270,15 @@
     var acts = liveActs(), actNode = {}, actEdge = {};
     acts.forEach(function (a) {
       (actNode[a.node] = actNode[a.node] || []).push(a);
-      a.edges.forEach(function (e) { var E = ensureEdge(e[0], e[1]); if (E) actEdge[e[0] + '>' + e[1]] = true; });
+      a.edges.forEach(function (e) { var E = ensureEdge(e[0], e[1]); if (E && !a.quiet) actEdge[e[0] + '>' + e[1]] = true; });   // a silent agent moves nothing
     });
-    Object.keys(edgeEls).forEach(function (k) { if (actEdge[k]) edgeEls[k].g.classList.add('live'); });
+    var nowS = Date.now() / 1000;
+    Object.keys(edgeEls).forEach(function (k) {
+      var e = tal.edges[k];
+      if (actEdge[k]) edgeEls[k].g.classList.add('live');
+      // the travelling dot means «talking right now»: a live attempt or a message in the last minute (live mode only)
+      if (actEdge[k] || (S.mode === 'live' && e && nowS - e.last < HOT_FOR)) edgeEls[k].g.classList.add('hot');
+    });
     Object.keys(nodeEls).forEach(function (id) {
       var X = nodeEls[id], o = tal.nodes[id], loops = tal.loops[id] || 0, act = actNode[id];
       X.meta.textContent = o ? fmt(o.count) + ' msj · ' + ago(o.last) : 'sin mensajes';

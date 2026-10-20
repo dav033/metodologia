@@ -58,13 +58,13 @@
 @keyframes fl-ripple { 0% { opacity: .9; transform: scale(.96); } 100% { opacity: 0; transform: scale(1.14); } }
 
 .fl-edge .fl-ln { stroke-width: 2; }
-.fl-edge.idle .fl-ln { stroke: var(--border); stroke-dasharray: 2 7; animation: fl-flow 3.2s linear infinite; }
+.fl-edge.idle .fl-ln { stroke: var(--border); stroke-dasharray: 2 7; }
 .fl-edge:not(.idle) .fl-ln { filter: drop-shadow(0 0 3px color-mix(in srgb, var(--kc) 55%, transparent)); }
 .fl-edge.live .fl-ln { stroke-dasharray: 10 8; animation: fl-flow 1s linear infinite; }
 .fl-edge .fl-run-path { display: none; }
 @keyframes fl-flow { to { stroke-dashoffset: -30; } }
 .fl-dotm { fill: var(--kc); stroke: var(--surface); stroke-width: 1.5; opacity: 0; filter: drop-shadow(0 0 5px var(--kc)); }
-.fl-edge:not(.idle) .fl-dotm { opacity: 1; }
+.fl-edge.hot .fl-dotm { opacity: 1; }
 .fl-edge.fade .fl-dotm { opacity: 0; }
 .fl-edge:hover .fl-ln { stroke-width: 4 !important; }
 
