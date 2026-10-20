@@ -97,7 +97,7 @@ class TelegramBot:
             self._api_call("answerCallbackQuery", {"callback_query_id": callback_id, "text": "Acción vencida"})
             return
         try:
-            _status, result = self.runtime.submit_command(command)
+            _status, result = self.runtime.submit_telegram_command(command)
         except (CommandRelayError, CommandValidationError) as exc:
             response = str(exc)
         except UpstreamError:

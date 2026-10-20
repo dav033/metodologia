@@ -112,7 +112,25 @@ class GatewayRuntime:
 
     def submit_command(self, value: object) -> tuple[int, dict[str, Any]]:
         command = validate_command(value)
-        key = command["idempotencyKey"]
+        return self._relay_command(command)
+
+    def submit_telegram_command(self, value: object) -> tuple[int, dict[str, Any]]:
+        command = validate_command(value)
+        if command["type"] not in {"pause", "resume"} or command["target"]["kind"] != "run":
+            raise CommandValidationError("INVALID_COMMAND", "Telegram command target or type is not allowed")
+        target = command["target"]
+        ledger_command = {
+            "idempotency_key": command["idempotencyKey"],
+            "command": command["type"],
+            "target": f"{target['project']}/{target['req']}",
+            "origin": "telegram",
+            "params": {},
+            "precondition": {"state": command["precondition"]["state"]},
+        }
+        return self._relay_command(ledger_command)
+
+    def _relay_command(self, command: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        key = command.get("idempotencyKey", command.get("idempotency_key", ""))
         if self.liveness.status is LaptopStatus.OFFLINE:
             raise CommandRelayError(410, "LAPTOP_OFFLINE", "Laptop is offline; command was not queued", key)
         try:

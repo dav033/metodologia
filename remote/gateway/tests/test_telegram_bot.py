@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 from app import create_runtime
+from commands import CommandValidationError
 from config import GatewayConfig
 from telegram_bot import TelegramBot
 
@@ -85,10 +86,11 @@ class TelegramBotTests(unittest.TestCase):
 
         self.assertEqual(len(self.laptop.commands), 1)
         command = self.laptop.commands[0]
-        self.assertEqual(command["type"], "pause")
-        self.assertEqual(command["target"], {"kind": "run", "project": "demo", "req": "REQ-027"})
+        self.assertEqual(command["command"], "pause")
+        self.assertEqual(command["origin"], "telegram")
+        self.assertEqual(command["target"], "demo/REQ-027")
         self.assertEqual(command["precondition"], {"state": "running"})
-        self.assertEqual(len(command["idempotencyKey"]), 32)
+        self.assertEqual(len(command["idempotency_key"]), 32)
         self.assertTrue(any(method == "answerCallbackQuery" for method, _payload in self.api.calls))
 
         self.api.updates = [{"update_id": 3, "callback_query": {
@@ -109,6 +111,20 @@ class TelegramBotTests(unittest.TestCase):
         button = message["reply_markup"]["inline_keyboard"][0][0]
         self.assertEqual(button["text"], "Pausar: demo/REQ-027")
         self.assertLessEqual(len(button["callback_data"].encode("utf-8")), 64)
+
+    def test_telegram_relay_rejects_commands_outside_safe_run_controls(self):
+        command = {
+            "schemaVersion": 1,
+            "idempotencyKey": "0123456789abcdef0123456789abcdef",
+            "type": "cancel-plan",
+            "target": {"kind": "plan", "project": "demo", "req": "REQ-027"},
+            "precondition": {"state": "review"},
+        }
+
+        with self.assertRaises(CommandValidationError):
+            self.runtime.submit_telegram_command(command)
+
+        self.assertEqual(self.laptop.commands, [])
 
 
 if __name__ == "__main__":
