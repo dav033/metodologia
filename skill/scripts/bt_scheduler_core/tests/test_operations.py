@@ -269,6 +269,18 @@ class Rework(unittest.TestCase):
         h.core.rework(("T3",), "operator", "again", cascade=False)       # T3 back to pending with T1 still being redone
         self.assertEqual(self.states(h)["T3"], "pending")
 
+    def test_without_cascade_a_waiting_dependent_goes_back_to_pending_and_a_running_one_keeps_going(self):
+        h = Harness([indep("T1"), indep("T2", ["T1"]), indep("T4", ["T1"])], parallel=1, max_attempts=2)
+        h.core.step()
+        h.finish_and_accept("T1")
+        h.core.step()                                              # parallel=1: T2 runs, T4 waits ready
+        states = self.states(h)
+        self.assertEqual((states["T2"], states["T4"]), ("active", "ready"))
+        h.core.rework(("T1",), "operator", "why", cascade=False)
+        states = self.states(h)
+        self.assertEqual(states["T2"], "active")                   # already running: left alone
+        self.assertEqual((states["T1"], states["T4"]), ("ready", "pending"))   # T4 must not start before T1 is redone
+
     def test_independent_branches_are_left_alone(self):
         h = self.chain()
         h.finish_and_accept("T9")

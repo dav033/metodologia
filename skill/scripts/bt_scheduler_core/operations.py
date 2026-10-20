@@ -136,9 +136,23 @@ def rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "", *, al
         rec.reworks += 1
         set_task(ctx, task_id, T.PENDING, by=by, reason=reason, decision="rework")
         moved.append(task_id)
+    if not cascade:
+        _hold_dependents(ctx, set(moved), by)
     ctx.audit("rework_requested", by=by, reason=reason, named=list(task_ids), tasks=moved, cascade=cascade)
     promote_ready(ctx)
     return tuple(moved)
+
+
+def _hold_dependents(ctx: Ctx, moved: set[str], by: str) -> None:
+    """Tasks that depend on a task just sent back and keep their own state (a rework without cascade) must not start while
+    it is redone: those waiting to start (ready, blocked or recovering, with no live attempt) go back to pending and
+    become ready again when every ancestor is completed. A dependent already running keeps going on what it started from."""
+    for spec in ctx.plan.tasks:
+        rec = ctx.state.tasks[spec.id]
+        if spec.id in moved or rec.state not in (T.READY.value, T.BLOCKED.value, T.RECOVERING.value):
+            continue
+        if live_attempt(ctx.state, spec.id) is None and moved & set(ctx.plan.ancestors(spec.id)):
+            set_task(ctx, spec.id, T.PENDING, by=by, reason="prerequisite_sent_back", decision="rework_wait")
 
 
 def withdraw_rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "") -> tuple[str, ...]:

@@ -50,6 +50,7 @@ class QualityVerificationPort:
         read_ledger: Callable[[VerifyRequest, str], bytes | None] | None = None,
         read_changes: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
         integration_check: Callable[[str, str, str], str] | None = None,
+        integration_retries: int = 2,
     ):
         self.core = core
         self.rework_notes = rework_notes
@@ -58,6 +59,7 @@ class QualityVerificationPort:
         self._read_ledger = read_ledger or self._ledger_from_snapshot
         self._read_changes = read_changes or self._changes_from_snapshot
         self.integration_check = integration_check        # (task, attempt, snapshot) -> '' or why it cannot be combined
+        self.integration_retries = integration_retries    # clash rejections of one task before the dependents give way
         self.executor = executor
         self.store = store
         self.policy = policy
@@ -360,6 +362,33 @@ class QualityVerificationPort:
             LOGGER.warning("integration check skipped (%s)", type(error).__name__)
             return ""
 
+    def _write_note(self, task_ids, text: str) -> None:
+        for task_id in task_ids if self.rework_notes is not None else ():
+            try:
+                self.rework_notes(task_id, text)
+            except OSError as error:
+                LOGGER.warning("note not written for %s (%s)", task_id, type(error).__name__)
+
+    def _prior_clashes(self, task_id: str) -> int:
+        return self.core.read(lambda ctx: sum(
+            1 for attempt in ctx.state.tasks[task_id].attempts
+            if str(ctx.state.attempts[attempt].failure).startswith("integration gate:")))
+
+    def _dependents_to_redo(self, clash: str, task_id: str) -> tuple[str, ...]:
+        """The accepted tasks on the other side of a clash, once `task_id` has been rejected `integration_retries` times
+        for it and still cannot fit around them: they were built on the result it replaces, so they give way. Empty when
+        the task still has retries, the other side is not a set of accepted tasks, or the rework cannot start now."""
+        if self._prior_clashes(task_id) < self.integration_retries:
+            return ()
+        sides = clash.split(" for ")[0].split(" vs ")
+        others = [t for side in sides if task_id not in side.split("+") for t in side.split("+")]
+        known = {spec.id for spec in self.core.plan.tasks}
+        done = self.core.read(lambda ctx: {t for t, rec in ctx.state.tasks.items() if rec.state == "completed"})
+        redo = tuple(t for t in others if t in known and t in done and t != task_id)
+        if not redo or self.core.rework_problem(redo, (), False):
+            return ()
+        return redo
+
     def _write_rework_notes(self, gate: bt_audit_gate.Gate, order: VerifyRequest) -> None:
         if self.rework_notes is None:
             return
@@ -406,14 +435,16 @@ class QualityVerificationPort:
                 return "pending"
             gate = self._audit_gate(order) if accepted else None
             clash = self._integration_problem(order) if accepted and (gate is None or gate.ok) else ""
+            give_way: tuple[str, ...] = ()
             if clash:
-                accepted = False
-                evidence = f"integration gate: {clash} | M6 evidence: {evidence}"[:2000]
-                if self.rework_notes is not None:
-                    try:
-                        self.rework_notes(order.task_id, _integration_note(clash))
-                    except OSError as error:
-                        LOGGER.warning("integration note not written for %s (%s)", order.task_id, type(error).__name__)
+                give_way = self._dependents_to_redo(clash, order.task_id)
+                if give_way:
+                    # the task already tried to fit around them: its result is accepted and they are rebuilt on top of it
+                    self._write_note(give_way, _give_way_note(order.task_id, clash))
+                else:
+                    accepted = False
+                    evidence = f"integration gate: {clash} | M6 evidence: {evidence}"[:2000]
+                    self._write_note((order.task_id,), _integration_note(clash))
             if gate is not None and not gate.ok:
                 accepted = False
                 evidence = f"{gate.summary()} | M6 evidence: {evidence}"[:2000]
@@ -442,6 +473,9 @@ class QualityVerificationPort:
                                                                cascade=cascade)
             else:
                 response = self.core.submit_verdict(verdict)
+                if give_way and response.status == "applied":
+                    self.core.rework(give_way, "integration-gate", f"{order.task_id} was accepted and clashes with "
+                                     f"{', '.join(give_way)}: {clash}"[:300], cascade=False)
         # Retain the outbox entry when any unexpected M1 integration failure occurs.
         except Exception as error:  # noqa: BLE001
             self.store.finish_delivery(request_key, "pending", type(error).__name__)
@@ -492,6 +526,13 @@ def _integration_note(clash: str) -> str:
             f"{clash}. Tasks that come after it, or were built on an earlier result of this one, would collide with it. "
             "Redo it as a small change on top of the result you started from: keep every file and function it already "
             "has, edit only what the task and the audit notes require, and do not rewrite or delete working code.")
+
+
+def _give_way_note(task_id: str, clash: str) -> str:
+    return (f"{task_id} was changed after this task was built (an audit finding needed it), and the two touch the same "
+            f"code: {clash}. Your tree now contains the new {task_id}. Redo this task on top of it: keep what your earlier "
+            "result did that is still right, adapt it to the new code instead of overwriting it, and do not delete working "
+            "code.")
 
 
 def _captured_handoff(

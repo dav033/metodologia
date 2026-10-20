@@ -330,6 +330,45 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertIn("T6+T10 vs T13 for T14", notes[0][1])
         self.assertIn("small change", notes[0][1])
 
+    def _give_way_system(self, prior_clashes, notes):
+        def spec(tid):
+            task = _task(tid, "python3 build.py")
+            task.update(kind="implement")
+            task["verification"][0]["category"] = "functional"
+            return task
+        system = self._system([spec("T3"), spec("T1")], max_attempts=2, schema_version="1.2.0",
+                              integration_check=lambda *args: "T1+T9 vs T3 for T4: remote/gateway/app.py",
+                              rework_notes=lambda task_id, text: notes.append((task_id, text)))
+        root, core, _, executor, _, adapter = system
+        adapter._prior_clashes = lambda task_id: prior_clashes
+        adapter.integration_check = (lambda task_id, attempt, snapshot:
+                                     "T1+T9 vs T3 for T4: remote/gateway/app.py" if task_id == "T1" else "")
+        self._start_attempts(core, executor, root, ("T3",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T3"]["state"] == "completed"))
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        return core
+
+    def test_a_task_that_keeps_clashing_is_accepted_and_the_accepted_task_it_clashes_with_is_rebuilt(self):
+        notes = []
+        core = self._give_way_system(2, notes)
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T1"]["state"] == "completed"))
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T3"]["state"] != "completed"))
+        event = [e for e in core.audit_log() if e.kind == "rework_requested"][-1]
+        self.assertEqual((event.detail["by"], event.detail["named"], event.detail["cascade"]),
+                         ("integration-gate", ["T3"], False))
+        self.assertEqual([task_id for task_id, _ in notes], ["T3"])
+        self.assertIn("Redo this task on top of it", notes[0][1])
+
+    def test_a_task_with_retries_left_is_rejected_instead_of_sending_the_others_back(self):
+        notes = []
+        core = self._give_way_system(0, notes)
+        self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T1"
+                                              and e.detail.get("to") == "rejected" for e in core.audit_log())))
+        self.assertEqual(core.snapshot().tasks["T3"]["state"], "completed")
+        self.assertEqual([task_id for task_id, _ in notes], ["T1"])
+
     def test_a_result_that_combines_cleanly_is_accepted(self):
         task = _task("T1", "python3 build.py")
         task.update(kind="implement")
