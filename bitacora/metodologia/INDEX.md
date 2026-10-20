@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-20 10:07 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-20 15:00 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -41,7 +41,8 @@ _Generated 2026-10-20 10:07 by `bitacora.py index`. Do not edit by hand._
 | [REQ-025](requirements/REQ-025-m2-quota-aware-provider-and-account-rout/SPEC.md) | M2 quota-aware provider and account routing | `in-progress` | — |  |
 | [REQ-026](requirements/REQ-026-demo-illustrative-plan-with-every-plan-f/SPEC.md) | DEMO — Illustrative plan with every plan feature (test only) | `in-progress` | [in-progress](requirements/REQ-026-demo-illustrative-plan-with-every-plan-f/PLAN.md) |  |
 | [REQ-027](requirements/REQ-027-remote-flow-control-vercel-frontend-advi/SPEC.md) | Remote flow control: Vercel frontend, AdvIn API, local or VPS execution | `planned` | [launched](requirements/REQ-027-remote-flow-control-vercel-frontend-advi/PLAN.md) |  |
-| [REQ-028](requirements/REQ-028-per-run-integration-branch-and-remediati/SPEC.md) | Per-run integration branch and remediation tasks: audit findings stop cascading rebuilds | `clarifying` | — |  |
+| [REQ-028](requirements/REQ-028-per-run-integration-branch-and-remediati/SPEC.md) | Per-run integration branch and remediation tasks: audit findings stop cascading rebuilds | `in-progress` | — |  |
+| [REQ-029](requirements/REQ-029-autonomous-recovery-from-repeated-audit/SPEC.md) | Autonomous recovery from repeated audit failures | `clarifying` | [in-progress](requirements/REQ-029-autonomous-recovery-from-repeated-audit/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -55,11 +56,11 @@ _Generated 2026-10-20 10:07 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
-- D-089 — A task redone over changed code resolves a merge in progress instead of rebuilding from nothing
-- D-088 — An integration gate at acceptance: the task that causes a clash is the one sent back
-- D-087 — Forward remediation: an audit rejection redoes the named tasks and the tests over them, not the whole downstream
-- D-086 — Audits are read-only; REQ-027 plan r7 sequences the cross-check after the primary audit
-- D-085 — Telemetry that teaches: Codex in `--json`, a quiet monitor, and Scheduler attempts in the attempt log
+- D-100 — A retry of a failed attempt is carried onto its prerequisites' new work, never continued on a stale tree
+- D-099 — A retry reads the history of the task's earlier attempts, and is warned when they keep failing the same way
+- D-098 — The bitácora pull never kills git while it holds an autostash, and never rebases under uncommitted code
+- D-097 — A stop is diagnosed from its evidence, by rules and by a cheap agent, and shown as origin, steps and one recommended move
+- D-096 — A stopped task says what it needs from the owner, what the owner can do and the error
 
 ## Artifacts
 

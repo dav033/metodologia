@@ -10,7 +10,7 @@ Last confirmed with owner: YYYY-MM-DD (set only after the owner confirms; otherw
 REQ-027 r9 is under the repaired Scheduler; T18 is blocked on owner decision T18:11 after findings F2, F19 and F20. REQ-020 r2 has T5 att-0011 running. `/flow` intentionally folds M4 provider detail and informational incidents into per-attempt digests (D-085); REQ-027 currently has 5,703 provider events and 966 info incidents folded, with two medium connection errors visible.
 
 ## Active focus
-- REQ-027: wait for owner direction on T18:11, then continue the audit/rework flow from current evidence.
+- REQ-029: owner requests system-level autonomous recovery from repeated audit failures; forensic evidence and specification prepared, classified plan in progress. REQ-027 T18:11 is the acceptance case, not a manual product repair.
 - Pictures REQ-020: monitor T5 att-0011 and downstream work; T4 is no longer the live attempt.
 - 2026-10-18 Relay C2 marathon retirement completed: obsolete tests removed, shared coverage retained, remaining launch/orchestration tests migrated, and three Scheduler-only launch regressions fixed. Targeted tests passed (207 cases plus quality_metrics 24); migration package/entrypoint/inventory 45 passed. Compile/imports/CLI/wheel/sdist passed. Collection retains pre-existing relay_run 52 -> 48 failure; scoped lint retains 12 pre-existing F401 findings, no new findings. C3 documentation/overall removal reconciliation remains under P-001; P-002 unchanged. Owner's dirty/staged tree preserved; no commits or full-suite rerun.
 

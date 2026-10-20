@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r2:att-0011:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "Todos los criterios pasaron; un check genérico no mapea a ningún criterio",
+ "origin": "El verificador no encontró un fallo real: el error es CHECK_UNMAPPED, que significa que un check no corresponde exactamente a un criterio de aceptación. El check `npm run asesor:test` es genérico, y `scripts/test/asesor/brief.test.ts` aparece tres veces como check, así que el verificador se detuvo a pedir una persona. La evidencia no muestra el resultado por criterio; el diagnóstico previo indica que los tres pasaron.",
+ "steps": [
+  "Confirma en el detalle de REQ-020 que los tres criterios de T5 salen PASS, sobre todo la proyección del vendedor sin nombre, contacto ni presupuesto.",
+  "Obtén el id de la decisión con `python ~/dev/metodologia/skill/scripts/bitacora.py --project pictures scheduler-op REQ-020 decisions`.",
+  "Aprueba con `python ~/dev/metodologia/skill/scripts/bitacora.py --project pictures scheduler-op REQ-020 decide <id> review_pass --reason \"todos los criterios PASS; solo CHECK_UNMAPPED\"`.",
+  "Para la próxima revisión del plan, sube \"revision\" en PLAN.json, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`, y quita las líneas repetidas de brief.test.ts o da al check genérico el propósito de un criterio."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T15:03:19",
+ "seconds": 15.6
+}

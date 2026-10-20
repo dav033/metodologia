@@ -1,0 +1,707 @@
+{
+  "schema": "recovery-investigation/1",
+  "project": "metodologia",
+  "req": "REQ-027",
+  "audit": "T18",
+  "source": "Read-only official M1 state and immutable M3 snapshots",
+  "attempts": [
+    {
+      "attempt": "att-0038",
+      "number": 1,
+      "state": "accepted",
+      "failure": "",
+      "current_signature": "",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r3-626cca55-1792439172092/attempts/att-0038-d0344d89e2f42aa3/handoff/manifest.json",
+      "base_sha": "481e89386de3fec62c00a782c0858a71e7382576",
+      "snapshot_sha": "9d9fc4419066e2fe0588609c1267171eb8ddc54f"
+    },
+    {
+      "attempt": "att-0040",
+      "number": 2,
+      "state": "rejected",
+      "failure": "audit gate: 3 open blocking finding(s): F1 (high), F2 (high), F3 (high) | M6 evidence: m6://result/31dd1cf153935941ced132896e19dda4c0286a13243cd9f2c61c7cb828b1276c",
+      "current_signature": "a453d59c9a55",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r4-c6f64c2a-1792439172092/attempts/att-0040-97e24d64ed21fb11/handoff/manifest.json",
+      "base_sha": "481e89386de3fec62c00a782c0858a71e7382576",
+      "snapshot_sha": "2a0849247b3a724e157caf659af9808dab75229c",
+      "ledger_sha256": "5ea549013e6c650c55d3a7c41f7612621d412331fe8fa381bf64a9a6220582cd",
+      "blocking_findings": [
+        {
+          "id": "F1",
+          "severity": "high",
+          "status": "open",
+          "summary": "Gateway has no HTTP server; session, CSRF/Origin, rate limit, request log, SSE and relay are unwired libraries and /healthz is not served",
+          "tasks": [
+            "T10",
+            "T11a",
+            "T12",
+            "T13"
+          ]
+        },
+        {
+          "id": "F2",
+          "severity": "high",
+          "status": "open",
+          "summary": "Laptop remote API routes only health, snapshot and attempt-review; commands, challenges, events, history, runs, plans and quotas are not served and the review path differs from the contract",
+          "tasks": [
+            "T4",
+            "T5a",
+            "T5b",
+            "T6",
+            "T7"
+          ]
+        },
+        {
+          "id": "F3",
+          "severity": "high",
+          "status": "open",
+          "summary": "Reverse tunnel exposes the whole unauthenticated local panel (incl. plan launch) to any process on AdvIn, not only /api/remote/v1; needs a remote-only listener and a retargeted tunnel unit",
+          "tasks": [
+            "T3",
+            "T9",
+            "T16"
+          ]
+        }
+      ]
+    },
+    {
+      "attempt": "att-0070",
+      "number": 3,
+      "state": "cancelled",
+      "failure": "reworked by audit-gate",
+      "current_signature": "58d11d929410",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r5-018ca34e-1792439172092/attempts/att-0070-c51db45e33d57d90/handoff/manifest.json",
+      "base_sha": "2152448fd8365ece001f3df102dc5bb35f665279",
+      "snapshot_sha": "9b4bb54379edbeeea479e19273a044c38c862315",
+      "ledger_sha256": "a2ab76f221f8e90e193e097715676d6791a4e92f480b882071dc54f2822ed870",
+      "blocking_findings": [
+        {
+          "id": "F1",
+          "severity": "high",
+          "status": "open",
+          "summary": "Frontend routes, snapshot fields and live event shapes disagree with the real gateway and laptop API; the panel cannot load or control runs.",
+          "tasks": [
+            "T12",
+            "T13",
+            "T15a",
+            "T15b",
+            "T15c",
+            "T15d",
+            "T15e",
+            "T15f"
+          ],
+          "evidence": "audit.md F1; audit-evidence/observations.json gateway/cache: authenticated frontend paths return 404; production /api/snapshot returns 200."
+        },
+        {
+          "id": "F2",
+          "severity": "high",
+          "status": "open",
+          "summary": "Production serve() never wires event/liveness notifications to Telegram delivery; the E2E adds its own missing production wiring and alerts lack review links/buttons.",
+          "tasks": [
+            "T14",
+            "T14a",
+            "T14b",
+            "T17"
+          ],
+          "evidence": "audit.md F2; remote/gateway/server.py:406; audit-evidence/observations.json notifications; remote/e2e/tests/test_local_e2e.py:267."
+        },
+        {
+          "id": "F3",
+          "severity": "high",
+          "status": "open",
+          "summary": "Recovery uses incompatible target/state vocabularies and an absent routes endpoint; remote notes are stored in a file the next-attempt prompt never reads.",
+          "tasks": [
+            "T5a",
+            "T8",
+            "T8a",
+            "T15f"
+          ],
+          "evidence": "audit.md F3; audit-evidence/observations.json commands: web note/edit targets INVALID_COMMAND, terminal task unknown, recorded note absent from next prompt notes."
+        },
+        {
+          "id": "F4",
+          "severity": "high",
+          "status": "open",
+          "summary": "The ledger commits OK before validation/effects; invalid commands and interrupted commands can replay as successful without performing the requested action.",
+          "tasks": [
+            "T5",
+            "T5a",
+            "T5b"
+          ],
+          "evidence": "audit.md F4; audit-evidence/observations.json commands: invalid note first INVALID_COMMAND, stored/replayed OK; reopened interrupted ledger replays OK with null detail and absent effect."
+        },
+        {
+          "id": "F5",
+          "severity": "high",
+          "status": "open",
+          "summary": "Idempotency ignores effect-bearing request content and preconditions ignore revision/updatedAt, accepting changed requests and stale plan revisions.",
+          "tasks": [
+            "T5",
+            "T5a",
+            "T5b",
+            "T8a"
+          ],
+          "evidence": "audit.md F5; audit-evidence/observations.json commands: changed_body_replayed true and expected revision 1 accepted against revision 2."
+        },
+        {
+          "id": "F6",
+          "severity": "high",
+          "status": "open",
+          "summary": "Failure review loses real verification/diff evidence through the live projection, reads the supervisor log, and returns a shape rejected by the frontend.",
+          "tasks": [
+            "T7",
+            "T15c",
+            "T17"
+          ],
+          "evidence": "audit.md F6; audit-evidence/observations.json review_after_real_projection has null command/output/stat and empty files/log; bt_remote_api.py:144-168 and page.tsx:91."
+        },
+        {
+          "id": "F7",
+          "severity": "high",
+          "status": "open",
+          "summary": "The documented API-host OAuth callback cannot receive frontend-host state/session cookies; Strict state-cookie handling also lacks browser verification.",
+          "tasks": [
+            "T11",
+            "T15",
+            "T16"
+          ],
+          "evidence": "audit.md F7; remote/docs/runbook.md:15-19, remote/gateway/auth.py:45, remote/gateway/server.py:329; source/configuration proof, no live/browser login claimed."
+        },
+        {
+          "id": "F8",
+          "severity": "high",
+          "status": "open",
+          "summary": "Laptop text redaction misses FLOW_GATEWAY_KEY, TELEGRAM_BOT_TOKEN and GITHUB_CLIENT_SECRET assignments; snapshot/event failure text bypasses review redaction.",
+          "tasks": [
+            "T7",
+            "T4a",
+            "T6"
+          ],
+          "evidence": "audit.md F8; audit-evidence/observations.json review.env_assignments_left_unredacted is 3 using synthetic values only; bt_remote_api.py:16 and bt_remote_events.py:49."
+        },
+        {
+          "id": "F12",
+          "severity": "high",
+          "status": "open",
+          "summary": "The UI only renders runs[0] and lacks required cancel-attempt/reason, reopen, plan cancel/delete and acceptance-criteria controls.",
+          "tasks": [
+            "T15a",
+            "T15b",
+            "T15d",
+            "T15f"
+          ],
+          "evidence": "audit.md F12; source review of page.tsx:280,308,320, command-sheet.tsx actions and recovery-panel.tsx forms."
+        }
+      ]
+    },
+    {
+      "attempt": "att-0114",
+      "number": 4,
+      "state": "accepted",
+      "failure": "",
+      "current_signature": "",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r6-4c962fa9-1792439172092/attempts/att-0114-5654e2af21f529e6/handoff/manifest.json",
+      "base_sha": "d6b9491bc56eb7b13f17ce690f5480c14053a944",
+      "snapshot_sha": "04c78b17a729db9672d4f556756b7a4d2bc756df",
+      "ledger_sha256": "cdb227beb90ba181221d73017300b2f8a500bc5c39c5e564cc949cc4c63d2a1a",
+      "blocking_findings": []
+    },
+    {
+      "attempt": "att-0172",
+      "number": 5,
+      "state": "rejected",
+      "failure": "audit gate: 11 open blocking finding(s): F1 (high), F2 (high), F3 (high), F4 (high), F5 (high), F6 (high), F7 (high), F8 (high), F9 (high), F10 (high), F19 (high) | M6 evidence: m6://result/52cf3a71308ceeb8c969c8a043ab65ef8c3cc696cb6f0d6adfb37e5365d9cfa4",
+      "current_signature": "7795508ca9a1",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r7-17522cd6-1792439172092/attempts/att-0172-04e384e2de44367a/handoff/manifest.json",
+      "base_sha": "210f3e58397816dbaeea628ec528f6540105f79b",
+      "snapshot_sha": "32926c5c19381b5a28c35198e488c0f1eb7b6975",
+      "ledger_sha256": "b5ea5c5bb745068a20220ad06a9f1a80ee721c09f705d3bcff7bc7cf4f3e8281",
+      "blocking_findings": [
+        {
+          "id": "F1",
+          "severity": "high",
+          "status": "open",
+          "summary": "The displayed GitHub sign-in route returns 404; the displayed logout route is also absent.",
+          "tasks": [
+            "T15a"
+          ],
+          "evidence": "Probe A: GET /api/auth/github and /api/auth/logout -> 404; page.tsx:390/412 versus gateway/server.py:60."
+        },
+        {
+          "id": "F2",
+          "severity": "high",
+          "status": "open",
+          "summary": "The shared web command/challenge sender omits X-Flow-Request and all web mutations are refused.",
+          "tasks": [
+            "T15d"
+          ],
+          "evidence": "Probe A: matching Origin and valid fixture session with the web's headers -> 403 forbidden."
+        },
+        {
+          "id": "F3",
+          "severity": "high",
+          "status": "open",
+          "summary": "The gateway forwards the public command schema unchanged to a laptop ledger that requires another format.",
+          "tasks": [
+            "T13"
+          ],
+          "evidence": "Probe A: contract-valid pause through both production HTTP handlers -> 400 INVALID_COMMAND. Laptop requires idempotency_key/command/string target/origin/params."
+        },
+        {
+          "id": "F4",
+          "severity": "high",
+          "status": "open",
+          "summary": "The gateway has no authenticated challenge-issuance relay, blocking genuine destructive confirmations.",
+          "tasks": [
+            "T13"
+          ],
+          "evidence": "Probe A: POST /api/remote/v1/challenges with valid session, Origin and marker -> 404."
+        },
+        {
+          "id": "F5",
+          "severity": "high",
+          "status": "open",
+          "summary": "Production run/plan snapshots use a different dialect from the mobile parser and omit round/decision detail.",
+          "tasks": [
+            "T4a",
+            "T15a",
+            "T15b",
+            "T15e"
+          ],
+          "evidence": "Probe A: real run_summaries projection emits req_id/status/attempt, not required req/state/activeAttempt; bt_planstatus.list_plans emits summary rows only."
+        },
+        {
+          "id": "F6",
+          "severity": "high",
+          "status": "open",
+          "summary": "Required review/quotas/history/routes read paths are not connected; quotas/history remain laptop placeholders.",
+          "tasks": [
+            "T12",
+            "T15c",
+            "T15d",
+            "T15f"
+          ],
+          "evidence": "Probe A: authenticated gateway GET review, quotas, commands and routes -> 404; laptop quotas/commands -> unconditional 503; UI history is per-page React state."
+        },
+        {
+          "id": "F7",
+          "severity": "high",
+          "status": "open",
+          "summary": "The Telegram owner-only bot, safe callbacks, inline buttons and /estado are missing.",
+          "tasks": [
+            "T14b"
+          ],
+          "evidence": "Probe B: sendMessage payload has only chat_id/text. test_telegram_bot.py is absent; its discovery command runs zero tests."
+        },
+        {
+          "id": "F8",
+          "severity": "high",
+          "status": "open",
+          "summary": "Production alerts lack several specified event producers and do not establish retry exhaustion before notifying.",
+          "tasks": [
+            "T6",
+            "T14"
+          ],
+          "evidence": "Probe B: a real attempt_transition failed row produces a no-retries alert without retry facts. Production plan summaries omit decisions; no derivation of completion/round/quota/stall conditions exists in the audited remote path."
+        },
+        {
+          "id": "F9",
+          "severity": "high",
+          "status": "open",
+          "summary": "SESSION_SECRET is omitted from laptop remote redaction and can pass through diagnostic payloads.",
+          "tasks": [
+            "T6",
+            "T7"
+          ],
+          "evidence": "Probe A: synthetic SESSION_SECRET assignment remains in 200 snapshot and review payloads. No real credential was inspected or found."
+        },
+        {
+          "id": "F10",
+          "severity": "high",
+          "status": "open",
+          "summary": "Anonymous requests consume the owner's shared command quota; OAuth starts are not throttled.",
+          "tasks": [
+            "T11a"
+          ],
+          "evidence": "Probe B: 30 anonymous command requests -> 401, next owner request -> 429; limiter keys socket peer before session check. Probe A: six login starts -> six 302s."
+        },
+        {
+          "id": "F19",
+          "severity": "high",
+          "status": "open",
+          "summary": "Task/attempt preconditions resolve run state rather than the actual mutation target.",
+          "tasks": [
+            "T5",
+            "T5a"
+          ],
+          "evidence": "Probe C: failed-task retry against a running run -> STALE_PRECONDITION, zero handler calls. target_state only accepts project/REQ and has no task/attempt state lookup."
+        }
+      ]
+    },
+    {
+      "attempt": "att-0180",
+      "number": 6,
+      "state": "rejected",
+      "failure": "audit gate: 5 open blocking finding(s): F1 (high), F2 (high), F3 (high), F4 (high), F14 (high) | the findings become remediation tasks; this audit runs again after them | M6 evidence: m6://result/3b5910c821be32ebac1fd97b154c724ebd0e01c0cb2c0441e58509ff4d775f8a",
+      "current_signature": "3680e2ad6291",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r8-f5437aa5-1792439172092/attempts/att-0180-cce39f22c671e16a/handoff/manifest.json",
+      "base_sha": "df2282480d31dcfd59768d6cd16b4502c04468cc",
+      "snapshot_sha": "e8730609a0ad85e90aad1ccd6b9966e13ca6733e",
+      "ledger_sha256": "260ba078f82bae9e9f337066884bd0c721cd1ea40c321270cf304b0e73249530",
+      "blocking_findings": [
+        {
+          "id": "F1",
+          "severity": "high",
+          "status": "open",
+          "summary": "Resolving an ephemeral decision/round event invalidates the laptop feed cursor; the gateway retries that cursor indefinitely and stops subsequent SSE/Telegram delivery.",
+          "tasks": [
+            "T6",
+            "T12"
+          ],
+          "evidence": "Real route_get: resolving the last decision changes the previously valid after cursor to HTTP 400 INVALID_CURSOR. Two gateway polls retained and requested the same expired cursor. See audit.md F1."
+        },
+        {
+          "id": "F2",
+          "severity": "high",
+          "status": "open",
+          "summary": "The production task projection removes non-live failed attempt identity from activeAttempt, while the web renders reviews only for failed tasks with activeAttempt; Telegram review fragments also have no matching page target.",
+          "tasks": [
+            "T4a",
+            "T15c"
+          ],
+          "evidence": "task_view on a rejected task with a non-live failed attempt returns activeAttempt=None; page.tsx:417 cannot render its review and does not parse history or handle #attempt fragments. See audit.md F2."
+        },
+        {
+          "id": "F3",
+          "severity": "high",
+          "status": "open",
+          "summary": "Web decision answers are rejected by the gateway type allowlist; requestId/request_id translation and decision-specific precondition reading are also missing.",
+          "tasks": [
+            "T13",
+            "T5a"
+          ],
+          "evidence": "validate_command on the page's answer-decision envelope raises INVALID_COMMAND; the laptop requires request_id and reads run state instead of the open decision. See audit.md F3."
+        },
+        {
+          "id": "F4",
+          "severity": "high",
+          "status": "open",
+          "summary": "Round answers compare open-round preconditions against plan/run state and send singular answer where the laptop requires answers.",
+          "tasks": [
+            "T5b",
+            "T15e"
+          ],
+          "evidence": "Real ledger with a waiting scheduler status and the open-round web precondition returns STALE_PRECONDITION; to_laptop_command retains answer and provides no answers. See audit.md F4."
+        },
+        {
+          "id": "F14",
+          "severity": "high",
+          "status": "open",
+          "summary": "The explicit distribution manifest omits all five bt_remote modules, breaking the remote API in installed environments despite passing checkout tests.",
+          "tasks": [
+            "T4"
+          ],
+          "evidence": "Built wheel/sdist via tests/migration/installed_wheel.py; wheel lacks bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_recovery and bt_remote_views. Isolated installed import bt_remote_api raises ModuleNotFoundError. See audit.md F14."
+        }
+      ]
+    },
+    {
+      "attempt": "att-0181",
+      "number": 7,
+      "state": "cancelled",
+      "failure": "cancelled_by_executor",
+      "current_signature": "1148eb69106d"
+    },
+    {
+      "attempt": "att-0185",
+      "number": 8,
+      "state": "rejected",
+      "failure": "audit gate: 2 open blocking finding(s): F1 (high), F2 (high) | M6 evidence: m6://result/23371003bfc386b7e6825bf71489421f37e50ad77e9e232af351557ac0f5165d",
+      "current_signature": "141de9beb54b",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r9-e2d7030f-1792439172092/attempts/att-0185-9037837c27608c2e/handoff/manifest.json",
+      "base_sha": "0ba9b657011be079d160ed12134f1130cf08a4e9",
+      "snapshot_sha": "dcfc5a591004a1848951b345a3c5b3fd5531fe44",
+      "ledger_sha256": "94a917a012a65d24474cb2eb3ad3580752a96f655b6627d38f3d3fc90236544e",
+      "blocking_findings": [
+        {
+          "id": "F1",
+          "severity": "high",
+          "status": "open",
+          "summary": "Deployment kit proxies container loopback and binds gateway to host loopback, contradicting the approved Docker Caddy-to-host 172.20.0.1:8790 topology; all public API access fails.",
+          "tasks": [
+            "T16"
+          ]
+        },
+        {
+          "id": "F2",
+          "severity": "high",
+          "status": "open",
+          "summary": "Required local E2E command exits 1: forced failure never reaches fake Telegram. Harness does not isolate/seed the separate authoritative retry-context read used by production events.",
+          "tasks": [
+            "T17"
+          ]
+        }
+      ]
+    },
+    {
+      "attempt": "att-0198",
+      "number": 9,
+      "state": "rejected",
+      "failure": "audit gate: 2 open blocking finding(s): F1 (high), F2 (high) | M6 evidence: m6://result/c4d12b360ae5487bf6893e131560114721a77a599d9ac81d831535986b75fdda",
+      "current_signature": "141de9beb54b",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r9-e2d7030f-1792439172092/attempts/att-0198-e03b4138a1665293/handoff/manifest.json",
+      "base_sha": "dcfc5a591004a1848951b345a3c5b3fd5531fe44",
+      "snapshot_sha": "13d914a6c446b3d350a2d2b0883bd9470d165905",
+      "ledger_sha256": "ab7bcb8a3a99fe931acc54ae10fea2d153a66e74b00277e7e04e14ec13d12851",
+      "blocking_findings": [
+        {
+          "id": "F1",
+          "severity": "high",
+          "status": "open",
+          "summary": "Deployment kit proxies container loopback and binds gateway to host loopback, contradicting the approved Docker Caddy-to-host 172.20.0.1:8790 topology; all public API access fails.",
+          "tasks": [
+            "T16"
+          ],
+          "evidence": "Current-tree inspection: PLAN.md Approach specifies Docker Caddy -> 172.20.0.1:8790; remote/deploy/Caddyfile:12 still proxies 127.0.0.1:8790. Probe C confirms GatewayConfig default bind 127.0.0.1. Kit suite exits 0 but asserts the loopback upstream; no actual Docker boundary tested."
+        },
+        {
+          "id": "F2",
+          "severity": "high",
+          "status": "open",
+          "summary": "Required local E2E still exits 1 on the forced-failure Telegram assertion with an isolated empty bitacora root: authoritative retry context is not seeded. Required real-ledger cancel/stale scenarios are also absent.",
+          "tasks": [
+            "T17"
+          ],
+          "evidence": "T17 unittest command with temporary empty BITACORA_ROOT, run sequentially after web/kit checks: exit 1; Ran 1 test in 35.751s; line 294, forced failure did not reach the fake Telegram before its deadline. Probe B: production-shaped failure with empty retry context returns None, exhausted-task context emits attempt.failed. Harness also omits required ledger cancel/stale scenarios."
+        }
+      ]
+    },
+    {
+      "attempt": "att-0201",
+      "number": 10,
+      "state": "rejected",
+      "failure": "audit gate: 2 open blocking finding(s): F1 (high), F2 (high) | M6 evidence: m6://result/fc5b43f9483b51382f09346c6c4e900b510a9ba0d28afc4d5c3f83650c9466f0",
+      "current_signature": "141de9beb54b",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r9-e2d7030f-1792439172092/attempts/att-0201-a196ba60b2347a76/handoff/manifest.json",
+      "base_sha": "13d914a6c446b3d350a2d2b0883bd9470d165905",
+      "snapshot_sha": "15f1a318f82e3e5a69a5fd6fb1d60efb7917febf",
+      "ledger_sha256": "347843bc7b5bc5abe3fd95ac642577ab685df353bb13e01d4b16900c3ab0fbb0",
+      "blocking_findings": [
+        {
+          "id": "F1",
+          "severity": "high",
+          "status": "open",
+          "summary": "Deployment kit proxies container loopback and binds gateway to host loopback, contradicting the approved Docker Caddy-to-host 172.20.0.1:8790 topology; all public API access fails.",
+          "tasks": [
+            "T16"
+          ],
+          "evidence": "Current-tree inspection: PLAN.md Approach specifies Docker Caddy -> 172.20.0.1:8790; remote/deploy/Caddyfile:11 still proxies 127.0.0.1:8790. Probe C confirms GatewayConfig default bind 127.0.0.1. Kit suite exits 0 but asserts the loopback upstream; no actual Docker boundary tested."
+        },
+        {
+          "id": "F2",
+          "severity": "high",
+          "status": "open",
+          "summary": "Required local E2E still exits 1 on the forced-failure Telegram assertion with an isolated empty bitacora root: authoritative retry context is not seeded. Required real-ledger cancel/stale scenarios are also absent.",
+          "tasks": [
+            "T17"
+          ],
+          "evidence": "T17 unittest command with temporary empty BITACORA_ROOT, run sequentially after web/kit checks: exit 1; Ran 1 test in 36.867s; line 294, forced failure did not reach the fake Telegram before its deadline. Probe B: production-shaped failure with empty retry context returns None, exhausted-task context emits attempt.failed. Harness also omits required ledger cancel/stale scenarios."
+        }
+      ]
+    },
+    {
+      "attempt": "att-0202",
+      "number": 11,
+      "state": "rejected",
+      "failure": "audit gate: 3 open blocking finding(s): F2 (high), F19 (high), F20 (high) | M6 evidence: m6://result/5bb60931755bcefa02f84d7a9bc1e2b78e03627dd671dee5c310456fb6209b8b",
+      "current_signature": "a453d59c9a55",
+      "manifest": "/home/david/bitacora/.state/executor/metodologia-REQ-027-r9-e2d7030f-1792439172092/attempts/att-0202-a0408f7e01944c9e/handoff/manifest.json",
+      "base_sha": "4c20e6cb77611d16f610a44c108b84220236d857",
+      "snapshot_sha": "088cefb37b3cf0456b279a5a026c514bc34578d9",
+      "ledger_sha256": "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610",
+      "blocking_findings": [
+        {
+          "id": "F2",
+          "severity": "high",
+          "status": "open",
+          "tasks": [
+            "T17"
+          ],
+          "summary": "The E2E fixture still yields no failure event and its supposedly valid cancel command pins running against a reserved attempt; full E2E also stops at the web build.",
+          "evidence": "cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py: exit 1, Ran 0 tests, setUpClass build error (F19). Report probe C: real fixture feed events=[], nextCursor=''; fixture attempt state reserved; stale command 409 STALE_PRECONDITION; supposedly current cancel also 409 STALE_PRECONDITION; cancelled transitions 0."
+        },
+        {
+          "id": "F19",
+          "severity": "high",
+          "status": "open",
+          "tasks": [
+            "T15a"
+          ],
+          "summary": "The current run-history parser does not typecheck, preventing the production build and every built-web E2E scenario.",
+          "evidence": "cd remote/web && npm run verify: exit 2 at typecheck; TS2677 page.tsx:138 and TS2322 page.tsx:143. E2E invokes npm run build, which exits 1 on the same invalid Attempt type predicate; Ran 0 tests in 12.061s."
+        },
+        {
+          "id": "F20",
+          "severity": "high",
+          "status": "open",
+          "tasks": [
+            "T15a"
+          ],
+          "summary": "Successful real OAuth sessions cannot load the phone panel because the gateway and web disagree on the session response.",
+          "evidence": "Report probe B: authenticated GET /api/auth/session returns HTTP 200 {login:'dav033'}. page.tsx load requires typeof parsedSession.authenticated === 'boolean' and otherwise throws Respuesta de sesión inválida before setting session or fetching snapshot. Mock returns authenticated:true and conceals the mismatch."
+        }
+      ]
+    }
+  ],
+  "remediation_rounds": [
+    {
+      "at": 1792512509.6655452,
+      "audit": "T18",
+      "round": 1,
+      "tasks": [
+        "T18.1",
+        "T18.2",
+        "T18.3",
+        "T18.4"
+      ],
+      "findings": [
+        {
+          "id": "F1",
+          "severity": "high",
+          "tasks": [
+            "T15a"
+          ]
+        },
+        {
+          "id": "F2",
+          "severity": "high",
+          "tasks": [
+            "T15d"
+          ]
+        },
+        {
+          "id": "F3",
+          "severity": "high",
+          "tasks": [
+            "T13"
+          ]
+        },
+        {
+          "id": "F4",
+          "severity": "high",
+          "tasks": [
+            "T13"
+          ]
+        },
+        {
+          "id": "F5",
+          "severity": "high",
+          "tasks": [
+            "T4a",
+            "T15a",
+            "T15b",
+            "T15e"
+          ]
+        },
+        {
+          "id": "F6",
+          "severity": "high",
+          "tasks": [
+            "T12",
+            "T15c",
+            "T15d",
+            "T15f"
+          ]
+        },
+        {
+          "id": "F7",
+          "severity": "high",
+          "tasks": [
+            "T14b"
+          ]
+        },
+        {
+          "id": "F8",
+          "severity": "high",
+          "tasks": [
+            "T6",
+            "T14"
+          ]
+        },
+        {
+          "id": "F9",
+          "severity": "high",
+          "tasks": [
+            "T6",
+            "T7"
+          ]
+        },
+        {
+          "id": "F10",
+          "severity": "high",
+          "tasks": [
+            "T11a"
+          ]
+        },
+        {
+          "id": "F19",
+          "severity": "high",
+          "tasks": [
+            "T5",
+            "T5a"
+          ]
+        }
+      ]
+    },
+    {
+      "at": 1792515689.2188203,
+      "audit": "T18",
+      "round": 2,
+      "tasks": [
+        "T18.5",
+        "T18.6"
+      ],
+      "findings": [
+        {
+          "id": "F1",
+          "severity": "high",
+          "tasks": [
+            "T6",
+            "T12"
+          ]
+        },
+        {
+          "id": "F2",
+          "severity": "high",
+          "tasks": [
+            "T4a",
+            "T15c"
+          ]
+        },
+        {
+          "id": "F3",
+          "severity": "high",
+          "tasks": [
+            "T13",
+            "T5a"
+          ]
+        },
+        {
+          "id": "F4",
+          "severity": "high",
+          "tasks": [
+            "T5b",
+            "T15e"
+          ]
+        },
+        {
+          "id": "F14",
+          "severity": "high",
+          "tasks": [
+            "T4"
+          ]
+        }
+      ]
+    }
+  ]
+}
