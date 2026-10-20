@@ -116,8 +116,21 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
         task = params.get("task")
         if not isinstance(task, str) or not task:
             raise ValueError("retry requiere params.task.")
-        if params.get("route"):
-            raise ValueError("retry con route requiere el despachador de recuperación.")
+        task = ops.bound_plan(rdir).task(task).id
+        route = params.get("route")
+        if route is None and any(key in params for key in ("provider", "model", "account", "profile")):
+            route = {key: params[key] for key in ("provider", "model", "account", "profile") if key in params}
+        if route is not None:
+            import bt_remote_recovery as recovery
+            pin = recovery.validate_pin(route)
+            recovery.validate_available(project, rdir, task, pin)
+            recovery.write_pin(rdir, task, pin)
+        note = params.get("reason", "")
+        if note.strip():
+            import bt_scheduler_decisions as decisions
+            path = decisions.notes_path(rdir, task)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(note.strip() + "\n", encoding="utf-8")
         messages = ops.retry(project, req, rdir, task, reason)
         messages.append(ops.resume(project, req, rdir))
         return {"messages": messages}

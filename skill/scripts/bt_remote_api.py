@@ -275,6 +275,18 @@ def route_get(handler) -> None:
                                    "generatedAt": dt.datetime.now(dt.UTC).isoformat(), "cursor": ""}))
         if path == f"{PREFIX}/runs":
             return _json(handler, {"runs": _runs()})
+        if path == f"{PREFIX}/routes":
+            target, task = query.get("target", ""), query.get("task", "")
+            if not target or not re.fullmatch(r"[A-Za-z0-9_-]+/REQ-[0-9]+", target) or \
+                    not re.fullmatch(r"T[0-9A-Za-z_-]{1,79}", task):
+                return _problem(handler, 400, "INVALID_ROUTE_QUERY", "Se requieren target y task válidos.")
+            import bt_remote_commands as commands
+            import bt_remote_recovery as recovery
+            try:
+                project, _, rdir = commands._run_target(target)
+                return _json(handler, {"routes": recovery.route_options(project, rdir, task)})
+            except ValueError as exc:
+                return _problem(handler, 404, "ROUTES_UNAVAILABLE", str(exc))
         if path == f"{PREFIX}/plans":
             return _json(handler, {"plans": _plans()})
         if path == f"{PREFIX}/history":
