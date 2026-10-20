@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { FlowEvent, parseFlowEvent } from "../lib/flow-events";
+import { postRemoteMutation } from "../lib/remote-api";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string; roundId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
@@ -279,14 +280,16 @@ export default function HomePage() {
     try {
       const confirmation = record(command.confirmation);
       if (confirmation && text(confirmation.typedReq)) {
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" },
-          body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmation.typedReq }) });
+        const challengeResponse = await postRemoteMutation("/api/remote/v1/challenges", {
+          target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`,
+          typedReq: confirmation.typedReq,
+        });
         const challengeBody: unknown = await challengeResponse.json().catch(() => null);
         const challenge = record(challengeBody);
         if (!challengeResponse.ok || !text(challenge?.challengeId)) throw new Error(text(record(challengeBody)?.message) ? String(record(challengeBody)?.message) : "No se pudo obtener la confirmación del gateway.");
         command.confirmation = { challengeId: challenge.challengeId, typedReq: confirmation.typedReq };
       }
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" }, body: JSON.stringify(command) });
+      const response = await postRemoteMutation("/api/remote/v1/commands", command);
       const responseBody: unknown = await response.json().catch(() => null);
       if (!response.ok) {
         const problem = record(responseBody);

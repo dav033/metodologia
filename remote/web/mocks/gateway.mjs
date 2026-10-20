@@ -61,6 +61,10 @@ export async function createMockGatewayServer() {
     }
     if (request.method === "POST" && request.url === "/api/remote/v1/challenges") {
       server.challengeHeaders.push(request.headers["x-flow-request"] ?? null);
+      if (request.headers["x-flow-request"] !== "1" || request.headers.origin !== server.frontendOrigin) {
+        send(403, { error: "forbidden" });
+        return;
+      }
       let body = "";
       request.on("data", (chunk) => { body += chunk; });
       request.on("end", () => {
@@ -78,6 +82,10 @@ export async function createMockGatewayServer() {
     }
     if (request.method === "POST" && request.url === "/api/remote/v1/commands") {
       server.commandHeaders.push(request.headers["x-flow-request"] ?? null);
+      if (request.headers["x-flow-request"] !== "1" || request.headers.origin !== server.frontendOrigin) {
+        send(403, { error: "forbidden" });
+        return;
+      }
       let body = "";
       request.on("data", (chunk) => { body += chunk; });
       request.on("end", () => {
@@ -99,6 +107,7 @@ export async function createMockGatewayServer() {
     send(404, { code: "NOT_FOUND", message: "Ruta desconocida" });
   });
   server.snapshot = snapshot;
+  server.frontendOrigin = "";
   server.commands = [];
   server.challenges = [];
   server.challengeHeaders = [];

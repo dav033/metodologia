@@ -75,6 +75,7 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     const frontendPort = await listen(reservation);
     await new Promise((resolve, reject) => reservation.close((error) => error ? reject(error) : resolve()));
     const frontendOrigin = `http://127.0.0.1:${frontendPort}`;
+    gateway.frontendOrigin = frontendOrigin;
     next = spawn(process.execPath, [join(root, "node_modules/next/dist/bin/next"), "dev", "--hostname", "127.0.0.1", "--port", String(frontendPort)], {
       cwd: root, env: { ...process.env, FLOW_GATEWAY_ORIGIN: `http://127.0.0.1:${gatewayPort}` }, stdio: "ignore",
     });

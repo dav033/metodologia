@@ -13,6 +13,7 @@ before(async () => {
   const address = server.address();
   assert.ok(address && typeof address !== "string");
   origin = `http://127.0.0.1:${address.port}`;
+  server.frontendOrigin = origin;
 });
 
 after(async () => {
@@ -40,8 +41,18 @@ test("mock gateway returns the v1 snapshot and session contracts consumed by the
 });
 
 test("mock gateway accepts versioned, idempotent control commands", async () => {
-  const response = await fetch(`${origin}/api/remote/v1/commands`, {
+  const refused = await fetch(`${origin}/api/remote/v1/commands`, {
     method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ schemaVersion: 1, idempotencyKey: "test-idempotency-key", type: "cancel-attempt" }),
+  });
+  assert.equal(refused.status, 403, "mutations without the gateway CSRF marker and matching Origin must be refused");
+
+  const response = await fetch(`${origin}/api/remote/v1/commands`, {
+    method: "POST", headers: {
+      "content-type": "application/json",
+      "X-Flow-Request": "1",
+      Origin: origin,
+    },
     body: JSON.stringify({ schemaVersion: 1, idempotencyKey: "test-idempotency-key", type: "cancel-attempt" }),
   });
   assert.equal(response.status, 202);

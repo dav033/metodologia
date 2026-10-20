@@ -29,6 +29,11 @@
     "eslint": "9.39.1",
     "eslint-config-next": "15.5.28",
     "tailwindcss": "4.3.3",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "@next/eslint-plugin-next": "15.5.28",
+    "@typescript-eslint/eslint-plugin": "8.72.0",
+    "@typescript-eslint/parser": "8.72.0",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "5.2.0"
   }
 }
