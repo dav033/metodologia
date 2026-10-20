@@ -248,9 +248,10 @@ change, the documentation the change makes stale, decisions in `DECISIONS.md`, a
 
 ## Telemetry: deciding with measurements
 
-Every scheduler attempt and every delegation appends one row to `.state/events/attempts-YYYY-MM.jsonl`: agent,
-profile, model, effort, kind, tier, tasks, result, seconds, and the provider's own usage figures (a figure it did not
-report is `null`, never 0). Each row also says **what** the work was and **why** it ended as it did:
+Every delegation, every legacy session and every judged scheduler attempt appends one row to
+`.state/events/attempts-YYYY-MM.jsonl`: agent, profile, model, effort, kind, tier, tasks, result, seconds, and the
+provider's own usage figures (a figure it did not report is `null`, never 0). Each row also says **what** the work was
+and **why** it ended as it did:
 
 | Key | Meaning |
 |---|---|
@@ -291,6 +292,22 @@ shows token/cost coverage rather than turning unknown measurements into zero.
 - `success_rate` only counts attempts that had a verdict (a usage limit is not the agent's failure);
   `tokens_per_done` appears only when every attempt of the group was measured.
 - The router reads the same rows: a route with a clearly better record for a kind of work is preferred.
+
+**Scheduler attempts** (`bt_attempt_log`, written by the owner loop at every heartbeat and at the end of the run, rows
+tagged `source: scheduler`). An attempt is judged by what the plan says, not by its own session: *rejected by its
+verifier* → `verify_failed`; *accepted and named by a finding of the audit gate* → `verify_failed` with outcome
+`audit_rejected` (the independent audit proved the accepted result wrong: the strongest quality signal there is);
+*accepted and every audit over it passed* → `verified`; an accepted attempt with an audit still pending is not written
+yet. Work that was only redone because something upstream was, a start the executor refused, a killed shim and a
+cancellation are `stopped` (unjudged: nobody's quality). An audit attempt the gate rejected is `stopped` too: it did its
+job by finding problems in other tasks. `metrics --by outcome` separates these classes.
+
+**Provider streams.** Codex runs under the scheduler with `--json`, so its tool activity and the token split (input,
+cached input, output) reach the monitor and the log; Claude and Antigravity stream JSON already. M4 raises a
+`stream_gap` incident only when the structured channel loses data (stdout, or an unreadable/oversized stderr line); text
+on stderr and a stderr buffer overflow are logged as gaps but are not incidents, and repeated gaps of one attempt, stream
+and cause are one incident with a count, not hundreds. Known events without activity (Claude `user` tool results and
+`rate_limit_event`) are ignored, while an unknown event type stays visible as a gap so a provider schema change shows.
 
 **Quality by defects.** `success_rate` only says the verify command passed. A milestone audit (synthetic
 `Mn-audit` task) reports `task done REQ Mn-audit --evidence ... --findings N --severity high=N,med=N,low=N` (N >= 0,

@@ -306,15 +306,18 @@ def build_report() -> dict[str, Any]:
         timings["m2_deterministic"].append(time.perf_counter_ns() - started)
 
         started = time.perf_counter_ns()
-        policy_ranking = rank_with_route_policy(request, {}, risk=case["classifications"].get("risk"))
-        contextual_plan = plan_ready_batch((request,), route_evidence_by_task={case["case_id"]: {}})
+        # Production (`bt_scheduler_plan_routing.plan_full_dag`) keeps the router's order for every task that is not
+        # documentation, because that order is already quota- and role-aware; the offline cases model that default.
+        policy_ranking = rank_with_route_policy(request, {}, risk=case["classifications"].get("risk"),
+                                                preserve_baseline=True)
+        contextual_plan = plan_ready_batch((request,), route_evidence_by_task={case["case_id"]: {}},
+                                           preserve_baseline_by_task={case["case_id"]: True})
         if len(contextual_plan.assignments) != 1 or not policy_ranking.eligible:
             raise BenchmarkError("contextual M2 failed to produce one eligible offline recommendation")
         contextual_route = contextual_plan.assignments[0].route_id
-        # No evidence was supplied, so the route policy had nothing to learn from. Without configured risk floors it
-        # reports no fallback reason of its own; the invariant checked below (contextual == deterministic) is what
-        # matters, and the benchmark names the input condition itself.
-        contextual_fallbacks[policy_ranking.fallback_reason or "quality_evidence_unavailable"] += 1
+        # The fallback is named after the input condition (no verified quality history), not after the policy switch
+        # that preserves the baseline; the invariant checked below (contextual == deterministic) is what matters.
+        contextual_fallbacks["quality_evidence_unavailable"] += 1
         if contextual_route != policy_ranking.selected.route_id:
             raise BenchmarkError("contextual batch and route-policy selections disagree")
         timings["m2_contextual_missing_history_fallback"].append(time.perf_counter_ns() - started)
@@ -337,7 +340,7 @@ def build_report() -> dict[str, Any]:
         "eligible_round_robin": "Stable SHA-256 route order with one shared cursor; skip routes absent from each eligible set.",
         "legacy_router_frozen_output": "Frozen deterministic_route_id from the fixture protocol recorded from bt_agents.candidates; no live router or provider call.",
         "m2_deterministic": "Current M2 rank_candidates() on the same validated request and eligible candidates.",
-        "m2_contextual_missing_history_fallback": "Current M2 batch and route policy with no correlated verified outcomes; missing history must preserve deterministic fallback.",
+        "m2_contextual_missing_history_fallback": "Current M2 batch and route policy with no correlated verified outcomes, baseline preserved as in production; missing history must preserve deterministic fallback.",
     }
     methods = []
     legacy_by_case = {row["case_id"]: row["route_id"] for row in selections["legacy_router_frozen_output"]}

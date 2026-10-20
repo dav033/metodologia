@@ -36,6 +36,49 @@ def _from_result(obj: dict) -> dict:
             "limit": obj.get("api_error") == "usage_limit_reached" or obj.get("api_error_status") == 429}
 
 
+CODEX_EVENT_TYPES = frozenset(("thread.started", "turn.started", "item.started", "item.updated", "item.completed",
+                               "turn.completed", "turn.failed", "error"))
+_CODEX_MARKERS = ('"type":"thread.started"', '"type":"turn.', '"type":"item.')
+
+
+def codex_events(raw: str) -> list[dict]:
+    """The events of a `codex exec --json` stream, in order; [] for text mode or any other provider's output."""
+    if not any(marker in (raw or "") for marker in _CODEX_MARKERS):
+        return []
+    found = []
+    for line in raw.splitlines():
+        if line.startswith("{"):
+            obj = _json(line)
+            if isinstance(obj, dict) and obj.get("type") in CODEX_EVENT_TYPES:
+                found.append(obj)
+    return found
+
+
+def codex_turn(raw: str) -> str | None:
+    """How the last Codex turn ended: `completed`, `failed`, or None while it is open (a cut stream has no end)."""
+    for event in reversed(codex_events(raw)):
+        if event["type"] in ("turn.completed", "turn.failed"):
+            return event["type"].split(".")[1]
+    return None
+
+
+def _from_codex(events: list[dict]) -> dict:
+    """{text, is_error, cost} of a Codex JSONL session: the final agent message, or the failure that ended the turn.
+    A transient `error` (a reconnect) followed by a completed turn is not a failure."""
+    ended = next((e["type"] for e in reversed(events) if e["type"] in ("turn.completed", "turn.failed")), None)
+    failure = ""
+    for event in events:
+        detail = event.get("error") if event["type"] == "turn.failed" else event if event["type"] == "error" else None
+        message = detail.get("message") if isinstance(detail, dict) else detail if isinstance(detail, str) else None
+        if isinstance(message, str) and message.strip():
+            failure = message.strip()
+    failed = ended == "turn.failed" or (ended is None and bool(failure))
+    messages = [e["item"]["text"] for e in events if e["type"] == "item.completed" and isinstance(e.get("item"), dict)
+                and e["item"].get("type") == "agent_message" and isinstance(e["item"].get("text"), str)]
+    text = (failure or "codex turn failed") if failed else (messages[-1] if messages else "")
+    return {"text": text[-4000:], "is_error": failed, "cost": None}
+
+
 def parse_output(raw: str) -> dict:
     """{text, is_error, cost} of a session. Claude stream-json: the last `result` event (when it never came, only the
     non-JSON lines count, so tool output inside the transcript is not mistaken for the agent's verdict); a single JSON
@@ -49,6 +92,9 @@ def parse_output(raw: str) -> dict:
             return parsed
     if isinstance(whole, dict):
         return _from_result(whole)
+    codex = codex_events(raw)
+    if codex:
+        return _from_codex(codex)
     plain, events = [], False
     for line in reversed(raw.splitlines()):
         if line.startswith("{"):  # an event, even one cut in half by a kill
@@ -91,7 +137,7 @@ _MONTHS = {m: i + 1 for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "j
                                             "dec"))}
 _MONTHS.update({"ene": 1, "abr": 4, "ago": 8, "set": 9, "dic": 12, "fev": 2, "avr": 4, "mai": 5, "out": 10, "dez": 12})
 _TRY_AT = re.compile(r"(?:(?:try again|available again)\s+(?:at|on)|resets?(?:\s+(?:at|on))?)\s+(?:([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})"
-                     r"(?:st|nd|rd|th)?,?\s+(?:(\d{4}),?\s+)?(?:at\s+)?)?(\d{1,2})(?::(\d{2}))?\s*([AaPp]\.?[Mm]\.?)?")
+                     r"(?:st|nd|rd|th)?,?\s+(?:(\d{4}),?\s+)?(?:at\s+)?)?(\d{1,2})(?::(\d{2}))?\s*([AaPp]\.?[Mm]\.?)?", re.I)
 
 
 def absolute_reset_epoch(text: str, now: float | None = None) -> int:

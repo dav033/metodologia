@@ -36,13 +36,25 @@ class DetectorTests(unittest.TestCase):
         self.assertEqual(detect_events((text_line,), DetectorContext(NOW)), ())
         scalar = (("cause", "unsupported_event"), ("dropped_bytes", 6), ("dropped_frames", 1))   # a "12345" line
         self.assertEqual(detect_events((event("stream_gap", payload=scalar, stream="stderr"),), DetectorContext(NOW)), ())
-        for stream, cause in (("stdout", "malformed_json"), ("stdout", "unsupported_event"), ("stderr", "invalid_utf8"),
+        overflow = (("cause", "source_gap"), ("dropped_bytes", 4096), ("dropped_frames", 3))
+        self.assertEqual(detect_events((event("stream_gap", payload=overflow, stream="stderr"),), DetectorContext(NOW)), ())
+        for stream, cause in (("stdout", "source_gap"), ("stdout", "malformed_json"), ("stdout", "unsupported_event"), ("stderr", "invalid_utf8"),
                               ("stderr", "oversized_line")):
             with self.subTest(stream=stream, cause=cause):
                 real = event("stream_gap", payload=(("cause", cause), ("dropped_bytes", 21), ("dropped_frames", 1)),
                              stream=stream)
                 found = detect_events((real,), DetectorContext(NOW))
                 self.assertEqual([item.detector_id for item in found], ["stream_gap"])
+
+    def test_gaps_of_one_attempt_stream_and_cause_collapse_into_one_incident(self) -> None:
+        def gap(first):
+            return event("stream_gap", payload=(("cause", "source_gap"), ("first_sequence", first), ("first_offset", first * 10),
+                                                ("dropped_bytes", 21), ("dropped_frames", 1)), stream="stdout")
+        first, second = (detect_events((gap(n),), DetectorContext(NOW))[0] for n in (1, 5))
+        self.assertEqual(first.incident_id, second.incident_id)
+        other = event("stream_gap", payload=(("cause", "malformed_event"), ("dropped_bytes", 9), ("dropped_frames", 1)),
+                      stream="stdout")
+        self.assertNotEqual(detect_events((other,), DetectorContext(NOW))[0].incident_id, first.incident_id)
 
     def test_structured_errors_without_source_code_use_event_identity(self) -> None:
         for kind, detector in (("quota_error", "quota_explicit"), ("auth_error", "auth_failure"),

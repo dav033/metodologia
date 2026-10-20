@@ -13,6 +13,9 @@ from .validation import SCHEMA_VERSION
 
 # Gap causes that, on stderr, only mean "a line of plain text": a CLI's progress output, never a lost event.
 STDERR_TEXT = frozenset(("malformed_json", "unsupported_event"))
+# stderr is a log, not the event channel: text on it is not an event (STDERR_TEXT), and its bounded buffer overflowing
+# (`source_gap`) loses diagnostics only. Both stay in the gap accounting; neither is an incident.
+STDERR_BENIGN = STDERR_TEXT | {"source_gap"}
 
 
 @dataclass(frozen=True)
@@ -195,14 +198,15 @@ def detect_events(events: Iterable[NormalizedEvent], context: DetectorContext,
             result.append(_incident(event, "connection_error", "connection_error", "medium", "medium",
                                     f"connection:{event.event_id}", context.observed_at,
                                     {"diagnostic_code": "connection"}))
-        if event.event_type == "stream_gap" and not (event.stream == "stderr" and p.get("cause") in STDERR_TEXT):
+        if event.event_type == "stream_gap" and not (event.stream == "stderr" and p.get("cause") in STDERR_BENIGN):
             # A line of plain text on stderr is not a JSON event, by nature: it is no incident (a CLI prints one per
             # second). Text that happens to parse as a JSON scalar ("42", "[1]") is unsupported_event, same thing.
             facts = {k: p[k] for k in ("first_sequence", "last_sequence", "first_offset", "last_offset",
                                         "dropped_bytes", "dropped_frames") if k in p}
+            # One incident per attempt, stream and cause: its occurrence count and evidence grow with each gap, and the
+            # per-gap detail (offsets, bytes) lives in the gap accounting instead of in hundreds of incidents.
             result.append(_incident(event, "stream_gap", "stream_gap", "info", "medium",
-                                    f"gap:{p.get('first_sequence', event.sequence)}:{p.get('first_offset', event.offset_bytes)}",
-                                    context.observed_at, facts))
+                                    f"gaps:{event.stream}:{p.get('cause')}", context.observed_at, facts))
 
     event = parsed[-1]
     m3_timeout_confirmed = context.m3_process_state == "terminal" \

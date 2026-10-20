@@ -259,7 +259,7 @@ class MethodologyDriver:
             if wanted and wanted != bt_profiles.DEFAULT_BIN.get(provider):
                 executable = shutil.which(wanted) or wanted
         invocation = bt_driver.driver_for(provider, executable).invocation(
-            prompt, Path(workspace.path), route.model, route.effort or None, int(timeout_seconds))
+            prompt, Path(workspace.path), route.model, route.effort or None, int(timeout_seconds), structured=True)
         current = dict(os.environ)
         removed = tuple(k for k in current if k not in env)
         added = tuple((k, v) for k, v in env.items() if current.get(k) != v)

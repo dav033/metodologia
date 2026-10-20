@@ -13,6 +13,7 @@ import uuid
 from pathlib import Path
 
 import bt_core
+import bt_attempt_log
 import bt_notify
 import bt_run_stores
 import bt_scheduler_adapter as adapter
@@ -313,6 +314,7 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                 snap = scheduler.snapshot()
                 if now - last_heartbeat >= HEARTBEAT_SECONDS or steps == 1:
                     adapter.write_projection(rdir, scheduler)
+                    bt_attempt_log.sync(project, req, rdir)
                     last_heartbeat = now
                 _notify_terminal(rdir, req, snap.status, run_id, _notification_generation(scheduler))
                 terminal_run = snap.status in {"completed", "cancelled"} or adapter.is_stalled(scheduler, snap)
@@ -320,6 +322,7 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                         and not m4_runtime.has_pending_incidents(wiring):
                     _remove_autostart(project, req)
                     adapter.write_projection(rdir, scheduler)
+                    bt_attempt_log.sync(project, req, rdir)
                     return 0
                 if max_steps is not None and steps >= max_steps:
                     return 0

@@ -65,9 +65,10 @@ class IsolatedCase(unittest.TestCase):
         p = patch("bt_agents.shutil.which", return_value="/stub-agent")
         p.start()
         self.addCleanup(p.stop)
-        bt_notify.notify = lambda *args, **kwargs: None
-        bt_notify.install_autostart = lambda *args, **kwargs: None
-        bt_notify.remove_autostart = lambda *args, **kwargs: None
+        for name in ("notify", "install_autostart", "remove_autostart"):
+            p = patch.object(bt_notify, name, lambda *args, **kwargs: None)    # restored: other tests use the real ones
+            p.start()
+            self.addCleanup(p.stop)
 
 class AttemptDetails(IsolatedCase):
     def test_complexity_declared_largest_and_inference_rules(self):

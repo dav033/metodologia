@@ -6,6 +6,9 @@ from . import ParseResult, decode_line, digest_json, result, safe_tool_label
 SCHEMA = "claude-stream-json/1"
 _ROOT = {"type", "subtype", "message", "result", "usage", "is_error", "total_cost_usd", "num_turns",
          "session_id", "uuid", "timestamp", "error_code", "stop_reason", "terminal_reason"}
+# Known events that carry no activity of their own: the session set-up, the closing record, tool results (the call was
+# counted when it started) and the account's rate-limit status. Unknown types stay a gap so a schema change shows.
+_NON_ACTIVITY = frozenset(("system", "result", "user", "rate_limit_event"))
 _USAGE_FIELDS = {"input_tokens", "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens",
                  "server_tool_use", "service_tier", "cache_creation", "iterations", "speed", "fallback_credit"}
 
@@ -66,7 +69,7 @@ def _normalize_one(raw: bytes | str) -> ParseResult | tuple[ParseResult, ...]:
                           "unit": "tokens", "source": "provider_reported", "sample_count": 1}, obj, _ROOT,
                           event_id=obj.get("uuid"), occurred_at=obj.get("timestamp"),
                           nested=(("usage", usage, _USAGE_FIELDS),))
-    if kind in ("system", "result"):
+    if isinstance(kind, str) and kind in _NON_ACTIVITY:
         return ParseResult("ignored", "non_activity_event", SCHEMA)
     return ParseResult("unsupported", "unknown_event_type", SCHEMA, "unsupported")
 

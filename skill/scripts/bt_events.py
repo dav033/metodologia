@@ -233,6 +233,37 @@ def _seen(path: Path, event_id: str) -> bool:
         return False
 
 
+def known_event_ids(when: dt.datetime | None = None) -> set[str]:
+    """The event ids already in this month's file, for a caller that appends many rows and checks each once."""
+    try:
+        with _path(when or dt.datetime.now().astimezone()).open(encoding="utf-8") as fh:
+            return {row["event_id"] for row in map(_loads, fh) if isinstance(row, dict) and row.get("event_id")}
+    except OSError:
+        return set()
+
+
+def _loads(line: str):
+    try:
+        return json.loads(line)
+    except ValueError:
+        return None
+
+
+def append_row(row: dict, known: set[str] | None = None) -> Path | None:
+    """Append one finished row unless its `event_id` is already in the file (`known`, when the caller holds the set).
+    Returns the file written, or None for a replay. The one writer of the log; it raises on I/O errors."""
+    now = dt.datetime.now().astimezone()
+    path = _path(now)
+    if (row["event_id"] in known) if known is not None else _seen(path, row["event_id"]):
+        return None
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    if known is not None:
+        known.add(row["event_id"])
+    return path
+
+
 def event_id_for(project: str, req, session: int, run_id: str | None = None) -> str:
     """Stable id of one session. `run_id` (RUN.json `context_run_id`, created with the run and kept by resumes) keeps a
     NEW run of the same REQ from colliding with the old one; without it (legacy rows, delegations) the id is the old
@@ -272,12 +303,9 @@ def record_attempt(project: str, state: dict, task_id: str, session: int, info: 
         row["outcome"] = row["outcome"] or outcome_of(result, None)
         if result == "stopped" and row.get("task_outcomes"):  # a stop is nobody's failure: unjudged for every task
             row["task_outcomes"] = [{**o, "result": "stopped"} for o in row["task_outcomes"]]
-        path = _path(now)
-        if _seen(path, event_id):
+        path = append_row(row)
+        if path is None:
             return None
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
         decision = row.get("decision") or {}
         if decision.get("decision_id"):  # close the exploration's ledger entry with what it produced
             import bt_explore

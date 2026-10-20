@@ -101,10 +101,10 @@ class Driver:
     # -- invocation -----------------------------------------------------------------------------------------
     def invocation(self, prompt: str, workdir: Path, model: str | None = None, effort: str | None = None,
                    timeout_sec: int | None = None, env_remove: tuple[str, ...] = (),
-                   env_set: tuple[tuple[str, str], ...] = ()) -> Invocation:
+                   env_set: tuple[tuple[str, str], ...] = (), structured: bool = False) -> Invocation:
         state = {"agent": self.provider,
                  "limits": {"session_timeout_min": timeout_sec / 60} if timeout_sec else {}}
-        argv, stdin = bt_runprompt.agent_argv(state, Path(workdir), prompt, model, effort)
+        argv, stdin = bt_runprompt.agent_argv(state, Path(workdir), prompt, model, effort, structured=structured)
         if self.executable:
             argv[0] = self.executable
         return Invocation(self.provider, tuple(argv), stdin, str(workdir), env_remove, env_set)
@@ -190,13 +190,22 @@ class CodexDriver(Driver):
     provider = "codex"
 
     def _terminal(self, raw: str, returncode: int | None) -> bool:
-        # `codex exec` has no end-of-turn event: a clean exit with output is the only evidence there is. This is
-        # best effort, so a truncated message that exits 0 or a printed error with rc 0 is `completed`. The
-        # supervisor's own verification is what decides success, never this status.
+        # With `--json` the stream ends in a `turn.completed` event: that is the provider's own end of turn. In text
+        # mode `codex exec` has no such event, so a clean exit with output is the only evidence there is; that is best
+        # effort, a truncated message that exits 0 or a printed error with rc 0 is `completed`. The supervisor's own
+        # verification is what decides success, never this status.
+        if bt_runsettle.codex_events(raw):
+            return bt_runsettle.codex_turn(raw) == "completed"
         return returncode == 0 and bool((raw or "").strip())
 
     def _usage(self, raw: str) -> dict | None:
-        # Only the closing "tokens used" total is reported by `codex exec` in text mode: a total, never a split.
+        # `--json` reports the split (input, cached input, output, reasoning); text mode only the closing "tokens used"
+        # total, a total and never a split.
+        if bt_runsettle.codex_events(raw):
+            usage = bt_events.extract_usage("codex", raw)
+            fields = {key: usage[key] for key in ("input_tokens", "output_tokens", "cache_read_tokens", "total_tokens")
+                      if usage.get(key) is not None}
+            return fields or None
         found = bt_events._CODEX_TOTAL.findall(raw or "")
         digits = "".join(ch for ch in found[-1] if ch.isdigit()) if found else ""
         return {"total_tokens": int(digits)} if digits else None

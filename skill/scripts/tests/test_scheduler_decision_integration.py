@@ -374,7 +374,39 @@ class DecisionAssignmentIntegration(s.World):
         self.assertTrue(all(item.reason == "m2_batch_task_limit_exceeded" for item in routes))
         refresh.assert_not_called()
 
-    def test_frozen_req017_dag_routes_by_fresh_account_quota_without_reserving(self):
+    def _plan_frozen_req017(self, now, *, force_kind=None):
+        views = frozen_req017_views()
+        request = core.PlanRoutingRequest("REQ-017", 1, FROZEN_PLAN_SHA256, views, now)
+        quota = {
+            "claude-personal": {"status": "available", "state": "fresh", "reason": "quota_fresh"},
+            "codex-luis": {"status": "available", "state": "fresh", "reason": "quota_fresh"},
+            "agy-1": {"status": "available", "state": "fresh", "reason": "quota_fresh"},
+            "codex-1": {"status": "unavailable", "state": "stale", "reason": "quota_observation_stale"},
+        }
+        real_facts = m1.decision_sources.task_facts
+
+        def facts(*args):
+            task, kind, classifications = real_facts(*args)
+            return task, force_kind or kind, classifications
+
+        candidate_views = iter(views)
+        with (patch.object(m1, "refresh_quota_preflight", return_value=quota),
+              patch.object(m1.decision_sources, "task_facts", side_effect=facts),
+              patch.object(m1.decision_sources, "_candidate_rows",
+                           side_effect=lambda _project, _kind, _facts, _now: synthetic_routes(
+                               next(candidate_views), now))):
+            return views, self.port().plan(request)
+
+    def test_frozen_req017_dag_applies_quota_pressure_only_to_docs_tasks(self):
+        # Every other kind keeps the router's order (it is already quota-aware and role-aware); a docs task is the one
+        # that M2 steers by the account with the most headroom.
+        views, routes = self._plan_frozen_req017(time.time(), force_kind="docs")
+        self.assertEqual([route.task_id for route in routes], [view.id for view in views])
+        preferred = {view.id: ("claude-personal", "codex-luis", "agy-1")[int(view.id[1]) % 3] for view in views}
+        self.assertEqual({route.task_id: route.route_metadata["profile"] for route in routes}, preferred)
+        self.assertEqual({route.route_metadata["provider"] for route in routes}, {"claude", "codex", "antigravity"})
+
+    def test_frozen_req017_dag_keeps_router_order_and_skips_stale_accounts_without_reserving(self):
         now = time.time()
         views = frozen_req017_views()
         self.assertEqual({view.meta["complexity"] for view in views}, {"low", "medium"})
@@ -395,9 +427,8 @@ class DecisionAssignmentIntegration(s.World):
 
         self.assertEqual([route.task_id for route in routes], [view.id for view in views])
         self.assertTrue(all(route.route_metadata for route in routes))
-        self.assertEqual({route.route_metadata["provider"] for route in routes},
-                         {"claude", "codex", "antigravity"})
-        self.assertTrue(all(route.route_metadata["profile"] != "codex-1" for route in routes))
+        self.assertEqual({route.route_metadata["profile"] for route in routes}, {"claude-personal"})
+        self.assertTrue(all(route.route_metadata["policy_rank"] == "1" for route in routes))
         self.assertTrue(all(route.route_metadata["account_ref"] and route.route_metadata["model"] and
                             route.route_metadata["assignment_reason"] for route in routes))
         from bt_scheduler_decision_adapter import _tier_for, task_facts

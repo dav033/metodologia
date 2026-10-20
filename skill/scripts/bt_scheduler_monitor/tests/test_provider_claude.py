@@ -23,6 +23,16 @@ class ClaudeNormalizerTests(unittest.TestCase):
         self.assertNotIn("private answer", serialized)
         self.assertNotIn("secret command", serialized)
 
+    def test_tool_results_and_rate_limit_status_are_ignored_but_an_unknown_type_stays_a_gap(self) -> None:
+        for kind in ("user", "rate_limit_event", "system", "result"):
+            with self.subTest(kind=kind):
+                item = claude.normalize(json.dumps({"type": kind, "message": {"role": "user"}}).encode())[0]
+                self.assertEqual((item.status, item.code), ("ignored", "non_activity_event"))
+        item = claude.normalize(b'{"type":"brand_new_event"}')[0]
+        self.assertEqual((item.status, item.code), ("unsupported", "unknown_event_type"))
+        item = claude.normalize(b'{"type":{"nested":true}}')[0]
+        self.assertEqual(item.status, "unsupported")
+
     def test_structured_error_codes_are_normalized_without_error_text(self) -> None:
         event = claude.normalize(b'{"type":"result","is_error":true,"error_code":"quota_exceeded","result":"secret"}')[0]
         self.assertEqual((event.event_type, dict(event.payload)), ("quota_error", {"source_code": "quota_exceeded"}))
