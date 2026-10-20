@@ -140,34 +140,47 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
       }
       assert.fail(`open panel did not refresh its snapshot to show ${expected} within 7 seconds`);
     };
-    const updateSnapshot = (update) => {
+    let panelEvent = 0;
+    const updateSnapshot = (update, type = "task.progress") => {
       const nextSnapshot = JSON.parse(gateway.snapshot);
       update(nextSnapshot);
       nextSnapshot.generatedAt = new Date().toISOString();
       nextSnapshot.cursor = `mock-cursor-${Date.now()}`;
       gateway.snapshot = JSON.stringify(nextSnapshot);
+      panelEvent += 1;
+      gateway.publishEvent({ id: `panel-event-${panelEvent}`, cursor: String(panelEvent), schemaVersion: 1,
+        type, occurredAt: new Date().toISOString(), target: { project: "lotm", req: "REQ-027", taskId: "T15a" },
+        data: { summary: "Fixture state changed" } });
     };
     const originalSnapshot = gateway.snapshot;
+    let refreshStarted = Date.now();
     updateSnapshot((nextSnapshot) => {
       nextSnapshot.runs[0].tasks[0].state = "verifying";
       nextSnapshot.runs[0].tasks[0].activeAttempt.state = "verifying";
     });
     assert.ok((await waitForText("verifying")).includes("M6"), "task progress should refresh the active module and state");
+    assert.ok(Date.now() - refreshStarted < 1500, "task progress event should refresh the open panel without waiting for the 5-second poll");
+    refreshStarted = Date.now();
     updateSnapshot((nextSnapshot) => {
       nextSnapshot.runs[0].tasks[0].state = "failed";
       nextSnapshot.runs[0].tasks[0].activeAttempt.state = "failed";
-    });
+    }, "attempt.failed");
     await waitForText("failed");
+    assert.ok(Date.now() - refreshStarted < 1500, "failure event should refresh the open panel immediately");
+    refreshStarted = Date.now();
     updateSnapshot((nextSnapshot) => {
       nextSnapshot.runs[0].state = "finished";
       nextSnapshot.runs[0].tasks[0].state = "completed";
       delete nextSnapshot.runs[0].tasks[0].activeAttempt;
       delete nextSnapshot.runs[0].activeAttempt;
-    });
+    }, "run.finished");
     await waitForText("finished");
+    assert.ok(Date.now() - refreshStarted < 1500, "completion event should refresh the open panel immediately");
     await waitForText("completed");
-    updateSnapshot((nextSnapshot) => { nextSnapshot.laptop.online = false; });
+    refreshStarted = Date.now();
+    updateSnapshot((nextSnapshot) => { nextSnapshot.laptop.online = false; }, "laptop.offline");
     await waitForText("LAPTOP SIN CONEXIÓN");
+    assert.ok(Date.now() - refreshStarted < 1500, "laptop disconnect event should refresh the open panel immediately");
     gateway.snapshot = originalSnapshot;
     await waitForText("Intento att-0008");
     const initialPanel = await waitForText("Rondas abiertas");

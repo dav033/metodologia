@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { FlowEvent, parseFlowEvent } from "../lib/flow-events";
 
@@ -250,14 +250,11 @@ export default function HomePage() {
     return () => window.clearInterval(timer);
   }, [session?.authenticated, refreshSnapshot, refreshQuotas]);
 
-  const snapshotCursor = useRef(snapshot?.cursor);
-  snapshotCursor.current = snapshot?.cursor;
-  const hasSnapshotCursor = Boolean(snapshot?.cursor);
   useEffect(() => {
     const authenticated = session?.authenticated;
-    if (authenticated !== true || !snapshotCursor.current) return;
-    const cursor = snapshotCursor.current;
-    const stream = new EventSource(`/api/remote/v1/events/stream?after=${encodeURIComponent(cursor)}`);
+    if (authenticated !== true) return;
+    // The gateway stream resumes with Last-Event-ID; the laptop snapshot cursor is a different feed.
+    const stream = new EventSource("/api/remote/v1/events");
     stream.onmessage = (message) => {
       void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
       try {
@@ -270,7 +267,7 @@ export default function HomePage() {
     };
     stream.onerror = () => setError("Se perdió la conexión en vivo; intentando reconectar…");
     return () => stream.close();
-  }, [session?.authenticated, hasSnapshotCursor, refreshSnapshot]);
+  }, [session?.authenticated, refreshSnapshot]);
 
   async function sendCommand(event: FormEvent<HTMLFormElement>, command: Record<string, unknown>, key: string) {
     event.preventDefault();

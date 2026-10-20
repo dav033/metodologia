@@ -140,6 +140,8 @@ class LocalRemoteEndToEndTests(unittest.TestCase):
             "seq": 1, "at": 1792497600.0, "kind": "attempt_transition", "task_id": "T1",
             "attempt_id": "attempt-1", "detail": json.dumps({"from": "dispatched", "to": "running", "source": "executor"}),
         }], bt_flow_bus.Ctx(None, "demo/REQ-001"))
+        # These are the production flow-bus row fields; producers do not emit remote_type.
+        self.assertNotIn("remote_type", self.flow_rows[0])
         self.patches = [
             patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "fixture-gateway-key"}),
             patch("bt_remote_api._snapshot_runs", side_effect=lambda: json.loads(json.dumps(self.runs))),
@@ -260,6 +262,7 @@ class LocalRemoteEndToEndTests(unittest.TestCase):
         self.assertEqual(changed["runs"][0]["updatedAt"], "v2")
         projected = self._wait_for_event("task.progress", timeout=5)
         self.assertEqual(projected["target"], {"project": "demo", "req": "REQ-001", "taskId": "T1", "attemptId": "attempt-1"})
+        self.assertEqual(projected["type"], "task.progress")
 
         FakeGitHubHandler.login = "foreign-user"
         foreign_state, foreign_headers, _ = self._request(self.frontend_origin, "/api/auth/login")
@@ -293,6 +296,7 @@ class LocalRemoteEndToEndTests(unittest.TestCase):
         self.assertEqual(FakeTelegramHandler.messages[0]["chat_id"], "fixture-chat")
         failed_event = self._wait_for_event("attempt.failed", timeout=5)
         self.assertEqual(failed_event["target"]["taskId"], "T1")
+        self.assertEqual(failed_event["type"], "attempt.failed")
 
         self.runs[0] = {**self.runs[0], "state": "finished", "tasks": [{"id": "T1", "state": "completed"}], "updatedAt": "v3"}
         completed = self._wait_snapshot(session_cookie, lambda value: value["runs"][0]["state"] == "finished", 5)

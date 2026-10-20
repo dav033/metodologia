@@ -42,8 +42,9 @@ export async function createMockGatewayServer() {
       send(200, { events: [], nextCursor: "mock-cursor-v1", hasMore: false });
       return;
     }
-    if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events/stream?")) {
+    if (request.method === "GET" && request.url === "/api/remote/v1/events") {
       response.writeHead(200, { "cache-control": "no-store, no-transform", "content-type": "text/event-stream; charset=utf-8", connection: "keep-alive", "x-accel-buffering": "no" });
+      server.eventStreams.add(response);
       const events = [
         { id: "mock-event-1", cursor: "mock-event-cursor-1", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:01Z", target: { kind: "attempt", project: "lotm", req: "REQ-027", taskId: "T15a", attemptId: "att-0008" }, data: { summary: "La verificación terminó" } },
         { id: "mock-event-2", cursor: "mock-event-cursor-2", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:02Z", target: { kind: "attempt", project: "lotm", req: "REQ-027", taskId: "T15a", attemptId: "att-0008" }, data: { summary: "La verificación terminó" } },
@@ -55,7 +56,7 @@ export async function createMockGatewayServer() {
         else { response.write(": keep-alive\n\n"); clearInterval(timer); }
         index += 1;
       }, 200);
-      request.on("close", () => clearInterval(timer));
+      request.on("close", () => { clearInterval(timer); server.eventStreams.delete(response); });
       return;
     }
     if (request.method === "POST" && request.url === "/api/remote/v1/challenges") {
@@ -99,6 +100,12 @@ export async function createMockGatewayServer() {
   server.commands = [];
   server.challenges = [];
   server.commandResponses = [];
+  server.eventStreams = new Set();
+  server.publishEvent = (event) => {
+    for (const response of server.eventStreams) {
+      if (!response.destroyed) response.write(`id: ${event.id}\ndata: ${JSON.stringify(event)}\n\n`);
+    }
+  };
   return server;
 }
 
