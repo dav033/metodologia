@@ -17,16 +17,24 @@ from auth import (
     SessionStore,
     cookie_values,
 )
+from security import RateLimiter, origin_matches
 
 logger = logging.getLogger(__name__)
+RATE_WINDOW_SECONDS = 60
+LOGIN_FAILURE_LIMIT = 5
+COMMAND_REQUEST_LIMIT = 30
 
 
 def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
+    rate_limiter = RateLimiter()
+
     class GatewayHandler(BaseHTTPRequestHandler):
         server_version = "FlowGateway"
 
         def log_message(self, format: str, *args: object) -> None:
-            logger.info("gateway http %s %s", self.command, urlsplit(self.path).path)
+            status = str(args[0]) if args else "-"
+            logger.info("gateway http client=%s method=%s path=%s status=%s",
+                        self.client_address[0], self.command, urlsplit(self.path).path, status)
 
         def _send(self, status: int, body: bytes = b"", *, content_type: str = "text/plain; charset=utf-8",
                   headers: tuple[tuple[str, str], ...] = ()) -> None:
@@ -54,7 +62,12 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
                 ))
                 return
             if route.path == "/api/auth/callback":
-                self._callback(parse_qs(route.query, keep_blank_values=True))
+                client_key = self.client_address[0]
+                if not rate_limiter.acquire("login", client_key, LOGIN_FAILURE_LIMIT, RATE_WINDOW_SECONDS):
+                    self._rate_limited()
+                    return
+                if self._callback(parse_qs(route.query, keep_blank_values=True)):
+                    rate_limiter.reset("login", client_key)
                 return
             if route.path == "/api/auth/session":
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
@@ -66,7 +79,27 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
                 return
             self._json(404, {"error": "not found"})
 
-        def _callback(self, query: dict[str, list[str]]) -> None:
+        def do_POST(self) -> None:
+            if not self._valid_state_changing_request():
+                self._json(403, {"error": "forbidden"})
+                return
+            route = urlsplit(self.path)
+            if route.path == "/api/remote/v1/commands":
+                client_key = self.client_address[0]
+                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+                    self._rate_limited()
+                    return
+            self._json(404, {"error": "not found"})
+
+        def _valid_state_changing_request(self) -> bool:
+            request_marker = self.headers.get("X-Flow-Request", "").strip()
+            origins = self.headers.get_all("Origin", [])
+            return bool(request_marker) and len(origins) == 1 and origin_matches(origins[0], service.config.frontend_origin)
+
+        def _rate_limited(self) -> None:
+            self._json(429, {"error": "too many requests"}, headers=(("Retry-After", str(RATE_WINDOW_SECONDS)),))
+
+        def _callback(self, query: dict[str, list[str]]) -> bool:
             values = cookie_values(self.headers.get("Cookie"))
             cookie_state = values.get(STATE_COOKIE, "")
             query_states = query.get("state", [])
@@ -78,7 +111,7 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
                 self._json(400, {"error": "invalid OAuth state"}, headers=(
                     ("Set-Cookie", f"{STATE_COOKIE}=; Path=/api/auth/callback; Max-Age=0; HttpOnly; Secure; SameSite=Lax"),
                 ))
-                return
+                return False
             try:
                 token = service.finish(codes[0])
             except AuthenticationError as exc:
@@ -86,12 +119,13 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
                 self._json(403, {"error": "GitHub sign-in refused"}, headers=(
                     ("Set-Cookie", f"{STATE_COOKIE}=; Path=/api/auth/callback; Max-Age=0; HttpOnly; Secure; SameSite=Lax"),
                 ))
-                return
+                return False
             self._send(302, headers=(
                 ("Location", service.config.frontend_origin + "/"),
                 ("Set-Cookie", f"{SESSION_COOKIE}={token}; Path=/; Max-Age=1209600; HttpOnly; Secure; SameSite=Strict"),
                 ("Set-Cookie", f"{STATE_COOKIE}=; Path=/api/auth/callback; Max-Age=0; HttpOnly; Secure; SameSite=Lax"),
             ))
+            return True
 
     return GatewayHandler
 
