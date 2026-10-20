@@ -27,6 +27,11 @@ class Load(unittest.TestCase):
         self.assertEqual(set(secrets), {"postgres://user:p4ss@host/db", "abc123"})
         QualityPolicy(environment=environment, secret_values=secrets)         # the policy accepts what was loaded
 
+    def test_the_path_is_per_project(self):
+        self.assertEqual(venv.path_for("~/.config/m/verifier-{project}.env", "pictures"), "~/.config/m/verifier-pictures.env")
+        self.assertEqual(venv.path_for("~/x/{project}.env", "../etc"), "~/x/..etc.env")
+        self.assertEqual((venv.path_for("", "p"), venv.path_for(None, "p")), ("", ""))
+
     def test_an_unset_missing_or_unreadable_file_gives_nothing(self):
         self.assertEqual(venv.load(""), ((), ()))
         self.assertEqual(venv.load(None), ((), ()))

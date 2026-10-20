@@ -22,6 +22,14 @@ def _value(raw: str) -> str:
     return raw.split(" #", 1)[0].strip()
 
 
+def path_for(template: object, project: str) -> str:
+    """The env file of a project: `{project}` in the configured path is replaced, so one setting keeps each project's
+    keys out of the checks of the others. A project without its own file simply gets none."""
+    if not isinstance(template, str) or not template.strip():
+        return ""
+    return template.replace("{project}", re.sub(r"[^A-Za-z0-9_.-]", "", project or ""))
+
+
 def load(path: str | Path | None) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...]]:
     """(environment, secret values) from the dotenv file, or empty ones when it is unset, missing or unreadable.
     A name the sandbox protects, a value that is too long or has control characters is skipped, never an error."""

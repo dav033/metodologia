@@ -33,7 +33,7 @@ DEFAULTS: dict = {
     # services, a database); `network` off makes them offline. `allow_production_actions` lets a check run
     # deploy/migrate-style commands; off, they need operator review.
     # `env_file`: a dotenv file kept outside the repositories whose variables the checks receive (a database URL, an API
-    # key); the sandbox otherwise starts with an empty environment. Values are redacted from every output.
+    # key; `{project}` in the path is replaced by the project name); the sandbox otherwise starts with an empty environment. Values are redacted from every output.
     "verifier": {"network": True, "allow_production_actions": True, "env_file": ""},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
