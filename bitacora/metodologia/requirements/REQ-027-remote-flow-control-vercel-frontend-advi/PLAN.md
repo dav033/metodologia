@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/6 · tareas 35/43 · generado: 2026-10-20T12:14:02-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/6 · tareas 32/43 · generado: 2026-10-20T12:58:39-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -28,7 +28,7 @@ created: 2026-10-19
 | T7 | Failure review read model per attempt | media | completada | gpt-6-luna | codex-luis | 3 |
 | T8 | Retry pinned to a route, model or account | alta | completada | gpt-6-luna | codex-1 | 3 |
 | T8a | Brief or criteria edit as an owner-approved plan revision | alta | completada | gpt-6-luna | codex-2 | 5 |
-| T9 | One owner of port 8765 and reloads that keep the listening socket | media | completada | gpt-6-luna | codex-2 | 3 |
+| T9 | One owner of port 8765 and reloads that keep the listening socket | media | completada | gpt-6-luna | codex-luis | 4 |
 
 **M3 — Gateway (tested against a fake laptop)** · dificultad alta · 8/8
 
@@ -41,7 +41,7 @@ created: 2026-10-19
 | T13 | Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME | media | completada | gpt-6-luna | codex-2 | 6 |
 | T14 | Deterministic notification rules with dedupe keys | alta | completada | gpt-6-luna | codex-2 | 9 |
 | T14a | Telegram delivery with retries, backoff and history | media | completada | gpt-6-luna | codex-2 | 4 |
-| T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | sonnet | claude-work | 3 |
+| T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | gpt-6-luna | codex-luis | 5 |
 
 **M4 — Mobile web (tested against a mock gateway)** · dificultad media · 7/7
 
@@ -53,19 +53,19 @@ created: 2026-10-19
 | T15c | Failure review screen | baja | completada | gpt-6-luna | codex-luis | 6 |
 | T15d | Control sheet with typed confirmations and command history | media | completada | gpt-6-luna | codex-luis | 6 |
 | T15e | Plans, question rounds and decision requests screens | media | completada | gpt-6-luna | codex-2 | 7 |
-| T15f | Recovery forms and live quotas | media | completada | gpt-6-luna | codex-2 | 8 |
+| T15f | Recovery forms and live quotas | media | completada | gpt-6-luna | codex-luis | 9 |
 
-**M5 — Go-live kit and audit** · dificultad alta · 8/11
+**M5 — Go-live kit and audit** · dificultad alta · 5/11
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | sonnet | claude-work | 3 |
-| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | completada | gpt-6-luna | codex-luis | 7 |
-| T18 | Independent security and spec audit by another provider | alta | en curso | gpt-6.1-sol | codex-2 | 8 |
+| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | gpt-6-luna | codex-luis | 5 |
+| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | en curso | gpt-6-luna | codex-luis | 8 |
+| T18 | Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-2 | 8 |
 | T18b | Cross-check audit of T18: Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-1 | 3 |
 | T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | gemini-3.8-flash-low | antigravity | 2 |
-| T18.1 | Remediate T18 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-1 | 4 |
-| T18.2 | Remediate T18 findings F5, F6, F7, F8 | alta | completada | sonnet | claude-work | 1 |
+| T18.1 | Remediate T18 findings F1, F2, F3, F4 | media | pendiente | gpt-6-luna | codex-1 | 4 |
+| T18.2 | Remediate T18 findings F5, F6, F7, F8 | alta | pendiente | sonnet | claude-work | 1 |
 | T18.3 | Remediate T18 findings F9, F10 | alta | completada | sonnet | claude-work | 1 |
 | T18.4 | Remediate T18 findings F19 | alta | completada | sonnet | claude-work | 1 |
 | T18.5 | Remediate T18 findings F1, F2, F3, F4 | alta | completada | sonnet | claude-work | 2 |

@@ -6,14 +6,14 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: — · hitos 0/4 · tareas 0/17 · generado: 2026-10-20T12:14:59-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/4 · tareas 1/17 · generado: 2026-10-20T12:54:38-05:00
 
-**M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 0/7
+**M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 1/7
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T1 | Worktree from origin/main; Supabase pool (`src/lib/asesor/db.ts`), migrations folder `scripts/migrations-asesor/` + runner (`npm run asesor:migrate`), schema: accounts, conversations, messages, attachments, briefs; `npm run asesor:test` script wired into the gate | alta | pendiente | — | — | 0 |
-| T2 | Own auth: scrypt-hashed accounts `user`/`admin`, seed script with generated passwords, `/asesor/login`, signed session cookie, proxy matcher exclusion for `/asesor` + `/api/asesor`, role guard helpers | alta | pendiente | — | — | 0 |
+| T1 | Worktree from origin/main; Supabase pool (`src/lib/asesor/db.ts`), migrations folder `scripts/migrations-asesor/` + runner (`npm run asesor:migrate`), schema: accounts, conversations, messages, attachments, briefs; `npm run asesor:test` script wired into the gate | alta | completada | gpt-6-luna | codex-luis | 7 |
+| T2 | Own auth: scrypt-hashed accounts `user`/`admin`, seed script with generated passwords, `/asesor/login`, signed session cookie, proxy matcher exclusion for `/asesor` + `/api/asesor`, role guard helpers | alta | en curso | gpt-6-luna | codex-luis | 1 |
 | T3 | Advisor agent: `EventBrief` schema (R3 fields, event kinds incl. corporate/school), system prompt, tools (save fields, propose summary, approve), progress calculator, streaming route `/api/asesor/conversar` persisting every turn, retry on provider failure; deterministic tests with a fake `ChatPort` | alta | pendiente | — | — | 0 |
 | T4 | Chat UI `/asesor`: guiado components, privacy + test-version notices, progress bar, resume by conversation id in localStorage (transcript reloaded from the server) | alta | pendiente | — | — | 0 |
 | T5 | Brief: summary to approve/correct, stored full brief + vendor version without name/contact/budget, printable one-page view | alta | pendiente | — | — | 0 |
@@ -96,7 +96,7 @@ Paths below are planned outputs relative to the pictures implementation checkout
 ### M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)
 Acceptance: A real authenticated text conversation supports correction, same-device restore and explicit approval; the persisted brief appears in the read-only admin monitor within five seconds. Invalid sessions and user access to admin are rejected; provider failure preserves the conversation and protected happie regression checks pass.
 
-- [ ] T1 — Worktree from origin/main; Supabase pool (`src/lib/asesor/db.ts`), migrations folder `scripts/migrations-asesor/` + runner (`npm run asesor:migrate`), schema: accounts, conversations, messages, attachments, briefs; `npm run asesor:test` script wired into the gate · repo: pictures · verify: `npm run asesor:migrate`; `npm run asesor:test` · files: package.json, scripts/test/gate.mjs, .env.example, src/lib/asesor/db.ts, src/lib/asesor/repository.ts, scripts/migrate-asesor.ts, scripts/migrations-asesor/001_initial.sql, scripts/test/asesor/run.ts, scripts/test/asesor/db.test.ts, scripts/integration/asesor-db.test.ts · resources: advisor-persistence-contract, advisor-command-contract · covers: R6 · kind: implement
+- [ ] T1 — Worktree from origin/main; Supabase pool (`src/lib/asesor/db.ts`), migrations folder `scripts/migrations-asesor/` + runner (`npm run asesor:migrate`), schema: accounts, conversations, messages, attachments, briefs; `npm run asesor:test` script wired into the gate · repo: pictures · verify: `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server --test scripts/integration/asesor-db.test.ts`; `npm run asesor:test` · files: package.json, scripts/test/gate.mjs, .env.example, src/lib/asesor/db.ts, src/lib/asesor/repository.ts, scripts/migrate-asesor.ts, scripts/migrations-asesor/001_initial.sql, scripts/test/asesor/run.ts, scripts/test/asesor/db.test.ts, scripts/integration/asesor-db.test.ts · resources: advisor-persistence-contract, advisor-command-contract · covers: R6 · kind: implement
 
   Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 240 min (provisional). Advisor database isolation, transaction-pooler compatibility and replay constraints cross the runner and repository; high rather than medium, but this is not an exceptional replacement of existing persistence.
 
@@ -220,7 +220,7 @@ Acceptance: Undecided customers receive twelve editable photo directions and ver
 ### M4 — Acceptance and close (before the 23 Nov rehearsal)
 Acceptance: The full shipped-entry-point flow and protected regressions run with actual outcomes recorded. Read-only final production review traces all R1-R14 and its valid findings ledger contains no open critical/high finding.
 
-- [ ] T14a — Run full advisor entry-point integration and protected happie regression; record outcomes without fixes · repo: pictures · after: T10, T14 · verify: `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone all` · files: docs/req-020/integration-results.json · resources: advisor-command-contract, pictures-production-deployment · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: test
+- [ ] T14a — Run full advisor entry-point integration and protected happie regression; record outcomes without fixes · repo: pictures · after: T10, T14 · verify: `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone all` · files: docs/req-020/integration-results.json · resources: advisor-command-contract, pictures-production-deployment · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: test
 
   Classification: complexity low; scope full_feature; risk medium; coupling high; confidence medium; estimate 120 min (provisional). Advisor execution runs fixed commands produced and locally verified by T7/T8/T9/T14; low rather than medium because it authors no harness, changes no configuration and makes no repair or acceptance decision. Environment failures are reported to owners.
 
@@ -297,6 +297,15 @@ Deterministic validation: the project plan-json check was run after enrichment a
 
 ## Rulings
 <!-- Judgment calls made during execution without asking. -->
+- Run start: first T1 attempt was based on the old local branch (5f910498, feat/req-014) instead of origin/main —
+  cancelled; created worktree `~/dev/pictures-wt/asesor` (branch `feat/req-020-asesor-happia` at origin/main 54d176a3,
+  `npm ci` + workspace build, `.env.local` copied) and pointed workspace role `pictures` there; T1 retried on 54d176a3
+  — cost if wrong: low (point the role back to `~/dev/pictures` after REQ-020).
+- T1 blocked after 3 verify failures caused only by sandbox-incompatible checks (`git merge-base` with no git
+  metadata; `asesor:migrate` needing SUPABASE_DB_URL; DB integration test skipping without a target). Code checks pass
+  (asesor:test 6/6, db.test 6/6, integration 3/3 against local Postgres). Revision 2 (pending owner approval): DB checks
+  use the local disposable Postgres inline; live Gemini/Supabase/deploy checks become coordinator-run manual checks
+  with offline `--fake-model` equivalents (T1, T7, T10, T14, T14a). No scope change.
 
 ## Progress log
 - 2026-10-20 Plan drafted after rounds 1–2; Supabase pooler connection verified (prior planning record, not rerun in classification).

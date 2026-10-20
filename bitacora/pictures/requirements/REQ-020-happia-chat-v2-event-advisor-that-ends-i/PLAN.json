@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 1,
+  "revision": 2,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -261,7 +261,7 @@
       "id": "T1",
       "milestone_id": "M1",
       "title": "Worktree from origin/main; Supabase pool (`src/lib/asesor/db.ts`), migrations folder `scripts/migrations-asesor/` + runner (`npm run asesor:migrate`), schema: accounts, conversations, messages, attachments, briefs; `npm run asesor:test` script wired into the gate",
-      "objective": "Provide an isolated advisor Postgres schema and repeatable migration/test entry points without using the Neon migration ledger.",
+      "objective": "Provide an isolated advisor Postgres schema and repeatable migration/test entry points without using the Neon migration ledger. Checks run in a sandbox without .env: database checks use the local disposable Postgres (docker compose service, 127.0.0.1:5432) passed inline; live checks (real Gemini/Supabase/deploy) are run by the coordinator with .env.local and recorded as evidence.",
       "repository": "pictures",
       "after": [],
       "complexity": "high",
@@ -349,8 +349,8 @@
       "verification": [
         {
           "type": "command",
-          "value": "npm run asesor:migrate",
-          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server --test scripts/integration/asesor-db.test.ts",
+          "purpose": "Advisor migrations apply twice to a disposable local Postgres (explicit test target, never Supabase) and the repository round trips pass; the test must not skip when the target is given.",
           "created_by": "T1",
           "category": "functional"
         },
@@ -369,11 +369,11 @@
           "category": "functional"
         },
         {
-          "type": "command",
-          "value": "npx tsx --conditions=react-server --test scripts/integration/asesor-db.test.ts",
-          "purpose": "Applying advisor migrations twice to a disposable Postgres target preserves records and creates accounts, conversations, messages, bytea attachments and versioned briefs without changing the Neon migration ledger.",
-          "created_by": "T1",
-          "category": "integration"
+          "type": "manual",
+          "value": "Coordinator runs `npm run asesor:migrate` with .env.local against Supabase (transaction pooler) and records the applied migrations.",
+          "purpose": "The real Supabase schema matches the migrations.",
+          "category": "functional",
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
         },
         {
           "type": "command",
@@ -383,10 +383,11 @@
           "category": "functional"
         },
         {
-          "type": "command",
-          "value": "git merge-base --is-ancestor origin/main HEAD",
+          "type": "manual",
+          "value": "Coordinator confirms the attempt base contains origin/main 54d176a3 (the sandbox copy has no git metadata).",
           "purpose": "At the T1 gate, origin/main is an ancestor of the implementation worktree HEAD.",
-          "category": "static"
+          "category": "static",
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
         }
       ],
       "covers": [
@@ -1013,7 +1014,7 @@
       "id": "T7",
       "milestone_id": "M1",
       "title": "M1 acceptance: e2e script (login → conversation → approved brief → visible to admin), one real Gemini conversation, `/happie` regression (`npm run happie:test-webhook`), env vars on Vercel + VPS, deploy",
-      "objective": "Build the real-entry-point acceptance harness, complete M1 deployment configuration and verify the text flow against the approved production dependencies.",
+      "objective": "Build the real-entry-point acceptance harness, complete M1 deployment configuration and verify the text flow against the approved production dependencies. Checks run in a sandbox without .env: database checks use the local disposable Postgres (docker compose service, 127.0.0.1:5432) passed inline; live checks (real Gemini/Supabase/deploy) are run by the coordinator with .env.local and recorded as evidence.",
       "repository": "pictures",
       "after": [
         "T4",
@@ -1110,11 +1111,11 @@
           "category": "regression"
         },
         {
-          "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1",
+          "type": "manual",
+          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "The new CLI --start builds/starts the shipped Next application with npm run start, waits for readiness, drives browser/HTTP login to persisted approval and admin visibility against disposable Postgres, and closes child processes on success or failure.",
-          "created_by": "T7",
-          "category": "integration"
+          "category": "integration",
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
         },
         {
           "type": "command",
@@ -1155,11 +1156,18 @@
           "category": "functional"
         },
         {
-          "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1",
+          "type": "manual",
+          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "The M1 scenario checks same-device reload, corrected summary, admin denial, provider failure and one real Gemini text conversation; required live dependencies missing or any required skipped step cause nonzero exit, never a green report.",
+          "category": "integration",
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1",
+          "purpose": "Same scenario offline: fake model port and the local disposable Postgres; no network to AI providers and no secrets.",
           "created_by": "T7",
-          "category": "integration"
+          "category": "functional"
         }
       ],
       "covers": [
@@ -1421,7 +1429,7 @@
       "id": "T10",
       "milestone_id": "M2",
       "title": "M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy",
-      "objective": "Complete the approved M2 deployment using the combined photo/voice phone flow and record reproducible operational checks.",
+      "objective": "Complete the approved M2 deployment using the combined photo/voice phone flow and record reproducible operational checks. Checks run in a sandbox without .env: database checks use the local disposable Postgres (docker compose service, 127.0.0.1:5432) passed inline; live checks (real Gemini/Supabase/deploy) are run by the coordinator with .env.local and recorded as evidence.",
       "repository": "pictures",
       "after": [
         "T8",
@@ -1505,11 +1513,11 @@
           "category": "regression"
         },
         {
-          "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2",
+          "type": "manual",
+          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "On a phone viewport a camera/gallery photo and a real voice note survive reload, feed a corrected/approved brief and appear in admin; the photo is retained as received and the stored voice message is the transcript.",
-          "created_by": "T7",
-          "category": "integration"
+          "category": "integration",
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
         },
         {
           "type": "command",
@@ -1548,6 +1556,13 @@
           "purpose": "Operational changes and verification are recorded; source defects are returned to T8/T9 or their named prerequisite rather than silently repaired in this deployment task.",
           "expected": "The milestone criteria are observed on the deployed tested revision; inaccessible service, permission or required assertion is a failure, not an accepted skip.",
           "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2",
+          "purpose": "Same scenario offline: fake model port and the local disposable Postgres; no network to AI providers and no secrets.",
+          "created_by": "T10",
+          "category": "functional"
         }
       ],
       "covers": [
@@ -1906,7 +1921,7 @@
       "id": "T14",
       "milestone_id": "M3",
       "title": "Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps",
-      "objective": "Integrate the optional direction/package tool adapters and tune advisor prompts using versioned real-model conversations and deterministic invariants.",
+      "objective": "Integrate the optional direction/package tool adapters and tune advisor prompts using versioned real-model conversations and deterministic invariants. Checks run in a sandbox without .env: database checks use the local disposable Postgres (docker compose service, 127.0.0.1:5432) passed inline; live checks (real Gemini/Supabase/deploy) are run by the coordinator with .env.local and recorded as evidence.",
       "repository": "pictures",
       "after": [
         "T12",
@@ -2002,18 +2017,25 @@
           "category": "functional"
         },
         {
-          "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/eval/asesor/run.ts --live",
+          "type": "manual",
+          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --live` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "Versioned birthday, corporate, school, undecided, photo-led, contact/address refusal, off-topic and prompt-injection scenarios run against the already selected real model and record outcomes separately from deterministic fake-ChatPort tests.",
-          "created_by": "T14",
-          "category": "product"
+          "category": "product",
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+        },
+        {
+          "type": "manual",
+          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --live` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
+          "purpose": "Scenario assertions check completeness, approval gating, photo confirmation and only sourced direction/package IDs and prices; they do not assert exact free-form model wording or treat a single run as a quality metric.",
+          "category": "product",
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
         },
         {
           "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/eval/asesor/run.ts --live",
-          "purpose": "Scenario assertions check completeness, approval gating, photo confirmation and only sourced direction/package IDs and prices; they do not assert exact free-form model wording or treat a single run as a quality metric.",
+          "value": "npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model",
+          "purpose": "Same scenario offline: fake model port and the local disposable Postgres; no network to AI providers and no secrets.",
           "created_by": "T14",
-          "category": "product"
+          "category": "functional"
         }
       ],
       "covers": [
@@ -2029,7 +2051,7 @@
       "id": "T14a",
       "milestone_id": "M4",
       "title": "Run full advisor entry-point integration and protected happie regression; record outcomes without fixes",
-      "objective": "Run the established full advisor entry-point flow and regression checks, reporting actual failures without changing code or judging product acceptance.",
+      "objective": "Run the established full advisor entry-point flow and regression checks, reporting actual failures without changing code or judging product acceptance. Checks run in a sandbox without .env: database checks use the local disposable Postgres (docker compose service, 127.0.0.1:5432) passed inline; live checks (real Gemini/Supabase/deploy) are run by the coordinator with .env.local and recorded as evidence.",
       "repository": "pictures",
       "after": [
         "T10",
@@ -2111,11 +2133,11 @@
       ],
       "verification": [
         {
-          "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone all",
+          "type": "manual",
+          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone all` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "The T7 runner starts the shipped production Next entry point and drives a real login, text/photo/voice conversation, reload, correction, approval and admin read through Postgres, configured AI and real Whisper; it fails on missing live dependencies or required skipped assertions.",
-          "created_by": "T7",
-          "category": "integration"
+          "category": "integration",
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
         },
         {
           "type": "command",
@@ -2154,11 +2176,11 @@
           "category": "regression"
         },
         {
-          "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone all",
+          "type": "manual",
+          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone all` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "Exercise the deployed revision and check protected happie paths/contracts against the captured implementation-base ref; no required case may be skipped.",
-          "created_by": "T7",
-          "category": "integration"
+          "category": "integration",
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
         },
         {
           "type": "command",
@@ -2166,6 +2188,13 @@
           "purpose": "The redacted integration result identifies revision, commands, actual outcomes and failed owning task; this task creates no tests/configuration, applies no fixes and makes no product acceptance decision.",
           "created_by": "T7",
           "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone all",
+          "purpose": "Same scenario offline: fake model port and the local disposable Postgres; no network to AI providers and no secrets.",
+          "created_by": "T14a",
+          "category": "integration"
         }
       ],
       "covers": [
