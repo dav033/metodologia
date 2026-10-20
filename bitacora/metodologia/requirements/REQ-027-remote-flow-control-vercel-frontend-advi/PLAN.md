@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: done · hitos 5/5 · tareas 31/31 · generado: 2026-10-19T18:09:26-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/5 · tareas 29/31 · generado: 2026-10-19T19:09:45-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -55,14 +55,14 @@ created: 2026-10-19
 | T15e | Plans, question rounds and decision requests screens | media | completada | gpt-6-luna | codex-luis | 1 |
 | T15f | Recovery forms and live quotas | media | completada | gpt-6-luna | codex-luis | 1 |
 
-**M5 — Go-live kit and audit** · dificultad alta · 4/4
+**M5 — Go-live kit and audit** · dificultad alta · 2/4
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | gpt-6-luna | codex-luis | 1 |
 | T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | completada | sonnet | claude-work | 1 |
-| T18 | Independent security and spec audit by another provider | alta | completada | gpt-6.1-sol | codex-luis | 1 |
-| T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | completada | gemini-3.8-flash-low | antigravity | 1 |
+| T18 | Independent security and spec audit by another provider | alta | en curso | sonnet | claude-work | 2 |
+| T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | gemini-3.8-flash-low | antigravity | 1 |
 <!-- bitacora:status:end -->
 
 ## Approach
@@ -151,7 +151,7 @@ while offline (rejected by the owner).
 ### M5 — Go-live kit and audit
 - [ ] T16 — Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook · repo: skill · files: remote/deploy/**, remote/docs/runbook.md · after: T14b, T15f, T9 · verify: `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` · covers: R16, R3 · kind: implement
 - [ ] T17 — Offline end-to-end: real laptop API, gateway and built web wired locally on loopback · repo: skill · files: remote/e2e/** · after: T16 · verify: `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` · covers: R1, R4, R5, R6, R7, R10, R11, R12, R18 · kind: test
-- [ ] T18 — Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit.md · after: T17 · verify: `test -s remote/docs/audit.md` · covers: R1, R2, R3, R16, R17 · kind: audit
+- [ ] T18 — Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit.md, remote/docs/audit.findings.json · after: T17 · verify: `test -s remote/docs/audit.md` · covers: R1, R2, R3, R16, R17 · kind: audit
 - [ ] T19 — Documentation: remote README, references and TOOLS entries to copy at go-live · repo: skill · files: remote/README.md, remote/docs/tools-entries.md · after: T18 · verify: `test -s remote/docs/tools-entries.md` · covers: R16, R18 · kind: docs
 
 ## Go-live with the owner (after the run; not scheduler tasks)
