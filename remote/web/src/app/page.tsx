@@ -28,7 +28,7 @@ function text(value: unknown): value is string { return typeof value === "string
 function field(source: Record<string, unknown>, camel: string, snake: string): unknown { return source[camel] ?? source[snake]; }
 
 function safeReviewText(value: string): string {
-  return value.replace(/\b(FLOW_GATEWAY_KEY|TELEGRAM_BOT_TOKEN|GITHUB_CLIENT_SECRET)\s*(?:=|:)\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/gi, "$1=[REDACTED]");
+  return value.replace(/\b([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|KEY|CREDENTIAL)[A-Z0-9_]*)\s*(?:=|:)\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/gi, "$1=[REDACTED]");
 }
 
 function parseFailureReview(value: unknown): FailureReview {
@@ -71,10 +71,10 @@ function FailureReviewPanel({ attemptId }: { attemptId: string }) {
   if (!review) return <p className="empty">Cargando revisión del intento…</p>;
   return <section className="failure-review" aria-label={`Revisión del intento ${review.attemptId}`}>
     <h4>Revisión del intento {review.attemptId}</h4>
-    <div className="failure-section"><h5>Causa</h5><p>{review.cause}</p></div>
-    <div className="failure-section"><h5>Verificación</h5>{review.verification.command && <p className="review-command">{review.verification.command}</p>}<pre className="review-scroll">{review.verification.output || "Sin salida de verificación."}</pre></div>
-    <div className="failure-section"><h5>Diff stat</h5><p>{review.diff.stat ?? "Sin diff disponible."}</p>{review.diff.files.length > 0 && <ul>{review.diff.files.map((file, index) => <li key={`${file}-${index}`}>{file}</li>)}</ul>}</div>
-    <div className="failure-section"><h5>Log del agente</h5><pre className="review-scroll">{review.logTail || "Sin log disponible."}</pre></div>
+    <section className="failure-section"><h5>Causa</h5><p>{review.cause}</p></section>
+    <section className="failure-section"><h5>Verificación</h5>{review.verification.command && <p className="review-command">{review.verification.command}</p>}<pre className="review-scroll">{review.verification.output || "Sin salida de verificación."}</pre></section>
+    <section className="failure-section"><h5>Diff stat</h5><p>{review.diff.stat ?? "Sin diff disponible."}</p>{review.diff.files.length > 0 && <ul>{review.diff.files.map((file, index) => <li key={`${file}-${index}`}>{file}</li>)}</ul>}</section>
+    <section className="failure-section"><h5>Log del agente</h5><pre className="review-scroll">{review.logTail || "Sin log disponible."}</pre></section>
   </section>;
 }
 

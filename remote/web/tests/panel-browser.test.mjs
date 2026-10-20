@@ -116,11 +116,13 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
       })();
       assert.ok(reviewText.includes(expected));
     }
+    const reviewSections = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.failure-section')].map((section) => section.querySelector('h5')?.innerText)", returnByValue: true });
+    assert.deepEqual(reviewSections.result?.value, ["Causa", "Verificación", "Diff stat", "Log del agente"], "failure review should render its four fixture sections");
     const reviewSecurity = await cdp(socket, "Runtime.evaluate", { expression: `({text: document.body.innerText, log: (() => { const boxes = document.querySelectorAll('.review-scroll'); const box = boxes[boxes.length - 1]; return {overflowY: getComputedStyle(box).overflowY, scrollHeight: box.scrollHeight, clientHeight: box.clientHeight}; })()})`, returnByValue: true });
     assert.ok(reviewSecurity.result?.value?.log.scrollHeight > reviewSecurity.result?.value?.log.clientHeight, "long logs should scroll inside the log box");
     assert.equal(reviewSecurity.result?.value?.log.overflowY, "auto");
     for (const secret of ["fixture-gateway-secret", "fixture-telegram-secret", "fixture-github-secret"]) {
-      assert.ok(!reviewSecurity.result?.value?.text.includes(secret), `review must redact ${secret}`);
+      assert.ok(!reviewSecurity.result?.value?.text.includes(secret), "review must redact fixture credentials");
     }
     for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("×2"); attempt += 1) {
       await delay(100);
