@@ -160,6 +160,6 @@ test("OAuth redirect and authenticated runs list render without overflow at 360 
       gateway.close();
       await once(gateway, "close");
     }
-    if (profile) await rm(profile, { recursive: true, force: true });
+    if (profile) await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
