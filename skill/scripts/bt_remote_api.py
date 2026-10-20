@@ -92,8 +92,9 @@ def route_get(handler) -> None:
                                "checkedAt": dt.datetime.now(dt.UTC).isoformat()})
     try:
         if path == f"{PREFIX}/snapshot":
-            return _json(handler, {"schemaVersion": 1, "runs": _snapshot_runs(), "plans": _plans(),
-                                   "generatedAt": dt.datetime.now(dt.UTC).isoformat(), "cursor": ""})
+            from bt_remote_events import redact
+            return _json(handler, redact({"schemaVersion": 1, "runs": _snapshot_runs(), "plans": _plans(),
+                                   "generatedAt": dt.datetime.now(dt.UTC).isoformat(), "cursor": ""}))
         if path == f"{PREFIX}/runs":
             return _json(handler, {"runs": _runs()})
         if path == f"{PREFIX}/plans":
@@ -106,6 +107,7 @@ def route_get(handler) -> None:
             return _problem(handler, 503, "QUOTAS_UNAVAILABLE", "Las cuotas aún no están disponibles.")
         if path == f"{PREFIX}/events":
             import bt_live_api as live
+            import bt_remote_events as remote_events
             try:
                 limit = int(query.get("limit", "200"))
             except ValueError:
@@ -114,12 +116,15 @@ def route_get(handler) -> None:
                 return _problem(handler, 400, "INVALID_LIMIT", "El límite debe estar entre 1 y 1000.")
             limit = min(limit, 1000)
             after = query.get("after", "")
-            if after and not after.isdigit():
+            if after and not re.fullmatch(r"evt_[a-f0-9]{64}", after):
                 return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
-            events, _, cursors = live.flow_events(None, "global", after_ord=after, limit=limit)
-            cursor = str(max((int(row.get("ord", 0)) for row in events), default=int(after or 0)))
-            return _json(handler, {"events": events, "nextCursor": cursor,
-                                   "hasMore": len(events) == limit, "cursors": cursors})
+            rows, _, _ = live.flow_events(None, "global", limit=5000)
+            events = [event for row in rows if (event := remote_events.from_flow(row)) is not None]
+            events.extend(remote_events.decision_events(_plans()))
+            if after and all(event["cursor"] != after for event in events):
+                return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
+            page, cursor, has_more = remote_events.page(events, after, limit)
+            return _json(handler, {"events": page, "nextCursor": cursor, "hasMore": has_more})
         if path == f"{PREFIX}/commands":
             return _problem(handler, 503, "COMMANDS_UNAVAILABLE", "El registro de comandos aún no está disponible.")
         match = re.fullmatch(re.escape(PREFIX) + r"/attempts/([^/]+)/review", path)
