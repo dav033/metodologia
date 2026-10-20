@@ -92,9 +92,10 @@ class LocalRemoteEndToEndTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.gateway_port = free_port()
-        install = subprocess.run(["npm", "ci", "--offline"], cwd=WEB, capture_output=True, text=True, timeout=180)
-        if install.returncode:
-            raise RuntimeError(f"offline web dependency install failed: {install.stderr[-2000:]}")
+        if not (WEB / "node_modules" / ".bin" / "next").exists():
+            install = subprocess.run(["npm", "ci", "--offline"], cwd=WEB, capture_output=True, text=True, timeout=180)
+            if install.returncode:
+                raise RuntimeError(f"offline web dependency install failed: {install.stderr[-2000:]}")
         build_env = {**os.environ, "FLOW_GATEWAY_ORIGIN": f"http://127.0.0.1:{cls.gateway_port}"}
         build = subprocess.run(["npm", "run", "build"], cwd=WEB, env=build_env,
                                capture_output=True, text=True, timeout=240)
@@ -305,6 +306,8 @@ class LocalRemoteEndToEndTests(unittest.TestCase):
         self.laptop_server.shutdown()
         self.laptop_server.server_close()
         self._wait_snapshot(session_cookie, lambda value: value.get("laptop", {}).get("online") is False, 20)
+        offline_event = self._wait_for_event("snapshot.updated", timeout=2)
+        self.assertEqual(offline_event["data"], {"reason": "laptop.offline"})
 
     def _wait_snapshot(self, cookie: str, predicate, timeout: float) -> dict[str, object]:
         deadline = time.monotonic() + timeout

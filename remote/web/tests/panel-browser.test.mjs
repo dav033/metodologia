@@ -148,9 +148,11 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
       nextSnapshot.cursor = `mock-cursor-${Date.now()}`;
       gateway.snapshot = JSON.stringify(nextSnapshot);
       panelEvent += 1;
-      gateway.publishEvent({ id: `panel-event-${panelEvent}`, cursor: String(panelEvent), schemaVersion: 1,
-        type, occurredAt: new Date().toISOString(), target: { project: "lotm", req: "REQ-027", taskId: "T15a" },
-        data: { summary: "Fixture state changed" } });
+      const event = { schemaVersion: 1, type, occurredAt: new Date().toISOString(),
+        data: type === "snapshot.updated" ? { reason: "laptop.offline" } : { summary: "Fixture state changed" } };
+      if (type !== "snapshot.updated") Object.assign(event, { id: `panel-event-${panelEvent}`, cursor: String(panelEvent),
+        target: { project: "lotm", req: "REQ-027", taskId: "T15a" } });
+      gateway.publishEvent(event);
     };
     const originalSnapshot = gateway.snapshot;
     let refreshStarted = Date.now();
@@ -178,7 +180,7 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     assert.ok(Date.now() - refreshStarted < 1500, "completion event should refresh the open panel immediately");
     await waitForText("completed");
     refreshStarted = Date.now();
-    updateSnapshot((nextSnapshot) => { nextSnapshot.laptop.online = false; }, "laptop.offline");
+    updateSnapshot((nextSnapshot) => { nextSnapshot.laptop.online = false; }, "snapshot.updated");
     await waitForText("LAPTOP SIN CONEXIÓN");
     assert.ok(Date.now() - refreshStarted < 1500, "laptop disconnect event should refresh the open panel immediately");
     gateway.snapshot = originalSnapshot;

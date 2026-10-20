@@ -55,13 +55,25 @@ class GatewayRuntime:
             )
             if transition and transition.current is LaptopStatus.OFFLINE:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
+                self._publish_snapshot_changed("laptop.offline")
         else:
-            self.liveness.record_success()
+            transition = self.liveness.record_success()
             self._refresh_active_run_cache()
+            if transition and transition.current is LaptopStatus.ONLINE:
+                self._publish_snapshot_changed("laptop.online")
             self._poll_events()
         if self.liveness.status is LaptopStatus.OFFLINE:
             self._notify_long_offline_with_active_run()
         self.outbox.deliver_due(self.sender)
+
+    def _publish_snapshot_changed(self, reason: str) -> None:
+        """Wake open panels when liveness changes the cached snapshot outside the laptop event feed."""
+        self.stream.publish([{
+            "schemaVersion": 1,
+            "type": "snapshot.updated",
+            "occurredAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "data": {"reason": reason},
+        }])
 
     def _notify_long_offline_with_active_run(self) -> None:
         offline_since = self.liveness.offline_since
