@@ -1,3 +1,2 @@
-The independent audit T18 rejected the accepted result of this task. Fix these confirmed findings and prove each one with a test that exercises the real entry point, not only the module in isolation:
-- F3 (high): Recovery uses incompatible target/state vocabularies and an absent routes endpoint; remote notes are stored in a file the next-attempt prompt never reads.
-- F5 (high): Idempotency ignores effect-bearing request content and preconditions ignore revision/updatedAt, accepting changed requests and stale plan revisions.
+The independent audit T18b rejected the accepted result of this task. Fix these confirmed findings and prove each one with a test that exercises the real entry point, not only the module in isolation:
+- F3 (high): edit-brief freezes an owner-approved revision and invokes destructive revise without the typed REQ challenge required for revise.
