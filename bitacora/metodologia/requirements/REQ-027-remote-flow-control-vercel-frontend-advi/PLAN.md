@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/6 · tareas 25/37 · generado: 2026-10-19T22:29:17-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/6 · tareas 30/37 · generado: 2026-10-20T06:39:52-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -43,7 +43,7 @@ created: 2026-10-19
 | T14a | Telegram delivery with retries, backoff and history | media | completada | sonnet | claude-work | 3 |
 | T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | sonnet | claude-work | 3 |
 
-**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 5/7
+**M4 — Mobile web (tested against a mock gateway)** · dificultad media · 7/7
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
@@ -52,18 +52,18 @@ created: 2026-10-19
 | T15b | Run view: activity strip, tasks and feed on flow-core.js | media | completada | gpt-6-luna | codex-luis | 3 |
 | T15c | Failure review screen | baja | completada | gpt-6-luna | codex-1 | 3 |
 | T15d | Control sheet with typed confirmations and command history | media | completada | gpt-6-luna | codex-1 | 3 |
-| T15e | Plans, question rounds and decision requests screens | media | en curso | sonnet | claude-personal | 4 |
-| T15f | Recovery forms and live quotas | media | pendiente | gpt-6-luna | codex-luis | 2 |
+| T15e | Plans, question rounds and decision requests screens | media | completada | sonnet | claude-personal | 4 |
+| T15f | Recovery forms and live quotas | media | completada | sonnet | claude-work | 3 |
 
-**M5 — Go-live kit and audit** · dificultad alta · 0/5
+**M5 — Go-live kit and audit** · dificultad alta · 3/5
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | pendiente | gpt-6-luna | codex-luis | 2 |
-| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | pendiente | sonnet | claude-work | 2 |
-| T18 | Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-luis | 3 |
-| T18b | Cross-check audit of T18: Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-luis | 1 |
-| T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | gemini-3.8-flash-low | antigravity | 1 |
+| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | sonnet | claude-work | 3 |
+| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | completada | sonnet | claude-work | 3 |
+| T18 | Independent security and spec audit by another provider | alta | completada | sonnet | claude-work | 4 |
+| T18b | Cross-check audit of T18: Independent security and spec audit by another provider | alta | en curso | gpt-6.1-sol | codex-1 | 3 |
+| T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | gemini-3.8-flash-low | antigravity | 2 |
 
 **M6 — Production environment** · dificultad alta · 0/5
 
@@ -163,7 +163,7 @@ while offline (rejected by the owner).
 - [ ] T16 — Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook · repo: skill · files: remote/deploy/**, remote/docs/runbook.md · after: T14b, T15f, T9 · verify: `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` · covers: R16, R3 · kind: implement
 - [ ] T17 — Offline end-to-end: real laptop API, gateway and built web wired locally on loopback · repo: skill · files: remote/e2e/** · after: T16 · verify: `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` · covers: R1, R4, R5, R6, R7, R10, R11, R12, R18 · kind: test
 - [ ] T18 — Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit.md, remote/docs/audit.findings.json · after: T17 · verify: `test -s remote/docs/audit.md` · covers: R1, R2, R3, R16, R17 · kind: audit
-- [ ] T18b — Cross-check audit of T18: Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit-crosscheck.md, remote/docs/audit-crosscheck.findings.json · after: T17 · verify: `test -s remote/docs/audit-crosscheck.md` · covers: R1, R2, R3, R16, R17 · kind: audit
+- [ ] T18b — Cross-check audit of T18: Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit-crosscheck.md, remote/docs/audit-crosscheck.findings.json · after: T17, T18 · verify: `test -s remote/docs/audit-crosscheck.md` · covers: R1, R2, R3, R16, R17 · kind: audit
 - [ ] T19 — Documentation: remote README, references and TOOLS entries to copy at go-live · repo: skill · files: remote/README.md, remote/docs/tools-entries.md · after: T18, T18b · verify: `test -s remote/docs/tools-entries.md` · covers: R16, R18 · kind: docs
 
 ### M6 — Production environment

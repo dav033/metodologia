@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-027",
-  "revision": 6,
+  "revision": 7,
   "spec_ref": "SPEC.md",
   "milestones": [
     {
@@ -2848,7 +2848,8 @@
       "objective": "An independent second audit of the scope of T18. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger.",
       "repository": "skill",
       "after": [
-        "T17"
+        "T17",
+        "T18"
       ],
       "complexity": "high",
       "scope": "small_change",
