@@ -113,6 +113,44 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     assert.ok(browserState?.text?.includes("×2"), "SSE messages should render through the /flow grouping logic");
     assert.equal(browserState.viewport, 360);
     assert.equal(browserState.width, 360, `page overflowed horizontally at 360 px: ${browserState.width}px`);
+    const waitForText = async (expected) => {
+      for (let attempt = 0; attempt < 70; attempt += 1) {
+        const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
+        if (evaluated.result?.value?.includes(expected)) return evaluated.result.value;
+        await delay(100);
+      }
+      assert.fail(`open panel did not refresh its snapshot to show ${expected} within 7 seconds`);
+    };
+    const updateSnapshot = (update) => {
+      const nextSnapshot = JSON.parse(gateway.snapshot);
+      update(nextSnapshot);
+      nextSnapshot.generatedAt = new Date().toISOString();
+      nextSnapshot.cursor = `mock-cursor-${Date.now()}`;
+      gateway.snapshot = JSON.stringify(nextSnapshot);
+    };
+    const originalSnapshot = gateway.snapshot;
+    updateSnapshot((nextSnapshot) => {
+      nextSnapshot.runs[0].tasks[0].state = "verifying";
+      nextSnapshot.runs[0].tasks[0].activeAttempt.state = "verifying";
+    });
+    assert.ok((await waitForText("verifying")).includes("M6"), "task progress should refresh the active module and state");
+    updateSnapshot((nextSnapshot) => {
+      nextSnapshot.runs[0].tasks[0].state = "failed";
+      nextSnapshot.runs[0].tasks[0].activeAttempt.state = "failed";
+    });
+    await waitForText("failed");
+    updateSnapshot((nextSnapshot) => {
+      nextSnapshot.runs[0].state = "finished";
+      nextSnapshot.runs[0].tasks[0].state = "completed";
+      delete nextSnapshot.runs[0].tasks[0].activeAttempt;
+      delete nextSnapshot.runs[0].activeAttempt;
+    });
+    await waitForText("finished");
+    await waitForText("completed");
+    updateSnapshot((nextSnapshot) => { nextSnapshot.laptop.online = false; });
+    await waitForText("LAPTOP SIN CONEXIÓN");
+    gateway.snapshot = originalSnapshot;
+    await waitForText("Intento att-0008");
     const fill = async (selector, value) => cdp(socket, "Runtime.evaluate", {
       expression: `(() => { const input = document.querySelector(${JSON.stringify(selector)}); if (!input) throw new Error('Missing input ${selector}'); const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; setter.call(input, ${JSON.stringify(value)}); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`,
       returnByValue: true,

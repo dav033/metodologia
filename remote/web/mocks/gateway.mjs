@@ -19,7 +19,7 @@ export async function createMockGatewayServer() {
     }
     if (request.method === "GET" && request.url === "/api/remote/v1/snapshot") {
       response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
-      response.end(snapshot);
+      response.end(server.snapshot);
       return;
     }
     if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events?")) {
@@ -62,6 +62,7 @@ export async function createMockGatewayServer() {
     }
     send(404, { code: "NOT_FOUND", message: "Ruta desconocida" });
   });
+  server.snapshot = snapshot;
   server.commands = [];
   return server;
 }

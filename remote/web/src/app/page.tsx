@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string };
@@ -111,6 +111,12 @@ export default function HomePage() {
   const [confirmation, setConfirmation] = useState("");
   const [typedReq, setTypedReq] = useState("");
 
+  const refreshSnapshot = useCallback(async () => {
+    const response = await fetch("/api/remote/v1/snapshot", { cache: "no-store" });
+    if (!response.ok) throw new Error(`No se pudo cargar el estado (${response.status}).`);
+    setSnapshot(parseSnapshot(await response.json()));
+  }, []);
+
   const load = useCallback(async () => {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
     if (sessionResponse.status === 401) { setSession({ authenticated: false }); return; }
@@ -120,32 +126,42 @@ export default function HomePage() {
     if (!parsedSession || typeof parsedSession.authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
     setSession({ authenticated: parsedSession.authenticated });
     if (!parsedSession.authenticated) return;
-    const response = await fetch("/api/remote/v1/snapshot", { cache: "no-store" });
-    if (!response.ok) throw new Error(`No se pudo cargar el estado (${response.status}).`);
-    setSnapshot(parseSnapshot(await response.json()));
-  }, []);
+    await refreshSnapshot();
+  }, [refreshSnapshot]);
 
   useEffect(() => {
     void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Error al cargar el panel."));
   }, [load]);
 
   useEffect(() => {
+    if (session?.authenticated !== true) return;
+    const timer = window.setInterval(() => {
+      void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [session?.authenticated, refreshSnapshot]);
+
+  const snapshotCursor = useRef(snapshot?.cursor);
+  snapshotCursor.current = snapshot?.cursor;
+  const hasSnapshotCursor = Boolean(snapshot?.cursor);
+  useEffect(() => {
     const authenticated = session?.authenticated;
-    const cursor = snapshot?.cursor;
-    if (authenticated !== true || !cursor) return;
+    if (authenticated !== true || !snapshotCursor.current) return;
+    const cursor = snapshotCursor.current;
     const stream = new EventSource(`/api/remote/v1/events/stream?after=${encodeURIComponent(cursor)}`);
     stream.onmessage = (message) => {
+      void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
       try {
         const event = parseFlowEvent(JSON.parse(message.data) as unknown);
-        if (!event) throw new Error("Evento remoto inválido.");
-        setFeed((current) => current.some((item) => item.id === event.id) ? current : [...current, event].sort((a, b) => a.ord - b.ord).slice(-500));
-        setError("");
-        void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+        if (event) {
+          setFeed((current) => current.some((item) => item.id === event.id) ? current : [...current, event].sort((a, b) => a.ord - b.ord).slice(-500));
+          setError("");
+        }
       } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo leer el evento remoto."); }
     };
     stream.onerror = () => setError("Se perdió la conexión en vivo; intentando reconectar…");
     return () => stream.close();
-  }, [session?.authenticated, snapshot?.cursor, load]);
+  }, [session?.authenticated, hasSnapshotCursor, refreshSnapshot]);
 
   async function sendCommand(event: FormEvent<HTMLFormElement>, command: Record<string, unknown>, key: string) {
     event.preventDefault();
