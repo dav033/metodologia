@@ -65,6 +65,12 @@ class OpsTests(unittest.TestCase):
         self.sch.rework.assert_called_once_with(("T1", "T2"), ops.OPERATOR, "audit found it", cascade=True)
         self.assertIn("sent back for rework: T1, T2", lines)
 
+    def test_withdraw_rework_takes_the_listed_tasks_back_through_m1(self):
+        self.sch.withdraw_rework.return_value = ("T2",)
+        lines = ops.apply("p", "REQ-001", self.rdir, "withdraw-rework", "T2", "keep it")
+        self.sch.withdraw_rework.assert_called_once_with(("T2",), ops.OPERATOR, "keep it")
+        self.assertTrue(any("T2" in line for line in lines))
+
     def test_rework_only_does_not_cascade(self):
         self.sch.rework.return_value = ("T1",)
         ops.apply("p", "REQ-001", self.rdir, "rework", "T1", "just this one", only=True)

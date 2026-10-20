@@ -9,7 +9,7 @@ from .errors import SchedulerError
 from .model import OUTBOX_KEEP, OUTBOX_LIMIT, AttemptRec, OutboxItem, RunState
 from .plan import Plan
 from .repository import Transaction
-from .states import ATTEMPT_LIVE, ATTEMPT_TRANSITIONS, TASK_TRANSITIONS
+from .states import ATTEMPT_LIVE, ATTEMPT_TRANSITIONS, RESTORABLE, TASK_TRANSITIONS
 from .states import AttemptState as A
 from .states import TaskState as T
 
@@ -31,10 +31,12 @@ class Ctx:
         self.tx.audit(kind, at=self.now, task_id=task_id, attempt_id=attempt_id, **detail)
 
 
-def set_task(ctx: Ctx, task_id: str, new: T, **detail: Any) -> None:
+def set_task(ctx: Ctx, task_id: str, new: T, *, restore: bool = False, **detail: Any) -> None:
+    """`restore` is the one way back to COMPLETED without a verdict (`operations.withdraw_rework`): a task whose accepted
+    result was sent back for rework and has not been redone returns to it. Nothing else may pass it."""
     rec = ctx.state.tasks[task_id]
     old = T(rec.state)
-    if new not in TASK_TRANSITIONS[old]:
+    if not (restore and new == T.COMPLETED and old in RESTORABLE) and new not in TASK_TRANSITIONS[old]:
         raise SchedulerError("ILLEGAL_TRANSITION", f"task {task_id}: {old.value} -> {new.value}")
     rec.state = new.value
     ctx.audit("task_transition", task_id, **{"from": old.value, "to": new.value}, **detail)

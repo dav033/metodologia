@@ -242,6 +242,12 @@ class SchedulerCore:
         self._wake.set()
         return out
 
+    def withdraw_rework(self, task_ids: tuple[str, ...], by: str, reason: str = "") -> tuple[str, ...]:
+        """Operator move: take a rework back for tasks that have redone nothing since (see `operations.withdraw_rework`)."""
+        out = self.write(lambda c: operations.withdraw_rework(c, tuple(task_ids), by, reason))
+        self._wake.set()
+        return out
+
     def reject_and_rework(self, verdict: Verdict, task_ids: tuple[str, ...], by: str, reason: str = "",
                           cascade: bool = True) -> tuple[IngestResult, tuple[str, ...]]:
         """Apply a REJECTING verdict and, in the same transaction, send the named accepted tasks (and what depends on

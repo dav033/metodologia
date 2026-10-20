@@ -225,6 +225,7 @@ M1_RULES: dict[str, Callable] = {
     "run_cancel_requested": _m1("run_cancelled", "owner", "M1", "Cancelación solicitada"),
     "amendment_applied": _m1("amendment", "planner", "M1", "Enmienda aplicada a {task}"),
     "rework_requested": _m1("rework", "M6", "M1", "La auditoría devuelve trabajo aceptado: se rehacen {tasks}"),
+    "rework_withdrawn": _m1("rework_withdrawn", "owner", "M1", "El dueño retira el rework: {tasks} vuelven a su resultado aceptado"),
     "rework_refused": _m1("rework_refused", "M6", "M1", "No se pudo devolver el trabajo tras la auditoría ({why})"),
     "audit_gate_skipped": _m1("audit_gate", "M6", "M1", "Auditoría de {task} sin ledger: el gate se omite (configurado)"),
     "run_rebased": _m1("run_rebased", "planner", "M1", "La ejecución pasa a la revisión nueva"),

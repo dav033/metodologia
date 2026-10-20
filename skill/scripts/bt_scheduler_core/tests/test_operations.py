@@ -237,6 +237,29 @@ class Rework(unittest.TestCase):
         self.assertEqual(h.core.rework(("T1",), "operator", "why", cascade=False), ("T1",))
         self.assertEqual(self.states(h)["T2"], "completed")
 
+    def test_a_rework_can_be_taken_back_for_tasks_that_redid_nothing(self):
+        h = self.chain()
+        h.finish_and_accept("T3")
+        h.core.rework(("T1",), "operator", "audit", cascade=True)
+        self.assertEqual({t: s for t, s in self.states(h).items() if t != "T9"}, {"T1": "ready", "T2": "pending", "T3": "pending"})
+        restored = h.core.withdraw_rework(("T2", "T3"), "operator", "keep the accepted results")
+        self.assertEqual(restored, ("T2", "T3"))
+        states = self.states(h)
+        self.assertEqual((states["T1"], states["T2"], states["T3"]), ("ready", "completed", "completed"))
+        self.assertIn("rework_withdrawn", h.audit_kinds())
+        self.assertEqual(h.core.read(lambda c: c.state.tasks["T2"].reworks), 0)
+
+    def test_taking_back_is_refused_when_work_was_redone_or_never_accepted_and_changes_nothing(self):
+        h = self.chain()
+        h.finish_and_accept("T3")
+        h.core.rework(("T1",), "operator", "audit", cascade=True)
+        h.core.step()                                                   # T1 starts again: it is being redone
+        with self.assertRaises(sc.SchedulerError):
+            h.core.withdraw_rework(("T1",), "operator", "no")
+        with self.assertRaises(sc.SchedulerError):
+            h.core.withdraw_rework(("T2", "T9"), "operator", "T9 never reworked")
+        self.assertEqual(self.states(h)["T2"], "pending")                # all or nothing
+
     def test_independent_branches_are_left_alone(self):
         h = self.chain()
         h.finish_and_accept("T9")

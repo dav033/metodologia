@@ -77,6 +77,7 @@ ATTEMPT_TRANSITIONS: dict[AttemptState, frozenset[AttemptState]] = {
 ATTEMPT_TERMINAL = frozenset({A.ACCEPTED, A.FAILED, A.REJECTED, A.CANCELLED})
 ATTEMPT_LIVE = frozenset(set(AttemptState) - ATTEMPT_TERMINAL)
 TASK_TERMINAL = frozenset({T.COMPLETED, T.CANCELLED})  # COMPLETED only leaves it through `rework`
+RESTORABLE = frozenset({T.PENDING, T.READY, T.BLOCKED, T.RECOVERING})  # `withdraw_rework` may put these back to COMPLETED
 
 # Which attempt state an executor event leads to, from which states (anything else is stale or invalid).
 _EARLY = frozenset({A.RESERVED, A.DISPATCHED, A.UNCERTAIN})

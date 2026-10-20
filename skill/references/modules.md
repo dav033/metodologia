@@ -145,7 +145,11 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   `rework_requested`, `cascade`). What depends on a named task keeps its accepted result: the fix is a snapshot on top of
   the old one and the integrator merges it with theirs (a real overlap surfaces as `INTEGRATION_CONFLICT` naming both
   tasks). A task becomes `ready` only when **every ancestor** is completed. `scheduler-op REQ rework T1,T2 --only` does
-  the same for the owner (without `--only`, everything downstream goes back). Tasks whose prerequisites are
+  the same for the owner (without `--only`, everything downstream goes back).
+  `scheduler-op REQ withdraw-rework T4,T5` takes a rework back for tasks that have redone nothing since (every attempt
+  after the accepted one ended without a result): they return to `completed` on the verdict they already had, so no
+  work is lost and no verdict is invented (audit `rework_withdrawn`); anything redone or never accepted is refused and
+  nothing changes. Tasks whose prerequisites are
   still completed become `ready` at once; the scheduler redoes them, and the audit runs again at the end. Nothing is
   completed by the rework: each redone task needs a new independent verdict;
 - the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was

@@ -223,6 +223,10 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
                 tasks = tuple(item.strip() for item in target.split(",") if item.strip())
                 moved = sch.rework(tasks, OPERATOR, why, cascade=not only)
                 lines.append(f"sent back for rework: {', '.join(moved) or 'nothing (already pending)'}")
+            elif action == "withdraw-rework":
+                tasks = tuple(item.strip() for item in target.split(",") if item.strip())
+                restored = sch.withdraw_rework(tasks, OPERATOR, why)
+                lines.append(f"rework taken back (completed again on their accepted result): {', '.join(restored)}")
             elif action == "revise":
                 live = [a for a, _, _ in _live_attempts(sch)]
                 lines += cancel_attempts(project, req, rdir, sch, live, f"{why}: superseded by a plan revision")

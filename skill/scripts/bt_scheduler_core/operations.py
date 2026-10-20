@@ -139,6 +139,36 @@ def rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "", *, al
     return tuple(moved)
 
 
+def withdraw_rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "") -> tuple[str, ...]:
+    """Take a rework back: each task returns to COMPLETED on the accepted result it already had. Allowed only while nothing
+    has been redone since (no live attempt, and every attempt after the accepted one ended without producing a result),
+    so no work is lost and no verdict is invented: the result was accepted by an independent verdict before. Tasks that
+    were never accepted, or that were redone, are refused and nothing changes."""
+    by, reason = _who(by, reason)
+    if not task_ids:
+        raise SchedulerError("NOT_ALLOWED", "withdraw needs at least one task")
+    for task_id in task_ids:
+        if task_id not in ctx.state.tasks:
+            raise SchedulerError("UNKNOWN_TASK", task_id)
+        rec = ctx.state.tasks[task_id]
+        if rec.state not in (T.PENDING.value, T.READY.value, T.BLOCKED.value, T.RECOVERING.value) or rec.reworks < 1:
+            raise SchedulerError("NOT_ALLOWED", f"{task_id} is {rec.state} with {rec.reworks} rework(s): nothing to take back")
+        accepted = [a for a in rec.attempts if A(ctx.state.attempts[a].state) == A.ACCEPTED]
+        if not accepted:
+            raise SchedulerError("NOT_ALLOWED", f"{task_id} has no accepted result to restore")
+        later = rec.attempts[rec.attempts.index(accepted[-1]) + 1:]
+        if any(A(ctx.state.attempts[a].state) not in (A.CANCELLED, A.FAILED) for a in later):
+            raise SchedulerError("NOT_ALLOWED", f"{task_id} was redone since its accepted result: it cannot be taken back")
+    for task_id in task_ids:
+        rec = ctx.state.tasks[task_id]
+        rec.reworks -= 1
+        rec.reason, rec.hold_until, rec.waits = "", 0.0, 0
+        set_task(ctx, task_id, T.COMPLETED, restore=True, by=by, reason=reason, decision="withdraw_rework")
+    ctx.audit("rework_withdrawn", by=by, reason=reason, tasks=list(task_ids))
+    promote_ready(ctx)
+    return tuple(task_ids)
+
+
 def resolve_attempt(ctx: Ctx, attempt_id: str, outcome: str, by: str, reason: str = "") -> str:
     """Manual answer for an attempt reconciliation could not settle: failed | finished | cancelled | running."""
     by, reason = _who(by, reason)
