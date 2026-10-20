@@ -102,7 +102,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan") && browserState?.text?.includes("Intento att-0008")) break;
       await delay(250);
     }
-    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
+    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan", "Aprobar plan", "Rondas abiertas", "¿Qué prioridad prefieres?", "Esperando tu decisión", "Crea otro intento y consume una oportunidad.", "Pausa el scheduler hasta que lo reanudes."]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
     for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("×2"); attempt += 1) {
@@ -205,6 +205,20 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Reabrir')?.click()", returnByValue: true });
     await waitForText("El estado cambió");
     await waitForText("Resultado · Rechazado: el estado cambió");
+    await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-028");
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.innerText.includes('Aprobar plan'))?.requestSubmit()", returnByValue: true });
+    assert.equal(gateway.challenges.length, 0, "a mismatched REQ id must not request an approval challenge");
+    await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.innerText.includes('Aprobar plan'))?.requestSubmit()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
+    assert.equal(gateway.challenges.at(-1)?.typedReq, "REQ-027", "approval should issue a challenge for the exact REQ id");
+    assert.equal(gateway.commands.at(-1)?.type, "approve");
+    assert.equal(gateway.commands.at(-1)?.confirmation?.typedReq, "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 4; attempt += 1) await delay(100);
+    assert.equal(gateway.commands.at(-1)?.type, "answer-round", "round answers should use the command ledger");
+    assert.equal(gateway.commands.at(-1)?.round, 2);
+    assert.deepEqual(gateway.commands.at(-1)?.answer, { q1: { choice: "safe", note: "" }, q2: { text: "Keep the audit trail" } });
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);

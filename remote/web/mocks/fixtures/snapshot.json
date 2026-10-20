@@ -26,7 +26,22 @@
   "plans": [
     { "id": "plan-027", "project": "lotm", "req": "REQ-027", "state": "awaiting-review", "revision": 2, "updatedAt": "2026-10-19T11:45:00Z", "acceptanceCriteria": ["Owner reviews and approves the plan"] }
   ],
-  "rounds": [],
+  "rounds": [
+    { "project": "lotm", "req": "REQ-027", "round": 2, "id": "round-02", "title": "Scope", "intro": "Confirma el alcance pendiente.", "status": "open", "revision": 1,
+      "questions": [
+        { "id": "q1", "text": "¿Qué prioridad prefieres?", "type": "choice", "options": [{ "key": "fast", "label": "Rapidez" }, { "key": "safe", "label": "Seguridad" }], "recommended": "safe", "why": "La opción recomendada protege los datos." },
+        { "id": "q2", "text": "¿Qué detalle debemos considerar?", "type": "open", "suggested": "" }
+      ]
+    }
+  ],
+  "decisionRequests": [
+    { "id": "decision-1", "project": "pictures", "req": "REQ-018", "task": "T2", "title": "La tarea quedó bloqueada", "what": "La recuperación automática no puede continuar sin una decisión.", "evidence": ["Se agotaron los intentos disponibles."], "recommended": "retry", "state": "blocked", "revision": 4,
+      "options": [
+        { "id": "retry", "label": "Reintentar", "consequence": "Crea otro intento y consume una oportunidad." },
+        { "id": "stop", "label": "Detener", "consequence": "Pausa el scheduler hasta que lo reanudes." }
+      ]
+    }
+  ],
   "quotas": [],
   "laptop": { "online": true, "checkedAt": "2026-10-19T11:59:50Z" }
 }

@@ -3,11 +3,15 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string };
+type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string; roundId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
 type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string } };
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
-type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptop?: { online: boolean; checkedAt?: string } };
+type RoundQuestion = { id: string; text: string; type: "choice" | "open"; options?: { key: string; label: string }[]; recommended?: string; why?: string; suggested?: string };
+type Round = { project: string; req: string; round: number; id?: string; title?: string; intro?: string; coverage?: string; status: string; revision?: number; questions: RoundQuestion[] };
+type DecisionOption = { id: string; label: string; consequence: string };
+type DecisionRequest = { id: string; project: string; req: string; task?: string; title: string; what: string; evidence?: string[]; options: DecisionOption[]; recommended?: string; unskippable?: boolean; state?: string; revision?: number };
+type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; rounds?: Round[]; decisionRequests?: DecisionRequest[]; laptop?: { online: boolean; checkedAt?: string } };
 type Session = { authenticated: boolean };
 type CommandHistoryItem = { id: string; type: string; target: string; submittedAt: string; origin: string; result: string };
 type FlowEvent = { id: string; cursor: string; run: string; seq: string; ord: number; task: string; attempt: string; from: string; to: string; kind: string; summary: string; at_epoch: number };
@@ -90,9 +94,46 @@ function parseSnapshot(value: unknown): Snapshot {
       acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
       tasks: Array.isArray(plan.tasks) ? plan.tasks.map(parseTask) : [] };
   });
+  const rounds = Array.isArray(raw.rounds) ? raw.rounds.map((item): Round => {
+    const round = record(item);
+    const number = round && field(round, "round", "round_number");
+    if (!round || !text(round.project) || !text(round.req) || typeof number !== "number" || !text(round.status) || !Array.isArray(round.questions)) {
+      throw new Error("El snapshot contiene una ronda inválida.");
+    }
+    return { project: round.project, req: round.req, round: number, id: text(round.id) ? round.id : undefined,
+      title: text(round.title) ? round.title : undefined, intro: text(round.intro) ? round.intro : undefined,
+      coverage: text(round.coverage) ? round.coverage : undefined, status: round.status,
+      revision: typeof round.revision === "number" ? round.revision : undefined,
+      questions: round.questions.map((value): RoundQuestion => {
+        const question = record(value);
+        if (!question || !text(question.id) || !text(question.text)) throw new Error("El snapshot contiene una pregunta inválida.");
+        const options = Array.isArray(question.options) ? question.options.flatMap((option) => {
+          const choice = record(option);
+          return choice && text(choice.key) && text(choice.label) ? [{ key: choice.key, label: choice.label }] : [];
+        }) : undefined;
+        return { id: question.id, text: question.text, type: question.type === "choice" || options?.length ? "choice" : "open", options,
+          recommended: text(question.recommended) ? question.recommended : undefined, why: text(question.why) ? question.why : undefined,
+          suggested: text(question.suggested) ? question.suggested : undefined };
+      }) };
+  }) : [];
+  const decisionValues = Array.isArray(raw.decisionRequests) ? raw.decisionRequests : Array.isArray(raw.decision_requests) ? raw.decision_requests : [];
+  const decisionRequests = decisionValues.map((value): DecisionRequest => {
+    const decision = record(value);
+    if (!decision || !text(decision.id) || !text(decision.project) || !text(decision.req)) throw new Error("El snapshot contiene una decisión inválida.");
+    const options = Array.isArray(decision.options) ? decision.options.flatMap((option) => {
+      const choice = record(option);
+      return choice && text(choice.id) && text(choice.label) && text(choice.consequence) ? [{ id: choice.id, label: choice.label, consequence: choice.consequence }] : [];
+    }) : [];
+    if (!text(decision.title) || !text(decision.what) || options.length === 0) throw new Error("La decisión no contiene opciones y consecuencias válidas.");
+    return { id: decision.id, project: decision.project, req: decision.req, task: text(decision.task) ? decision.task : undefined,
+      title: decision.title, what: decision.what, evidence: Array.isArray(decision.evidence) ? decision.evidence.filter(text) : [], options,
+      recommended: text(decision.recommended) ? decision.recommended : undefined,
+      unskippable: typeof decision.unskippable === "boolean" ? decision.unskippable : undefined,
+      state: text(decision.state) ? decision.state : undefined, revision: typeof decision.revision === "number" ? decision.revision : undefined };
+  });
   const laptop = record(raw.laptop);
   const cursor = raw.cursor;
-  return { schemaVersion: 1, generatedAt: String(generatedAt), cursor: String(cursor), runs, plans,
+  return { schemaVersion: 1, generatedAt: String(generatedAt), cursor: String(cursor), runs, plans, rounds, decisionRequests,
     laptop: laptop && typeof laptop.online === "boolean" ? { online: laptop.online, checkedAt: text(field(laptop, "checkedAt", "checked_at")) ? String(field(laptop, "checkedAt", "checked_at")) : undefined } : undefined };
 }
 
@@ -214,7 +255,16 @@ export default function HomePage() {
     const submittedAt = new Date().toISOString();
     let result = "Resultado desconocido";
     try {
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(command) });
+      const confirmationValue = record(command.confirmation);
+      if (confirmationValue && !text(confirmationValue.challengeId) && text(confirmationValue.typedReq)) {
+        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" },
+          body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmationValue.typedReq }) });
+        const challengeBody: unknown = await challengeResponse.json().catch(() => null);
+        const challenge = record(challengeBody);
+        if (!challengeResponse.ok || !text(challenge?.challengeId)) throw new Error(text(record(challengeBody)?.message) ? String(record(challengeBody)?.message) : "No se pudo obtener la confirmación del gateway.");
+        command.confirmation = { challengeId: challenge.challengeId, typedReq: confirmationValue.typedReq };
+      }
+      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" }, body: JSON.stringify(command) });
       const payload: unknown = await response.json().catch(() => null);
       const responseRecord = record(payload);
       if (!response.ok) {
@@ -239,11 +289,41 @@ export default function HomePage() {
   }
 
   function commandForm(type: string, target: Target, state: string, revision: number | undefined, key: string, extra?: Record<string, unknown>) {
-    const command = (event: FormEvent<HTMLFormElement>) => sendCommand(event, {
-      schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type, target,
-      precondition: { state, ...(revision === undefined ? {} : { revision }) }, ...extra,
-    }, key);
+    const command = (event: FormEvent<HTMLFormElement>) => {
+      const formValues = new FormData(event.currentTarget);
+      const typedReq = formValues.get("typedReq");
+      const confirmation = typeof typedReq === "string" && typedReq ? { confirmation: { typedReq } } : {};
+      return sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type, target,
+        precondition: { state, ...(revision === undefined ? {} : { revision }) }, ...extra, ...confirmation }, key);
+    };
     return command;
+  }
+
+  function roundForm(round: Round) {
+    return (event: FormEvent<HTMLFormElement>) => {
+      const values = new FormData(event.currentTarget);
+      const answer: Record<string, unknown> = {};
+      for (const question of round.questions) {
+        if (question.type === "choice") answer[question.id] = { choice: String(values.get(question.id) ?? ""), note: String(values.get(`${question.id}-note`) ?? "") };
+        else answer[question.id] = { text: String(values.get(question.id) ?? "") };
+      }
+      return sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "answer-round",
+        target: { kind: "round", project: round.project, req: round.req, roundId: round.id ?? String(round.round) },
+        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
+    };
+  }
+
+  function decisionForm(decision: DecisionRequest, option: DecisionOption) {
+    return (event: FormEvent<HTMLFormElement>) => {
+      const reason = String(new FormData(event.currentTarget).get("reason") ?? "").trim();
+      if (["retry_with_note", "review_pass", "review_fail"].includes(option.id) && !reason) {
+        event.preventDefault(); setError("Esta opción requiere una indicación o razón."); return;
+      }
+      return sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "answer-decision",
+        target: { kind: "run", project: decision.project, req: decision.req, ...(decision.task ? { taskId: decision.task } : {}) },
+        precondition: { state: decision.state ?? "waiting", ...(decision.revision === undefined ? {} : { revision: decision.revision }) },
+        requestId: decision.id, option: option.id, reason }, `${decision.req}-${decision.id}`);
+    };
   }
 
   if (session === null) {
@@ -302,10 +382,30 @@ export default function HomePage() {
       return <article className="run-card" key={`${plan.project}-${plan.req}-${plan.id ?? "plan"}`}><div className="run-top"><div><p className="eyebrow">{plan.project}</p><h3>{plan.req} · Plan</h3></div><span className="state">{plan.state}</span></div>
         <p className="last-seen">Última actividad · {prettyTime(plan.updatedAt)}</p>
         {[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].length > 0 && <details><summary>Criterios de aceptación</summary><ul>{[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
-        <div className="actions"><label>Confirmación <input required aria-label="Id del reto de confirmación" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Id del reto" /></label><label>Escribe {plan.req} <input required aria-label={`Escribe ${plan.req}`} value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button disabled={!!working || typedReq !== plan.req}>Cancelar plan</button></form>
+        <div className="actions">
+          {plan.state === "review" || plan.state === "awaiting-review" ? <form onSubmit={commandForm("approve", target, plan.state, plan.revision, `${plan.req}-approve`)}><label>Escribe {plan.req} para aprobar <input required name="typedReq" pattern={plan.req} autoCapitalize="characters" aria-label={`Escribe ${plan.req} para confirmar la aprobación`} /></label><button disabled={!!working}>Aprobar plan</button></form> : null}
+          {plan.state === "approved" ? <form onSubmit={commandForm("launch", target, plan.state, plan.revision, `${plan.req}-launch`)}><label>Escribe {plan.req} para ejecutar <input required name="typedReq" pattern={plan.req} autoCapitalize="characters" aria-label={`Escribe ${plan.req} para confirmar la ejecución`} /></label><button disabled={!!working}>Ejecutar plan</button></form> : null}
+          <label>Confirmación <input required aria-label="Id del reto de confirmación" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Id del reto" /></label><label>Escribe {plan.req} <input required aria-label={`Escribe ${plan.req}`} value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button disabled={!!working || typedReq !== plan.req}>Cancelar plan</button></form>
           <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`, { confirmation: { challengeId: confirmation, typedReq } })}><button className="danger" disabled={!!working || typedReq !== plan.req}>Eliminar plan</button></form></div>
       </article>;
     })}</div></section>}
+    {!!snapshot?.rounds?.some((round) => round.status === "open") && <section className="runs plans" aria-labelledby="rounds-title"><div className="section-heading"><div><p className="eyebrow">PREGUNTAS</p><h2 id="rounds-title">Rondas abiertas</h2></div></div><div className="run-list">{snapshot.rounds.filter((round) => round.status === "open").map((round) => <article className="run-card" key={`${round.project}-${round.req}-${round.round}`}>
+      <div className="run-top"><div><p className="eyebrow">{round.project}</p><h3>{round.req} · {round.title || `Ronda ${round.round}`}</h3></div><span className="state">Ronda {round.round}</span></div>
+      {round.intro && <p className="last-seen">{round.intro}</p>}{round.coverage && <p className="last-seen">Cobertura · {round.coverage}</p>}
+      <form className="answer-form" onSubmit={roundForm(round)}>{round.questions.map((question) => <fieldset className="question" key={question.id}><legend>{question.text}</legend>
+        {question.type === "choice" ? <div className="choice-list">{(question.options ?? []).map((option) => <label className="choice-option" key={option.key}><input type="radio" name={question.id} value={option.key} required /><span>{option.label}{question.recommended === option.key ? <em> · recomendada</em> : ""}</span></label>)}</div> : <textarea name={question.id} defaultValue={question.suggested ?? ""} required aria-label={question.text} />}
+        {question.why && <p className="last-seen">{question.why}</p>}{question.type === "choice" && <label className="note-label">Nota opcional <input name={`${question.id}-note`} maxLength={2000} /></label>}
+      </fieldset>)}<button disabled={!!working}>Enviar respuestas</button></form>
+    </article>)}</div></section>}
+    {!!snapshot?.decisionRequests?.length && <section className="runs plans" aria-labelledby="decisions-title"><div className="section-heading"><div><p className="eyebrow">DECISIONES</p><h2 id="decisions-title">Esperando tu decisión</h2></div></div><div className="run-list">{snapshot.decisionRequests.map((decision) => <article className="run-card" key={decision.id}>
+      <div className="run-top"><div><p className="eyebrow">{decision.project} · {decision.req}{decision.task ? ` · ${decision.task}` : ""}</p><h3>{decision.title}</h3></div>{decision.unskippable && <span className="state">Requiere revisión</span>}</div>
+      <p className="last-seen">{decision.what}</p>{!!decision.evidence?.length && <details><summary>Evidencia</summary><ul>{decision.evidence.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul></details>}
+      <div className="decision-options">{decision.options.map((option) => <form className={`decision-option${decision.recommended === option.id ? " recommended" : ""}`} key={option.id} onSubmit={decisionForm(decision, option)}>
+        <h4>{option.label}{decision.recommended === option.id ? <span> · recomendada</span> : ""}</h4><p>{option.consequence}</p>
+        {["retry_with_note", "review_pass", "review_fail"].includes(option.id) && <label className="note-label">Indicación o razón <textarea name="reason" required maxLength={2000} /></label>}
+        <button disabled={!!working}>Elegir esta opción</button>
+      </form>)}</div>
+    </article>)}</div></section>}
     <section className="runs history" aria-labelledby="command-history-title"><div className="section-heading"><div><p className="eyebrow">TRAZABILIDAD</p><h2 id="command-history-title">Historial de comandos</h2></div></div>{historyError && <p className="error" role="status">{historyError}</p>}{commandHistory.length ? <ol className="command-history">{commandHistory.map((item) => <li key={item.id}><strong>{item.type}</strong><span>{item.target}</span><time dateTime={item.submittedAt}>{prettyTime(item.submittedAt)}</time><span>Origen · {item.origin}</span><span>Resultado · {item.result}</span></li>)}</ol> : <p className="empty">Aún no se han enviado comandos desde este panel.</p>}</section>
     <footer className="footer"><span>FLOW REMOTE</span><span>Actualizado · {prettyTime(snapshot?.generatedAt)}</span></footer>
   </main>;

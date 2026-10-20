@@ -47,6 +47,22 @@ export async function createMockGatewayServer() {
       request.on("close", () => clearInterval(timer));
       return;
     }
+    if (request.method === "POST" && request.url === "/api/remote/v1/challenges") {
+      let body = "";
+      request.on("data", (chunk) => { body += chunk; });
+      request.on("end", () => {
+        try {
+          const challengeRequest = JSON.parse(body);
+          if (challengeRequest.typedReq !== challengeRequest.target.split("/").at(-1)) {
+            send(400, { code: "INVALID_CHALLENGE", message: "El id del requerimiento no coincide" });
+            return;
+          }
+          server.challenges.push(challengeRequest);
+          send(201, { challengeId: "mock-server-challenge-0001", target: challengeRequest.target, expiresIn: 120 });
+        } catch { send(400, { code: "INVALID_CHALLENGE", message: "JSON inválido" }); }
+      });
+      return;
+    }
     if (request.method === "POST" && request.url === "/api/remote/v1/commands") {
       let body = "";
       request.on("data", (chunk) => { body += chunk; });
@@ -78,6 +94,7 @@ export async function createMockGatewayServer() {
   server.snapshot = snapshot;
   server.snapshotReads = [];
   server.commands = [];
+  server.challenges = [];
   server.history = [];
   server.nextCommandResponse = null;
   return server;
