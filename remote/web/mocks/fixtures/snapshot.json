@@ -1,0 +1,25 @@
+{
+  "snapshot": {
+    "generated_at": "2026-10-19T12:00:00Z",
+    "etag": "mock-snapshot-v1",
+    "runs": [
+      {
+        "project": "lotm",
+        "req": "REQ-027",
+        "status": "running",
+        "active_module": "M3 · Executor",
+        "active_task": "T15 · Web scaffold",
+        "active_attempt": "att-0008",
+        "last_seen": "2026-10-19T11:59:45Z",
+        "agent_now": "Construyendo el panel remoto"
+      }
+    ],
+    "plans": [],
+    "rounds": [],
+    "decisions": []
+  },
+  "laptop": {
+    "online": true,
+    "since": null
+  }
+}
