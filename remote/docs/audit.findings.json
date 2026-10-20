@@ -4,188 +4,241 @@
     {
       "id": "F1",
       "severity": "high",
-      "status": "open",
-      "summary": "Deployment kit proxies container loopback and binds gateway to host loopback, contradicting the approved Docker Caddy-to-host 172.20.0.1:8790 topology; all public API access fails.",
+      "status": "fixed",
       "tasks": [
         "T16"
       ],
-      "evidence": "Current-tree inspection: PLAN.md Approach specifies Docker Caddy -> 172.20.0.1:8790; remote/deploy/Caddyfile:11 still proxies 127.0.0.1:8790. Probe C confirms GatewayConfig default bind 127.0.0.1. Kit suite exits 0 but asserts the loopback upstream; no actual Docker boundary tested."
+      "summary": "The prior Caddy container-loopback upstream defect is corrected in the supplied prerequisite tree.",
+      "evidence": "cd remote/deploy && python -m unittest discover -s tests -p test_kit.py: exit 0, 4 tests in 0.110s; test_caddy_block_and_deploy_entrypoint_use_host_gateway_offline checks reverse_proxy 172.20.0.1:8790 and service Environment=GATEWAY_BIND=172.20.0.1. sh remote/deploy/deploy.sh --check: exit 0, deployment topology: 172.20.0.1:8790. Live Docker connectivity was not tested; separate env-example defect F22 remains."
     },
     {
       "id": "F2",
       "severity": "high",
       "status": "open",
-      "summary": "Required local E2E still exits 1 on the forced-failure Telegram assertion with an isolated empty bitacora root: authoritative retry context is not seeded. Required real-ledger cancel/stale scenarios are also absent.",
       "tasks": [
         "T17"
       ],
-      "evidence": "T17 unittest command with temporary empty BITACORA_ROOT, run sequentially after web/kit checks: exit 1; Ran 1 test in 36.867s; line 294, forced failure did not reach the fake Telegram before its deadline. Probe B: production-shaped failure with empty retry context returns None, exhausted-task context emits attempt.failed. Harness also omits required ledger cancel/stale scenarios."
+      "summary": "The E2E fixture still yields no failure event and its supposedly valid cancel command pins running against a reserved attempt; full E2E also stops at the web build.",
+      "evidence": "cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py: exit 1, Ran 0 tests, setUpClass build error (F19). Report probe C: real fixture feed events=[], nextCursor=''; fixture attempt state reserved; stale command 409 STALE_PRECONDITION; supposedly current cancel also 409 STALE_PRECONDITION; cancelled transitions 0."
     },
     {
       "id": "F3",
       "severity": "medium",
       "status": "open",
-      "summary": "First-install runbook restarts the gateway before installing its unit and starts a tunnel without instructions to start/configure the laptop remote API listener.",
       "tasks": [
         "T16"
       ],
-      "evidence": "Source recheck: remote/docs/runbook.md Step 3 invokes deploy.sh; deploy.sh:27 restarts bitacora-gateway; Step 4 first installs its unit. Step 6 starts only the tunnel; no serve-remote startup/key setup is given."
+      "summary": "Runbook still omits installing/configuring the private laptop API and reverse tunnel; public Caddy hostname remains an unexplained placeholder.",
+      "evidence": "Current remote/docs/runbook.md Go-live steps 1-5 cover host gateway and Docker Caddy only; no serve-remote startup, laptop FLOW_GATEWAY_KEY loading, or tunnel installation/start. Caddyfile uses flow.example.com instead of the approved sslip.io hostname; runbook never instructs substitution."
     },
     {
       "id": "F4",
       "severity": "medium",
       "status": "open",
-      "summary": "Gateway request logger mistakes the full HTTP request line for status and logs OAuth code/state query values.",
       "tasks": [
         "T11a"
       ],
-      "evidence": "Fresh probe A exits 0: synthetic OAuth callback log status field contains the entire request line including code=SYNTHETIC_CODE and state=SYNTHETIC_STATE. server.py log_message still takes args[0] as status."
+      "summary": "Request logging still writes OAuth code/state query values into the status field.",
+      "evidence": "Report probe A, exit 0: status=GET /api/auth/callback?code=SYNTHETIC_CODE&state=SYNTHETIC_STATE HTTP/1.1. server.py log_message takes args[0], the full request line, as status."
     },
     {
       "id": "F5",
       "severity": "medium",
       "status": "open",
-      "summary": "GET logout mutates sessions without Origin/header checks; POST guard accepts arbitrary nonempty X-Flow-Request values instead of requiring 1.",
       "tasks": [
         "T11a",
         "T15a"
       ],
-      "evidence": "Fresh probe A exits 0: X-Flow-Request: not-one reaches POST command handler (200); GET logout with foreign Origin returns 302 and session retained is False. server.py guard uses bool(request_marker); page.tsx still links GET logout."
+      "summary": "GET logout bypasses mutation guards, and the CSRF marker accepts any nonempty value rather than 1.",
+      "evidence": "Report probe A, exit 0: wrong marker POST 200; foreign Origin logout 302; session retained False. server.py uses bool(request_marker); page.tsx still links GET /api/auth/logout."
     },
     {
       "id": "F6",
       "severity": "medium",
       "status": "open",
-      "summary": "Telegram task retry pins run state, while the real laptop compares task state, causing valid failed-task retries to be rejected as stale.",
       "tasks": [
+        "T14a",
         "T14b"
       ],
-      "evidence": "Fresh probe C exits 0 through TelegramBot -> GatewayRuntime -> adapter -> real Ledger and target_state reading a temporary Scheduler state table: precondition running, task failed, STALE_PRECONDITION, effects 0."
+      "summary": "Telegram retry and alert action/deep-link integration are missing; the previous bad retry envelope was removed rather than repaired.",
+      "evidence": "Report probe B: submit_telegram_command(retry) raises NameError because CommandValidationError is not imported; app.py allows only pause/resume. telegram_bot.py _send_status constructs only pause/resume callbacks; notifications.py TelegramSender sends chat_id/text only, no reply_markup, and notification_for_event produces at most a fragment, not a frontend URL."
     },
     {
       "id": "F7",
       "severity": "medium",
       "status": "open",
-      "summary": "Advertised note command is accepted by the web/gateway but has no laptop dispatcher and returns COMMAND_NOT_IMPLEMENTED.",
       "tasks": [
-        "T15f"
+        "T5a"
       ],
-      "evidence": "Fresh probe B exits 0: validated and translated note returns COMMAND_NOT_IMPLEMENTED. dispatch_handlers has no note handler; page.tsx noteForm still advertises it. Retry reason notes remain implemented and are a different command."
+      "summary": "The advertised note command remains accepted by validators but has no laptop dispatcher.",
+      "evidence": "Report probe B, exit 0: GatewayRuntime._web_command(validate_command(note)) -> real Ledger/dispatch_handlers -> COMMAND_NOT_IMPLEMENTED. note is still in both command enums."
     },
     {
       "id": "F8",
       "severity": "medium",
       "status": "open",
-      "summary": "Phone brief editor omits the required task, offers no criteria edit, hides editing on launched plans, and uses plan-state preconditions against an active run-state reader.",
       "tasks": [
-        "T15f",
-        "T8a"
+        "T15f"
       ],
-      "evidence": "Fresh probe B: UI brief envelope raises edit-brief requiere params.task. Probe C: active edit target_state is running; current UI sends plan state, omits task selector/criteria, and displays editor only for approved plans. Both probes exit 0."
+      "summary": "Task brief editing now supplies the task and run precondition, but the phone still cannot edit acceptance criteria.",
+      "evidence": "Current page.tsx editBriefForm sends task, field='objective', value and run.state; renderTask shows a brief textarea for failed/blocked tasks. No acceptance_criteria editing field or selector exists. bt_remote_commands.dispatch_edit_brief supports acceptance_criteria."
     },
     {
       "id": "F9",
       "severity": "medium",
       "status": "open",
-      "summary": "Run-level reopen form sends no task although the laptop reopen dispatcher requires params.task, so Reabrir ejecucion fails.",
       "tasks": [
         "T15d"
       ],
-      "evidence": "Fresh probe B exits 0: run-level reopen without task raises reopen requiere params.task. Current page.tsx run-level Reabrir ejecucion still sends no taskId."
+      "summary": "Run-level Reabrir ejecución still sends no task to a dispatcher that requires one.",
+      "evidence": "Report probe B: dispatch_run_command('reopen', 'demo/REQ-001', {}) raises reopen requiere params.task. page.tsx run-level commandForm('reopen', {kind:'run',...}) supplies no taskId."
     },
     {
       "id": "F10",
       "severity": "medium",
       "status": "open",
-      "summary": "Ordinary plans waiting for approval emit no plan.waiting event unless they also have a scheduler decision request.",
       "tasks": [
         "T6"
       ],
-      "evidence": "Fresh probe B exits 0: ordinary review-state plan without scheduler decisions produces approval events []. Current decision_events only iterates decisions; derived_events has no plans input. Gateway handling of an already-produced plan.waiting event is present."
+      "summary": "An ordinary plan waiting for approval still emits no plan.waiting event without a scheduler decision.",
+      "evidence": "Report probe B: decision_events([{project:'demo',req_id:'REQ-001',plan_status:'review',decisions:[]}]) returns []; route_get events calls decision_events(plans) and from_snapshot(runs, rounds), which has no plans input."
     },
     {
       "id": "F11",
       "severity": "medium",
       "status": "open",
-      "summary": "Gateway restart loses offline snapshots/read caches and resets SSE sequence IDs, suppressing new events behind an old Last-Event-ID without resynchronization.",
       "tasks": [
         "T12"
       ],
-      "evidence": "Fresh probes B/C exit 0: new stream with event 1 returns [] after old cursor 1; two GatewayRuntime objects with the same SQLite path yield snapshot present before restart, None after. Read cache and stream remain in-memory only; HTTP stream has no reset protocol."
+      "summary": "Restart still loses the cached snapshot and resets SSE IDs without a resynchronization protocol.",
+      "evidence": "Report probe B: two GatewayRuntime instances with one database yield snapshot before/after restart True/None; a new stream with event 1 returns [] after old Last-Event-ID 1. HTTP _stream_events has no reset event/protocol."
     },
     {
       "id": "F12",
       "severity": "medium",
       "status": "open",
-      "summary": "Gateway SSE history, notification outbox/history and abandoned expired sessions grow without bounded retention or the promised 90-day history pruning.",
       "tasks": [
         "T11",
         "T12",
         "T14a"
       ],
-      "evidence": "Fresh probe C exits 0: SSE deque maxlen None; an expired session is retained after a later login. Source recheck of NotificationOutbox confirms sent/dropped/history rows have no pruning or 90-day retention implementation."
+      "summary": "Gateway event history, delivered/dropped outbox/history and abandoned expired sessions remain unbounded.",
+      "evidence": "Report probe B: stream deque.maxlen None; expired session count 1 after a later login. Source inspection: NotificationOutbox has no 90-day pruning/deletion; SessionStore prunes only a session whose token is presented."
     },
     {
       "id": "F13",
       "severity": "medium",
       "status": "open",
-      "summary": "Failed probes overwrite snapshot cachedAt, there is no stable offlineSince, and the web omits the required outage-start time.",
       "tasks": [
         "T12",
         "T15b"
       ],
-      "evidence": "Fresh probe B exits 0: identical snapshot cachedAt changes from 2026-10-20T12:00:15Z to 2026-10-20T12:05:00Z across failed probes. stream.py overwrites capture time; page.tsx banner has no outage-start time."
+      "summary": "Failed probes relabel cached data with the current time; offline start time is not exposed to the phone.",
+      "evidence": "Report probe B: repeated _publish_liveness calls change cachedAt without fetching data. app.py publishes cached_snapshot with datetime.now on health failure; page.tsx displays LAPTOP SIN CONEXIÓN with no outage-start timestamp."
     },
     {
       "id": "F14",
       "severity": "medium",
       "status": "open",
-      "summary": "Laptop remote failure-review redaction recognizes only four credential names; synthetic provider API key assignments and bearer authorization text reach the control plane unchanged.",
       "tasks": [
         "T7",
         "T6"
       ],
-      "evidence": "Fresh probe B exits 0: OPENAI_API_KEY and Authorization: Bearer synthetic text survives laptop redaction unchanged. bt_remote_events only recognizes four names; bt_remote_api redacts failure review through that function before the gateway receives it."
+      "summary": "Laptop redaction still misses provider API-key assignments and bearer authorization text before transmission.",
+      "evidence": "Report probe B: redact('OPENAI_API_KEY=SYNTHETIC Authorization: Bearer SYNTHETIC') returns both values unchanged. bt_remote_api applies this redactor to review/events; _SECRET_NAMES lists only four credential names."
     },
     {
       "id": "F15",
       "severity": "medium",
-      "status": "open",
-      "summary": "T9 socket-preserving reload is absent: stale server is terminated/restarted and serve creates a new listening socket.",
+      "status": "fixed",
       "tasks": [
         "T9"
       ],
-      "evidence": "Current source recheck of bt_server.py: serve creates a new ThreadingHTTPServer socket, _stale kills prior PID, ensure_server restarts the unit/process; no inherited-listener/reload path. Platform suite exits 0 (23 tests) without socket-continuity coverage."
+      "summary": "The earlier absence of an inherited-listener path is corrected in the supplied prerequisite tree.",
+      "evidence": "cd skill/scripts && python -m unittest discover -s tests -p test_platform.py: exit 0, 25 tests in 2.001s, including test_web_server_reload_uses_the_inherited_listener and test_systemd_listener_requires_its_activation_environment. Source create_http_server adopts systemd_listener; ensure_server restarts the unit without spawning a loose process."
     },
     {
       "id": "F16",
       "severity": "medium",
       "status": "open",
-      "summary": "Web discards unknown-outcome command envelopes and generates a new idempotency key on each retry, with no same-key reconciliation/retry path.",
       "tasks": [
         "T15d"
       ],
-      "evidence": "Current source recheck of page.tsx sendCommand and commandForm/roundForm/decisionForm/retryForm/noteForm/editBriefForm: each submission creates a fresh web UUID; UNKNOWN_OUTCOME envelope/key is not retained for same-key retry. No production duplicate effect is claimed."
+      "summary": "The web still discards unknown-outcome envelopes and generates a fresh key on every retry.",
+      "evidence": "Current page.tsx sendCommand keeps only the returned message, not the command/idempotencyKey; commandForm, roundForm, decisionForm, retryTask and editBriefForm create a new web UUID for every submission."
     },
     {
       "id": "F17",
       "severity": "low",
       "status": "open",
-      "summary": "Published command/laptop wire dialects and key limits disagree; command families/round selector are incomplete, and production event types/targets violate the event schema.",
       "tasks": [
         "T3"
       ],
-      "evidence": "Current source recheck of contract.md and both schemas; probes C/D exit 0. Gateway accepts a 121-character key that the laptop rejects; answer-decision absent and required round selector disallowed. Event enum excludes task.progress/task.completed; event target requires kind/project/req but flow targets omit kind and derived run.finished uses only run. JSON syntax command exits 0 and does not validate these payloads."
+      "summary": "Published command/event schemas still disagree with production dialects, field names and key limits.",
+      "evidence": "Report probe B: gateway accepts a 121-character key rejected by laptop's 120 limit; produced run.finished target lacks kind/project/req required by the referenced schema. Source schemas omit answer-decision, specify string route rather than the current route object, and require answer while the web now submits answers."
     },
     {
       "id": "F18",
       "severity": "medium",
       "status": "open",
-      "summary": "Default web verify runs browser tests concurrently against shared Next.js output/configuration; panel test cancels at 60s and child shutdown stalls, while serial browser tests and separate build pass.",
       "tasks": [
-        "T15"
+        "T15",
+        "T15e"
       ],
-      "evidence": "cd remote/web && npm run verify: exit 1 after panel test timed out at 60000ms; 8 passed, 1 cancelled, build not reached; auditor terminated only its stuck Next.js server child to finish cleanup. node --test --test-concurrency=1 tests/*.test.mjs: exit 0, 9 passed in 23.862s. npm run build: exit 0. Both browser test sources spawn next dev with cwd root and shared .next. Shared-output race is confirmed structurally; exclusive cause of this timeout is not established."
+      "summary": "Browser checks still share Next.js output/configuration, and serial execution now reveals a stale answer-round contract assertion.",
+      "evidence": "cd remote/web && node --test --test-concurrency=1 tests/*.test.mjs: exit 1, 8 tests, 7 passed, 1 failed in 36.428s; panel-browser.test.mjs:223 expects command.answer but current roundForm sends answers. Both browser tests spawn next dev in the same cwd/.next; default npm test remains concurrent."
+    },
+    {
+      "id": "F19",
+      "severity": "high",
+      "status": "open",
+      "tasks": [
+        "T15a"
+      ],
+      "summary": "The current run-history parser does not typecheck, preventing the production build and every built-web E2E scenario.",
+      "evidence": "cd remote/web && npm run verify: exit 2 at typecheck; TS2677 page.tsx:138 and TS2322 page.tsx:143. E2E invokes npm run build, which exits 1 on the same invalid Attempt type predicate; Ran 0 tests in 12.061s."
+    },
+    {
+      "id": "F20",
+      "severity": "high",
+      "status": "open",
+      "tasks": [
+        "T15a"
+      ],
+      "summary": "Successful real OAuth sessions cannot load the phone panel because the gateway and web disagree on the session response.",
+      "evidence": "Report probe B: authenticated GET /api/auth/session returns HTTP 200 {login:'dav033'}. page.tsx load requires typeof parsedSession.authenticated === 'boolean' and otherwise throws Respuesta de sesión inválida before setting session or fetching snapshot. Mock returns authenticated:true and conceals the mismatch."
+    },
+    {
+      "id": "F21",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T4a",
+        "T6",
+        "T15b"
+      ],
+      "summary": "The real phone feed cannot connect or decode production events despite mock SSE coverage.",
+      "evidence": "Report probe B: authenticated GET /api/remote/v1/events/stream?after=abc returns 404. Gateway streams only /api/remote/v1/events and reads Last-Event-ID, while page.tsx uses the former path/query. Laptop snapshot cursor is always empty, and the web refuses to create EventSource without a truthy snapshot cursor. Production event targets use run/task, but parseFlowEvent requires project/req and reads taskId/task_id."
+    },
+    {
+      "id": "F22",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T16"
+      ],
+      "summary": "Filling the required env-example values still leaves blank optional settings that prevent gateway startup.",
+      "evidence": "Report probe B: parsing the checked-in example after filling required synthetic values and GATEWAY_BIND raises Gateway port and timeouts must be numeric; filling numeric settings then raises GitHub OAuth endpoints must use https because blank endpoint assignments override defaults."
+    },
+    {
+      "id": "F23",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T15d"
+      ],
+      "summary": "Phone command history drops the stored web/telegram origin and displays target/command in its place.",
+      "evidence": "Current page.tsx refreshCommandHistory constructs item.origin from item.target and item.command without reading item.origin; history rendering labels that constructed text Origen. Laptop Ledger.rows retains the real origin field."
     }
   ]
 }
