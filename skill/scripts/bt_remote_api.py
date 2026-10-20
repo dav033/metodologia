@@ -41,6 +41,40 @@ def _runs() -> list[dict]:
     return live.run_summaries(None, "global")
 
 
+def _shared_now_items() -> list[dict]:
+    """Read live attempts from the same cached now frame used by the local SSE clients."""
+    import bt_live_api as live
+    frame = live._now_frame(None).decode("utf-8")
+    for line in frame.splitlines():
+        if line.startswith("data: "):
+            payload = json.loads(line[6:])
+            return payload.get("items", [])
+    return []
+
+
+def _snapshot_runs() -> list[dict]:
+    """Add live task and liveness data to run summaries using the shared now read model."""
+    runs = _runs()
+    now_by_run = {}
+    for item in _shared_now_items():
+        key = f'{item.get("project", "")}/{item.get("req_id", "")}'
+        now_by_run.setdefault(key, []).append(item)
+
+    for run in runs:
+        live_items = now_by_run.get(run.get("run"), [])
+        active = live_items[0] if live_items else None
+        task_by_id = {task.get("id"): task for task in run.get("tasks", [])}
+        active_task = task_by_id.get(active.get("task")) if active else None
+        attempts = [attempt for task in run.get("tasks", [])
+                    for attempt in [task.get("attempt"), *(task.get("history") or [])]]
+        last_activity = [attempt.get("last_activity_at") for attempt in attempts
+                         if attempt and attempt.get("last_activity_at")]
+        run["active_task"] = ({"id": active_task.get("id"), "title": active_task.get("title")}
+                              if active_task else None)
+        run["last_sign_of_life"] = max(last_activity, default=run.get("updated_at"))
+    return runs
+
+
 def _plans() -> list[dict]:
     import bt_plans_api as plans
     from bt_core import ROOT
@@ -58,7 +92,7 @@ def route_get(handler) -> None:
                                "checkedAt": dt.datetime.now(dt.UTC).isoformat()})
     try:
         if path == f"{PREFIX}/snapshot":
-            return _json(handler, {"schemaVersion": 1, "runs": _runs(), "plans": _plans(),
+            return _json(handler, {"schemaVersion": 1, "runs": _snapshot_runs(), "plans": _plans(),
                                    "generatedAt": dt.datetime.now(dt.UTC).isoformat(), "cursor": ""})
         if path == f"{PREFIX}/runs":
             return _json(handler, {"runs": _runs()})
