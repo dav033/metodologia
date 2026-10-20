@@ -113,6 +113,7 @@ class NotificationTests(unittest.TestCase):
                 patch("app.LaptopClient", return_value=laptop), \
                 patch("app.TelegramSender", return_value=sent.append), \
                 patch("main.create_server", return_value=FakeServer()), \
+                patch("main.TelegramBot"), \
                 patch("app.time.monotonic", side_effect=lambda: current_time[0]), \
                 patch.object(GatewayRuntime, "run_forever", run_production_cycles):
             self.assertEqual(main(), 0)

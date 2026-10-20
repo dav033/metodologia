@@ -126,6 +126,7 @@ class LivenessTests(unittest.TestCase):
                 "GATEWAY_PORT": str(free_port()),
             }, clear=True), patch("app.LaptopClient", return_value=laptop), \
                     patch("app.TelegramSender", return_value=sent.append), \
+                    patch("main.TelegramBot"), \
                     patch("app.OFFLINE_ALERT_DELAY_SECONDS", 0), \
                     patch.object(GatewayRuntime, "run_forever", one_production_cycle):
                 self.assertEqual(main(), 0)
@@ -180,6 +181,7 @@ class LivenessTests(unittest.TestCase):
             }
             with patch.dict(os.environ, env, clear=True), patch("app.LaptopClient", return_value=laptop), \
                     patch("app.TelegramSender", return_value=sent.append), \
+                    patch("main.TelegramBot"), \
                     patch("app.OFFLINE_ALERT_DELAY_SECONDS", 0), \
                     patch.object(GatewayRuntime, "run_forever", four_production_cycles):
                 self.assertEqual(main(), 0)
