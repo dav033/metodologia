@@ -293,8 +293,14 @@ class Boundary(unittest.TestCase):
         self.assertEqual(done.returncode, 0, (done.stderr or done.stdout)[-1500:])
 
     def test_historical_runs_of_this_repository_are_byte_identical_after_a_whole_executor_session(self):
+        def settled(path):
+            """A run that is still going rewrites its own projection every heartbeat: only finished runs are history."""
+            try:
+                return json.loads(path.read_text(encoding="utf-8")).get("status") in ("done", "completed", "cancelled")
+            except (OSError, ValueError, AttributeError):
+                return True
         runs = sorted((REPO / "bitacora" / "metodologia").rglob("RUN.json")) + \
-            sorted((REPO / "bitacora" / "metodologia").rglob("RUN.projection.json"))
+            [p for p in sorted((REPO / "bitacora" / "metodologia").rglob("RUN.projection.json")) if settled(p)]
         before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in runs}
         world = Operations("test_no_secret_value_appears_in_the_executors_state_or_in_the_cores_audit")
         result = unittest.TestResult()

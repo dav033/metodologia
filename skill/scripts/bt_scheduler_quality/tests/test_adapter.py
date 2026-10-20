@@ -12,6 +12,7 @@ from pathlib import Path
 import bt_audit_gate
 import bt_scheduler_adapter as scheduler_adapter
 import bt_scheduler_executor_adapter as executor_adapter
+from bt_scheduler_quality.contracts import QualityError
 from bt_scheduler_quality.policy import QualityPolicy
 from bt_scheduler_quality.runner import CommandOutcome
 from bt_scheduler_quality.store import QualityStore
@@ -368,6 +369,25 @@ class M6M1AdapterTests(unittest.TestCase):
                                               and e.detail.get("to") == "rejected" for e in core.audit_log())))
         self.assertEqual(core.snapshot().tasks["T3"]["state"], "completed")
         self.assertEqual([task_id for task_id, _ in notes], ["T1"])
+
+    def test_a_verification_interrupted_by_a_restart_is_rerun_once_and_other_reviews_are_left_alone(self):
+        calls = []
+
+        class Store:
+            def list_reviews(self):
+                return ({"request_key": "interrupted"}, {"request_key": "needs-a-person"}, {"request_key": "again"})
+
+            def retry_interrupted(self, key, operator, reason):
+                calls.append((key, operator))
+                if key == "needs-a-person":
+                    raise QualityError("RETRY_INVALID", "not caused by an interruption")
+                if key == "again":
+                    raise QualityError("RETRY_EXHAUSTED", "already retried once")
+        port = QualityVerificationPort.__new__(QualityVerificationPort)
+        port.store = Store()
+        self.assertEqual(port._retry_interrupted_reviews(), 1)
+        self.assertEqual([key for key, _ in calls], ["interrupted", "needs-a-person", "again"])
+        self.assertEqual({operator for _, operator in calls}, {"owner-restart"})
 
     def test_a_result_that_combines_cleanly_is_accepted(self):
         task = _task("T1", "python3 build.py")

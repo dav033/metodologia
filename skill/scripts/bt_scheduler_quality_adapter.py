@@ -91,6 +91,7 @@ class QualityVerificationPort:
         if self._thread is not None and self._thread.is_alive():
             return
         self.engine.recover_interrupted()
+        self._retry_interrupted_reviews()
         self.reconcile_outbox(force=True)
         self._stop.clear()
         self._thread = threading.Thread(
@@ -98,6 +99,20 @@ class QualityVerificationPort:
         )
         self._thread.start()
         self._wake.set()
+
+    def _retry_interrupted_reviews(self) -> int:
+        """A verification cut short by a restart of the owner is repeated, not left for a person: the review it left is
+        caused solely by the interruption (no check gave a verdict). The store allows one such retry per request, so a
+        restart loop cannot replay commands indefinitely; a request already retried stays for the owner."""
+        retried = 0
+        for review in self.store.list_reviews():
+            try:
+                self.store.retry_interrupted(review["request_key"], "owner-restart",
+                                             "verification interrupted by a restart of the owner; rerun it")
+                retried += 1
+            except QualityError:
+                continue                                # not an interruption, or already retried once
+        return retried
 
     def close(self, *, wait: bool = True) -> None:
         self._closed = True

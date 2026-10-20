@@ -125,9 +125,6 @@ class Unit(unittest.TestCase):
 
     def test_a_redone_task_that_clashes_with_its_dependent_merges_over_the_result_it_replaced(self):
         spec = self.redone_task_and_a_dependent()
-        with self.assertRaises(integ.IntegrationError) as caught:                 # without the history it is a clash
-            self.bound(spec).base_ref("T3")
-        self.assertEqual(caught.exception.code, "INTEGRATION_CONFLICT")
         self.earlier["T1"] = ["att-T1-v1"]
         merged = self.bound(spec).base_ref("T3")
         text = git(self.app, "show", f"{merged}:f.txt")
@@ -181,8 +178,6 @@ class Unit(unittest.TestCase):
         self.accept("T2", t2)
         self.snaps["att-T0-v1"] = t0_v1
         spec = {"T0": ([], "app"), "T1": (["T0"], "app"), "T2": (["T0"], "app"), "T3": (["T1", "T2"], "app")}
-        with self.assertRaises(integ.IntegrationError):
-            self.bound(spec).base_ref("T3")                                        # T0's earlier result is not in the pair
         self.earlier["T0"] = ["att-T0-v1"]
         merged = self.bound(spec).base_ref("T3")
         self.assertEqual({n: git(self.app, "show", f"{merged}:{n}")[:5] for n in ("one.txt", "two.txt", "up.txt")},
@@ -193,12 +188,61 @@ class Unit(unittest.TestCase):
         spec = {**spec, "T3": (["T1", "T2"], "app")}
         redo = self.snaps["att-T1"]
         del self.accepted["T1"]                                                    # T1 is being redone: v2 is the candidate
+        self.assertEqual(self.bound(spec).would_conflict("T1", "att-T1-redo", redo), "")     # T2 carries over cleanly
+        v1 = git(self.app, "rev-parse", f"{own}^1")
+        self.snaps["att-T2"] = snapshot(self.app, v1, {"up.txt": "T2 rewrote the file\n"})  # now T2 overlaps the fix
         problem = self.bound(spec).would_conflict("T1", "att-T1-redo", redo)
-        self.assertTrue(problem.startswith("T1 vs T2 for T3") or problem.startswith("T2 vs T1 for T3"), problem)
-        self.earlier["T1"] = ["att-T1-v1"]
-        self.snaps["att-T1-v1"] = git(self.app, "rev-parse", f"{own}^1")           # the result T2 was built on
-        self.assertEqual(self.bound(spec).would_conflict("T1", "att-T1-redo", redo), "")
+        self.assertTrue(problem.startswith("T1 vs T2 for T") or problem.startswith("T2 vs T1 for T3"), problem)
         self.assertNotIn("att-T1-redo", self.accepted)                              # a dry run changes nothing
+
+    def test_two_redone_prerequisites_are_merged_over_both_of_their_earlier_results_together(self):
+        a_lines = [f"a{n}" for n in range(20)]
+        b_lines = [f"b{n}" for n in range(20)]
+        base = snapshot(self.app, self.head, {"a.txt": "\n".join(a_lines) + "\n", "b.txt": "\n".join(b_lines) + "\n"})
+        a1 = snapshot(self.app, base, {"a.txt": "\n".join(["a draft", *a_lines[1:]]) + "\n"})
+        b1 = snapshot(self.app, base, {"b.txt": "\n".join(["b draft", *b_lines[1:]]) + "\n"})
+        tree = git(self.app, "merge-tree", "--write-tree", a1, b1).splitlines()[0]
+        both = git(self.app, "-c", "user.name=T", "-c", "user.email=t@t", "commit-tree", tree, "-p", a1, "-p", b1, "-m", "both")
+        built = snapshot(self.app, both, {"own.txt": "D own\n"})                    # D was built on both first versions
+        a2 = snapshot(self.app, base, {"a.txt": "\n".join(["a fixed", *a_lines[1:]]) + "\n"})
+        b2 = snapshot(self.app, base, {"b.txt": "\n".join(["b fixed", *b_lines[1:]]) + "\n"})
+        self.accept("A", a2)
+        self.accept("B", b2)
+        self.accept("D", built)
+        self.snaps["att-A-1"], self.snaps["att-B-1"] = a1, b1
+        spec = {"A": ([], "app"), "B": ([], "app"), "D": (["A", "B"], "app"), "E": (["A", "B", "D"], "app")}
+        self.earlier["A"], self.earlier["B"] = ["att-A-1"], ["att-B-1"]
+        merged = self.bound(spec).base_ref("E")
+        got = {n: git(self.app, "show", f"{merged}:{n}")[:7] for n in ("a.txt", "b.txt", "own.txt")}
+        self.assertEqual(got, {"a.txt": "a fixed", "b.txt": "b fixed", "own.txt": "D own"})
+
+    def test_a_result_is_checked_against_completed_tasks_built_on_the_one_it_replaces_even_if_nobody_else_waits(self):
+        own, spec = self.carried_case(None)                                         # T2 was built on T1's first version
+        redo = self.snaps["att-T1-redo"]
+        del self.accepted["T1"]
+        self.assertEqual(self.bound(spec).would_conflict("T1", "att-T1-redo", redo), "")     # merges over T2's own base
+        clash = snapshot(self.app, self.snaps["att-T1-redo"], {"up.txt": "T1 redo, then T2 rewrote it\n"})
+        self.accepted["T2"], self.snaps["att-T2"] = "att-T2", snapshot(self.app, git(self.app, "rev-parse", f"{own}^1"),
+                                                                       {"up.txt": "T2 rewrote the same line\n"})
+        problem = self.bound(spec).would_conflict("T1", "att-T1-redo", redo)
+        self.assertTrue(problem.startswith("T1 vs T2 for T2"), problem)             # a real overlap, no task after them
+        del clash
+
+    def test_a_task_that_only_travels_in_the_merged_group_is_not_blamed_for_a_clash_it_cannot_fix(self):
+        """B and C clash on f.txt whatever A does; A (a bystander merged with B) is a candidate whose result is harmless."""
+        base = snapshot(self.app, self.head, {"f.txt": "\n".join(f"l{n}" for n in range(20)) + "\n"})
+        b = snapshot(self.app, base, {"f.txt": "\n".join(["B", *[f"l{n}" for n in range(1, 20)]]) + "\n"})
+        c = snapshot(self.app, base, {"f.txt": "\n".join(["C", *[f"l{n}" for n in range(1, 20)]]) + "\n"})
+        a_old = snapshot(self.app, base, {"a.txt": "A old\n"})
+        a_new = snapshot(self.app, base, {"a.txt": "A new\n"})
+        self.accept("B", b)
+        self.accept("C", c)
+        self.accept("A", a_old)
+        self.snaps["att-A-new"] = a_new
+        spec = {"A": ([], "app"), "B": ([], "app"), "C": ([], "app"), "D": (["A", "B", "C"], "app")}
+        with self.assertRaises(integ.IntegrationError):
+            self.bound(spec).base_ref("D")                                          # the clash exists already
+        self.assertEqual(self.bound(spec).would_conflict("A", "att-A-new", a_new), "")
 
     def test_a_clash_between_other_tasks_is_not_blamed_on_the_candidate(self):
         own, spec = self.carried_case(None)

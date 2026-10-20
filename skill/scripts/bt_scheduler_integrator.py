@@ -165,11 +165,12 @@ class PredecessorIntegrator:
         bound = self._bound
         if bound is None or not SHA.fullmatch(snapshot or ""):
             return ""
-        accepted = dict(bound["accepted"]())
-        accepted[task_id] = attempt_id
+        current = dict(bound["accepted"]())
+        accepted = {**current, task_id: attempt_id}
         real = bound["snapshot_of"]
         overlay = lambda attempt: snapshot if attempt == attempt_id else real(attempt)      # noqa: E731
         role = self._role(task_id)
+        before = current.get(task_id) or next(iter(bound["earlier_of"](task_id) if bound.get("earlier_of") else ()), None)
         for later in bound["plan"].ids():
             if later == task_id or self._role(later) != role or task_id not in self.ancestors(later):
                 continue
@@ -179,9 +180,53 @@ class PredecessorIntegrator:
                 self._integrate(later, accepted, overlay, write_ref=False)
             except IntegrationError as error:
                 pair = error.detail.split(" for ")[0]
-                if error.code == "INTEGRATION_CONFLICT" and task_id in re.split(r"\+| vs ", pair):
-                    return error.detail             # a clash the candidate takes part in; older ones are not its doing
+                if error.code != "INTEGRATION_CONFLICT" or task_id not in re.split(r"\+| vs ", pair):
+                    continue                                # a clash the candidate takes no part in
+                if before is not None and self._clashes_without(later, accepted, task_id, before):
+                    continue                                # the same clash exists with its previous result: not its doing
+                return error.detail
+        return self._clash_with_built_on(task_id, snapshot, accepted, overlay, current, before)
+
+    def _clash_with_built_on(self, task_id: str, snapshot: str, accepted: dict, overlay, current: dict, before) -> str:
+        """The candidate against each accepted task that comes after it. Such a task was built on the candidate's earlier
+        result; nobody else combines the two until a task further down needs both, and then it is that bystander that
+        blocks. The pair is merged here (with the earlier results as merge bases, like everywhere else)."""
+        bound = self._bound
+        role = self._role(task_id)
+        path = bound["repo_of"](role)
+        if not path:
+            return ""
+        repo = Path(path)
+        for later in bound["plan"].ids():
+            if later == task_id or self._role(later) != role or task_id not in self.ancestors(later) \
+                    or later not in current:
+                continue
+            built = overlay(current[later])
+            if not built or not SHA.fullmatch(built):
+                continue
+            owners = [*self.ancestors(later), task_id]
+            try:
+                self._merge(repo, later, [(task_id, snapshot), (later, built)], owners, overlay)
+            except IntegrationError as error:
+                if error.code != "INTEGRATION_CONFLICT":
+                    continue
+                old = overlay(before) if before is not None else None
+                if old and SHA.fullmatch(old):
+                    try:
+                        self._merge(repo, later, [(task_id, old), (later, built)], owners, overlay)
+                    except IntegrationError as again:
+                        if again.code == "INTEGRATION_CONFLICT":
+                            continue                # it clashed with the previous result too: not this one's doing
+                return error.detail
         return ""
+
+    def _clashes_without(self, later: str, accepted: dict, task_id: str, before_attempt: str) -> bool:
+        """Does `later` clash even with the candidate's previous result (or the accepted result it replaces)?"""
+        try:
+            self._integrate(later, {**accepted, task_id: before_attempt}, None, write_ref=False)
+        except IntegrationError as error:
+            return error.code == "INTEGRATION_CONFLICT"
+        return False
 
     def _integrate(self, task_id: str, accepted_map=None, snapshot_of=None, *, write_ref: bool = True) -> str:
         bound = self._bound
@@ -253,13 +298,22 @@ class PredecessorIntegrator:
         if earlier_of is None:
             return None
         resolve = snapshot_of or self._bound["snapshot_of"]
+        newest: list[str] = []                              # per prerequisite, the earlier result a side was built on
         for owner in owners:
             for attempt in earlier_of(owner):
                 prior = resolve(attempt)
                 if not prior or not SHA.fullmatch(prior) or not (contains(prior, current) or contains(prior, sha)):
                     continue
+                if prior not in newest:
+                    newest.append(prior)
                 done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={prior}",
                             current, sha, check=False)
                 if done.returncode == 0:
                     return done
+                break                                       # older results of the same prerequisite are not what a side holds
+        for built_on in (f"{sha}^1", f"{current}^1"):      # several were redone: the base a side was itself built on
+            done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={built_on}",
+                        current, sha, check=False)
+            if done.returncode == 0:
+                return done
         return None
