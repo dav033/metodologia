@@ -21,10 +21,10 @@ test("failure review renders its four sections from the fixture", async () => {
 });
 
 test("long review output scrolls inside a bounded panel", async () => {
-  const css = await read("src/app/globals.css");
-  assert.match(css, /\.review-output\s*\{[^}]*max-height:\s*210px/s);
-  assert.match(css, /\.review-output\s*\{[^}]*overflow:\s*auto/s);
-  assert.match(css, /\.review-output\s*\{[^}]*overscroll-behavior:\s*contain/s);
+  const css = await read("src/app/review/review.module.css");
+  assert.match(css, /\.output\s*\{[^}]*max-height:\s*210px/s);
+  assert.match(css, /\.output\s*\{[^}]*overflow:\s*auto/s);
+  assert.match(css, /\.output\s*\{[^}]*overscroll-behavior:\s*contain/s);
 });
 
 test("review text redacts credentials, tokens and private keys", () => {

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { reviewFixture } from "./review-fixture";
 import { redactReviewText } from "./review-text.mjs";
+import styles from "./review.module.css";
 
 function ReviewSection({ title, children }: { title: string; children: string }) {
   return (
-    <section className="review-section" aria-label={title}>
+    <section className={styles.section} aria-label={title}>
       <h2>{title}</h2>
-      <pre className="review-output">{redactReviewText(children)}</pre>
+      <pre className={styles.output}>{redactReviewText(children)}</pre>
     </section>
   );
 }
@@ -19,13 +20,13 @@ export default function ReviewPage() {
           <span className="brand-mark" aria-hidden="true">F</span>
           <span>flow<span className="brand-muted">/remote</span></span>
         </Link>
-        <Link className="review-back" href="/">Volver a ejecuciones</Link>
+        <Link className={styles.back} href="/">Volver a ejecuciones</Link>
       </header>
-      <article className="review-content" aria-labelledby="review-title">
+      <article className={styles.content} aria-labelledby="review-title">
         <p className="eyebrow">DATOS DE MUESTRA · {redactReviewText(reviewFixture.run)} · {redactReviewText(reviewFixture.task)}</p>
         <h1 id="review-title">Intento fallido</h1>
-        <p className="review-attempt">{redactReviewText(reviewFixture.attempt)}</p>
-        <div className="review-sections">
+        <p className={styles.attempt}>{redactReviewText(reviewFixture.attempt)}</p>
+        <div className={styles.sections}>
           <ReviewSection title="Causa">{reviewFixture.cause}</ReviewSection>
           <ReviewSection title="Salida de verificación">{reviewFixture.verificationOutput}</ReviewSection>
           <ReviewSection title="Estadística del diff">{reviewFixture.diffStat}</ReviewSection>
