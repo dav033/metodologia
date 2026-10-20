@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import http.client
+import hashlib
 import json
 import os
 import socket
@@ -92,6 +93,7 @@ class LocalEndToEndTests(unittest.TestCase):
         cls.provider_thread.start()
         FakeProviderHandler.telegram_messages.clear()
         cls._seed_retry_event_fixture()
+        cls._seed_cancel_run_fixture()
         cls._build_web()
         cls._start_laptop_api()
         cls._start_gateway()
@@ -139,6 +141,47 @@ class LocalEndToEndTests(unittest.TestCase):
         m5.execute("INSERT INTO decisions VALUES (1, 'T1', 'attempt-forced-failure', 'fixture failure', 'retry')")
         m5.commit()
         m5.close()
+
+    @classmethod
+    def _seed_cancel_run_fixture(cls):
+        """Create a second run through M1's SQLite repository for command-path cancel coverage."""
+        req = cls.root / "demo" / "requirements" / "REQ-002-cancel-fixture"
+        req.mkdir(parents=True)
+        plan = {
+            "schema_version": "1.0.0", "plan_id": "REQ-002", "revision": 1,
+            "tasks": [{
+                "id": "T1", "milestone_id": "M1", "after": [], "shared_resources": [],
+                "expected_paths": ["fixture/**"], "acceptance_criteria": ["cancel fixture"],
+                "verification": [{"type": "command", "value": "true"}], "repository": "demo",
+            }],
+        }
+        plan_text = json.dumps(plan, separators=(",", ":"))
+        plan_path = req / "plan-revisions" / "PLAN.r1.json"
+        plan_path.parent.mkdir()
+        plan_path.write_text(plan_text, encoding="utf-8")
+        plan_hash = hashlib.sha256(plan_text.encode()).hexdigest()
+        (plan_path.parent / "MANIFEST.json").write_text(json.dumps({
+            "schema": 1, "revisions": [{
+                "revision": 1, "sha256": plan_hash, "frozen_at": "2026-10-20T00:00:00Z",
+            }],
+        }), encoding="utf-8")
+        (req / "PLAN.md").write_text(
+            "---\nstatus: approved\n---\n# Plan — Cancel fixture\n", encoding="utf-8")
+        (req / "PLAN.json").write_text(plan_text, encoding="utf-8")
+
+        seed_script = """
+import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import bt_scheduler_adapter as adapter
+from bt_scheduler_core import Config
+rdir = Path(sys.argv[2])
+scheduler = adapter.open_scheduler(rdir, config=Config(max_parallel_tasks=1))
+scheduler.step()
+adapter.write_projection(rdir, scheduler)
+"""
+        subprocess.run([sys.executable, "-c", seed_script, str(SCRIPTS), str(req)],
+                       env={**os.environ, "BITACORA_ROOT": str(cls.root)}, check=True, timeout=30)
 
     @classmethod
     def _build_web(cls):
@@ -248,6 +291,20 @@ class LocalEndToEndTests(unittest.TestCase):
         connection.close()
         return result
 
+    def _post_command(self, command: dict, *, cookie: str):
+        connection = http.client.HTTPConnection("127.0.0.1", self.gateway_port, timeout=4)
+        body = json.dumps(command).encode()
+        connection.request("POST", "/api/remote/v1/commands", body=body, headers={
+            "Cookie": cookie,
+            "Content-Type": "application/json",
+            "Origin": f"http://127.0.0.1:{self.web_port}",
+            "X-Flow-Request": "1",
+        })
+        response = connection.getresponse()
+        result = response.status, json.loads(response.read())
+        connection.close()
+        return result
+
     def _sign_in(self, login: str) -> tuple[int, str]:
         status, headers, _ = self._request("/api/auth/login")
         self.assertEqual(status, 302)
@@ -295,6 +352,32 @@ class LocalEndToEndTests(unittest.TestCase):
         self.assertEqual((status, json.loads(body)["login"]), (200, "dav033"))
         status, _, body = self._request("/api/remote/v1/snapshot", cookie=session)
         self.assertEqual(status, 200, body)
+
+        cancel_command = {
+            "schemaVersion": 1,
+            "idempotencyKey": "e2e-cancel-attempt-0001",
+            "type": "cancel-attempt",
+            "target": {"kind": "attempt", "project": "demo", "req": "REQ-002", "attemptId": "att-0001"},
+            "precondition": {"state": "running", "revision": 1},
+            "reason": "E2E cancellation",
+        }
+        stale = {**cancel_command, "idempotencyKey": "e2e-cancel-stale-0001",
+                 "precondition": {"state": "running", "revision": 0}}
+        status, body = self._post_command(stale, cookie=session)
+        self.assertEqual((status, body.get("code")), (409, "STALE_PRECONDITION"), body)
+
+        status, body = self._post_command(cancel_command, cookie=session)
+        self.assertEqual((status, body.get("status")), (200, "OK"), body)
+        scheduler_db = self.root / ".state" / "scheduler" / "demo-REQ-002.db"
+        db = sqlite3.connect(scheduler_db)
+        try:
+            cancelled = db.execute(
+                "SELECT COUNT(*) FROM audit WHERE kind = 'attempt_transition' AND attempt_id = 'att-0001' "
+                "AND detail LIKE '%cancelled%'"
+            ).fetchone()[0]
+        finally:
+            db.close()
+        self.assertEqual(cancelled, 1, "cancel command did not commit a cancellation transition to M1")
 
         status, foreign_session = self._sign_in("foreign-user")
         self.assertEqual(status, 403)
