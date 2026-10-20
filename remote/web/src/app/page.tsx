@@ -4,12 +4,14 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string };
-type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
-type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string } };
+type Attempt = { id: string; state?: string; updatedAt?: string; failure?: string };
+type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: Attempt; tasks?: Task[] };
+type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: Attempt; history?: Attempt[] };
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptop?: { online: boolean; checkedAt?: string } };
 type Session = { authenticated: boolean };
 type FlowEvent = { id: string; cursor: string; run: string; seq: string; ord: number; task: string; attempt: string; from: string; to: string; kind: string; summary: string; at_epoch: number };
+type FailureReview = { attemptId: string; cause: string; verification: { command: string | null; output: string; checks: { command: string; exitCode: number | null; output: string }[] }; diff: { stat: string | null; files: string[] }; logTail: string };
 type FlowCore = { groupRows(events: FlowEvent[]): { ev: FlowEvent; n: number; first: number; last: number }[]; taskState(state: string): string };
 declare global { interface Window { FlowCore?: FlowCore } }
 
@@ -24,9 +26,11 @@ function parseFlowEvent(value: unknown): FlowEvent | null {
   const event = record(value);
   const target = record(event?.target);
   const data = record(event?.data);
-  if (!event || event.schemaVersion !== 1 || !target || !data || !text(event.id) || !text(event.cursor) || !text(event.type) || !text(target.project) || !text(target.req) || !text(event.occurredAt)) return null;
-  const task = text(field(target, "taskId", "task_id")) ? String(field(target, "taskId", "task_id")) : "";
-  const attempt = text(field(target, "attemptId", "attempt_id")) ? String(field(target, "attemptId", "attempt_id")) : "";
+  if (!event || event.schemaVersion !== 1 || !target || !data || !text(event.id) || !text(event.cursor) || !text(event.type) || !text(target.run) || !text(event.occurredAt)) return null;
+  const [project, req] = target.run.split("/", 2);
+  if (!project || !req) return null;
+  const task = text(field(target, "taskId", "task")) ? String(field(target, "taskId", "task")) : "";
+  const attempt = text(field(target, "attemptId", "attempt")) ? String(field(target, "attemptId", "attempt")) : "";
   const routes: Record<string, [string, string, string]> = {
     "attempt.failed": ["M3", "M6", "execution_finished"], "attempt.blocked": ["M3", "M5", "incident"],
     "attempt.stalled": ["M3", "M1", "incident_detected"], "run.finished": ["M6", "owner", "execution_finished"],
@@ -39,7 +43,7 @@ function parseFlowEvent(value: unknown): FlowEvent | null {
   const [from, to, kind] = route;
   const date = new Date(event.occurredAt);
   if (Number.isNaN(date.valueOf())) return null;
-  return { id: event.id, cursor: event.cursor, run: `${target.project}/${target.req}`, seq: event.cursor, ord: date.valueOf(), task,
+  return { id: event.id, cursor: event.cursor, run: `${project}/${req}`, seq: event.cursor, ord: date.valueOf(), task,
     attempt, from, to, kind, summary: text(data.summary) ? data.summary : text(data.message) ? data.message : event.type,
     at_epoch: date.valueOf() / 1000 };
 }
@@ -50,40 +54,46 @@ function parseSnapshot(value: unknown): Snapshot {
   if (!raw || raw.schemaVersion !== 1 || !text(generatedAt) || !text(raw.cursor) || !Array.isArray(raw.runs) || !Array.isArray(raw.plans)) {
     throw new Error("La respuesta del gateway no cumple el contrato de snapshot v1.");
   }
-  const parseAttempt = (value: unknown) => {
+  const parseAttempt = (value: unknown): Attempt | undefined => {
     const attempt = record(value);
     const id = attempt && field(attempt, "id", "attempt_id");
     if (!attempt || !text(id)) return undefined;
     const state = attempt.state;
-    const updatedAt = field(attempt, "updatedAt", "updated_at");
-    return { id, state: text(state) ? state : undefined, updatedAt: text(updatedAt) ? updatedAt : undefined };
+    const updatedAt = field(attempt, "updatedAt", "last_activity_at");
+    const failure = attempt.failure;
+    return { id, state: text(state) ? state : undefined, updatedAt: text(updatedAt) ? updatedAt : undefined, failure: text(failure) ? failure : undefined };
   };
   const parseTask = (item: unknown): Task => {
     const task = record(item);
     if (!task || !text(task.id) || !text(task.state)) throw new Error("El snapshot contiene una tarea inválida.");
     const criteria = field(task, "acceptanceCriteria", "acceptance_criteria");
     const updatedAt = field(task, "updatedAt", "updated_at");
+    const history = Array.isArray(task.history) ? task.history.map(parseAttempt).filter((item): item is Attempt => Boolean(item)) : [];
     return { id: task.id, title: text(task.title) ? task.title : undefined, state: task.state,
       revision: typeof task.revision === "number" ? task.revision : undefined,
       updatedAt: text(updatedAt) ? updatedAt : undefined,
       acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
-      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")) };
+      activeAttempt: parseAttempt(field(task, "activeAttempt", "attempt")) ?? parseAttempt(field(task, "active_attempt", "activeAttempt")), history };
   };
   const runs = raw.runs.map((item): Run => {
     const run = record(item);
-    if (!run || !text(run.project) || !text(run.req) || !text(run.state)) throw new Error("El snapshot contiene una ejecución inválida.");
+    const req = field(run ?? {}, "req", "req_id");
+    const state = field(run ?? {}, "state", "status");
+    if (!run || !text(run.project) || !text(req) || !text(state)) throw new Error("El snapshot contiene una ejecución inválida.");
     const updatedAt = field(run, "updatedAt", "updated_at");
-    const lastSeenAt = field(run, "lastSeenAt", "last_seen_at");
-    return { project: run.project, req: run.req, state: run.state, revision: typeof run.revision === "number" ? run.revision : undefined,
+    const lastSeenAt = field(run, "lastSeenAt", "last_sign_of_life");
+    return { project: run.project, req, state, revision: typeof run.revision === "number" ? run.revision : undefined,
       updatedAt: text(updatedAt) ? updatedAt : undefined, lastSeenAt: text(lastSeenAt) ? lastSeenAt : undefined,
       activeAttempt: parseAttempt(field(run, "activeAttempt", "active_attempt")), tasks: Array.isArray(run.tasks) ? run.tasks.map(parseTask) : [] };
   });
   const plans = raw.plans.map((item): Plan => {
     const plan = record(item);
-    if (!plan || !text(plan.project) || !text(plan.req) || !text(plan.state)) throw new Error("El snapshot contiene un plan inválido.");
+    const req = field(plan ?? {}, "req", "req_id");
+    const state = field(plan ?? {}, "state", "status");
+    if (!plan || !text(plan.project) || !text(req) || !text(state)) throw new Error("El snapshot contiene un plan inválido.");
     const criteria = field(plan, "acceptanceCriteria", "acceptance_criteria");
     const updatedAt = field(plan, "updatedAt", "updated_at");
-    return { id: text(plan.id) ? plan.id : undefined, project: plan.project, req: plan.req, state: plan.state,
+    return { id: text(plan.id) ? plan.id : undefined, project: plan.project, req, state,
       revision: typeof plan.revision === "number" ? plan.revision : undefined,
       updatedAt: text(updatedAt) ? updatedAt : undefined,
       acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
@@ -101,10 +111,38 @@ function prettyTime(value?: string): string {
   return Number.isNaN(date.valueOf()) ? "Hora no disponible" : new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
+function redactSecrets(value: string): string {
+  return value.replace(/\b(FLOW_GATEWAY_KEY|TELEGRAM_BOT_TOKEN|GITHUB_CLIENT_SECRET)\s*(?:=|:)\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/gi, "$1=[REDACTED]");
+}
+
+function parseFailureReview(value: unknown): FailureReview {
+  const review = record(value);
+  const verification = record(review?.verification);
+  const diff = record(review?.diff);
+  if (!review || !text(review.attemptId) || !text(review.cause) || !verification || !diff || !text(review.logTail)) {
+    throw new Error("La respuesta del gateway no cumple el contrato de revisión v1.");
+  }
+  const checks = Array.isArray(verification.checks) ? verification.checks.flatMap((item) => {
+    const check = record(item);
+    if (!check || !text(check.command) || !text(check.output)) return [];
+    return [{ command: redactSecrets(check.command), exitCode: typeof check.exitCode === "number" ? check.exitCode : null, output: redactSecrets(check.output) }];
+  }) : [];
+  return {
+    attemptId: review.attemptId, cause: redactSecrets(review.cause),
+    verification: { command: text(verification.command) ? redactSecrets(verification.command) : null,
+      output: text(verification.output) ? redactSecrets(verification.output) : "", checks },
+    diff: { stat: text(diff.stat) ? redactSecrets(diff.stat) : null,
+      files: Array.isArray(diff.files) ? diff.files.filter(text).map(redactSecrets) : [] },
+    logTail: redactSecrets(review.logTail),
+  };
+}
+
 export default function HomePage() {
   const [session, setSession] = useState<Session | null>(null);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [feed, setFeed] = useState<FlowEvent[]>([]);
+  const [reviews, setReviews] = useState<Record<string, FailureReview>>({});
+  const [reviewErrors, setReviewErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [working, setWorking] = useState("");
   const [reason, setReason] = useState("");
@@ -130,21 +168,29 @@ export default function HomePage() {
   }, [load]);
 
   useEffect(() => {
-    const authenticated = session?.authenticated;
-    const cursor = snapshot?.cursor;
-    if (authenticated !== true || !cursor) return;
-    const stream = new EventSource(`/api/remote/v1/events/stream?after=${encodeURIComponent(cursor)}`);
-    stream.onmessage = (message) => {
+    if (session?.authenticated !== true) return;
+    let cursor = snapshot?.cursor ?? "";
+    let stopped = false;
+    const poll = async () => {
       try {
-        const event = parseFlowEvent(JSON.parse(message.data) as unknown);
-        if (!event) throw new Error("Evento remoto inválido.");
-        setFeed((current) => current.some((item) => item.id === event.id) ? current : [...current, event].sort((a, b) => a.ord - b.ord).slice(-500));
-        setError("");
-        void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
-      } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo leer el evento remoto."); }
+        const response = await fetch(`/api/remote/v1/events?after=${encodeURIComponent(cursor)}&limit=200`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`No se pudo leer la actividad (${response.status}).`);
+        const payload = record(await response.json());
+        if (!payload || !Array.isArray(payload.events) || !text(payload.nextCursor)) throw new Error("La respuesta de actividad es inválida.");
+        const events = payload.events.map(parseFlowEvent);
+        if (events.some((event) => !event)) throw new Error("Evento remoto inválido.");
+        cursor = payload.nextCursor;
+        if (!stopped && events.length) {
+          setFeed((current) => [...current, ...events.filter((event): event is FlowEvent => Boolean(event))]
+            .filter((event, index, all) => all.findIndex((candidate) => candidate.id === event.id) === index)
+            .sort((a, b) => a.ord - b.ord).slice(-500));
+          void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+        }
+      } catch (cause) { if (!stopped) setError(cause instanceof Error ? cause.message : "No se pudo leer la actividad remota."); }
     };
-    stream.onerror = () => setError("Se perdió la conexión en vivo; intentando reconectar…");
-    return () => stream.close();
+    void poll();
+    const timer = window.setInterval(() => { void poll(); }, 3000);
+    return () => { stopped = true; window.clearInterval(timer); };
   }, [session?.authenticated, snapshot?.cursor, load]);
 
   async function sendCommand(event: FormEvent<HTMLFormElement>, command: Record<string, unknown>, key: string) {
@@ -160,10 +206,25 @@ export default function HomePage() {
     finally { setWorking(""); }
   }
 
+  async function loadFailureReview(attemptId: string) {
+    setReviewErrors((current) => ({ ...current, [attemptId]: "" }));
+    try {
+      const response = await fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`No se pudo cargar la revisión (${response.status}).`);
+      const review = parseFailureReview(await response.json());
+      setReviews((current) => ({ ...current, [attemptId]: review }));
+    } catch (cause) {
+      setReviewErrors((current) => ({ ...current, [attemptId]: cause instanceof Error ? cause.message : "No se pudo cargar la revisión." }));
+    }
+  }
+
   function commandForm(type: string, target: Target, state: string, revision: number | undefined, key: string, extra?: Record<string, unknown>) {
+    const params: Record<string, unknown> = { ...(extra ?? {}) };
+    if (type === "cancel-attempt") params.attempt = target.attemptId;
+    if (type === "reopen") params.task = target.taskId;
     const command = (event: FormEvent<HTMLFormElement>) => sendCommand(event, {
-      schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type, target,
-      precondition: { state, ...(revision === undefined ? {} : { revision }) }, ...extra,
+      idempotency_key: `web-${crypto.randomUUID()}`, command: type, target: `${target.project}/${target.req}`,
+      origin: "web", precondition: { state, ...(revision === undefined ? {} : { revision }) }, params,
     }, key);
     return command;
   }
@@ -190,6 +251,19 @@ export default function HomePage() {
       {task.state === "blocked" || task.state === "failed" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
       {task.activeAttempt && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, taskId: task.id, attemptId: task.activeAttempt.id }, task.activeAttempt.state ?? task.state, task.revision, `${run.req}-${task.id}-cancel`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
     </div>
+    {task.history?.filter((attempt) => ["failed", "rejected"].includes(attempt.state ?? "") || attempt.failure).map((attempt) => <section className="failure-review" key={attempt.id} aria-label={`Revisión del intento ${attempt.id}`}>
+      <button className="review-trigger" onClick={() => void loadFailureReview(attempt.id)}>Revisar intento fallido · {attempt.id}</button>
+      {reviewErrors[attempt.id] && <p className="error" role="alert">{reviewErrors[attempt.id]}</p>}
+      {reviews[attempt.id] && <div className="review-sections">
+        <section><h4>Causa</h4><p>{reviews[attempt.id].cause}</p></section>
+        <section><h4>Verificación</h4><p>{reviews[attempt.id].verification.command ?? "Sin comando registrado"}</p>
+          {reviews[attempt.id].verification.checks.map((check, index) => <p key={`${check.command}-${index}`}>{check.command} · salida {check.exitCode ?? "desconocida"}</p>)}
+          <pre className="review-log" aria-label="Salida de verificación">{reviews[attempt.id].verification.output || "Sin salida registrada"}</pre></section>
+        <section><h4>Diff</h4><p>{reviews[attempt.id].diff.stat ?? "Sin estadísticas de cambios"}</p>
+          {reviews[attempt.id].diff.files.length > 0 && <ul>{reviews[attempt.id].diff.files.map((file) => <li key={file}>{file}</li>)}</ul>}</section>
+        <section><h4>Registro del agente</h4><pre className="review-log" aria-label="Registro del agente">{reviews[attempt.id].logTail || "Sin líneas de registro"}</pre></section>
+      </div>}
+    </section>)}
   </article>;
 
   return <main className="dashboard shell">

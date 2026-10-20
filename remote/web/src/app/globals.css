@@ -110,6 +110,14 @@ details ul { margin: 10px 0 0; padding-left: 20px; line-height: 1.6; overflow-wr
 .plans { border-top: 1px solid rgb(205 214 244 / 8%); }
 .cancel-form { flex: 1 1 280px; }
 .cancel-form label { flex: 1 1 140px; }
+.failure-review { display: grid; gap: 12px; margin-top: 12px; border-top: 1px solid rgb(243 139 168 / 18%); padding-top: 12px; }
+.review-trigger { width: fit-content; min-height: 38px; border: 1px solid rgb(243 139 168 / 30%); border-radius: 9px; background: rgb(243 139 168 / 8%); color: var(--ctp-red); padding: 0 12px; font: inherit; font-size: 12px; cursor: pointer; }
+.review-sections { display: grid; gap: 10px; min-width: 0; }
+.review-sections section { min-width: 0; border: 1px solid rgb(205 214 244 / 8%); border-radius: 9px; background: rgb(24 24 37 / 58%); padding: 12px; }
+.review-sections h4 { margin: 0 0 8px; color: var(--ctp-lavender); font-size: 12px; }
+.review-sections p, .review-sections li { margin: 6px 0 0; overflow-wrap: anywhere; color: var(--ctp-subtext1); font-size: 12px; line-height: 1.5; }
+.review-sections ul { margin: 0; padding-left: 20px; }
+.review-log { max-height: 220px; max-width: 100%; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--ctp-surface1); border-radius: 7px; background: var(--ctp-crust); padding: 10px; color: var(--ctp-subtext1); font-family: var(--font-code); font-size: 10px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sign-in { gap: 12px; }
 button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid var(--ctp-lavender); outline-offset: 3px; }
 

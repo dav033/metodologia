@@ -62,7 +62,7 @@ async function cdp(socket, method, params = {}) {
   return response;
 }
 
-test("real panel entrypoint renders every contract run and its controls at 360 px", { timeout: 60_000 }, async () => {
+test("real panel entrypoint renders API contract runs, failure reviews and controls at 360 px", { timeout: 60_000 }, async () => {
   let gateway;
   let next;
   let browser;
@@ -110,9 +110,23 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
       browserState.text = evaluated.result?.value;
     }
-    assert.ok(browserState?.text?.includes("×2"), "SSE messages should render through the /flow grouping logic");
+    assert.ok(browserState?.text?.includes("×2"), "paged API events should render through the /flow grouping logic");
     assert.equal(browserState.viewport, 360);
     assert.equal(browserState.width, 360, `page overflowed horizontally at 360 px: ${browserState.width}px`);
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.review-trigger')].find((button) => button.innerText.includes('att-failed-02'))?.click()", returnByValue: true });
+    let reviewState;
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "({text: document.body.innerText, logs: [...document.querySelectorAll('.review-log')].map((node) => ({height: node.clientHeight, scrollHeight: node.scrollHeight, overflow: getComputedStyle(node).overflowY}))})", returnByValue: true });
+      reviewState = evaluated.result?.value;
+      if (reviewState?.text?.includes("verification_failed") && reviewState?.logs?.length === 2) break;
+      await delay(100);
+    }
+    for (const heading of ["Causa", "Verificación", "Diff", "Registro del agente", "verification_failed", "npm test", "2 files changed", "src/feature.ts"]) {
+      assert.ok(reviewState?.text?.includes(heading), `failure review should render ${heading}`);
+    }
+    assert.ok(reviewState?.logs.some((box) => box.scrollHeight > box.height && box.overflow === "auto"), "long review logs should scroll inside their own box");
+    assert.ok(!reviewState?.text?.includes("fixture-key-value"), "gateway keys must not be displayed");
+    assert.ok(!reviewState?.text?.includes("fixture-token-value"), "bot tokens must not be displayed");
     const fill = async (selector, value) => cdp(socket, "Runtime.evaluate", {
       expression: `(() => { const input = document.querySelector(${JSON.stringify(selector)}); if (!input) throw new Error('Missing input ${selector}'); const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; setter.call(input, ${JSON.stringify(value)}); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`,
       returnByValue: true,
@@ -124,9 +138,10 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     await fill(".cancel-form input", "Stop the stalled attempt");
     await click(".cancel-form button");
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 1; attempt += 1) await delay(100);
-    assert.equal(gateway.commands[0]?.type, "cancel-attempt");
-    assert.equal(gateway.commands[0]?.reason, "Stop the stalled attempt");
-    assert.equal(gateway.commands[0]?.target.attemptId, "att-0008");
+    assert.equal(gateway.commands[0]?.command, "cancel-attempt");
+    assert.equal(gateway.commands[0]?.params.reason, "Stop the stalled attempt");
+    assert.equal(gateway.commands[0]?.params.attempt, "att-0008");
+    assert.equal(gateway.commands[0]?.target, "lotm/REQ-027");
     for (let attempt = 0; attempt < 40; attempt += 1) {
       const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].some((button) => button.innerText === 'Reabrir' && !button.disabled)", returnByValue: true });
       if (ready.result?.value) break;
@@ -134,8 +149,8 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     }
     await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Reabrir')?.click()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
-    assert.equal(gateway.commands[1]?.type, "reopen");
-    assert.equal(gateway.commands[1]?.target.taskId, "T2");
+    assert.equal(gateway.commands[1]?.command, "reopen");
+    assert.equal(gateway.commands[1]?.params.task, "T2");
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);

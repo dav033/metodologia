@@ -5,9 +5,11 @@ import { dirname, join } from "node:path";
 
 const directory = dirname(fileURLToPath(import.meta.url));
 const snapshotPath = join(directory, "fixtures", "snapshot.json");
+const reviewPath = join(directory, "fixtures", "failure-review.json");
 
 export async function createMockGatewayServer() {
   const snapshot = await readFile(snapshotPath, "utf8");
+  const review = await readFile(reviewPath, "utf8");
   const server = createServer((request, response) => {
     const send = (status, body) => {
       response.writeHead(status, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
@@ -23,23 +25,21 @@ export async function createMockGatewayServer() {
       return;
     }
     if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events?")) {
-      send(200, { events: [], nextCursor: "mock-cursor-v1", hasMore: false });
+      const after = new URL(request.url, "http://gateway.local").searchParams.get("after") ?? "";
+      const all = [
+        { id: "mock-event-1", cursor: "mock-event-cursor-1", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:01Z", target: { run: "lotm/REQ-027", task: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-1" },
+        { id: "mock-event-2", cursor: "mock-event-cursor-2", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:02Z", target: { run: "lotm/REQ-027", task: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-2" },
+      ];
+      const start = Math.max(0, all.findIndex((event) => event.cursor === after) + 1);
+      const events = after === "mock-event-cursor-2" ? [] : all.slice(start);
+      send(200, { events, nextCursor: events.at(-1)?.cursor ?? (after || "mock-cursor-v1"), hasMore: false });
       return;
     }
-    if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events/stream?")) {
-      response.writeHead(200, { "cache-control": "no-store, no-transform", "content-type": "text/event-stream; charset=utf-8", connection: "keep-alive", "x-accel-buffering": "no" });
-      const events = [
-        { id: "mock-event-1", cursor: "mock-event-cursor-1", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:01Z", target: { kind: "attempt", project: "lotm", req: "REQ-027", taskId: "T15a", attemptId: "att-0008" }, data: { summary: "La verificación terminó" } },
-        { id: "mock-event-2", cursor: "mock-event-cursor-2", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:02Z", target: { kind: "attempt", project: "lotm", req: "REQ-027", taskId: "T15a", attemptId: "att-0008" }, data: { summary: "La verificación terminó" } },
-      ];
-      let index = 0;
-      const timer = setInterval(() => {
-        if (response.destroyed) { clearInterval(timer); return; }
-        if (index < events.length) response.write(`id: ${events[index].cursor}\ndata: ${JSON.stringify(events[index])}\n\n`);
-        else { response.write(": keep-alive\n\n"); clearInterval(timer); }
-        index += 1;
-      }, 200);
-      request.on("close", () => clearInterval(timer));
+    const reviewMatch = request.method === "GET" && request.url?.match(/^\/api\/remote\/v1\/attempts\/([^/]+)\/review$/);
+    if (reviewMatch) {
+      if (reviewMatch[1] !== "att-failed-02") { send(404, { code: "ATTEMPT_NOT_FOUND", message: "No se encontró el intento." }); return; }
+      response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
+      response.end(review);
       return;
     }
     if (request.method === "POST" && request.url === "/api/remote/v1/commands") {
@@ -48,12 +48,12 @@ export async function createMockGatewayServer() {
       request.on("end", () => {
         try {
           const command = JSON.parse(body);
-          if (command.schemaVersion !== 1 || typeof command.idempotencyKey !== "string" || typeof command.type !== "string") {
+          if (typeof command.idempotency_key !== "string" || typeof command.command !== "string" || typeof command.target !== "string" || command.origin !== "web") {
             send(400, { code: "INVALID_COMMAND", message: "Comando inválido" });
             return;
           }
           server.commands.push(command);
-          send(202, { commandId: "mock-command-v1", status: "accepted", idempotencyKey: command.idempotencyKey });
+          send(200, { status: "OK", code: null, replayed: false, idempotency_key: command.idempotency_key });
         } catch {
           send(400, { code: "INVALID_COMMAND", message: "JSON inválido" });
         }

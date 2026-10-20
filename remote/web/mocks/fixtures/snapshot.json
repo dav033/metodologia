@@ -5,26 +5,26 @@
   "runs": [
     {
       "project": "lotm",
-      "req": "REQ-027",
-      "state": "running",
+      "req_id": "REQ-027",
+      "status": "running",
       "revision": 3,
       "updatedAt": "2026-10-19T11:59:45Z",
-      "lastSeenAt": "2026-10-19T11:59:45Z",
-      "activeAttempt": { "id": "att-0008", "state": "running", "updatedAt": "2026-10-19T11:59:45Z" },
-      "tasks": [{ "id": "T15a", "title": "Login screen and runs list", "state": "running", "revision": 1, "acceptanceCriteria": ["Shows state and last sign of life", "No horizontal scroll at 360 px"], "activeAttempt": { "id": "att-0008", "state": "running", "updatedAt": "2026-10-19T11:59:45Z" } }]
+      "last_sign_of_life": "2026-10-19T11:59:45Z",
+      "active_task": { "id": "T15a", "title": "Login screen and runs list" },
+      "tasks": [{ "id": "T15a", "title": "Login screen and runs list", "state": "running", "attempt": { "id": "att-0008", "state": "running", "last_activity_at": "2026-10-19T11:59:45Z" } }]
     },
     {
       "project": "pictures",
-      "req": "REQ-018",
-      "state": "paused",
+      "req_id": "REQ-018",
+      "status": "paused",
       "revision": 7,
       "updatedAt": "2026-10-19T11:55:00Z",
-      "lastSeenAt": "2026-10-19T11:50:00Z",
-      "tasks": [{ "id": "T2", "title": "Recover stalled work", "state": "blocked", "revision": 4, "acceptanceCriteria": ["Task can be reopened"] }]
+      "last_sign_of_life": "2026-10-19T11:50:00Z",
+      "tasks": [{ "id": "T2", "title": "Recover stalled work", "state": "blocked", "attempt": null, "history": [{ "id": "att-failed-02", "state": "failed", "failure": "verification_failed" }] }]
     }
   ],
   "plans": [
-    { "id": "plan-027", "project": "lotm", "req": "REQ-027", "state": "awaiting-review", "revision": 2, "updatedAt": "2026-10-19T11:45:00Z", "acceptanceCriteria": ["Owner reviews and approves the plan"] }
+    { "id": "plan-027", "project": "lotm", "req_id": "REQ-027", "status": "awaiting-review", "revision": 2, "updated_at": "2026-10-19T11:45:00Z", "acceptance_criteria": ["Owner reviews and approves the plan"] }
   ],
   "rounds": [],
   "quotas": [],
