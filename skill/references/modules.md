@@ -139,8 +139,13 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   PASS into a **rejecting verdict** (evidence `audit gate: …`); a snapshot that cannot be read leaves the verdict
   pending instead of judging the ledger;
 - when open findings name plan tasks, the same verdict calls `core.reject_and_rework(...)`: in one transaction M1
-  rejects the audit attempt and sends the named tasks, **everything downstream of them** and the audit itself back to
-  `pending` with a fresh attempt budget (`operations.rework`, audit `rework_requested`). Tasks whose prerequisites are
+  rejects the audit attempt and sends back the named tasks, the `kind: test` tasks over them and the audit itself
+  (`gates.rework_scope`: `named`, the default; `downstream` also resets **everything that depends on them**, which for a
+  finding on a root task is the whole plan) to `pending` with a fresh attempt budget (`operations.rework`, audit
+  `rework_requested`, `cascade`). What depends on a named task keeps its accepted result: the fix is a snapshot on top of
+  the old one and the integrator merges it with theirs (a real overlap surfaces as `INTEGRATION_CONFLICT` naming both
+  tasks). A task becomes `ready` only when **every ancestor** is completed. `scheduler-op REQ rework T1,T2 --only` does
+  the same for the owner (without `--only`, everything downstream goes back). Tasks whose prerequisites are
   still completed become `ready` at once; the scheduler redoes them, and the audit runs again at the end. Nothing is
   completed by the rework: each redone task needs a new independent verdict;
 - the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was

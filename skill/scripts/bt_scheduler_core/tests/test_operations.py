@@ -213,6 +213,30 @@ class Rework(unittest.TestCase):
         self.assertEqual((states["T1"], states["T2"], states["T3"]), ("ready", "pending", "pending"))
         self.assertIn("rework_requested", h.audit_kinds())
 
+    def test_without_cascade_only_the_named_and_the_rejected_task_go_back(self):
+        h = self.chain()
+        h.core.step()
+        h.send("T3", "execution_finished")
+        h.core.step()
+        h.n += 1
+        attempt = h.attempt("T3")
+        verdict = sc.Verdict("vd-nc", h.plan.plan_id, h.plan.revision, "T3", attempt, False, "validator", "audit gate",
+                             h.token(attempt))
+        result, moved = h.core.reject_and_rework(verdict, ("T1",), "audit-gate", "F1", cascade=False)
+        self.assertEqual((result.status, moved), ("applied", ("T1", "T3")))
+        states = self.states(h)
+        # T3's direct prerequisite T2 is completed, but T1 above it is being redone: T3 waits for the whole chain
+        self.assertEqual((states["T1"], states["T2"], states["T3"]), ("ready", "completed", "pending"))
+        self.assertEqual(h.core.rework_scope(("T1",), ("T3",), cascade=False), ("T1", "T3"))
+        self.assertEqual(h.core.rework_scope(("T1",), ("T3",)), ("T1", "T2", "T3"))
+        event = [e for e in h.core.audit_log() if e.kind == "rework_requested"][-1]
+        self.assertFalse(event.detail["cascade"])
+
+    def test_the_operator_can_send_back_only_what_it_names(self):
+        h = self.chain()
+        self.assertEqual(h.core.rework(("T1",), "operator", "why", cascade=False), ("T1",))
+        self.assertEqual(self.states(h)["T2"], "completed")
+
     def test_independent_branches_are_left_alone(self):
         h = self.chain()
         h.finish_and_accept("T9")

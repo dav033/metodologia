@@ -265,6 +265,48 @@ class M6M1AdapterTests(unittest.TestCase):
                                   policy=bt_audit_gate.Policy(read_only=False))
         self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T2"]["state"] == "completed"))
 
+    def _wide_audit_system(self, policy, finding_tasks, notes):
+        """T1 root, T2 depends on it, T3 is a test over it, T4 the audit after all three; a finding names `finding_tasks`."""
+        def spec(tid, kind, after, command, **extra):
+            task = _task(tid, command)
+            task.update(kind=kind, after=after, **extra)
+            task["verification"][0]["category"] = "functional"
+            return task
+        tasks = [spec("T1", "implement", [], "python3 build.py"), spec("T2", "implement", ["T1"], "python3 build.py"),
+                 spec("T3", "test", ["T1"], "python3 build.py"),
+                 spec("T4", "audit", ["T1", "T2", "T3"], "test -s audit.md",
+                      expected_paths=["docs/audit.md", "docs/audit.findings.json"])]
+        finding = {"id": "F1", "severity": "high", "status": "open", "summary": "root is wrong", "tasks": finding_tasks}
+        system = self._system(tasks, max_attempts=2, schema_version="1.2.0",
+                              read_ledger=lambda order, path: self._ledger(finding), read_changes=lambda order: (),
+                              rework_notes=lambda task_id, text: notes.append(task_id), audit_policy=policy)
+        root, core, _, executor, _, _ = system
+        for tid in ("T1", "T2", "T3"):
+            self._start_attempts(core, executor, root, (tid,))
+            core.step()
+            self.assertTrue(_wait_for(lambda t=tid: core.snapshot().tasks[t]["state"] == "completed"))
+        self._start_attempts(core, executor, root, ("T4",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: "rework_requested" in [e.kind for e in core.audit_log()]))
+        return core
+
+    def test_by_default_a_finding_on_a_root_task_redoes_it_and_the_tests_not_what_depends_on_it(self):
+        notes = []
+        core = self._wide_audit_system(bt_audit_gate.Policy(), ["T1"], notes)
+        states = {t: v["state"] for t, v in core.snapshot().tasks.items()}
+        self.assertEqual(states["T2"], "completed")                      # keeps its accepted result
+        self.assertNotEqual(states["T1"], "completed")
+        self.assertNotEqual(states["T3"], "completed")                    # the test over it proves nothing now
+        self.assertEqual(states["T4"], "pending")
+        self.assertEqual(set(notes), {"T1", "T3", "T4"})
+
+    def test_downstream_scope_still_redoes_everything_that_depends_on_the_finding(self):
+        notes = []
+        core = self._wide_audit_system(bt_audit_gate.Policy(rework_scope="downstream"), ["T1"], notes)
+        states = {t: v["state"] for t, v in core.snapshot().tasks.items()}
+        self.assertEqual([states[t] for t in ("T2", "T3", "T4")], ["pending"] * 3)
+        self.assertEqual(set(notes), {"T1", "T2", "T3", "T4"})
+
     def test_an_audit_with_a_missing_ledger_is_rejected_without_reopening_anything(self):
         notes = []
         core = self._audit_system(lambda order, path: None, notes)

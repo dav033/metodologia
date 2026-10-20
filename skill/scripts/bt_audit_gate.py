@@ -24,6 +24,7 @@ SCHEMA = "audit-findings/1"
 SEVERITIES = ("critical", "high", "medium", "low")
 BLOCKING_SEVERITIES = ("critical", "high")     # the default policy; `bt_config` `gates.audit_blocking` overrides it
 STATUSES = ("open", "fixed", "accepted")
+REWORK_SCOPES = ("named", "downstream")
 MAX_BYTES = 1 << 20
 MAX_FINDINGS = 200
 MAX_TEXT = 600
@@ -53,6 +54,7 @@ class Policy:
     blocking: tuple[str, ...] = BLOCKING_SEVERITIES   # open findings of these severities reject the audit
     ledger_required: bool = True                      # an audit without a declared ledger: reject (True) or skip
     read_only: bool = True                            # an audit may change only the files it declares (report, ledger)
+    rework_scope: str = "named"                       # what a rejection sends back: "named" (+ the checks over it) | "downstream"
 
 
 def policy_from(get) -> Policy:
@@ -61,8 +63,9 @@ def policy_from(get) -> Policy:
     ok = isinstance(severities, list) and severities and all(item in SEVERITIES for item in severities)
     required = get("gates.audit_ledger_required", True)
     read_only = get("gates.audit_read_only", True)
+    scope = get("gates.rework_scope", "named")
     return Policy(tuple(severities) if ok else BLOCKING_SEVERITIES, required if isinstance(required, bool) else True,
-                  read_only if isinstance(read_only, bool) else True)
+                  read_only if isinstance(read_only, bool) else True, scope if scope in REWORK_SCOPES else "named")
 
 
 @dataclass(frozen=True)

@@ -140,6 +140,12 @@ class ReadOnly(unittest.TestCase):
         self.assertTrue(gate.policy_from(
             lambda key, default: "no" if key == "gates.audit_read_only" else default).read_only)
 
+    def test_rework_scope_defaults_to_named_and_ignores_unknown_values(self):
+        self.assertEqual(gate.policy_from(lambda key, default: default).rework_scope, "named")
+        pick = lambda value: gate.policy_from(lambda key, default: value if key == "gates.rework_scope" else default)
+        self.assertEqual(pick("downstream").rework_scope, "downstream")
+        self.assertEqual(pick("everything").rework_scope, "named")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -228,21 +228,22 @@ class SchedulerCore:
         self._wake.set()
         return result
 
-    def rework_scope(self, task_ids: tuple[str, ...], also: tuple[str, ...] = ()) -> tuple[str, ...]:
+    def rework_scope(self, task_ids: tuple[str, ...], also: tuple[str, ...] = (), cascade: bool = True) -> tuple[str, ...]:
         """Every task `reject_and_rework(..., task_ids)` would send back with the rejected task `also`."""
-        return self.read(lambda c: operations.rework_scope(c, (*task_ids, *also)))
+        return self.read(lambda c: operations.rework_scope(c, (*task_ids, *also), cascade))
 
-    def rework_problem(self, task_ids: tuple[str, ...], also: tuple[str, ...] = ()) -> str:
+    def rework_problem(self, task_ids: tuple[str, ...], also: tuple[str, ...] = (), cascade: bool = True) -> str:
         """Why `reject_and_rework` would be refused right now ('' when it would not)."""
-        return self.read(lambda c: operations.rework_problem(c, tuple(task_ids), tuple(also)))
+        return self.read(lambda c: operations.rework_problem(c, tuple(task_ids), tuple(also), cascade=cascade))
 
-    def rework(self, task_ids: tuple[str, ...], by: str, reason: str = "") -> tuple[str, ...]:
+    def rework(self, task_ids: tuple[str, ...], by: str, reason: str = "", cascade: bool = True) -> tuple[str, ...]:
         """Operator move: send accepted work back (see `operations.rework`)."""
-        out = self.write(lambda c: operations.rework(c, tuple(task_ids), by, reason, owner=True))
+        out = self.write(lambda c: operations.rework(c, tuple(task_ids), by, reason, owner=True, cascade=cascade))
         self._wake.set()
         return out
 
-    def reject_and_rework(self, verdict: Verdict, task_ids: tuple[str, ...], by: str, reason: str = "") -> tuple[IngestResult, tuple[str, ...]]:
+    def reject_and_rework(self, verdict: Verdict, task_ids: tuple[str, ...], by: str, reason: str = "",
+                          cascade: bool = True) -> tuple[IngestResult, tuple[str, ...]]:
         """Apply a REJECTING verdict and, in the same transaction, send the named accepted tasks (and what depends on
         them) back for rework together with the task just rejected. Three outcomes when the rework cannot start:
         `busy` (live attempts in scope) defers everything — the verdict is NOT applied, status `deferred`, and the
@@ -254,7 +255,7 @@ class SchedulerCore:
 
         def both(ctx: Ctx) -> tuple[IngestResult, tuple[str, ...]]:
             ids = tuple(task_ids)
-            problem = operations.rework_problem(ctx, ids, (verdict.task_id,))
+            problem = operations.rework_problem(ctx, ids, (verdict.task_id,), cascade=cascade)
             if problem.startswith("busy") and not ctx.state.has_seen(verdict.verdict_id):
                 return IngestResult("deferred", problem, verdict.verdict_id), ()
             result = events.apply_verdict(ctx, verdict)
@@ -268,7 +269,7 @@ class SchedulerCore:
                         rec.reason = "rework_limit"
                         set_task(ctx, verdict.task_id, T.BLOCKED, reason="rework_limit")
                 return result, ()
-            return result, operations.rework(ctx, ids, by, reason, also=(verdict.task_id,))
+            return result, operations.rework(ctx, ids, by, reason, also=(verdict.task_id,), cascade=cascade)
 
         out = self.write(both)
         self._wake.set()

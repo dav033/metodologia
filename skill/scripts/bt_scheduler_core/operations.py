@@ -69,13 +69,15 @@ def reopen(ctx: Ctx, task_id: str, by: str, reason: str = "") -> None:
     set_task(ctx, task_id, T.READY, by=by, reason=reason, decision="reopen")
 
 
-def rework_scope(ctx: Ctx, task_ids: tuple[str, ...]) -> tuple[str, ...]:
-    """The tasks a rework of `task_ids` sends back: each one and everything downstream of it, in plan order."""
+def rework_scope(ctx: Ctx, task_ids: tuple[str, ...], cascade: bool = True) -> tuple[str, ...]:
+    """The tasks a rework of `task_ids` sends back, in plan order: each one and, with `cascade`, everything downstream of
+    it. Without it only the tasks named are redone (the caller names whatever else must rerun, such as the checks over
+    the changed result); what depends on them keeps its accepted result, which the integrator merges with the redo."""
     for task_id in task_ids:
         if task_id not in ctx.state.tasks:
             raise SchedulerError("UNKNOWN_TASK", task_id)
     wanted = set(task_ids)
-    for task_id in task_ids:
+    for task_id in task_ids if cascade else ():
         wanted |= ctx.plan.descendants(task_id)
     return tuple(spec.id for spec in ctx.plan.tasks if spec.id in wanted)
 
@@ -87,7 +89,8 @@ def _building(ctx: Ctx, task_id: str):
     return att if att is not None and A(att.state) != A.VERIFYING else None
 
 
-def rework_problem(ctx: Ctx, task_ids: tuple[str, ...], also: tuple[str, ...] = (), *, owner: bool = False) -> str:
+def rework_problem(ctx: Ctx, task_ids: tuple[str, ...], also: tuple[str, ...] = (), *, owner: bool = False,
+                   cascade: bool = True) -> str:
     """Why a rework cannot start now ('' when it can). The text starts with a code: `cancelled` (the run is being
     cancelled), `limit` (a named task was already sent back `max_reworks` times: only the owner can decide more) or
     `busy` (a task it would reset is still building: its result would sit on work being redone, try later). `also` is
@@ -96,7 +99,7 @@ def rework_problem(ctx: Ctx, task_ids: tuple[str, ...], also: tuple[str, ...] = 
     supersedes it instead (see `rework`)."""
     if ctx.state.cancel_requested:
         return "cancelled: the run is being cancelled"
-    scope = rework_scope(ctx, (*task_ids, *also))
+    scope = rework_scope(ctx, (*task_ids, *also), cascade)
     for task_id in () if owner else task_ids:      # the owner may send work back more often than the system does
         if ctx.state.tasks[task_id].reworks >= ctx.config.max_reworks:
             return f"limit: {task_id} was already sent back {ctx.config.max_reworks} time(s)"
@@ -107,17 +110,17 @@ def rework_problem(ctx: Ctx, task_ids: tuple[str, ...], also: tuple[str, ...] = 
 
 
 def rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "", *, also: tuple[str, ...] = (),
-           owner: bool = False) -> tuple[str, ...]:
+           owner: bool = False, cascade: bool = True) -> tuple[str, ...]:
     """Send accepted work back: the named tasks, the tasks downstream of them and `also` (the task whose rejection asked
     for it) return to PENDING with a fresh attempt budget; those whose prerequisites are all still completed become
     READY at once. It never completes anything: the redone work needs a new independent verdict. Cancelled tasks stay."""
     by, reason = _who(by, reason)
     if not task_ids:
         raise SchedulerError("NOT_ALLOWED", "rework needs at least one task")
-    problem = rework_problem(ctx, task_ids, also, owner=owner)
+    problem = rework_problem(ctx, task_ids, also, owner=owner, cascade=cascade)
     if problem:
         raise SchedulerError("NOT_ALLOWED", f"rework refused: {problem}")
-    scope = rework_scope(ctx, (*task_ids, *also))
+    scope = rework_scope(ctx, (*task_ids, *also), cascade)
     moved = []
     for task_id in scope:
         att = live_attempt(ctx.state, task_id)
@@ -131,7 +134,7 @@ def rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "", *, al
         rec.reworks += 1
         set_task(ctx, task_id, T.PENDING, by=by, reason=reason, decision="rework")
         moved.append(task_id)
-    ctx.audit("rework_requested", by=by, reason=reason, named=list(task_ids), tasks=moved)
+    ctx.audit("rework_requested", by=by, reason=reason, named=list(task_ids), tasks=moved, cascade=cascade)
     promote_ready(ctx)
     return tuple(moved)
 

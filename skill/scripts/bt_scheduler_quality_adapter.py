@@ -333,10 +333,24 @@ class QualityVerificationPort:
                                       gate.rework)
         return gate
 
+    def _rework_plan(self, gate: bt_audit_gate.Gate, order: VerifyRequest) -> tuple[tuple[str, ...], bool]:
+        """(tasks to send back, cascade). `downstream`: the named tasks and everything that depends on them. `named`
+        (default): the named tasks plus the `kind: test` tasks over them, because their result no longer proves anything;
+        what else depends on a named task keeps its accepted result, and the integrator merges the fix with it."""
+        if self.audit_policy.rework_scope == "downstream":
+            return tuple(gate.rework), True
+        plan, ids = self.core.plan, list(gate.rework)
+        for task_id in gate.rework:
+            for later in plan.descendants(task_id):
+                if later != order.task_id and later not in ids and plan.task(later).meta.get("kind") == "test":
+                    ids.append(later)
+        return tuple(spec.id for spec in plan.tasks if spec.id in ids), False
+
     def _write_rework_notes(self, gate: bt_audit_gate.Gate, order: VerifyRequest) -> None:
         if self.rework_notes is None:
             return
-        for task_id in self.core.rework_scope(gate.rework, (order.task_id,)):
+        ids, cascade = self._rework_plan(gate, order)
+        for task_id in self.core.rework_scope(ids, (order.task_id,), cascade):
             try:
                 self.rework_notes(task_id, bt_audit_gate.note_for(gate, task_id, order.task_id))
             except OSError as error:
@@ -398,9 +412,11 @@ class QualityVerificationPort:
                 order.token,
             )
             if gate is not None and gate.rework:
-                if not self.core.rework_problem(gate.rework, (order.task_id,)):
+                ids, cascade = self._rework_plan(gate, order)
+                if not self.core.rework_problem(ids, (order.task_id,), cascade):
                     self._write_rework_notes(gate, order)
-                response, _moved = self.core.reject_and_rework(verdict, gate.rework, "audit-gate", gate.summary())
+                response, _moved = self.core.reject_and_rework(verdict, ids, "audit-gate", gate.summary(),
+                                                               cascade=cascade)
             else:
                 response = self.core.submit_verdict(verdict)
         # Retain the outbox entry when any unexpected M1 integration failure occurs.

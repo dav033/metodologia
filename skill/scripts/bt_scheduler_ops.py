@@ -205,7 +205,7 @@ def ensure_watch(project: str, req: str, rdir: Path) -> bool:
 
 
 def apply(project: str, req: str, rdir: Path, action: str, target: str = "", reason: str = "",
-          keep_held: bool = False) -> list[str]:
+          keep_held: bool = False, only: bool = False) -> list[str]:
     """Run one operator move; the owner is stopped first and the watchdog restarts it afterwards."""
     lines: list[str] = []
     why = reason or f"operator {action}"
@@ -221,7 +221,7 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
                 lines.append(f"{target}: reopened")
             elif action == "rework":
                 tasks = tuple(item.strip() for item in target.split(",") if item.strip())
-                moved = sch.rework(tasks, OPERATOR, why)
+                moved = sch.rework(tasks, OPERATOR, why, cascade=not only)
                 lines.append(f"sent back for rework: {', '.join(moved) or 'nothing (already pending)'}")
             elif action == "revise":
                 live = [a for a, _, _ in _live_attempts(sch)]

@@ -31,6 +31,10 @@ DEFAULTS: dict = {
     # gate) is accepted on M6's verdict alone and the skip is recorded in the run's audit trail.
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
+              # what an audit rejection sends back: "named" = the tasks its findings name plus the tests over them (what
+              # depends on them keeps its result and is merged with the fix); "downstream" = also everything that
+              # depends on them (a finding on a root task then redoes the whole plan)
+              "rework_scope": "named",
               # an audit that sends back more tasks than this at once found a defect of the plan or the integration,
               # not of each builder: the attempt log records those tasks as redone, not as failed (bt_attempt_log)
               "attribute_max_tasks": 3},   # a plan with an audit also needs an independent cross-check audit
@@ -44,6 +48,7 @@ ALLOWED: dict[str, tuple] = {
     "routing.mode": ("auto", "fixed"),
     "routing.quality_protection": ("critical", "always", "off"),
     "audit.mode": ("milestone", "off"),
+    "gates.rework_scope": ("named", "downstream"),
     "audit.provider": ("antigravity", "claude", "codex", "none"),
     "run.isolation": ("off", "worktree"),
 }

@@ -22,6 +22,8 @@ def register(subparsers) -> None:
     op.add_argument("option", nargs="?", default="", help="the option to take, for decide")
     op.add_argument("--reason", default="", help="why (kept in the run's audit trail)")
     op.add_argument("--hold", action="store_true", help="leave the run stopped; `resume` releases it")
+    op.add_argument("--only", action="store_true",
+                    help="rework: send back only the tasks named, not what depends on them")
 
 
 def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
@@ -71,7 +73,8 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
                 print(line)
             print(ops.resume(project, args.req, rdir))
             return 0
-        for line in ops.apply(project, args.req, rdir, args.action, args.target, args.reason, keep_held=args.hold):
+        for line in ops.apply(project, args.req, rdir, args.action, args.target, args.reason, keep_held=args.hold,
+                           only=args.only):
             print(line)
     except adapter.core.SchedulerError as exc:
         print(f"{exc.code}: {exc}")
