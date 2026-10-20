@@ -49,6 +49,10 @@ class GatewayRuntime:
                 raise UpstreamError("laptop health check was not successful")
         except UpstreamError:
             transition = self.liveness.record_failure()
+            self.stream.update_laptop_status(
+                self.liveness.status is LaptopStatus.ONLINE,
+                datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            )
             if transition and transition.current is LaptopStatus.OFFLINE:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
         else:
@@ -87,6 +91,9 @@ class GatewayRuntime:
             for run in runs
         )
         self.stream.update_snapshot(snapshot, datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+        self.stream.update_laptop_status(
+            True, datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        )
         self.has_cached_active_run = has_active_run
         self.outbox.set_state_value("laptop_has_cached_active_run", int(has_active_run))
 

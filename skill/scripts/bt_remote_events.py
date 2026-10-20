@@ -42,27 +42,34 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
     """Map actionable flow-bus records to the versioned remote notification contract."""
     kind = row.get("remote_type")
     if kind is None:
-        # Production rows come from bt_flow_bus and carry its `kind`/`data` contract;
-        # `remote_type` is reserved for explicitly projected external notifications.
+        # Production rows come from bt_flow_bus and carry its `kind`/`data` contract.
         data = row.get("data") if isinstance(row.get("data"), dict) else {}
-        state = data.get("state")
-        kind = {
-            ("state_change", "failed"): "attempt.failed",
-            ("state_change", "rejected"): "attempt.failed",
-            ("task_state", "blocked"): "attempt.blocked",
-            ("verdict", "failed"): "attempt.failed",
-            ("verdict", "rejected"): "attempt.failed",
-        }.get((row.get("kind"), state))
+        state = data.get("state") or data.get("status") or data.get("to")
+        kind = row.get("kind")
+        if kind in {"state_change", "task_state"}:
+            kind = {
+                "failed": "attempt.failed", "rejected": "attempt.failed", "blocked": "attempt.blocked",
+                "completed": "task.completed", "accepted": "task.completed",
+            }.get(state, "task.progress")
+        elif kind == "verdict":
+            kind = "attempt.failed" if state in {"failed", "rejected"} else "task.completed"
     if kind not in {"attempt.failed", "attempt.blocked", "run.finished", "round.waiting", "plan.waiting",
-                    "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated"}:
+                    "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated",
+                    "task.progress", "task.completed"}:
         return None
-    target = {"run": str(row.get("run", ""))}
+    run = str(row.get("run", ""))
+    project, separator, req = run.partition("/")
+    target = {"project": project, "req": req} if separator else {"run": run}
     if row.get("task"):
-        target["task"] = str(row["task"])
+        target["taskId"] = str(row["task"])
+    if row.get("attempt"):
+        target["attemptId"] = str(row["attempt"])
     identity = str(row.get("id") or row.get("ord") or row.get("seq") or "")
     data = row.get("data") if isinstance(row.get("data"), dict) else {}
     if not data:
         data = {key: row.get(key) for key in ("failure", "summary") if row.get(key) is not None}
+    elif row.get("summary") is not None and "summary" not in data:
+        data = {**data, "summary": row["summary"]}
     return project_event(kind, identity, str(row.get("at") or row.get("occurredAt") or ""), target, data)
 
 

@@ -100,8 +100,9 @@ class RemoteEventsTests(unittest.TestCase):
         replay = get_events()
         self.assertEqual(len(first), 1)
         self.assertEqual(first[0]["type"], "attempt.failed")
-        self.assertEqual(first[0]["target"], {"run": "demo/REQ-001", "task": "T1"})
-        self.assertEqual(first[0]["data"], row["data"])
+        self.assertEqual(first[0]["target"], {"project": "demo", "req": "REQ-001", "taskId": "T1", "attemptId": "attempt-1"})
+        self.assertEqual(first[0]["data"]["state"], row["data"]["state"])
+        self.assertEqual(first[0]["data"]["summary"], row["summary"])
         self.assertEqual([event["id"] for event in first], [event["id"] for event in replay])
 
 

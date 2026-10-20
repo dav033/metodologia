@@ -85,7 +85,7 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 if login is None:
                     self._json(401, {"error": "unauthorized"})
                     return
-                self._json(200, {"login": login})
+                self._json(200, {"authenticated": True, "login": login})
                 return
             if route.path in {"/api/remote/v1/snapshot", "/api/remote/v1/events"} and runtime is not None:
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
