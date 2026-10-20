@@ -170,6 +170,9 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     await waitForText("LAPTOP SIN CONEXIÓN");
     gateway.snapshot = originalSnapshot;
     await waitForText("Intento att-0008");
+    const initialPanel = await waitForText("Rondas abiertas");
+    assert.ok(initialPanel.includes("Seguridad"), "open rounds should show their available answers");
+    assert.ok(initialPanel.includes("Pausa el scheduler hasta que lo reanudes."), "decision options should show their consequences");
     const fill = async (selector, value) => cdp(socket, "Runtime.evaluate", {
       expression: `(() => { const input = document.querySelector(${JSON.stringify(selector)}); if (!input) throw new Error('Missing input ${selector}'); const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; setter.call(input, ${JSON.stringify(value)}); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`,
       returnByValue: true,
@@ -193,14 +196,40 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
     assert.equal(gateway.commands[1]?.type, "reopen");
     assert.equal(gateway.commands[1]?.target.taskId, "T2");
-    assert.ok(browserState?.text?.includes("Escribe REQ-027 para confirmar"), "destructive plan action should ask for the REQ id");
-    gateway.commandResponses.push({ status: 409, body: { code: "STALE_PRECONDITION", message: "precondition changed" } });
-    await fill('.plans .actions form input[name="typedReq"]', "REQ-027");
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.plans .actions form')?.requestSubmit()", returnByValue: true });
+    assert.ok(browserState?.text?.includes("Escribe REQ-027 para aprobar"), "approval should ask for the REQ id");
+    await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-999");
+    const mismatch = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('[aria-label=\"Escribe REQ-027 para confirmar la aprobación\"]').validity.patternMismatch", returnByValue: true });
+    assert.equal(mismatch.result?.value, true, "approval must reject a different REQ id");
+    await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('[aria-label=\"Escribe REQ-027 para confirmar la aprobación\"]').form.requestSubmit()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
-    assert.equal(gateway.commands[2]?.type, "cancel-plan");
+    assert.equal(gateway.challenges[0]?.target, "lotm/REQ-027");
+    assert.equal(gateway.challenges[0]?.typedReq, "REQ-027");
+    assert.equal(gateway.commands[2]?.type, "approve");
     assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
-    assert.ok(gateway.commands[2]?.confirmation?.challengeId?.length >= 16);
+    assert.equal(gateway.commands[2]?.confirmation?.challengeId, "mock-server-challenge-0001");
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.answer-form input[name=\"q1\"][value=\"safe\"]').click(); document.querySelector('.answer-form textarea[name=\"q2\"]').value='Keep a review step'; document.querySelector('.answer-form textarea[name=\"q2\"]').dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('.answer-form').requestSubmit()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 4; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[3]?.type, "answer-round");
+    assert.equal(gateway.commands[3]?.target.roundId, "round-02");
+    assert.deepEqual(gateway.commands[3]?.answer, { q1: { choice: "safe", note: "" }, q2: { text: "Keep a review step" } });
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.decision-option button')?.disabled === false", returnByValue: true });
+      if (ready.result?.value) break;
+      await delay(100);
+    }
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.decision-option button')?.click()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 5; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[4]?.type, "answer-decision");
+    assert.equal(gateway.commands[4]?.requestId, "decision-1");
+    assert.equal(gateway.commands[4]?.option, "retry");
+    gateway.commandResponses.push({ status: 409, body: { code: "STALE_PRECONDITION", message: "precondition changed" } });
+    await fill('[aria-label="Escribe REQ-027 para confirmar la cancelación"]', "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('[aria-label=\"Escribe REQ-027 para confirmar la cancelación\"]').form.requestSubmit()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 6; attempt += 1) await delay(100);
+    assert.equal(gateway.commands[5]?.type, "cancel-plan");
+    assert.equal(gateway.commands[5]?.confirmation?.typedReq, "REQ-027");
+    assert.ok(gateway.commands[5]?.confirmation?.challengeId?.length >= 16);
     const historyText = await waitForText("el estado cambió");
     assert.ok(historyText.includes("Origen · lotm/REQ-027 · cancel-plan"), "history should list command origin");
     assert.ok(historyText.includes("Resultado · Rechazado · el estado cambió"), "history should list command result");
