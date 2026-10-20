@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0010:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "El verificador pide revisión: un check de T4 no corresponde a ningún criterio de aceptación",
+ "origin": "No hay fallo de código: no hay intentos fallidos registrados y el error es CHECK_UNMAPPED, que indica que el check `npm run asesor:test` no corresponde literalmente a ninguno de los tres criterios de T4. Según la guía por regla, los tres criterios pasaron; el bloqueo viene del plan (lista de checks de REQ-020), que además repite tres veces el mismo `npx tsx --conditions=react-server --test scripts/test/asesor/chat-ui.test.ts`.",
+ "steps": [
+  "Abre el veredicto de T4 en REQ-020 y confirma que los tres criterios (aviso de privacidad y versión de prueba, persistencia por ID de conversación en localStorage, Composer como único dueño de la UI de foto/voz y tarjetas) aparecen como PASS.",
+  "Si los tres están en PASS, aprueba con `bitacora.py --project pictures scheduler-op REQ-020 decide <id> review_pass --reason \"todos los criterios PASS; solo CHECK_UNMAPPED\"`.",
+  "Para que no vuelva a pasar, sube \"revision\" en PLAN.json, asocia `npm run asesor:test` a un criterio o quítalo, deja un solo comando tsx en lugar de tres, y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T14:34:56",
+ "seconds": 15.4
+}
