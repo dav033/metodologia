@@ -84,7 +84,29 @@
   }
  ],
  "round": 1,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-20T10:44:39"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "text": "Asesor Happia (route /asesor)"
+  },
+  "q2": {
+   "choice": "a",
+   "note": "Behind current APP_PASSWORD"
+  },
+  "q3": {
+   "choice": "b",
+   "note": "Browser only for now for the customer side; but see q4: an admin profile must monitor conversations, so conversations go to Postgres on Supabase"
+  },
+  "q4": {
+   "choice": "a",
+   "note": "New 'admin' user profile whose only difference is monitoring conversations; Postgres on Supabase"
+  },
+  "q5": {
+   "choice": "a",
+   "note": "Yes; before starting, ask for every connection, key, password and credential needed"
+  }
+ },
+ "created_at": "2026-10-20T10:44:39",
+ "answered_at": "2026-10-20T10:50:38",
+ "answered_via": "terminal"
 }
