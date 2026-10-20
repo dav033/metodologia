@@ -1,2 +1,4 @@
 The independent audit T18 rejected the accepted result of this task. Fix these confirmed findings and prove each one with a test that exercises the real entry point, not only the module in isolation:
-- F2 (high): Laptop remote API routes only health, snapshot and attempt-review; commands, challenges, events, history, runs, plans and quotas are not served and the review path differs from the contract
+- F3 (high): Recovery uses incompatible target/state vocabularies and an absent routes endpoint; remote notes are stored in a file the next-attempt prompt never reads.
+- F4 (high): The ledger commits OK before validation/effects; invalid commands and interrupted commands can replay as successful without performing the requested action.
+- F5 (high): Idempotency ignores effect-bearing request content and preconditions ignore revision/updatedAt, accepting changed requests and stale plan revisions.

@@ -7,6 +7,7 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
+- P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/start`, and put `TELEGRAM_BOT_TOKEN` in `~/.config/flow/secrets.env` (template exists, mode 600, empty); the OAuth App is created by the agent in its Firefox unless GitHub asks for 2FA/sudo mode · urgency: high · complexity: S · added 2026-10-19 · D-082
 - P-129 · M2 semantics vs 3 tests (REQ-017 frozen-DAG routing test and the offline decision benchmark ×2): the full-DAG batch keeps baseline order (claude) instead of following quota pressure, and the contextual policy picks a different route than the deterministic one with no history. Decide which side is right (D-081 settled the role-policy part) · urgency: low · complexity: M · added 2026-10-19 · owner question after D-080
 - P-130 · `~/bitacora/.state/explore.jsonl` holds 46 fake `personal-project` rows dated 2027 from old test runs; owner said NO to moving it (2026-10-19); revisit only if the exploration budget looks spent · urgency: low · complexity: S · added 2026-10-19 · found while fixing bt_explore hermeticity
 - P-131 · Optional `gates.rework_scope` (named + test/audit tasks only) because a root-task finding sends the whole DAG back (29 tasks on REQ-027) · urgency: low · complexity: M · added 2026-10-19 · REQ-027 audit round
