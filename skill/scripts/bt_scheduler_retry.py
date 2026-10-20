@@ -70,7 +70,8 @@ class RetryContinuation:
         self.fallback, self.default_repository = fallback, default_repository
         self.snapshot_of = snapshot_of          # attempt id -> snapshot sha, also for attempts of earlier plan revisions
         self.run_dir = Path(run_dir) if run_dir else None
-        self.integrator = integrator            # carries a result onto a changed base (PredecessorIntegrator.rebase)
+        self.integrator = integrator            # carries a result onto a changed base (PredecessorIntegrator.carry)
+        self.resolving: dict[str, tuple[str, ...]] = {}   # task -> files of its carried base that hold conflict markers
 
     def _snapshot_verified(self, row, sha):
         if not isinstance(sha, str) or SHA.fullmatch(sha) is None:
@@ -225,26 +226,41 @@ class RetryContinuation:
             return None
 
     def _carry(self, task_id, snapshot, previous_base=None):
-        """`snapshot` carried onto this task's base of today, or None when the two overlap or nothing can carry it."""
-        rebase = getattr(self.integrator, "rebase", None)
-        return rebase(task_id, snapshot, previous_base) if callable(rebase) else None
+        """`snapshot` carried onto this task's base of today: (commit, conflicted files); (None, ()) when nothing can
+        carry it. Conflicted files hold merge markers the task resolves (`resolving`)."""
+        carry = getattr(self.integrator, "carry", None)
+        if callable(carry):
+            commit, conflicts = carry(task_id, snapshot, previous_base)
+        else:                                            # an integrator that can only carry cleanly
+            rebase = getattr(self.integrator, "rebase", None)
+            commit, conflicts = (rebase(task_id, snapshot, previous_base) if callable(rebase) else None), ()
+        if commit and conflicts:
+            self.resolving[task_id] = tuple(conflicts)
+        else:
+            self.resolving.pop(task_id, None)
+        return commit, tuple(conflicts)
 
     def _plan(self, task_id):
         """(base to start from, kind, the earlier result). kind: `directed` (the owner chose the result), `continue` (the
-        earlier result as it is), `carried` (the earlier result moved onto the redone prerequisites), or `fresh` with the
+        earlier result as it is), `carried` (the earlier result moved onto the redone prerequisites), `resolve` (the same,
+        but it overlaps them: the base is a merge in progress with conflict markers to resolve) or `fresh` with the
         earlier result, if any, only as a reference. A result an audit sent back is always kept: the redo is the delta that
         answers the findings, not a rewrite that its dependents would clash with."""
+        self.resolving.pop(task_id, None)
         directed = self._directed(task_id)
         if directed is not None:
-            return (self._carry(task_id, directed) or directed), "directed", directed
+            carried, conflicts = self._carry(task_id, directed)
+            return (carried or directed), ("resolve" if conflicts else "directed"), directed
         snapshot = self._handoff(task_id)
         if snapshot is None:
             earlier = self._earlier_revision_result(task_id)
             return (earlier, "continue", earlier) if earlier else (None, "fresh", None)
         if not self._reworked(task_id) or self._same_base(task_id, self._previous_base(task_id)):
             return snapshot, "continue", snapshot
-        carried = self._carry(task_id, snapshot, self._previous_base(task_id))
-        return (carried, "carried", snapshot) if carried else (None, "fresh", snapshot)
+        carried, conflicts = self._carry(task_id, snapshot, self._previous_base(task_id))
+        if carried is None:
+            return None, "fresh", snapshot
+        return carried, ("resolve" if conflicts else "carried"), snapshot
 
     def _continue_from(self, task_id):
         return self._plan(task_id)[0]
@@ -266,6 +282,15 @@ class RetryContinuation:
                     "change small, because the tasks after this one were built on that result.")
         if request.base_ref != base:
             raise integration.IntegrationError("PREDECESSOR_HANDOFF_MISSING", "retry base does not match its snapshot")
+        if kind == "resolve":
+            files = ", ".join(self.resolving.get(request.task_id, ())[:12])
+            return (f"The redone prerequisites changed code that this task's earlier accepted result ({snapshot}) also "
+                    "changed, and the tasks after it were built on that result. Your tree is that result merged onto the new "
+                    f"prerequisites, with the overlap left unresolved in: {files}. Open each file and resolve every conflict "
+                    "marker (`<<<<<<<` is the new prerequisite code, `>>>>>>>` this task's earlier work): keep both "
+                    "intents, never drop either side's behaviour, and leave no marker behind (a result with markers is "
+                    "rejected). Then recheck the complete frozen acceptance and verification instructions and run the "
+                    "tests of both sides. Do not rewrite or delete working code.")
         if kind in ("directed", "carried") or (kind == "continue" and (self._handoff(request.task_id) is None)):
             where = "chosen by the owner" if kind == "directed" else \
                 "moved onto the prerequisites that were redone since" if kind == "carried" else "accepted earlier"

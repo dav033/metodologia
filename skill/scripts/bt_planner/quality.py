@@ -184,6 +184,25 @@ def _minutes(task: dict) -> int:
     return m if isinstance(m, int) and not isinstance(m, bool) and m > 0 else 0
 
 
+HOTSPOT_TASKS = 4  # tasks that declare the same file before the plan is told it has no owner for it
+
+
+def file_hotspots(plan: dict) -> list[str]:
+    """One file declared by `HOTSPOT_TASKS` or more tasks of the same repository (audits and tests excluded: they only
+    read it). Whoever fixes a late audit finding in such a file changes the work of every task that built on it, and
+    the scheduler redoes them one by one (REQ-027: five tasks edited the gateway entry point). A warning: split the
+    file by responsibility so each task owns its own module, or give it one owner task and let the others import it."""
+    seen: dict[tuple[str, str], list[str]] = {}
+    for tid, task in _tasks(plan).items():
+        if task.get("kind") in ("audit", "test"):
+            continue
+        for path in {p for p in _strs(task.get("expected_paths")) if not any(c in p for c in "*?[") and "." in p.split("/")[-1]}:
+            seen.setdefault((str(task.get("repository")), path), []).append(tid)
+    return sorted(f"{path}: declared by {len(ids)} tasks ({', '.join(sorted(ids)[:6])}); give it one owner or split it "
+                  "by responsibility, or an audit fix in it will force those tasks to be redone"
+                  for (_, path), ids in seen.items() if len(ids) >= HOTSPOT_TASKS)
+
+
 def analyze(plan: dict) -> dict:
     """Read-only quality summary of a (valid) plan."""
     order, tasks, _, _ = _ordered_masks(plan)

@@ -50,7 +50,8 @@ class QualityVerificationPort:
         read_ledger: Callable[[VerifyRequest, str], bytes | None] | None = None,
         read_changes: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
         integration_check: Callable[[str, str, str], str] | None = None,
-        integration_retries: int = 2,
+        integration_retries: int = 0,
+        unresolved_check: Callable[[str, str], tuple[str, ...]] | None = None,
     ):
         self.core = core
         self.rework_notes = rework_notes
@@ -60,6 +61,7 @@ class QualityVerificationPort:
         self._read_changes = read_changes or self._changes_from_snapshot
         self.integration_check = integration_check        # (task, attempt, snapshot) -> '' or why it cannot be combined
         self.integration_retries = integration_retries    # clash rejections of one task before the dependents give way
+        self.unresolved_check = unresolved_check          # (task, snapshot) -> files still holding merge conflict markers
         self.executor = executor
         self.store = store
         self.policy = policy
@@ -368,11 +370,17 @@ class QualityVerificationPort:
     def _integration_problem(self, order: VerifyRequest) -> str:
         """Why the verified result cannot be combined with the accepted work around it ('' when it can). A check that
         cannot run (no snapshot yet) is not a verdict: it returns ''."""
-        if self.integration_check is None:
+        if self.integration_check is None and self.unresolved_check is None:
             return ""
         try:
             source = self._snapshot_source(order)
-            return self.integration_check(order.task_id, order.attempt_id, source.snapshot_sha) if source else ""
+            if not source:
+                return ""
+            left = self.unresolved_check(order.task_id, source.snapshot_sha) if self.unresolved_check else ()
+            if left:
+                return UNRESOLVED + ", ".join(left[:6])
+            return self.integration_check(order.task_id, order.attempt_id, source.snapshot_sha) \
+                if self.integration_check else ""
         except Exception as error:  # noqa: BLE001 - an outage is not a reason to reject work
             LOGGER.warning("integration check skipped (%s)", type(error).__name__)
             return ""
@@ -459,7 +467,8 @@ class QualityVerificationPort:
                 else:
                     accepted = False
                     evidence = f"integration gate: {clash} | M6 evidence: {evidence}"[:2000]
-                    self._write_note((order.task_id,), _integration_note(clash))
+                    self._write_note((order.task_id,), _unresolved_note(clash) if clash.startswith(UNRESOLVED)
+                                     else _integration_note(clash))
             if gate is not None and not gate.ok:
                 accepted = False
                 evidence = f"{gate.summary()} | M6 evidence: {evidence}"[:2000]
@@ -534,6 +543,15 @@ def _read_snapshot_inputs(
     except Exception as error:  # noqa: BLE001
         LOGGER.warning("M6 attempt description unavailable (%s)", type(error).__name__)
         return None, None
+
+
+UNRESOLVED = "merge conflict markers left in: "
+
+
+def _unresolved_note(clash: str) -> str:
+    return (f"Your result still contains unresolved merge conflict markers ({clash.removeprefix(UNRESOLVED)}). Your tree "
+            "started as a merge in progress: open every file with `<<<<<<<` / `=======` / `>>>>>>>` lines, combine both "
+            "sides' behaviour, delete the markers, and run the tests again.")
 
 
 def _integration_note(clash: str) -> str:

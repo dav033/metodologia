@@ -166,6 +166,31 @@ class Unit(unittest.TestCase):
         own, spec = self.carried_case("T2 rewrote the file\n")
         self.assertIsNone(self.bound(spec).rebase("T2", own))
 
+    def test_an_overlapping_earlier_result_is_carried_as_a_merge_in_progress_with_markers(self):
+        own, spec = self.carried_case("T2 rewrote the file\n")
+        integrator = self.bound(spec)
+        carried, conflicts = integrator.carry("T2", own)
+        self.assertEqual(conflicts, ("up.txt",))
+        text = git(self.app, "show", f"{carried}:up.txt")
+        self.assertIn("<<<<<<<", text)
+        self.assertIn("fixed", text)                                         # the new prerequisite's side
+        self.assertIn("T2 rewrote the file", text)                           # and the earlier result's side
+        self.assertEqual(git(self.app, "show", f"{carried}:own.txt"), "T2 own work")
+        self.assertEqual(integrator.carry("T2", own), (carried, conflicts))   # deterministic
+        self.assertEqual(integrator.carry("T2", "not-a-sha"), (None, ()))
+
+    def test_unresolved_markers_are_found_only_when_the_repository_head_does_not_have_them(self):
+        own, spec = self.carried_case("T2 rewrote the file\n")
+        integrator = self.bound(spec)
+        carried, _ = integrator.carry("T2", own)
+        self.assertEqual(integrator.unresolved("T2", carried), ("up.txt",))
+        resolved = snapshot(self.app, carried, {"up.txt": "fixed and T2 rewrote the file\n"})
+        self.assertEqual(integrator.unresolved("T2", resolved), ())
+        self.assertEqual(integrator.unresolved("T2", "not-a-sha"), ())
+        with_markers = snapshot(self.app, self.head, {"doc.md": "<<<<<<< ours\nx\n>>>>>>> theirs\n"})
+        git(self.app, "update-ref", "HEAD", with_markers)                     # markers that the head itself holds
+        self.assertEqual(integrator.unresolved("T2", with_markers), ())
+
     def test_a_clash_caused_by_a_common_ancestor_that_was_redone_is_merged_over_its_earlier_result(self):
         lines = [f"line{n}" for n in range(1, 21)]
         base = snapshot(self.app, self.head, {"up.txt": "\n".join(lines) + "\n"})

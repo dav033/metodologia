@@ -375,6 +375,7 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
         report.warnings.extend(quality.shared_unordered(plan))
         report.warnings.extend(quality.unconsumed_results(plan))
         report.warnings.extend(quality.redundant_edges(plan))
+        report.warnings.extend(quality.file_hotspots(plan))
     reused: dict[str, set[str]] = {}
     for task in tasks:
         entries = task.get("classification_evidence") if isinstance(task, dict) else None

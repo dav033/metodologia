@@ -471,6 +471,18 @@ class Coherence(unittest.TestCase):
         plan = mini("T1", dict(id="T2", after=["T1"]), dict(id="T3", after=["T1", "T2"]))
         self.assertTrue(any("T3.after: T1 is already implied" in w for w in check(plan).warnings))
 
+    def test_a_file_declared_by_many_tasks_is_a_warning_naming_the_tasks(self):
+        shared = dict(expected_paths=["gateway/app.py"])
+        plan = mini(dict(id="T1", **shared), dict(id="T2", after=["T1"], **shared), dict(id="T3", after=["T2"], **shared),
+                    dict(id="T4", after=["T3"], **shared), dict(id="T5", after=["T4"], kind="audit", **shared))
+        warnings = [w for w in check(plan).warnings if "declared by" in w]
+        self.assertEqual(len(warnings), 1, warnings)
+        self.assertIn("gateway/app.py: declared by 4 tasks (T1, T2, T3, T4)", warnings[0])      # the audit only reads it
+        few = mini(dict(id="T1", **shared), dict(id="T2", after=["T1"], **shared))
+        self.assertFalse(any("declared by" in w for w in check(few).warnings))
+        globs = mini(*[dict(id=f"T{n}", expected_paths=["gateway/**"]) for n in range(1, 6)])
+        self.assertFalse(any("declared by" in w for w in check(globs).warnings))                # globs name no one file
+
     def test_path_overlap_rules(self):
         yes = [("src/**", "src/a.py"), ("src/auth/**", "src/auth/x/y.py"), ("**", "docs/a.md"), ("a/b.py", "a/b.py"),
                ("src/*.py", "src/a.py")]

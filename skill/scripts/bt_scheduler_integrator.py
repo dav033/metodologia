@@ -113,36 +113,66 @@ class PredecessorIntegrator:
         return [tid for tid in plan.ids() if tid in seen]
 
     def rebase(self, task_id: str, snapshot: str, previous_base: str | None = None) -> str | None:
+        """`carry` when the earlier result moves onto the new base cleanly; None when the two overlap."""
+        commit, conflicts = self.carry(task_id, snapshot, previous_base)
+        return None if conflicts else commit
+
+    def carry(self, task_id: str, snapshot: str, previous_base: str | None = None) -> tuple[str | None, tuple[str, ...]]:
         """A task's own earlier result carried onto the base it would start from today: its new base (the redone
-        prerequisites) plus what the earlier result added, as one commit that has both as parents. None when the two
-        overlap (the caller then starts on the new base and shows the earlier result as a reference). Objects only, like
+        prerequisites) plus what the earlier result added, as one commit that has both as parents. Objects only, like
         every other merge here; the commit is kept alive under `refs/m3/integration/<run>/<task>-carried`. What the earlier
-        result added is measured from the base it was built on (`previous_base`; by default the snapshot's first parent)."""
+        result added is measured from the base it was built on (`previous_base`; by default the snapshot's first parent).
+
+        Returns (commit, conflicts). When the two overlap the commit still exists, as a merge in progress: the conflicted
+        files hold git's `<<<<<<<` / `=======` / `>>>>>>>` markers (first side: the new base, second: the earlier result)
+        and `conflicts` names them, so the task resolves them in place instead of redoing its work from nothing.
+        (None, ()) when nothing can be carried."""
         bound = self._bound
         if bound is None or not SHA.fullmatch(snapshot or ""):
-            return None
+            return None, ()
         path = bound["repo_of"](self._role(task_id))
         if not path:
-            return None
+            return None, ()
         repo, base = Path(path), self.base_ref(task_id)
         if _git(repo, "cat-file", "-e", f"{snapshot}^{{commit}}", check=False).returncode:
-            return None
+            return None, ()
         resolved = _git(repo, "rev-parse", "--verify", f"{base}^{{commit}}", check=False)
         if resolved.returncode:
-            return None
+            return None, ()
         base = resolved.stdout.strip()
         if base == snapshot or _git(repo, "merge-base", "--is-ancestor", base, snapshot, check=False).returncode == 0:
-            return snapshot                                   # the earlier result already builds on the new base
+            return snapshot, ()                               # the earlier result already builds on the new base
         origin = previous_base if SHA.fullmatch(previous_base or "") else f"{snapshot}^1"
         done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={origin}", base,
                     snapshot, check=False)
-        if done.returncode:
-            return None
-        tree = done.stdout.splitlines()[0].strip()
-        carried = _git(repo, "commit-tree", "--no-gpg-sign", tree, "-p", base, "-p", snapshot, "-m",
-                       f"m3 carried result of {task_id} onto its new base").stdout.strip()
+        if done.returncode not in (0, 1):
+            return None, ()
+        lines = done.stdout.splitlines()
+        if not lines or not SHA.fullmatch(lines[0].strip()):
+            return None, ()
+        conflicts = tuple(line.strip() for line in lines[1:] if line.strip()) if done.returncode else ()
+        message = f"m3 carried result of {task_id} onto its new base" + (" (conflicts to resolve)" if conflicts else "")
+        carried = _git(repo, "commit-tree", "--no-gpg-sign", lines[0].strip(), "-p", base, "-p", snapshot, "-m",
+                       message).stdout.strip()
         _git(repo, "update-ref", f"{self.ref_prefix}/{bound['identity']}/{self._ref_leaf(task_id)}-carried", carried)
-        return carried
+        return carried, conflicts
+
+    def unresolved(self, task_id: str, snapshot: str) -> tuple[str, ...]:
+        """Files of `snapshot` that still hold merge conflict markers a carried base put there and the repository's own
+        head does not: a task that was handed a merge in progress must not hand it back unresolved."""
+        bound = self._bound
+        path = bound["repo_of"](self._role(task_id)) if bound is not None and SHA.fullmatch(snapshot or "") else None
+        if not path:
+            return ()
+        repo = Path(path)
+        pattern = ("-e", "^<<<<<<< ", "-e", "^>>>>>>> ")
+        found = _git(repo, "grep", "-lI", "-E", *pattern, snapshot, "--", check=False)
+        if found.returncode:
+            return ()
+        files = {line.split(":", 1)[1] for line in found.stdout.splitlines() if ":" in line}
+        known = _git(repo, "grep", "-lI", "-E", *pattern, "HEAD", "--", check=False)
+        files -= {line.split(":", 1)[1] for line in known.stdout.splitlines() if ":" in line}
+        return tuple(sorted(files))
 
     # ------------------------------------------------------------------------------------------------ internals
     @staticmethod

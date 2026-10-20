@@ -34,8 +34,8 @@ DEFAULTS: dict = {
               # a verified result that could not be combined with the accepted work around it (the tasks about to start
               # after it) is rejected with the clash, so the task that caused it is the one sent back
               "integration_check": True,
-              # clash rejections one task gets before the accepted tasks it clashes with are sent back to be rebuilt on it
-              "integration_retries": 2,
+              # clash rejections one task gets before the accepted tasks it clashes with are sent back to resolve the overlap on it
+              "integration_retries": 0,
               # what an audit rejection sends back: "named" = the tasks its findings name plus the tests over them (what
               # depends on them keeps its result and is merged with the fix); "downstream" = also everything that
               # depends on them (a finding on a root task then redoes the whole plan)

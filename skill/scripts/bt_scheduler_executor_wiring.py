@@ -172,8 +172,9 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 integration_check=(integrate.would_conflict
                                    if integrate is not None and bt_config.get("gates.integration_check", True) is True
                                    else None),
-                integration_retries=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 2)(
-                    bt_config.get("gates.integration_retries", 2)))
+                unresolved_check=getattr(integrate, "unresolved", None),
+                integration_retries=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0)(
+                    bt_config.get("gates.integration_retries", 0)))
             scheduler.ports.verification = wiring.verification_runtime
             wiring.verification_runtime.start()
         sink.bind(scheduler)

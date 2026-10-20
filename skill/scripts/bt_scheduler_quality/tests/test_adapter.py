@@ -101,6 +101,7 @@ class M6M1AdapterTests(unittest.TestCase):
         read_ledger=None,
         read_changes=None,
         integration_check=None,
+        unresolved_check=None,
         rework_notes=None,
         audit_policy=None,
     ):
@@ -140,6 +141,7 @@ class M6M1AdapterTests(unittest.TestCase):
             read_ledger=read_ledger,
             read_changes=read_changes,
             integration_check=integration_check,
+            unresolved_check=unresolved_check,
             rework_notes=rework_notes,
             audit_policy=audit_policy,
         )
@@ -342,6 +344,7 @@ class M6M1AdapterTests(unittest.TestCase):
                               rework_notes=lambda task_id, text: notes.append((task_id, text)))
         root, core, _, executor, _, adapter = system
         adapter._prior_clashes = lambda task_id: prior_clashes
+        adapter.integration_retries = 2
         adapter.integration_check = (lambda task_id, attempt, snapshot:
                                      "T1+T9 vs T3 for T4: remote/gateway/app.py" if task_id == "T1" else "")
         self._start_attempts(core, executor, root, ("T3",))
@@ -388,6 +391,22 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertEqual(port._retry_interrupted_reviews(), 1)
         self.assertEqual([key for key, _ in calls], ["interrupted", "needs-a-person", "again"])
         self.assertEqual({operator for _, operator in calls}, {"owner-restart"})
+
+    def test_a_result_that_still_holds_merge_conflict_markers_is_rejected_with_a_note_to_resolve_them(self):
+        task = _task("T1", "python3 build.py")
+        task.update(kind="implement")
+        task["verification"][0]["category"] = "functional"
+        notes = []
+        root, core, _, executor, _, _ = self._system(
+            [task], max_attempts=2, schema_version="1.2.0", unresolved_check=lambda task_id, snapshot: ("a.py", "b.py"),
+            rework_notes=lambda task_id, text: notes.append((task_id, text)))
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T1"
+                                              and e.detail.get("to") == "rejected" for e in core.audit_log())))
+        self.assertEqual([task_id for task_id, _ in notes], ["T1"])
+        self.assertIn("a.py, b.py", notes[0][1])
+        self.assertIn("delete the markers", notes[0][1])
 
     def test_a_result_that_combines_cleanly_is_accepted(self):
         task = _task("T1", "python3 build.py")

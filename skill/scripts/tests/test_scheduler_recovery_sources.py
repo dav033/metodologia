@@ -102,6 +102,21 @@ class RetryAcrossRevisions(unittest.TestCase):
         self.assertEqual(source.base_ref("T1"), "newbase")
         self.assertIn("overlaps", source.notes(SimpleNamespace(task_id="T1", base_ref="newbase")))
 
+    def test_sent_back_work_that_overlaps_the_new_base_resolves_a_merge_in_progress(self):
+        source = self._source("REQ-1:r2:T1:att-0001", old_state="accepted")
+        source._handoff = lambda _task: "oldsnap"
+        source._previous_base = lambda _task: "basesha"
+        source.fallback = lambda _task: "newbase"
+        source.integrator = SimpleNamespace(carry=lambda task, snap, base=None: ("conflicted", ("a.py", "b.py")))
+        self.assertEqual(source.base_ref("T1"), "conflicted")
+        note = source.notes(SimpleNamespace(task_id="T1", base_ref="conflicted"))
+        self.assertIn("a.py, b.py", note)
+        self.assertIn("resolve every conflict marker", note)
+        self.assertIn("rejected", note)
+        source.integrator = SimpleNamespace(carry=lambda task, snap, base=None: ("clean", ()))
+        self.assertEqual(source.base_ref("T1"), "clean")
+        self.assertNotIn("conflict marker", source.notes(SimpleNamespace(task_id="T1", base_ref="clean")))
+
     def test_a_failed_retry_continues_whatever_the_base(self):
         source = self._source("REQ-1:r2:T1:att-0001", old_state="failed")
         source._handoff = lambda _task: "oldsnap"

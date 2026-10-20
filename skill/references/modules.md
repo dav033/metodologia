@@ -163,7 +163,12 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   vs T13 for T14: files`) and the task gets a note to redo it as a small change; M5 retries it. The task that
   causes a clash is sent back at once, not a bystander blocked later when it tries to start; a clash the
   candidate takes no part in is not blamed on it. A task sent back also continues from its earlier result carried
-  onto the redone prerequisites (`PredecessorIntegrator.rebase`) instead of being rewritten, and the merge
+  onto the redone prerequisites (`PredecessorIntegrator.carry`) instead of being rewritten; when the two overlap, the
+  base is a **merge in progress** (git conflict markers in the overlapping files, kept under
+  `refs/m3/integration/<run>/<task>-carried`) and the task resolves it in place, keeping both sides, rather than redoing
+  its work from nothing; a result handed back with markers still in it (`PredecessorIntegrator.unresolved`) is
+  rejected. `gates.integration_retries` (default 0) is how many times the task that caused a clash is retried before
+  the accepted tasks it clashes with resolve the overlap on top of it. The merge
   fallback tries the earlier result of every prerequisite as merge base. Tasks whose prerequisites are
   still completed become `ready` at once; the scheduler redoes them, and the audit runs again at the end. Nothing is
   completed by the rework: each redone task needs a new independent verdict;

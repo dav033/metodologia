@@ -30,6 +30,7 @@ Load the four attached Planner resources from the installed methodology skill. C
 ## Plan contract
 
 - Use `PLAN.json` schema 1.2.0 as the machine contract and `PLAN.md` as its human-readable counterpart. Use each task's `covers` requirement IDs and `kind`, the plan's declared `interfaces`, and each verification item's `category`; do not invent fields outside the schema.
+- Give each file one owner. When four or more tasks of a chain declare the same file in `expected_paths` (the check warns "declared by N tasks"), split it by responsibility into modules each task owns, or make one task the owner and let the others import it: an audit fix in a shared file forces every task built on it to be redone.
 - Every milestone and task needs observable acceptance criteria. Every task needs the full classification, typed evidence for all six dimensions, expected paths, shared resources, and verification required by the current schema.
 - Use `after` for dependency edges. Keep IDs within the schema's task-ID pattern. Milestones group work; tasks are independently actionable units. The current contract has no `parent_id` or separate subtask object: do not simulate one with extra JSON fields.
 - Ground file evidence in files actually inspected. Never claim a command passed unless you ran it; never cite planned tests as existing evidence. Keep unverified assumptions explicit and confidence consistent with the evidence.
