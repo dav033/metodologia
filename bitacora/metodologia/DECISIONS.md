@@ -854,3 +854,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Decision:** `plan-json check` warns for a command verification that uses `--live`/`--deployed`/`--remote`/`--prod`, a non-loopback URL or a network tool (`curl`, `ssh`, `gh`, `vercel`, `docker`, ...), and says to verify a receipt file the task leaves after running the live check. The planner prompt says the same. A warning, not an error: a plan can still be launched knowingly.
 - **Consequences:** + the failure is found when the plan is written. − the check is a heuristic on the command text; a database or service reached through a plain `npm test` is not seen.
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · pictures REQ-020
+
+## D-094 — The panel's live streams share one computation instead of one per open tab
+
+- **Date:** 2026-10-20 · **Status:** Accepted
+- **Context:** the bitácora panel (`localhost:8765`) kept dropping and answering slowly. The service was alive but its process used 75–110 % of a core: each open tab holds a plans SSE stream that, on every change of any run file (the running scheduler writes constantly), re-parsed every plan of every project (`plan_status` → markdown plan parse → `infer_kind` recompiling regexes per task line) and re-stat'ed all run stores every 0.25 s. The unit also restarts itself whenever the skill code changes (`ensure_server` stale check), which, while editing, left short windows with the port closed.
+- **Decision:** (1) `bt_plans_api._shared_value`: the fingerprint (0.5 s window) and the rendered plans/plan frame (1.5 s window, keyed by fingerprint) are computed once for all clients watching the same view; a busy run is coalesced per client, never dropped; entries older than 60 s are pruned. (2) `bt_planstatus._markdown_structure` is memoized by (path, mtime, size). (3) `bt_agent_models.infer_kind` uses precompiled patterns.
+- **Consequences:** + steady CPU of the panel went from ~78 % to ~20 % with the same tabs open; page latency halved (`/` 0.35 s → 0.15 s). + N tabs cost about the same as one. − a plan view can lag a change by up to ~2 s. The per-client `flow_events` poll of the live stream (`bt_live_api`) is still not shared (residual ~20 %).
+- **Source:** [day log](2026-10/W4/2026-10-20.md)
